@@ -34,8 +34,23 @@ The default agentic workflow focusing on speed and structure.
 
 ### 2. VDD (Verification-Driven Development)
 A high-integrity mode using "Iterative Adversarial Refinement".
-- **Concept**: A "Builder" agent writes code, and a "Sarcasmotron" agent (Adversary) roasts it.
-- **The "Hallucination Exit"**: The loop ends only when the Adversary is forced to invent problems (hallucinate) because the code is too robust.
+
+**Source**: [Verification-Driven Development (VDD) via Iterative Adversarial Refinement](https://gist.github.com/dollspace-gay/45c95ebfb5a3a3bae84d8bebd662cc25#file-method-md)
+
+#### Core Concept
+VDD is designed to eliminate "code slop" (lazy patterns, hidden technical debt, hallucinations) through a **Generative Adversarial Loop**:
+1. **Builder**: Writes the code and tests.
+2. **Sarcasmotron (Adversary)**: A hostile AI persona that critiques the code with zero tolerance.
+3. **Loop**: The process only ends when the code is so robust that the Adversary starts "hallucinating" flaws because it can't find real ones (The "Hallucination Exit").
+
+#### VDD vs. TDD (Comparison)
+| Feature | TDD (Test-Driven) | VDD (Verification-Driven) |
+| :--- | :--- | :--- |
+| **Primary Goal** | Functional Correctness | Robustness & "Zero-Slop" |
+| **Driver** | Unit Tests (Red-Green-Refactor) | Adversarial Critique (The "Roast") |
+| **Mindset** | "Does it work as expected?" | "Can I break it? Is it lazy?" |
+| **Exit Condition** | All tests pass | Adversary runs out of valid critiques |
+| **Best For** | Domain logic, Algorithms | Security, High-Reliability Systems |
 
 #### Workflows
 - **[vdd-01-start-feature](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-01-start-feature.md)**

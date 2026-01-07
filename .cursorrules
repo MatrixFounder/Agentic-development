@@ -42,7 +42,3 @@ Before starting the standard pipeline, check if the user's request matches a wor
 - **Context Loading**: When moving to a new phase, explicitly read the prompt file for that role (e.g., "Reading 06_agent_planner.md...").
 - **File Creation**: Always save intermediate artifacts (TZ, Plan) to files, do not just output them in chat.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user (as per `01_orchestrator.md`).
-
-## BILINGUAL SYNCHRONIZATION
-- **README Sync**: When updating `README.md`, ALWAYS apply the corresponding semantic changes to `README.ru.md`.
-- **Prompt Sync**: When updating any agent prompt in `System/Agents/`, ALWAYS apply the corresponding semantic changes to the matching file in `System/Agents_ru/`.

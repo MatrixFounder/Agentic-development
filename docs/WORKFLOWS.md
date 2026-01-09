@@ -71,6 +71,8 @@ These workflows leverage the **Nesting** capability (one workflow calling anothe
     - **Nested**: Calls `/base-stub-first` → `/vdd-adversarial`.
 - **[full-robust](.agent/workflows/full-robust.md)**
     - **Nested**: Calls `/vdd-enhanced` → Security Audit.
+- **[security-audit](.agent/workflows/security-audit.md)**
+    - **Specialized**: Standalone security audit phase. Checks for OWASP vulnerabilities.
 
 ## Extension Guide
 To add a new variant (e.g., `tdd`):

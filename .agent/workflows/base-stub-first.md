@@ -1,3 +1,6 @@
+---
+description: Start a feature using the standard Stub-First pipeline
+---
 # Workflow: Base Stub-First Development
 
 **Description:**  

@@ -1,3 +1,6 @@
+---
+description: Run the full robust pipeline (Stub-First + VDD + Security)
+---
 # Workflow: Full Robust Development
 
 **Description:**  

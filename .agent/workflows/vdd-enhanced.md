@@ -1,3 +1,7 @@
+---
+description: VDD-Enhanced Development
+---
+
 # Workflow: VDD-Enhanced Development
 
 **Description:**  

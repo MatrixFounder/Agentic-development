@@ -1,3 +1,7 @@
+---
+description: VDD Adversarial Refinement
+---
+
 # Workflow: VDD Adversarial Refinement
 
 **Description:**  

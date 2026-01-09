@@ -45,6 +45,7 @@ It **MUST** be added to the context for all other agents (01-09).
 | **Plan Reviewer** | `07_agent_plan_reviewer.md` | Ensures the plan is logical and testable. |
 | **Developer** | `08_agent_developer.md` | Writes code (Stubs -> Tests -> Implementation). |
 | **Code Reviewer** | `09_agent_code_reviewer.md` | Final code quality check. |
+| **Security Auditor** | `10_security_auditor.md` | Security vulnerability assessment and reporting. |
 
 ### 📊 How the System Prompt is Loaded
 

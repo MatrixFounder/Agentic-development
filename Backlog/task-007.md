@@ -1,8 +1,8 @@
-### Реализация рабочего примера Security Audit в Agentic-development
+# Реализация рабочего примера Security Audit в Agentic-development
 
 Для **security audit** необходимо создать **отдельный workflow** (`/security-audit.md`), который можно nested вызывать в более сложных пайплайнах вроде `/full-robust`. Это сохранит модульность: audit — независимая фаза, запускаемая после основной реализации (и опционально после VDD).
 
-#### Создание новой роли
+## Создание новой роли
 
 **Рекомендуется отдельная роль** — это соответствует стилю фреймворка (роли как 01–09.md в `System/Agents/`).
 
@@ -27,9 +27,9 @@ Input: All modified code + dependencies + architecture context.
 Output: Security Report (save as docs/SECURITY_AUDIT.md) + fix tasks if critical.
 ```
 
-#### Рабочий пример workflow `/security-audit.md`
+## Рабочий пример workflow `/security-audit.md`
 
-Поместите в `.agent/workflows/` как markdown. Он может быть самостоятельным или nested.
+Нужно поместить в `.agent/workflows/` как markdown. Он может быть самостоятельным или nested.
 
 ```markdown
 # Workflow: Security Audit
@@ -70,9 +70,9 @@ Run after implementation (and optionally after VDD) for critical projects.
 **Completion:** Security-hardened code ready.
 ```
 
-#### Как встроить в текущий процесс
+## Как встроить в текущий процесс
 
-1. **Nested в существующих workflows** (как в вашем примере `/full-robust`):
+1. **Nested в существующих workflows** (на примере `/full-robust`):
    
    ```markdown
    # Workflow: Full Robust Development
@@ -92,6 +92,15 @@ Run after implementation (and optionally after VDD) for critical projects.
   ```
 3. **Опциональность**:
 - Сделайте audit conditional: “If project involves auth/data/sensitive info — run security audit”.
-- Для лёгких задач — пропускайте.
+- Для лёгких задач — пропускать.
 
-Этот подход идеально впишется: security становится ещё одной “вариацией” (как VDD), повышая robustness для production-кода. Если добавите роль и workflow — фреймворк станет универсальным для enterprise-level agentic dev!
+## Обновление документации по результатам доработок задачи
+
+1. readme, readme.ru
+2. workflows.md
+3. ARCHITECTURE.md
+4. .gemini/GEMINI.md
+5. CHANGELOG.md в разделе версии 2.1
+
+# Заключение
+Этот подход идеально впишется: security становится ещё одной “вариацией” (как VDD), повышая robustness для production-кода. Если добавить роль и workflow — фреймворк станет универсальным для enterprise-level agentic dev!

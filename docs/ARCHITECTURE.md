@@ -14,6 +14,7 @@ System/
 │   ├── 04_architect_prompt.md   # System design
 │   ├── 06_agent_planner.md      # Planning & Task breakdown
 │   ├── 08_agent_developer.md    # Code implementation
+│   ├── 10_security_auditor.md   # Security Vulnerability Assessment
 │   └── ...
 └── Agents_ru/               # Legacy/Backup System Prompts (Russian)
     └── ... (mirrors Agents/)
@@ -25,6 +26,7 @@ System/
 3. **Architect** (Agent 04) validates/updates Architecture.
 4. **Planner** (Agent 06) creates a Task Plan.
 5. **Developer** (Agent 08) executes the plan using Stub-First methodology.
+6. **Security Auditor** (Agent 10) performs vulnerability analysis (optional/workflow-dependent).
 
 Workflows can be **nested**: A workflow can call another workflow (e.g., VDD invokes Base Stub-First), allowing for composable and reusable process definitions.
 

@@ -1,56 +1,50 @@
 ## 0. Meta Information
-- **Task ID:** 006
-- **Slug:** nested-workflows
+- **Task ID:** 007
+- **Slug:** security-audit
 
 ## 1. General Description
-The goal is to implement support for "nested workflows" in the Google Antigravity system. This involves creating a set of modular workflow definitions in `.agent/workflows/` that can reference each other (e.g., a "VVD Enhanced" workflow calling a "Base Stub-First" workflow). This enhances scalability, reduces duplication, and makes the system more composable. We also need to update the system prompt (`.gemini/GEMINI.md`) and documentation (`README.md`, `docs/WORKFLOWS.md`) to expose these new capabilities.
+The goal is to implement a dedicated **Security Audit** workflow and agent role within the Antigravity system. This involves creating a specialized agent (`System/Agents/10_security_auditor.md`) focused on identifying vulnerabilities (OWASP Top 10, secrets, dependencies) and a modular workflow (`.agent/workflows/security-audit.md`) that executes this audit. This new workflow should be capable of being run independently or nested within other workflows (e.g., `/full-robust`). Documentation and system prompts must be updated to reflect these new capabilities.
 
 ## 2. List of Use Cases
 
-### UC-01: Execute Base Stub-First Workflow
-**Actors:** User, Orchestrator
-**Preconditions:** User initiates the workflow via specific slash command or instruction.
+### UC-01: Execute Security Audit Workflow
+**Actors:** User, Orchestrator, Security Auditor
+**Preconditions:** Codebase is in a state ready for audit (implementation complete).
 **Main Scenario:**
-1. Orchestrator receives request to start `/base-stub-first`.
-2. Orchestrator executes steps sequentially: Analyst -> Review -> Architect -> Review -> Planner -> Review -> Development Loop.
-**Postconditions:** Feature implemented using Stub-First and TDD approach.
+1. User or Orchestrator triggers `/security-audit`.
+2. System gathers context (ARCHITECTURE, modified files, dependencies).
+3. **Security Auditor** agent analyzes code for vulnerabilities (OWASP, secrets, etc.).
+4. Security Auditor produces a structured report (`docs/SECURITY_AUDIT.md`).
+5. (Optional) If critical issues are found, fix tasks are generated.
+**Postconditions:** Verification report exists in `docs/SECURITY_AUDIT.md`.
 
-### UC-02: Execute VDD Adversarial Refinement
-**Actors:** User, Orchestrator (Adversary Role)
-**Preconditions:** Core feature implementation is complete.
+### UC-02: Nested Execution in Full Robust Workflow
+**Actors:** Orchestrator
+**Preconditions:** `/full-robust` workflow is executed.
 **Main Scenario:**
-1. Orchestrator activates "Sarcasmotron" (Adversary).
-2. Adversary reviews code/tests and provides critique.
-3. If issues found, Developer fixes and Reviewer checks.
-4. Cycle repeats until "zero-slop" achieved.
-**Postconditions:** Code robust against adversarial critique.
+1. Orchestrator executes standard robust steps (VDD, etc.).
+2. Orchestrator calls `/security-audit` as a nested workflow.
+3. Security phase completes before final success.
+**Postconditions:** Project is audited as part of the full robust pipeline.
 
-### UC-03: Execute VDD Enhanced Workflow (Nested)
-**Actors:** User, Orchestrator
+### UC-03: Security Auditor Role Definition
+**Actors:** System
 **Preconditions:** None.
 **Main Scenario:**
-1. Orchestrator calls `/base-stub-first`.
-2. Upon completion of base workflow, Orchestrator calls `/vdd-adversarial`.
-**Postconditions:** Feature implemented and hardened via VDD.
-
-### UC-04: Execute Full Robust Workflow (Nested)
-**Actors:** User, Orchestrator
-**Preconditions:** None.
-**Main Scenario:**
-1. Orchestrator calls `/vdd-enhanced`.
-2. (Optional/Future) Orchestrator calls `/security-audit`.
-3. Orchestrator updates final documentation.
-**Postconditions:** Maximum reliability achieved.
+1. `System/Agents/10_security_auditor.md` is loaded as the instruction set.
+2. Agent follows "Core Principles" (OWASP, static analysis mindset).
+3. Agent outputs strictly formatted security reports.
+**Postconditions:** Agent behaves as a specialized security expert.
 
 ## 3. Non-functional Requirements
-- **Composability:** Workflows must be modular and callable by name.
-- **Integration:** Must work seamlessly with the existing `task_boundary` and tool usage patterns.
-- **Documentation:** All new workflows must be documented in `docs/WORKFLOWS.md` and `README.md`.
+- **Modularity:** The security workflow must be decoupled and reusable.
+- **Standards:** Audit should align with generic OWASP Top 10 principles where applicable.
+- **Integration:** Seamless experience when calling via slash commands.
 
 ## 4. Constraints and Assumptions
-- Assumes Antigravity framework supports parsing "Call /workflow-name".
-- Assumes `.gemini/GEMINI.md` is the writable integration point for system prompts.
-- Assumes `.agent/workflows` is the correct location for workflow files.
+- New agent role will be `System/Agents/10_security_auditor.md`.
+- Workflow file will be `.agent/workflows/security-audit.md`.
+- "Manual" tools (grep, find) will be used by the agent to simulate static analysis if external binary tools (bandit, npm audit) are not available/reliable in the env.
 
 ## 5. Open Questions
 - None.

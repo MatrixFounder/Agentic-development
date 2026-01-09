@@ -33,6 +33,9 @@
   * `/vdd-adversarial`: Isolated adversarial loop.
   * `/vdd-enhanced`: Nested combination of Stub-First + VDD.
   * `/full-robust`: Full pipeline including future Security Audit steps.
+  * `/security-audit`: Standalone security vulnerability assessment workflow.
+* **New Roles**:
+  * **10_security_auditor**: Specialized agent for OWASP/Security scanning.
 * **Documentation**: Updated `WORKFLOWS.md`, `README.md`, and `GEMINI.md` to reflect these changes.
 
 ---

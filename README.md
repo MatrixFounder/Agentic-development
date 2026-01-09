@@ -32,6 +32,20 @@ If you need **Russian versions** of the prompts:
 The file `00_agent_development.md` contains **fundamental principles** (Meta-System Prompt).
 It **MUST** be added to the context for all other agents (01-09).
 
+### 🤖 The Agent Team (Roles)
+
+| Role | File | Responsibility |
+|------|------|----------------|
+| **Orchestrator** | `01_orchestrator.md` | Project Manager. Dispatches tasks, manages the pipeline. |
+| **Analyst** | `02_analyst_prompt.md` | Requirements elicitation, TZ creation. |
+| **TZ Reviewer** | `03_tz_reviewer_prompt.md` | Quality control for Technical Specifications. |
+| **Architect** | `04_architect_prompt.md` | System design, database schema, API definition. |
+| **Arch Reviewer** | `05_architecture_reviewer_prompt.md` | Validates verification of architectural decisions. |
+| **Planner** | `06_agent_planner.md` | Breaks down implementation into atomic steps (Stub-First). |
+| **Plan Reviewer** | `07_agent_plan_reviewer.md` | Ensures the plan is logical and testable. |
+| **Developer** | `08_agent_developer.md` | Writes code (Stubs -> Tests -> Implementation). |
+| **Code Reviewer** | `09_agent_code_reviewer.md` | Final code quality check. |
+
 ### 📊 How the System Prompt is Loaded
 
 | Tool | System Prompt | Loading Method |

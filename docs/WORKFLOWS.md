@@ -24,9 +24,12 @@ This document serves as the **Single Source of Truth** for all automation workfl
 
 ## 🛡 Safety & Verification
 
-All workflows in this version (v2.1.1+) include **Mandatory Verification Loops** and **Safety Limits**:
+All **Standard** automation workflows in this version (v2.1.1+) include **Mandatory Verification Loops** and **Safety Limits**:
 1. **Verification**: Every artifact (TZ, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
 2. **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention. This prevents infinite loops.
+
+> [!NOTE]
+> **VDD Exception**: Workflows starting with `vdd-*` (e.g., `vdd-01`, `vdd-enhanced`) and `full-robust` **DO NOT** have iteration limits. They are designed for "High Integrity" and will loop indefinitely until the Reviewer (Sarcasmotron) is fully satisfied or reaches "Hallucination Exit".
 
 ---
 

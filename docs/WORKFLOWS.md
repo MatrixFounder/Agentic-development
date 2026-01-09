@@ -1,83 +1,78 @@
-# Workspace Workflows & VDD Method
+# Antigravity Workflows Manual
 
-This project supports multiple development "variants" via workspace workflows.
+This document serves as the **Single Source of Truth** for all automation workflows in the Antigravity system. Workflows are defined in `.agent/workflows/` and can be executed by the Orchestrator to automate complex development processes.
 
-## Workflow Registry
+## 🚀 Workflow Registry
 
-| Variant | Prefix | Description | Use Case |
+| Variant | Workflow Name | Description | Command to Run |
 | :--- | :--- | :--- | :--- |
-| **Standard** | `(01-04)` | Stub-First Agentic Development | General features, MVPs, Prototypes |
-| **VDD** | `vdd-` | Verification-Driven Development (Adversarial) | Mission-critical components, complex logic, security-sensitive code |
+| **Standard** | **Start Feature** | Begins a new feature cycle: Analysis, TZ creation, Architecture review. | `Start feature [Name]` / `run 01-start-feature` |
+| **Standard** | **Plan Implementation** | Generates a detailed implementation plan and task breakdown (Stub-First). | `Plan implementation` / `run 02-plan-implementation` |
+| **Standard** | **Develop Task** | Executes a single development task from the plan. | `Develop task [ID]` / `run 03-develop-task` |
+| **Standard** | **Update Docs** | Updates project documentation (README, Architecture, etc.). | `Update docs` / `run 04-update-docs` |
+| **VDD** | **VDD Start Feature** | Starts a feature in High-Integrity VDD mode (Chainlink Decomposition). | `Start VDD feature [Name]` / `run vdd-01-start-feature` |
+| **VDD** | **VDD Plan** | Atomic breakdown of issues into verifiable "Beads". | `Plan VDD` / `run vdd-02-plan` |
+| **VDD** | **VDD Develop** | Runs the **Adversarial Loop** (Sarcasmotron) to implement code with zero slop. | `Develop VDD task` / `run vdd-03-develop` |
+| **Nested** | **Base Stub-First** | The core Stub-First pipeline (can be called by other workflows). | `run base-stub-first` |
+| **Nested** | **VDD Adversarial** | Isolated Adversarial Refinement Loop. | `run vdd-adversarial` |
+| **Nested** | **VDD Enhanced** | Combines Stub-First structure with VDD verification (`Base` → `Adversarial`). | `run vdd-enhanced` |
+| **Robust** | **Full Robust** | The Ultimate Pipeline: `VDD Enhanced` + `Security Audit`. | `run full-robust` |
+| **Audit** | **Security Audit** | Standalone security check using the Security Auditor agent. | `Run security audit` / `run security-audit` |
 
-## Usage
-To trigger a workflow, simply use the slash command or ask the agent to run the specific file.
+---
 
-- **Standard**: "Start feature X" -> Agent runs `01-start-feature.md`
-- **VDD**: "Start feature X in VDD mode" -> Agent runs `vdd-01-start-feature.md`
+## 📖 Detailed Guides
 
-## Workflow File Naming Schema
-New workflows must follow this schema to keep the registry clean:
-`[variant]-[stage]-[action].md`
+### 1. Standard Workflow (Stub-First)
+*Best for: MVPs, Prototypes, Standard Features*
 
-- **variant**: `std` (implicit/omitted for backward compat), `vdd`, `bdd`, etc.
-- **stage**: `01` (Init), `02` (Plan), `03` (Dev), `04` (Docs/Misc).
-- **action**: Kebab-case description (e.g., `start-feature`, `develop`).
-
-## Variations Details
-
-### 1. Standard (Stub-First)
-The default agentic workflow focusing on speed and structure.
-- `01-start-feature`: Analysis & Architecture
-- `02-plan-implementation`: Planning
-- `03-develop-task`: Implementation Loop
-- `04-update-docs`: Documentation
+The default "happy path" for development. Focuses on speed and structural integrity.
+1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TZ).
+2. **Planning (`02`)**: The Agent creates a `plan.md` and detailed task files (`docs/tasks/`).
+3. **Development (`03`)**: The Agent implements tasks one by one, prioritizing stubs before logic.
 
 ### 2. VDD (Verification-Driven Development)
-A high-integrity mode using "Iterative Adversarial Refinement".
+*Best for: Mission-Critical Systems, Complex Logic, Security Components*
 
-**Source**: [Verification-Driven Development (VDD) via Iterative Adversarial Refinement](https://gist.github.com/dollspace-gay/45c95ebfb5a3a3bae84d8bebd662cc25#file-method-md)
-
-#### Core Concept
-VDD is designed to eliminate "code slop" (lazy patterns, hidden technical debt, hallucinations) through a **Generative Adversarial Loop**:
-1. **Builder**: Writes the code and tests.
-2. **Sarcasmotron (Adversary)**: A hostile AI persona that critiques the code with zero tolerance.
-3. **Loop**: The process only ends when the code is so robust that the Adversary starts "hallucinating" flaws because it can't find real ones (The "Hallucination Exit").
-
-#### VDD vs. TDD (Comparison)
-| Feature | TDD (Test-Driven) | VDD (Verification-Driven) |
-| :--- | :--- | :--- |
-| **Primary Goal** | Functional Correctness | Robustness & "Zero-Slop" |
-| **Driver** | Unit Tests (Red-Green-Refactor) | Adversarial Critique (The "Roast") |
-| **Mindset** | "Does it work as expected?" | "Can I break it? Is it lazy?" |
-| **Exit Condition** | All tests pass | Adversary runs out of valid critiques |
-| **Best For** | Domain logic, Algorithms | Security, High-Reliability Systems |
-
-#### Workflows
-- **[vdd-01-start-feature](.agent/workflows/vdd-01-start-feature.md)**
-    - *Focus*: Chainlink Decomposition (Epics -> Issues).
-- **[vdd-02-plan](.agent/workflows/vdd-02-plan.md)**
-    - *Focus*: Atomic Breakdown (Issues -> Beads). A Bead is a unit verifiable by a single test.
-- **[vdd-03-develop](.agent/workflows/vdd-03-develop.md)**
-    - *Focus*: **The Adversarial Loop** (Implement -> Verify -> Sarcasmotron -> Refine).
+A high-integrity mode based on **Adversarial Refinement**.
+- **Philosophy**: "It's not done until the Adversary can't roast it."
+- **Mechanism**: A secondary AI persona ("Sarcasmotron") aggressively critiques the code and tests. The developer must fix all issues until the Adversary is satisfied (the "Hallucination Exit").
+- **Workflow**:
+    - `vdd-01`: Breaks down Epics into Issues (Chainlink).
+    - `vdd-02`: Breaks down Issues into Beads (Atomic Verifiable Units).
+    - `vdd-03`: The Implementation Loop with the Adversary.
 
 ### 3. Nested & Advanced Workflows
-These workflows leverage the **Nesting** capability (one workflow calling another) to create complex, robust pipelines without duplication.
+*Best for: Power Users, Architects*
 
-- **[base-stub-first](.agent/workflows/base-stub-first.md)**
-    - The foundational Stub-First pipeline. Callable by other workflows.
-- **[vdd-adversarial](.agent/workflows/vdd-adversarial.md)**
-    - The isolated Adversarial Refinement Loop.
-- **[vdd-enhanced](.agent/workflows/vdd-enhanced.md)**
-    - **Nested**: Calls `/base-stub-first` → `/vdd-adversarial`.
-- **[full-robust](.agent/workflows/full-robust.md)**
-    - **Nested**: Calls `/vdd-enhanced` → Security Audit.
-- **[security-audit](.agent/workflows/security-audit.md)**
-    - **Specialized**: Standalone security audit phase. Checks for OWASP vulnerabilities.
+These workflows utilize the **Nesting** capability, where one workflow calls another (`Call /workflow-name`).
 
-## Extension Guide
-To add a new variant (e.g., `tdd`):
-1. **Define the Philosophy**: What makes it different? (e.g., "Write tests BEFORE code").
-2. **Create Workflows**:
-    - `tdd-02-plan.md`: Plan the tests.
-    - `tdd-03-develop.md`: Red-Green-Refactor loop.
-3. **Update Registry**: Add to this file.
+- **`/vdd-enhanced`**:
+    - **Why?** You want the structure of "Stub-First" but the quality assurance of "VDD".
+    - **How?** It runs the standard planning phase, then switches to the Adversarial Loop for implementation.
+
+- **`/full-robust`**:
+    - **Why?** You need maximum confidence for production deployment.
+    - **How?** It runs `vdd-enhanced` and follows it up with a dedicated **Security Audit**.
+
+### 4. specialized Workflows
+
+- **`/security-audit`**:
+    - **Agent**: `System/Agents/10_security_auditor.md`
+    - **Action**: Scans the codebase for OWASP Top 10 vulnerabilities, secret leaks, and hazardous dependencies.
+    - **Output**: `docs/SECURITY_AUDIT.md`
+
+---
+
+## 🛠 Extension Guide
+
+To add a new workflow:
+1. Create a `.md` file in `.agent/workflows/`.
+2. Use the standard header:
+   ```markdown
+   ---
+   description: Your workflow description
+   ---
+   ```
+3. Define the steps (Agent prompts, shell commands, or nested workflow calls).
+4. **Update this file** to include it in the Registry.

@@ -53,23 +53,23 @@ VDD is designed to eliminate "code slop" (lazy patterns, hidden technical debt, 
 | **Best For** | Domain logic, Algorithms | Security, High-Reliability Systems |
 
 #### Workflows
-- **[vdd-01-start-feature](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-01-start-feature.md)**
+- **[vdd-01-start-feature](.agent/workflows/vdd-01-start-feature.md)**
     - *Focus*: Chainlink Decomposition (Epics -> Issues).
-- **[vdd-02-plan](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-02-plan.md)**
+- **[vdd-02-plan](.agent/workflows/vdd-02-plan.md)**
     - *Focus*: Atomic Breakdown (Issues -> Beads). A Bead is a unit verifiable by a single test.
-- **[vdd-03-develop](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-03-develop.md)**
+- **[vdd-03-develop](.agent/workflows/vdd-03-develop.md)**
     - *Focus*: **The Adversarial Loop** (Implement -> Verify -> Sarcasmotron -> Refine).
 
 ### 3. Nested & Advanced Workflows
 These workflows leverage the **Nesting** capability (one workflow calling another) to create complex, robust pipelines without duplication.
 
-- **[base-stub-first](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/base-stub-first.md)**
+- **[base-stub-first](.agent/workflows/base-stub-first.md)**
     - The foundational Stub-First pipeline. Callable by other workflows.
-- **[vdd-adversarial](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-adversarial.md)**
+- **[vdd-adversarial](.agent/workflows/vdd-adversarial.md)**
     - The isolated Adversarial Refinement Loop.
-- **[vdd-enhanced](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/vdd-enhanced.md)**
+- **[vdd-enhanced](.agent/workflows/vdd-enhanced.md)**
     - **Nested**: Calls `/base-stub-first` → `/vdd-adversarial`.
-- **[full-robust](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/full-robust.md)**
+- **[full-robust](.agent/workflows/full-robust.md)**
     - **Nested**: Calls `/vdd-enhanced` → Security Audit.
 
 ## Extension Guide

@@ -19,6 +19,10 @@ Before starting the standard pipeline, check if the user's request matches a wor
 
 1. **Analysis Phase**:
    - Read ` System/Agents/02_analyst_prompt.md`.
+   - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
+   - If `docs/TZ.md` exists and this is a new task, archive it to `docs/tasks/task-ID-slug.md` BEFORE proceeding.
+     - **Archiving Rule**: Read `docs/TZ.md`, find "Meta Information" (Task ID/Slug).
+     - If found, use that ID. If not, auto-generate.
    - Create/Update `docs/TZ.md` based on user task.
    - (Self-Correction): Check your own TZ against ` System/Agents/03_tz_reviewer_prompt.md`.
 

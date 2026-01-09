@@ -7,4 +7,10 @@ description: Develop a specific task
     - Create stubs/interfaces first.
     - Verify rendering/compilation.
     - Implement logic.
-4. Read `System/Agents/09_agent_code_reviewer.md` and self-review your code.
+4. Initiate Code Review.
+    - **Verification Loop**: Read `System/Agents/09_agent_code_reviewer.md`. 
+    - If the Reviewer requests changes:
+        - Update code/stubs.
+        - **Retry (Max 2 attempts)**: Repeat the review.
+        - If after 2 retries the review still fails: **STOP** and ask the user for help.
+    - If approved: Proceed or Finish.

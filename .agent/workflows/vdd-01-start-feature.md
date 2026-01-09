@@ -10,4 +10,10 @@ description: Start a new feature development cycle (VDD Mode - High Integrity)
     - Update `docs/TZ.md`.
     - **Constraint**: You MUST structure the requirements into **Epics** and **Issues**.
     - **Constraint**: Do not accept vague requirements. If ambiguous, ask the user.
+    - **Verification Loop**: Read `System/Agents/03_tz_reviewer_prompt.md`.
+    - If the Reviewer requests changes: Update `docs/TZ.md` and repeat the review.
+    - If approved: Proceed.
 4. **Architecture**: Read `System/Agents/04_architect_prompt.md` and update `docs/ARCHITECTURE.md`.
+    - **Verification Loop**: Read `System/Agents/05_architecture_reviewer_prompt.md`.
+    - If the Reviewer requests changes: Update `docs/ARCHITECTURE.md` and repeat the review.
+    - If approved: Proceed.

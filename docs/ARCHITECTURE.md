@@ -23,9 +23,13 @@ System/
 ## 3. Workflow Logic
 1. **Orchestrator** receives the user task.
 2. **Analyst** (Agent 02) creates a Technical Specification (TZ).
+    - *Verification:* **TZ Reviewer** (Agent 03) validates the TZ.
 3. **Architect** (Agent 04) validates/updates Architecture.
+    - *Verification:* **Architecture Reviewer** (Agent 05) checks the design.
 4. **Planner** (Agent 06) creates a Task Plan.
+    - *Verification:* **Plan Reviewer** (Agent 07) validates the plan.
 5. **Developer** (Agent 08) executes the plan using Stub-First methodology.
+    - *Verification:* **Code Reviewer** (Agent 09) checks the code (optional/workflow-dependent).
 6. **Security Auditor** (Agent 10) performs vulnerability analysis (optional/workflow-dependent).
 
 Workflows can be **nested**: A workflow can call another workflow (e.g., VDD invokes Base Stub-First), allowing for composable and reusable process definitions.

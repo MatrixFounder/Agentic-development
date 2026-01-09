@@ -24,6 +24,14 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v2.1.1 — Workflow Verification & Safety**
+
+#### **Added**
+* **Mandatory Verification**: All core workflows (Standard & VDD) now include explicit verification loops (Analyst -> TZ Review, Architect -> Arch Review, etc.).
+* **Safety Limits**: Implemented a **Max 2 Retries** mechanism to prevent infinite Doer-Reviewer loops.
+
+---
+
 ### **v2.1.0 — Nested Workflows and Security Audit**
 
 #### **Added**
@@ -62,6 +70,14 @@ This is the first major public release of the **Agentic Development** framework.
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v2.1.1 — Верификация процессов и безопасность**
+
+#### **Добавлено**
+* **Обязательная верификация**: Все основные сценарии (Standard и VDD) теперь включают явные циклы проверки (Analyst -> TZ Review и т.д.).
+* **Лимиты безопасности**: Внедрен механизм **Max 2 Retries** для предотвращения бесконечных циклов "Исполнитель-Ревьюер".
+
+---
 
 ### **v2.1.0 — Вложенные сценарии (Nested Workflows) и аудит безопасности (Security Audit)**
 

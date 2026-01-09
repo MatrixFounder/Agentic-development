@@ -1,37 +1,47 @@
 ## 0. Meta Information
-- **Task ID:** 008
-- **Slug:** workflow-manual
+- **Task ID:** 009
+- **Slug:** verification-workflow
 
 ## 1. General Description
-The goal is to improve `docs/WORKFLOWS.md` to make it a comprehensive manual for users. This involves creating a detailed, visually appealing table of all available workflow variants, including descriptions and usage examples. The document should serve as a single point of truth for automation workflows.
+The goal is to improve the development process quality by introducing mandatory verification steps (Review) and feedback loops into the agentic workflows. We need to modify existing workflow files to ensure that every "Doer" (Analyst, Architect, Planner) is followed by a "Reviewer" (TZ Reviewer, Architecture Reviewer, Plan Reviewer).
 
 ## 2. List of Use Cases
 
-### UC-01: View available workflows
-**Actors:** User
-**Preconditions:** User opens `docs/WORKFLOWS.md`
+### UC-01: Analyst Workflow with Verification
+**Actors:** User, Analyst, TZ Reviewer
+**Preconditions:** User initiates a new feature or task.
 **Main Scenario:**
-1. User sees a clear summary table of capabilities.
-2. User can quickly find the right workflow for their task (Standard vs VDD vs Nested).
-3. User sees copy-pasteable examples for running workflows.
-**Postconditions:** User understands how to start work.
+1. **Analyst** creates/updates `docs/TZ.md`.
+2. **TZ Reviewer** checks the TZ.
+3. If issues found -> Analyst fixes -> Go to step 2.
+4. If approved -> Workflow proceeds.
 
-### UC-02: Add new workflow
-**Actors:** Developer/Architect
-**Preconditions:** New workflow file created.
+### UC-02: Architect Workflow with Verification
+**Actors:** Architect, Architecture Reviewer
+**Preconditions:** TZ is approved.
 **Main Scenario:**
-1. Developer adds new entry to the Registry table.
-2. Developer follows the defined schema.
-**Postconditions:** `docs/WORKFLOWS.md` remains up to date.
+1. **Architect** updates `docs/ARCHITECTURE.md`.
+2. **Architecture Reviewer** checks the architecture.
+3. If issues found -> Architect fixes -> Go to step 2.
+4. If approved -> Workflow proceeds.
+
+### UC-03: Planner Workflow with Verification
+**Actors:** Planner, Plan Reviewer
+**Preconditions:** Architecture is approved.
+**Main Scenario:**
+1. **Planner** creates `docs/PLAN.md` and task breakdowns.
+2. **Plan Reviewer** checks the plan.
+3. If issues found -> Planner fixes -> Go to step 2.
+4. If approved -> Workflow proceeds.
 
 ## 3. Non-functional Requirements
-- **Readability:** High, with clear formatting and examples.
-- **Completeness:** Must cover all existing workflows found in `.agent/workflows`.
-- **Maintainability:** Easy to update when new workflows are added.
+- **Consistency:** All specified workflows must follow the same Doer-Reviewer-Loop pattern.
+- **Robustness:** The loop must ensure quality before moving forward.
 
 ## 4. Constraints and Assumptions
-- Modifications are limited to `docs/WORKFLOWS.md`.
-- No new workflows are created, only documentation is improved.
+- We are modifying markdown workflow files in `.agent/workflows`.
+- The agents (Analyst, etc.) are already defined in `System/Agents`.
+- We assume the Orchestrator/User will execute these steps manually or via an interpreter that understands these prompts.
 
 ## 5. Open Questions
 - None.

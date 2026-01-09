@@ -19,7 +19,17 @@ This document serves as the **Single Source of Truth** for all automation workfl
 | **Robust** | **Full Robust** | The Ultimate Pipeline: `VDD Enhanced` + `Security Audit`. | `run full-robust` |
 | **Audit** | **Security Audit** | Standalone security check using the Security Auditor agent. | `Run security audit` / `run security-audit` |
 
+
 ---
+
+## 🛡 Safety & Verification
+
+All workflows in this version (v2.1.1+) include **Mandatory Verification Loops** and **Safety Limits**:
+1. **Verification**: Every artifact (TZ, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
+2. **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention. This prevents infinite loops.
+
+---
+
 
 ## 📖 Detailed Guides
 
@@ -27,9 +37,9 @@ This document serves as the **Single Source of Truth** for all automation workfl
 *Best for: MVPs, Prototypes, Standard Features*
 
 The default "happy path" for development. Focuses on speed and structural integrity.
-1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TZ).
-2. **Planning (`02`)**: The Agent creates a `plan.md` and detailed task files (`docs/tasks/`).
-3. **Development (`03`)**: The Agent implements tasks one by one, prioritizing stubs before logic.
+1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TZ). **(+ Verification Loop)**
+2. **Planning (`02`)**: The Agent creates a `plan.md` and detailed task files (`docs/tasks/`). **(+ Verification Loop)**
+3. **Development (`03`)**: The Agent implements tasks one by one, prioritizing stubs before logic. **(+ Code Review Loop)**
 
 ### 2. VDD (Verification-Driven Development)
 *Best for: Mission-Critical Systems, Complex Logic, Security Components*

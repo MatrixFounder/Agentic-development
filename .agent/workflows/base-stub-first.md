@@ -8,15 +8,42 @@ Core pipeline with Stub-First and TDD. Used as foundation for others.
 
 **Steps:**
 
-1. Call /analyst-tz               # Technical Specification
-2. Call /tz-review
-3. Call /architect-design
-4. Call /architecture-review
-5. Call /planner-stub-first      # Enforce Stub → Impl pairs
-6. Call /plan-review
-7. For each task pair:
-   - Call /developer-stub
-   - Call /code-review-stub
-   - Call /developer-impl
-   - Call /code-review-final
-8. Final validation and commit preparation
+1. **Analyst Phase**:
+    - Call `/analyst-tz`.
+    - **Verification Loop**: Call `/tz-review`.
+    - If Rejection:
+        - Re-run `/analyst-tz` (revision mode).
+        - **Retry (Max 2 attempts)**: Repeat Review.
+        - If after 2 retries the review still fails: **STOP** and ask the user for help.
+
+2. **Architecture Phase**:
+    - Call `/architect-design`.
+    - **Verification Loop**: Call `/architecture-review`.
+    - If Rejection:
+        - Re-run `/architect-design` (revision mode).
+        - **Retry (Max 2 attempts)**: Repeat Review.
+        - If after 2 retries the review still fails: **STOP** and ask the user for help.
+
+3. **Planning Phase**:
+    - Call `/planner-stub-first`.
+    - **Verification Loop**: Call `/plan-review`.
+    - If Rejection:
+        - Re-run `/planner-stub-first` (revision mode).
+        - **Retry (Max 2 attempts)**: Repeat Review.
+        - If after 2 retries the review still fails: **STOP** and ask the user for help.
+
+4. **Development Loop** (For each task pair):
+    - **Stubbing**:
+        - Call `/developer-stub`.
+        - Verify: Call `/code-review-stub`.
+        - If Issues:
+             - Fix -> Re-verify (Max 2 retries).
+             - If fails: Stop.
+    - **Implementation**:
+        - Call `/developer-impl`.
+        - Verify: Call `/code-review-final`.
+        - If Issues:
+             - Fix -> Re-verify (Max 2 retries).
+             - If fails: Stop.
+
+5. Final validation and commit preparation.

@@ -11,6 +11,8 @@ The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md
 - **TDD (Test-Driven Development)**: The "Stub-First" strategy ensures that tests are written and verified against stubs before actual implementation begins. [Read more](docs/TDD.md).
 - **VDD (Verification-Driven Development)**: A high-integrity mode where an adversarial agent proactively challenges the plan and code to eliminate hallucinations and logic errors before they are committed. [Read more](docs/VDD.md).
 
+![Framework architecture](/Attachments/Framework_architecture.png)
+
 ## 📁 Installation
 **IMPORTANT:** The entire set of files (prompts 00-09, README) must be located in a separate directory in the root of your project:
 `/System/Agents`

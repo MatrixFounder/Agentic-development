@@ -24,6 +24,13 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v2.1.2 — Fix .AGENTS.md Generation Bug**
+
+#### **Fixed**
+* **Prompt Conflict**: Resolved a conflict where the Developer agent would skip creating `.AGENTS.md` files because the Planner didn't explicitly task them and the "no extra files" rule completely forbade them.
+* **Planner Agent**: Now mandates `.AGENTS.md` creation for new directories.
+* **Developer Agent**: Explicitly allowed to create `.AGENTS.md` as an exception, even if not listed in the task.
+
 ### **v2.1.1 — Workflow Verification & Safety**
 
 #### **Added**
@@ -70,6 +77,13 @@ This is the first major public release of the **Agentic Development** framework.
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v2.1.2 — Исправление генерации .AGENTS.md**
+
+#### **Исправлено**
+* **Конфликт промптов**: Устранен конфликт, из-за которого Developer пропускал создание `.AGENTS.md`, так как Planner не ставил это в задачу, а правило "без лишних файлов" запрещало самодеятельность.
+* **Planner Agent**: Теперь явно требует создания `.AGENTS.md` для новых папок.
+* **Developer Agent**: Получил явное разрешение (исключение) на создание `.AGENTS.md`, даже если этого нет в task-файле.
 
 ### **v2.1.1 — Верификация процессов и безопасность**
 

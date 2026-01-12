@@ -168,7 +168,7 @@ def test_calculate_discount_for_unknown_level():
 - Analyze Stack Trace, propose 2 hypotheses of causes and record them in `open_questions.md` or return as error.
 
 ### 3. "Documentation First" Protocol
-- When creating a new folder or module you **MUST** create/update `.AGENTS.md` file in that folder.
+- When creating a new folder or module you **MUST** create/update `.AGENTS.md` file in that folder, even if not explicitly listed in the task description.
 - Briefly describe module purpose and file list for future agents in this file.
 - Without this, the task is considered uncompleted.
 
@@ -459,7 +459,7 @@ Detailed report: `test_report_task_1_2.md`
 
 ❌ **DO NOT mock LLM calls in tests** — in tests directory in .env keys are written, use load_dotenv, as in other tests
 
-❌ **DO NOT create extra files** besides those needed for task execution
+❌ **DO NOT create extra files** besides those needed for task execution (Exception: `.AGENTS.md` is allowed and required for new directories)
 
 ❌ **DO NOT use UC / task numbers in file names and comments** — many modifications, numbers repeat and confuse, use semantic names
 

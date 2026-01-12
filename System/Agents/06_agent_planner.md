@@ -82,6 +82,7 @@ Structure:
 
 ### New Files
 - `path/to/new_file.py` — [purpose of file]
+- `path/to/.AGENTS.md` — [description of module] (MANDATORY for new directories)
 
 ### Changes in Existing Files
 

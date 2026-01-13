@@ -6,6 +6,14 @@ The Source of Truth for these agents is located in `System/Agents`.
 
 ## 2. Directory Structure
 ```text
+.agent/                      # Agentic Workflows & Rules
+├── workflows/               # Executable workflow definitions
+└── rules/                   # Specific agent rules
+docs/                        # Project Documentation (Source of Truth)
+├── tasks/                   # Archived Tasks (History)
+├── ARCHITECTURE.md          # This file
+├── WORKFLOWS.md             # User Manual for Workflows
+└── ...
 System/
 ├── Agents/                  # Primary System Prompts (English)
 │   ├── 00_agent_development.md  # Meta-prompt / Orchestrator guide
@@ -32,7 +40,7 @@ System/
     - *Verification:* **Code Reviewer** (Agent 09) checks the code (optional/workflow-dependent).
 6. **Security Auditor** (Agent 10) performs vulnerability analysis (optional/workflow-dependent).
 
-Workflows can be **nested**: A workflow can call another workflow (e.g., VDD invokes Base Stub-First), allowing for composable and reusable process definitions.
+Workflows can be **nested**: A workflow can call another workflow (e.g., VDD invokes Base Stub-First), allowing for composable and reusable process definitions. Workflow definitions are stored in `.agent/workflows`.
 
 ## 4. Key Principles
 - **Stub-First**: Always create stubs/interfaces before implementation.

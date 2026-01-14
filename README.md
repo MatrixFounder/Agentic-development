@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v2.1.3
+# Multi-Agent Software Development System v3.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
@@ -13,26 +13,42 @@ The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md
 
 ![Framework architecture](/Attachments/Framework_architecture.png)
 
-## 📁 Installation
-**IMPORTANT:** The entire set of files (prompts 00-09, README) must be located in a separate directory in the root of your project:
-`/System/Agents`
-This is necessary so that agents clearly separate the "rules of the game" from the "project code".
+## 📁 Installation & Setup
 
-### Language Support
+### 1. Common Prerequisites
+Regardless of your tool, you need the **Agent Personas** in your project root:
+- Copy `/System/Agents` folder to your project root.
 
-| Language | Path | Status |
-|----------|------|--------|
-| **English** | `/System/Agents` | **Default** (Active) |
-| **Russian** | `/System/Agents_ru` | Backup / Legacy |
+### 2. Choose Your AI Assistant
 
-By default, the system uses English prompts in `/System/Agents`.
-If you need **Russian versions** of the prompts:
-1. They are saved in the `/System/Agents_ru` folder.
-2. You can copy them to `/System/Agents`, replacing the English versions, or configure the paths in your AI tool.
+#### 🔵 Option A: Cursor IDE
+To configure Cursor for this workflow:
+1.  **Context Rules**: Copy `.cursorrules` to your project root.
+2.  **Skills**: Copy the contents of `.agent/skills/` to `.cursor/skills/` (or `.cursor/rules/` depending on your version).
+    *   *Note:* Cursor will index these files to understand agent capabilities.
+
+#### 🟣 Option B: Antigravity (Native)
+Antigravity supports this architecture out-of-the-box:
+1.  **Configuration**: Ensure `.gemini/GEMINI.md` exists (it acts as the system prompt).
+2.  **Skills**: Ensure `.agent/skills/` directory exists. Antigravity automatically loads skills from here.
+3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
+
+---
+
+## 🏗 Directory Structure
+```text
+project-root/
+├── .cursorrules                   # [Cursor] Context & Rules
+├── .cursor/skills/                # [Cursor] Skills Library
+├── .gemini/GEMINI.md              # [Antigravity] System Config
+├── .agent/skills/                 # [Antigravity] Skills Library
+├── System/Agents/                 # [Common] Agent Personas (00-10)
+└── src/                           # Your Source Code
+```
 
 ### 🔑 System Prompt (00_agent_development.md)
 The file `00_agent_development.md` contains **fundamental principles** (Meta-System Prompt).
-It **MUST** be added to the context for all other agents (01-09).
+It **MUST** be added to the context for all other agents (01-10).
 
 ### 🤖 The Agent Team (Roles)
 
@@ -56,24 +72,7 @@ It **MUST** be added to the context for all other agents (01-09).
 | **Cursor IDE** | `00` + role (01-09) | Manually or via `.cursorrules` |
 | **Antigravity** | `.gemini/GEMINI.md` (includes global principles) | **Automatically (Native)**. Manual concatenation of `00` is not required. |
 
-Example of assembling a prompt for LLM (if you are assembling manually for Cursor):
-`System Prompt = Content(00_agent_development.md) + Content(01_orchestrator.md)`
 
-## 🔌 Integration: Cursor vs Antigravity
-
-The project uses two key configuration files for different AI tools. It is important to understand their purpose:
-
-### 1. Cursor IDE (`.cursorrules`)
-The `.cursorrules` file in the project root is intended **exclusively for Cursor**.
-- **Purpose:** Automatic context setup for Chat (Cmd+L) and Composer (Cmd+I).
-- **Function:** Sets the Orchestrator role, defines code style rules, and reminds about the agent structure.
-- **Usage:** Works automatically when opening the project in Cursor.
-
-### 2. Antigravity (`.gemini/GEMINI.md`)
-The `.gemini/GEMINI.md` file is intended **for the Antigravity agent**.
-- **Purpose:** System prompt and long-term memory for the Antigravity agent.
-- **Function:** Provides the agent with project context that might have previously been in `agent_prompt.md`. All global instructions have been moved here.
-- **Usage:** Antigravity automatically picks up this file. **No need** to manually feed it into the chat — this is the agent's native config.
 
 ---
 
@@ -249,9 +248,12 @@ TASK: Organize development of a new "Loyalty System" module.
 INPUT:
 - Users should receive 1 point for every 100 rubles.
 - It should be possible to pay with points up to 30% of the order.
+ACTIVE SKILLS:
+- skill-core-principles
+- skill-planning-decision-tree
 ACTIONS:
 - Run the full pipeline (Analysis -> Architecture -> Plan -> Code).
-- Ensure Stub-First strategy.
+- Ensure Stub-First strategy (skill-tdd-stub-first).
 ```
 
 ### Template 2: Refactoring
@@ -262,6 +264,8 @@ CONTEXT:
 - Current code: `src/notifications`.
 - Problem: Synchronous sending.
 - Goal: Move to Celery.
+ACTIVE SKILLS:
+- skill-architecture-design
 ACTIONS:
 - Guide through all stages (Analyst -> Architect -> Plan...).
 ```
@@ -272,6 +276,9 @@ You are an Orchestrator.
 TASK: Fix the "Double Charigng" error.
 INPUT:
 - Log file: error_logs.txt.
+ACTIVE SKILLS:
+- skill-tdd-stub-first
+- skill-vdd-adversarial
 ACTIONS:
 - Analyst must create a scenario (E2E test) to reproduce.
 - Fix via Stub-First (test first, then fix).

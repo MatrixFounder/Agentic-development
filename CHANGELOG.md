@@ -24,6 +24,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.0.0 — Skills System & Global Localization**
+
+#### **Major Changes**
+* **Skills System**: Introduced a modular `.agent/skills/` library. Agents now dynamically load capabilities (Skills) instead of having monolithic prompts. This reduces prompt size and increases maintainability.
+* **Localization Architecture**: New `Translations/` directory structure. Full support for switching between English and Russian contexts by swapping agent/skill files.
+* **Documentation**:
+    * Added `docs/SKILLS.md`: Comprehensive catalog of all available skills.
+    * Updated `README.md`, `README.ru.md`, `docs/ARCHITECTURE.md` to reflect the new structure.
+
+#### **Removed**
+* **Legacy directories**: Removed `/System/Agents_ru` (replaced by `Translations/RU`).
+
+---
+
 ### **v2.1.3 — Documentation & Workflow Consistency**
 
 #### **Fixed**
@@ -83,6 +97,20 @@ This is the first major public release of the **Agentic Development** framework.
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.0.0 — Система Навыков и Глобальная Локализация**
+
+#### **Ключевые изменения**
+* **Система Навыков**: Внедрена модульная библиотека `.agent/skills/`. Агенты теперь динамически загружают "навыки" вместо использования монолитных промптов.
+* **Архитектура Локализации**: Новая структура директории `Translations/`. Полная поддержка переключения между Английским и Русским контекстами.
+* **Документация**:
+    * Добавлен `docs/SKILLS.md`: Полный каталог доступных навыков.
+    * Обновлены `README.md`, `README.ru.md`, `docs/ARCHITECTURE.md`.
+
+#### **Удалено**
+* **Legacy**: Удалена директория `/System/Agents_ru` (заменена на `Translations/RU`).
+
+---
 
 ### **v2.1.3 — Документация и согласованность сценариев**
 

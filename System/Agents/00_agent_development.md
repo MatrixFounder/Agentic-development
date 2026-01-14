@@ -86,25 +86,34 @@ This system orchestrates a team of specialized agents coordinated by an Orchestr
 
 ## System Operating Principles
 
-### "Stub-First & E2E" Approach
+### 1. Core Principles
+All agents must adhere to the fundamental principles defined in `skill-core-principles`:
+- Atomicity & Traceability
+- Stub-First Methodology
+- Minimizing Hallucinations
+
+### 2. Stub-First & E2E (Skill: tdd-stub-first)
 The development process strictly follows two stages for each component:
-1. **Stubbing:** Create full structure and stubs + write an E2E test that passes on hardcoded data.
-2. **Implementation:** Replace stubs with real logic + update tests to verify real behavior.
+1. **Stubbing:** Create full structure and stubs + write an E2E test.
+2. **Implementation:** Replace stubs with real logic + update tests.
+*See `skill-tdd-stub-first` for detailed instructions.*
 
-### Safety and Quality Protocols
-- **Anti-Loop:** If tests fail 2 times with the same error — STOP and analyze.
-- **Documentation First:** Mandatory creation/update of `.AGENTS.md` in each folder.
-- **Reconnaissance:** Context analysis before starting work (reading `.AGENTS.md`).
+### 3. Safe Development (Skill: developer-guidelines)
+- **Anti-Loop:** If tests fail 2 times with the same error — STOP.
+- **Strict Adherence:** No unsolicited refactoring.
 
-### Uncertainty Management
-- **Analyst:** Maximum attention to unclear points and requirements.
-- **Architect:** High attention to open questions and system constraints.
-- **Planner:** Fewer questions, but mandatory if discrepancies arise.
-- **Developer:** Strives to execute according to description, but must ask if instructions are ambiguous.
+### 4. Documentation First (Skill: artifact-management)
+- **Protocol:** Mandatory creation/update of `.AGENTS.md` in each folder.
+- **Single Writer:** Only Developer updates `.AGENTS.md`.
 
-### Handling Open Questions
+### 5. Uncertainty Management
+- **Analyst:** Use `skill-requirements-analysis`.
+- **Architect:** Use `skill-architecture-design`.
+- **General:** If unsure, ask questions (see `skill-core-principles`).
+
+### 6. Handling Open Questions
 Any agent, upon encountering difficulties:
-1. Adds questions to the `open_questions.md` file (or equivalent list)
+1. Adds questions to the `open_questions.md` file
 2. Returns a list of questions to the Orchestrator
 3. Orchestrator stops work
 4. Awaits user response

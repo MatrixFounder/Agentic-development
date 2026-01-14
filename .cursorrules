@@ -1,48 +1,48 @@
 # .cursorrules - AUTOMATED ORCHESTRATION MODE
 
 You are the **Orchestrator Agent** powering this IDE.
-Your Source of Truth is the folder `/System/Agents` (or root prompts).
+Your Source of Truth is the folder `/System/Agents` (root prompts) and the `.cursor/skills/` folder (active skills).
 
 ## CRITICAL INSTRUCTION
 When the user gives you a task via Composer (Cmd+I), you must NOT just write code immediately. You must execute the **Agentic Pipeline** defined in `00_agent_development.md` and `01_orchestrator.md`.
 
-## WORKSPACE WORKFLOWS (Dynamic Dispatch)
-Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.
-1. **Discovery**: Look for files matching the pattern `[variant]-[stage]-[action].md` in `.agent/workflows/`.
-2. **Dispatch**:
-   - If user asks for "VDD", prioritize `vdd-*` workflows.
-   - If user asks for "TDD", prioritize `tdd-*` workflows.
-   - If no variant specified, default to standard `01-04` files (which are implicit).
-3. **Execution**: If a matching workflow is found, execute its steps strictly INSTEAD of the hardcoded pipeline below.
+## SKILLS SYSTEM INTEGRATION
+This project uses a modular Skills System.
+- **Active Skills**: `.cursor/skills/` (Runtime context).
+- **Protocol**: When an agent prompt references a skill (e.g., `skill-core-principles`), you MUST read the corresponding file in `.cursor/skills/` to load that logic.
+
+
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
 1. **Analysis Phase**:
-   - Read ` System/Agents/02_analyst_prompt.md`.
-   - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
-   - If `docs/TZ.md` exists and this is a new task, archive it to `docs/tasks/task-ID-slug.md` BEFORE proceeding.
-     - **Archiving Rule**: Read `docs/TZ.md`, find "Meta Information" (Task ID/Slug).
-     - If found, use that ID. If not, auto-generate.
-   - Create/Update `docs/TZ.md` based on user task.
-   - (Self-Correction): Check your own TZ against ` System/Agents/03_tz_reviewer_prompt.md`.
+   - Read `System/Agents/02_analyst_prompt.md`.
+   - **Load Skills**: `skill-requirements-analysis`.
+   - Read `docs/KNOWN_ISSUES.md`.
+   - Archive/Create `docs/TZ.md` using `skill-artifact-management` rules.
+   - (Self-Correction): Check against `System/Agents/03_tz_reviewer_prompt.md` using `skill-tz-review-checklist`.
 
 2. **Architecture Phase**:
-   - Read ` System/Agents/04_architect_prompt.md`.
-   - Create `docs/ARCHITECTURE.md` based on `TZ.md`.
-   - (Self-Correction): Check against ` System/Agents/05_architecture_reviewer_prompt.md`.
+   - Read `System/Agents/04_architect_prompt.md`.
+   - **Load Skills**: `skill-architecture-design`.
+   - Create `docs/ARCHITECTURE.md`.
+   - (Self-Correction): Check against `System/Agents/05_architecture_reviewer_prompt.md` using `skill-architecture-review-checklist`.
 
 3. **Planning Phase**:
-   - Read ` System/Agents/06_agent_planner.md`.
+   - Read `System/Agents/06_agent_planner.md`.
+   - **Load Skills**: `skill-planning-decision-tree`, `skill-tdd-stub-first`.
    - Create `docs/PLAN.md` and `docs/tasks/*.md`.
-   - **MUST FOLLOW STUB-FIRST STRATEGY**: Ensure tasks are split into Stub -> Implementation.
+   - **MUST FOLLOW STUB-FIRST STRATEGY**.
+   - (Verification): Validate plan with `System/Agents/07_agent_plan_reviewer.md` using `skill-plan-review-checklist`.
 
 4. **Development Phase** (Loop for each task):
-   - Read ` System/Agents/08_agent_developer.md`.
+   - Read `System/Agents/08_agent_developer.md`.
+   - **Load Skills**: `skill-developer-guidelines`, `skill-documentation-standards`.
    - Execute the task in the codebase.
-   - **Apply STUBS first**, then run E2E tests, then implement logic.
-   - Verify with ` System/Agents/09_agent_code_reviewer.md`.
+   - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
+   - Verify with `System/Agents/09_agent_code_reviewer.md` using `skill-code-review-checklist`.
 
 ## BEHAVIOR RULES
-- **Context Loading**: When moving to a new phase, explicitly read the prompt file for that role (e.g., "Reading 06_agent_planner.md...").
-- **File Creation**: Always save intermediate artifacts (TZ, Plan) to files, do not just output them in chat.
+- **Context Loading**: When moving to a new phase, explicitly read the prompt file AND the required skills.
+- **File Creation**: Always save intermediate artifacts (TZ, Plan) to files.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user (as per `01_orchestrator.md`).

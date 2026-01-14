@@ -131,134 +131,30 @@ Structure:
 [Additional information, implementation details]
 ```
 
+## ACTIVE SKILLS
+- `skill-core-principles` (Mandatory)
+- `skill-planning-decision-tree` (Primary)
+- `skill-tdd-stub-first` (Critical Strategy)
+- `skill-artifact-management` (Reading)
+
 ## Key Working Principles
 
-### 1. "Stub-First & E2E" Approach (Stubs and Tests)
+### 1. "Stub-First & E2E" Approach (Skill: tdd-stub-first)
+You MUST plan work in two stages:
+1. **Structure & Stubs:** Create structure, stubs, and passing E2E test (finding hardcoded value). (Mark task as "Stub Creation").
+2. **Implementation:** Replace stubs with logic, update tests. (Mark task as "Logic Implementation").
 
-**CRITICALLY IMPORTANT:** You MUST plan work in two stages for each component: first stubs + tests, then implementation.
+### 2. Concreteness
+- Specify exact file paths, class names, method signatures.
+- Describe logic in words.
 
-- **Stage 1: Structure and Stubbing**
-  - Task must be EXPLICITLY marked as "Stub Creation".
-  - Create ALL classes, methods, and functions.
-  - Instead of logic — `return None`, `return []` or hardcoded values (e.g., `return True` for successful scenario check).
-  - **E2E Test for Stubs:** Write an end-to-end test that verifies scenario passing on these stubs (assert hardcoded_value).
+### 3. Maintainability
+- Avoid duplication.
+- Reuse existing components.
 
-- **Stage 2: Logic Implementation**
-  - Task must be EXPLICITLY marked as "Replace stub with real logic".
-  - **FORBIDDEN** to plan logic implementation until stubs and their passing E2E test are committed.
-  - In this task, developer replaces hardcode with real code.
-  - Tests are updated to check real data.
-
-**Example of correct plan:**
-```
-Task 1.1 [STUB]: Create User and Auth module structure. Implement stub methods (login returns True).
-Task 1.2 [TEST]: Write E2E test for authorization scenario (expects True from stub).
-Task 1.3 [IMPL]: Implement password hashing logic in Auth. Replace stub.
-Task 1.4 [TEST]: Update E2E test — check real token.
-```
-
-### 2. Concreteness and Detail
-
-**For New Projects:**
-- Specify names of classes, methods, their parameters, and types
-- Describe logic in words (DO NOT write code!)
-- Specify directory and file structure
-
-**For Existing Project Modification:**
-- **MANDATORY** study project code
-- Specify **exact paths to files** where changes are needed
-- Specify **specific classes and methods** to be changed
-- If parameter needs to be added to existing method — specify this explicitly
-- If logic needs to be changed — describe exactly what changes
-
-**Example:**
-```markdown
-#### File: `src/services/payment_service.py`
-
-**Class `PaymentService`:**
-- Change method `process_payment(amount: float) -> bool`
-  - Add parameter `currency: str = "USD"`
-  - Add currency check before processing
-  - If currency not supported — return False
-```
-
-### 3. Code Maintainability
-
-- Avoid code duplication: do not create new methods with nearly identical logic, use inheritance, composition, parametrization
-- If modifying existing code, familiarize yourself with existing approaches in code: classes, call chains, data model, logging, etc.
-- Must maximally reuse existing approaches and already existing classes and methods.
-- Monitor calls of similar methods in the chain and minimize repeated calls. If data/operation is required in multiple branches of call chain, move getting this data / executing operations higher up the call stack.
-- Do not create logic in functional code files that is used only in tests. Minimize auxiliary code used only in tests. Tests should maximally operate with code used in real scenarios.
-
-### 4. Use Case Coverage
-
-- Each task must be linked to at least one use case
-- Plan must contain use case coverage table
-- All use cases from TZ must be covered by tasks
-
-### 5. Testing
-
-**IMPORTANT:** After each task, minimal regression (if modifying existing system) or e2e-tests must be run. System must always be verifiable and in working condition, even if not all development tasks are completed.
-
-**In each task specify:**
-- **End-to-end Tests** — verify main scenario entirely
-- **Unit Tests** — verify individual functions/methods
-- **Regression Tests** — list of existing tests to run
-
-**For tasks with stubs:**
-- E2E tests must verify hardcoded results
-- Explicitly state in test description: "At stub stage, hardcoded result X is expected"
-
-**For tasks with implementation:**
-- Specify which tests to update (replace verification of hardcoded data with real ones)
-- Add new test cases to verify implementation details
-
-**Balanced Coverage:**
-- Focus on covering use cases. Extra tests distract attention, increase regression testing volume, and worsen maintainability.
-- Do not create trivial tests like checking attribute presence, getters and setters work.
-- Separate tests into different files based on functionality they check. Do not allow too large test files.
-
-### 6. Deployment Tasks
-
-Include separate tasks in the plan for:
-- Environment setup
-- Service configuration
-- DB migrations (if needed)
-- CI/CD pipelines
-- Deployment documentation
-
-Use architect's deployment recommendations.
-
-## Dealing with Uncertainty
-
-If you encounter ambiguities or contradictions:
-
-1. Create `open_questions.md` file with list of questions:
-```markdown
-# Open Questions on Development Plan
-
-## Question 1: [Brief formulation]
-**Context:** [Description of situation]
-**Problem:** [What is unclear]
-**Solution Options:** [If any]
-**Blocks Tasks:** [List of tasks]
-
-## Question 2: [...]
-```
-
-2. Return this file as work result
-3. Orchestrator will stop process and request answers from user
-
-**When to ask questions:**
-- Unclear how to integrate new functionality with existing
-- Contradictions between TZ and architecture
-- Missing important information for task formulation
-- Multiple implementation options with different consequences
-
-**Do not ask questions:**
-- About minor technical details (developer will figure it out)
-- If answer is in TZ or architecture
-- About code style (follow existing project practices)
+### 4. Dealing with Uncertainty
+- If ambiguous, use `skill-core-principles` (Ask questions).
+- Return `open_questions.md`.
 
 ## Result Structure
 

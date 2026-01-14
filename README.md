@@ -53,6 +53,7 @@ project-root/
 ├── .cursor/skills/                # [Cursor] Skills Library
 ├── .gemini/GEMINI.md              # [Antigravity] System Config
 ├── .agent/skills/                 # [Antigravity] Skills Library
+├── .agent/workflows/              # [Antigravity] Workflow Library
 ├── System/Agents/                 # [Common] Agent Personas (00-10)
 └── src/                           # Your Source Code
 ```
@@ -184,6 +185,7 @@ During the development process, agents create various artifacts. Here is how to 
 | **Task Archive** | `docs/tasks/task-ID-name.md` | **History / Immutable** | **Mandatory Archive**. All completed TZs move here. Never edit after archiving. |
 | **Subtask Description** | `docs/tasks/task-ID-SubID-slug.md` | **Granular Plan** | Created by Planner. detailed steps for Developer. |
 | **Implementation Plan** | `docs/PLAN.md` (or `implementation_plan.md`) | **Transient** | Can be kept for history or deleted after task completion. |
+| **Walkthrough** | `walkthrough.md` | **Proof of Work** | Created after verification. Demonstrates changes and validation results. |
 | **Task Checklist** | `task.md` | **Transient** | Task tracking. Reset/overwrite for new tasks. |
 | **Agent Memory** | `.AGENTS.md` | **Long-term Memory** | **NEVER DELETE**. Commit to Git. |
 

@@ -33,6 +33,17 @@ Antigravity supports this architecture out-of-the-box:
 2.  **Skills**: Ensure `.agent/skills/` directory exists. Antigravity automatically loads skills from here.
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
 
+### 📚 Skills System
+Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) from "What" (Capabilities).
+- **Reduces Prompt Size**: Agents only load what they need.
+- **Shared Logic**: Improvements in a skill benefit all agents.
+
+**[>> View Full Skills Catalog <<](docs/SKILLS.md)**
+
+By default, the system uses English prompts. To use **Russian** context:
+1.  Copy content from `Translations/RU/Agents` to `System/Agents`.
+2.  Copy content from `Translations/RU/Skills` to `.agent/skills`.
+
 ---
 
 ## 🏗 Directory Structure

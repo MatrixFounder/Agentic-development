@@ -24,6 +24,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.0.1 — Skills System Refinement**
+
+#### **Improved**
+* **Skills Documentation**:
+    * Expanded `docs/SKILLS.md` with "How it Works", "Principles", and official documentation links.
+    * Added explicit "Used By Workflows" and "Used By Agents" matrices.
+    * Clarified **Adversarial Agent** as a "Virtual Persona" in VDD mode.
+* **README**:
+    * Restored missing "Agent Team" and "System Prompt" sections.
+    * Fixed incomplete instructions for Skills System installation.
+
+---
+
 ### **v3.0.0 — Skills System & Global Localization**
 
 #### **Major Changes**

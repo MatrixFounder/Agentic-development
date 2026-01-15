@@ -81,7 +81,7 @@ It **MUST** be added to the context for all other agents (01-10).
 
 | Tool | System Prompt | Loading Method |
 |------|---------------|----------------|
-| **Cursor IDE** | `00` + role (01-09) | Manually or via `.cursorrules` |
+| **Cursor IDE** | `00` + role (01-10) | Manually or via `.cursorrules` |
 | **Antigravity** | `.gemini/GEMINI.md` (includes global principles) | **Automatically (Native)**. Manual concatenation of `00` is not required. |
 
 

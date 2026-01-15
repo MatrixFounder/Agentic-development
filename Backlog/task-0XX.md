@@ -1,169 +1,136 @@
-# Техническое Задание (ТЗ): Интеграция structured tool calling в фреймворк Agentic-development
+# TASK: Интеграция structured tool calling в фреймворк Agentic-development
 
 **Дата:** 14 января 2026  
-**Версия ТЗ:** 1.0  
+**Версия TASK:** 1.0  
 **Ответственный:** Maintainer / Контрибьютор  
 **Репозиторий:** https://github.com/MatrixFounder/Agentic-development  
-**Цель релиза:** v3.1.0 (минорный релиз с backwards-compatibility)  
-**Предпосылки:** Текущая версия v3.0.1 с модульной системой Skills. Orchestrator уже работает с LLM API (предположительно xAI/OpenAI-совместимый).
+**Цель релиза:** v3.1.2 (минорный релиз с backwards-compatibility)  
+**Предпосылки:** Текущая версия v3.1.1 с модульной системой Skills. Orchestrator уже работает с LLM API (предположительно xAI/OpenAI-совместимый).
 
-## Цель
+## 1. Обоснование и Цель
 
-Перейти от текстового описания внешних действий (например, «выведи команду `pytest ...`») к **structured tool calling** (function calling / tools) для executable skills.  
+Переход к **structured tool calling** (function calling) — это качественный скачок зрелости фреймворка, обеспечивающий следующие преимущества:
 
-Это решит текущие проблемы:
-- Ненадёжный парсинг текстового вывода агента.
-- Ошибки в формате команд.
-- Зависимость от дисциплины LLM.
-- Сложность обработки ошибок выполнения.
+### 1. Железная надёжность (Reliability)
+Исключение ошибок парсинга. Агент отправляет типизированный JSON-объект, гарантированно понятный машине. Выполнение становится атомарным и предсказуемым, исключая итерации на исправление опечаток в командах.
 
-После реализации:
-- Надёжное выполнение внешних действий (тесты, git, файлы).
-- Атомарность операций.
-- Полная совместимость с моделями, поддерживающими tools (Grok-4, GPT-4o, Claude 3.5 Sonnet, Gemini 1.5).
-- Минимальные изменения в существующих промптах и skills.
+### 2. Поддержка Native Tool Use
+Современные модели (Grok-4, GPT-4o, Claude 3.5) оптимизированы для работы с инструментами. Фреймворк становится "родным" для передовых LLM, позволяя им использовать встроенные механизмы рассуждения (CoT) над инструментами.
 
-## Задачи
+### 3. Безопасность (Safety)
+Переход от парсинга произвольных shell-команд к строгому "Белому списку" (Allowlist) функций. Аргументы валидируются до выполнения, что снижает риск инъекций.
 
-1. **Определить категорию executable skills**  
-   - Выделить в `docs/SKILLS.md` новую категорию «Executable Skills» (те, что требуют tool calling).  
-   - Обновить существующие skills (например, `skill-testing-best-practices.md`, `skill-git-ops.md` если есть) с явным указанием использовать tool вместо текста.
+### 4. Упрощение контекста (Simpler Prompts)
+Снижение когнитивной нагрузки на модель за счёт удаления громоздких инструкций по форматированию текста. Агент сосредотачивается на бизнес-логике.
 
-2. **Реализовать поддержку tool calling в Orchestrator**  
-   - Добавить конфигурацию tools (JSON schema) в Orchestrator.  
-   - В цикле агента: отправлять tools в API, обрабатывать tool_calls, выполнять инструменты, возвращать результаты в контекст.  
-   - Обеспечить fallback на текстовый режим для моделей без tool calling.
+## 2. Сценарии Использования (Use Cases)
 
-3. **Определить базовый набор tools**  
-   - Реализовать минимум 5–7 популярных tools (см. ниже).  
-   - Добавить их схемы в новый файл `.agent/tools/schemas.json` или напрямую в код Orchestrator.
+### UC-1: Выполнение инструмента Агентом
+**Акторы:** Агент (Developer/Reviewer), Orchestrator.  
+**Предусловия:** Агент находится в середине цикла выполнения задачи.  
+**Основной сценарий:**
+1. Агент решает выполнить внешнее действие (напр., прочитать файл).
+2. Агент возвращает ответ с заполненным полем `tool_calls` (JSON), указывая имя инструмента и аргументы.
+3. Orchestrator перехватывает `tool_calls`.
+4. Orchestrator валидирует существование инструмента и аргументы.
+5. Orchestrator выполняет инструмент (Python-функцию).
+6. Orchestrator формирует сообщение с ролью `tool` (или `function`), содержащее output действия.
+7. Orchestrator добавляет результат в контекст и вызывает модель снова.
+**Постусловия:** Результат действия доступен Агенту для анализа.
 
-4. **Обновить документацию**  
-   - Добавить раздел в `docs/SKILLS.md` и `docs/ORCHESTRATOR.md` (или новый `docs/TOOLS.md`).  
-   - Описать, как добавлять новые tools.
+### UC-2: Обработка ошибок выполнения
+**Акторы:** Orchestrator, Агент.  
+**Предусловия:** Агент вызвал инструмент с некорректными аргументами или инструмент вернул ошибку выполнения (non-zero exit code).
+**Основной сценарий:**
+1. Orchestrator пытается выполнить инструмент.
+2. Возникает исключение или ошибка процесса (stderr).
+3. Orchestrator перехватывает ошибку.
+4. Orchestrator формирует JSON-ответ с полем `error` или `success: false`.
+5. Агент получает сообщение с описанием ошибки.
+6. Агент анализирует ошибку и повторяет вызов с исправленными аргументами.
 
-5. **Тестирование и backwards-compatibility**  
-   - Протестировать на существующих workflow (Stub-First, VDD).  
-   - Сохранить совместимость: если модель не поддерживает tools — fallback на парсинг текста.
+### UC-3: Fallback на текстовый режим
+**Акторы:** Агент, Orchestrator.  
+**Предусловия:** Используемая модель не поддерживает native tool calling или API недоступно.
+**Основной сценарий:**
+1. Orchestrator определяет отсутствие поддержки tools.
+2. Orchestrator инструктирует Агента использовать текстовый формат (как в v3.0.1).
+3. Агент использует текстовый блок `>>> RUN COMMAND`.
+4. Orchestrator использует regex-парсер для извлечения команды.
+**Постусловия:** Система сохраняет работоспособность на старых моделях.
 
-## Предлагаемые популярные Tools
+## 3. Спецификация Инструментов (Functional Requirements)
 
-В рамках современных агентных фреймворков (LangChain, CrewAI, Autogen, MCP-подобные подходы) стандартный набор tools для разработки включает операции с файловой системой, тестами и git. Предлагаю следующий минимальный viable набор (все реализуемы в Python без внешних зависимостей, кроме subprocess для shell-команд):
+Система должна поддерживать следующий минимальный набор инструментов. Схемы приведены в Приложении.
 
-| Tool name              | Описание                                                                 | Параметры (JSON schema)                                                                 | Когда использовать (пример в skill) |
-|-----------------------|--------------------------------------------------------------------------|------------------------------------------------------------------------------------------|-------------------------------------|
-| `run_tests`           | Запуск тестов проекта (pytest)                                           | `command`: str (опционально, default: "pytest -q")<br>`cwd`: str (опционально)           | В Developer/Reviewer после изменений кода |
-| `git_status`          | Получить статус репозитория                                              | Нет                                                                                     | Перед commit |
-| `git_add`             | Добавить файлы в staging                                                 | `files`: array[str]                                                                     | После создания/изменения файлов |
-| `git_commit`          | Создать commit                                                           | `message`: str (required)                                                               | После успешных тестов |
-| `read_file`           | Прочитать содержимое файла                                               | `path`: str (required)                                                                  | Для анализа существующего кода |
-| `write_file`          | Записать/перезаписать файл                                               | `path`: str (required)<br>`content`: str (required)                                     | Для создания нового кода/артефактов |
-| `list_directory`      | Список файлов в директории                                               | `path`: str (default: ".")<br>`recursive`: bool (default: false)                         | Для ориентирования в проекте |
+| Tool name | Описание | Обязательные аргументы |
+|-----------|----------|------------------------|
+| `run_tests` | Запуск тестов проекта (pytest) | - |
+| `git_status` | Получить статус репозитория | - |
+| `git_add` | Добавить файлы в staging | `files` (list) |
+| `git_commit` | Создать commit | `message` |
+| `read_file` | Прочитать содержимое файла | `path` |
+| `write_file` | Записать/перезаписать файл | `path`, `content` |
+| `list_directory` | Просмотр содержимого папки | - |
 
-**Почему именно эти?**  
-- Это стандартный набор в большинстве MCP-агентных систем (Multi-Agent Collaboration Protocol, как в Autogen или CrewAI).  
-- Покрывают 90% нужд разработки: тесты, git, файлы.  
-- Легко расширяемы (добавить `search_code` с ripgrep позже).
+## 4. Объем работ (Scope & Tasks)
 
-## Примеры встраивания в пайплайн разработки
+1. **Определить категорию executable skills**
+   - Выделить в `docs/SKILLS.md` новую категорию «Executable Skills».
+   - Обновить `skill-testing-best-practices.md`, `skill-git-ops.md`.
 
-### 1. Обновление skill-testing-best-practices.md
+2. **Реализовать поддержку tool calling в Orchestrator**
+   - Добавить загрузку схем из `.agent/tools/schemas.py`.
+   - Реализовать обработку `tool_calls` в основном цикле.
+   - Реализовать функцию `execute_tool` (диспетчер).
 
-```markdown
-### Запуск тестов
+3. **Обновить документацию**
+   - Создать `docs/ORCHESTRATOR.md` (новое техническое описание работы диспетчера tools).
+   - Создать руководство по добавлению новых tools.
 
-ТЫ ДОЛЖЕН использовать tool calling:
+4. **Тестирование**
+   - Проверить работу на Grok-4 (Tools) и модели без Tools (Fallback).
 
-- Вызови tool `run_tests` с параметром command = "pytest -q --tb=short".
-- ДОЖДИСЬ результата от Orchestrator.
-- Если тесты фейлятся — анализируй ошибки и исправляй.
+## 5. Нефункциональные Требования
 
-НЕ пиши команду текстом в выводе.
-```
+1. **Безопасность:**
+   - Tools не должны позволять выход за пределы директории проекта (path traversal check).
+   - Shell-команды в `run_tests` должны быть ограничены белым списком или запускаться в изолированном окружении (по возможности).
+2. **Совместимость:**
+   - Полная обратная совместимость со старыми промптами (через fallback).
+3. **Производительность:**
+   - Оверхед на обработку JSON tools не должен превышать 100мс.
 
-### 2. Пример цикла в Orchestrator (псевдокод Python)
+## 6. Критерии Приёмки
 
-```python
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "run_tests",
-            "description": "Запустить тесты",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "command": {"type": "string", "description": "Команда pytest"}
-                }
-            }
-        }
-    },
-    # ... другие tools
-]
+- [ ] PR включает изменения в Orchestrator (поддержка `tool_calls`, диспетчер `execute_tool`).
+- [ ] PR включает файл схем `.agent/tools/schemas.py`.
+- [ ] Обновлены скиллы (как минимум Testing и Git-ops).
+- [ ] End-to-end тест: Агент пишет тест -> падает -> чинит -> коммитит (используя tools).
+- [ ] Протестирован fallback режим.
 
-def execute_tool(tool_call):
-    if tool_call.name == "run_tests":
-        import subprocess
-        result = subprocess.run(tool_call.args["command"], shell=True, capture_output=True)
-        return {"output": result.stdout.decode(), "errors": result.stderr.decode(), "returncode": result.returncode}
+## 7. Следующие шаги (Future Work)
 
-# В основном цикле агента
-response = client.chat.completions.create(
-    model="grok-4",
-    messages=messages,
-    tools=tools,
-    tool_choice="auto"
-)
+После стабилизации базового функционала tools (Post-v3.1.0):
 
-if response.choices[0].message.tool_calls:
-    for tool_call in response.choices[0].message.tool_calls:
-        result = execute_tool(tool_call)
-        messages.append({
-            "role": "tool",
-            "tool_call_id": tool_call.id,
-            "content": json.dumps(result)
-        })
-    # Повторный запрос к модели с результатами
-```
+1. **Чистка системных Промптов (Dynamic Prompt Assembly):**
+   - Базовые промпты очищаются от инструкций по текстовому форматированию (`>>> RUN COMMAND`).
+   - Orchestrator динамически добавляет блок "Legacy Formatting Instructions" ТОЛЬКО если модель не поддерживает native tools.
+   - Это сохраняет чистоту промптов для умных моделей и совместимость для старых.
+2. **Advanced Safety:**
+   - Внедрение песочницы (Sandbox) для выполнения кода и команд.
+   - Granular permissions (разные права для разных агентов).
+3. **Расширение набора Tools:**
+   - Добавление `search_code` (ripgrep / grep).
+   - Интеграция с внешними API.
 
-### 3. Пример поведения агента (Developer в Stub-First)
+---
 
-Агент вместо текста:
-```json
-{
-  "tool_calls": [
-    {
-      "name": "run_tests",
-      "arguments": {"command": "pytest -q"}
-    }
-  ]
-}
-```
+# Приложение: Примеры реализации Tools
 
-Orchestrator выполняет → возвращает результаты → агент анализирует и продолжает (исправляет код → write_file → run_tests снова).
+**Цель:** Готовые к внедрению JSON-схемы и код.
 
-### 4. В пайплайне VDD (adversarial)
-
-Sarcasmotron может вызывать `read_file` для анализа кода, затем `run_tests` для поиска слабых мест.
-
-## Приёмка
-
-- PR с изменениями в Orchestrator, новыми tools, обновлёнными skills и документацией.
-- End-to-end тесты: запуск простого workflow (создание функции + тесты + commit).
-- Проверка на Grok-4 и fallback-режиме.
-- Минимум 2 approve от контрибьюторов.
-
-Это ТЗ доведёт фреймворк до уровня современных tool-enabled агентных систем. 
-
-# Приложение к ТЗ: Примеры реализации Tools
-
-**Приложение к Техническому Заданию "Интеграция structured tool calling в фреймворк Agentic-development" (v3.1.0)**  
-**Дата:** 14 января 2026  
-**Цель приложения:** Предоставить конкретные, готовые к копированию примеры JSON-схем tools и кода их выполнения в Orchestrator. Это позволит ускорить реализацию и обеспечить единообразие.
-
-## 1. Полный список JSON-схем tools (рекомендуемый базовый набор)
-
-Сохранить в отдельный файл `.agent/tools/schemas.py` (как список словарей) или напрямую в коде Orchestrator.
+## 1. JSON-схемы (Draft)
 
 ```python
 TOOLS_SCHEMAS = [
@@ -273,7 +240,7 @@ TOOLS_SCHEMAS = [
 ]
 ```
 
-## 2. Пример реализации функции execute_tool в Orchestrator
+## 2. Реализация execute_tool (Reference)
 
 ```python
 import subprocess
@@ -284,9 +251,9 @@ from pathlib import Path
 def execute_tool(tool_call):
     """Выполняет tool_call и возвращает результат в формате, подходящем для сообщения 'tool'."""
     name = tool_call.function.name
-    args = json.loads(tool_call.function.arguments)  # arguments приходят как строка JSON
+    args = json.loads(tool_call.function.arguments)
     
-    repo_root = Path.cwd()  # или явно задать корень проекта
+    repo_root = Path.cwd()
     
     try:
         if name == "run_tests":
@@ -315,35 +282,7 @@ def execute_tool(tool_call):
             path.write_text(args["content"], encoding="utf-8")
             return {"status": "written", "path": args["path"], "size_bytes": len(args["content"])}
         
-        elif name == "list_directory":
-            path = repo_root / args.get("path", ".")
-            recursive = args.get("recursive", False)
-            files = []
-            if recursive:
-                for p in path.rglob("*"):
-                    files.append(str(p.relative_to(repo_root)))
-            else:
-                for p in path.iterdir():
-                    files.append(str(p.relative_to(repo_root)))
-            return {"files": sorted(files), "path": args.get("path", ".")}
-        
-        elif name == "git_status":
-            result = subprocess.run(
-                ["git", "status", "--porcelain"], capture_output=True, text=True, check=False
-            )
-            return {"status": result.stdout.strip(), "returncode": result.returncode}
-        
-        elif name == "git_add":
-            files = args["files"]
-            result = subprocess.run(["git", "add"] + files, capture_output=True, text=True)
-            return {"output": result.stdout, "errors": result.stderr, "returncode": result.returncode}
-        
-        elif name == "git_commit":
-            message = args["message"]
-            result = subprocess.run(
-                ["git", "commit", "-m", message], capture_output=True, text=True
-            )
-            return {"output": result.stdout, "errors": result.stderr, "returncode": result.returncode}
+        # ... остальные implementation ...
         
         else:
             raise ValueError(f"Unknown tool: {name}")
@@ -352,19 +291,9 @@ def execute_tool(tool_call):
         return {"error": str(e), "success": False}
 ```
 
-## 3. Пример интеграции в цикл Orchestrator (упрощённо)
+## 3. Пример цикла в Orchestrator
 
 ```python
-# В основном цикле обработки ответа агента
-response = client.chat.completions.create(
-    model=current_model,
-    messages=messages,
-    tools=TOOLS_SCHEMAS,
-    tool_choice="auto"  # или "required" для принудительного вызова
-)
-
-message = response.choices[0].message
-
 if message.tool_calls:
     for tool_call in message.tool_calls:
         result = execute_tool(tool_call)
@@ -372,93 +301,7 @@ if message.tool_calls:
             "role": "tool",
             "tool_call_id": tool_call.id,
             "name": tool_call.function.name,
-            "content": json.dumps(result, ensure_ascii=False, indent=2)
+            "content": json.dumps(result, ensure_ascii=False)
         })
-    # Повторный запрос к модели с результатами tools
-    return continue_agent_loop(messages)
-else:
-    # Обычная обработка текстового ответа
-    ...
+    # Рекурсивный вызов или продолжение цикла
 ```
-
-Эти примеры полностью рабочие (при минимальной адаптации под текущую структуру Orchestrator). Они покрывают все предложенные tools и могут быть расширены. Рекомендуется начать реализацию с `run_tests`, `read_file` и `write_file` — они дадут максимальный эффект сразу.
-
-
-# Приложение к ТЗ: Пояснения по работе агента с tool calling
-
-**Приложение к Техническому Заданию "Интеграция structured tool calling в фреймворк Agentic-development" (v3.1.0)**  
-**Дата:** 14 января 2026  
-
-## Общий принцип
-
-Агент (LLM) в фреймворке **Agentic-development** не выполняет Python-скрипты или внешние команды напрямую и самостоятельно. Все внешние действия происходят под строгим контролем **Orchestrator** — центрального управляющего компонента фреймворка. Это обеспечивает безопасность, предсказуемость и возможность валидации операций.
-
-## Текущая реализация (v3.0.1) — текстовый режим
-
-- Агент получает задачу, промпт и загруженные skills.
-- При необходимости внешнего действия (запуск тестов, чтение/запись файлов, git-операции) агент описывает его текстом в строго заданном формате, например:
-  ```markdown
-  >>> RUN COMMAND
-  pytest -q --tb=short
-  ```
-  или
-  ```markdown
-  >>> WRITE FILE: src/utils.py
-  ```python
-  def hello():
-      return "world"
-  ```
-  ```
-- Orchestrator парсит текстовый вывод, выполняет проверку безопасности и запускает соответствующую операцию (subprocess, pathlib, git-операции).
-- Результат возвращается агенту в следующем сообщении, цикл продолжается.
-
-**Преимущества:** совместимость с моделями без поддержки tool calling.  
-**Недостатки:** зависимость от точного формата вывода, риск ошибок парсинга.
-
-## Предлагаемая реализация (v3.1.0) — structured tool calling
-
-Реализация использует нативный механизм function/tool calling современных моделей (Grok-4, GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 и др.).
-
-- Агент получает в промпте описание доступных tools (JSON-схемы: `run_tests`, `read_file`, `write_file`, `git_commit` и т.д.).
-- При необходимости действия агент генерирует structured tool_call в формате JSON:
-  ```json
-  {
-    "tool_calls": [
-      {
-        "name": "run_tests",
-        "arguments": {
-          "command": "pytest -q --tb=short"
-        }
-      }
-    ]
-  }
-  ```
-- Orchestrator получает tool_call напрямую от API модели (без текстового парсинга).
-- Orchestrator выполняет соответствующий код (subprocess, pathlib, git).
-- Результат возвращается агенту как сообщение роли "tool":
-  ```json
-  {
-    "role": "tool",
-    "content": "{\"output\": \"...\", \"errors\": \"\", \"success\": true}"
-  }
-  ```
-- Агент анализирует результат и продолжает работу (исправление кода, следующий tool_call и т.д.).
-
-## Ключевые аспекты безопасности и автономности
-
-- Агент самостоятельно принимает решение о вызове tool (на основе промпта, skills и контекста).
-- Выполнение осуществляется исключительно через Orchestrator: агент не имеет прямого доступа к файловой системе, shell или интерпретатору Python.
-- Доступны только заранее определённые tools с фиксированными схемами — произвольное выполнение кода, придуманного агентом, невозможно.
-- Возможен fallback на текстовый режим для моделей без поддержки tool calling.
-- Orchestrator может дополнительно реализовать сандбоксинг, валидацию путей и ограничения команд.
-
-## Пример полного цикла (Developer реализует функцию)
-
-1. Агент генерирует код → вызывает tool `write_file`.
-2. Orchestrator записывает файл.
-3. Агент вызывает tool `run_tests`.
-4. Orchestrator запускает pytest → возвращает результат.
-5. При неудачных тестах: агент анализирует ошибки → повторный `write_file` → `run_tests`.
-6. При успехе: `git_add` → `git_commit`.
-
-**Эффект внедрения:** повышение надёжности и скорости работы агентов за счёт устранения ошибок парсинга и сокращения лишних итераций. Фреймворк достигает уровня современных tool-enabled систем (CrewAI, Autogen, LangGraph) при сохранении уникальных особенностей (Stub-First, VDD, verification loops).

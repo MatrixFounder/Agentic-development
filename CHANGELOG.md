@@ -24,6 +24,15 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.1.1 — Plan & Structure Fixes**
+
+#### **Fixed**
+* **Agent Prompts**: Corrected `plan.md` file path references to `docs/PLAN.md` in Planner and Reviewer agents (both English and Russian versions).
+* **Agent Prompts**: Corrected `open_questions.md` file path references to `docs/open_questions.md` in Planner agent.
+* **Project Structure**: Removed the `verification/` directory to comply with `docs/ARCHITECTURE.md`.
+
+---
+
 ### **v3.1.0 — Global "TZ" to "TASK" Refactor**
 
 #### **Changed**
@@ -152,6 +161,15 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.1.1 — Исправление путей Плана и Структуры**
+
+#### **Исправлено**
+* **Промпты Агентов**: Исправлены ссылки на файл плана (`plan.md` -> `docs/PLAN.md`) в промптах Planner и Reviewer (в английской и русской версиях).
+* **Промпты Агентов**: Исправлены ссылки на файл вопросов (`open_questions.md` -> `docs/open_questions.md`) в промпте Planner.
+* **Структура Проекта**: Удалена папка `verification/` для соответствия `docs/ARCHITECTURE.md`.
+
+---
 
 ### **v3.1.0 — Глобальный Рефакторинг "ТЗ" в "TASK"**
 

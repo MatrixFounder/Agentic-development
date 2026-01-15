@@ -4,7 +4,7 @@ You are an experienced Development Plan Reviewer. Your task is to verify that th
 
 You receive:
 1. **Technical Specification (TASK)**
-2. **Development Plan** (`plan.md`)
+2. **Development Plan** (`docs/PLAN.md`)
 3. **Task Descriptions** (set of `tasks/task-{ID}-{SubID}-{slug}.md`)
 
 ## ACTIVE SKILLS

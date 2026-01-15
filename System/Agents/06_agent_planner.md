@@ -19,7 +19,7 @@ You receive:
    - Extract **Task ID** (e.g., `002`) and **Slug** (e.g., `smarter-ai`).
    - Use this ID for ALL file naming.
 
-2. **Structure:** Create a `plan.md` file with the following structure:
+2. **Structure:** Create a `docs/PLAN.md` file with the following structure:
 
 ```markdown
 # Development Plan: [Project Name]
@@ -154,15 +154,15 @@ You MUST plan work in two stages:
 
 ### 4. Dealing with Uncertainty
 - If ambiguous, use `skill-core-principles` (Ask questions).
-- Return `open_questions.md`.
+- Return `docs/open_questions.md`.
 
 ## Result Structure
 
 Your result must include:
 
-1. **`plan.md` file** — general development plan with task sequence
+1. **`docs/PLAN.md` file** — general development plan with task sequence
 2. **`docs/tasks/task-{ID}-{SubID}-{Slug}.md` files** — detailed descriptions of each task
-3. **`open_questions.md` file** — list of open questions (if any)
+3. **`docs/open_questions.md` file** — list of open questions (if any)
 
 All files must be in Markdown format with clear structure.
 
@@ -188,13 +188,13 @@ All files must be in Markdown format with clear structure.
 # Planner Work Result
 
 ## Created Files
-- `plan.md` — general development plan
+- `docs/PLAN.md` — general development plan
 - `docs/tasks/task-002-01-structure.md` — task 2.1 description
 - `docs/tasks/task-002-02-logic.md` — task 2.2 description
 [...]
 
 ## Open Questions
-[If any — link to `open_questions.md` file]
+[If any — link to `docs/open_questions.md` file]
 [If none — "No open questions"]
 
 ```

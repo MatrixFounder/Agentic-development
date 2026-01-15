@@ -24,6 +24,21 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.1.0 — Global "TZ" to "TASK" Refactor**
+
+#### **Changed**
+* **Terminology**: Global refactoring of "TZ" (Техническое Задание) to "TASK" (Task/Specification) to improve internationalization and consistency.
+* **Artifacts**: Renamed `docs/TZ.md` to `docs/TASK.md`.
+* **System Agents**: Updated all agent prompts (Analyst, Reviewer, Architect, etc.) to use "TASK" terminology.
+* **Skills**: Renamed `skill-tz-review-checklist` to `skill-task-review-checklist`.
+* **Documentation**: Updated `README.md`, `WORKFLOWS.md`, `SKILLS.md`, and `.gemini/GEMINI.md` to reflect the new standard.
+
+#### **Fixed**
+* **Consistency**: Eliminated mixed usage of "TZ" and "Task Specification" across the framework.
+* **Localization**: Aligned Russian translations (`Translations/RU`) with the new global standard.
+
+---
+
 ### **v3.0.3 — Documentation Sync & Artifacts**
 
 #### **Fixed**
@@ -112,8 +127,6 @@
 
 ### **v2.0.0 — Public Release: Multi-Agent Software Development System**
 
-This is the first major public release of the **Agentic Development** framework. Version 2.0.0 introduces a robust, production-ready workflow designed to transform how you build software with LLMs (Antigravity, Cursor, etc.).
-
 #### **Key Highlights**
 
 * **9-Agent Ecosystem**: A comprehensive orchestration of **9 specialized agents** (Analyst, Architect, Planner, Developer, Reviewer, Orchestrator, and others) covering the full SDLC.
@@ -132,6 +145,20 @@ This is the first major public release of the **Agentic Development** framework.
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.1.0 — Глобальный Рефакторинг "ТЗ" в "TASK"**
+
+#### **Изменено**
+* **Терминология**: Глобальный рефакторинг "ТЗ" (Техническое Задание) в "TASK" (Task/Specification) для улучшения интернационализации и согласованности.
+* **Артефакты**: Переименован `docs/TZ.md` в `docs/TASK.md`.
+* **Системные Агенты**: Обновлены все промпты агентов (Analyst, Reviewer, Architect и др.) для использования терминологии "TASK".
+* **Навыки**: Переименован `skill-tz-review-checklist` в `skill-task-review-checklist`.
+* **Документация**: Обновлены `README.ru.md`, `WORKFLOWS.md`, `SKILLS.md` и `.gemini/GEMINI.md` для соответствия новому стандарту.
+
+#### **Исправлено**
+* **Согласованность**: Устранено смешанное использование "ТЗ" и "Task Specification" во всем фреймворке.
+
+---
 
 ### **v3.0.3 — Синхронизация документации и артефакты**
 
@@ -212,13 +239,12 @@ This is the first major public release of the **Agentic Development** framework.
   * `/vdd-adversarial`: Изолированный цикл адверсариальной проверки.
   * `/vdd-enhanced`: Комбинация Stub-First + VDD.
   * `/full-robust`: Полный пайплайн с будущим аудитом безопасности.
+  * `/security-audit`: Standalone security vulnerability assessment workflow.
 * **Документация**: Обновлены `WORKFLOWS.md`, `README.md` и `GEMINI.md`.
 
 ---
 
 ### **v2.0.0 — Публичный релиз: Система мультиагентной разработки**
-
-Первый мажорный релиз фреймворка **Agentic Development**. Версия 2.0.0 — это завершенная экосистема для автоматизации разработки через LLM.
 
 #### **Основные возможности**
 
@@ -234,4 +260,3 @@ This is the first major public release of the **Agentic Development** framework.
 2. **Настройка IDE**: Скопируйте `.gemini/GEMINI.md` (для Antigravity) или `.cursorrules` (для Cursor) в корень проекта.
 3. **Инициализация**: Используйте промпт `02_analyst_prompt.md` для запуска процесса.
 4. **Инструкции**: Следуйте разделу **Pre-flight Check** в README.
-

@@ -19,7 +19,7 @@ This project uses a modular Skills System.
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Load Skills**: `skill-requirements-analysis`.
    - Read `docs/KNOWN_ISSUES.md`.
-   - Archive/Create `docs/TZ.md` using `skill-artifact-management` rules.
+   - Archive/Create `docs/TASK.md` using `skill-artifact-management` rules.
    - (Self-Correction): Check against `System/Agents/03_tz_reviewer_prompt.md` using `skill-tz-review-checklist`.
 
 2. **Architecture Phase**:
@@ -44,5 +44,5 @@ This project uses a modular Skills System.
 
 ## BEHAVIOR RULES
 - **Context Loading**: When moving to a new phase, explicitly read the prompt file AND the required skills.
-- **File Creation**: Always save intermediate artifacts (TZ, Plan) to files.
+- **File Creation**: Always save intermediate artifacts (TASK, Plan) to files.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user (as per `01_orchestrator.md`).

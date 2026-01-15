@@ -9,7 +9,7 @@ Run after implementation (and optionally after VDD) for critical projects.
 **Steps:**
 
 1. **Gather Context**
-   - Review docs/ARCHITECTURE.md, docs/TZ.md, and all modified source files
+   - Review docs/ARCHITECTURE.md, docs/TASK.md, and all modified source files
    - List dependencies (e.g., requirements.txt, package.json)
 
 2. **Static Security Analysis**

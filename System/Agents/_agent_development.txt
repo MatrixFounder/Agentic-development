@@ -7,11 +7,11 @@ An Orchestrator agent manages the workflow. It assigns tasks, routes deliverable
 
 ## Agent Roles
 
-1. **Analyst**: Converts high-level user requirements into a Technical Specification (TZ). The TZ defines Use Cases, Scenarios (Main/Alternative), Actors, and Acceptance Criteria.
-   - *Reviewer:* TZ Reviewer checks for completeness and consistency.
+1. **Analyst**: Converts high-level user requirements into a Technical Specification (TASK). The TASK defines Use Cases, Scenarios (Main/Alternative), Actors, and Acceptance Criteria.
+   - *Reviewer:* TASK Reviewer checks for completeness and consistency.
 
-2. **Architect**: Designs the system based on the TZ. Defines Functional Components, System Architecture, Interfaces, Data Models, and Technology Stack.
-   - *Reviewer:* Architecture Reviewer checks alignment with TZ and technical feasibility.
+2. **Architect**: Designs the system based on the TASK. Defines Functional Components, System Architecture, Interfaces, Data Models, and Technology Stack.
+   - *Reviewer:* Architecture Reviewer checks alignment with TASK and technical feasibility.
 
 3. **Tech Lead / Planner**: Decomposes the Architecture into a Low-Level Development Plan.
    - Creates a sequence of atomic tasks.
@@ -27,8 +27,8 @@ An Orchestrator agent manages the workflow. It assigns tasks, routes deliverable
 
 ## Development Workflow
 
-1. **Analysis**: User Request → Analyst (TZ) → Review → Approval.
-2. **Architecture**: TZ → Architect (Design) → Review → Approval.
+1. **Analysis**: User Request → Analyst (TASK) → Review → Approval.
+2. **Architecture**: TASK → Architect (Design) → Review → Approval.
 3. **Planning**: Architecture → Planner (Plan + Tasks) → Review → Approval.
 4. **Execution**: Plan → Developer (Code + Tests) → Review → Fix → Completion.
 

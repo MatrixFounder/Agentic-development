@@ -6,7 +6,7 @@ This document serves as the **Single Source of Truth** for all automation workfl
 
 | Variant | Workflow Name | Description | Command to Run |
 | :--- | :--- | :--- | :--- |
-| **Standard** | **Start Feature** | Begins a new feature cycle: Analysis, TZ creation, Architecture review. | `Start feature [Name]` / `run 01-start-feature` |
+| **Standard** | **Start Feature** | Begins a new feature cycle: Analysis, TASK creation, Architecture review. | `Start feature [Name]` / `run 01-start-feature` |
 | **Standard** | **Plan Implementation** | Generates a detailed implementation plan and task breakdown (Stub-First). | `Plan implementation` / `run 02-plan-implementation` |
 | **Standard** | **Develop Task** | Executes a single development task from the plan. | `Develop task [ID]` / `run 03-develop-task` |
 | **Standard** | **Update Docs** | Updates project documentation (README, Architecture, etc.). | `Update docs` / `run 04-update-docs` |
@@ -25,7 +25,7 @@ This document serves as the **Single Source of Truth** for all automation workfl
 ## 🛡 Safety & Verification
 
 All **Standard** automation workflows in this version (v2.1.1+) include **Mandatory Verification Loops** and **Safety Limits**:
-1. **Verification**: Every artifact (TZ, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
+1. **Verification**: Every artifact (TASK, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
 2. **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention. This prevents infinite loops.
 
 > [!NOTE]
@@ -40,7 +40,7 @@ All **Standard** automation workflows in this version (v2.1.1+) include **Mandat
 *Best for: MVPs, Prototypes, Standard Features*
 
 The default "happy path" for development. Focuses on speed and structural integrity.
-1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TZ). **(+ Verification Loop)**
+1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TASK). **(+ Verification Loop)**
 2. **Planning (`02`)**: The Agent creates a `plan.md` and detailed task files (`docs/tasks/`). **(+ Verification Loop)**
 3. **Development (`03`)**: The Agent implements tasks one by one, prioritizing stubs before logic. **(+ Code Review Loop)**
 

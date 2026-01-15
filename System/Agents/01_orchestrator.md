@@ -33,7 +33,7 @@ CONTEXT: Beginning work on a task
 INPUT DATA:
 - User task description: {user_task}
 - Current project description (if exists): {project_description}
-- Current docs/TZ.md content (if exists): {current_tz}
+- Current docs/TASK.md content (if exists): {current_task_docs}
 
 YOUR TASK:
 Determine if this is a NEW task or a refinement, and initiate the Analyst agent.
@@ -41,32 +41,32 @@ Determine if this is a NEW task or a refinement, and initiate the Analyst agent.
 DECISION LOGIC (ARTEFACT HANDLING):
 (See `skill-artifact-management` for detailed archiving rules)
 - IF user_task implies a NEW SEPARATE feature/refactor:
-  - CHECK: If docs/TZ.md has meaningful content from a previous task:
+  - CHECK: If docs/TASK.md has meaningful content from a previous task:
     - ACTION: Archive it FIRST.
-    - CONFIRM: "Archiving previous TZ..."
+    - CONFIRM: "Archiving previous TASK..."
 - IF user_task is a clarification/refinement of the CURRENT task:
   - ACTION: Do NOT archive. Proceed to overwrite/update logic.
 
 ACTIONS:
-1. (If New Task & Old TZ exists) Archive `docs/TZ.md` (See `skill-artifact-management`).
+1. (If New Task & Old TASK exists) Archive `docs/TASK.md` (See `skill-artifact-management`).
 2. Pass to Analyst:
    - Task description
    - Project description
-   - Instruction: "Create/Overwrite docs/TZ.md completely. Do NOT append."
+   - Instruction: "Create/Overwrite docs/TASK.md completely. Do NOT append."
 3. Wait for result from Analyst
 4. Check result for:
-   - Link to TZ file
+   - Link to TASK file
    - Blocking questions
 
 EXPECTED RESULT FROM ANALYST:
 {
-  "tz_file": "path/to/tz.md",
+  "task_file": "path/to/task.md",
   "blocking_questions": [ ... ]
 }
 
 DECISION LOGIC:
 - IF blocking questions -> stop, ask user.
-- IF none -> proceed to TZ review.
+- IF none -> proceed to TASK review.
 
 CURRENT STAGE: Analysis
 ITERATION: 1 of 2
@@ -75,21 +75,21 @@ NEXT STEP: [indicate based on result]
 
 ---
 
-## 2. Analysis Stage (TZ Review)
+## 2. Analysis Stage (TASK Review)
 
 ```
-CONTEXT: TZ received from Analyst without blocking questions
+CONTEXT: TASK received from Analyst without blocking questions
 
 INPUT DATA:
-- TZ File: {tz_file}
+- TASK File: {task_file}
 - Project description: {project_description}
 
 YOUR TASK:
 Initiate review of the Technical Specification.
 
 ACTIONS:
-1. Pass to TZ Reviewer:
-   - TZ File
+1. Pass to TASK Reviewer:
+   - TASK File
    - Project description
    - Original task description
 2. Wait for result from Reviewer
@@ -97,7 +97,7 @@ ACTIONS:
 
 EXPECTED RESULT FROM REVIEWER:
 {
-  "review_file": "path/to/tz_review.md",
+  "review_file": "path/to/task_review.md",
   "has_critical_issues": true/false
 }
 
@@ -114,32 +114,32 @@ NEXT STEP: [indicate based on result]
 
 ---
 
-## 3. Analysis Stage (TZ Revision)
+## 3. Analysis Stage (TASK Revision)
 
 ```
-CONTEXT: Comments received from TZ Reviewer
+CONTEXT: Comments received from TASK Reviewer
 
 INPUT DATA:
 - Review file: {review_file}
-- Original TZ file: {tz_file}
+- Original TASK file: {task_file}
 
 YOUR TASK:
-Pass comments to Analyst for TZ revision.
+Pass comments to Analyst for TASK revision.
 
 ACTIONS:
 1. Pass to Analyst:
-   - Original TZ
+   - Original TASK
    - Review file
    - Instruction: fix ONLY noted issues
-2. Wait for updated TZ
+2. Wait for updated TASK
 3. Initiate review again
 
 INSTRUCTION FOR ANALYST:
-"Fix comments from file {review_file}. Do NOT change parts of the TZ that do not relate to these comments. Preserve document structure and format."
+"Fix comments from file {review_file}. Do NOT change parts of the TASK that do not relate to these comments. Preserve document structure and format."
 
 CURRENT STAGE: Analysis (Revision)
 ITERATION: {current_iteration} of 2
-NEXT STEP: Repeat TZ Review
+NEXT STEP: Repeat TASK Review
 ```
 
 ---
@@ -147,10 +147,10 @@ NEXT STEP: Repeat TZ Review
 ## 4. Architecture Design Stage (Initiation)
 
 ```
-CONTEXT: TZ approved, architecture design begins
+CONTEXT: TASK approved, architecture design begins
 
 INPUT DATA:
-- Approved TZ: {tz_file}
+- Approved TASK: {task_file}
 - Project description: {project_description}
 
 YOUR TASK:
@@ -158,7 +158,7 @@ Initiate Architect agent.
 
 ACTIONS:
 1. Pass to Architect:
-   - Approved TZ
+   - Approved TASK
    - Current project description
 2. Check result for architecture file or blocking questions.
 
@@ -186,7 +186,7 @@ CONTEXT: Architecture received from Architect
 
 INPUT DATA:
 - Architecture file: {architecture_file}
-- TZ: {tz_file}
+- TASK: {task_file}
 - Project description: {project_description}
 
 YOUR TASK:
@@ -195,7 +195,7 @@ Initiate Architecture review.
 ACTIONS:
 1. Pass to Architecture Reviewer:
    - Architecture file
-   - TZ
+   - TASK
    - Project description
 2. Wait for result.
 
@@ -251,7 +251,7 @@ NEXT STEP: Repeat Architecture Review
 CONTEXT: Architecture approved, task planning begins
 
 INPUT DATA:
-- Approved TZ: {tz_file}
+- Approved TASK: {task_file}
 - Approved Architecture: {architecture_file}
 - Project code: {project_code}
 - Project documentation: {project_docs}
@@ -289,7 +289,7 @@ CONTEXT: Plan received from Planner
 INPUT DATA:
 - Plan file: {plan_file}
 - Task description files: {task_files}
-- TZ: {tz_file}
+- TASK: {task_file}
 
 YOUR TASK:
 Initiate Plan review.
@@ -449,7 +449,7 @@ YOUR TASK:
 Prepare final report and ARCHIVE.
 
 ACTIONS:
-1. MANDATORY: Archive current docs/TZ.md (See `skill-artifact-management`).
+1. MANDATORY: Archive current docs/TASK.md (See `skill-artifact-management`).
 2. Collect statistics.
 3. Check completion.
 4. Generate final report.

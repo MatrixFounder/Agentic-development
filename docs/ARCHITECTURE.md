@@ -34,8 +34,8 @@ project-root/
 2. **Agent** (any role) starts by reading relevant local `.AGENTS.md` files in the target directories.
 3. **Agent** activates **Skills** (dynamically loaded from `.agent/skills`).
    - *Example:* Analyst loads `skill-requirements-analysis`.
-4. **Analyst** (Agent 02) creates/updates a Technical Specification (TZ) in `docs/TZ.md`.
-    - *Verification:* **TZ Reviewer** (Agent 03) validates the TZ.
+4. **Analyst** (Agent 02) creates/updates a Technical Specification (TASK) in `docs/TASK.md`.
+    - *Verification:* **Task Reviewer** (Agent 03) validates the TASK.
 5. **Architect** (Agent 04) validates/updates Architecture in `docs/ARCHITECTURE.md`.
     - *Verification:* **Architecture Reviewer** (Agent 05) checks the design.
 6. **Planner** (Agent 06) creates a Task Plan in `docs/PLAN.md` and detailed tasks.

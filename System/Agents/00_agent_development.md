@@ -15,15 +15,15 @@ This system orchestrates a team of specialized agents coordinated by an Orchestr
 - Manages review-repair cycles
 
 ### 2. Analyst
-**Function:** Creating the Technical Specification (TZ)
-- Accepts high-level task descriptions
-- Creates a TZ (Technical Specification) with a list of use cases
+**Function:** Creating the Technical Specification (TASK)
+- accepts high-level task descriptions
+- Creates a TASK (Technical Specification) with a list of use cases
 - Describes scenarios (main and alternative)
 - Identifies actors for each use case
 - Formulates acceptance criteria
 - **Does NOT write code**
 
-### 3. TZ Reviewer
+### 3. TASK Reviewer
 **Function:** Verifying the quality of the Technical Specification
 - Evaluates the completeness of the task description
 - Checks compliance with the existing project
@@ -41,7 +41,7 @@ This system orchestrates a team of specialized agents coordinated by an Orchestr
 
 ### 5. Architecture Reviewer
 **Function:** Verifying the quality of the architecture
-- Evaluates architecture compliance with the TZ and task description
+- Evaluates architecture compliance with the TASK and task description
 - Checks compatibility with the existing project architecture
 - Identifies architectural contradictions
 
@@ -58,7 +58,7 @@ This system orchestrates a team of specialized agents coordinated by an Orchestr
 
 ### 7. Plan Reviewer
 **Function:** Verifying the quality of the plan
-- Checks coverage of all use cases from the TZ
+- Checks coverage of all use cases from the TASK
 - Checks for detailed descriptions for all tasks
 - **Does NOT delve deeply into the content of descriptions** (checks structure/completeness)
 
@@ -129,15 +129,15 @@ The system supports multiple development "variants" via workspace workflows.
 ```
 User  →  Orchestrator (Task formulation + Project description)
                                 ↓
-        [DECISION: New Task? → Archive docs/TZ.md]
+        [DECISION: New Task? → Archive docs/TASK.md]
                                 ↓
-                            Analyst → TZ
+                            Analyst → TASK
                                 ↓
-                         TZ Reviewer → Comments
+                         TASK Reviewer → Comments
                                 ↓
                           Analyst (Revision)
                                 ↓
-                         TZ Reviewer (Repeat)
+                         TASK Reviewer (Repeat)
 ```
 **Cycles:** Maximum 2 review iterations
 
@@ -145,7 +145,7 @@ User  →  Orchestrator (Task formulation + Project description)
 
 ### Stage 2: Architecture Design
 ```
-TZ + Project Description → Architect → Architecture
+TASK + Project Description → Architect → Architecture
                             ↓
                      Architecture Reviewer → Comments
                             ↓
@@ -159,7 +159,7 @@ TZ + Project Description → Architect → Architecture
 
 ### Stage 3: Planning
 ```
-TZ + Architecture + Project Description + Code → Planner → Plan + Task Descriptions
+TASK + Architecture + Project Description + Code → Planner → Plan + Task Descriptions
                                                 ↓
                                           Plan Reviewer → Comments
                                                 ↓
@@ -217,34 +217,34 @@ The Developer is obliged to update documentation with every code change.
 - Fix only specified issues
 
 ### GLOBAL ARTEFACT HANDLING RULES
-ARTEFACT HANDLING: TECHNICAL SPECIFICATION (TZ.md)
+ARTEFACT HANDLING: TECHNICAL SPECIFICATION (TASK.md)
 
 STRICT RULES (mandatory for all agents):
-- docs/TZ.md contains ONLY the specification for the SINGLE CURRENT active task.
+- docs/TASK.md contains ONLY the specification for the SINGLE CURRENT active task.
 - Distinguish task phases:
-  - "Clarification/refinement/iteration" = changes within the SAME task (e.g., "improve TZ", "add details to requirements", "fix inconsistencies after review").
-    → Overwrite docs/TZ.md completely. DO NOT archive. Preserve as the evolving single document for the current task.
+  - "Clarification/refinement/iteration" = changes within the SAME task (e.g., "improve TASK", "add details to requirements", "fix inconsistencies after review").
+    → Overwrite docs/TASK.md completely. DO NOT archive. Preserve as the evolving single document for the current task.
   - "New task" = explicitly different feature/bugfix/refactor (e.g., user says "now implement payments", "start new module", "next feature").
-    → Archive current TZ.md first (if it contains meaningful content), then overwrite with new.
+    → Archive current TASK.md first (if it contains meaningful content), then overwrite with new.
 - When starting a NEW task:
-  - If docs/TZ.md contains previous content → archive it first.
-  - Then OVERWRITE docs/TZ.md completely with the new specification.
+  - If docs/TASK.md contains previous content → archive it first.
+  - Then OVERWRITE docs/TASK.md completely with the new specification.
   - NEVER append to existing content.
 - Archiving triggers (strict):
   - ONLY upon full task completion (after successful implementation, tests, and before final commit).
   - OR explicitly before starting a NEW task (when user input clearly indicates a new separate task).
-  - Do NOT archive during early stages (analysis iterations, TZ review, clarifications).
+  - Do NOT archive during early stages (analysis iterations, TASK review, clarifications).
 - Archiving procedure (when triggered):
   1. **Identify Filename:**
-     - First, read `docs/TZ.md` content.
+     - First, read `docs/TASK.md` content.
      - Look for "Meta Information" section (Task ID and Slug).
      - **IF FOUND:** Use `docs/tasks/task-{ID}-{Slug}.md`.
      - **IF NOT FOUND:**
        - Determine ID: Check existing files in `docs/tasks/`, use next zero-padded number (001, 002, ...).
        - Slug: Derive from task name (kebab-case, max 30 chars, no spaces).
        - Filename: `docs/tasks/task-{GeneratedID}-{DerivedSlug}.md`.
-  2. Create the file with FULL content of current docs/TZ.md.
+  2. Create the file with FULL content of current docs/TASK.md.
   3. Add header at top: # Archived Task: <Full Task Name> — Archived on: YYYY-MM-DD
   4. If folder docs/tasks/ does not exist — create it.
-  5. Confirm archiving in your response (e.g., "Archived previous TZ to docs/tasks/task-003-loyalty-system.md").
-- After archiving: Proceed with new TZ.md (overwrite completely).
+  5. Confirm archiving in your response (e.g., "Archived previous TASK to docs/tasks/task-003-loyalty-system.md").
+- After archiving: Proceed with new TASK.md (overwrite completely).

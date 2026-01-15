@@ -34,9 +34,9 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
 | **`core-principles`** | Fundamental principles: Atomicity, Traceability, Stub-First, Minimizing Hallucinations. | All (`01-03`, `vdd-*`) | All Agents |
-| **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TZ.md`, `ARCHITECTURE.md`). | All Workflows | All Agents |
+| **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `ARCHITECTURE.md`). | All Workflows | All Agents |
 | **`planning-decision-tree`** | Decision logic for breaking down tasks and prioritizing work (Stub-First & E2E). | `02-plan-implementation`, `vdd-02-plan` | Planner, Architect |
-| **`requirements-analysis`** | Process for gathering and refining requirements into a structured Technical Specification (TZ). | `01-start-feature`, `vdd-01-start-feature` | Analyst, TZ Reviewer |
+| **`requirements-analysis`** | Process for gathering and refining requirements into a structured Technical Specification (TASK). | `01-start-feature`, `vdd-01-start-feature` | Analyst, TASK Reviewer |
 
 ### Engineering Standards
 | Skill | Description | Used By in Workflows | Used By Agents |
@@ -50,8 +50,8 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 ### Review & Quality Assurance
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
-| **`checklists/*`** | Specialized checklists for each review stage: | All relevant stages | Reviewers (TZ, Arch, Plan, Code) |
-| - `tz-review-checklist` | For checking Technical Specifications. | `01-start-feature` | TZ Reviewer |
+| **`checklists/*`** | Specialized checklists for each review stage: | All relevant stages | Reviewers (TASK, Arch, Plan, Code) |
+| - `task-review-checklist` | For checking Technical Specifications. | `01-start-feature` | TASK Reviewer |
 | - `architecture-review-checklist` | For checking System Architecture. | `01-start-feature` | Arch Reviewer |
 | - `plan-review-checklist` | For checking Development Plans. | `02-plan-implementation` | Plan Reviewer |
 | - `code-review-checklist` | For checking Code implementation. | `03-develop-task` | Code Reviewer |

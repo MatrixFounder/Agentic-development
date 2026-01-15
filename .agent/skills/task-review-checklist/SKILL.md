@@ -1,9 +1,9 @@
 ---
-name: tz-review-checklist
-description: Detailed checklist for verifying Technical Specifications (TZ).
+name: task-review-checklist
+description: Detailed checklist for verifying Technical Specifications (TASK).
 version: 1.0
 ---
-# TZ Review Checklist
+# TASK Review Checklist
 
 ## 1. Task Compliance
 - [ ] **Requirements:** All user requirements covered?

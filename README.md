@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.0.3
+# Multi-Agent Software Development System v3.1.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
@@ -13,7 +13,16 @@ The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md
 
 ![Framework architecture](/Attachments/Framework_architecture.png)
 
-## 📁 Installation & Setup
+## � Table of Contents
+- [Installation & Setup](#-installation--setup)
+- [Directory Structure](#-directory-structure)
+- [How to Start Development](#-how-to-start-development-step-by-step-plan)
+- [Artifact Management](#-artifact-management)
+- [Migration Guide](#-migration-from-older-versions)
+- [Starter Prompts](#-starter-prompt-templates)
+
+
+## �📁 Installation & Setup
 
 ### 1. Common Prerequisites
 Regardless of your tool, you need the **Agent Personas** in your project root:
@@ -67,8 +76,8 @@ It **MUST** be added to the context for all other agents (01-10).
 | Role | File | Responsibility |
 |------|------|----------------|
 | **Orchestrator** | `01_orchestrator.md` | Project Manager. Dispatches tasks, manages the pipeline. |
-| **Analyst** | `02_analyst_prompt.md` | Requirements elicitation, TZ creation. |
-| **TZ Reviewer** | `03_tz_reviewer_prompt.md` | Quality control for Technical Specifications. |
+| **Analyst** | `02_analyst_prompt.md` | Requirements elicitation, TASK creation. |
+| **TASK Reviewer** | `03_task_reviewer_prompt.md` | Quality control for Technical Specifications. |
 | **Architect** | `04_architect_prompt.md` | System design, database schema, API definition. |
 | **Arch Reviewer** | `05_architecture_reviewer_prompt.md` | Validates verification of architectural decisions. |
 | **Planner** | `06_agent_planner.md` | Breaks down implementation into atomic steps (Stub-First). |
@@ -126,11 +135,11 @@ This process will take you from an idea to finished code in the repository.
 1. **Analyst (02_analyst_prompt.md):**
    - Provide the agent with the idea/task.
    - The agent studies the project structure (Reconnaissance).
-   - Result: **Technical Specification (TZ)**.
-2. **TZ Review (03_tz_reviewer_prompt.md):**
-   - Check the TZ for completeness and consistency.
+   - Result: **Technical Specification (TASK)**.
+2. **TASK Review (03_task_reviewer_prompt.md):**
+   - Check the TASK for completeness and consistency.
 3. **Architect (04_architect_prompt.md):**
-   - Based on the TZ, the agent designs the architecture.
+   - Based on the TASK, the agent designs the architecture.
    - Result: **Architecture Document** (`docs/ARCHITECTURE.md`) - (classes, databases, APIs).
 4. **Architecture Review (05_architecture_reviewer_prompt.md):**
    - Approve the architecture before planning.
@@ -167,8 +176,8 @@ For each pair of tasks in the plan (Stub -> Impl):
    - If all tests are green, make a commit.
    - Recommended format: `feat(scope): description`.
 3. **Artifacts:**
-   - Ensure all created artifacts (TZ, Architecture, Plan) are saved in the project documentation.
-   - **Archive TZ:** Copy the final Technical Specification to the archive: `cp docs/TZ.md docs/tasks/task-ID-name.md`.
+   - Ensure all created artifacts (TASK, Architecture, Plan) are saved in the project documentation.
+   - **Archive TASK:** Copy the final Technical Specification to the archive: `cp docs/TASK.md docs/tasks/task-ID-name.md`.
 
 ---
 
@@ -179,10 +188,10 @@ During the development process, agents create various artifacts. Here is how to 
 
 | Artifact | Path | Status | Recommendation |
 |----------|------|--------|----------------|
-| **Technical Specification** | `docs/TZ.md` | **Single Source of Truth (Current Task)** | **STRICTLY for current active task**. Overwrite for updates. Archive before new task. |
+| **Technical Specification** | `docs/TASK.md` | **Single Source of Truth (Current Task)** | **STRICTLY for current active task**. Overwrite for updates. Archive before new task. |
 | **Architecture** | `docs/ARCHITECTURE.md` | **Source of Truth (System)** | **NEVER DELETE**. Keep updated. This is the map of your system. |
 | **Known Issues** | `docs/KNOWN_ISSUES.md` | **Living Document** | Keep. Document bugs, workarounds, and complex logic explanation. |
-| **Task Archive** | `docs/tasks/task-ID-name.md` | **History / Immutable** | **Mandatory Archive**. All completed TZs move here. Never edit after archiving. |
+| **Task Archive** | `docs/tasks/task-ID-name.md` | **History / Immutable** | **Mandatory Archive**. All completed TASKs move here. Never edit after archiving. |
 | **Subtask Description** | `docs/tasks/task-ID-SubID-slug.md` | **Granular Plan** | Created by Planner. detailed steps for Developer. |
 | **Implementation Plan** | `docs/PLAN.md` (or `implementation_plan.md`) | **Transient** | Can be kept for history or deleted after task completion. |
 | **Walkthrough** | `walkthrough.md` | **Proof of Work** | Created after verification. Demonstrates changes and validation results. |
@@ -191,10 +200,10 @@ During the development process, agents create various artifacts. Here is how to 
 | **Open Questions** | `docs/open_questions.md` | **Unresolved Issues** | Track unresolved architectural questions here. |
 
 **Strict Artefact Rules (New v2.1):**
-1. **One Task = One TZ**: `docs/TZ.md` always reflects *only* what is being built right now.
+1. **One Task = One TASK**: `docs/TASK.md` always reflects *only* what is being built right now.
 2. **Archive Strategy**:
-   - **Before** starting a fundamentally new task: Archive `docs/TZ.md` -> `docs/tasks/task-00N-name.md`.
-   - **During** the task: Only overwrite `docs/TZ.md`. Never append.
+   - **Before** starting a fundamentally new task: Archive `docs/TASK.md` -> `docs/tasks/task-00N-name.md`.
+   - **During** the task: Only overwrite `docs/TASK.md`. Never append.
 3. **Cleanup**:
    - **Keep**: All `docs/*` files that describe the *current* state of the system.
    - **Cleanup**: Intermediate scratchpads if you used them outside of `docs/`.
@@ -223,21 +232,21 @@ To make the next iteration go smoothly:
 
 ## 🛠 Reverse Engineering (If documentation is outdated)
 
-If the user made "free-form" fixes during development completion, the documentation (e.g., `docs/TZ.md`, `docs/ARCHITECTURE.md`) might have desynchronized with the actual code.
+If the user made "free-form" fixes during development completion, the documentation (e.g., `docs/TASK.md`, `docs/ARCHITECTURE.md`) might have desynchronized with the actual code.
 
 To prevent AI from breaking what you fixed when adding a feature next time (e.g., "color-code tasks by status"), you need to update the documentation.
 
 Use this prompt (Reverse Engineering):
 
 ```text
-@docs/TZ.md
+@docs/TASK.md
 
 You are an Architect and Technical Writer.
 
 SITUATION:
 We completed the active development and debugging phase of the Gantt widget prototype.
 Many manual fixes were made to the code to fix bugs (scroll, Drag&Drop).
-Current documentation (TZ.md) is outdated and does not reflect the actual code structure.
+Current documentation (TASK.md) is outdated and does not reflect the actual code structure.
 
 TASK:
 1. Study ALL current widget code files (HTML, CSS, TS).
@@ -297,6 +306,30 @@ ACTIONS:
 - Analyst must create a scenario (E2E test) to reproduce.
 - Fix via Stub-First (test first, then fix).
 ```
+
+---
+
+## 🔄 Migration from Older Versions
+
+### Upgrading to v3.1.0 (Global Refactor)
+**Goal:** Transition from "TZ" (Техническое Задание) to "TASK" to align with the new standard.
+
+1. **Rename Artifact:**
+   ```bash
+   mv docs/TZ.md docs/TASK.md
+   ```
+2. **Update Prompts:**
+   - Overwrite `System/Agents/` with the latest version from v3.1.0 release.
+   - Key shift: `03_tz_reviewer_prompt.md` is now **`03_task_reviewer_prompt.md`**.
+3. **Update Skills:**
+   - Overwrite `.agent/skills/` with the latest version.
+
+### Upgrading to v3.0.0 (Skills System)
+**Goal:** Enable modular agents.
+
+1. **Delete Legacy:** Remove `System/Agents` (if it contains monolithic prompts).
+2. **Install New:** Copy `System/Agents` (v3.0+) and `.agent/` folder to root.
+3. **Config:** Ensure `.gemini/GEMINI.md` or `.cursorrules` are updated.
 
 ---
 

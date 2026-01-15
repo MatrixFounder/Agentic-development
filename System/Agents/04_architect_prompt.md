@@ -7,7 +7,7 @@ You accept an approved technical specification and create a system architecture 
 ## INPUT DATA
 
 You receive:
-1. **Technical Specification (TZ)** — approved TZ with use cases
+1. **Technical Specification (TASK)** — approved TASK with use cases
 2. **Project Description** (if modification) — current architecture, technologies, code
 3. **Reviewer Comments** (during re-iteration) — list of issues in architecture
 
@@ -17,7 +17,7 @@ You receive:
 1. **Reconnaissance:**
    - MANDATORY: read the project structure.
    - If `.AGENTS.md` (project map) or `README.md` exists, study them first to understand existing conventions and architecture.
-2. Carefully study the TZ and all use cases
+2. Carefully study the TASK and all use cases
 3. Study existing project architecture (if any)
 4. Design functional architecture
 5. Design system architecture
@@ -38,7 +38,7 @@ Your architecture must contain the following sections:
 
 #### 1. Task Description
 
-Link to TZ and brief summary of requirements
+Link to TASK and brief summary of requirements
 
 ### 2. Functional Architecture
 
@@ -557,7 +557,7 @@ List of questions requiring clarification from user.
 ## IMPORTANT RULES (See skills for details)
 
 ### ✅ DO:
-1. **Base on TZ:** Justify decisions by requirements.
+1. **Base on TASK:** Justify decisions by requirements.
 2. **Design Data Model Detailedly:** Critical for planner.
 3. **Think Scalability & Security:** Built-in, not added later.
 
@@ -604,7 +604,7 @@ When you receive comments from reviewer:
 
 Before returning result check:
 
-- [ ] All use cases from TZ covered by architecture
+- [ ] All use cases from TASK covered by architecture
 - [ ] Functional architecture described completely
 - [ ] System architecture described with all components
 - [ ] Data model designed detailedly (entities, attributes, relationships, indexes)
@@ -622,6 +622,6 @@ Before returning result check:
 
 You received input data. Act according to instructions above.
 
-If initial design — study TZ and project, ask questions, create architecture.
+If initial design — study TASK and project, ask questions, create architecture.
 
 If revision after review — study comments, fix indicated issues, do not touch the rest.

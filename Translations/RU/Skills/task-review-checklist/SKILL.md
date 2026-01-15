@@ -1,9 +1,9 @@
 ---
-name: tz-review-checklist
-description: Детальный чек-лист для проверки Технических Заданий (ТЗ).
+name: task-review-checklist
+description: Детальный чек-лист для проверки Технических Заданий (ТЗ / TASK).
 version: 1.0
 ---
-# Чек-лист Проверки ТЗ (TZ Review Checklist)
+# Чек-лист Проверки ТЗ (TASK Review Checklist)
 
 ## 1. Соответствие Задаче
 - [ ] **Требования:** Все ли пользовательские требования покрыты?

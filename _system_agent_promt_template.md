@@ -17,8 +17,8 @@ When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`
 1. **Analysis Phase**:
    - Read `System/Agents/02_analyst_prompt.md`.
    - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
-   - Create/Update `docs/TZ.md` based on user task.
-   - (Self-Correction): Check your own TZ against `System/Agents/03_tz_reviewer_prompt.md`.
+   - Create/Update `docs/TASK.md` based on user task.
+   - (Self-Correction): Check your own TASK against `System/Agents/03_task_reviewer_prompt.md`.
 
 2. **Architecture Phase**:
    - Read `System/Agents/04_architect_prompt.md`.
@@ -38,10 +38,10 @@ When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`
    - Verify with `System/Agents/09_agent_code_reviewer.md`.
 
 ## BEHAVIOR RULES
-- **File Creation**: Always save intermediate artifacts (TZ, Plan) to files, do not just output them in chat.
+- **File Creation**: Always save intermediate artifacts (TASK, Plan) to files, do not just output them in chat.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user.
 
 ## CRITICAL RULE:
 Even for small tasks, **NEVER** skip the Analysis and Architecture phases.
 If the user asks for code directly (e.g., "Fix the button"), **REFUSE** to code immediately.
-Instead, reply: "I must update the TZ and check Architecture first. Starting Analysis phase..."
+Instead, reply: "I must update the TASK and check Architecture first. Starting Analysis phase..."

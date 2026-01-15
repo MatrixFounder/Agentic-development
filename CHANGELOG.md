@@ -36,6 +36,7 @@
 #### **Fixed**
 * **Consistency**: Eliminated mixed usage of "TZ" and "Task Specification" across the framework.
 * **Localization**: Aligned Russian translations (`Translations/RU`) with the new global standard.
+* **Workflows**: Fixed a critical bug in `01-start-feature` and `vdd-01-start-feature` where the previous `docs/TASK.md` was overwritten instead of archived. Added explicit archiving step.
 
 ---
 
@@ -157,6 +158,7 @@
 
 #### **Исправлено**
 * **Согласованность**: Устранено смешанное использование "ТЗ" и "Task Specification" во всем фреймворке.
+* **Сценарии (Workflows)**: Исправлена критическая ошибка в `01-start-feature` и `vdd-01-start-feature`, из-за которой старое ТЗ перезаписывалось без архивации. Добавлен явный шаг архивирования.
 
 ---
 

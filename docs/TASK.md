@@ -1,20 +1,20 @@
 ### 0. Meta Information
-- **Task ID:** 025
-- **Slug:** update-changelog-v3.2.1
+- **Task ID:** 030
+- **Slug:** update-changelog-v3.2.2
 - **Status:** Completed
 
-# TASK: Update CHANGELOG for Localization Fixes
+# TASK: Update CHANGELOG.md
 
 ## Goal
-Document recent changes regarding Localization Synchronization and Russian Agent Prompt updates in `CHANGELOG.md`.
+Document the critical fixes and protocol updates from Tasks 026-029 in `CHANGELOG.md`.
 
 ## Requirements
-1.  Create a new entry `v3.2.1`.
-2.  Document:
-    -   Sync of `README.ru` with `README`.
-    -   Update of Russian translations for Orchestrator, Analyst, Planner, Architect.
-    -   New rule `.agent/rules/localization-sync.md`.
-3.  Update English and Russian sections of CHANGELOG.
+1.  Create entry for **v3.2.2 — System Integrity & Archiving Protocols**.
+2.  Include:
+    -   System Prompts update (`CHECKPOINT 8` logic in `.gemini` & `.cursorrules`).
+    -   Archiving Protocol Fix (`skill-artifact-management`).
+    -   Restoration of Russian Agents (Critical Fix).
+    -   Updates to Orchestrator and Planner for archiving enforcement.
 
 ## Acceptance Criteria
--   `CHANGELOG.md` reflects latest work.
+-   `CHANGELOG.md` reflects recent work accurately.

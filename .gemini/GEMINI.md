@@ -11,6 +11,13 @@ The system relies on a modular **Skills System**:
 1.  **Definitions**: Located in `.agent/skills/[skill-name]/SKILL.md`. These are the source of truth.
 2.  **Usage**: Agents declare "Active Skills" in their prompts. You **MUST** read these skill files when assuming an agent role.
 
+## TOOL EXECUTION PROTOCOL (v3.2.0)
+The Orchestrator natively supports structured tool calling (Function Calling).
+1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
+2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
+3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`) instead of asking the user to run shell commands.
+4.  **Reference**: See `docs/ORCHESTRATOR.md` for details.
+
 ## CONTEXT LOADING PROTOCOL (MUST READ)
 When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`):
 1. Attempt to read it using your internal tools.

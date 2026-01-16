@@ -3,10 +3,11 @@ description: Start a new feature development cycle (Analysis & Architecture)
 ---
 1. Read `System/Agents/02_analyst_prompt.md` to understand the Analysis phase.
 2. Read `docs/KNOWN_ISSUES.md` to be aware of past problems.
-3. **Archiving (Important)**:
+3. **Archiving (CRITICAL)**:
+   - **Execute Archiving Protocol** from `skill-artifact-management`.
    - Check if `docs/TASK.md` exists and contains content from a previous task.
-   - If yes: Archive it to `docs/tasks/task-ID-slug.md` (use `skill-artifact-management`).
-   - If no (or first run): Skip archiving.
+   - If yes: Archive it to `docs/tasks/task-{ID}-{Slug}.md`.
+   - **Validation**: Ensure the file is moved before proceeding.
 4. Update `docs/TASK.md` with the new feature requirements.
     - **Verification Loop**: Read `System/Agents/03_task_reviewer_prompt.md`.
     - If the Reviewer requests changes:

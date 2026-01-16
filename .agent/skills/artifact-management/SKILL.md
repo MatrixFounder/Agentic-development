@@ -29,6 +29,15 @@ version: 1.0
 - **ARCHITECTURE.md:** System Architecture. Managed by Architect.
 - **PLAN.md:** Development Plan. Managed by Planner.
 
+
+## Archiving Protocol (CRITICAL)
+Before creating a NEW `docs/TASK.md` (Analyst) or starting a new major phase:
+1.  **Check Condition**: Does `docs/TASK.md` exist and contain a different/completed task?
+2.  **Extract Formatting**: Read `Task ID` and `Slug` from "0. Meta Information".
+3.  **Archive**: Move the file to `docs/tasks/task-{ID}-{Slug}.md`.
+    -   Command: `mv docs/TASK.md docs/tasks/task-{ID}-{Slug}.md`
+4.  **Validation**: Verify the file was moved before creating the new one.
+
 ## Protocol
 1. **Read First:** Before starting work, read relevant artifacts.
 2. **Update Immediately:** Update artifacts corresponding to your changes (Developer updates `.AGENTS.md`, Analyst updates `TASK.md`).

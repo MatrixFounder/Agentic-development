@@ -14,6 +14,11 @@ You receive:
 
 ### 1. Create Low-Level Development Plan
 
+0. **Archive Previous Plan (If Exists):**
+   - If `docs/PLAN.md` exists and belongs to a previous task:
+   - Archive it to `docs/tasks/plan-{OldID}-{OldSlug}.md`.
+
+
 1. **Extract Meta Information:**
    - Read `docs/TASK.md` header.
    - Extract **Task ID** (e.g., `002`) and **Slug** (e.g., `smarter-ai`).

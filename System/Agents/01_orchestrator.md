@@ -57,7 +57,9 @@ DECISION LOGIC (ARTEFACT HANDLING):
   - ACTION: Do NOT archive. Proceed to overwrite/update logic.
 
 ACTIONS:
-1. (If New Task & Old TASK exists) Archive `docs/TASK.md` (See `skill-artifact-management`).
+1. CHECK & ARCHIVE: Execute the `Archiving Protocol` from `skill-artifact-management`.
+   - Verify if `docs/TASK.md` needs archiving.
+   - If yes, archive to `docs/tasks/task-{ID}-{Slug}.md`.
 2. Pass to Analyst:
    - Task description
    - Project description

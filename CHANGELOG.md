@@ -24,6 +24,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.2.2 — System Integrity & Archiving Protocols**
+
+#### **Fixed**
+* **Critical Restoration**: Restored missing (empty) Russian agent prompts (`Translations/RU/Agents/01, 02, 04, 06`) using v3.2.0 logic.
+* **Data Loss Prevention**: Fixed a critical gap in `skill-artifact-management` where the "Archiving Protocol" was missing.
+* **Protocol Enforcement**: Updated Orchestrator (`01`), Analyst (`02`), and Planner (`06`) to strictly enforce archiving of `docs/TASK.md` and `docs/PLAN.md` before overwriting.
+
+#### **Improved**
+* **System Prompts**: Synchronized `.gemini/GEMINI.md` and `.cursorrules` with the Tool Execution Protocol (v3.2.0), explicitly enabling native tool calling.
+* **Consistency**: Completed a full audit of the prompt system to ensure zero contradictions between System and Agent prompts.
+
+---
+
 ### **v3.2.1 — Skills System Optimization**
 
 #### **Added**
@@ -230,6 +243,19 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.2.2 — Целостность системы и Протоколы архивации**
+
+#### **Исправлено**
+* **Критическое восстановление**: Восстановлены отсутствующие (пустые) промпты русских агентов (`Translations/RU/Agents/01, 02, 04, 06`) с логикой v3.2.0.
+* **Предотвращение потери данных**: Исправлен критический пробел в `skill-artifact-management`, где отсутствовал "Протокол Архивации".
+* **Принудительные протоколы**: Обновлены Оркестратор (`01`), Аналитик (`02`) и Планировщик (`06`) для строгого требования архивации `docs/TASK.md` и `docs/PLAN.md` перед перезаписью.
+
+#### **Улучшено**
+* **Системные промпты**: Синхронизированы `.gemini/GEMINI.md` и `.cursorrules` с Протоколом Выполнения Инструментов (v3.2.0), явно разрешающим нативный вызов инструментов.
+* **Согласованность**: Проведен полный аудит системы промптов для исключения противоречий.
+
+---
 
 ### **v3.2.1 — Оптимизация Системы Навыков**
 

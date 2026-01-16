@@ -24,6 +24,16 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.1.3 — Skills Cleanup & Cursor Integration Fix**
+
+#### **Changed**
+* **Project Structure**: Removed redundant `.cursor/skills` directory to eliminate duplication.
+* **Cursor Integration**: Updated `README.md` to instruct users to simply symlink `.cursor/skills` -> `.agent/skills`, ensuring a single source of truth.
+* **Orchestrator**: Updated `.cursorrules` to reference the correct symlinked path and fixed legacy "tz" terminology in comments.
+* **Workflows**: Archived `docs/TASK.md` to `docs/tasks/task-014-cleanup-skills.md`.
+
+---
+
 ### **v3.1.2 — Analyst Protocol & YAML Fixes**
 
 #### **Fixed**
@@ -179,6 +189,16 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.1.3 — Очистка Skills и исправление интеграции Cursor**
+
+#### **Изменено**
+* **Структура проекта**: Удалена дублирующая директория `.cursor/skills`.
+* **Интеграция с Cursor**: В `README.md` и `README.ru.md` добавлена инструкция по созданию симлинка `.cursor/skills` -> `.agent/skills`, что гарантирует единый источник правды.
+* **Оркестратор**: Обновлен `.cursorrules`, исправлены пути к навыкам и легаси-терминология "tz".
+* **Документация**: В `docs/ARCHITECTURE.md` отражена связь через симлинк.
+
+---
 
 ### **v3.1.2 — Протокол Аналитика и Fix YAML**
 

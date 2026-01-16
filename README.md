@@ -33,8 +33,11 @@ Regardless of your tool, you need the **Agent Personas** in your project root:
 #### 🔵 Option A: Cursor IDE
 To configure Cursor for this workflow:
 1.  **Context Rules**: Copy `.cursorrules` to your project root.
-2.  **Skills**: Copy the contents of `.agent/skills/` to `.cursor/skills/` (or `.cursor/rules/` depending on your version).
-    *   *Note:* Cursor will index these files to understand agent capabilities.
+2.  **Skills**: Create a symbolic link to enable native skill detection:
+    ```bash
+    ln -s .agent/skills .cursor/skills
+    ```
+    *   *Note:* This allows Cursor to index the skills while keeping `.agent/skills` as the single source of truth.
 
 #### 🟣 Option B: Antigravity (Native)
 Antigravity supports this architecture out-of-the-box:
@@ -59,10 +62,9 @@ By default, the system uses English prompts. To use **Russian** context:
 ```text
 project-root/
 ├── .cursorrules                   # [Cursor] Context & Rules
-├── .cursor/skills/                # [Cursor] Skills Library
 ├── .gemini/GEMINI.md              # [Antigravity] System Config
-├── .agent/skills/                 # [Antigravity] Skills Library
-├── .agent/workflows/              # [Antigravity] Workflow Library
+├── .agent/skills/                 # [Common] Skills Library
+├── .agent/workflows/              # [Common] Workflow Library
 ├── System/Agents/                 # [Common] Agent Personas (00-10)
 └── src/                           # Your Source Code
 ```

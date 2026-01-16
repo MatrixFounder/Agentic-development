@@ -1,47 +1,31 @@
-# Task: SKILL Audit & Artifact Standards
+# Task: Correct Cursor Installation Instructions
 
 ### 0. Meta Information
-- **Task ID:** 013
-- **Slug:** fix-skills-and-enforce-relative-paths
+- **Task ID:** 014-B
+- **Slug:** fix-cursor-instructions
+- **Status:** Active
 
 ## 1. General Description
-The user reported a YAML syntax error in `core-principles`, which has been fixed. Now, the scope is expanded to:
-1.  **Audit all SKILL files** for similar YAML issues.
-2.  **Standardize Artifact Paths:** Enforce the use of relative paths (instead of absolute) in `docs/PLAN.md` and other artifacts for portability.
-3.  **Systemic Enforcement:** Update System Prompts and Skills (Documentation Standards) to require relative paths.
-4.  **Localization Sync Rule:** Create a formal rule to ensure `System/Agents` and `Translations` are kept in sync.
+The user pointed out that Cursor does not automatically index `.agent/skills`. We need to explicitly instruct users to trigger this indexing, likely via a symbolic link from `.agent/skills` to `.cursor/skills`. We also need to correct `.cursorrules` to reflect this reality.
 
 ## 2. List of Use Cases
 
-### UC-01: Fix YAML Syntax (Completed)
-- Fixed `core-principles`.
+### UC-01: Update README Installation Instructions
+- **Actor:** System
+- **Action:** Update `README.md` and `README.ru.md`.
+- **Change:**
+    - Replace "Automatically indexes" with "Requires Symlink".
+    - Provide exact command: `ln -s ../.agent/skills .cursor/skills` (or similar relative path).
 
-### UC-02: Enforce Analyst Protocol (Completed)
-- Hardened `02_analyst_prompt.md`.
-
-### UC-03: Audit and Fix All Skills (Completed)
-- Audited and fixed YAML in 5 files.
-
-### UC-04: Refactor PLAN.md to Relative Paths (Completed)
-- Refactored `docs/PLAN.md`.
-
-### UC-05: Enforce Relative Path Standard (Completed)
-- Updated `skill-documentation-standards` and `06_agent_planner.md`.
-
-### UC-06: Create Localization Sync Rule
-**Actors:** System
-**Main Scenario:**
-1.  Create `.agent/rules/localization-sync.md` (or similar).
-2.  Define rule: "If `System/Agents` changes -> Update `Translations/RU/Agents`".
-3.  (Optional) Add this rule to `docs/rules.md` if it exists, or just ensure the agent reads it.
-**Note:** The user specified creating a rule in `.agent/rules`.
+### UC-02: Corrections in .cursorrules
+- **Actor:** System
+- **Action:** Update `.cursorrules`.
+- **Change:**
+    - Clarify that Skills are physically in `.agent/skills` but should be linked for Cursor visibility.
+    - Ensure paths are robust.
 
 ## 3. Impact Analysis
-- **Consistency:** Prevents English and Russian prompts from drifting apart in logic/rules.
+- **User UX:** Users must run one Setup command (`ln -s`) for the IDE to work fully. This is better than maintaining duplicate files.
 
 ## 4. Verification Plan
-- **Rule Existence:** Verify file `.agent/rules/localization-sync.md` exists.
-- **Content:** Verify it explicitly mentions the sync requirement.
-
-## 5. Open Questions
-- None.
+- **Docs:** Read `README.md` to ensure clarity.

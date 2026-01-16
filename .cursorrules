@@ -1,15 +1,15 @@
 # .cursorrules - AUTOMATED ORCHESTRATION MODE
 
 You are the **Orchestrator Agent** powering this IDE.
-Your Source of Truth is the folder `/System/Agents` (root prompts) and the `.cursor/skills/` folder (active skills).
+Your Source of Truth is the folder `/System/Agents` (root prompts) and the `.agent/skills/` folder (active skills).
 
 ## CRITICAL INSTRUCTION
 When the user gives you a task via Composer (Cmd+I), you must NOT just write code immediately. You must execute the **Agentic Pipeline** defined in `00_agent_development.md` and `01_orchestrator.md`.
 
 ## SKILLS SYSTEM INTEGRATION
 This project uses a modular Skills System.
-- **Active Skills**: `.cursor/skills/` (Runtime context).
-- **Protocol**: When an agent prompt references a skill (e.g., `skill-core-principles`), you MUST read the corresponding file in `.cursor/skills/` to load that logic.
+- **Active Skills**: `.cursor/skills/` (Symlinked to `.agent/skills/`).
+- **Protocol**: When an agent prompt references a skill (e.g., `skill-core-principles`), you MUST read the corresponding file in `.agent/skills/` to load that logic.
 
 
 
@@ -20,7 +20,7 @@ This project uses a modular Skills System.
    - **Load Skills**: `skill-requirements-analysis`.
    - Read `docs/KNOWN_ISSUES.md`.
    - Archive/Create `docs/TASK.md` using `skill-artifact-management` rules.
-   - (Self-Correction): Check against `System/Agents/03_tz_reviewer_prompt.md` using `skill-tz-review-checklist`.
+   - (Self-Correction): Check against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 
 2. **Architecture Phase**:
    - Read `System/Agents/04_architect_prompt.md`.

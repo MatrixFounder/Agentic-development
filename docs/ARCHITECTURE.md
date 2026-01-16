@@ -11,7 +11,7 @@ project-root/
 ├── .cursor/rules/                 # Cursor Rules
 ├── .cursorrules                   # References to skills + reading .AGENTS.md
 ├── .agent/skills/                 # [NEW] Skills Library (Source of Capabilities)
-├── .cursor/skills/                # Duplicate of skills for Cursor
+├── .cursor/skills/                # [Symlink] Mirrors .agent/skills for Cursor
 ├── System/Agents/                 # Lightweight System Prompts (Personas)
 │   ├── 00_agent_development.md  # Meta-prompt / Orchestrator guide
 │   ├── 01_orchestrator.md       # Interaction handler

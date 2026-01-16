@@ -9,10 +9,10 @@ Core pipeline with Stub-First and TDD. Used as foundation for others.
 **Steps:**
 
 1. **Analyst Phase**:
-    - Call `/analyst-tz`.
-    - **Verification Loop**: Call `/tz-review`.
+    - Call `/analyst-task`.
+    - **Verification Loop**: Call `/task-review`.
     - If Rejection:
-        - Re-run `/analyst-tz` (revision mode).
+        - Re-run `/analyst-task` (revision mode).
         - **Retry (Max 2 attempts)**: Repeat Review.
         - If after 2 retries the review still fails: **STOP** and ask the user for help.
 
@@ -32,18 +32,7 @@ Core pipeline with Stub-First and TDD. Used as foundation for others.
         - **Retry (Max 2 attempts)**: Repeat Review.
         - If after 2 retries the review still fails: **STOP** and ask the user for help.
 
-4. **Development Loop** (For each task pair):
-    - **Stubbing**:
-        - Call `/developer-stub`.
-        - Verify: Call `/code-review-stub`.
-        - If Issues:
-             - Fix -> Re-verify (Max 2 retries).
-             - If fails: Stop.
-    - **Implementation**:
-        - Call `/developer-impl`.
-        - Verify: Call `/code-review-final`.
-        - If Issues:
-             - Fix -> Re-verify (Max 2 retries).
-             - If fails: Stop.
+4. **Development Loop** (Automated):
+    - Call `/05-run-full-task`.
 
 5. Final validation and commit preparation.

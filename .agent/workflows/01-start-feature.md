@@ -8,7 +8,7 @@ description: Start a new feature development cycle (Analysis & Architecture)
    - If yes: Archive it to `docs/tasks/task-ID-slug.md` (use `skill-artifact-management`).
    - If no (or first run): Skip archiving.
 4. Update `docs/TASK.md` with the new feature requirements.
-    - **Verification Loop**: Read `System/Agents/03_tz_reviewer_prompt.md`.
+    - **Verification Loop**: Read `System/Agents/03_task_reviewer_prompt.md`.
     - If the Reviewer requests changes:
         - Update `docs/TASK.md`.
         - **Retry (Max 2 attempts)**: Repeat the review.

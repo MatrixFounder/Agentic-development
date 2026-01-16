@@ -50,6 +50,11 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 - **Reduces Prompt Size**: Agents only load what they need.
 - **Shared Logic**: Improvements in a skill benefit all agents.
 
+### 3. Executable Skills (Tools)
+New in v3.1: The system supports **Native Tools** executed by the Orchestrator (Schema-based).
+- **Definition**: `.agent/tools/schemas.py`.
+- **Capabilities**: Run tests, Git operations, File I/O.
+
 **[>> View Full Skills Catalog <<](docs/SKILLS.md)**
 
 By default, the system uses English prompts. To use **Russian** context:
@@ -110,7 +115,7 @@ You can run a workflow simply by asking the agent:
 - **Standard Mode (Stub-First):**
   - "Start feature X" -> runs `01-start-feature.md`
   - "Plan implementation" -> runs `02-plan-implementation.md`
-  - "Develop task" -> runs `03-develop-task.md`
+  - "Develop task" -> runs `03-develop-single-task.md` (for single) or `05-run-full-task.md` (for loop)
 
 - **VDD Mode (Verification-Driven Development):**
   - "Start feature X in VDD mode" -> runs `vdd-01-start-feature.md`

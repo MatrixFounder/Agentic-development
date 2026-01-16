@@ -110,7 +110,7 @@ project-root/
 - **Стандартный режим (Stub-First):**
   - "Start feature X" -> запускает `01-start-feature.md`
   - "Plan implementation" -> запускает `02-plan-implementation.md`
-  - "Develop task" -> запускает `03-develop-task.md`
+  - "Develop task" -> запускает `03-develop-single-task.md` (одиночная) или `05-run-full-task.md` (цикл)
 
 - **Режим VDD (Verification-Driven Development):**
   - "Start feature X in VDD mode" -> запускает `vdd-01-start-feature.md`

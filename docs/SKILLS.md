@@ -57,6 +57,13 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | - `code-review-checklist` | For checking Code implementation. | `03-develop-task` | Code Reviewer |
 | **`security-audit`** | Vulnerability assessment (OWASP, secrets) and reporting. | `/security-audit`, `/full-robust` | Security Auditor |
 
+### Executable Skills (Tools)
+| Skill | Description | Used By in Workflows | Used By Agents |
+|-------|-------------|----------------------|----------------|
+| **`tools/*`** | Core system tools defined in `.agent/tools/schemas.py`. These are natively executed by the Orchestrator. | `01-start-feature`, `03-develop-task` | All Agents |
+| - `run_tests` | Runs pytest validation. | `03-develop-task` | Developer |
+| - `git_ops` | Git operations (status, add, commit). | `03-develop-task` | Developer |
+
 ### Verification Driven Development (VDD)
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|

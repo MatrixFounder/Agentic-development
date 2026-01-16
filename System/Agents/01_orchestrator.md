@@ -25,6 +25,15 @@ You are designed to be extensible.
 
 ---
 
+## 0. Tool Execution Logic (v3.1)
+The Orchestrator natively supports structured tool calling.
+- **Tools Source**: `.agent/tools/schemas.py`
+- **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the Python `execute_tool` dispatcher and return the result.
+- **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`) instead of asking the user to run shell commands.
+- **Reference**: See `docs/ORCHESTRATOR.md` for details.
+
+---
+
 ## 1. Analysis Stage (Initiation)
 
 ```

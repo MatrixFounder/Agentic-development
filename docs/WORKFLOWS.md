@@ -1,91 +1,67 @@
 # Antigravity Workflows Manual
 
-This document serves as the **Single Source of Truth** for all automation workflows in the Antigravity system. Workflows are defined in `.agent/workflows/` and can be executed by the Orchestrator to automate complex development processes.
+This document is the **Single Source of Truth** for all automation workflows in the Antigravity system. Workflows are defined in `.agent/workflows/` and can be executed by the Orchestrator to automate development processes.
 
-## 🚀 Workflow Registry
+## 🚀 Workflow Categorization
 
-| Variant | Workflow Name | Description | Command to Run |
-| :--- | :--- | :--- | :--- |
-| **Standard** | **Start Feature** | Begins a new feature cycle: Analysis, TASK creation, Architecture review. | `Start feature [Name]` / `run 01-start-feature` |
-| **Standard** | **Plan Implementation** | Generates a detailed implementation plan and task breakdown (Stub-First). | `Plan implementation` / `run 02-plan-implementation` |
-| **Standard** | **Develop Task** | Executes a single development task from the plan. | `Develop task [ID]` / `run 03-develop-task` |
-| **Standard** | **Update Docs** | Updates project documentation (README, Architecture, etc.). | `Update docs` / `run 04-update-docs` |
-| **VDD** | **VDD Start Feature** | Starts a feature in High-Integrity VDD mode (Chainlink Decomposition). | `Start VDD feature [Name]` / `run vdd-01-start-feature` |
-| **VDD** | **VDD Plan** | Atomic breakdown of issues into verifiable "Beads". | `Plan VDD` / `run vdd-02-plan` |
-| **VDD** | **VDD Develop** | Runs the **Adversarial Loop** (Sarcasmotron) to implement code with zero slop. | `Develop VDD task` / `run vdd-03-develop` |
-| **Nested** | **Base Stub-First** | The core Stub-First pipeline (can be called by other workflows). | `run base-stub-first` |
-| **Nested** | **VDD Adversarial** | Isolated Adversarial Refinement Loop. | `run vdd-adversarial` |
-| **Nested** | **VDD Enhanced** | Combines Stub-First structure with VDD verification (`Base` → `Adversarial`). | `run vdd-enhanced` |
-| **Robust** | **Full Robust** | The Ultimate Pipeline: `VDD Enhanced` + `Security Audit`. | `run full-robust` |
-| **Audit** | **Security Audit** | Standalone security check using the Security Auditor agent. | `Run security audit` / `run security-audit` |
+The workflows are organized into three categories:
 
+1.  **Pipelines (Meta-Workflows)**: High-level strategies that manage the entire lifecycle of a feature (Analysis -> Arch -> Plan -> Execution). **Start here.**
+2.  **Automation Loops**: Engines that iterate through lists of tasks.
+3.  **Atomic Actions**: Granular steps that perform a single phase.
+
+---
+
+## 1. Pipelines (Meta-Workflows)
+*Use these to start a big chunk of work.*
+
+| Workflow Name | Description | Command |
+| :--- | :--- | :--- |
+| **Standard Feature** | **Default Choice.** Runs the full "Stub-First" pipeline: Analysis, Architecture, Planning, and then Auto-Execution loop. | `run base-stub-first` |
+| **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) followed by a Security Audit. | `run full-robust` |
+| **VDD Enhanced** | Combines Stub-First planning with VDD Adversarial execution. | `run vdd-enhanced` |
+
+---
+
+## 2. Automation Loops
+*Use these to execute a ready-made plan.*
+
+| Workflow Name | Description | Command |
+| :--- | :--- | :--- |
+| **Run Full Task** | **The Loop Engine.** Reads `docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. Stops on error. | `run 05-run-full-task` |
+| **VDD Develop** | The VDD Loop Engine. Runs the Adversarial "Sarcasmotron" loop for tasks. | `run vdd-03-develop` |
+
+---
+
+## 3. Atomic Actions
+*Use these for granular control or manual overrides.*
+
+| Workflow Name | Description | Command |
+| :--- | :--- | :--- |
+| **Start Feature** | Analysis Phase only (creates TASK). | `run 01-start-feature` |
+| **Plan Impl** | Planning Phase only (creates PLAN). | `run 02-plan-implementation` |
+| **Develop Task** | Executes a **single** task from the plan (No loop). | `run 03-develop-single-task` |
+| **Update Docs** | Updates documentation artifacts. | `run 04-update-docs` |
+| **Security Audit** | runs the security auditor agent. | `run security-audit` |
+
+---
+
+## ❓ FAQ
+
+### Q: Why did `01-04` not loop through all tasks?
+A: Because `03-develop-single-task` (formerly `03-develop-task`) is designed to be **atomic**. It performs one cycle of "Code -> Review -> Fix". It does **not** contain logic to read a list and iterate. To run the full list, you must use a **Pipeline** (like `base-stub-first`) which calls the **Automation Loop** (`05-run-full-task`).
+
+### Q: How does `Run Full Task` work?
+A: It parses `docs/PLAN.md`. For each entry (e.g., "Task 1.1"), it:
+1.  Calls `03-develop-single-task` with that specific task ID.
+2.  Waits for success.
+3.  Moves to the next task.
+4.  Verification is handled inside `03` (Developer <-> Reviewer loop).
 
 ---
 
 ## 🛡 Safety & Verification
 
-All **Standard** automation workflows in this version (v2.1.1+) include **Mandatory Verification Loops** and **Safety Limits**:
-1. **Verification**: Every artifact (TASK, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
-2. **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention. This prevents infinite loops.
-
-> [!NOTE]
-> **VDD Exception**: Workflows starting with `vdd-*` (e.g., `vdd-01`, `vdd-enhanced`) and `full-robust` **DO NOT** have iteration limits. They are designed for "High Integrity" and will loop indefinitely until the Reviewer (Sarcasmotron) is fully satisfied or reaches "Hallucination Exit".
-
----
-
-
-## 📖 Detailed Guides
-
-### 1. Standard Workflow (Stub-First)
-*Best for: MVPs, Prototypes, Standard Features*
-
-The default "happy path" for development. Focuses on speed and structural integrity.
-1. **Analysis (`01`)**: The Agent reads instructions, checks for known issues, and creates a Technical Specification (TASK). **(+ Verification Loop)**
-2. **Planning (`02`)**: The Agent creates a `plan.md` and detailed task files (`docs/tasks/`). **(+ Verification Loop)**
-3. **Development (`03`)**: The Agent implements tasks one by one, prioritizing stubs before logic. **(+ Code Review Loop)**
-
-### 2. VDD (Verification-Driven Development)
-*Best for: Mission-Critical Systems, Complex Logic, Security Components*
-
-A high-integrity mode based on **Adversarial Refinement**.
-- **Philosophy**: "It's not done until the Adversary can't roast it."
-- **Mechanism**: A secondary AI persona ("Sarcasmotron") aggressively critiques the code and tests. The developer must fix all issues until the Adversary is satisfied (the "Hallucination Exit").
-- **Workflow**:
-    - `vdd-01`: Breaks down Epics into Issues (Chainlink).
-    - `vdd-02`: Breaks down Issues into Beads (Atomic Verifiable Units).
-    - `vdd-03`: The Implementation Loop with the Adversary.
-
-### 3. Nested & Advanced Workflows
-*Best for: Power Users, Architects*
-
-These workflows utilize the **Nesting** capability, where one workflow calls another (`Call /workflow-name`).
-
-- **`/vdd-enhanced`**:
-    - **Why?** You want the structure of "Stub-First" but the quality assurance of "VDD".
-    - **How?** It runs the standard planning phase, then switches to the Adversarial Loop for implementation.
-
-- **`/full-robust`**:
-    - **Why?** You need maximum confidence for production deployment.
-    - **How?** It runs `vdd-enhanced` and follows it up with a dedicated **Security Audit**.
-
-### 4. specialized Workflows
-
-- **`/security-audit`**:
-    - **Agent**: `System/Agents/10_security_auditor.md`
-    - **Action**: Scans the codebase for OWASP Top 10 vulnerabilities, secret leaks, and hazardous dependencies.
-    - **Output**: `docs/SECURITY_AUDIT.md`
-
----
-
-## 🛠 Extension Guide
-
-To add a new workflow:
-1. Create a `.md` file in `.agent/workflows/`.
-2. Use the standard header:
-   ```markdown
-   ---
-   description: Your workflow description
-   ---
-   ```
-3. Define the steps (Agent prompts, shell commands, or nested workflow calls).
-4. **Update this file** to include it in the Registry.
+All **Standard** automation workflows include **Mandatory Verification Loops** and **Safety Limits**:
+1.  **Verification**: Every artifact (TASK, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
+2.  **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention.

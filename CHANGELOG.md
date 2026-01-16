@@ -24,6 +24,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.2.0 — Structured Tool Calling**
+
+#### **Added**
+* **Tool Execution Subsystem**: The Orchestrator now natively supports structured tool calling (Function Calling).
+* **Tool Dispatcher**: `scripts/tool_runner.py` executes actions safely.
+* **Workflows**:
+    * Refactored `03-develop-task` -> `03-develop-single-task` (clearer naming).
+    * Updated `base-stub-first` to call the automation engine (`05`).
+    * Rewrote `docs/WORKFLOWS.md` with "Pipelines" vs "Actions" categorization.
+* **Standard Tools**: Added `run_tests`, `git_ops`, `file_ops` to `.agent/tools/schemas.py`.
+* **Documentation**: Added `docs/ORCHESTRATOR.md` and `docs/USER_TOOLS_GUIDE.md`.
+
+---
+
 ### **v3.1.3 — Skills Cleanup & Cursor Integration Fix**
 
 #### **Changed**

@@ -1,6 +1,6 @@
 ---
 name: artifact-management
-description: Rules for managing local .AGENTS.md and global artifacts (TZ.md, ARCHITECTURE.md).
+description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, ARCHITECTURE.md)."
 version: 1.0
 ---
 # Artifact Management
@@ -25,11 +25,11 @@ version: 1.0
   ```
 
 ## Global Artifacts
-- **TZ.md:** Technical Specification. Managed by Analyst.
+- **TASK.md:** Technical Specification. Managed by Analyst.
 - **ARCHITECTURE.md:** System Architecture. Managed by Architect.
 - **PLAN.md:** Development Plan. Managed by Planner.
 
 ## Protocol
 1. **Read First:** Before starting work, read relevant artifacts.
-2. **Update Immediately:** Update artifacts corresponding to your changes (Developer updates `.AGENTS.md`, Analyst updates `TZ.md`).
+2. **Update Immediately:** Update artifacts corresponding to your changes (Developer updates `.AGENTS.md`, Analyst updates `TASK.md`).
 3. **Consistency:** Ensure artifacts match the actual code state.

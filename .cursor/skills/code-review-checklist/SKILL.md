@@ -1,6 +1,6 @@
 ---
 name: code-review-checklist
-description: Structured checklist for code review: bugs, style, performance, security, docs.
+description: "Structured checklist for code review: bugs, style, performance, security, docs."
 version: 1.1
 ---
 # Code Review Checklist

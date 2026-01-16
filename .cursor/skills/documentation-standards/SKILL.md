@@ -8,7 +8,15 @@ version: 1.2
 ## 1. Docstrings & JSDoc
 All classes and functions must have documentation.
 
-### Python (Google Style)
+### 3. Path Standards (CRITICAL)
+- **Relative Paths Only:** When linking to internal files in Artifacts (PLAN.md, TASK.md), ALWAYS use relative paths.
+    - ✅ `[Ref](src/main.py)`
+    - ✅ `[.agent/skills/core.md](.agent/skills/core.md)`
+    - ❌ `file:///Users/username/project/src/main.py`
+    - ❌ `/Absolute/System/Path`
+- **Portability:** Absolute paths break portability. Relative paths work everywhere.
+
+
 ```python
 def calculate(price: float, rate: float) -> float:
     """

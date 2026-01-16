@@ -5,7 +5,7 @@ version: 1.0
 ---
 # Architecture Review Checklist
 
-## 1. TZ Compliance
+## 1. TASK Compliance
 - [ ] **Coverage:** All Use Cases mapped to components?
 - [ ] **Constraints:** All non-functional requirements met?
 
@@ -31,6 +31,6 @@ version: 1.0
 - [ ] **Faults:** Error handling, retries, backups?
 
 ## Criticality Protocol
-- 🔴 **BLOCKING:** Data Model error, Security hole, Unmet TZ requirement.
+- 🔴 **BLOCKING:** Data Model error, Security hole, Unmet TASK requirement.
 - 🟡 **MAJOR:** Missing index, Questionable tech choice, Vague interface.
 - 🟢 **MINOR:** Description clarity, typos.

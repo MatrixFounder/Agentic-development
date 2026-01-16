@@ -44,7 +44,7 @@ version: 1.1
 ## 3. Important Rules
 
 ### ✅ DO:
-1. **Base on TZ:** Justify every decision by requirements from TZ.
+1. **Base on TASK:** Justify every decision by requirements from TASK.
 2. **Consider Existing:** Structure new components to fit existing patterns.
 3. **Be Specific:** Indicate specific technologies (e.g., "PostgreSQL 14"), not just "SQL DB".
 4. **Link to Use Cases:** Map components to the UC they fulfill.

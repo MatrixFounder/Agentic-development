@@ -1,6 +1,6 @@
 ---
 name: requirements-analysis
-description: Process for gathering and refining requirements into a structured TZ.
+description: Process for gathering and refining requirements into a structured TASK.
 version: 1.3
 ---
 # Requirements Analysis
@@ -10,13 +10,14 @@ version: 1.3
 2. **Identification:** What are the use cases? Actors? Preconditions?
 3. **Clarification:** List open questions. Better to ask now than fail later.
 
-## 2. Technical Specification (TZ) Structure
+## 2. Technical Specification (TASK) Structure
 
-Your TZ must contain the following sections:
+Your TASK must contain the following sections:
 
-### 0. Meta Information
-- **Task ID:** Extract from existing tasks (e.g. 002 if 001 exists) or use 001 for new project.
-- **Slug:** Short kebab-case name (e.g. `user-auth`).
+### 0. Meta Information (MANDATORY)
+- **Task ID:** Extract from existing tasks (e.g. 002 if 001 exists) or use 001 for new project. **REQUIRED.**
+- **Slug:** Short kebab-case name (e.g. `user-auth`). **REQUIRED.**
+- **WARNING:** Do not skip this section. It is crucial for tracking.
 
 ### 1. General Description
 - Brief description of the task based on the general statement from the user
@@ -72,7 +73,7 @@ Specific, verifiable criteria:
 ### 4. Constraints and Assumptions
 - Technical constraints
 - Business constraints
-- Assumptions made during TZ creation
+- Assumptions made during TASK creation
 
 ### 5. Open Questions
 List of questions requiring clarification from the user
@@ -87,12 +88,12 @@ List of questions requiring clarification from the user
 5. **Link to existing functionality:** Explicitly state how new functionality interacts with existing.
 
 ### ❌ DO NOT:
-1. **DO NOT write code:** You create TZ, not implementation.
+1. **DO NOT write code:** You create TASK, not implementation.
 2. **DO NOT design architecture:** This is the Architect's task.
 3. **DO NOT invent:** If unclear, ask a question.
 4. **DO NOT make assumptions:** Explicitly state where you make an assumption.
 5. **DO NOT overcomplicate:** Keep it simple, don't overengineer.
-6. **DO NOT ignore existing functionality:** Study the project before writing TZ.
+6. **DO NOT ignore existing functionality:** Study the project before writing TASK.
 7. **DO NOT leave important decisions for later:** All key decisions must be selected or clarification requested from user.
 
 ### 🔴 CRITICAL: Uncertainty Management

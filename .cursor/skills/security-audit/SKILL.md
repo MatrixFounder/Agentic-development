@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: Security vulnerability assessment (OWASP, secrets, dependencies).
+description: "Security vulnerability assessment (OWASP, secrets, dependencies)."
 version: 1.0
 ---
 # Security Audit

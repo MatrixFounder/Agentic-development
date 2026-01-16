@@ -38,6 +38,11 @@ Before creating a NEW `docs/TASK.md` (Analyst) or starting a new major phase:
     -   Command: `mv docs/TASK.md docs/tasks/task-{ID}-{Slug}.md`
 4.  **Validation**: Verify the file was moved before creating the new one.
 
+### Execution Rule
+- The archive command (`mv docs/TASK.md docs/tasks/...`) is **SAFE TO AUTO-RUN**.
+- **DO NOT** wait for user approval for this operation.
+- This is a mandatory, non-destructive operation (move, not delete).
+
 ## Protocol
 1. **Read First:** Before starting work, read relevant artifacts.
 2. **Update Immediately:** Update artifacts corresponding to your changes (Developer updates `.AGENTS.md`, Analyst updates `TASK.md`).

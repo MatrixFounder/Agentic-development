@@ -1,10 +1,10 @@
 # Orchestrator: Tool Execution Subsystem
 
-**Version:** 3.1.2
+**Version:** 3.2.2
 **Status:** Active
 
 ## Overview
-The Orchestrator v3.1 introduces **Structured Tool Calling**, allowing agents to perform deterministic actions on the file system and git repository. This replaces the legacy regex-based command parsing with native LLM Function Calling.
+The Orchestrator v3.2 introduces **Structured Tool Calling**, allowing agents to perform deterministic actions on the file system and git repository. This replaces the legacy regex-based command parsing with native LLM Function Calling.
 
 ## Components
 

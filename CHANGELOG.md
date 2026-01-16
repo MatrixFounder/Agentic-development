@@ -24,6 +24,17 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.2.3 — Archiving Protocol Refinement**
+
+#### **Changed**
+* **Archiving Scope**: Removed mandatory archiving of `docs/PLAN.md`. Only `docs/TASK.md` requires archiving before new tasks.
+* **Documentation**: Updated version references in `README.md` (v3.1→v3.2) and `docs/ORCHESTRATOR.md` (v3.1.2→v3.2.2).
+
+#### **Improved**
+* **Auto-Run Protocol**: Added explicit `SAFE TO AUTO-RUN` instruction to Analyst prompt and `skill-artifact-management`. The archive command for `docs/TASK.md` no longer requires user approval.
+
+---
+
 ### **v3.2.2 — System Integrity & Archiving Protocols**
 
 #### **Fixed**
@@ -243,6 +254,17 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.2.3 — Уточнение Протокола Архивации**
+
+#### **Изменено**
+* **Область архивации**: Удалена обязательная архивация `docs/PLAN.md`. Только `docs/TASK.md` требует архивации перед новыми задачами.
+* **Документация**: Обновлены ссылки на версии в `README.md` (v3.1→v3.2) и `docs/ORCHESTRATOR.md` (v3.1.2→v3.2.2).
+
+#### **Улучшено**
+* **Протокол Auto-Run**: Добавлена явная инструкция `SAFE TO AUTO-RUN` в промпт Аналитика и `skill-artifact-management`. Команда архивации `docs/TASK.md` больше не требует одобрения пользователя.
+
+---
 
 ### **v3.2.2 — Целостность системы и Протоколы архивации**
 

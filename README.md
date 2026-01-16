@@ -51,7 +51,7 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 - **Shared Logic**: Improvements in a skill benefit all agents.
 
 ### 3. Executable Skills (Tools)
-New in v3.1: The system supports **Native Tools** executed by the Orchestrator (Schema-based).
+New in v3.2: The system supports **Native Tools** executed by the Orchestrator (Schema-based).
 - **Definition**: `.agent/tools/schemas.py`.
 - **Capabilities**: Run tests, Git operations, File I/O.
 

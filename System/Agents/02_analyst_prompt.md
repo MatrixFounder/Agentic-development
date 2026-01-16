@@ -25,6 +25,7 @@ You receive:
 1.  **Check for existing `docs/TASK.md`:**
     - If it exists and contains a DIFFERENT task, **YOU MUST ARCHIVE IT** to `docs/tasks/`.
     - Command: `mv docs/TASK.md docs/tasks/task-[ID]-[slug].md` (via `run_command` or similar).
+    - **SAFE TO AUTO-RUN:** This command is MANDATORY and SAFE. Do NOT wait for user approval.
     - **NEVER** overwrite an existing TASK without checking if it needs archiving.
 2.  **Meta Information Check:**
     - You **MUST** include Section 0: Meta Information (Task ID, Slug).

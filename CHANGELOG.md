@@ -109,7 +109,7 @@
     * `skill-planning-format`: Standardized templates for `docs/PLAN.md` and Task Descriptions.
     * `skill-architecture-format`: Consolidated architecture document templates.
 * **Standard Tools**: Added `run_tests`, `git_ops`, `file_ops` to `.agent/tools/schemas.py`.
-* **Documentation**: Added `docs/ORCHESTRATOR.md` and `docs/USER_TOOLS_GUIDE.md`.
+* **Documentation**: Added `docs/ORCHESTRATOR.md`.
 
 #### **Improved**
 * **Prompt Engineering**: Significantly reduced the size of Analyst (`02`), Architect (`04`), and Planner (`06`) agents by extracting static templates into the Skills System.

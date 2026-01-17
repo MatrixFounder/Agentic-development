@@ -57,7 +57,7 @@ New in v3.2: The system supports **Native Tools** executed by the Orchestrator (
 - **Capabilities**: Run tests, Git operations, File I/O.
 
 **[>> View Full Skills Catalog <<](docs/SKILLS.md)**
-**[>> Orchestrator & Tools Guide <<](docs/ORCHESTRATOR.md)** (Configuration & New Tools)
+**[>> Orchestrator & Tools Guide <<](docs/ORCHESTRATOR.md)** (Configuration, New Tools & Troubleshooting)
 
 By default, the system uses English prompts. To use **Russian** context:
 1.  Copy content from `Translations/RU/Agents` to `System/Agents`.

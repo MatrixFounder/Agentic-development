@@ -14,12 +14,18 @@ This project uses a modular Skills System.
 
 
 
-## TOOL EXECUTION PROTOCOL (v3.2.0)
+## TOOL EXECUTION PROTOCOL (v3.2.5+)
 The Orchestrator natively supports structured tool calling (Function Calling).
 1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
 2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
-3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`) instead of asking the user to run shell commands.
+3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`, `generate_task_archive_filename`) instead of asking the user to run shell commands.
 4.  **Reference**: See `docs/ORCHESTRATOR.md` for details.
+
+### Safe Commands (Auto-Run without Approval)
+- **Read-only**: `ls`, `cat`, `head`, `tail`, `grep`, `find`, `tree`
+- **Git read**: `git status`, `git log`, `git diff`, `git show`
+- **Archiving**: `mv docs/TASK.md docs/tasks/...`
+- **Tools**: `generate_task_archive_filename`, `list_directory`, `read_file`
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
@@ -28,6 +34,7 @@ The Orchestrator natively supports structured tool calling (Function Calling).
    - **Load Skills**: `skill-requirements-analysis`.
    - Read `docs/KNOWN_ISSUES.md`.
    - Archive/Create `docs/TASK.md` using `skill-artifact-management` rules.
+   - **Use Tool**: Call `generate_task_archive_filename(slug="task-slug")` for unique filename.
    - (Self-Correction): Check against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 
 2. **Architecture Phase**:

@@ -11,12 +11,19 @@ The system relies on a modular **Skills System**:
 1.  **Definitions**: Located in `.agent/skills/[skill-name]/SKILL.md`. These are the source of truth.
 2.  **Usage**: Agents declare "Active Skills" in their prompts. You **MUST** read these skill files when assuming an agent role.
 
-## TOOL EXECUTION PROTOCOL (v3.2.0)
+## TOOL EXECUTION PROTOCOL (v3.2.5+)
 The Orchestrator natively supports structured tool calling (Function Calling).
 1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
 2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
-3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`) instead of asking the user to run shell commands.
+3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`, `generate_task_archive_filename`) instead of asking the user to run shell commands.
 4.  **Reference**: See `docs/ORCHESTRATOR.md` for details.
+
+### Safe Commands (Auto-Run)
+The following are **SAFE TO AUTO-RUN** without user approval:
+- **Read-only**: `ls`, `cat`, `head`, `tail`, `grep`, `find`, `tree`
+- **Git read**: `git status`, `git log`, `git diff`, `git show`
+- **Archiving**: `mv docs/TASK.md docs/tasks/...`
+- **Tools**: `generate_task_archive_filename`, `list_directory`, `read_file`
 
 ## CONTEXT LOADING PROTOCOL (MUST READ)
 When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`):
@@ -48,6 +55,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
    - If `docs/TASK.md` exists and this is a new task, archive it to `docs/tasks/task-ID-slug.md` BEFORE proceeding.
      - **Archiving Rule**: Use `skill-artifact-management`.
+     - **Use Tool**: Call `generate_task_archive_filename(slug="task-slug")` to get unique filename.
    - Create/Update `docs/TASK.md` based on user task.
    - (Self-Correction): Check your own TASK against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 

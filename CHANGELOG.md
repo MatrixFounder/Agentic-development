@@ -46,6 +46,8 @@
 #### **Documentation**
 * Updated `docs/ARCHITECTURE.md`, `docs/ORCHESTRATOR.md`, and `docs/SKILLS.md`.
 * Added Python installation requirements to README.
+* Consolidated `docs/USER_TOOLS_GUIDE.md` into `docs/ORCHESTRATOR.md` (removed duplicate file).
+* Synchronized `.gemini/GEMINI.md` and `.cursorrules` with v3.2.5+ protocol.
 
 ---
 

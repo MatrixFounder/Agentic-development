@@ -24,7 +24,7 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.2.5 — Task Archive ID Tool & Auto-Run Protocol**
+### **v3.2.5, v3.2.6 — Task Archive ID Tool & Auto-Run Protocol**
 
 #### **Added**
 * **New Tool: `generate_task_archive_filename`**: Deterministic tool for generating unique sequential IDs when archiving tasks. Eliminates manual ID assignment errors and ID gaps.
@@ -294,7 +294,7 @@ To upgrade from v3.0.x to v3.1.0:
 
 ## 🇷🇺 Русская версия
 
-### **v3.2.5 — Инструмент генерации ID задач и Протокол Auto-Run**
+### **v3.2.5, v3.2.6 — Инструмент генерации ID задач и Протокол Auto-Run**
 
 #### **Добавлено**
 * **Новый инструмент: `generate_task_archive_filename`**: Детерминированный инструмент для генерации уникальных последовательных ID при архивации задач. Устраняет ошибки ручного назначения ID и пробелы в нумерации.

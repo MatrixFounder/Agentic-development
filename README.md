@@ -46,6 +46,10 @@ Antigravity supports this architecture out-of-the-box:
 1.  **Configuration**: Ensure `.gemini/GEMINI.md` exists (it acts as the system prompt).
 2.  **Skills**: Ensure `.agent/skills/` directory exists. Antigravity automatically loads skills from here.
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
+4.  **Auto-Run Permissions**: To enable autonomous command execution, add the following to **Allow List Terminal Commands** in IDE Settings:
+    ```text
+    ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md docs/tasks/, mv docs/PLAN.md docs/plans/, mkdir -p docs/tasks, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test
+    ```
 
 ### 📚 Skills System
 Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) from "What" (Capabilities).

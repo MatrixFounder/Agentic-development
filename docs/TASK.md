@@ -270,3 +270,4 @@ tools: ["generate_task_archive_filename"]
 - [x] Fix `skill-safe-commands` IDE config confusion (Agent vs User)
 - [x] Make `docs/ORCHESTRATOR.md` reference optional in prompts (if available)
 - [x] Update README with installation instructions (User Request)
+- [x] Add Antigravity allow-list configuration to README

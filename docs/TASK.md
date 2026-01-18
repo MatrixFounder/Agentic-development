@@ -266,4 +266,6 @@ tools: ["generate_task_archive_filename"]
     - [x] Planner
     - [x] Developer
     - [x] Reviewers (Task, Arch, Plan, Code)
-- [x] Revert explicit duplication in `01_orchestrator.md`
+### Phase 8: Portability & UX Fixes (Bonus)
+- [x] Fix `skill-safe-commands` IDE config confusion (Agent vs User)
+- [x] Make `docs/ORCHESTRATOR.md` reference optional in prompts (if available)

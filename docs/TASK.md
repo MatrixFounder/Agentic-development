@@ -269,3 +269,4 @@ tools: ["generate_task_archive_filename"]
 ### Phase 8: Portability & UX Fixes (Bonus)
 - [x] Fix `skill-safe-commands` IDE config confusion (Agent vs User)
 - [x] Make `docs/ORCHESTRATOR.md` reference optional in prompts (if available)
+- [x] Update README with installation instructions (User Request)

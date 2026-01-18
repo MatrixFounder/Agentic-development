@@ -28,6 +28,7 @@ The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md
 ### 1. Common Prerequisites
 Regardless of your tool, you need the **Agent Personas** in your project root:
 - Copy `/System/Agents` folder to your project root.
+- (Recommended) Copy `docs/ORCHESTRATOR.md` to your `docs/` folder (referenced by Orchestrator).
 
 ### 2. Choose Your AI Assistant
 

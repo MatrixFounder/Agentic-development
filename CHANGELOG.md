@@ -24,6 +24,18 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.3.1 — Portability, VDD Audit & UX Improvements** (Task 033)
+
+#### **Fixed**
+* **Circular Logic in Safe Commands**: Eliminated the documentation loop. Added explicit copy-paste list to `skill-safe-commands` for IDE configuration.
+* **Agent Hallucinations**: Corrected `01_orchestrator.md` references to non-existent tools (`git_ops` -> `git_status`, etc.) revealed by VDD Audit.
+* **IDE Configuration**: Fixed documentation for "Allow List" to address `mv` command token matching issues.
+* **Portability**: Made `docs/ORCHESTRATOR.md` reference optional (`if available`) to prevent errors in lightweight projects or when transferring agents.
+
+#### **Refactored**
+* **Mandatory Skill Pattern**: Enforced `skill-safe-commands (Mandatory)` across all agents to ensure native tool safety.
+* **Developer Guidelines**: Introduced explicit "Tooling Protocol" enforcing `native tools` (like `run_tests`) over shell commands.
+
 ### **v3.3.0 — Skill Encapsulation & Safe Commands Centralization** (Task 033)
 
 #### **Added**
@@ -322,6 +334,18 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.3.1 — Портативность, VDD Аудит и UX** (Task 033)
+
+#### **Исправлено**
+* **Круговая зависимость в Safe Commands**: Устранена петля в документации. Добавлен явный список команд в `skill-safe-commands` для быстрой настройки IDE.
+* **Галлюцинации Агентов**: Исправлены ссылки на несуществующие инструменты в `01_orchestrator.md` (`git_ops` -> `git_status`), выявленные в ходе VDD Аудита.
+* **Конфигурация IDE**: Исправлена документация для "Allow List" (решена проблема токенизации команды `mv`).
+* **Портативность**: Ссылка на `docs/ORCHESTRATOR.md` сделана опциональной (`if available`), чтобы агенты работали корректно при переносе.
+
+#### **Рефакторинг**
+* **Mandatory Skill Pattern**: Принудительное использование `skill-safe-commands` всеми агентами.
+* **Гайдлайны Разработчика**: Явный "Tooling Protocol", требующий использования нативных инструментов (`run_tests`) вместо shell.
 
 ### **v3.3.0 — Инкапсуляция Skills и Централизация Safe Commands** (Task 033)
 

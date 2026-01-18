@@ -274,4 +274,5 @@ tools: ["generate_task_archive_filename"]
 - [x] Adversarial Analysis of Tool Usage (Native vs Legacy)
 - [x] Verify Consistency of Skill References (Mandatory pattern)
 - [x] Cross-check Prompt Interfaces (Input/Output compatibility)
-- [x] Fix identified inconsistencies
+### Phase 10: Release v3.3.1 (Changelog)
+- [x] Update CHANGELOG.md with v3.3.1 release notes (VDD & Portability fixes)

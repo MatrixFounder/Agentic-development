@@ -31,42 +31,26 @@ version: 1.0
 
 
 ## Archiving Protocol (CRITICAL)
-Before creating a NEW `docs/TASK.md` (Analyst) or starting a new major phase:
-1.  **Check Condition**: Does `docs/TASK.md` exist and contain a different/completed task?
-2.  **Extract Metadata**: Read `Task ID` and `Slug` from "0. Meta Information".
-3.  **Generate Filename**: Call the `generate_task_archive_filename` tool:
-    ```python
-    # Auto-generate next ID:
-    result = generate_task_archive_filename(slug="my-task-slug")
-    # Or validate a proposed ID:
-    result = generate_task_archive_filename(slug="my-task-slug", proposed_id="032")
-    ```
-    - If `status == "generated"` or `status == "corrected"`: use `result["filename"]`
-    - If `status == "conflict"`: notify user of the conflict
-    - If `status == "error"`: handle the error
-4.  **Update Task ID**: Before archiving, update the `Task ID` in TASK.md's Meta Information to match `result["used_id"]`.
-5.  **Archive**: Move the file to `docs/tasks/{filename}`.
-    -   Command: `mv docs/TASK.md docs/tasks/{filename}`
-6.  **Validation**: Verify the file was moved before creating the new one.
-
-### Execution Rule
-- The archive command (`mv docs/TASK.md docs/tasks/...`) is **SAFE TO AUTO-RUN**.
-- **DO NOT** wait for user approval for this operation.
-- This is a mandatory, non-destructive operation (move, not delete).
-
-### Safe Commands (Auto-Run without Approval)
-The following commands are **SAFE TO AUTO-RUN** and do NOT require user confirmation:
-
-| Category | Commands |
-|----------|----------|
-| **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `tree`, `wc` |
-| **File info** | `stat`, `file`, `du`, `df` |
-| **Git read** | `git status`, `git log`, `git diff`, `git show`, `git branch` |
-| **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` |
-| **Tool calls** | `generate_task_archive_filename`, `list_directory`, `read_file` |
 
 > [!IMPORTANT]
-> These commands are idempotent or read-only. Always auto-run them to avoid blocking workflow.
+> **Complete protocol is in `skill-archive-task`.**
+> This skill depends on `skill-archive-task` for archiving `docs/TASK.md`.
+
+Before creating a NEW `docs/TASK.md`:
+1. **Apply Skill**: `skill-archive-task`
+2. Follow the 6-step protocol defined there
+
+See [skill-archive-task](file:///Users/sergey/Antigravity/agentic-development/.agent/skills/skill-archive-task/SKILL.md) for:
+- When to Archive (conditions)
+- Decision Logic (new vs refinement)
+- Protocol Steps (6 steps)
+- Tool usage (`generate_task_archive_filename`)
+
+### Safe Commands (Auto-Run without Approval)
+
+> See **`skill-safe-commands`** for the complete list of commands safe for auto-execution.
+
+Key commands: `mv docs/TASK.md docs/tasks/...`, `generate_task_archive_filename`, read-only commands.
 
 ## Protocol
 1. **Read First:** Before starting work, read relevant artifacts.

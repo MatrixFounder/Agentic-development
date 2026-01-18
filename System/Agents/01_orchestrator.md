@@ -33,11 +33,7 @@ The Orchestrator natively supports structured tool calling.
 - **Reference**: See `docs/ORCHESTRATOR.md` for details.
 
 ### Safe Commands (Auto-Run)
-The following are **SAFE TO AUTO-RUN** without user approval:
-- **Read-only**: `ls`, `cat`, `head`, `tail`, `grep`, `find`, `tree`
-- **Git read**: `git status`, `git log`, `git diff`, `git show`
-- **Archiving**: `mv docs/TASK.md docs/tasks/...`
-- **Tools**: `generate_task_archive_filename`, `list_directory`, `read_file`
+> See **`skill-safe-commands`** for the complete list of commands safe for auto-execution.
 
 ---
 
@@ -55,18 +51,11 @@ YOUR TASK:
 Determine if this is a NEW task or a refinement, and initiate the Analyst agent.
 
 DECISION LOGIC (ARTEFACT HANDLING):
-(See `skill-artifact-management` for detailed archiving rules)
-- IF user_task implies a NEW SEPARATE feature/refactor:
-  - CHECK: If docs/TASK.md has meaningful content from a previous task:
-    - ACTION: Archive it FIRST using the `generate_task_archive_filename` tool.
-    - CONFIRM: "Archiving previous TASK..."
-- IF user_task is a clarification/refinement of the CURRENT task:
-  - ACTION: Do NOT archive. Proceed to overwrite/update logic.
+- **Apply Skill**: `skill-archive-task` for complete archiving protocol
+- See skill for decision logic: New vs Refinement
 
 ACTIONS:
-1. CHECK & ARCHIVE: Execute the `Archiving Protocol` from `skill-artifact-management`.
-   - Call `generate_task_archive_filename(slug="task-slug")` to get unique filename.
-   - Move file: `mv docs/TASK.md docs/tasks/{filename}`.
+1. CHECK & ARCHIVE: Apply `skill-archive-task` protocol.
 2. Pass to Analyst:
    - Task description
    - Project description

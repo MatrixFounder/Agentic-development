@@ -24,6 +24,35 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.3.0 — Skill Encapsulation & Safe Commands Centralization** (Task 033)
+
+#### **Added**
+* **New Skill: `skill-archive-task`**: Complete, self-contained protocol for archiving `docs/TASK.md`. Single source of truth for archiving logic, eliminating duplication across 7+ files.
+    * 6-step archiving protocol with decision logic (new vs refinement).
+    * Error handling for missing Meta Information.
+    * Validation and rollback guidance.
+* **New Skill: `skill-safe-commands`**: Centralized list of commands safe for auto-execution without user approval.
+    * 7 command categories: read-only, file info, git read, archiving, directory ops, tool calls, testing.
+    * Pattern matching rules for IDE integration.
+    * IDE-specific instructions (Antigravity/Gemini, Cursor).
+
+#### **Refactored**
+* **Duplication Eliminated**: Reduced archiving protocol duplication from 7 files to 1:
+    * `.gemini/GEMINI.md` → skill reference
+    * `.cursorrules` → skill reference
+    * `System/Agents/02_analyst_prompt.md` → skill reference
+    * `System/Agents/01_orchestrator.md` → skill reference
+    * `System/Agents/00_agent_development.md` → skill reference (30 lines → 14)
+    * `.agent/skills/artifact-management/SKILL.md` → skill import
+    * `.agent/workflows/01-start-feature.md` → skill reference
+* **Safe Commands Centralized**: All 4 files with duplicate Safe Commands now reference `skill-safe-commands`.
+
+#### **Documentation**
+* Updated `docs/SKILLS.md` with new skills.
+* Added Implementation Summary to `docs/TASK.md` (Task 033).
+
+---
+
 ### **v3.2.5, v3.2.6 — Task Archive ID Tool & Auto-Run Protocol**
 
 #### **Added**
@@ -293,6 +322,35 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.3.0 — Инкапсуляция Skills и Централизация Safe Commands** (Task 033)
+
+#### **Добавлено**
+* **Новый навык: `skill-archive-task`**: Полный, самодостаточный протокол архивации `docs/TASK.md`. Единый источник истины для логики архивации, устраняет дублирование в 7+ файлах.
+    * 6-шаговый протокол архивации с логикой принятия решений (новая задача vs уточнение).
+    * Обработка ошибок при отсутствии Meta Information.
+    * Руководство по валидации и откату.
+* **Новый навык: `skill-safe-commands`**: Централизованный список команд для автоматического выполнения без подтверждения пользователя.
+    * 7 категорий команд: только чтение, информация о файлах, git чтение, архивация, директории, инструменты, тестирование.
+    * Правила pattern matching для интеграции с IDE.
+    * Инструкции для IDE (Antigravity/Gemini, Cursor).
+
+#### **Рефакторинг**
+* **Устранено дублирование**: Сокращён протокол архивации с 7 файлов до 1:
+    * `.gemini/GEMINI.md` → ссылка на skill
+    * `.cursorrules` → ссылка на skill
+    * `System/Agents/02_analyst_prompt.md` → ссылка на skill
+    * `System/Agents/01_orchestrator.md` → ссылка на skill
+    * `System/Agents/00_agent_development.md` → ссылка на skill (30 строк → 14)
+    * `.agent/skills/artifact-management/SKILL.md` → импорт из skill
+    * `.agent/workflows/01-start-feature.md` → ссылка на skill
+* **Safe Commands централизованы**: Все 4 файла с дублированными Safe Commands теперь ссылаются на `skill-safe-commands`.
+
+#### **Документация**
+* Обновлён `docs/SKILLS.md` с новыми навыками.
+* Добавлено Implementation Summary в `docs/TASK.md` (Task 033).
+
+---
 
 ### **v3.2.5, v3.2.6 — Инструмент генерации ID задач и Протокол Auto-Run**
 

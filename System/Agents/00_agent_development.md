@@ -219,32 +219,15 @@ The Developer is obliged to update documentation with every code change.
 ### GLOBAL ARTEFACT HANDLING RULES
 ARTEFACT HANDLING: TECHNICAL SPECIFICATION (TASK.md)
 
-STRICT RULES (mandatory for all agents):
-- docs/TASK.md contains ONLY the specification for the SINGLE CURRENT active task.
-- Distinguish task phases:
-  - "Clarification/refinement/iteration" = changes within the SAME task (e.g., "improve TASK", "add details to requirements", "fix inconsistencies after review").
-    → Overwrite docs/TASK.md completely. DO NOT archive. Preserve as the evolving single document for the current task.
-  - "New task" = explicitly different feature/bugfix/refactor (e.g., user says "now implement payments", "start new module", "next feature").
-    → Archive current TASK.md first (if it contains meaningful content), then overwrite with new.
-- When starting a NEW task:
-  - If docs/TASK.md contains previous content → archive it first.
-  - Then OVERWRITE docs/TASK.md completely with the new specification.
-  - NEVER append to existing content.
-- Archiving triggers (strict):
-  - ONLY upon full task completion (after successful implementation, tests, and before final commit).
-  - OR explicitly before starting a NEW task (when user input clearly indicates a new separate task).
-  - Do NOT archive during early stages (analysis iterations, TASK review, clarifications).
-- Archiving procedure (when triggered):
-  1. **Identify Filename:**
-     - First, read `docs/TASK.md` content.
-     - Look for "Meta Information" section (Task ID and Slug).
-     - **IF FOUND:** Use `docs/tasks/task-{ID}-{Slug}.md`.
-     - **IF NOT FOUND:**
-       - Determine ID: Check existing files in `docs/tasks/`, use next zero-padded number (001, 002, ...).
-       - Slug: Derive from task name (kebab-case, max 30 chars, no spaces).
-       - Filename: `docs/tasks/task-{GeneratedID}-{DerivedSlug}.md`.
-  2. Create the file with FULL content of current docs/TASK.md.
-  3. Add header at top: # Archived Task: <Full Task Name> — Archived on: YYYY-MM-DD
-  4. If folder docs/tasks/ does not exist — create it.
-  5. Confirm archiving in your response (e.g., "Archived previous TASK to docs/tasks/task-003-loyalty-system.md").
-- After archiving: Proceed with new TASK.md (overwrite completely).
+> See **`skill-archive-task`** for the complete archiving protocol.
+
+**Key Rules:**
+- `docs/TASK.md` contains ONLY the specification for the SINGLE CURRENT active task.
+- **Clarification/refinement** = Overwrite TASK.md, do NOT archive.
+- **New task** = Apply `skill-archive-task` protocol, then overwrite.
+- **Archiving triggers**: Only on task completion OR before starting NEW task.
+- Do NOT archive during early stages (analysis, review, clarifications).
+
+**Tool Usage:**
+- Call `generate_task_archive_filename(slug="...")` to get unique filename.
+- Move: `mv docs/TASK.md docs/tasks/{filename}`

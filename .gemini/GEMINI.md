@@ -19,11 +19,9 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 4.  **Reference**: See `docs/ORCHESTRATOR.md` for details.
 
 ### Safe Commands (Auto-Run)
-The following are **SAFE TO AUTO-RUN** without user approval:
-- **Read-only**: `ls`, `cat`, `head`, `tail`, `grep`, `find`, `tree`
-- **Git read**: `git status`, `git log`, `git diff`, `git show`
-- **Archiving**: `mv docs/TASK.md docs/tasks/...`
-- **Tools**: `generate_task_archive_filename`, `list_directory`, `read_file`
+> See **`skill-safe-commands`** for the complete list of commands safe for auto-execution.
+
+Key: read-only (`ls`, `cat`), git read, archiving (`mv docs/TASK.md`), tools.
 
 ## CONTEXT LOADING PROTOCOL (MUST READ)
 When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`):
@@ -53,9 +51,8 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Apply Skill**: `skill-requirements-analysis`.
    - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
-   - If `docs/TASK.md` exists and this is a new task, archive it to `docs/tasks/task-ID-slug.md` BEFORE proceeding.
-     - **Archiving Rule**: Use `skill-artifact-management`.
-     - **Use Tool**: Call `generate_task_archive_filename(slug="task-slug")` to get unique filename.
+   - If `docs/TASK.md` exists and this is a new task:
+     - **Apply Skill**: `skill-archive-task` (handles archiving protocol).
    - Create/Update `docs/TASK.md` based on user task.
    - (Self-Correction): Check your own TASK against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 

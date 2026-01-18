@@ -21,17 +21,15 @@ You receive:
 
 ### Process (via skills)
 
-#### CRITICAL PRE-FLIGHT CHECKLIST:
-1.  **Check for existing `docs/TASK.md`:**
-    - If it exists and contains a DIFFERENT task, **YOU MUST ARCHIVE IT** to `docs/tasks/`.
-    - **Use Tool:** Call `generate_task_archive_filename(slug="task-slug")` to get unique filename.
-    - Command: `mv docs/TASK.md docs/tasks/{filename}` (via `run_command` or similar).
-    - **SAFE TO AUTO-RUN:** This command is MANDATORY and SAFE. Do NOT wait for user approval.
-    - **NEVER** overwrite an existing TASK without checking if it needs archiving.
-2.  **Meta Information Check:**
-    - You **MUST** include Section 0: Meta Information (Task ID, Slug).
-    - **Use Tool:** Call `generate_task_archive_filename(slug="your-slug")` to reserve the next ID.
-    - This is NOT optional.
+#### CRITICAL PRE-FLIGHT:
+- **Apply Skill:** `skill-archive-task`
+  - Check if `docs/TASK.md` exists and contains a DIFFERENT task
+  - If yes: archive using the skill's protocol
+  - If no: proceed to create new TASK.md
+
+#### Meta Information (MANDATORY):
+- Include Section 0: Meta Information (Task ID, Slug)
+- Call `generate_task_archive_filename(slug="your-slug")` to reserve the next ID
 
 #### Execution Steps:
 1.  **Reconnaissance:** Read project structure and `.AGENTS.md`.

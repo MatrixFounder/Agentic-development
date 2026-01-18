@@ -22,15 +22,8 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 4.  **Reference**: See `docs/ORCHESTRATOR.md` for details.
 
 ### Safe Commands (Auto-Run without Approval)
-> See **`skill-safe-commands`** for the complete list.
-
-**CRITICAL: When calling `run_command`, set `SafeToAutoRun: true` for:**
-- `mv docs/TASK.md docs/tasks/...` — archiving (ALWAYS auto-run)
-- `mv docs/PLAN.md docs/plans/...` — archiving (ALWAYS auto-run)
-- `ls`, `cat`, `head`, `tail`, `grep`, `find`, `tree` — read-only
-- `git status`, `git log`, `git diff`, `git show` — git read
-- `mkdir -p docs/tasks`, `mkdir -p .agent/skills/*` — directory creation
-- `python -m pytest ...` — testing
+> **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.
+> All commands listed in that skill (including `mv`, `ls`, `git`, tests) are `SafeToAutoRun: true`.
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 

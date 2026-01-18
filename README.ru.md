@@ -66,7 +66,7 @@ Antigravity поддерживает эту архитектуру "из кор�
 3.  **Сценарии**: (Опционально) Используйте `.agent/workflows/` для автоматизированных цепочек.
 4.  **Автономный режим**: Чтобы разрешить авто-выполнение безопасных команд, добавьте следующий список в **Allow List Terminal Commands** (в настройках IDE):
     ```text
-    ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md docs/tasks/, mv docs/PLAN.md docs/plans/, mkdir -p docs/tasks, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test
+    ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md, mv docs/PLAN.md, mkdir -p docs, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test
     ```
 
 ### 3. Требования к установке (Python)

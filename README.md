@@ -48,7 +48,7 @@ Antigravity supports this architecture out-of-the-box:
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
 4.  **Auto-Run Permissions**: To enable autonomous command execution, add the following to **Allow List Terminal Commands** in IDE Settings:
     ```text
-    ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md docs/tasks/, mv docs/PLAN.md docs/plans/, mkdir -p docs/tasks, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test
+    ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md, mv docs/PLAN.md, mkdir -p docs, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test
     ```
 
 ### 📚 Skills System

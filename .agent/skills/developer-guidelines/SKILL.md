@@ -21,3 +21,9 @@ version: 1.0
 
 ## 4. Documentation First
 - **Update .AGENTS.md:** You are the Single Writer. You MUST create/update this file in every directory you touch.
+
+## 5. Tooling Protocol
+- **Tests:** Use `run_tests` tool (NOT `run_command` with pytest).
+- **Git:** Use `git_status`, `git_add`, `git_commit` tools.
+- **Files:** Use `read_file`, `write_file`, `list_directory`.
+- **Shell:** Use `run_command` only if no native tool exists for the operation.

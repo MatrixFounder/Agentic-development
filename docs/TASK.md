@@ -270,4 +270,8 @@ tools: ["generate_task_archive_filename"]
 - [x] Fix `skill-safe-commands` IDE config confusion (Agent vs User)
 - [x] Make `docs/ORCHESTRATOR.md` reference optional in prompts (if available)
 - [x] Update README with installation instructions (User Request)
-- [x] Add Antigravity allow-list configuration to README
+### Phase 9: VDD Framework Audit (User Request)
+- [x] Adversarial Analysis of Tool Usage (Native vs Legacy)
+- [x] Verify Consistency of Skill References (Mandatory pattern)
+- [x] Cross-check Prompt Interfaces (Input/Output compatibility)
+- [x] Fix identified inconsistencies

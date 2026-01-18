@@ -67,7 +67,8 @@ When calling `run_command` in **ANY** environment:
 - Add the patterns above to your `.cursorrules` file to enable auto-approval.
 
 **Antigravity Users:**
-- Add the command list to "Allow List Terminal Commands" setting in IDE options.
+- Add the command list below to "Allow List Terminal Commands" setting in IDE options:
+  `ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md, mv docs/PLAN.md, mkdir -p docs, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test`
 
 ## Integration
 

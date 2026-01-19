@@ -37,6 +37,8 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `ARCHITECTURE.md`). | All Workflows | All Agents |
 | **`skill-archive-task`** | Complete protocol for archiving TASK.md with ID generation. Single source of truth for archiving. | `01-start-feature`, All | Analyst, Orchestrator |
 | **`skill-safe-commands`** | Centralized list of commands safe for auto-execution without user approval. | All | All Agents |
+| **`skill-update-memory`** | Auto-update `.AGENTS.md` files based on code changes from git diff. | `04-update-docs`, Code Review | Developer, Code Reviewer |
+| **`skill-reverse-engineering`** | Regenerate architecture documentation from codebase analysis. | `04-update-docs`, Manual | Architect, Analyst |
 | **`planning-decision-tree`** | Decision logic for breaking down tasks and prioritizing work (Stub-First & E2E). | `02-plan-implementation`, `vdd-02-plan` | Planner, Architect |
 | **`requirements-analysis`** | Process for gathering and refining requirements into a structured Technical Specification (TASK). | `01-start-feature`, `vdd-01-start-feature` | Analyst, TASK Reviewer |
 | **`skill-task-model`** | Standard models, examples (Good/Bad), and structure rules for TASK documents. | `01-start-feature` | Analyst, TASK Reviewer |

@@ -24,7 +24,7 @@
 | **v3.3.1** | Portability fixes, VDD Audit, UX improvements | ✅ Released | [→ Детали](#v331-portability-fixes) |
 | **v3.3.2** | Auto-tests для протокола архивации (15 тестов) | ✅ Released | [→ Детали](#v332-auto-tests) |
 | **v3.4** | VDD multi-adversarial + новые adversarial skills | ✅ Released | [→ Детали](#v34--vdd-multi-adversarial-done) |
-| **v3.5** | `skill-update-agents-memory`, `skill-reverse-engineering` | 🟢 Планируется | [→ Детали](#v35--автоматизация-памяти-planned) |
+| **v3.5** | `skill-update-memory`, `skill-reverse-engineering` | ✅ Released | [→ Детали](#v35--автоматизация-памяти-done) |
 | **v3.6** | Installer + examples + documentation polish | 🔵 Низкий | [→ Детали](#v36--экосистема) |
 
 ---
@@ -114,7 +114,7 @@ cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
 ---
 
-## v3.5 — Автоматизация памяти (PLANNED)
+## v3.5 — Автоматизация памяти (DONE)
 
 **Цель:** Исключить человеческий фактор при поддержании актуальности документации и памяти агентов.
 

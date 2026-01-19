@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.4.2
+# Multi-Agent Software Development System v3.5.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
@@ -272,27 +272,31 @@ To make the next iteration go smoothly:
 
 If the user made "free-form" fixes during development completion, the documentation (e.g., `docs/TASK.md`, `docs/ARCHITECTURE.md`) might have desynchronized with the actual code.
 
-To prevent AI from breaking what you fixed when adding a feature next time (e.g., "color-code tasks by status"), you need to update the documentation.
+To prevent AI from breaking what you fixed when adding a feature next time, you need to update the documentation.
 
-Use this prompt (Reverse Engineering):
+> [!TIP]
+> Use `skill-reverse-engineering` for structured recovery of architecture docs from code.
+> Use `skill-update-memory` for automatic `.AGENTS.md` updates based on git diff.
+
+**Example prompt (Reverse Engineering):**
 
 ```text
-@docs/TASK.md
+@docs/ARCHITECTURE.md
 
 You are an Architect and Technical Writer.
+Apply skill-reverse-engineering.
 
 SITUATION:
-We completed the active development and debugging phase of the Gantt widget prototype.
-Many manual fixes were made to the code to fix bugs (scroll, Drag&Drop).
-Current documentation (TASK.md) is outdated and does not reflect the actual code structure.
+We completed active development. Many manual fixes were made.
+Current documentation is outdated and does not reflect the actual code structure.
 
 TASK:
-1. Study ALL current widget code files (HTML, CSS, TS).
-2. Update the `docs/ARCHITECTURE.md` file (or create it), describing the real technical solution that is currently working.
-3. Record in `docs/KNOWN_ISSUES.md` (create file) what complex spots we resolved (how Drag&Drop is implemented, how scroll works) to avoid breaking this in the future.
-
-This is needed so that you understand the actual context during future modifications.
+1. Use the iterative analysis strategy from skill-reverse-engineering.
+2. Update docs/ARCHITECTURE.md with the real technical solution.
+3. Record hidden knowledge in docs/KNOWN_ISSUES.md (TODOs, HACKs, complex spots).
+4. Generate missing .AGENTS.md files using skill-update-memory format.
 ```
+
 
 ---
 

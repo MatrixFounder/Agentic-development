@@ -19,6 +19,7 @@ You receive:
 - `skill-architecture-design` (Primary)
 - `skill-architecture-format` (Document Structure & Template)
 - `skill-artifact-management` (Reading)
+- `skill-reverse-engineering` (Optional: for recovering docs from code)
 
 ## YOUR TASK
 

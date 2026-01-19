@@ -27,6 +27,7 @@ You receive **ONE** of the following input data options:
 - `skill-developer-guidelines` (Role behaviors)
 - `skill-tdd-stub-first` (Process)
 - `skill-artifact-management` (Documentation First)
+- `skill-update-memory` (Propose .AGENTS.md updates)
 - `skill-testing-best-practices`
 - `skill-documentation-standards`
 

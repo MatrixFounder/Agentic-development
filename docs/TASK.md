@@ -1,69 +1,81 @@
-# Task: v3.4 VDD Multi-Adversarial
+# Task: v3.5 Memory Automation
 
 ## 0. Meta Information
 
-| Field    | Value                                |
-|----------|--------------------------------------|
-| Task ID  | 034                                  |
-| Slug     | vdd-multi-adversarial                |
-| Status   | Completed                            |
-| Priority | High                                 |
+| Field    | Value                   |
+|----------|-------------------------|
+| Task ID  | 035                     |
+| Slug     | memory-automation       |
+| Status   | Completed               |
+| Priority | Medium                  |
 
 ---
 
 ## 1. Цель
 
-Реализовать **VDD Multi-Adversarial** (v3.4.0) и **Workflow Integrity Fixes** (v3.4.1).
+Реализовать **v3.5 — Автоматизация памяти**: создать скиллы для автоматического обновления `.AGENTS.md` и восстановления архитектурной документации из кода.
 
-## 2. Что создано
+## 2. Проблема
 
-### 2.1 Новые Adversarial Skills (v3.4.0)
+1. **Амнезия агентов**: Разработчики забывают обновлять `.AGENTS.md` после изменения кода. Следующие сессии не имеют актуального контекста.
+2. **Рассинхронизация документации**: После "быстрых правок" или серии багфиксов, `ARCHITECTURE.md` и `KNOWN_ISSUES.md` не отражают реальное состояние кода.
 
-| Skill | Описание |
-|-------|----------|
-| `skill-adversarial-security` | OWASP-критик в саркастичном стиле: injections, auth, secrets |
-| `skill-adversarial-performance` | Критик производительности: N+1, memory, async, complexity |
+## 3. Решение
 
-### 2.2 Новый Workflow (v3.4.0)
+### 3.1 `skill-update-memory`
 
-| Workflow | Описание |
-|----------|----------|
-| `vdd-multi.md` | Последовательный запуск 3 критиков: logic → security → performance |
+Навык анализа изменений в коде и предложения обновлений для `.AGENTS.md`.
 
-### 2.3 Workflow Integrity Fixes (v3.4.1)
+**Вход:** `git diff --staged` или список изменённых файлов.
 
-| Компонент | Исправление |
-|-----------|-------------|
-| `base-stub-first.md` | Исправлены ссылки на несуществующие сценарии (`/analyst-task` → `/01-start-feature`) |
-| `vdd-enhanced.md` | Починен через фикс base-stub-first (восстановлен вызов Аналитика) |
-| `vdd-adversarial.md` | Исправлен вызов (`/developer-fix` → `/03-develop-single-task`) |
-| `docs/KNOWN_ISSUES.md` | Создан (требовался для работы сценариев) |
+**Логика:**
+1. **Фильтрация:** Игнорировать `*.lock`, `*.min.js`, `dist/`, `migrations/`, конфиги, документацию.
+2. Для каждого изменённого исходного файла определить целевой `.AGENTS.md`.
+3. Если файл новый — добавить запись.
+4. Если файл удалён — пометить `(Deleted)`.
+5. Если изменилась логика — обновить описание.
 
-## 3. Файлы
+**Интеграция:** Шаг в `09_agent_code_reviewer` или `04-update-docs`.
 
-### Созданные файлы
+### 3.2 `skill-reverse-engineering`
+
+Навык восстановления ментальной модели проекта из кода.
+
+**Функции:**
+- Генерация/обновление `docs/ARCHITECTURE.md` по текущему коду.
+- Выявление "скрытых знаний" для записи в `docs/KNOWN_ISSUES.md`.
+
+**Стратегия (Mitigation: Context Overflow):**
+- Итеративный анализ: папка-за-папкой → локальные summaries → глобальная Architecture.
+
+## 4. Файлы
+
+### Создаваемые файлы
 | Файл | Описание |
 |------|----------|
-| `.agent/skills/skill-adversarial-security/SKILL.md` | Критик безопасности |
-| `.agent/skills/skill-adversarial-performance/SKILL.md` | Критик производительности |
-| `.agent/workflows/vdd-multi.md` | Workflow мульти-критиков |
-| `docs/KNOWN_ISSUES.md` | Реестр известных проблем (v3.4.1) |
+| `.agent/skills/skill-update-memory/SKILL.md` | Навык обновления .AGENTS.md |
+| `.agent/skills/skill-reverse-engineering/SKILL.md` | Навык reverse engineering |
 
-### Изменённые файлы
+### Изменяемые файлы
 | Файл | Изменения |
 |------|-----------|
-| `System/Docs/SKILLS.md` | Добавлены 2 новых скилла в VDD секцию |
-| `Backlog/potential_improvements-2.md` | Обновлены статусы v3.4 → Done |
-| `CHANGELOG.md` | Добавлены v3.4.0 и v3.4.1 releases |
-| `.agent/workflows/base-stub-first.md` | Fix phantom references |
-| `.agent/workflows/vdd-adversarial.md` | Fix loop calls |
-| `.agent/workflows/security-audit.md` | Fix .AGENTS.md instructions |
+| `System/Docs/SKILLS.md` | Добавление 2 новых скиллов |
+| `Backlog/potential_improvements-2.md` | Обновление статуса v3.5 → Done |
+| `CHANGELOG.md` | Добавление v3.5.0 release |
+| `README.md` / `README.ru.md` | Обновление версии |
 
-## 4. Acceptance Criteria
+## 5. Acceptance Criteria
 
-- [x] `skill-adversarial-security` создан с OWASP checklist
-- [x] `skill-adversarial-performance` создан с perf checklist  
-- [x] `vdd-multi` workflow создан с 3 фазами
-- [x] Документация обновлена (SKILLS, CHANGELOG)
-- [x] **v3.4.1 Integrity**: Все 14 сценариев проверены и ссылаются на существующие файлы
-- [x] **v3.4.1 Integrity**: `docs/KNOWN_ISSUES.md` существует
+- [x] `skill-update-memory/SKILL.md` создан с filtering logic и integration steps
+- [x] `skill-reverse-engineering/SKILL.md` создан с iterative strategy
+- [x] Документация `System/Docs/SKILLS.md` обновлена
+- [x] VDD adversarial проверка пройдена
+- [x] `CHANGELOG.md` обновлён
+
+## 6. VDD Risk Assessment (Pre-Verified)
+
+| Risk | Critique | Mitigation |
+|------|----------|------------|
+| Context Overflow | "50k lines в контекст для Architecture? Удачи." | Iterative Strategy: folder-by-folder summaries |
+| Hallucination & Noise | "1000 строк в package-lock.json = 'Dependencies Logic'?" | Strict Filtering: `*.lock`, `dist/`, `migrations/` |
+| Overwriting Human Wisdom | "Агент удалит мой костыльный комментарий?" | Append/Refine Mode: `[Human Knowledge]` sections protected |

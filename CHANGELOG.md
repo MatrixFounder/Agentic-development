@@ -24,6 +24,30 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.5.0 — Memory Automation** (Task 035)
+
+#### **Added**
+* **New Skill: `skill-update-memory`**: Auto-update `.AGENTS.md` files based on code changes.
+    * Analyzes `git diff --staged` to detect new, modified, and deleted files.
+    * Strict filtering: ignores `*.lock`, `dist/`, `migrations/`, config files.
+    * Human knowledge preservation: protects `[Human Knowledge]` sections.
+    * Integration points: `09_agent_code_reviewer`, `04-update-docs`.
+* **New Skill: `skill-reverse-engineering`**: Regenerate architecture documentation from codebase.
+    * Iterative strategy: folder-by-folder analysis → local summaries → global synthesis.
+    * Updates `ARCHITECTURE.md` and discovers hidden knowledge for `KNOWN_ISSUES.md`.
+    * Context overflow mitigation: never loads entire codebase at once.
+
+#### **Documentation**
+* Updated `System/Docs/SKILLS.md` with new skills in Core & Process section.
+* Updated roadmap in `Backlog/potential_improvements-2.md`.
+
+#### **Integration**
+* `09_agent_code_reviewer.md`: Added `skill-update-memory` to verify `.AGENTS.md` updates.
+* `04-update-docs.md` workflow: Added references to both skills for structured docs maintenance.
+* `README.md` / `README.ru.md`: Updated "Reverse Engineering" section with skill-based prompts.
+
+---
+
 ### **v3.4.2 — Framework Documentation Consistency Fixes** (Task 034 Phase 3)
 
 #### **Fixed**
@@ -396,6 +420,30 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.5.0 — Автоматизация памяти** (Task 035)
+
+#### **Добавлено**
+* **Новый навык: `skill-update-memory`**: Автообновление `.AGENTS.md` на основе изменений кода.
+    * Анализирует `git diff --staged` для обнаружения новых, изменённых и удалённых файлов.
+    * Строгая фильтрация: игнорирует `*.lock`, `dist/`, `migrations/`, конфиги.
+    * Сохранение человеческих знаний: защищает секции `[Human Knowledge]`.
+    * Точки интеграции: `09_agent_code_reviewer`, `04-update-docs`.
+* **Новый навык: `skill-reverse-engineering`**: Восстановление архитектурной документации из кода.
+    * Итеративная стратегия: анализ папка-за-папкой → локальные summaries → глобальный синтез.
+    * Обновляет `ARCHITECTURE.md` и выявляет скрытые знания для `KNOWN_ISSUES.md`.
+    * Защита от overflow контекста: никогда не загружает весь код сразу.
+
+#### **Документация**
+* Обновлён `System/Docs/SKILLS.md` с новыми навыками в секции Core & Process.
+* Обновлена дорожная карта в `Backlog/potential_improvements-2.md`.
+
+#### **Интеграция**
+* `09_agent_code_reviewer.md`: Добавлен `skill-update-memory` для проверки обновления `.AGENTS.md`.
+* Workflow `04-update-docs.md`: Добавлены ссылки на оба навыка.
+* `README.md` / `README.ru.md`: Обновлён раздел "Reverse Engineering" с промптами на основе навыков.
+
+---
 
 ### **v3.4.1 — Целостность сценариев и фиксы артефактов** (Task 034 Phase 2)
 

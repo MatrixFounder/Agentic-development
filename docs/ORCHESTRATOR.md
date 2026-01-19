@@ -1,6 +1,6 @@
 # Orchestrator: Tool Execution Subsystem
 
-**Version:** 3.2.5
+**Version:** 3.3.2
 **Status:** Active
 
 ## Overview
@@ -12,6 +12,7 @@ The Orchestrator v3.2 introduces **Structured Tool Calling**, allowing agents to
 - [User Guide](#-user-guide)
 - [Developer Guide: Adding a New Tool](#-developer-guide-adding-a-new-tool)
 - [Supported Tools](#supported-tools)
+- [Archive Protocol Module](#-archive-protocol-module-testing-infrastructure)
 - [Troubleshooting](#-troubleshooting)
 - [Manual Tool Verification](#-manual-tool-verification)
 
@@ -284,6 +285,142 @@ See the implementation in:
 | `git_add` | Stages files. |
 | `git_commit` | Commits changes. |
 | `generate_task_archive_filename` | Generates unique sequential ID for task archival. |
+
+---
+
+## 🧪 Archive Protocol Module (Testing Infrastructure)
+
+The `archive_protocol.py` module provides a **testable Python implementation** of the 6-step archiving protocol from `skill-archive-task`. This module is primarily for **automated testing** and **validation**.
+
+### Purpose
+
+| Problem | Solution |
+|---------|----------|
+| `skill-archive-task` is documentation, not executable code | `archive_protocol.py` provides executable logic for testing |
+| Manual testing of 8 archiving scenarios is time-consuming | Automated tests validate all scenarios in seconds |
+| VDD adversarial testing needs controlled environment | Fixtures and mocks enable edge case testing |
+
+### Module Location
+
+```
+.agent/tools/
+├── archive_protocol.py          # Testable protocol implementation
+├── test_archive_protocol.py     # 15 automated tests
+├── task_id_tool.py              # ID generation tool (dependency)
+└── fixtures/
+    ├── task_with_meta.md        # Valid TASK with Meta Information
+    ├── task_without_meta.md     # TASK missing Meta section
+    └── task_malformed_id.md     # TASK with invalid ID format
+```
+
+### Functions
+
+#### `parse_task_meta(content: str) -> dict`
+
+Extracts Task ID and Slug from TASK.md content.
+
+```python
+from archive_protocol import parse_task_meta
+
+content = open("docs/TASK.md").read()
+meta = parse_task_meta(content)
+# Returns: {"task_id": "042", "slug": "existing-feature", "has_meta": True}
+```
+
+**Fallback behavior:**
+- If Meta Information section is missing → extracts slug from H1 header
+- If Task ID is non-numeric → returns `task_id: None`
+
+---
+
+#### `should_archive(is_new_task: bool, task_exists: bool) -> bool`
+
+Decision logic: should we archive the existing TASK.md?
+
+```python
+from archive_protocol import should_archive
+
+# New task + existing file = archive
+should_archive(is_new_task=True, task_exists=True)  # True
+
+# Refinement = do not archive
+should_archive(is_new_task=False, task_exists=True)  # False
+```
+
+---
+
+#### `archive_task(docs_dir, is_new_task, current_task_slug=None, current_task_id=None) -> dict`
+
+Executes the complete 6-step archiving protocol.
+
+```python
+from archive_protocol import archive_task
+
+result = archive_task(
+    docs_dir="/path/to/docs",
+    is_new_task=True,
+    current_task_slug="my-feature",
+    current_task_id="042"
+)
+
+# Success:
+# {"status": "archived", "reason": "success", "archived_to": "/path/to/docs/tasks/task-042-my-feature.md"}
+
+# Skip (refinement):
+# {"status": "skipped", "reason": "refinement", "archived_to": None}
+
+# Error:
+# {"status": "error", "reason": "permission_denied", "message": "Permission denied"}
+```
+
+**Status values:**
+| Status | Meaning |
+|--------|---------|
+| `archived` | File successfully moved to `docs/tasks/` |
+| `skipped` | Archiving not needed (no file or refinement) |
+| `error` | Something went wrong (see `reason` and `message`) |
+
+### Running Tests
+
+```bash
+# All archive protocol tests (15 tests)
+cd .agent/tools && python -m pytest test_archive_protocol.py -v
+
+# Full test suite (44 tests)
+cd .agent/tools && python -m pytest -v
+
+# With coverage
+cd .agent/tools && python -m pytest --cov=. --cov-report=term-missing
+```
+
+### Test Scenarios
+
+| # | Test | Validates |
+|---|------|-----------|
+| 1 | `test_scenario_1_new_task_archives_existing` | New task archives old TASK.md |
+| 5 | `test_scenario_5_new_task_no_existing_file` | Skip when no TASK.md |
+| 6 | `test_scenario_6_refinement_no_archive` | Refinement doesn't archive |
+| 8 | `test_scenario_8_id_conflict_corrected` | ID conflict resolution |
+
+**VDD Adversarial tests:**
+| Test | Validates |
+|------|-----------|
+| `test_adversarial_missing_meta_info` | Fallback when no Meta section |
+| `test_adversarial_malformed_task_id` | Handle non-numeric Task ID |
+| `test_adversarial_permission_denied` | Error handling for `mv` failure |
+| `test_adversarial_tool_returns_error` | Propagate tool errors |
+
+### When to Use
+
+| Use Case | How |
+|----------|-----|
+| **Validate protocol after changes** | Run `pytest test_archive_protocol.py -v` |
+| **Debug archiving issues** | Import functions in Python REPL |
+| **Add new edge case test** | Add test to `test_archive_protocol.py` |
+| **Understand protocol logic** | Read `archive_protocol.py` as reference |
+
+> [!NOTE]
+> This module is for **testing and validation only**. Agents should follow the documentation in `skill-archive-task`, not call this Python module directly.
 
 ## ❓ Troubleshooting
 

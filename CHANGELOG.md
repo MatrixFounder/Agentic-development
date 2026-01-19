@@ -24,6 +24,18 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.4.2 — Framework Documentation Consistency Fixes** (Task 034 Phase 3)
+
+#### **Fixed**
+* **Broken References**: Identified and fixed stale references to moved files (`System/Docs/` vs `docs/`) in `README.md`, `.cursorrules`, and agent prompts.
+* **Path Error**: Fixed incorrect path in `Translations/RU/Agents/01_orchestrator.md` (`docs/ORCHESTRATOR.md`) to align with user project structure.
+* **Typos**: Corrected formatting errors in Russian Orchestrator prompt.
+
+#### **Improved**
+* **Installation Instructions**: Clarified `README.md` and `README.ru.md` to explicitly instruct users to copy `System/Docs/ORCHESTRATOR.md` to their local `docs/` folder, preventing path conflicts for distributed agents.
+
+---
+
 ### **v3.4.1 — Workflow Integrity & Artifact Fixes** (Task 034 Phase 2)
 
 #### **Fixed**

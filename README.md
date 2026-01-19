@@ -3,17 +3,17 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.4.1
+# Multi-Agent Software Development System v3.4.2
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
-The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md)):
-- **TDD (Test-Driven Development)**: The "Stub-First" strategy ensures that tests are written and verified against stubs before actual implementation begins. [Read more](docs/TDD.md).
-- **VDD (Verification-Driven Development)**: A high-integrity mode where an adversarial agent proactively challenges the plan and code to eliminate hallucinations and logic errors before they are committed. [Read more](docs/VDD.md).
+The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS_VDD.md)):
+- **TDD (Test-Driven Development)**: The "Stub-First" strategy ensures that tests are written and verified against stubs before actual implementation begins. [Read more](System/Docs/TDD.md).
+- **VDD (Verification-Driven Development)**: A high-integrity mode where an adversarial agent proactively challenges the plan and code to eliminate hallucinations and logic errors before they are committed. [Read more](System/Docs/VDD.md).
 
 ![Framework architecture](/Attachments/Framework_architecture_v2.png)
 
-## � Table of Contents
+##  Table of Contents
 - [Installation & Setup](#-installation--setup)
 - [Directory Structure](#-directory-structure)
 - [Workspace Workflows](#-workspace-workflows)
@@ -23,12 +23,12 @@ The methodology combines two key approaches (see [Comparison](docs/TDD_VS_VDD.md
 - [Starter Prompts](#-starter-prompt-templates)
 
 
-## �📁 Installation & Setup
+## 📁 Installation & Setup
 
 ### 1. Common Prerequisites
 Regardless of your tool, you need the **Agent Personas** in your project root:
 - Copy `/System/Agents` folder to your project root.
-- (Recommended) Copy `docs/ORCHESTRATOR.md` to your `docs/` folder (referenced by Orchestrator).
+- (Recommended) Copy `System/Docs/ORCHESTRATOR.md` to your `docs/` folder (referenced by Orchestrator).
 
 ### 2. Choose Your AI Assistant
 
@@ -61,8 +61,8 @@ New in v3.2: The system supports **Native Tools** executed by the Orchestrator (
 - **Definition**: `.agent/tools/schemas.py`.
 - **Capabilities**: Run tests, Git operations, File I/O.
 
-**[>> View Full Skills Catalog <<](docs/SKILLS.md)**
-**[>> Orchestrator & Tools Guide <<](docs/ORCHESTRATOR.md)** (Configuration, New Tools & Troubleshooting)
+**[>> View Full Skills Catalog <<](System/Docs/SKILLS.md)**
+**[>> Orchestrator & Tools Guide <<](System/Docs/ORCHESTRATOR.md)** (Configuration, New Tools & Troubleshooting)
 
 By default, the system uses English prompts. To use **Russian** context:
 1.  Copy content from `Translations/RU/Agents` to `System/Agents`.
@@ -135,7 +135,7 @@ It **MUST** be added to the context for all other agents (01-10).
 ## ⚡ Workspace Workflows
 
 To simplify launching different development modes, the project provides special **Workflows**.
-Detailed description of all workflows: [docs/WORKFLOWS.md](docs/WORKFLOWS.md).
+Detailed description of all workflows: [WORKFLOWS](System/Docs/WORKFLOWS.md).
 
 ### Quick Start
 You can run a workflow simply by asking the agent:

@@ -16,7 +16,7 @@ Streamline the Workflow system, ensuring consistency, removing legacy terms, and
 - **Clarify `05-run-full-task.md`**: Ensure it acts as the primary "Loop" workflow.
 - **Audit `base-stub-first.md`**: Ensure it calls the correct atomic workflows.
 
-### 2. Documentation Update (docs/WORKFLOWS.md)
+### 2. Documentation Update (System/Docs/WORKFLOWS.md)
 - **Rewrite**: Create a clear hierarchy of workflows.
   - **Category A: Atomic Actions** (01-05) - Run *one* phase.
   - **Category B: Automation Loops** (05, base-*, vdd-*) - Run *multiple* phases.
@@ -26,5 +26,5 @@ Streamline the Workflow system, ensuring consistency, removing legacy terms, and
 
 ### Manual Verification
 1. **Dry Run**: Execute `05-run-full-task` on a dummy task.
-2. **Link Check**: Verify all links in `docs/WORKFLOWS.md` correspond to real files.
+2. **Link Check**: Verify all links in `System/Docs/WORKFLOWS.md` correspond to real files.
 3. **Term Check**: `grep` for "tz" again to be 100% sure.

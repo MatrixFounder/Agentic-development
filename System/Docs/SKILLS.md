@@ -46,7 +46,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 |-------|-------------|----------------------|----------------|
 | **`architecture-design`** | Guidelines for designing scalable and modular system architecture and data models. | `01-start-feature`, `/base-stub-first` | Architect, Arch Reviewer |
 | **`skill-planning-format`** | Standard templates for `PLAN.md` and Task Descriptions. | `02-plan-implementation` | Planner |
-| **`architecture-format`** | Standard structure and templates for Architecture documents (`docs/ARCHITECTURE.md`). | `01-start-feature`, `/base-stub-first` | Architect |
+| **`architecture-format`** | Standard structure and templates for Architecture documents (`../../docs/ARCHITECTURE.md`). | `01-start-feature`, `/base-stub-first` | Architect |
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-task`, `vdd-enhanced` | Planner, Developer |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol. | `03-develop-task`, `/base-stub-first` | Developer |
 | **`documentation-standards`** | Standards for docstrings (Google/JSDoc) and "The Why" comments. | All Development Workflows | Developer, Code Reviewer |
@@ -73,7 +73,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 ### Verification Driven Development (VDD)
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
-| **`skill-vdd-adversarial`** | Adversarial verification: challenging assumptions and finding weak spots. <br> **[Read Full Role Description](docs/VDD.md#core-philosophy)** | `vdd-03-develop`, `/vdd-adversarial`, `/vdd-multi` | **Virtual Persona** <br> (Adversarial Agent) |
+| **`skill-vdd-adversarial`** | Adversarial verification: challenging assumptions and finding weak spots. <br> **[Read Full Role Description](VDD.md#core-philosophy)** | `vdd-03-develop`, `/vdd-adversarial`, `/vdd-multi` | **Virtual Persona** <br> (Adversarial Agent) |
 | **`vdd-sarcastic`** | Adversarial verification with a sarcastic/provocative tone. (Variant of `vdd-adversarial`) | `/vdd-sarcastic` | **Virtual Persona** <br> (Adversarial Agent) |
 | **`skill-adversarial-security`** | OWASP security critic in adversarial/sarcastic style. Checks injections, auth, secrets. | `/vdd-multi` | **Virtual Persona** <br> (Security Critic) |
 | **`skill-adversarial-performance`** | Performance critic in adversarial/sarcastic style. Checks N+1, memory, async issues. | `/vdd-multi` | **Virtual Persona** <br> (Performance Critic) |

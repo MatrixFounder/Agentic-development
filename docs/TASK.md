@@ -52,7 +52,7 @@
 ### Изменённые файлы
 | Файл | Изменения |
 |------|-----------|
-| `docs/SKILLS.md` | Добавлены 2 новых скилла в VDD секцию |
+| `System/Docs/SKILLS.md` | Добавлены 2 новых скилла в VDD секцию |
 | `Backlog/potential_improvements-2.md` | Обновлены статусы v3.4 → Done |
 | `CHANGELOG.md` | Добавлены v3.4.0 и v3.4.1 releases |
 | `.agent/workflows/base-stub-first.md` | Fix phantom references |

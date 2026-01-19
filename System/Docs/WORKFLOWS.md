@@ -96,7 +96,7 @@ The workflows are organized into three categories:
 
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
-| **Run Full Task** | **The Loop Engine.** Reads `docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. Stops on error. | `run 05-run-full-task` |
+| **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. Stops on error. | `run 05-run-full-task` |
 | **VDD Develop** | The VDD Loop Engine. Runs the Adversarial "Sarcasmotron" loop for tasks. | `run vdd-03-develop` |
 
 ---
@@ -120,7 +120,7 @@ The workflows are organized into three categories:
 A: Because `03-develop-single-task` (formerly `03-develop-task`) is designed to be **atomic**. It performs one cycle of "Code -> Review -> Fix". It does **not** contain logic to read a list and iterate. To run the full list, you must use a **Pipeline** (like `base-stub-first`) which calls the **Automation Loop** (`05-run-full-task`).
 
 ### Q: How does `Run Full Task` work?
-A: It parses `docs/PLAN.md`. For each entry (e.g., "Task 1.1"), it:
+A: It parses `../../docs/PLAN.md`. For each entry (e.g., "Task 1.1"), it:
 1.  Calls `03-develop-single-task` with that specific task ID.
 2.  Waits for success.
 3.  Moves to the next task.
@@ -181,14 +181,14 @@ run base-stub-first
 ```bash
 # Step 1: Analysis Phase
 run 01-start-feature
-# → Review docs/TASK.md before proceeding
+# → Review ../../docs/TASK.md before proceeding
 
 # Step 2: Architecture Phase (if needed)
-# → Manually update docs/ARCHITECTURE.md or verify it's current
+# → Manually update ../../docs/ARCHITECTURE.md or verify it's current
 
 # Step 3: Planning Phase
 run 02-plan-implementation
-# → Review docs/PLAN.md before proceeding
+# → Review ../../docs/PLAN.md before proceeding
 
 # Step 4: Execute a single task
 run 03-develop-single-task
@@ -249,11 +249,11 @@ run full-robust
 ```bash
 # Step 1: VDD Analysis Phase (with Chainlink Decomposition)
 run vdd-01-start-feature
-# → Review docs/TASK.md (structured as Epics → Issues)
+# → Review ../../docs/TASK.md (structured as Epics → Issues)
 
 # Step 2: VDD Planning Phase (Beads Decomposition)
 run vdd-02-plan
-# → Review docs/PLAN.md (structured as Epics → Issues → Sub-issues)
+# → Review ../../docs/PLAN.md (structured as Epics → Issues → Sub-issues)
 
 # Step 3: VDD Development with Adversarial Loop
 run vdd-03-develop

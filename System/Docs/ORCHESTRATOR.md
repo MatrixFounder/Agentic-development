@@ -246,9 +246,9 @@ print('✅ Integration test passed!')
 
 ### Step 7: Update Documentation
 
-1. **`docs/ORCHESTRATOR.md`**: Add to Supported Tools table
-2. **`docs/SKILLS.md`**: Add to Executable Skills section (if user-facing)
-3. **`docs/ARCHITECTURE.md`**: Add to Available Tools table
+1. **`ORCHESTRATOR.md`**: Add to Supported Tools table
+2. **`SKILLS.md`**: Add to Executable Skills section (if user-facing)
+3. **`../../docs/ARCHITECTURE.md`**: Add to Available Tools table
 4. **`docs/USER_TOOLS_GUIDE.md`**: Add troubleshooting entry if needed
 
 ---
@@ -322,7 +322,7 @@ Extracts Task ID and Slug from TASK.md content.
 ```python
 from archive_protocol import parse_task_meta
 
-content = open("docs/TASK.md").read()
+content = open("../../docs/TASK.md").read()
 meta = parse_task_meta(content)
 # Returns: {"task_id": "042", "slug": "existing-feature", "has_meta": True}
 ```
@@ -376,7 +376,7 @@ result = archive_task(
 **Status values:**
 | Status | Meaning |
 |--------|---------|
-| `archived` | File successfully moved to `docs/tasks/` |
+| `archived` | File successfully moved to `../../docs/tasks/` |
 | `skipped` | Archiving not needed (no file or refinement) |
 | `error` | Something went wrong (see `reason` and `message`) |
 

@@ -54,7 +54,7 @@
 |-------------|--------|
 | Circular Logic в Safe Commands | ✅ Fixed |
 | Phantom tool references в orchestrator | ✅ Fixed |
-| Portability: `docs/ORCHESTRATOR.md` optional | ✅ Done |
+| Portability: `System/Docs/ORCHESTRATOR.md` optional | ✅ Done |
 
 ---
 
@@ -143,15 +143,15 @@ cd .agent/tools && python -m pytest test_archive_protocol.py -v
 **Решение:**
 Навык для восстановления ментальной модели проекта из кода.
 
-*   **Функции:**
-    *   Генерация `ARCHITECTURE.md` по текущему коду (восстановление карты классов/модулей).
+*   **Функции**:
+    *   Генерация `docs/ARCHITECTURE.md` по текущему коду (восстановление карты классов/модулей).
     *   Выявление "скрытых знаний" (неочевидные решения, костыли) для записи в `docs/KNOWN_ISSUES.md`.
 *   **Сценарий:** Используется, когда агент получает задачу и видит несоответствие документации и кода.
 
 ### Критерии приемки (DoD)
 1.  Создан `skill-update-memory/SKILL.md`.
 2.  Создан `skill-reverse-engineering/SKILL.md`.
-3.  Обновлен `docs/SKILLS.md`.
+3.  Обновлен `System/Docs/SKILLS.md`.
 4.  Проверен сценарий: изменение файла -> запуск скилла -> `.AGENTS.md` обновлен.
 ### VDD Verification (Risks & Mitigations)
 > **VDD Critic:** "Nice plan, but reality is harsher. Here is how it will fail:"
@@ -175,7 +175,7 @@ cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
 - **Installer script** (`setup.sh`): После стабилизации структуры
 - **Examples**: `examples/` с 2-3 готовыми проектами
-- **Skills Catalog**: Расширение `docs/SKILLS.md`
+- **Skills Catalog**: Расширение `System/Docs/SKILLS.md`
 
 ---
 

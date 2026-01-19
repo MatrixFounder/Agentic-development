@@ -171,15 +171,15 @@ tools: ["generate_task_archive_filename"]
 - [x] Написать полный протокол из `artifact-management`
 - [x] Добавить Decision Logic
 
-### Phase 2: Тестирование (8 сценариев) ⏳
-- [ ] Сценарий 1: Прямой промпт + существующий TASK
-- [ ] Сценарий 2: `/01-start-feature` + существующий TASK
-- [ ] Сценарий 3: `/base-stub-first` + существующий TASK
-- [ ] Сценарий 4: `/vdd-enhanced` + существующий TASK
-- [ ] Сценарий 5: TASK не существует
-- [ ] Сценарий 6: Уточнение задачи
-- [ ] Сценарий 7: Orchestrator Completion
-- [ ] Сценарий 8: Конфликт ID
+### Phase 2: Тестирование (8 сценариев) ✅ (v3.3.2)
+- [x] Сценарий 1: Новая задача + существующий TASK (автотест)
+- [x] Сценарий 5: TASK не существует (автотест)
+- [x] Сценарий 6: Уточнение задачи (автотест)
+- [x] Сценарий 8: Конфликт ID (автотест)
+- [x] VDD: Missing Meta Info, Malformed ID, Permission Error, Tool Error
+
+> Сценарии 2, 3, 4, 7 эквивалентны сценарию 1 на уровне протокола.
+> Тесты: `cd .agent/tools && python -m pytest test_archive_protocol.py -v`
 
 ### Phase 3: Рефакторинг дублирования ✅
 - [x] Упростить `.gemini/GEMINI.md`

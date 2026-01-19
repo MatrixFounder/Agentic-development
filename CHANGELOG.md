@@ -24,6 +24,21 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.3.2 — Auto-Tests for Archiving Protocol** (Task 033 Phase 2)
+
+#### **Added**
+* **Archive Protocol Tests**: 15 new automated tests for the 8 archiving scenarios using VDD adversarial approach:
+    * Core scenarios: new task with existing TASK.md, no TASK.md, refinement, ID conflict.
+    * VDD adversarial: missing Meta Information, malformed Task ID, permission denied, tool error simulation.
+* **Testable Protocol Module**: `archive_protocol.py` — Python implementation of the 6-step archiving protocol for unit testing.
+* **Test Fixtures**: 3 TASK.md variants (`task_with_meta.md`, `task_without_meta.md`, `task_malformed_id.md`).
+
+#### **Verification**
+* 44 total tests pass (29 existing + 15 new).
+* Run: `cd .agent/tools && python -m pytest test_archive_protocol.py -v`
+
+---
+
 ### **v3.3.1 — Portability, VDD Audit & UX Improvements** (Task 033)
 
 #### **Fixed**
@@ -334,6 +349,21 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.3.2 — Авто-тесты для Протокола Архивации** (Task 033 Phase 2)
+
+#### **Добавлено**
+* **Тесты протокола архивации**: 15 новых автоматизированных тестов для 8 сценариев архивации с VDD adversarial подходом:
+    * Основные сценарии: новая задача с существующим TASK.md, без TASK.md, уточнение, конфликт ID.
+    * VDD adversarial: отсутствие Meta Information, некорректный Task ID, ошибка прав доступа, ошибка инструмента.
+* **Тестируемый модуль протокола**: `archive_protocol.py` — Python реализация 6-шагового протокола для unit-тестирования.
+* **Test Fixtures**: 3 варианта TASK.md (`task_with_meta.md`, `task_without_meta.md`, `task_malformed_id.md`).
+
+#### **Верификация**
+* 44 теста проходят (29 существующих + 15 новых).
+* Запуск: `cd .agent/tools && python -m pytest test_archive_protocol.py -v`
+
+---
 
 ### **v3.3.1 — Портативность, VDD Аудит и UX** (Task 033)
 

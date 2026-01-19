@@ -73,7 +73,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 ### Verification Driven Development (VDD)
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
-| **`vdd-adversarial`** | Adversarial verification: challenging assumptions and finding weak spots. <br> **[Read Full Role Description](docs/VDD.md#core-philosophy)** | `vdd-03-develop`, `/vdd-adversarial` | **Virtual Persona** <br> (Adversarial Agent) |
+| **`skill-vdd-adversarial`** | Adversarial verification: challenging assumptions and finding weak spots. <br> **[Read Full Role Description](docs/VDD.md#core-philosophy)** | `vdd-03-develop`, `/vdd-adversarial`, `/vdd-multi` | **Virtual Persona** <br> (Adversarial Agent) |
 | **`vdd-sarcastic`** | Adversarial verification with a sarcastic/provocative tone. (Variant of `vdd-adversarial`) | `/vdd-sarcastic` | **Virtual Persona** <br> (Adversarial Agent) |
 | **`skill-adversarial-security`** | OWASP security critic in adversarial/sarcastic style. Checks injections, auth, secrets. | `/vdd-multi` | **Virtual Persona** <br> (Security Critic) |
 | **`skill-adversarial-performance`** | Performance critic in adversarial/sarcastic style. Checks N+1, memory, async issues. | `/vdd-multi` | **Virtual Persona** <br> (Performance Critic) |

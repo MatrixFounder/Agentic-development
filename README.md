@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.3.2
+# Multi-Agent Software Development System v3.4.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
@@ -154,6 +154,7 @@ You can run a workflow simply by asking the agent:
 2. **VDD (Verification-Driven)**: High-reliability mode using an "Adversarial Agent" (Sarcasmotron) that harshly criticizes code.
 3. **Nested & Advanced**:
    - **VDD Enhanced** (`/vdd-enhanced`): Runs Stub-First then VDD Refinement.
+   - **VDD Multi-Adversarial** (`/vdd-multi`): Sequential 3-critic verification (Logic → Security → Performance).
    - **Full Robust** (`/full-robust`): Runs VDD Enhanced then Security Audit.
 
 ---

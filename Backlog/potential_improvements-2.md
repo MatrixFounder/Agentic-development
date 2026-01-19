@@ -23,7 +23,7 @@
 | **v3.3.0** | `skill-archive-task` + `skill-safe-commands` + рефакторинг дублирования | ✅ Released | [→ Детали](#v330-skill-encapsulation) |
 | **v3.3.1** | Portability fixes, VDD Audit, UX improvements | ✅ Released | [→ Детали](#v331-portability-fixes) |
 | **v3.3.2** | Auto-tests для протокола архивации (15 тестов) | ✅ Released | [→ Детали](#v332-auto-tests) |
-| **v3.4** | VDD multi-adversarial + новые adversarial skills | 🟡 Следующий | [→ Детали](#v34--vdd-multi-adversarial-next) |
+| **v3.4** | VDD multi-adversarial + новые adversarial skills | ✅ Released | [→ Детали](#v34--vdd-multi-adversarial-next) |
 | **v3.5** | `skill-update-agents-memory`, `skill-reverse-engineering` | 🟢 Планируется | [→ Детали](#v35--автоматизация-памяти) |
 | **v3.6** | Installer + examples + documentation polish | 🔵 Низкий | [→ Детали](#v36--экосистема) |
 
@@ -89,9 +89,9 @@ cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
 | Компонент | Описание | Статус |
 |-----------|----------|--------|
-| `skill-adversarial-security` | OWASP-критик в adversarial-стиле | ❌ TODO |
-| `skill-adversarial-performance` | Критик производительности | ❌ TODO |
-| `workflow vdd-multi` | Последовательный запуск критиков | ❌ TODO |
+| `skill-adversarial-security` | OWASP-критик в adversarial-стиле | ✅ Done |
+| `skill-adversarial-performance` | Критик производительности | ✅ Done |
+| `workflow vdd-multi` | Последовательный запуск критиков | ✅ Done |
 
 ### Существующая база
 

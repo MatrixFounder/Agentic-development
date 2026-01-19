@@ -24,6 +24,30 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.4.0 — VDD Multi-Adversarial** (Task 034)
+
+#### **Added**
+* **New Skill: `skill-adversarial-security`**: OWASP security critic in adversarial/sarcastic style.
+    * Injection attacks (SQLi, XSS, Command Injection, Path Traversal).
+    * Authentication & Authorization flaws.
+    * Secrets exposure (hardcoded keys, passwords, API tokens).
+    * Input validation failures.
+* **New Skill: `skill-adversarial-performance`**: Performance critic in adversarial/sarcastic style.
+    * N+1 queries, missing indexes.
+    * Memory leaks, unbounded allocations.
+    * Blocking operations in async code.
+    * Algorithm complexity issues.
+* **New Workflow: `/vdd-multi`**: Sequential execution of multiple specialized adversarial critics.
+    * Phase 1: General logic review (`skill-vdd-adversarial`).
+    * Phase 2: Security review (`skill-adversarial-security`).
+    * Phase 3: Performance review (`skill-adversarial-performance`).
+
+#### **Documentation**
+* Updated `docs/SKILLS.md` with new VDD skills.
+* Updated `Backlog/potential_improvements-2.md` with v3.4 status.
+
+---
+
 ### **v3.3.2 — Auto-Tests for Archiving Protocol** (Task 033 Phase 2)
 
 #### **Added**
@@ -349,6 +373,30 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.4.0 — VDD Multi-Adversarial** (Task 034)
+
+#### **Добавлено**
+* **Новый навык: `skill-adversarial-security`**: OWASP-критик в саркастичном стиле.
+    * Атаки инъекций (SQLi, XSS, Command Injection, Path Traversal).
+    * Уязвимости аутентификации и авторизации.
+    * Утечка секретов (хардкод ключей, паролей, токенов).
+    * Ошибки валидации ввода.
+* **Новый навык: `skill-adversarial-performance`**: Критик производительности в саркастичном стиле.
+    * N+1 запросы, отсутствие индексов.
+    * Утечки памяти, unbounded аллокации.
+    * Блокирующие операции в async коде.
+    * Проблемы сложности алгоритмов.
+* **Новый workflow: `/vdd-multi`**: Последовательный запуск нескольких adversarial критиков.
+    * Фаза 1: Ревью логики (`skill-vdd-adversarial`).
+    * Фаза 2: Ревью безопасности (`skill-adversarial-security`).
+    * Фаза 3: Ревью производительности (`skill-adversarial-performance`).
+
+#### **Документация**
+* Обновлён `docs/SKILLS.md` с новыми VDD скиллами.
+* Обновлён `Backlog/potential_improvements-2.md` статусы v3.4.
+
+---
 
 ### **v3.3.2 — Авто-тесты для Протокола Архивации** (Task 033 Phase 2)
 

@@ -37,6 +37,7 @@ The workflows are organized into three categories:
 | **Standard Feature** | **Default Choice.** Runs the full "Stub-First" pipeline: Analysis, Architecture, Planning, and then Auto-Execution loop. | `run base-stub-first` |
 | **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) followed by a Security Audit. | `run full-robust` |
 | **VDD Enhanced** | Combines Stub-First planning with VDD Adversarial execution. | `run vdd-enhanced` |
+| **VDD Multi-Adversarial** | Sequential execution of 3 specialized critics: Logic → Security → Performance. | `run vdd-multi` |
 
 ---
 
@@ -255,6 +256,7 @@ graph TD
 | Quick feature, trusted automation | `run base-stub-first` |
 | Learning the system | TDD Multi-Step (`01` → `02` → `03/05` → `04`) |
 | High-quality production code | `run vdd-enhanced` |
+| Maximum code quality (3 critics) | `run vdd-multi` |
 | Security-critical feature | `run full-robust` |
 | Debugging a specific phase | Run that phase's atomic workflow |
 | Just need analysis | `run 01-start-feature` or `run vdd-01-start-feature` |

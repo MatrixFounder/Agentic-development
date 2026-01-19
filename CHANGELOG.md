@@ -24,6 +24,17 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.4.1 — Workflow Integrity & Artifact Fixes** (Task 034 Phase 2)
+
+#### **Fixed**
+* **Workflow "Phantom" References**: Fixed critical bugs in `base-stub-first.md` (and consequently `vdd-enhanced`) which referenced non-existent workflows (`/analyst-task`, etc.) instead of valid ones. This restored the mandatory Analysis/Architecture phases.
+* **VDD Adversarial Loop**: Corrected `vdd-adversarial.md` to use valid workflow calls (`/03-develop-single-task`) instead of non-existent actions (`/developer-fix`).
+* **Artifact Consistency**: Created missing `docs/KNOWN_ISSUES.md` placeholder to satisfy workflow requirements.
+* **Security Audit**: Clarified `security-audit.md` instructions regarding `.AGENTS.md` updates to handle missing files gracefully.
+
+#### **Verified**
+* Performed a full audit of all 14 workflow definitions to ensure every cross-reference points to an existing file.
+
 ### **v3.4.0 — VDD Multi-Adversarial** (Task 034)
 
 #### **Added**
@@ -373,6 +384,17 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.4.1 — Целостность сценариев и фиксы артефактов** (Task 034 Phase 2)
+
+#### **Исправлено**
+* **"Фантомные" ссылки в сценариях**: Исправлены критические ссылки в `base-stub-first.md` (и, как следствие, в `vdd-enhanced`), которые вели на несуществующие сценарии (`/analyst-task` и др.). Это восстановило обязательные фазы Анализа и Архитектуры.
+* **Цикл VDD Adversarial**: В `vdd-adversarial.md` исправлены вызовы на валидные сценарии (`/03-develop-single-task`) вместо несуществующих действий.
+* **Целостность Артефактов**: Добавлен отсутствующий файл `docs/KNOWN_ISSUES.md`, необходимый для корректной работы сценариев.
+* **Аудит Безопасности**: В `security-audit.md` уточнена инструкция по обновлению `.AGENTS.md` (теперь корректно отрабатывает отсутствие файлов).
+
+#### **Верифицировано**
+* Проведен полный аудит всех 14 файлов сценариев на предмет корректности перекрестных ссылок.
 
 ### **v3.4.0 — VDD Multi-Adversarial** (Task 034)
 

@@ -32,7 +32,7 @@ Run after implementation (and optionally after VDD) for critical projects.
 
 4. **Documentation**
    - Save report as docs/SECURITY_AUDIT.md
-   - Update .AGENTS.md with security notes
+   - Update relevant `.AGENTS.md` files with security notes (if present)
    - Recommend: Add to CI/CD (e.g., bandit, trivy scans)
 
 **Completion:** Security-hardened code ready.

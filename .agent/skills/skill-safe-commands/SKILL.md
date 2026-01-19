@@ -29,7 +29,7 @@ Commands are safe if they match these patterns:
 
 ```
 # Read-only filesystem
-^(ls|cat|head|tail|find|grep|tree|wc|stat|file|du|df)\s
+^(ls|cat|head|tail|find|grep|tree|wc|stat|file|du|df)(?:\s|$)
 
 # Git read operations
 ^git\s+(status|log|diff|show|branch|remote|tag)
@@ -68,7 +68,12 @@ When calling `run_command` in **ANY** environment:
 
 **Antigravity Users:**
 - Add the command list below to "Allow List Terminal Commands" setting in IDE options:
-  `ls, cat, head, tail, find, grep, tree, wc, stat, file, du, df, git status, git log, git diff, git show, git branch, git remote, git tag, mv docs/TASK.md, mv docs/PLAN.md, mkdir -p docs, mkdir -p .agent, mkdir -p tests, python -m pytest, python3 -m pytest, npm test, npx jest, cargo test`
+  `ls,cat,head,tail,find,grep,tree,wc,stat,file,du,df,git status,git log,git diff,git show,git branch,git remote,git tag,mv docs/TASK.md,mv docs/PLAN.md,mkdir -p docs,mkdir -p .agent,mkdir -p tests,python -m pytest,python3 -m pytest,npm test,npx jest,cargo test`
+
+### Troubleshooting
+If the IDE still requests approval for commands listed here:
+1. **Agent Behavior**: Ensure the Agent is actually setting `SafeToAutoRun: true` in the tool call. If the Agent sets it to `false`, the IDE *must* ask for approval regardless of the Allow List.
+2. **Prefix Matching**: Some IDEs require exact matches. If `mv docs/TASK.md` works but `mv docs/TASK.md docs/tasks/foo.md` fails, check if the IDE supports regex/glob patterns or try shortening the allowed rule (e.g., `mv` only) if security policy permits.
 
 ## Integration
 

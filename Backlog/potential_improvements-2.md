@@ -114,13 +114,61 @@ cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
 ---
 
-## v3.5 — Автоматизация памяти
+## v3.5 — Автоматизация памяти (PLANNED)
 
-| Skill | Описание | Зависимости |
-|-------|----------|-------------|
-| `skill-update-agents-memory` | Анализ git diff → обновление `.AGENTS.md` | `git_ops` tool |
-| `skill-reverse-engineering` | Промпт для reverse engineering проекта | `requirements-analysis` |
+**Цель:** Исключить человеческий фактор при поддержании актуальности документации и памяти агентов.
 
+### 1. Skill: Update Memory (`skill-update-memory`)
+
+**Проблема:**
+Агенты и разработчики забывают обновлять файлы `.AGENTS.md` после изменения кода. Это приводит к "амнезии" системы в следующих сессиях.
+
+**Решение:**
+Навык, который анализирует изменения в коде и предлагает обновления для `.AGENTS.md`.
+
+*   **Вход:** Вывод `git diff --staged` или список измененных файлов.
+*   **Логика:**
+    1.  **Фильтрация:** Игнорировать документацию, конфиги, авто-генерируемые файлы. Учитывать только **исходный код** (src/, logic/).
+    2.  Для каждого измененного файла определить его ответственность.
+    3.  Если файл новый — добавить запись в `.AGENTS.md`.
+    4.  Если файл удален — пометить как (Deleted).
+    5.  Если изменилась логика — обновить описание.
+*   **Интеграция:** Добавить шаг вызова этого навыка в `09_agent_code_reviewer` перед апрувом или в `04-update-docs`.
+
+### 2. Skill: Reverse Engineering (`skill-reverse-engineering`)
+
+**Проблема:**
+После "быстрых правок" руками или серии багфиксов, документация (`ARCHITECTURE.md`, `TASK.md`) рассинхронизируется с кодом.
+
+**Решение:**
+Навык для восстановления ментальной модели проекта из кода.
+
+*   **Функции:**
+    *   Генерация `ARCHITECTURE.md` по текущему коду (восстановление карты классов/модулей).
+    *   Выявление "скрытых знаний" (неочевидные решения, костыли) для записи в `docs/KNOWN_ISSUES.md`.
+*   **Сценарий:** Используется, когда агент получает задачу и видит несоответствие документации и кода.
+
+### Критерии приемки (DoD)
+1.  Создан `skill-update-memory/SKILL.md`.
+2.  Создан `skill-reverse-engineering/SKILL.md`.
+3.  Обновлен `docs/SKILLS.md`.
+4.  Проверен сценарий: изменение файла -> запуск скилла -> `.AGENTS.md` обновлен.
+### VDD Verification (Risks & Mitigations)
+> **VDD Critic:** "Nice plan, but reality is harsher. Here is how it will fail:"
+
+1.  **Risk: Context Overflow (Reverse Engineering)**
+    *   *Critique:* "Feeding 50k lines of code into context to generate Architecture? Good luck with usage limits."
+    *   *Mitigation:* **Iterative Strategy.** Analyze folder-by-folder, generate local summaries, then synthesize global Architecture.
+
+2.  **Risk: Hallucination & Noise (Update Memory)**
+    *   *Critique:* "Git diff shows a 1000-line change in `package-lock.json`. Agent decides it's 'Dependencies Logic' and writes hallucinated summary."
+    *   *Mitigation:* **Strict Filtering.** Ignored list must include `*.lock`, `*.min.js`, `dist/`, `migrations/`.
+
+3.  **Risk: Overwriting Human Wisdom**
+    *   *Critique:* "I wrote a nuance about *why* we use this weird hack in `.AGENTS.md`. Agent deletes it and replaces with 'Refactored function X'."
+    *   *Mitigation:* **Append/Refine Mode.** Never delete manual sections marked as `[Human Knowledge]`. Or use Pull Request model for memory updates.
+
+---
 ---
 
 ## v3.6 — Экосистема

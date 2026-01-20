@@ -4,7 +4,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from scripts.tool_runner import execute_tool
+from System.scripts.tool_runner import execute_tool
 
 class TestToolRunner(unittest.TestCase):
     def setUp(self):

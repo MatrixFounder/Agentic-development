@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.5.0
+# Multi-Agent Software Development System v3.5.2
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer).
 
@@ -25,9 +25,25 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 
 ## 📁 Installation & Setup
 
-### 1. Common Prerequisites
-Regardless of your tool, you need the **Agent Personas** and **System Docs** in your project root:
-- Copy the entire `/System` folder to your project root.
+### 1. Copy Framework Folders
+
+Copy these folders to your project root:
+
+| Folder | Required | Description |
+|--------|----------|-------------|
+| `System/` | ✅ **Yes** | Agent Personas, Docs, and Tool Dispatcher |
+| `.agent/` | ✅ **Yes** | Skills, Workflows, and Tool definitions |
+
+```bash
+# Installation (only 2 folders needed!)
+cp -r /path/to/framework/System ./
+cp -r /path/to/framework/.agent ./
+```
+
+> [!NOTE]
+> The Tool Execution Subsystem is included in `System/scripts/`:
+> - `System/scripts/tool_runner.py` — Dispatcher (entry point)
+> - `.agent/tools/` — Tool logic and schemas
 
 ### 2. Choose Your AI Assistant
 
@@ -42,7 +58,7 @@ To configure Cursor for this workflow:
 
 #### 🟣 Option B: Antigravity (Native)
 Antigravity supports this architecture out-of-the-box:
-1.  **Configuration**: Ensure `.gemini/GEMINI.md` exists (it acts as the system prompt).
+1.  **Configuration**: Copy `.gemini/GEMINI.md` to your project root (this is the system prompt).
 2.  **Skills**: Ensure `.agent/skills/` directory exists. Antigravity automatically loads skills from here.
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
 4.  **Auto-Run Permissions**: To enable autonomous command execution, add the following to **Allow List Terminal Commands** in IDE Settings:
@@ -57,8 +73,23 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 
 ### 3. Executable Skills (Tools)
 New in v3.2: The system supports **Native Tools** executed by the Orchestrator (Schema-based).
-- **Definition**: `.agent/tools/schemas.py`.
-- **Capabilities**: Run tests, Git operations, File I/O.
+
+**Architecture:**
+```text
+.agent/tools/              ← Tool definitions & business logic
+├── schemas.py             ← OpenAI-compatible JSON schemas
+├── task_id_tool.py        ← Example: ID generation tool
+└── archive_protocol.py    ← Example: Archiving logic
+
+System/scripts/            ← Dispatcher (execution entry point)
+└── tool_runner.py         ← execute_tool() function
+```
+
+**Why this structure?**
+- `.agent/tools/` — groups all "agentic" components (skills, tools, workflows) together
+- `System/scripts/` — framework utilities, separate from project code
+
+**Capabilities**: Run tests, Git operations, File I/O.
 
 **[>> View Full Skills Catalog <<](System/Docs/SKILLS.md)**
 **[>> Orchestrator & Tools Guide <<](System/Docs/ORCHESTRATOR.md)** (Configuration, New Tools & Troubleshooting)
@@ -95,11 +126,15 @@ pip install python-dotenv  # Environment variables
 project-root/
 ├── .cursorrules                   # [Cursor] Context & Rules
 ├── .gemini/GEMINI.md              # [Antigravity] System Config
-├── .agent/skills/                 # [Common] Skills Library
-├── .agent/workflows/              # [Common] Workflow Library
+├── .agent/
+│   ├── skills/                  # [Common] Skills Library
+│   ├── workflows/               # [Common] Workflow Library
+│   └── tools/                   # [Common] Tool Logic & Schemas
 ├── System/
 │   ├── Agents/                  # [Common] Agent Personas (00-10)
-│   └── Docs/                    # [Common] Framework Documentation
+│   ├── Docs/                    # [Common] Framework Documentation
+│   └── scripts/                 # [Common] Tool Dispatcher
+│       └── tool_runner.py
 └── src/                           # Your Source Code
 ```
 

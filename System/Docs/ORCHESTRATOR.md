@@ -24,7 +24,7 @@ The Orchestrator v3.2 introduces **Structured Tool Calling**, allowing agents to
 - **Import:** Dynamic loading via `importlib` (due to hidden directory).
 
 ### 2. Dispatcher (`execute_tool`)
-- **Location:** `scripts/tool_runner.py`
+- **Location:** `System/scripts/tool_runner.py`
 - **Function:** `execute_tool(tool_call)`
 - **Input:** `tool_call` object (or dict) with `function.name` and `function.arguments`.
 - **Output:** Dict (JSON-serializable) with fields like `output`, `error`, `success`.
@@ -47,7 +47,7 @@ Tools are enabled automatically if the Orchestrator prompt (`01_orchestrator.md`
 
 ### Configuration
 1. **Adding Allowed Commands:**
-   Edit `scripts/tool_runner.py` -> `ALLOWED_TEST_COMMANDS` list.
+   Edit `System/scripts/tool_runner.py` -> `ALLOWED_TEST_COMMANDS` list.
    ```python
    ALLOWED_TEST_COMMANDS = [
        "pytest",
@@ -167,7 +167,7 @@ Add the tool definition to `.agent/tools/schemas.py`:
 
 ### Step 4: Register in Dispatcher
 
-Add the tool handler to `scripts/tool_runner.py`:
+Add the tool handler to `System/scripts/tool_runner.py`:
 
 ```python
 # At the top of execute_tool function, add import handling:
@@ -231,7 +231,7 @@ Test via the dispatcher to ensure end-to-end functionality:
 
 ```bash
 python -c "
-from scripts.tool_runner import execute_tool
+from System.scripts.tool_runner import execute_tool
 result = execute_tool({
     'name': 'my_tool_function',
     'arguments': {'required_param': 'hello'}
@@ -259,7 +259,7 @@ print('✅ Integration test passed!')
 |------|------|
 | Core logic in `.agent/tools/my_tool.py` | ☐ |
 | Schema in `.agent/tools/schemas.py` | ☐ |
-| Handler in `scripts/tool_runner.py` | ☐ |
+| Handler in `System/scripts/tool_runner.py` | ☐ |
 | Unit tests passing | ☐ |
 | Dispatcher integration test passing | ☐ |
 | Documentation updated | ☐ |
@@ -425,7 +425,7 @@ cd .agent/tools && python -m pytest --cov=. --cov-report=term-missing
 ## ❓ Troubleshooting
 
 ### Error: "Function definition not found"
-- **Cause:** The schema is defined, but the function is not registered in `tool_runner.py`.
+- **Cause:** The schema is defined, but the function is not registered in `System/scripts/tool_runner.py`.
 - **Fix:** Check Step 4 in Developer Guide above.
 
 ### Error: "Path traversal detected"
@@ -434,7 +434,7 @@ cd .agent/tools && python -m pytest --cov=. --cov-report=term-missing
 
 ### Error: "Command not allowed"
 - **Cause:** `run_tests` tried to run a command not in the whitelist (e.g., `rm -rf`, `ls -la`).
-- **Fix:** The `run_tests` tool is ONLY for running tests. Use `list_directory` to see files. To add new commands, update `valid_starts` in `tool_runner.py`.
+- **Fix:** The `run_tests` tool is ONLY for running tests. Use `list_directory` to see files. To add new commands, update `valid_starts` in `System/scripts/tool_runner.py`.
 
 ### Tool Loop (Agent keeps calling same tool)
 - **Cause:** The tool returns an error that the agent doesn't understand, so it tries again.
@@ -452,11 +452,11 @@ You can run the tool dispatcher manually to verify logic:
 
 ```bash
 # Example: Read README.md
-python3 -c 'from scripts.tool_runner import execute_tool; print(execute_tool({"name": "read_file", "arguments": {"path": "README.md"}}))'
+python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_tool({"name": "read_file", "arguments": {"path": "README.md"}}))'
 
 # Example: List directory
-python3 -c 'from scripts.tool_runner import execute_tool; print(execute_tool({"name": "list_directory", "arguments": {"path": "."}}))'
+python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_tool({"name": "list_directory", "arguments": {"path": "."}}))'
 
 # Example: Generate task archive filename
-python3 -c 'from scripts.tool_runner import execute_tool; print(execute_tool({"name": "generate_task_archive_filename", "arguments": {"slug": "my-feature"}}))'
+python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_tool({"name": "generate_task_archive_filename", "arguments": {"slug": "my-feature"}}))'
 ```

@@ -24,6 +24,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.5.2 — Scripts Consolidation & Installation Simplification** (Refactoring)
+
+#### **Changed**
+* **Moved `scripts/` → `System/scripts/`**: Tool Dispatcher is now part of System folder.
+    * **Installation simplified**: Only 2 folders to copy (`System/` + `.agent/`) instead of 3.
+    * **Clear separation**: Framework files (`System/`) vs project files.
+
+#### **Updated**
+* **README.md / README.ru.md**: Simplified installation instructions and directory structure diagrams.
+* **System/Docs/ORCHESTRATOR.md**: All import paths updated to `System.scripts.tool_runner`.
+* **tests/test_tool_runner.py**: Updated import path.
+
+---
+
 ### **v3.5.1 — Protocol Conflict Resolution & IDE-Agnostic Fixes** (Framework Bugfix)
 
 #### **Fixed**
@@ -440,6 +454,20 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.5.2 — Консолидация скриптов и упрощение установки** (Рефакторинг)
+
+#### **Изменено**
+* **Перемещён `scripts/` → `System/scripts/`**: Диспатчер инструментов теперь часть папки System.
+    * **Установка упрощена**: Только 2 папки для копирования (`System/` + `.agent/`) вместо 3.
+    * **Чёткое разделение**: Файлы фреймворка (`System/`) vs файлы проекта.
+
+#### **Обновлено**
+* **README.md / README.ru.md**: Упрощены инструкции установки и диаграммы структуры.
+* **System/Docs/ORCHESTRATOR.md**: Все пути импорта обновлены до `System.scripts.tool_runner`.
+* **tests/test_tool_runner.py**: Обновлён путь импорта.
+
+---
 
 ### **v3.5.1 — Исправление конфликтов протоколов и IDE-агностичные фиксы** (Framework Bugfix)
 

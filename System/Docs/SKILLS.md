@@ -48,7 +48,8 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 |-------|-------------|----------------------|----------------|
 | **`architecture-design`** | Guidelines for designing scalable and modular system architecture and data models. | `01-start-feature`, `/base-stub-first` | Architect, Arch Reviewer |
 | **`skill-planning-format`** | Standard templates for `PLAN.md` and Task Descriptions. | `02-plan-implementation` | Planner |
-| **`architecture-format`** | Standard structure and templates for Architecture documents (`../../docs/ARCHITECTURE.md`). | `01-start-feature`, `/base-stub-first` | Architect |
+| **`architecture-format-core`** | Core template for Architecture documents. For quick updates. (~150 lines, TIER 1) | `01-start-feature`, Most updates | Architect |
+| **`architecture-format-extended`** | Full templates with examples, diagrams, JSON samples. For new systems. (~400 lines, TIER 2) | New systems, Major refactors | Architect |
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-task`, `vdd-enhanced` | Planner, Developer |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol. | `03-develop-task`, `/base-stub-first` | Developer |
 | **`documentation-standards`** | Standards for docstrings (Google/JSDoc) and "The Why" comments. | All Development Workflows | Developer, Code Reviewer |

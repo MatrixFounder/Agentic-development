@@ -17,9 +17,25 @@ You receive:
 - `skill-core-principles` (Mandatory)
 - `skill-safe-commands` (Mandatory)
 - `skill-architecture-design` (Primary)
-- `skill-architecture-format` (Document Structure & Template)
 - `skill-artifact-management` (Reading)
 - `skill-reverse-engineering` (Optional: for recovering docs from code)
+
+### Architecture Format Loading (Conditional)
+
+Load the appropriate architecture format skill based on task complexity:
+
+| Condition | Skill to Load |
+|-----------|---------------|
+| Minor update to existing architecture | `architecture-format-core` |
+| Adding new component to existing system | `architecture-format-core` |
+| Creating NEW system from scratch | `architecture-format-extended` |
+| Major refactor (>3 components changed) | `architecture-format-extended` |
+| Sophisticated/complex requirements | `architecture-format-extended` |
+| User explicitly requests full template | `architecture-format-extended` |
+
+> [!NOTE]
+> Default to `architecture-format-core` (~150 lines) for most updates.
+> Load `architecture-format-extended` (~400 lines) only when creating new systems or major refactors.
 
 ## YOUR TASK
 

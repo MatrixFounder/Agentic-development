@@ -455,14 +455,15 @@ checkpoint:
 
 ---
 
-### O5: Skill Tiers (Formalization of O1)
+### O5: Skill Tiers (Formalization)
 
-**Concept:** Formally document and enforce the tier system from O1
+**Status:** READY FOR IMPLEMENTATION
+**Prerequisite:** O1 (Completed)
 
-> [!NOTE]
-> O5 is the formalization of O1. After O1 is implemented and tested, O5 formalizes it into framework documentation.
+**Analysis:**
+Now that O1 is implemented and verified (v3.5.4), O5 is the necessary follow-up to "lock in" the changes. It involves creating authority documentation (`System/Docs/SKILL_TIERS.md`) and adding metadata headers to all SKILL.md files.
 
-**Skill Tier Reference (Corrected Based on Investigation):**
+**Skill Tier Reference (Authoritative):**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -507,116 +508,108 @@ checkpoint:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Implementation for O5:**
-1. Create `System/Docs/SKILL_TIERS.md` as authoritative reference
-2. Update all agent prompts with explicit tier markers
-3. Add `TIER:` header to each SKILL.md file
+**Recommendation:**
+- **Proceed immediately.** This is low-risk and high-value for maintainability.
+- **Action:** Add `tier: [0|1|2]` to YAML frontmatter of all skills.
+- **Action:** Create `System/Docs/SKILL_TIERS.md` as the single source of truth.
 
-**Savings:** Formalization itself doesn't save tokens, but enables enforcement
-**Risk:** LOW
-**Effort:** 2-3 hours (documentation)
+**Effort:** 2-4 hours.
 
 ---
 
 ### O6: Agent Prompt Compression
 
-**Concept:** Use more compact DSL-like syntax in agent prompts
+**Status:** PROTOTYPE REQUIRED
 
-**Before (verbose):**
-```markdown
-YOUR TASK:
-Determine if this is a NEW task or a refinement, and initiate the Analyst agent.
+**Analysis:**
+Compressing natural language into a "DSL" (e.g., `TASK: Route -> Analyst`) saves tokens but risks reducing the specific nuance that the LLM uses to make decisions. 3.5 Sonnet is smart, but "over-compression" can lead to instruction following failures.
 
-DECISION LOGIC:
-- IF docs/TASK.md exists AND content relates to user request:
-  - This is a REFINEMENT
-  - DO NOT archive
-  - Update existing TASK.md
-- IF docs/TASK.md exists AND content is UNRELATED:
-  - This is a NEW TASK
-  - Archive old TASK.md using skill-archive-task
-  - Create new TASK.md
-```
+**Recommendation:**
+- **Do NOT implement blindly.**
+- **Action:** Run an A/B test on *one* agent (e.g., `02_analyst`) with a compressed prompt.
+- **Success Metric:** If token usage drops 20% AND quality stays 100%, roll out.
+- **Strategy:** Use "Structured Natural Language" (keywords + bullet points) rather than cryptic DSL.
 
-**After (compact):**
-```markdown
-TASK: Route to Analyst (new vs refinement)
-LOGIC:
-  TASK.md exists + related → REFINE (no archive)
-  TASK.md exists + unrelated → NEW (apply: skill-archive-task)
-  TASK.md absent → NEW
-```
-
-**Savings:** 2,000-3,000 tokens across all agents
-**Risk:** MEDIUM — May reduce clarity for LLM
-**Effort:** 8-12 hours + A/B testing
+**Effort:** 8-12 hours (including A/B testing).
 
 ---
 
-### O7: Context Checkpointing (Advanced)
+### O7: Context Checkpointing (High Impact)
 
-**Concept:** Store intermediate state in artifacts, not context
+**Status:** STRATEGIC PRIORITY
 
-**Implementation:** 
-- Create `.agent/state/session.yaml` at each phase boundary
-- LLM reads state file instead of recalling from conversation
+**Analysis:**
+This is the "Holy Grail" for long-running tasks. O1-O3 reduced the "static" overhead. O7 tackles the "dynamic" accumulation of conversation history.
+Technical challenge: The agent needs to "boot" from a state file (`.agent/state/session.yaml`) rather than relying on the chat log.
 
-**Savings:** 10,000-20,000 tokens
-**Risk:** HIGH — Requires fundamental flow changes
-**Effort:** 16-24 hours
+**Feasibility:**
+- **High Feasibility:** Writing the state file is easy (via `write_to_file`).
+- **Medium Feasibility:** Getting the agent to *read* and *respect* it requires a robust "Boot-Up Skill" added to TIER 0.
+
+**Recommendation:**
+- **Plan for v3.6.0.**
+- **Action:** Create `skill-session-state` (TIER 0) that checks for `session.yaml` on load.
+- **Risk:** High (hallucination of previous context if not explicitly in file).
+
+**Effort:** 16-24 hours.
 
 ---
 
 ### O8: Domain Isolation (Enterprise)
 
-**Concept:** For multi-domain projects, load ONLY current domain context
+**Status:** DEFER
 
-```
-Working on /trading/bots/scanner:
-  LOAD: docs/domains/trading/ARCHITECTURE.md
-  SKIP: docs/domains/loyalty/*, docs/domains/payments/*
-```
+**Analysis:**
+Splitting architecture by domain (`docs/domains/trading/ARCHITECTURE.md`) is creating complexity that is presently unnecessary. Current projects are monorepos or single-domain.
 
-**Savings:** Critical for enterprise (10K+ tokens per domain)
-**Risk:** HIGH complexity
-**Effort:** 20+ hours
+**Recommendation:**
+- **Defer** until a multi-domain project actually exists. Avoid premature optimization.
+- **Trigger:** When `docs/ARCHITECTURE.md` exceeds 5,000 tokens.
 
 ---
 
-### O9: Multi-Session Pipeline (Enterprise)
+### O9: Multi-Session Pipeline
 
-**Concept:** Each phase runs in separate session with artifact handoff
+**Status:** BLOCKED (Tooling)
 
-```
-Session 1 (Analysis):
-  Input: User request
-  Output: docs/TASK.md
-  
-Session 2 (Architecture):
-  Input: docs/TASK.md
-  Output: docs/ARCHITECTURE.md
-  
-... etc
-```
+**Analysis:**
+Requires external tooling (IDE scripts or CLI) to mechanically start/stop sessions. The agent cannot do this itself.
 
-**Benefit:** Fresh context per phase, no history accumulation
-**Risk:** CRITICAL — Requires IDE support or custom tooling
-**Effort:** 40+ hours
+**Recommendation:**
+- **Hold** until external CLI wrapper is built.
 
 ---
 
-### O10: Hierarchical Context (Enterprise)
+### O10: Hierarchical Context
 
-**Concept:** Summarized parent context + full current phase
+**Status:** DEFER
 
-```
-Enterprise Project Context (500 tokens summary)
-├── Domain: Trading (300 tokens summary)
-│   └── Current Task: Scanner (full 3000 tokens)
-```
+**Analysis:**
+Dependent on O8.
 
-**Risk:** HIGH complexity
-**Effort:** 30+ hours
+**Recommendation:**
+- **Defer.**
+
+---
+
+## Feasibility Report (2026-01-21)
+
+### 1. Executive Summary
+Following the successful implementation of O1 (Lazy Loading), O2 (Orchestrator Compression), and O3 (Architecture Split), the system overhead has been reduced significantly. The next phase should focus on **O5 (Formalization)** and **O7 (Context Checkpointing)**.
+
+### 2. ROI Analysis
+
+| Optimization | Effort | Token Savings | ROI Strategy |
+|--------------|--------|---------------|--------------|
+| **O5: Tiers** | Low | N/A (Stability) | **MUST DO**. Locks in O1 gains. |
+| **O6: Compression** | Medium | ~2-3k | **PROTOTYPE**. Risky if not tested. |
+| **O7: Checkpoints** | High | ~10-20k | **HIGH PAYOFF**. Critical for long tasks. |
+| **O8: Domains** | High | Variable | **WAIT**. Premature for now. |
+
+### 3. Immediate Next Steps
+1.  **Execute O5:** Formalize Skill Tiers to prevent regression.
+2.  **Prototype O6:** Create `02_analyst_compact.md` and test.
+3.  **Design O7:** Draft the schema for `session.yaml`.
 
 ---
 
@@ -775,7 +768,7 @@ Enterprise Project Context (500 tokens summary)
 
 ---
 
-### Phase 4: O4 — Conversation Checkpointing (4-6 hours)
+### Phase 4: O4 — Conversation Checkpointing (4-6 hours) [SKIPPED]
 
 **Prerequisite: Document current state**
 - [ ] Measure baseline token usage for a full pipeline run
@@ -1033,7 +1026,7 @@ CRITICAL: Backup first. Test all 14 scenarios after compression.
 RESULT: 11,195 → 4,522 bytes (-60%), commit e5f7312
 ```
 
-### Prompt 4: O4 — Conversation Checkpointing
+### Prompt 4: O4 — Conversation Checkpointing [SKIPPED]
 
 ```
 TASK: Implement O4 from Backlog/agentic_development_optimisations.md
@@ -1077,6 +1070,29 @@ TEST PLAN:
 DELIVERABLES:
 1. Test report with pass/fail for each check
 2. Token usage comparison (before vs after)
+```
+
+### Prompt 6: O5 — Skill Tiers Formalization
+
+> **Status:** READY FOR IMPLEMENTATION
+
+```markdown
+TASK: Implement O5 from Backlog/agentic_development_optimisations.md
+
+CONTEXT:
+- Goal: Formalize the Skill Tiers mechanism in documentation and skill headers.
+- Reference: See "SKILL TIERS (AUTHORITATIVE)" table in Backlog.
+
+DELIVERABLES:
+1. Create `System/Docs/SKILL_TIERS.md` with the authoritative tier definitions.
+2. Update ALL `SKILL.md` files in `.agent/skills/` to include `tier: [0|1|2]` in the YAML frontmatter.
+   - Use the table in Backlog as the source of truth.
+   - Default to TIER 2 if not explicitly listed in TIER 0 or 1.
+3. Verify:
+   - All skills have a `tier` property.
+   - `TIER 0` skills match exactly: `core-principles`, `safe-commands`, `artifact-management`.
+
+CRITICAL: Do not modify the prompt logic (that was O1). This is purely documentation and metadata enforcement.
 ```
 
 ---

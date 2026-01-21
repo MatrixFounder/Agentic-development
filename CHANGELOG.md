@@ -47,6 +47,8 @@
 | Tokens (~) | ~2,799 | ~1,130 | **-60%** |
 
 > **Note:** All 14 scenarios preserved. Backup at `01_orchestrator_full.md.bak`.
+>
+> 📊 **See:** [Token Optimization Infographic](docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md) for a visual breakdown of savings.
 
 ---
 
@@ -553,6 +555,8 @@ To upgrade from v3.0.x to v3.1.0:
 | Токены (~) | ~2,799 | ~1,130 | **-60%** |
 
 > **Примечание:** Все 14 сценариев сохранены. Бекап: `01_orchestrator_full.md.bak`.
+>
+> 📊 **См. также:** [Инфографика оптимизации токенов](docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md) для визуального разбора экономии.
 
 ---
 

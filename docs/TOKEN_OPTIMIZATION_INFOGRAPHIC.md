@@ -10,6 +10,12 @@
 
 Significant reduction in token overhead across the entire development lifecycle.
 
+### Understanding the Charts
+The **Pie Chart** below illustrates "Tokens Saved" vs "Remaining Overhead". The saved portions represent context window space that is now available for your code, rather than being consumed by framework instructions.
+- **Session Overhead (Saved):** Reduction in initial prompt size.
+- **Orchestrator (Saved):** Compression of the main control logic.
+- **Architecture (Saved):** Savings from using the lightweight Core template.
+
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4CAF50', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#fff'}}}%%
 pie title Token Reduction by Area
@@ -51,6 +57,8 @@ graph TD
     style A3 fill:#b2dfdb,stroke:#00796b
 ```
 
+> **User Impact:** Sessions start faster and cost significantly less. Previously, every new session loaded ~10k tokens of instructions. Now, it loads only ~2k, allowing you to fit ~7,000 more tokens of *your code* in the initial context window.
+
 ### 2. Orchestrator Efficiency
 *Optimization O2 (Pattern Compression)*
 
@@ -69,6 +77,8 @@ classDiagram
     
     Orchestrator_Legacy --|> Orchestrator_v3_5 : Compressed by 60%
 ```
+
+> **User Impact:** The Orchestrator is the "brain" present in every single turn of conversation. By compressing it, we free up ~1,600 tokens *per message*. Over a long conversation (e.g., 50 turns), this accumulates to massive savings and prevents the model from "forgetting" earlier instructions due to context sliding.
 
 ---
 
@@ -106,3 +116,23 @@ For a typical developer day (10 sessions, 50 requests):
 - **Context Window:** +10,000 tokens available for code / documentation
 
 > *Data verified against v3.5.5 benchmarks (2026-01-21).*
+
+---
+
+## 📐 Methodology
+
+How we measured these savings:
+
+1.  **Token Counting:**
+    *   Used `tiktoken` (cl100k_base encoding) to measure exact token counts of files.
+    *   **Orchestrator:** Measured `01_orchestrator.md` (v3.4) vs `01_orchestrator.md` (v3.5).
+    *   **Skill Loading:** Summed tokens of all `SKILL.md` files loaded by default in v3.4 vs TIER 0 skills in v3.5.
+
+2.  **Pipeline Emulation:**
+    *   Simulated a standard "Start Feature" workflow (Analysis → Architecture → Planning).
+    *   **Before:** Assumed full loading of all instructions at session start.
+    *   **After:** Calculated cumulative load based on phase entry triggers (e.g., Architecture skills only load at Step 2).
+
+3.  **Real-World Validation:**
+    *   Executed `Task 036 (O1-O3 Validation)` to verify that skills load *only* when requested and automation tools still function correctly.
+    *   Peak usage estimates based on a context window limit of 200k tokens (Anthropic Claude 3.5 Sonnet).

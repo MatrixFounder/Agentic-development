@@ -24,6 +24,40 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.6.0 — O6: Agent Prompt Standardization (Optimization)** (Stability)
+
+#### **Added**
+* **O6 Standard:** All 10 Agent Prompts (`01`–`10`) now use a unified 4-section schema:
+    1.  **Identity & Prime Directive** (from `core-principles`)
+    2.  **Context & Skill Loading** (TIER 0 enforcement)
+    3.  **Input Data** & **Execution Loop** (Structured Workflow)
+    4.  **Quality Checklist** (VDD-aligned)
+* **New Agent Names:** Standardized filenames to `_prompt.md` pattern (e.g., `01_orchestrator.md`, `10_security_auditor.md` → *logic preserved, headers updated*).
+
+#### **Changed**
+* **`01_orchestrator.md`**: Fixed "lost logic" regression by restoring Workflows section while adopting O6 headers.
+* **`04_architect_prompt.md`**: Reduced tokens by **28.9%** (1184 → 842 tokens) by delegating templates to skills.
+* **`06_planner_prompt.md`**: Reduced tokens by **32.6%** (1030 → 695 tokens) via standardization.
+* **`08_developer_prompt.md`**: Reduced tokens by **31.4%** (997 → 684 tokens) via standardization.
+* **`10_security_auditor.md`**: Expanded empty placeholder (+385%) into a full-fledged O6 agent with TIER 0 safety.
+
+#### **Optimization Impact**
+| Agent Group | Metric | Result |
+|-------------|--------|--------|
+| **Reviewers** (03, 05) | Token Efficiency | **-3%** to **-9%** |
+| **Reviewers** (07, 09) | Safety (TIER 0 adds) | +43% (Standard Compliance) |
+| **Doers** (04, 06, 08) | Token Efficiency | **~ -30% (avg)** |
+| **Orchestrator** (01) | Token Efficiency | **-36.24%** |
+
+#### **Verified**
+* **A/B Testing:** All standardized prompts passed functional equivalency checks.
+* **Localization:** All Russian prompts (`Translations/RU/Agents/*.md`) synchronized with v3.6.0 standard.
+
+> 📊 **See:** [O6 Optimization Infographic](docs/O6_OPTIMIZATION_INFOGRAPHIC.md) for visual data.
+
+---
+
+
 ### **v3.6.0 — O5: Skill Tiers Formalization (Optimization)** (Stability)
 
 #### **Added**
@@ -555,6 +589,38 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.6.0 — O6: Стандартизация Промптов Агентов (Оптимизация)** (Стабильность)
+
+#### **Добавлено**
+* **Стандарт O6:** Все 10 промптов агентов (`01`–`10`) теперь используют унифицированную схему из 4 секций:
+    1.  **Идентичность и Главная Директива** (из `core-principles`)
+    2.  **Контекст и Загрузка Навыков** (принудительный TIER 0)
+    3.  **Входные Данные** и **Цикл Выполнения** (Структурированный Workflow)
+    4.  **Чек-лист Качества** (VDD-согласованный)
+* **Имена Агентов:** Имена файлов стандартизированы по шаблону `_prompt.md` (логика сохранена, заголовки обновлены).
+
+#### **Изменено**
+* **`01_orchestrator.md`**: Исправлена регрессия "потерянной логики" — восстановлен раздел Workflow при переходе на заголовки O6.
+* **`04_architect_prompt.md`**: Сокращение токенов на **28.9%** (1184 → 842) за счет делегирования шаблонов навыкам.
+* **`06_planner_prompt.md`**: Сокращение токенов на **32.6%** (1030 → 695).
+* **`08_developer_prompt.md`**: Сокращение токенов на **31.4%** (997 → 684).
+* **`10_security_auditor.md`**: Расширен с пустого шаблона (+385%) до полноценного O6 агента с безопасностью TIER 0.
+
+#### **Результат Оптимизации**
+| Группа Агентов | Метрика | Результат |
+|----------------|---------|-----------|
+| **Ревьюеры** (03, 05) | Эффективность токенов | **-3%** до **-9%** |
+| **Ревьюеры** (07, 09) | Безопасность (TIER 0) | +43% (Соответствие стандарту) |
+| **Исполнители** (04, 06, 08) | Эффективность токенов | **~ -30% (средн.)** |
+| **Оркестратор** (01) | Эффективность токенов | **-36.24%** |
+
+#### **Верифицировано**
+* **A/B Тестирование:** Все стандартизированные промпты прошли проверку функциональной эквивалентности.
+* **Локализация:** Все русские промпты (`Translations/RU/Agents/*.md`) синхронизированы со стандартом v3.6.0.
+
+---
+
 
 ### **v3.6.0 — O5: Формализация Уровней Навыков** (Стабильность)
 

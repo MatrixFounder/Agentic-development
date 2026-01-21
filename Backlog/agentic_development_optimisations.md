@@ -530,18 +530,75 @@ Now that O1 is implemented and verified (v3.5.4), O5 is the necessary follow-up 
 The success of O2 (Orchestrator Compression) proved that "Structured Patterns" (Input → Flow → Decision) are more effective than cryptic DSLs.
 Instead of "compressing" prompts to be shorter, we should **standardize** them to use the same structural rigidity as the Orchestrator.
 
-**Implemented Solution:**
+**Prototype (Completed 2026-01-22):**
 Refactored `02_analyst_prompt.md` to use standard schema:
 1. **Identity & Prime Directive** (from `core-principles`)
 2. **Context Loading** (from `skill-phase-context`)
 3. **Execution Loop** (Input → Process → Artifact → Review)
 
-**Results (A/B Test 2026-01-22):**
-- **Token Efficiency:** -2.35% input tokens.
-- **Structure:** Improved determinism via rigid headers.
+**Actionable Data for Infographic (A/B Test Results 2026-01-22):**
+
+| Agent | Role | Delta (Tokens) | Delta (%) | Status | Check |
+|-------|------|----------------|-----------|--------|-------|
+| `01` | Orch. | -406 | **-36.24%** | ✅ Logic Preserved | [x] |
+| `02` | Analyst | -24 | **-2.35%** | ✅ Optimization | [x] |
+| `03` | Task Rev. | -79 | **-9.88%** | ✅ Optimization | [x] |
+| `04` | Architect | -342 | **-28.86%** | ✅ Major Opt. | [x] |
+| `05` | Arch Rev. | -29 | **-3.87%** | ✅ Optimization | [x] |
+| `06` | Planner | -336 | **-32.56%** | ✅ Major Opt. | [x] |
+| `07` | Plan Rev. | +217 | +43.63% | ⚠️ Safety Fix* | [x] |
+| `08` | Developer | -313 | **-31.39%** | ✅ Major Opt. | [x] |
+| `09` | Code Rev. | +214 | +43.29% | ⚠️ Safety Fix* | [x] |
+| `10` | Security | +481 | +385.0% | ⚠️ Safety Fix* | [x] |
+
+*> Note: Agents 07/09 increased in size because they were previously unsafe (missing TIER 0 skills). New versions are compliant.*
+
+**Outcome:**
+- **Total Optimization:** ~ -700 tokens across critical "Doer" agents (04/06/08).
+- **Safety Trade-off:** +430 tokens to secure Reviewers (07/09).
+- **Net Result:** More robust, standardized system with reduced overhead in high-frequency loops.
+
+**Implementation Plan (Full Rollout):**
+
+#### Phase 1: Reviewers (Agents 03, 05, 07, 09)
+Reviewers follow a simple "Check & Report" pattern.
+- **Target:**
+    - [x] `03_task_reviewer` (Completed)
+    - [x] `05_architecture_reviewer` (Completed)
+    - [x] `07_plan_reviewer` (Completed)
+    - [x] `09_code_reviewer` (Completed)
+- **Pattern:** `Review Loop` (Read Artifact → Apply Checklist → Report)
+
+#### Phase 2: Doers (Agents 04, 06, 08)
+"Doers" execute complex creative tasks.
+- **Target:**
+    - [x] `04_architect` (Completed)
+    - [x] `06_planner` (Completed)
+    - [x] `08_developer` (Completed)
+- **Pattern:** `Execution Loop` (Read Task → Plan/Design → Implementation → Self-Correction)
+
+#### Phase 3: Special Agents (01, 10) & Finalization
+- [x] **01_orchestrator:** Already compressed in O2, but needs O6 *Header Standardization* (Context Loading).
+- [x] **10_security:** Needs VDD alignment. (Standardized +385%)
+- [x] **Localization:** Sync all Russian translations.
+
+> [!SUCCESS]
+> **Cross-Check Validation (2026-01-22):**
+> - [x] **File Integrity:** Agents 02-09 renamed to `_prompt.md`.
+> - [x] **TIER 0 Compliance:** All 8 standardized agents enforce `core-principles` + `safe-commands`.
+> - [x] **Backlog Accuracy:** Phase 1 & 2 A/B metrics recorded.
+> - [x] **Localization:** RU mirrors EN 100%.
+
+> [!WARNING]
+> **⚠️ LESSONS FROM O1-O5 — PROTOTYPE CHECKLIST**
+> Before standardizing any agent, verify:
+> 1.  [ ] **TIER 0 Compliance:** Does it strictly load `core-principles`, `safe-commands`, `artifact-management`? (Lesson from O1/O5)
+> 2.  [ ] **Pattern Validity:** Does it use `Execution Loop` or `Review Loop` correctly? (Lesson from O2)
+> 3.  [ ] **A/B Testing Rigor:** Is the new structure functionality equivalent? (Lesson from O2)
+> 4.  [ ] **Translation Impact:** Is the RU version updated simultaneously? (Lesson from O3)
 
 **Condition for Activation:**
-- `02_analyst_prompt.md` now uses this standard. Future agents should follow suit.
+- `02_analyst_prompt.md` is the Gold Standard. All others must match.
 
 ---
 

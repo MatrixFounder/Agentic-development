@@ -45,7 +45,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`planning-decision-tree`** | Decision logic for breaking down tasks and prioritizing work (Stub-First & E2E). | `02-plan-implementation`, `vdd-02-plan` | Planner, Architect |
 | **`requirements-analysis`** | Process for gathering and refining requirements into a structured Technical Specification (TASK). | `01-start-feature`, `vdd-01-start-feature` | Analyst, TASK Reviewer |
 | **`skill-task-model`** | Standard models, examples (Good/Bad), and structure rules for TASK documents. | `01-start-feature` | Analyst, TASK Reviewer |
-| **`skill-creator`** | Guidelines for creating new Agent Skills following Anthropic standards and Gemini/Antigravity structures. | Manual, `04-update-docs` | Developer, Architect |
+| **`skill-creator`** | Guidelines for creating new Agent Skills. Based on [Anthropic](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) & [Antigravity](https://antigravity.google/docs/skills) standards. | Manual, `04-update-docs` | Developer, Architect |
 
 ### Engineering Standards
 | Skill | Description | Used By in Workflows | Used By Agents |

@@ -62,8 +62,29 @@ Follow the **"Progressive Disclosure"** principle:
 
 When creating a new skill, you **MUST** strictly follow this sequence:
 
-1.  **Check Duplicates**: Verify in `System/Docs/SKILLS.md` that no similar skill exists.
-2.  **Create Directory**: `mkdir .agent/skills/skill-name`.
-3.  **Create SKILL.md**: Write the content with valid Frontmatter.
-4.  **Register**: Add the skill to the appropriate table in `System/Docs/SKILLS.md`.
-5.  **Verify**: Ensure the YAML is valid and the directory is clean (no extra files).
+1.  **Check Duplicates**: Verify in `System/Docs/SKILLS.md`.
+2.  **Initialize**: Use the automation script (Preferred) or create manually.
+    ```bash
+    # Usage: python3 .agent/skills/skill-creator/scripts/init_skill.py <skill-name> --tier [0|1|2]
+    python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 2
+    ```
+    *This creates the directory, templates, and required subfolders.*
+
+3.  **Edit Content**: Modify `SKILL.md` with your specific instructions.
+4.  **Validate**: Run the validation script to ensure compliance.
+    ```bash
+    python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/my-new-skill
+    ```
+5.  **Register**: Add the skill to `System/Docs/SKILLS.md`.
+
+## 5. Scripts Reference
+
+The `skill-creator` includes automation scripts located in `.agent/skills/skill-creator/scripts/`:
+
+*   **`init_skill.py`**: Generates a compliant skill skeleton.
+    *   Creates `scripts/`, `examples/`, `resources/`.
+    *   Generates `SKILL.md` with valid YAML frontmatter.
+*   **`validate_skill.py`**: Checks for compliance errors.
+    *   Verifies folders (no `assets/` or `references/`).
+    *   Verifies YAML frontmatter (`tier`, `version`, `name`).
+    *   Checks for prohibited files (`README.md`).

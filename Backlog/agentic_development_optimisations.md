@@ -636,34 +636,47 @@ Significant reduction in token overhead for extended skills, verifying the "Scri
 ### O7: Session Context Management (High Impact)
 
 **Status:** STRATEGIC PRIORITY
+**Blocking:** O9 (Multi-Session), O10 (Hierarchical Context)
 
 **Analysis:**
-O1-O5 solved "Static Context" (Codebase & Rules). The remaining bottleneck is "Dynamic Context" (Conversation History).
-We need a way to "Reboot" the agent mid-session without losing the thread of the conversation.
+With O1-O6 completed, we have minimized "Static Context" (Codebase & Rules). The remaining bottleneck is "Dynamic Context" (Conversation History).
+Currently, the agent relies on the chat window logic. When the window fills up, we lose "where we were".
+We need a **Persistent State Mechanism** that survives session resets and aligns with the `task_boundary` tool mechanics.
 
-**Solution: `session_state.md` Artifact**
-Instead of relying on Chat History (which grows linearly), we maintain a compact State File.
+**Solution: `session_state.md` + `task_boundary` resonance**
+Instead of relying on Chat History (which grows linearly), we maintain a compact State File that mirrors the `task_boundary` parameters.
 
+**Proposed Schema (`.agent/sessions/current_session.md`):**
 ```yaml
-# .agent/sessions/current_session.md
-session_id: "..."
-phase: "Execution"
-current_task: "task-012-login"
+session_id: "uuid-v4"
+last_updated: "ISO-8601"
+mode: "PLANNING | EXECUTION | VERIFICATION" # Aligns with task_boundary.Mode
+current_task:
+  name: "Implementing O7" # Aligns with task_boundary.TaskName
+  status: "Creating skill structure" # Aligns with task_boundary.TaskStatus
+  predicted_steps: 5
+context_summary: |
+  User requested O7 implementation.
+  Analysis complete.
+  Architecture updated.
+  Currently initiating Plan phase.
 active_blockers: []
-decision_log:
-  - "Use JWT"
-  - "Skip Oauth for now"
-recent_events:
-  - "Developer fixed bug in AuthController"
-  - "Reviews passed"
+recent_decisions:
+  - "Decided to use YAML for state storage"
+  - "Selected TIER 0 for skill persistence"
 ```
+
+**Integration Strategy:**
+1.  **Read (Boot):** The `core-principles` or `GEMINI.md` (TIER 0) must instruct the agent to read `current_session.md` immediately after booting.
+2.  **Write (Boundary):** Every time the agent calls `task_boundary`, it should also (or via a helper) update `current_session.md`.
+    *   *Optimization:* Create a script `update_state.py` in the skill to handle the YAML safely.
 
 **Recommendation:**
 - **Action:** Create `skill-session-state` (TIER 0).
-- **Trigger:** Read on boot, Write after every Phase Boundary.
-- **Payoff:** Allows "Squashing" chat history to zero while keeping context.
+- **Tooling:** Include `scripts/update_session.py` to robustly dump YAML.
+- **Payoff:** Allows "Squashing" chat history to zero while keeping the exact Task/Mode state restoration.
 
-**Effort:** 12-16 hours.
+**Effort:** 8-12 hours.
 
 ---
 
@@ -1240,24 +1253,44 @@ DELIVERABLES:
 CRITICAL: Do not modify the prompt logic (that was O1). This is purely documentation and metadata enforcement.
 ```
 
-### Prompt 7: O7 — Session Context Management
+### Prompt 7: O7 — Session Context Management (START PROMPT)
 
-> **Status:** STRATEGIC PRIORITY
+> **Status:** READY FOR IMPLEMENTATION
 
 ```markdown
-TASK: Implement O7 (Session Context) from Backlog/agentic_development_optimisations.md
+TASK: Implement Optimization O7 (Session Context)
 
 CONTEXT:
-- Goal: Create `skill-session-state` to manage dynamic context (conversation history replacement).
-- Strategy: Maintain a `current_session.md` state file.
+O1-O6 are complete. The framework now has efficient static context (TIERs) and standardized prompts.
+The alignment with `task_boundary` tool is critical. We need a persistent file that tracks the `task_boundary` state so we can recover it after a context clear.
+
+GOAL:
+Create a "Session State" mechanism that persists the current Mode, TaskName, and Summary to a file, allowing the agent to "reboot" seamlessly.
 
 DELIVERABLES:
-1. Create `.agent/skills/skill-session-state/SKILL.md`.
-2. Define YAML schema for session state (Phase, Task, Blockers, Decisions).
-3. "Boot Protocol": Update `core-principles` or `GEMINI.md` to instruct reading this file on boot.
-4. "Update Protocol": Define when to write to this file (Task Boundary).
 
-CRITICAL: This allows us to clear chat history without losing context.
+1. **Create Skill**: `.agent/skills/skill-session-state/SKILL.md` (TIER 0)
+   - Must define the schema for `.agent/sessions/latest.yaml`.
+   - Must provide instructions on *when* to read (Boot) and *when* to write (Task Boundary).
+   - **TIER 0 Status**: This skill MUST be added to TIER 0 in `SKILL_TIERS.md` and `GEMINI.md`.
+
+2. **Create Script**: `.agent/skills/skill-session-state/scripts/update_state.py`
+   - A robust script to update the YAML file.
+   - Arguments: `--mode`, `--task`, `--status`, `--summary`.
+   - Why script? To prevent YAML syntax errors by the LLM.
+
+3. **Update Bootstrap Protocol (`GEMINI.md`)**:
+   - Add explicit instruction: "ON SESSION START: Check for `.agent/sessions/latest.yaml`. If exists, READ IT to restore context."
+
+4. **Integration Plan**:
+   - Describe how this integrates with `task_boundary`. (e.g., "After calling task_boundary, run update_state.py").
+
+CONSTRAINTS:
+- The schema MUST map 1:1 to the arguments of the `task_boundary` tool where possible.
+- Do not overcomplicate. Keep it to <20 lines of YAML.
+
+STARTING STEP:
+- Analyze `skill-creator/SKILL.md` to ensure the new skill follows the "Script-First" pattern (O6a).
 ```
 
 ### Prompt 8: O6 — Agent Prompt Standardization
@@ -1298,6 +1331,7 @@ CRITICAL: Do NOT replace the original file until A/B test confirms neutral/posit
 | 2026-01-21 | Adversarial Architect | **O5 COMPLETED** (Skill Tiers Formalization) |
 | 2026-01-21 | Adversarial Architect | Updated Roadmap O6-O10 (Post-O5 Strategy) |
 | 2026-01-21 | Adversarial Architect | **O3 COMPLETED**: Marked as done, added Lessons Learned, updated prompts with checklists |
+| 2026-01-22 | Orchestrator Agent | **O7 UPDATED**: Refined specs for task_boundary alignment & script-first approach |
 | 2026-01-21 | Adversarial Architect | Final VDD review, implementation prompts |
 | 2026-01-21 | Adversarial Architect | Corrected skill tiers, cross-check requirements |
 | 2026-01-21 | Adversarial Architect | Initial document |

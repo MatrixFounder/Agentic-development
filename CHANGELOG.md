@@ -30,6 +30,9 @@
 * **Orchestrator Logic Integrity:** Restored missing stages 11-14 (Review/Fix cycle) and Workflows section in `01_orchestrator.md` to guarantee 100% logic parity with v3.2.
 * **Documentation:** Consolidated `CHANGELOG.md` entry for v3.6.0 logic clarity.
 
+#### **Added**
+* **New Skill: `skill-creator`**: Meta-skill for creating new skills containing Anthropic standards + Project Tiers (verified structure).
+
 #### **Updated**
 * **Infographics:** Updated `TOKEN_OPTIMIZATION_INFOGRAPHIC.md` and `O6_OPTIMIZATION_INFOGRAPHIC.md` with final v3.6.1 verification stats (-20% Orchestrator compression vs -36% initial estimate).
 
@@ -572,6 +575,9 @@ To upgrade from v3.0.x to v3.1.0:
 #### **Исправлено**
 * **Целостность Оркестратора:** Восстановлены пропущенные этапы 11-14 (Review/Fix цикл) и секция Workflows в `01_orchestrator.md` для гарантии 100% паритета логики с v3.2.
 * **Документация:** Консолидирована запись `CHANGELOG.md` для версии v3.6.0.
+
+#### **Добавлено**
+* **Новый навык: `skill-creator`**: Мета-навык для создания новых навыков, включающий стандарты Anthropic + Project Tiers (верифицированная структура).
 
 #### **Обновлено**
 * **Инфографика:** Обновлены `TOKEN_OPTIMIZATION_INFOGRAPHIC.md` и `O6_OPTIMIZATION_INFOGRAPHIC.md` с финальной статистикой (-20% сжатие Оркестратора против -36% изначальной оценки).

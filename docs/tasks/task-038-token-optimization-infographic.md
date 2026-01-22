@@ -13,11 +13,11 @@ Visualize the significant token reductions achieved by optimizations O1 (Lazy Lo
 
 ## 2. Scope
 - **Data Source:** `Backlog/agentic_development_optimisations.md` (Actual Results sections).
-- **Artifact:** `docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md`
+- **Artifact:** `archives/Infographics/TOKEN_OPTIMIZATION_INFOGRAPHIC.md`
 - **Updates:** `CHANGELOG.md`
 
 ## 3. Deliverables
-- [x] `docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md`:
+- [x] `archives/Infographics/TOKEN_OPTIMIZATION_INFOGRAPHIC.md`:
   - Visual comparison (Mermaid) of Before vs After.
   - Detailed breakdown by Optimization key.
   - "Savings at a Glance" summary.

@@ -35,7 +35,7 @@
 
 #### **Added**
 * **Automation Scripts**: Added python automation for deterministic skill execution.
-* **Infographic Update**: Added *Model Impact Analysis* and *References* to `docs/O6_OPTIMIZATION_INFOGRAPHIC.md`.
+* **Infographic Update**: Added *Model Impact Analysis* and *References* to [O6_OPTIMIZATION_INFOGRAPHIC.md](docs/O6_OPTIMIZATION_INFOGRAPHIC.md).
 
 ### **v3.6.2 — Skill Creator & Automation** (Feature)
 
@@ -55,7 +55,7 @@
 * **Documentation:** Consolidated `CHANGELOG.md` entry for v3.6.0 logic clarity.
 
 #### **Updated**
-* **Infographics:** Updated `TOKEN_OPTIMIZATION_INFOGRAPHIC.md` and `O6_OPTIMIZATION_INFOGRAPHIC.md` with final v3.6.1 verification stats (-20% Orchestrator compression vs -36% initial estimate).
+* **Infographics:** Updated [Token Optimization Infographic](docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md) and [O6 Optimization Infographic](docs/O6_OPTIMIZATION_INFOGRAPHIC.md) with final v3.6.1 verification stats (-20% Orchestrator compression vs -36% initial estimate).
 
 ---
 
@@ -602,7 +602,7 @@ To upgrade from v3.0.x to v3.1.0:
 
 #### **Добавлено**
 * **Скрипты Автоматизации:** Добавлена python-автоматизация для детерминированного выполнения навыков.
-* **Обновление Инфографики:** Добавлен *Анализ Влияния на Модель* и *Ссылки* в `docs/O6_OPTIMIZATION_INFOGRAPHIC.md`.
+* **Обновление Инфографики:** Добавлен *Анализ Влияния на Модель* и *Ссылки* в [O6 Optimization Infographic](docs/O6_OPTIMIZATION_INFOGRAPHIC.md).
 
 ### **v3.6.2 — Skill Creator & Automation** (Feature)
 
@@ -622,7 +622,7 @@ To upgrade from v3.0.x to v3.1.0:
 * **Документация:** Консолидирована запись `CHANGELOG.md` для версии v3.6.0.
 
 #### **Обновлено**
-* **Инфографика:** Обновлены `TOKEN_OPTIMIZATION_INFOGRAPHIC.md` и `O6_OPTIMIZATION_INFOGRAPHIC.md` с финальной статистикой (-20% сжатие Оркестратора против -36% изначальной оценки).
+* **Инфографика:** Обновлены [Token Optimization Infographic](docs/TOKEN_OPTIMIZATION_INFOGRAPHIC.md) и [O6 Optimization Infographic](docs/O6_OPTIMIZATION_INFOGRAPHIC.md) с финальной статистикой (-20% сжатие Оркестратора против -36% изначальной оценки).
 
 ---
 

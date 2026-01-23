@@ -9,14 +9,39 @@
 ## Table of Contents
 
 - [Vision Statement](#vision-statement)
+  - [Goals](#goals)
+  - [Non-Goals](#non-goals)
 - [Core Principles](#core-principles)
+  - [1. Artifact-Centric Architecture](#1-artifact-centric-architecture)
+  - [2. Sequential Sessions (Not Parallel Agents)](#2-sequential-sessions-not-parallel-agents)
+  - [3. VDD at Every Level](#3-vdd-at-every-level)
+  - [4. Token Budget Awareness](#4-token-budget-awareness)
 - [Target Architecture](#target-architecture)
+  - [Phase Model](#phase-model)
+  - [Isolation & Handoff Strategy](#isolation--handoff-strategy)
+  - [Artifact Flow](#artifact-flow)
 - [Agent Model](#agent-model)
-- [Skills & Workflows](#skills--workflows)
+  - [New Agents (Minimal Set)](#new-agents-minimal-set)
+  - [Rejected Agents](#rejected-agents)
+- [Skills & Workflows](#skills-workflows)
+  - [New Skills](#new-skills)
+  - [New Workflows](#new-workflows)
 - [Folder Structure](#folder-structure)
-- [Integration Strategy](#integration-strategy)
+- [Detailed Implementation Plan](#detailed-implementation-plan)
+  - [Prerequisites](#prerequisites)
+  - [Phase 0: Product Bootstrap & Tools](#phase-0-product-bootstrap--tools-week-1)
+  - [Phase 1: The Refinement Loop](#phase-1-the-refinement-loop-week-2)
+  - [Phase 2: Standalone Mode](#phase-2-standalone-mode-startupsrfp-week-3)
+  - [Phase 3: Technical Integration](#phase-3-technical-integration-week-4)
 - [VDD Review](#vdd-review)
+  - [Challenge 1: Business Metrics](#challenge-1-business-metrics-are-hard-to-verify)
+  - [Challenge 3: Complexity](#challenge-3-another-layer-more-complexity)
+  - [Challenge 4: Token Budget](#challenge-4-token-budget-will-be-exceeded)
 - [Open Questions](#open-questions)
+  - [Resolved](#resolved-by-this-document)
+  - [Still Open](#still-open)
+- [Future Initiatives (Phase 3+)](#future-initiatives-phase-3)
+- [Changelog](#changelog)
 
 ---
 
@@ -28,8 +53,7 @@
 
 1. **Business Layer Integration** — добавить Product Analysis фазу перед техническим pipeline
 2. **Artifact-Centric Communication** — агенты общаются через файлы, не через "оркестрацию"
-3. **Domain Isolation** — поддержка многодоменных enterprise-проектов
-4. **Near-Zero Hallucinations** — VDD на каждом уровне, включая бизнес-артефакты
+3. **Near-Zero Hallucinations** — VDD на каждом уровне, включая бизнес-артефакты
 
 ### Non-Goals
 
@@ -109,13 +133,16 @@ User Input ─────┐
 ### 4. Token Budget Awareness
 
 > [!IMPORTANT]
-> Product Development фаза добавляет overhead. Budget:
-> - `p01_product_analyst.md` — MAX 3,000 tokens
-> - `p02_product_reviewer.md` — MAX 2,000 tokens  
-> - `skill-product-analysis` — MAX 1,500 tokens
-> - `skill-backlog-prioritization` — MAX 1,000 tokens
-> 
-> **Total Product Phase overhead: < 8,000 tokens**
+> Product Development phase adds overhead, but recent optimizations (O1-O4) have created room.
+>
+> **Revised Budget (v3.7+ Baseline):**
+> - Standard Framework Overhead: ~12,000 tokens (down from 16k)
+> - `p01_product_analyst.md`: MAX 2,500 tokens (Standardized)
+> - `p02_product_reviewer.md`: MAX 2,000 tokens (Standardized)
+> - `skill-product-analysis`: MAX 1,000 tokens (TIER 2 - Lazy Load)
+> - `skill-backlog-prioritization`: MAX 500 tokens (Script-First approach)
+>
+> **Total Product Phase overhead: ~6,000 tokens (Optimized)**
 
 ---
 
@@ -125,11 +152,47 @@ User Input ─────┐
 
 | Phase | Session | Agent | Input | Output |
 |-------|---------|-------|-------|--------|
-| 1. Vision | 1 | p01_product_analyst | User request | `PRODUCT_VISION.md` |
-| 2. Backlog | 1 | p01_product_analyst | Vision | `PRODUCT_BACKLOG.md` |
-| 3. Review | 2 | p02_product_reviewer | Backlog | Approval or Comments |
-| 4. Domain Split | 3 | Orchestrator | Approved Backlog | Domain TASK.md files |
-| 5+ | N+ | Standard Pipeline | Domain TASK.md | Code |
+| 1. Vision Cycle | 1 | p01_Analyst + p02_Reviewer | User request | `APPROVED_VISION.md` |
+| 2. Backlog Cycle | 2 | p01_Analyst + p02_Reviewer | Approved Vision | `APPROVED_BACKLOG.md` |
+| **STOP** | **—** | **HUMAN** | **Approved Backlog** | **GO/NO-GO Decision** |
+| 3. Planning| — | **HUMAN** | Decisions | Scope for Tech Implementation |
+| 4. Handoff | 3 | Orchestrator | Human Scope | Domain `TASK.md` files |
+| 5. Dev | 4+ | Standard Pipeline | `TASK.md` | Code |
+
+### Isolation & Handoff Strategy
+
+> [!IMPORTANT]
+> **The "Air Gap" Principle**: Product Agents never call Development Agents directly.
+
+```mermaid
+graph TD
+    subgraph "Stage 1: Vision Refinement"
+        A[User Request] --> B(p01 Analyst)
+        B -- Draft --> C[PRODUCT_VISION]
+        C -- Review --> D(p02 Reviewer)
+        D -- Feedback --> B
+    end
+
+    subgraph "Stage 2: Backlog Generation"
+        D -- Approve --> E[APPROVED_VISION]
+        E --> F(p01 Analyst)
+        F -- Create --> G[PRODUCT_BACKLOG]
+        G -- Review --> H(p02 Reviewer)
+        H -- Feedback --> F
+        H -- Approve --> I[APPROVED_BACKLOG]
+    end
+
+    I --> J{HUMAN GATE<br/>Strategic Decision}
+
+    subgraph "Transition"
+        J -- Approved --> K[HUMAN PLANNING<br/>Select Scope for Sprint]
+        K -- Create Task --> L[Orchestrator Input]
+    end
+
+    subgraph "Agentic Development"
+        L --> M(Standard Pipeline)
+    end
+```
 
 ### Artifact Flow
 
@@ -150,16 +213,14 @@ User Input ─────┐
 │  │   └── Sections:                                                          │
 │  │       ├── Epics (WSJF-prioritized)                                       │
 │  │       ├── Stories (INVEST-compliant)                                     │
-│  │       └── Domain Assignments                                             │
 │  │                                                                          │
-│  └── domains/                                                               │
-│      ├── {domain}/                                                          │
-│      │   ├── ARCHITECTURE.md  # Domain-specific                             │
-│      │   ├── current/                                                       │
-│      │   │   ├── TASK.md      # Active task                                 │
-│      │   │   └── PLAN.md                                                    │
-│      │   └── archive/                                                       │
-│      └── ...                                                                │
+│  ├── APPROVED_BACKLOG.md      # Starting point for Implementation           │
+│  │   └── (Same structure as Backlog, but signed off)                        │
+│  │                                                                          │
+│  ├── TASK.md                  # Technical Scope (Manual Creation for now)   │
+│  │   └── Derived from Approved Epics                                        │
+│  │                                                                          │
+│  └── domains/                 # (Future: Multi-domain split)                │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -181,7 +242,11 @@ Analyze user product requests and create structured backlog.
 ## ACTIVE SKILLS
 - skill-product-analysis (REQUIRED)
 - skill-backlog-prioritization (REQUIRED)
-- core-principles (REQUIRED)
+- TIER 0 SKILLS (MANDATORY):
+  - core-principles
+  - safe-commands
+  - artifact-management
+  - skill-session-state (O7)
 
 ## INPUT
 - User product request
@@ -192,29 +257,34 @@ Analyze user product requests and create structured backlog.
 2. PRODUCT_BACKLOG.md — Prioritized backlog
 
 ## PROCESS
-1. Read user request
-2. IF PRODUCT_VISION.md exists → determine if UPDATE or NEW
-3. Extract: Problem, Users, Metrics, Constraints
-4. Create/Update PRODUCT_VISION.md
-5. Breakdown vision into Epics → Stories
-6. Prioritize using WSJF (skill-backlog-prioritization)
-7. Assign domains to stories
-8. Create PRODUCT_BACKLOG.md
+1. **BOOTSTRAP**: Restore Session State (skill-session-state)
+2. Read user request
+3. IF PRODUCT_VISION.md exists → determine if UPDATE or NEW
+4. Extract: Problem, Users, Metrics, Constraints
+5. Create/Update PRODUCT_VISION.md
+6. Breakdown vision into Epics → Stories
+7. Prioritize using WSJF (`prioritize.py`)
+8. Assign domains to stories
+9. Create PRODUCT_BACKLOG.md
+10. **UPDATE STATE**: Save session context
 
-## TOKEN BUDGET: < 3,000 tokens
+## TOKEN BUDGET: < 2,500 tokens
 ```
 
 #### p02_product_reviewer.md
 
 ```markdown
-# Product Reviewer (VDD-Adversarial)
-
 ## ROLE
 Challenge product artifacts using adversarial analysis.
 
 ## ACTIVE SKILLS
 - vdd-adversarial (REQUIRED)
 - skill-backlog-prioritization (for verification)
+- TIER 0 SKILLS (MANDATORY):
+  - core-principles
+  - safe-commands
+  - artifact-management
+  - skill-session-state
 
 ## INPUT
 - PRODUCT_BACKLOG.md
@@ -257,7 +327,10 @@ Use `vdd-sarcastic` approach:
 
 ### New Skills
 
-#### skill-product-analysis (MAX 1,500 tokens)
+> [!NOTE]
+> All new skills must comply with **O5 Skill Tiers** (likely TIER 2) and **O6 Script-First** standards.
+
+#### skill-product-analysis (TIER 2, MAX 1,000 tokens)
 
 ```markdown
 # Product Analysis
@@ -284,39 +357,24 @@ Apply INVEST:
 - Testable
 ```
 
-#### skill-backlog-prioritization (MAX 1,000 tokens)
+#### skill-backlog-prioritization (TIER 2, MAX 500 tokens)
 
 ```markdown
 # Backlog Prioritization
 
-## WSJF Formula
-WSJF = (Business Value + Time Criticality + Risk Reduction) / Effort
+## SCRIPT-FIRST STRATEGY
+Instead of teaching LLM arithmetic, use `scripts/calculate_wsjf.py`.
 
-## Ranking Table
-| Epic | BV | TC | RR | Effort | WSJF | Priority |
-|------|----|----|----|----|------|----------|
-| ...  | 1-10 | 1-10 | 1-10 | 1-10 | calc | sorted |
+## Usage
+`python3 scripts/calculate_wsjf.py --file PRODUCT_BACKLOG.md`
 
-## Priority Rules
-1. WSJF > 5 → High Priority
-2. WSJF 2-5 → Medium Priority
-3. WSJF < 2 → Low Priority / Backlog
+## WSJF Logic (Implemented in script)
+1. Parse table from markdown
+2. Calculate WSJF = (BV + TC + RR) / JobSize
+3. Sort items descending
+4. Rewrite table in-place
 ```
 
-#### skill-domain-decomposition (MAX 1,000 tokens)
-
-```markdown
-# Domain Decomposition
-
-## Bounded Context Rules
-1. Each domain has clear ownership
-2. Minimal dependencies between domains
-3. Shared kernel explicitly documented
-
-## Domain → Folder Mapping
-Epic "User Authentication" → domain: auth
-Epic "Trading Bots" → domain: trading
-Epic "Loyalty Points" → domain: loyalty
 ```
 
 ### New Workflows
@@ -333,7 +391,8 @@ description: Create or update Product Vision and Backlog
 4. Create/Update docs/PRODUCT_VISION.md
 5. Load skill: skill-backlog-prioritization
 6. Create docs/PRODUCT_BACKLOG.md
-7. Notify user: "Vision and Backlog ready for review"
+7. Tool: `calculate_wsjf.py` (Auto-prioritize)
+8. Notify user: "Vision and Backlog ready for review"
 ```
 
 #### product-review.md
@@ -354,17 +413,6 @@ description: VDD Review of Product Backlog
    - Proceed to domain-start workflow
 ```
 
-#### domain-start.md
-
-```yaml
----
-description: Create domain-specific TASK.md from approved backlog
----
-1. Read docs/APPROVED_BACKLOG.md
-2. Load skill: skill-domain-decomposition
-3. For each domain in backlog:
-   - Create docs/domains/{domain}/current/TASK.md
-   - Apply standard /01-start-feature workflow
 ```
 
 ---
@@ -394,51 +442,84 @@ project-root/
 │   ├── PRODUCT_VISION.md                 # NEW: High-level vision
 │   ├── PRODUCT_BACKLOG.md                # NEW: Prioritized backlog
 │   ├── APPROVED_BACKLOG.md               # NEW: After VDD review
-│   └── domains/
-│       ├── {domain}/
-│       │   ├── ARCHITECTURE.md           # Domain-specific
-│       │   ├── KNOWN_ISSUES.md
-│       │   └── current/                  # Single active task
-│       │       ├── TASK.md
-│       │       └── PLAN.md
-│       └── archive/                      # Completed tasks
-└── src/{domain}/                          # Code by domain
+│   │
+│   └── domains/                  # Future (See Phase 3+)
+│       └── ...
 ```
 
 ---
 
 ## Integration Strategy
 
-### Phase 0: Skills & Agents (No Pipeline Changes)
+## Detailed Implementation Plan
 
-1. Create 3 new skills (product-analysis, backlog-prioritization, domain-decomposition)
-2. Create 2 new agents (p01_product_analyst, p02_product_reviewer)
-3. Test in isolation — не интегрировать в main pipeline
+### Prerequisites
+- [ ] **O1-O7 Optimizations Complete**: System must be stable (v3.7+)
+- [ ] **Script-First Infrastructure**: `scripts/` directory must be ready for new Product tools
+- [ ] **Standalone Mode Support**: Ability to run agents without full project scaffolding (for RFPs/Startups)
 
-**DoD:** Skills pass token budget, agents produce valid artifacts
+### Phase 0: Product Bootstrap & Tools (Week 1)
+**Goal**: Create infrastructure for generating `PRODUCT_VISION.md` and `PRODUCT_BACKLOG.md` from zero.
 
-### Phase 1: Workflows Integration
+1. **Bootstrap Tools (Script-First)**:
+   - `scripts/init_product.py`: Interactive CLI to scaffold `PRODUCT_VISION.md`.
+     - Prompts user for: Problem, Persona, Goals, Constraints.
+     - Generates markdown template with placeholders.
+   - `scripts/calculate_wsjf.py`: Already defined (for Backlog).
 
-1. Create 3 new workflows
-2. Update GEMINI.md to recognize `/product-*` commands
-3. Test: `/product-vision` creates valid PRODUCT_VISION.md
+2. **Skills Implementation**:
+   - `skill-product-analysis`: TIER 2 skill, loaded only for product workflows.
+   - `skill-backlog-prioritization`: Wrapper around `calculate_wsjf.py`.
 
-**DoD:** User can invoke product workflows explicitly
+3. **Agent Implementation (Standalone-Capable)**:
+   - `p01_product_analyst.md`: Capable of running on empty folder (Greenfield).
+   - `p02_product_reviewer.md`: Strict VDD logic.
 
-### Phase 2: Domain Structure
+### Phase 1: The Cascading Refinement Loop (Week 2)
+**Goal**: Implement "Fail Fast" quality gates.
 
-1. Create domain folder template
-2. Update Orchestrator to read from APPROVED_BACKLOG.md
-3. Test: Multi-domain task creation works
+> [!TIP]
+> **Efficiency**: Reviewing Vision *before* generating Backlog saves tokens. Don't write 50 stories for a flawed concept.
 
-**DoD:** Standard pipeline works with domain-specific TASK.md
+**Workflow: `/product-refine`**
+```yaml
+description: Two-Stage Refinement (Vision -> Backlog)
+steps:
+  1. Boot: Restore Session Context
+  
+  # STAGE 1: VISION
+  2. Analyst: Generate `PRODUCT_VISION.md`
+  3. LOOP (Vision):
+     a. Reviewer: Check Vision (Goal/metrics/feasibility)
+     b. If Reject -> Analyst fixes -> Retry
+     c. If Approve -> Save `APPROVED_VISION.md` -> BREAK
 
-### Phase 3: Full Integration (After O1-O4 optimizations)
+  # STAGE 2: BACKLOG
+  4. Analyst: Generate `PRODUCT_BACKLOG.md` from `APPROVED_VISION.md`
+  5. Tool: Auto-calculate WSJF
+  6. LOOP (Backlog):
+     a. Reviewer: Check Epics/Stories (INVEST/WSJF)
+     b. If Reject -> Analyst fixes -> Retry
+     c. If Approve -> Save `APPROVED_BACKLOG.md` -> BREAK
 
-1. Integrate product phase as optional pre-step in main pipeline
-2. User can start with `/01-start-feature` (technical) OR `/product-vision` (business)
+  7. Summary: Ready for Human Gate
+```
 
-**DoD:** Both entry points work seamlessly
+### Phase 2: Standalone Mode (Startups/RFP) (Week 3)
+**Goal**: Use agents for analysis WITHOUT triggering development.
+
+- **Use Case**: Evaluating incoming RFPs or brainstorming startup ideas.
+- **Workflow**:
+  - Run `/product-refine`
+  - Output: `APPROVED_BACKLOG.md` + `PRODUCT_VISION.md`
+  - **STOP**. Do not convert to `TASK.md`.
+  - User decision point: "Archive" (Idea stored) or "Proceed" (Generate domains).
+
+### Phase 3: Technical Integration (Week 4)
+**Goal**: Connect Approved Backlog to `01_orchestrator`.
+
+- Only when user explicitly proceeds.
+- Map `APPROVED_BACKLOG.md` Epics -> `domains/{domain}/TASK.md`.
 
 ---
 
@@ -461,19 +542,6 @@ project-root/
 
 ---
 
-### Challenge 2: "Domain assignment is non-trivial"
-
-**Issue:** Deciding which epic belongs to which domain requires deep understanding.
-
-**Risk:** Incorrect domain → wrong architecture → refactoring hell
-
-**Mitigation:**
-1. Domain decomposition skill includes clear rules
-2. Dependencies between domains must be explicitly stated
-3. Architecture phase validates domain boundaries
-
-**VDD Verdict:** PASS with architecture validation
-
 ---
 
 ### Challenge 3: "Another layer = more complexity"
@@ -495,22 +563,20 @@ project-root/
 
 **Issue:** New skills + agents = more tokens
 
-**Calculation:**
+**Calculation (Revised after O1-O4):**
 ```
-Existing: ~50,000 tokens (standard pipeline)
+Existing: ~38,000 tokens (Optimized Standard Pipeline)
 Product Phase:
-  + p01_product_analyst: ~3,000
+  + p01_product_analyst: ~2,500
   + p02_product_reviewer: ~2,000
-  + skill-product-analysis: ~1,500
-  + skill-backlog-prioritization: ~1,000
-  + skill-domain-decomposition: ~1,000
-  = ~8,500 tokens additional
+  + skill-product-analysis: ~1,000 (TIER 2)
+  + skill-backlog-prioritization: ~500 (Script)
+  = ~6,000 tokens additional
 
-Total with Product: ~58,500 tokens
-Peak with history: ~75,000-90,000 tokens
+Total with Product: ~44,000 tokens (Well within limits)
 ```
 
-**VDD Verdict:** MARGINAL — requires O1-O4 optimizations first
+**VDD Verdict:** PASS — O1-O4 optimizations successfully created room.
 
 ---
 
@@ -528,7 +594,8 @@ Peak with history: ~75,000-90,000 tokens
 
 | Question | Owner | Blocker For |
 |----------|-------|-------------|
-| "How to persist context between sessions?" | To research | Multi-session pipeline |
+| "How to persist context between sessions?" | **RESOLVED (O7)**: `skill-session-state` + `latest.yaml` | Multi-session pipeline |
+| "Token Budget limit?" | **RESOLVED (O1-O4)**: Optimization freed up ~5k tokens | Feasibility |
 | "How to validate business metrics?" | Human oversight | Full automation |
 | "IDE support for domain switching?" | IDE vendor | Seamless UX |
 
@@ -558,6 +625,39 @@ Week 4+: Validation
 ├── Measure token usage
 ├── Iterate based on feedback
 ```
+
+---
+
+## Future Initiatives (Phase 3+)
+
+### 1. Domain Isolation Strategy
+> [!NOTE]
+> Deferred to allow Product Agents to stabilize first.
+
+**Goal**: Support multi-domain enterprise projects where Epics are automatically routed to domain-specific queues.
+
+#### Proposed Skill: `skill-domain-decomposition`
+```markdown
+# Domain Decomposition
+
+## Bounded Context Rules
+1. Each domain has clear ownership
+2. Minimal dependencies between domains
+3. Shared kernel explicitly documented
+
+## Domain → Folder Mapping
+Epic "User Authentication" → domain: auth
+Epic "Trading Bots" → domain: trading
+```
+
+#### Proposed Workflow: `domain-start.md`
+1. Read `APPROVED_BACKLOG.md`
+2. Load `skill-domain-decomposition`
+3. Split Epics into `docs/domains/{domain}/TASK.md`
+
+### 2. Challenge: "Domain assignment is non-trivial"
+**Issue:** Deciding which epic belongs to which domain requires deep understanding.
+**Mitigation:** Architecture phase must validate domain boundaries before any code is written.
 
 ---
 

@@ -375,7 +375,6 @@ Instead of teaching LLM arithmetic, use `scripts/calculate_wsjf.py`.
 4. Rewrite table in-place
 ```
 
-```
 
 ### New Workflows
 
@@ -413,7 +412,6 @@ description: VDD Review of Product Backlog
    - Proceed to domain-start workflow
 ```
 
-```
 
 ---
 

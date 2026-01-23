@@ -38,7 +38,7 @@ Copy these folders to your project root:
 # Installation
 cp -r /path/to/framework/System ./
 cp -r /path/to/framework/.agent ./
-cp -r /path/to/framework/.gemini ./ # (For Antigravity)
+cp /path/to/framework/GEMINI.md ./ # (For Antigravity)
 ```
 
 > [!NOTE]
@@ -50,7 +50,7 @@ cp -r /path/to/framework/.gemini ./ # (For Antigravity)
 
 #### 🔵 Option A: Cursor IDE
 To configure Cursor for this workflow:
-1.  **Context Rules**: Copy `.cursorrules` to your project root.
+1.  **Context Rules**: Copy `AGENTS.md` to your project root.
 2.  **Skills**: Create a symbolic link to enable native skill detection:
     ```bash
     ln -s .agent/skills .cursor/skills
@@ -59,7 +59,7 @@ To configure Cursor for this workflow:
 
 #### 🟣 Option B: Antigravity (Native)
 Antigravity supports this architecture out-of-the-box:
-1.  **Configuration**: Copy `.gemini/GEMINI.md` to your project root (this is the system prompt).
+1.  **Configuration**: Copy `GEMINI.md` to your project root (this is the system prompt).
 2.  **Skills**: Ensure `.agent/skills/` directory exists. Antigravity automatically loads skills from here.
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
 4.  **Auto-Run Permissions**: To enable autonomous command execution, add the following to **Allow List Terminal Commands** in IDE Settings:
@@ -125,8 +125,8 @@ pip install python-dotenv  # Environment variables
 ## 🏗 Directory Structure
 ```text
 project-root/
-├── .cursorrules                   # [Cursor] Context & Rules
-├── .gemini/GEMINI.md              # [Antigravity] System Config
+├── AGENTS.md                    # [Cursor] Context & Rules
+├── GEMINI.md                    # [Antigravity] System Config
 ├── .agent/
 │   ├── skills/                  # [Common] Skills Library
 │   ├── workflows/               # [Common] Workflow Library
@@ -162,8 +162,8 @@ It **MUST** be added to the context for all other agents (01-10).
 
 | Tool | System Prompt | Loading Method |
 |------|---------------|----------------|
-| **Cursor IDE** | `00` + role (01-10) | Manually or via `.cursorrules` |
-| **Antigravity** | `.gemini/GEMINI.md` (includes global principles) | **Automatically (Native)**. Manual concatenation of `00` is not required. |
+| **Cursor IDE** | `00` + role (01-10) | Manually or via `AGENTS.md` |
+| **Antigravity** | `GEMINI.md` (includes global principles) | **Automatically (Native)**. Manual concatenation of `00` is not required. |
 
 
 
@@ -339,7 +339,7 @@ TASK:
 ## 📝 Starter Prompt Templates
 
 **IMPORTANT:** To launch the process, use **Composer** (Cmd+I) or chat.
-Copy this text to activate the Orchestrator via `.cursorrules`.
+Copy this text to activate the Orchestrator via `AGENTS.md`.
 
 ### Template 1: Developing a New Feature (Feature)
 ```text
@@ -407,7 +407,7 @@ ACTIONS:
 
 1. **Delete Legacy:** Remove `System/Agents` (if it contains monolithic prompts).
 2. **Install New:** Copy `System/Agents` (v3.0+) and `.agent/` folder to root.
-3. **Config:** Ensure `.gemini/GEMINI.md` or `.cursorrules` are updated.
+3. **Config:** Ensure `GEMINI.md` or `AGENTS.md` are updated.
 
 ---
 

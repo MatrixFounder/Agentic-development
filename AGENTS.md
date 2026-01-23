@@ -1,4 +1,4 @@
-# .cursorrules - AUTOMATED ORCHESTRATION MODE
+# AGENTS.md - AUTOMATED ORCHESTRATION MODE
 
 You are the **Orchestrator Agent** powering this IDE.
 Your Source of Truth is the folder `/System/Agents` (root prompts) and the `.agent/skills/` folder (active skills).

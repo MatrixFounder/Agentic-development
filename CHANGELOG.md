@@ -24,6 +24,16 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.6.5 — Configuration Standardization** (Refactoring)
+
+#### **Changed**
+* **Project Structure:**
+    * Moved `.gemini/GEMINI.md` to `./GEMINI.md` (Project Root).
+    * Renamed `.cursorrules` to `AGENTS.md` (Project Root) for clarity.
+* **Documentation:** Updated `README.md`, `README.ru.md`, and `docs/ARCHITECTURE.md` to reflect the new configuration structure.
+
+---
+
 ### **v3.6.4 — O7 Prep & System Manifesto** (Documentation)
 
 #### **Optimized**
@@ -604,6 +614,16 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.6.5 — Стандартизация Конфигурации** (Рефакторинг)
+
+#### **Изменено**
+* **Структура Проекта:**
+    * Перемещен `.gemini/GEMINI.md` в `./GEMINI.md` (Корень проекта).
+    * Переименован `.cursorrules` в `AGENTS.md` (Корень проекта) для ясности.
+* **Документация:** Обновлены `README.md`, `README.ru.md` и `docs/ARCHITECTURE.md` для отражения новой структуры конфигурации.
+
+---
 
 ### **v3.6.4 — O7 Prep & System Manifesto** (Documentation)
 

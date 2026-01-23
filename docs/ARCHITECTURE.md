@@ -7,9 +7,9 @@ The Source of Truth for these agents is located in `System/Agents`.
 ## 2. Directory Structure
 ```text
 project-root/
-├── .gemini/GEMINI.md              # Orchestrator + core-principles
+├── GEMINI.md                    # Orchestrator + core-principles
 ├── .cursor/rules/                 # Cursor Rules
-├── .cursorrules                   # References to skills + reading .AGENTS.md
+├── AGENTS.md                      # References to rules + reading .AGENTS.md
 ├── .agent/
 │   ├── skills/                  # Skills Library (Source of Capabilities)
 │   └── tools/                   # [NEW] Executable Tools Schemas (schemas.py)

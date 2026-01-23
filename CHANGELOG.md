@@ -24,6 +24,26 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.8.0 — Phase 0: Product Bootstrap** (Feature)
+
+#### **Added**
+* **Product Management Module:**
+    * **New Skills:** `skill-product-analysis` (Vision) and `skill-backlog-prioritization` (WSJF).
+    * **New Agents:** `p01_product_analyst` (Creator) and `p02_product_reviewer` (VDD Critic).
+    * **New Documentation:** [`System/Docs/PRODUCT_DEVELOPMENT.md`](System/Docs/PRODUCT_DEVELOPMENT.md) with usage scenarios.
+* **Native Tool Integration:**
+    * **Product Tools:** `init_product` and `calculate_wsjf` registered in `schemas.py`.
+    * **Tool Runner:** Updated `System/scripts/tool_runner.py` to dispatch these tools via native subprocess calls.
+    * **Scripts Root:** Moved scripts from `scripts/` to `System/scripts/` to align with framework standards.
+
+#### **Changed**
+* **Documentation:**
+    * Updated `ORCHESTRATOR.md` with new supported tools.
+    * Updated `SKILLS.md` with Product Management section.
+    * Updated `SKILL_TIERS.md` with new Tier 2 skills.
+
+---
+
 ### **v3.7.2 — O7: Session Context Persistence** (Optimization)
 
 #### **Added**
@@ -658,6 +678,26 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.8.0 — Фаза 0: Product Bootstrap** (Feature)
+
+#### **Добавлено**
+* **Модуль Управления Продуктом:**
+    * **Новые Навыки:** `skill-product-analysis` (Видение) и `skill-backlog-prioritization` (WSJF).
+    * **Новые Агенты:** `p01_product_analyst` (Создатель) и `p02_product_reviewer` (VDD Критик).
+    * **Новая Документация:** [`System/Docs/PRODUCT_DEVELOPMENT.md`](System/Docs/PRODUCT_DEVELOPMENT.md) со сценариями использования.
+* **Нативная Интеграция Инструментов:**
+    * **Инструменты:** `init_product` и `calculate_wsjf` зарегистрированы в `schemas.py`.
+    * **Tool Runner:** Обновлен `System/scripts/tool_runner.py` для диспетчеризации этих инструментов.
+    * **Архитектура:** Скрипты перемещены из `scripts/` в `System/scripts/` для соответствия стандартам.
+
+#### **Изменено**
+* **Документация:**
+    * Обновлен `ORCHESTRATOR.md` (новые поддерживаемые инструменты).
+    * Обновлен `SKILLS.md` (секция Управления Продуктом).
+    * Обновлен `SKILL_TIERS.md` (новые навыки Tier 2).
+
+---
 
 ### **v3.7.1 — Light Mode** (Feature)
 

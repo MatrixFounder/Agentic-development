@@ -61,6 +61,12 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`documentation-standards`** | Standards for docstrings (Google/JSDoc) and "The Why" comments. | All Development Workflows | Developer, Code Reviewer |
 | **`testing-best-practices`** | Best practices: E2E/Unit hierarchy, no LLM mocking, realism. | `03-develop-task`, `vdd-03-develop` | Developer, Code Reviewer |
 
+### Product Management
+| Skill | Description | Used By in Workflows | Used By Agents |
+|-------|-------------|----------------------|----------------|
+| **`skill-product-analysis`** | Creation of Product Vision and Strategy. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p01) |
+| **`skill-backlog-prioritization`** | Backlog management logic containing WSJF rules. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p01) |
+
 ### Review & Quality Assurance
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|

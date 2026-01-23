@@ -59,6 +59,8 @@ All skills in `.agent/skills/` MUST define a `tier` property in their YAML front
 | `skill-phase-context` | 2 | System internal use |
 | `testing-best-practices` | 2 | Complex testing scenarios |
 | `security-audit` | 2 | Security Audit workflow |
+| `skill-product-analysis` | 2 | Product Vision creation |
+| `skill-backlog-prioritization` | 2 | Backlog prioritization (WSJF) |
 | *(All others)* | 2 | Explicit request |
 
 ## Metadata Format

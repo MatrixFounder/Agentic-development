@@ -1,7 +1,8 @@
 # Product Development Vision
 
-> **Status:** VDD-Reviewed Vision Document
+> **Status:** Finalized Vision Document
 > **Created:** 2026-01-21
+> **Last Updated:** 2026-01-23
 > **Purpose:** Target architecture for enterprise product development extension
 
 ---
@@ -231,82 +232,65 @@ graph TD
 
 ### New Agents (Minimal Set)
 
-#### p01_product_analyst.md
+#### p01_product_analyst_prompt.md (O6 Standard)
 
 ```markdown
 # Product Analyst
 
-## ROLE
-Analyze user product requests and create structured backlog.
+## IDENTITY
+You are the **Product Analyst**, a specialized agent focused on transforming vague user requests into structured product definitions. You operate in a **Script-First** manner, preferring to use deterministic tools for templating and data manipulation rather than generating them manually.
 
-## ACTIVE SKILLS
-- skill-product-analysis (REQUIRED)
-- skill-backlog-prioritization (REQUIRED)
-- TIER 0 SKILLS (MANDATORY):
-  - core-principles
-  - safe-commands
-  - artifact-management
-  - skill-session-state (O7)
+## CONTEXT
+- **Active Skills**:
+  - `skill-product-analysis` (TIER 2)
+  - `skill-backlog-prioritization` (TIER 2)
+- **System Skills** (TIER 0):
+  - `core-principles`
+  - `safe-commands`
+  - `artifact-management`
+  - `skill-session-state`
 
-## INPUT
-- User product request
-- PRODUCT_VISION.md (if exists, for updates)
-
-## OUTPUT
-1. PRODUCT_VISION.md — Vision document
-2. PRODUCT_BACKLOG.md — Prioritized backlog
-
-## PROCESS
-1. **BOOTSTRAP**: Restore Session State (skill-session-state)
-2. Read user request
-3. IF PRODUCT_VISION.md exists → determine if UPDATE or NEW
-4. Extract: Problem, Users, Metrics, Constraints
-5. Create/Update PRODUCT_VISION.md
-6. Breakdown vision into Epics → Stories
-7. Prioritize using WSJF (`prioritize.py`)
-8. Assign domains to stories
-9. Create PRODUCT_BACKLOG.md
-10. **UPDATE STATE**: Save session context
+## PROCESS LOOP
+1. **Bootstrap**: Restore Session State (`update_state.py`).
+2. **Analyze**: Read User interactions and `PRODUCT_VISION.md`.
+3. **Execute**:
+   - IF New Project: Call `scripts/init_product.py --name "..." --problem "..."` (Headless Mode).
+   - IF Refinement: Update markdown content using file_ops.
+   - IF Prioritization Needed: Call `scripts/calculate_wsjf.py`.
+4. **Verify**: Check if artifacts meet `skill-product-analysis` standards.
+5. **Update State**: Save session context.
 
 ## TOKEN BUDGET: < 2,500 tokens
 ```
 
-#### p02_product_reviewer.md
+#### p02_product_reviewer_prompt.md (O6 Standard)
 
 ```markdown
-## ROLE
-Challenge product artifacts using adversarial analysis.
+# Product Reviewer
 
-## ACTIVE SKILLS
-- vdd-adversarial (REQUIRED)
-- skill-backlog-prioritization (for verification)
-- TIER 0 SKILLS (MANDATORY):
-  - core-principles
-  - safe-commands
-  - artifact-management
-  - skill-session-state
+## IDENTITY
+You are the **Product Reviewer**, a specialized VDD critic designed to safeguard the backlog against hallucinations, fluff, and realistic feasibility issues. You embody the "Adversarial" mindset.
 
-## INPUT
-- PRODUCT_BACKLOG.md
-- PRODUCT_VISION.md
+## CONTEXT
+- **Active Skills**:
+  - `vdd-adversarial` (TIER 2)
+  - `skill-product-analysis` (For validation rules)
+- **System Skills** (TIER 0):
+  - `core-principles`
+  - `safe-commands`
+  - `artifact-management`
+  - `skill-session-state`
 
-## OUTPUT
-- Review comments OR approval
-
-## VDD CHECKLIST
-1. [ ] Vision clear and achievable?
-2. [ ] ROI/metrics measurable?
-3. [ ] Epics properly decomposed?
-4. [ ] Stories meet INVEST criteria?
-5. [ ] WSJF priorities justified?
-6. [ ] Domain assignments logical?
-7. [ ] Dependencies identified?
-8. [ ] Edge cases / risks documented?
-
-## TONE
-Use `vdd-sarcastic` approach:
-- "So you expect 100x growth in 3 months? With what team?"
-- "ROI based on 'market trends'? Which trends exactly?"
+## PROCESS LOOP
+1. **Bootstrap**: Restore Session State.
+2. **Read Artifacts**: `PRODUCT_VISION.md` or `PRODUCT_BACKLOG.md`.
+3. **Adversarial Check**:
+   - Check WSJF Math (Did they run the script or halluncinate numbers?).
+   - Check INVEST criteria.
+   - Check for Business "Fluff" (e.g., "seamless", "synergy").
+4. **Output**:
+   - IF APPROVED: Rename to `APPROVED_BACKLOG.md`.
+   - IF REJECTED: Generate specific, biting feedback.
 
 ## TOKEN BUDGET: < 2,000 tokens
 ```
@@ -332,49 +316,38 @@ Use `vdd-sarcastic` approach:
 
 #### skill-product-analysis (TIER 2, MAX 1,000 tokens)
 
-```markdown
-# Product Analysis
+> **Structure Compliance:** Follows `skill-creator` standard.
 
-## Vision Document Structure
-- Problem Statement (50-100 words)
-- Target Users (personas)
-- Success Metrics (SMART)
-- Constraints (time, budget, tech)
-
-## Epic Breakdown
-For each epic:
-- Clear business goal
-- Measurable outcome
-- Rough scope estimate (T-shirt size: S/M/L/XL)
-
-## Story Extraction
-Apply INVEST:
-- Independent
-- Negotiable
-- Valuable
-- Estimable
-- Small
-- Testable
 ```
+.agent/skills/skill-product-analysis/
+├── SKILL.md                 # Defining INVEST and Vision templates
+├── scripts/
+│   └── init_product.py      # DUAL-MODE script (CLI + Interactive)
+└── resources/
+    └── templates/           # Markdown templates
+```
+
+**Content:**
+- **Tier**: 2
+- **Tooling**: Mandates use of `scripts/init_product.py --name "X" --problem "Y"` for atomic creation.
+- **Rules**:
+  - Business Goals must be SMART.
+  - User Stories must follow INVEST.
+  - Agents MUST NOT write standard boilerplate manually; use the script.
 
 #### skill-backlog-prioritization (TIER 2, MAX 500 tokens)
 
-```markdown
-# Backlog Prioritization
-
-## SCRIPT-FIRST STRATEGY
-Instead of teaching LLM arithmetic, use `scripts/calculate_wsjf.py`.
-
-## Usage
-`python3 scripts/calculate_wsjf.py --file PRODUCT_BACKLOG.md`
-
-## WSJF Logic (Implemented in script)
-1. Parse table from markdown
-2. Calculate WSJF = (BV + TC + RR) / JobSize
-3. Sort items descending
-4. Rewrite table in-place
+```
+.agent/skills/skill-backlog-prioritization/
+├── SKILL.md                 # Prioritization rules
+└── scripts/
+    └── calculate_wsjf.py    # Robust table parsing & calculation
 ```
 
+**Content:**
+- **Tier**: 2
+- **Adversarial Rule**: "You are FORBIDDEN from calculating WSJF scores yourself. You MUST run the script."
+- **Logic**: Defines WSJF components (User Value, Time Criticality, Risk Reduction) but delegates math to `calculate_wsjf.py`.
 
 ### New Workflows
 
@@ -405,11 +378,11 @@ description: VDD Review of Product Backlog
 3. Load skill: vdd-adversarial
 4. Execute p02_product_reviewer
 5. IF issues found:
-   - Create review comments
-   - Return to product-vision workflow
+  - Create review comments
+  - Return to product-vision workflow
 6. IF approved:
-   - Rename to docs/APPROVED_BACKLOG.md
-   - Proceed to domain-start workflow
+  - Rename to docs/APPROVED_BACKLOG.md
+  - Proceed to domain-start workflow
 ```
 
 
@@ -421,16 +394,16 @@ description: VDD Review of Product Backlog
 project-root/
 ├── .gemini/GEMINI.md                    # Extended with product phase
 ├── .agent/
-│   ├── skills/
-│   │   ├── skill-product-analysis/       # NEW
-│   │   ├── skill-backlog-prioritization/ # NEW
-│   │   ├── skill-domain-decomposition/   # NEW
-│   │   └── ... (existing skills)
-│   └── workflows/
-│       ├── product-vision.md             # NEW
-│       ├── product-review.md             # NEW
-│       ├── domain-start.md               # NEW
-│       └── ... (existing workflows)
+├── skills/
+│   ├── skill-product-analysis/       # NEW
+│   ├── skill-backlog-prioritization/ # NEW
+│   ├── skill-domain-decomposition/   # NEW
+│   └── ... (existing skills)
+└── workflows/
+    ├── product-vision.md             # NEW
+    ├── product-review.md             # NEW
+    ├── domain-start.md               # NEW
+    └── ... (existing workflows)
 ├── System/
 │   └── Agents/
 │       ├── p01_product_analyst.md        # NEW
@@ -459,19 +432,21 @@ project-root/
 ### Phase 0: Product Bootstrap & Tools (Week 1)
 **Goal**: Create infrastructure for generating `PRODUCT_VISION.md` and `PRODUCT_BACKLOG.md` from zero.
 
-1. **Bootstrap Tools (Script-First)**:
-   - `scripts/init_product.py`: Interactive CLI to scaffold `PRODUCT_VISION.md`.
-     - Prompts user for: Problem, Persona, Goals, Constraints.
-     - Generates markdown template with placeholders.
-   - `scripts/calculate_wsjf.py`: Already defined (for Backlog).
+1.  **Bootstrap Tools (Script-First / Dual-Mode)**:
+    -   **`scripts/init_product.py`**:
+        -   **Headless Mode** (`--name`, `--problem`, ...): For Agents to use atomically.
+        -   **Interactive Mode** (No args): For Humans to use via CLI wizards.
+    -   **`scripts/calculate_wsjf.py`**:
+        -   **Robust Parsing**: Handles markdown table variations gracefully.
+        -   **Atomic Updates**: Reads file, calculates, rewrites validation.
 
-2. **Skills Implementation**:
-   - `skill-product-analysis`: TIER 2 skill, loaded only for product workflows.
-   - `skill-backlog-prioritization`: Wrapper around `calculate_wsjf.py`.
+2.  **Skills Implementation (Skill Creator Compliant)**:
+    -   `skill-product-analysis` (TIER 2): Bundles `init_product.py`.
+    -   `skill-backlog-prioritization` (TIER 2): Bundles `calculate_wsjf.py`.
 
-3. **Agent Implementation (Standalone-Capable)**:
-   - `p01_product_analyst.md`: Capable of running on empty folder (Greenfield).
-   - `p02_product_reviewer.md`: Strict VDD logic.
+3.  **Agent Implementation (O6 Standard)**:
+    -   `p01_product_analyst.md`: Loop-based, Script-First, strictly typed.
+    -   `p02_product_reviewer.md`: Adversarial VDD, TIER 2 context.
 
 ### Phase 1: The Cascading Refinement Loop (Week 2)
 **Goal**: Implement "Fail Fast" quality gates.
@@ -567,8 +542,8 @@ Existing: ~38,000 tokens (Optimized Standard Pipeline)
 Product Phase:
   + p01_product_analyst: ~2,500
   + p02_product_reviewer: ~2,000
-  + skill-product-analysis: ~1,000 (TIER 2)
-  + skill-backlog-prioritization: ~500 (Script)
+  + skill-product-analysis: ~1,000 (TIER 2 - Lazy)
+  + skill-backlog-prioritization: ~500 (TIER 2 - Lazy)
   = ~6,000 tokens additional
 
 Total with Product: ~44,000 tokens (Well within limits)
@@ -664,3 +639,4 @@ Epic "Trading Bots" → domain: trading
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-01-21 | Adversarial Architect | Initial vision with VDD review |
+| 2026-01-23 | Orchestrator Agent | Finalized with O6 Standards & Skill Creator Compliance |

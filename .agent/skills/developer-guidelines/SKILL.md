@@ -28,3 +28,11 @@ version: 1.0
 - **Git:** Use `git_status`, `git_add`, `git_commit` tools.
 - **Files:** Use `read_file`, `write_file`, `list_directory`.
 - **Shell:** Use `run_command` only if no native tool exists for the operation.
+
+## 6. Language Specific Guidelines
+- **Dynamic Loading:** If you are working in a specific language, you MUST read the corresponding guideline file from `resources/languages/` if it exists.
+  - Rust: `resources/languages/rust.md`
+  - Solidity: `resources/languages/solidity.md`
+  - Python: `resources/languages/python.md`
+  - JavaScript/TypeScript: `resources/languages/javascript.md`
+- **Application:** Apply the specific rules in addition to the core guidelines above.

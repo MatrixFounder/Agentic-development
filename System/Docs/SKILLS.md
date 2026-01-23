@@ -153,21 +153,32 @@ You can use n8n or any flow-based tool. We provide a ready-to-import workflow wi
 
 When creating or modifying skills, follow these guidelines to ensure effectiveness and maintainability.
 
+### 0. Creation Standard (V2)
+**ALWAYS** start your skill implementation using the **Skill Creator standard**:
+- Path: [`.agent/skills/skill-creator`](../.agent/skills/skill-creator)
+- Reasoning: Ensures compliance with structure, testing, and validation scripts from Day 1.
+
 ### 1. Granularity & Size
-- **Keep it Focused**: A skill should do *one* thing well (e.g., "Requirements Analysis" vs "Do Everything").
-- **Token Limit**: Try to keep skill files under **1500 tokens**. Large prompts dilute attention.
-- **Reference**: If a skill needs to reference another (e.g., "See Architecture Guide"), use the file path or a brief summary, don't copy-paste.
+- **Keep it Focused**: A skill should do *one* thing well.
+- **Token Limit**: Keep `SKILL.md` under **1000 tokens**. Move heavy content to resources.
+- **Script-First (Optimization O6a)**: If a skill contains complex logic (e.g., "scan this project structure"), **DO NOT** write 5 pages of instructions.
+    - ✅ **Correct:** Write a Python script (`scripts/scan.py`) and instruct the agent to run it.
+    - ❌ **Incorrect:** "Look at file X, then check Y, then if Z..." (Unreliable & expensive).
 
 ### 2. Instruction Style
-- **Imperative**: Use "You MUST", "DO NOT", "ALWAYS". avoid "It is recommended to".
-- **Structured**: Use Markdown extensively. Lists, bold text, and code blocks help the model parse instructions.
-- **Examples**: Provide "Good vs Bad" examples. This is the most effective way to align the model.
+- **Imperative**: Use "You MUST", "DO NOT".
+- **Example Separation**: **NEVER** put large examples inline in `SKILL.md`.
+    - ✅ **Correct:** "See `examples/auth_flow.py`".
+    - ❌ **Incorrect:** Large code blocks inside the prompt (wastes tokens).
+- **Resource Extraction**: Move checklists, templates, and patterns to `resources/` directory.
 
 ### 3. Versioning & Updates
-- **Breaking Changes**: If you fundamentally change a skill (e.g., `skill-tdd-stub-first`), verify it against *all* agents that use it.
-- **Backwards Compatibility**: If possible, keep the same file name. If a total rewrite is needed, create `skill-name-v2.md` and gradually migrate agents.
+- **Breaking Changes**: Check usage via `grep -r "skill-name" System/Agents`.
+- **Validation**: ALWAYS run `validate_skill.py` before committing.
 
 ### 4. Anti-Patterns
-- ❌ **Duplication**: Don't repeat "You are a helpful assistant" in every skill. That belongs in the Base Role.
-- ❌ **Conflict**: Ensure `skill-A` doesn't contradict `skill-B` (e.g., one says "write tests first", another says "write tests last").
-- ❌ **Hardcoded Paths**: Use relative paths or context variables where possible, as directory structures vary.
+- ❌ **Inline Bloat**: Large ASCII art, huge tables, or inline templates.
+- ❌ **Duplication**: Re-listing OWASP rules instead of linking to `security-audit`.
+- ❌ **Hardcoded Paths**: Use relative structure or standard vars.
+
+> **Note:** These standards are derived from the [Agentic Development Optimizations](../Backlog/agentic_development_optimisations.md) (O6/O6a) to ensure scalability.

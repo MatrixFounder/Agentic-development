@@ -19,6 +19,11 @@ version: 1.1
 - Loose coupling, high cohesion.
 - Clear interface definitions between components.
 
+### Common Patterns
+If building a complex system, refer to these standard patterns:
+- **Clean Architecture:** `resources/patterns/clean_architecture.md` (Layers, Dependency Rule).
+- **Event-Driven:** `resources/patterns/event_driven.md` (Async, Brokers, Idempotency).
+
 ## 2. Requirements for Architecture Components
 
 ### Data Model

@@ -24,6 +24,29 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.7.0 — Skills Refactoring & Security Hardening** (Optimization)
+
+#### **Added**
+* **Security Automation:** Added `run_audit.py` to `security-audit` skill. Auto-detects project type (Solidity/Rust/Python/JS) and runs relevant tools (`slither`, `bandit`, `cargo audit`).
+* **High-Grade Checklists:**
+    * `solidity_security.md`: DeFi patterns, Flash Loans, Upgradability.
+    * `solana_security.md`: Anchor validation, PDAs, Arithmetic.
+* **Architecture Patterns:** Added `clean_architecture.md` and `event_driven.md` to `architecture-design` resources.
+* **LLM Security:** Added Prompt Injection, Jailbreaking, and System Prompt Leakage checks to `skill-adversarial-security`.
+
+#### **Optimized**
+* **Skills Refactoring (O6):**
+    * **Example Separation:** Extracted inline templates from `requirements-analysis`, `testing-best-practices` to `resources/`.
+    * **Script-First:** Replaced manual instructions with script mandates.
+    * **Sarcastic Persona:** Extracted prompt examples to `resources/prompts/sarcastic.md`.
+* **Documentation:** Updated `System/Docs/SKILLS.md` to mandate V2 standards (Script-First, Example-Separation).
+
+#### **Verified**
+* **Global Validation:** All 6 refactored skills passed `validate_skill.py`.
+* **Safety:** TIER 0 skills (`core-principles`) verified intact.
+
+---
+
 ### **v3.6.5 — Configuration Standardization** (Refactoring)
 
 #### **Changed**
@@ -614,6 +637,29 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.7.0 — Рефакторинг Навыков и Усиление Безопасности** (Оптимизация)
+
+#### **Добавлено**
+* **Автоматизация Безопасности:** Добавлен `run_audit.py` в навык `security-audit`. Авто-детект типа проекта (Solidity/Rust/Python/JS) и запуск инструментов (`slither`, `bandit`, `cargo audit`).
+* **Чек-листы Высокого Уровня:**
+    * `solidity_security.md`: Паттерны DeFi, Flash Loans, Upgradability.
+    * `solana_security.md`: Валидация Anchor, PDA, Арифметика.
+* **Архитектурные Паттерны:** Добавлены `clean_architecture.md` и `event_driven.md` в ресурсы `architecture-design`.
+* **Безопасность LLM:** Добавлены проверки на Prompt Injection, Jailbreaking и утечку системного промпта в `skill-adversarial-security`.
+
+#### **Оптимизировано**
+* **Рефакторинг Навыков (O6):**
+    * **Выделение Примеров:** Инлайн-шаблоны вынесены в `resources/` (`requirements-analysis`, `testing-best-practices`).
+    * **Script-First:** Ручные инструкции заменены на обязательный запуск скриптов.
+    * **Саркастичная Персона:** Примеры промптов вынесены в `resources/prompts/sarcastic.md`.
+* **Документация:** В `System/Docs/SKILLS.md` закреплены стандарты V2 (Script-First, Example-Separation).
+
+#### **Верифицировано**
+* **Глобальная Валидация:** Все 6 навыков прошли `validate_skill.py`.
+* **Безопасность:** TIER 0 навыки (`core-principles`) не затронуты.
+
+---
 
 ### **v3.6.5 — Стандартизация Конфигурации** (Рефакторинг)
 

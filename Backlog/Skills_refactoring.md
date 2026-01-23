@@ -1,6 +1,6 @@
 # Skills Refactoring Backlog
 
-> **Status:** Draft
+> **Status:** Completed
 > **Created:** 2026-01-23
 > **Purpose:** Align all skills with the `skill-creator` V2 standard (Script-First, Example-Separation) and expand capabilities.
 
@@ -22,59 +22,85 @@ Based on the analysis of `.agent/skills` and `Backlog/agentic_development_optimi
 ### 1. Refactor `developer-guidelines` (High Priority)
 **Goal:** Expand language support and declutter core guidelines.
 
-- [ ] **Decompose Structure:**
-    - `SKILL.md`: Keep only universal principles (Strict Adherence, Input Handling, Anti-Loop).
-    - Create `resources/languages/` directory.
-- [ ] **Add Language Specifics:**
-    - Create `resources/languages/rust.md`: Rust-specific guidelines (borrow checker, unwrap safety, clippy).
-    - Create `resources/languages/solidity.md`: Smart contract security, gas optimization, checks-effects-interactions.
-    - Create `resources/languages/python.md`: Type hinting, docstrings, testing.
-    - Create `resources/languages/javascript.md`: Async/await, ecosystem standards.
-- [ ] **Update `SKILL.md`:** Add dynamic loading instruction or reference to look up language guides based on current task.
+- [x] **Decompose Structure:**
+    - [x] `SKILL.md`: Keep only universal principles (Strict Adherence, Input Handling, Anti-Loop).
+    - [x] Create `resources/languages/` directory.
+- [x] **Add Language Specifics:**
+    - [x] Create `resources/languages/rust.md`: Rust-specific guidelines (borrow checker, unwrap safety, clippy).
+    - [x] Create `resources/languages/solidity.md`: Smart contract security, gas optimization, checks-effects-interactions.
+    - [x] Create `resources/languages/python.md`: Type hinting, docstrings, testing.
+    - [x] Create `resources/languages/javascript.md`: Async/await, ecosystem standards.
+- [x] **Update `SKILL.md`:** Add dynamic loading instruction or reference to look up language guides based on current task.
 
 ### 2. Refactor `testing-best-practices` (Medium Priority)
 **Goal:** Provide concrete, runnable examples and standard boilerplate.
 
-- [ ] **Extract Examples:**
-    - Move inline naming/structure examples to `examples/`.
-    - Create `examples/pytest_structure.py`.
-    - Create `examples/jest_structure.js`.
-- [ ] **Create Templates:**
-    - `resources/templates/test_boilerplate.py`.
-- [ ] **Update `SKILL.md`:** Reference the new examples.
+- [x] **Extract Examples:**
+    - [x] Move inline naming/structure examples to `examples/`.
+    - [x] Create `examples/pytest_structure.py`.
+    - [x] Create `examples/jest_structure.js`.
+- [x] **Create Templates:**
+    - [x] `resources/templates/test_boilerplate.py`.
+- [x] **Update `SKILL.md`:** Reference the new examples.
 
 ### 3. Refactor `security-audit` (Medium Priority)
 **Goal:** Automate tooling and standardize checklists.
 
-- [ ] **Scripting:**
-    - Create `scripts/run_audit.py`: A wrapper script to detect language and run appropriate tools (`bandit`, `npm audit`, `semgrep`).
-- [ ] **Resources:**
-    - Create `resources/checklists/owasp_top_10.md`: Detailed breakdown for reference.
-    - Create `resources/checklists/solidity_security.md`: Reentrancy, overflow, access control.
-- [ ] **Update `SKILL.md`:** Instruct agent to run `scripts/run_audit.py` instead of generic "use tools".
+- [x] **Scripting:**
+    - [x] Create `scripts/run_audit.py`: A unified wrapper to detect project type and run:
+        - **Solidity:** `slither` (Static analysis), `aderyn` (if available).
+        - **Python:** `bandit` (Security linter), `safety` (Dependencies).
+        - **JS/TS:** `npm audit` / `yarn audit`.
+        - **Rust:** `cargo audit` (Dependencies), `cargo clippy` (Lints).
+        - **General:** Simple regex-based secrets detection (API keys, private keys).
+- [x] **Resources:**
+    - [x] Create `resources/checklists/owasp_top_10.md`: Web2 security standard (Injection, Auth, SSRF).
+    - [x] Create `resources/checklists/solidity_security.md`: **High-Grade Smart Contract Security**:
+        - **Standards:** Mapping to SCSVS (Smart Contract Security Verification Standard) and SWC Registry.
+        - **DeFi Patterns:** Flash loans, Price Oracle manipulation, Slippage protection.
+        - **Upgradability:** Storage collisions, Proxy patterns, Initializers.
+        - **Cryptography:** Signature replay, Malleability, Randomness (Chainlink VRF).
+        - **Access Control:** Timelocks, Multi-sig requirements, Role-based access.
+    - [x] Create `resources/checklists/solana_security.md`: **High-Grade Solana**:
+        - **Account Validation:** Ownership, Signer checks, Executable.
+        - **PDA:** Bump validation, Seed uniqueness.
+        - **Anchor:** `init` protection, correct types, `close` constraint.
+    - [x] Create `resources/checklists/fuzzing_invariants.md`: Guidelines for writing Invariant Tests (Foundry/Echidna).
+- [x] **Update `SKILL.md`:** 
+    - [x] Instruct agent to use `scripts/run_audit.py`.
+    - [x] **CRITICAL:** Mandate "Think like a Hacker" step using the checklists before any deployment.
 
 ### 4. Refactor `requirements-analysis` (Low Priority)
 **Goal:** Streamline the prompt by removing the large TASK definition.
 
-- [ ] **Extract Template:**
-    - Move the "Technical Specification (TASK) Structure" section to `resources/templates/task_template.md`.
-- [ ] **Update `SKILL.md`:**
-    - Replace the inline template with a reference: "You MUST follow the structure defined in `resources/templates/task_template.md`."
+- [x] **Extract Template:**
+    - [x] Move the "Technical Specification (TASK) Structure" section to `resources/templates/task_template.md`.
+- [x] **Update `SKILL.md`:**
+    - [x] Replace the inline template with a reference: "You MUST follow the structure defined in `resources/templates/task_template.md`."
 
-### 5. Review `architecture-design` (Low Priority)
-- [ ] **Analysis:** Check for inline patterns or diagrams that can be moved to `resources/patterns/`.
+### 5. Enrich `architecture-design` (Low Priority)
+- [x] **Create Resources:**
+    - [x] Create `resources/patterns/clean_architecture.md`: Reference for Layers (Entities, Use Cases, Adapters).
+    - [x] Create `resources/patterns/event_driven.md`: Reference for Pub/Sub, Brokers, and Async flows.
+- [x] **Update `SKILL.md`:**
+    - [x] Reference the new patterns in the "Modularity" or "Core Principles" section.
 
 ### 6. Refactor `skill-adversarial-security` (Medium Priority)
-**Goal:** Enhance security checks and separate sarcasm resources.
+**Goal:** Enhance security checks, separate sarcasm, and leverage `security-audit` tools.
 
-- [ ] **Add Prompt Injection Checks:**
-    - Update `SKILL.md` (or extracted resources) to include checks for:
-        - Indirect Prompt Injection (data exfiltration via LLM).
-        - Jailbreaking attempts detection.
-        - System prompt leakage.
-- [ ] **Decomposition (Optional but Recommended):**
-    - Move sarcastic prompts to `resources/prompts/sarcastic.md` to reduce token load on the main skill.
-    - Extract checklist to `resources/checklists/owasp_top_10.md` (shared with security-audit).
+- [x] **Integration with `security-audit`:**
+    - [x] **Reconnaissance:** Mandate running `.agent/skills/security-audit/scripts/run_audit.py` to find low-hanging fruit before deep adversarial thought.
+    - [x] **Shared Knowledge:** Link to `security-audit/resources/checklists/`:
+        - Use `solidity_security.md` for drilling into DeFi logic (Flash loans, Oracles).
+        - Use `solana_security.md` for attacking Account Validation and PDAs.
+- [x] **Add Prompt Injection Checks:**
+    - [x] Update `SKILL.md` (or extracted resources) to include checks for:
+        - [x] Indirect Prompt Injection (data exfiltration via LLM).
+        - [x] Jailbreaking attempts detection.
+        - [x] System prompt leakage.
+- [x] **Decomposition:**
+    - [x] Move sarcastic prompts to `resources/prompts/sarcastic.md` to reduce token load.
+    - [x] **Remove duplication:** Do NOT maintain separate OWASP lists. Reference `security-audit/resources/checklists/owasp_top_10.md`.
 
 ---
 

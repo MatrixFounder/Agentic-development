@@ -1,26 +1,32 @@
-# Task 040: Enrich O6 Prompt with Lessons Learned
+# Task 046: Refactor skill-adversarial-security
 
 > **Status:** ACTIVE
-> **Created:** 2026-01-21
+> **Created:** 2026-01-23
 > **Owner:** Orchestrator
 
 ## 0. Meta Information
-- **Task ID:** 040
-- **Slug:** `enrich-o6-prompt`
+- **Task ID:** 046
+- **Slug:** `refactor-adversarial-security`
 
 ## 1. Goal
-Enrich the description for Optimization O6 (Agent Prompt Standardization) in `Backlog/agentic_development_optimisations.md` by adding a "Lessons Learned" checklist derived from previous optimizations (O1-O5).
+Refactor `skill-adversarial-security` to leverage the new `security-audit` tools (de-duplication), extract sarcasm resources (decomposition), and add LLM-specific security checks (prompt injection).
 
 ## 2. Scope
-- **Target File:** `Backlog/agentic_development_optimisations.md`.
-- **Target Section:** Prompt 8 (O6).
-- **Source Material:** Lessons from O1, O2, O3, O5 in the same file.
+- **Target Skill:** `.agent/skills/skill-adversarial-security`
+- **New Directory:** `.agent/skills/skill-adversarial-security/resources/prompts/`
+- **New File:** `resources/prompts/sarcastic.md`
+- **Modified File:** `SKILL.md`
+    - Remove inline OWASP checklist (link to `security-audit` instead).
+    - Add instruction to run `security-audit/scripts/run_audit.py`.
+    - Add Prompt Injection checks.
 
 ## 3. Deliverables
-1. [ ] Updated `Backlog/agentic_development_optimisations.md` with:
-   - A new "⚠️ LESSONS FROM O1-O5 — PROTOTYPE CHECKLIST" section in Prompt 8.
-   - Specific checks for TIER 0 compliance, Pattern Validation, A/B Testing, and Translation Impact.
+1. [ ] Created `resources/prompts/sarcastic.md` with persona and example prompts.
+2. [ ] Updated `SKILL.md`:
+    - Linked to `security-audit/resources/checklists/`.
+    - Removed inline checklists.
+    - Added Prompt Injection / Jailbreak checks.
+    - Added mandate for `run_audit.py` reconnaissance.
 
 ## 4. Implementation Plan
-1.  **Edit:** Modify `Backlog/agentic_development_optimisations.md`.
-2.  **Verify:** Read the file to ensure formatting matches the user's request and existing style.
+See `docs/PLAN.md` for detailed steps.

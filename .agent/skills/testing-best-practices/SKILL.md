@@ -23,3 +23,9 @@ version: 1.1
 - **Clear Names:** `test_shoud_return_error_when_invalid_input`.
 - **Organization:** Mirror source structure (`src/auth` -> `tests/auth`).
 - **Docstrings:** specificy WHAT is being tested.
+- **Reference Examples:**
+  - Python: `examples/pytest_structure.py`
+  - JavaScript: `examples/jest_structure.js`
+
+## 4. Resources
+- **Templates:** Use `resources/templates/test_boilerplate.py` to start new test files quickly.

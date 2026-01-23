@@ -48,7 +48,7 @@
 
 ## Vision Statement
 
-Расширить фреймворк Agentic-Development для поддержки **бизнес-ориентированного планирования продуктов** с минимальным overhead и максимальной устойчивостью к галлюцинациям.
+Для продуктовых команд и стартапов, которые хотят строить сложные enterprise-системы без хаоса, наше расширение Agentic Development создает "кристально чистый канал" между бизнесом и кодом. В отличие от традиционной разработки, где 30-50% усилий уходит на переделки и уточнения, мы гарантируем, что каждая бизнес-цель проходит VDD-проверку до написания кода, превращая разработку в предсказуемый и вдохновляющий конвейер ценности.
 
 ### Goals
 
@@ -334,6 +334,21 @@ You are the **Product Reviewer**, a specialized VDD critic designed to safeguard
   - Business Goals must be SMART.
   - User Stories must follow INVEST.
   - Agents MUST NOT write standard boilerplate manually; use the script.
+  - **Product Vision Standards**:
+    - **The 3 Big Questions**:
+      1. Зачем вообще существует этот продукт?
+      2. Какой мир мы хотим создать с его помощью?
+      3. Для кого и почему это будет важно через 3–10 лет?
+    - **Best Practices (2024-2026)**:
+      - **Emotional & Inspiring**: Avoid dry corporate speak. Focus on "mutations" (feelings), not just features.
+      - **Customer-Centric**: Structure: "For [Who] -> [Problem/Desire] -> [Better World]".
+      - **Concise**: 1-2 sentences, memorable (max 30-40 words).
+    - **Templates**:
+      - *Moore's "Crossing the Chasm"*: "For [target] who [need], [product] is a [category] that [benefit], unlike [competitor]."
+      - *Human-Centric*: "For [persona] who [problem], [product] helps [do something] to [impact]."
+      - *Belief-Based*: "We believe that by doing [X] for [Y], we will achieve [Z]."
+    - **Quality Checks**:
+      - Inspiring? Clear? Customer-centric? Timeless? Differentiating? Measurable?
 
 #### skill-backlog-prioritization (TIER 2, MAX 500 tokens)
 
@@ -348,6 +363,12 @@ You are the **Product Reviewer**, a specialized VDD critic designed to safeguard
 - **Tier**: 2
 - **Adversarial Rule**: "You are FORBIDDEN from calculating WSJF scores yourself. You MUST run the tool."
 - **Logic**: Defines WSJF components (User Value, Time Criticality, Risk Reduction) but delegates math to `calculate_wsjf`.
+- **MoSCoW Rules (Pre-WSJF Filtering)**:
+  - **M - Must Have**: Critical, non-negotiable. Without this, the release is meaningless. (Priority: Highest / Infinite Cost of Delay).
+  - **S - Should Have**: Important but not vital. Workarounds exist. Painful to leave out.
+  - **C - Could Have**: Desirable, low impact if omitted. "Nice to have".
+  - **W - Won't Have**: Agreed exclusion for this timeframe.
+- **Integration Strategy**: MoSCoW defines *Categories*, WSJF defines *Order* within categories (or is used to rank Should/Could items against each other).
 
 ### New Workflows
 
@@ -447,6 +468,21 @@ project-root/
 3.  **Agent Implementation (O6 Standard)**:
     -   `p01_product_analyst.md`: Loop-based, Script-First, strictly typed.
     -   `p02_product_reviewer.md`: Adversarial VDD, TIER 2 context.
+
+### Phase 0.5: Skill Standards & Rule Injection (Mid-Week 1)
+**Goal**: Enforce high standards (Vision quality, MoSCoW, TIER 2) *before* activating the loops.
+
+1.  **Enhance Skills**:
+    -   Update `skill-product-analysis/SKILL.md` with:
+        -   Vision Templates (Crossing the Chasm, etc.).
+        -   Emotional/Customer-Centric guidelines.
+    -   Update `skill-backlog-prioritization/SKILL.md` with:
+        -   MoSCoW Rules (M/S/C/W definitions).
+        -   Pre-WSJF filtering logic.
+
+2.  **Verify Standards**:
+    -   Run `p01_product_analyst` with new skill context to generate a *sample* Vision.
+    -   Verify `p02_product_reviewer` correctly flags "boring" or "feature-centric" visions.
 
 ### Phase 1: The Cascading Refinement Loop (Week 2)
 **Goal**: Implement "Fail Fast" quality gates.

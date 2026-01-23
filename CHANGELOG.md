@@ -24,6 +24,16 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.7.2 — O7: Session Context Persistence** (Optimization)
+
+#### **Added**
+* **New Skill: `skill-session-state`**: TIER 0 capability to persist/restore session context.
+    * **Script-First**: `update_state.py` handles atomic YAML updates.
+    * **Protocol**: Defines Boot (Read) and Boundary (Write) triggers.
+* **Boot Protocol**: Updated `GEMINI.md` and `AGENTS.md` to restore state from `.agent/sessions/latest.yaml` on session start.
+* **Agent Updates**: All 10 Agent Prompts updated to include `skill-session-state` in TIER 0 list.
+
+
 ### **v3.7.1 — Light Mode** (Feature)
 
 #### **Added**

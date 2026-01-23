@@ -17,6 +17,7 @@ You are operating in the **Orchestration Phase**.
 - `skill-core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability - Auto-Run)
 - `skill-artifact-management` (File Operations)
+- `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Orchestration - LOAD NOW)
 - `skill-orchestrator-patterns` (Stage Cycle, Dispatch Table)

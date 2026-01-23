@@ -17,6 +17,7 @@ You are operating in the **Security Audit Phase**.
 - `skill-core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
 - `skill-artifact-management` (File Operations)
+- `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Security Phase - LOAD NOW)
 - `skill-security-audit` (OWASP/scan guidelines)

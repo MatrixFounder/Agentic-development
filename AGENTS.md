@@ -11,8 +11,12 @@ This project uses a modular Skills System.
 - **Active Skills**: `.cursor/skills/` (Symlinked to `.agent/skills/`).
 - **Protocol**: When an agent prompt references a skill (e.g., `skill-core-principles`), you MUST read the corresponding file in `.agent/skills/` to load that logic.
 
-
-
+## SESSION RESTORATION (BOOTSTRAP)
+**ON SESSION START**:
+1. Check if `.agent/sessions/latest.yaml` exists.
+2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary.
+3. **IF NEW**: Proceed with normal analysis.
+4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
 
 ## TOOL EXECUTION PROTOCOL (v3.2.5+)
 The Orchestrator natively supports structured tool calling (Function Calling).
@@ -26,6 +30,7 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 > - `core-principles` — Anti-hallucination, Stub-First methodology
 > - `skill-safe-commands` — Automation enablement (auto-run commands)
 > - `artifact-management` — File protocol, archiving
+> - `skill-session-state` — Session Context Persistence (Boot/Boundary)
 
 ### Safe Commands (Auto-Run without Approval)
 > **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.

@@ -38,6 +38,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `ARCHITECTURE.md`). | All Workflows | All Agents |
 | **`skill-archive-task`** | Complete protocol for archiving TASK.md with ID generation. Single source of truth for archiving. | `01-start-feature`, All | Analyst, Orchestrator |
 | **`skill-safe-commands`** | Centralized list of commands safe for auto-execution without user approval. | All | All Agents |
+| **`skill-session-state`** | Persist and restore session state (Mode, Task, Summary) to recovery from checks/resets. <br> **[Guide: Session Context Management](SESSION_CONTEXT_GUIDE.md)** | All | All Agents |
 | **`skill-phase-context`** | Skill loading tiers: TIER 0 (always), TIER 1 (phase-triggered), TIER 2 (extended). Defines when to load which skills. | All | Orchestrator |
 | **`skill-orchestrator-patterns`** | Stage Cycle pattern and dispatch table for Orchestrator compression. Defines Init→Review→Revision flow. | All | Orchestrator |
 | **`skill-update-memory`** | Auto-update `.AGENTS.md` files based on code changes from git diff. | `04-update-docs`, Code Review | Developer, Code Reviewer |

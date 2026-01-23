@@ -11,6 +11,14 @@ The system relies on a modular **Skills System**:
 1.  **Definitions**: Located in `.agent/skills/[skill-name]/SKILL.md`. These are the source of truth.
 2.  **Usage**: Agents declare "Active Skills" in their prompts. You **MUST** read these skill files when assuming an agent role.
 
+## SESSION RESTORATION (BOOTSTRAP)
+**ON SESSION START**:
+1. Check if `.agent/sessions/latest.yaml` exists.
+2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary.
+3. **IF NEW**: Proceed with normal analysis.
+4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
+
+
 ## TOOL EXECUTION PROTOCOL (v3.2.5+)
 The Orchestrator natively supports structured tool calling (Function Calling).
 1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
@@ -23,6 +31,7 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 > - `core-principles` — Anti-hallucination, Stub-First methodology
 > - `skill-safe-commands` — Automation enablement (auto-run commands)
 > - `artifact-management` — File protocol, archiving
+> - `skill-session-state` — Session Context Persistence (Boot/Boundary)
 
 ### Safe Commands (Auto-Run)
 > **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.

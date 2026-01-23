@@ -1,47 +1,40 @@
-# Implementation Plan - Light Mode
+# Implementation Plan - O7 Session Context
 
-> **User Review Required:**
-> - None. (Approved in Planning phase).
+## Goal
+Implement a robust Session State mechanism that survives context resets.
 
-## Proposed Changes
+## Architecture
 
-### 1. Documentation Updates
-#### [MODIFY] [GEMINI.md](file:///Users/sergey/Antigravity/agentic-development/GEMINI.md)
-- Update **CRITICAL RULE**: "Even for small tasks, NEVER skip the Analysis and Architecture phases *UNLESS running in Light Mode (via `/light` workflow)*".
-- Update **Dispatch**: Add instruction to propose `/light` for trivial tasks.
+### 1. Schema: `.agent/sessions/latest.yaml`
+```yaml
+session_id: "uuid"
+last_updated: "ISO-8601"
+mode: "PLANNING | EXECUTION | VERIFICATION"
+current_task:
+  name: "String"
+  status: "String"
+  predicted_steps: Int
+context_summary: "String"
+active_blockers: []
+recent_decisions: []
+completed_tasks: []  # NEW: Tracks history within session
+```
 
-#### [MODIFY] [AGENTS.md](file:///Users/sergey/Antigravity/agentic-development/AGENTS.md)
-- Update rules to reflect Light Mode existence.
+### 2. Skill: `skill-session-state` (TIER 0)
+- **Role**: Provide the mechanism (script) and the protocol (instructions).
+- **Script**: `.agent/skills/skill-session-state/scripts/update_state.py`
+  - Arguments: `--mode`, `--task_name`, `--task_status`, `--task_summary`, `--predicted_steps`
+  - Logic: Load existing YAML -> Update fields -> Save (Atomic write).
 
-#### [MODIFY] [WORKFLOWS.md](file:///Users/sergey/Antigravity/agentic-development/docs/WORKFLOWS.md)
-- Add documentation for `/light` workflow.
+### 3. Integration
+- **Boot**: `GEMINI.md` and `AGENTS.md` must have a "Start Specific" instruction to read `.agent/sessions/latest.yaml`.
+- **Runtime**: `task_boundary` calls should be followed by `run_command(python update_state.py ...)` (managed by the Agent).
 
-### 2. Workflows
-#### [NEW] [.agent/workflows/light-01-start-feature.md](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/light-01-start-feature.md)
-- Steps:
-    1. Analyst: Create TASK with `[LIGHT]` tag. Load `skill-light-mode`.
-    2. Suggest transition to `light-02-develop-task`.
+## Steps
 
-#### [NEW] [.agent/workflows/light-02-develop-task.md](file:///Users/sergey/Antigravity/agentic-development/.agent/workflows/light-02-develop-task.md)
-- Steps:
-    1. Developer (Loop): Implement + Test. (Verify `skill-light-mode` instructions).
-    2. Code Reviewer: Sanity check.
-    3. Orchestrator: Commit.
-
-### 3. Skills
-#### [NEW] [.agent/skills/light-mode/SKILL.md](file:///Users/sergey/Antigravity/agentic-development/.agent/skills/light-mode/SKILL.md)
-- YAML: `tier: 2`
-- Content:
-    - Definition of Low Risk.
-    - Developer Rules: "No overengineering", "Escalate if complex".
-    - Reviewer Rules: "Security Sanity Check", "No architecture nitpicks".
-
-## Verification Plan
-### Manual Verification
-- Run: `Call /light-01-start-feature` with a prompt "Fix typo in README".
-- Validate:
-    - Analyst runs.
-    - Architect IS SKIPPED.
-    - Planner IS SKIPPED.
-    - Developer runs.
-    - Code Reviewer runs.
+1. **Scaffold**: Create skill directory.
+2. **Script**: Develop `update_state.py` using standard Python libraries (`yaml`, `argparse`, `pathlib`).
+3. **Skill Doc**: Write `SKILL.md` defining the usage and TIER 0 status.
+4. **Docs Update**: Register in `SKILL_TIERS.md`.
+5. **Boot Update**: Modify `GEMINI.md` and `AGENTS.md`.
+6. **Verify**: Test run.

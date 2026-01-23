@@ -17,6 +17,7 @@
 - `skill-core-principles` (Методология и Этика)
 - `skill-safe-commands` (Возможности Автоматизации)
 - `skill-artifact-management` (Файловые Операции)
+- `skill-session-state` (Session Context Persistence)
 
 ### Активные Навыки (TIER 1 - Фаза Ревью - ЗАГРУЗИТЬ СЕЙЧАС)
 - `skill-planning-decision-tree` (Стандарт для проверки)

@@ -17,6 +17,7 @@ You are operating in the **Review Phase**.
 - `skill-core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
 - `skill-artifact-management` (File Operations)
+- `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Review Phase - LOAD NOW)
 - `skill-requirements-analysis` (Standard to check against)

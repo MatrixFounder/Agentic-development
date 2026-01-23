@@ -987,7 +987,23 @@ Dependent on O8 (Domains) and O9 (Multi-Session).
 
 ---
 
-### 🟢 O1: Phase-Specific Skill Loading
+### �️ Integrity & Regression Verification
+
+> **Objective:** Ensure ZERO information loss and NO performance degradation.
+
+| Check | Target | Method |
+|-------|--------|--------|
+| **Content Integrity** | Refactored Skills | `diff` comparison of semantic content (Core + Extended = Original) |
+| **Logic Retention** | Agent Prompts | Verification that all 14 scenarios/logic branches remain executable |
+| **Performance** | Token Usage | A/B Testing: New vs Old must show ≤ tokens for same task |
+| **Safety** | TIER 0 Skills | Verify `core-principles` & `safe-commands` are NEVER dropped |
+
+**Constraint:**
+If **ANY** logic is lost or token usage increases (without justification), the optimization is **REJECTED**.
+
+---
+
+### �🟢 O1: Phase-Specific Skill Loading
 
 **Challenge:** "Oh brilliant, now the agent decides WHEN to load skills. What could go wrong when a forgetful LLM 'forgets' to load the required skill?"
 

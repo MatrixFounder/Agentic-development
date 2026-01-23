@@ -40,7 +40,7 @@
     - If flags provided: **Headless Mode** (Generate file, exit 0).
     - If no flags: **Interactive Mode** (Prompt user via `input()`).
 3.  **Idempotency:** If `docs/PRODUCT_VISION.md` exists, fail gracefully or ask to overwrite (require `--force` flag for agents).
-4.  **Output:** Valid Markdown file based on `skill-product-analysis` templates.
+4.  **Output:** Valid Markdown file at `docs/PRODUCT_VISION.md` based on `skill-product-analysis` templates.
 
 **B. `scripts/calculate_wsjf.py`**
 **Type:** Data Processing CLI
@@ -53,10 +53,16 @@
         - Optional surrounding pipes.
         - Whitespace padding.
         - Escaped pipe characters `\|` (optional but good practice).
-    - *Validation:* If the table structure is invalid, exit with non-zero status and print a friendly correction guide (e.g., "Row 5 is missing a column").
+    - *Validation:* If the table structure is invalid:
+        -   **Exit Code 1**.
+        -   Print a friendly correction guide (e.g., "Row 5 is missing a column 'Job Size'").
 3.  **Logic:**
     - Parse columns: `User Value`, `Time Criticality`, `Risk Reduction`, `Job Size`.
     - Logic: `WSJF = (UV + TC + RR) / Job Size`.
+    - **Division by Zero Protection**: If `Job Size` is 0:
+        -   **Exit Code 1**.
+        -   Print specific error: "Job Size cannot be 0 for item '...'. Please set to at least 1."
+        -   **DO NOT** overwrite the file.
     - Sort: Descending by `WSJF`.
 4.  **Output:** Overwrite file with updated values (formatting preserved).
 
@@ -151,9 +157,14 @@
 
 **Functional Verification**
 - [ ] **Dual Mode Test**: Agent can invoke `init_product.py` without hanging.
-- [ ] **Math Check**: `calculate_wsjf.py` handles division by zero (JobSize=0) gracefully (sets score to 0 or errors).
+- [ ] **Math Check**: `calculate_wsjf.py` exits with Error Code 1 if JobSize=0 (does NOT overwrite file).
+- [ ] **Manual Verification (P02)**: Verify that `p02_product_reviewer` correctly identifies issues in `vision_example_bad.md` (Adversarial check).
 - [ ] **Regex Robustness**: `calculate_wsjf.py` handles malformed tables (missing pipes) by exiting with a clear error message, NOT crashing.
-
+- [ ] **Docs Verification**: `System/Docs/PRODUCT_DEVELOPMENT.md` contains:
+    - Usage Guide (CLI + Agent)
+    - Architecture Diagram
+    - Troubleshooting (Exit codes explanation)
+- [ ] **Stats**: Calculate and log token consumption for `p01` and `p02` runs to confirm TIER 2 budget compliance.
 **Framework Compliance**
 - [ ] **Token Budget**: Skills stay within defined limits (<1000 and <500).
 - [ ] **Linting**: Scripts pass `pylint` (score > 8.0).

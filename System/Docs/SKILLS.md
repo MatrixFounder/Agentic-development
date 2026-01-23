@@ -46,6 +46,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`requirements-analysis`** | Process for gathering and refining requirements into a structured Technical Specification (TASK). | `01-start-feature`, `vdd-01-start-feature` | Analyst, TASK Reviewer |
 | **`skill-task-model`** | Standard models, examples (Good/Bad), and structure rules for TASK documents. | `01-start-feature` | Analyst, TASK Reviewer |
 | **`skill-creator`** | Guidelines for creating new Agent Skills. Based on [Anthropic](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) & [Antigravity](https://antigravity.google/docs/skills) standards. | Manual, `04-update-docs` | Developer, Architect |
+| **`light-mode`** | Fast-track guidelines for trivial tasks (typos, UI tweaks). Skips Architect/Planner. (Tier 2) | `/light`, `light-01-start-feature` | Analyst, Developer, Code Reviewer |
 
 ### Engineering Standards
 | Skill | Description | Used By in Workflows | Used By Agents |

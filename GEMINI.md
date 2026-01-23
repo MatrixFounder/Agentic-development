@@ -43,9 +43,11 @@ Before starting the standard pipeline, check if the user's request matches a wor
       - `/vdd-adversarial`: Adversarial Refinement Loop.
       - `/vdd-enhanced`: Nested (Stub-First + Adversarial).
       - `/full-robust`: Nested (Enhanced + Security).
+      - `/light`: Fast-track for trivial tasks (skips Architect/Planner).
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.
+   - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
    - If no variant specified, default to standard `01-04`.
 3. **Execution**: If a matching workflow is found, execute its steps strictly INSTEAD of the hardcoded pipeline below.
    - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.
@@ -87,9 +89,9 @@ Before starting the standard pipeline, check if the user's request matches a wor
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user.
 
 ## CRITICAL RULE:
-Even for small tasks, **NEVER** skip the Analysis and Architecture phases.
+Even for small tasks, **NEVER** skip the Analysis and Architecture phases, **UNLESS** running in **Light Mode** (via `/light` workflow).
 If the user asks for code directly (e.g., "Fix the button"), **REFUSE** to code immediately.
-Instead, reply: "I must update the TASK and check Architecture first. Starting Analysis phase..."
+Instead, reply: "I must update the TASK and check Architecture first. Starting Analysis phase..." (or propose `/light` if trivial).
 
 ### Self-Improvement Mode
 

@@ -24,6 +24,17 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.7.1 — Light Mode** (Feature)
+
+#### **Added**
+* **Light Mode:** New fast-track workflow for trivial tasks (typos, UI tweaks, simple bugfixes).
+    * Skips Architecture and Planning phases (~50% token savings).
+    * Workflows: `light-01-start-feature.md`, `light-02-develop-task.md`.
+    * Skill: `light-mode` (Tier 2) with escalation protocol and security sanity checks.
+    * Updated `GEMINI.md`, `AGENTS.md`, `WORKFLOWS.md`, `SKILLS.md`.
+
+---
+
 ### **v3.7.0 — Skills Refactoring & Security Hardening** (Optimization)
 
 #### **Added**
@@ -637,6 +648,17 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.7.1 — Light Mode** (Feature)
+
+#### **Добавлено**
+* **Light Mode:** Новый быстрый режим для тривиальных задач (опечатки, UI-правки, простые баги).
+    * Пропускает фазы Architecture и Planning (~50% экономия токенов).
+    * Workflows: `light-01-start-feature.md`, `light-02-develop-task.md`.
+    * Навык: `light-mode` (Tier 2) с протоколом эскалации и проверками безопасности.
+    * Обновлены `GEMINI.md`, `AGENTS.md`, `WORKFLOWS.md`, `SKILLS.md`.
+
+---
 
 ### **v3.7.0 — Рефакторинг Навыков и Усиление Безопасности** (Оптимизация)
 

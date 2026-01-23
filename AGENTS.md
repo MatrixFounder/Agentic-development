@@ -65,3 +65,10 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 - **Context Loading**: When moving to a new phase, explicitly read the prompt file AND the required skills.
 - **File Creation**: Always save intermediate artifacts (TASK, Plan) to files.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user (as per `01_orchestrator.md`).
+
+## LIGHT MODE (Fast-Track for Trivial Tasks)
+For trivial tasks (typos, UI tweaks, simple bugfixes), use `/light` workflow:
+- **Skips:** Architecture, Planning phases.
+- **Requires:** Analysis (with `[LIGHT]` tag), Development, Code Review.
+- **Skill:** Load `skill-light-mode` (Tier 2) for specific instructions.
+- **Escalation:** If complexity increases, switch to standard pipeline.

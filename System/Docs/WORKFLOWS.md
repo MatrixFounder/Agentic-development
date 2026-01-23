@@ -36,6 +36,7 @@ graph TD
         VDDE([vdd-enhanced]):::pipeline
         Robust([full-robust]):::pipeline
         VDDMulti([vdd-multi]):::pipeline
+        Light([light]):::pipeline
     end
 
     %% Automation Loops
@@ -49,7 +50,9 @@ graph TD
         Plan[02-plan-implementation]:::atomic
         Dev[03-develop-single-task]:::atomic
         Sec[security-audit]:::atomic
-        Adv[vdd-adversarial]:::atomic
+        VDDStart[vdd-01-start-feature]:::atomic
+        LightStart[light-01-start-feature]:::atomic
+        LightDev[light-02-develop-task]:::atomic
     end
 
     %% Relationships
@@ -67,6 +70,9 @@ graph TD
     
     VDDMulti -->|Seq Critics| Adv
     VDDMulti -->|Seq Critics| Sec
+
+    Light -->|1. Analysis| LightStart
+    Light -->|2. Dev Loop| LightDev
 ```
 
 ## 🚀 Workflow Categorization
@@ -88,6 +94,7 @@ The workflows are organized into three categories:
 | **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) followed by a Security Audit. | `run full-robust` |
 | **VDD Enhanced** | Combines Stub-First planning with VDD Adversarial execution. | `run vdd-enhanced` |
 | **VDD Multi-Adversarial** | Sequential execution of 3 specialized critics: Logic → Security → Performance. | `run vdd-multi` |
+| **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop. | `run light` or `/light` |
 
 ---
 
@@ -111,6 +118,8 @@ The workflows are organized into three categories:
 | **Develop Task** | Executes a **single** task from the plan (No loop). | `run 03-develop-single-task` |
 | **Update Docs** | Updates documentation artifacts. | `run 04-update-docs` |
 | **Security Audit** | runs the security auditor agent. | `run security-audit` |
+| **Light Start** | Light Mode Analysis Phase only (creates TASK with `[LIGHT]` tag). | `run light-01-start-feature` |
+| **Light Develop** | Light Mode Dev → Review loop (skips Plan). | `run light-02-develop-task` |
 
 ---
 
@@ -285,7 +294,9 @@ run 04-update-docs
 
 ```mermaid
 graph TD
-    A[New Task] --> B{Task Complexity?}
+    A[New Task] --> T{Trivial Task?}
+    T -->|Yes: typo, bugfix, UI tweak| L[run light]
+    T -->|No| B{Task Complexity?}
     B -->|Simple/Well-defined| C{Trust Automation?}
     B -->|Complex/Ambiguous| D[Multi-Step Approach]
     C -->|Yes| E[run base-stub-first]
@@ -298,7 +309,7 @@ graph TD
     I -->|Standard| E
     I -->|High Quality| J[run vdd-enhanced]
     I -->|Mission Critical| K[run full-robust]
-    I -->|Max QA/Critics| L[run vdd-multi]
+    I -->|Max QA/Critics| M[run vdd-multi]
 ```
 
 ### Summary Table
@@ -312,3 +323,4 @@ graph TD
 | Security-critical feature | `run full-robust` |
 | Debugging a specific phase | Run that phase's atomic workflow |
 | Just need analysis | `run 01-start-feature` or `run vdd-01-start-feature` |
+| **Trivial task (typo, bugfix)** | `run light` or `/light` |

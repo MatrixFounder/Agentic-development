@@ -1,4 +1,4 @@
-# Task: Внедрение "Light" режима (Workflow-Based)
+# Task: Внедрение "Light" режима (Workflow-Based) [Completed]
 
 ## Цель
 
@@ -34,7 +34,7 @@
 | :--- | :--- | :--- | :--- |
 | **1** | Analyst | Создание `TASK.md` с тегом `[LIGHT]` | Обязательно |
 | **2** | Developer | Реализация + Тесты (Cycle) | Совмещает Plan+Exec |
-| **3** | Code Reviewer | Финальная проверка | Минимум 1 итерация |
+| **3** | Code Reviewer | Финальная проверка + Sanity Security | SPoF Mitigation |
 | **4** | Orchestrator | Commit + Archive | Автоматически |
 
 **Пропущенные фазы:**
@@ -55,13 +55,16 @@
 *   **Content:**
     *   Критерии режима (Low Risk).
     *   Инструкция для Developer: "Do not overengineer. Fix the issue directly. Run tests."
-    *   Инструкция для Reviewer: "Focus on correctness and tests. Skip architectural nitpicks unless critical."
+    *   Инструкция для Reviewer: "Focus on correctness and tests. Skip architectural nitpicks unless critical. Perform basic security sanity check."
+    *   **Escalation Policy:** "If you discover complexity (DB migration, API change), STOP and request workflow switch."
     *   **Safety:** Запрет на использование в файлах `auth`, `payment`, `crypto` (эскалация в Standard).
 
 ## План работ
 
 1.  **Documentation Updates:**
-    *   [ ] Обновить `GEMINI.md`: Добавить исключение в CRITICAL RULE.
+    *   [ ] Обновить `GEMINI.md`:
+        *   Добавить исключение в CRITICAL RULE.
+        *   Обновить Dispatch Logic: предлагать `/light` для простых задач.
     *   [ ] Обновить `AGENTS.md`: Добавить исключение.
     *   [ ] Обновить `docs/WORKFLOWS.md`: Описать режим.
 

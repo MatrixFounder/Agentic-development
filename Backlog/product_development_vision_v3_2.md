@@ -216,19 +216,19 @@ project-root/
 
 ## Handoff Mechanism (The Bridge & BRD Compiler)
 
-The `handoff_to_technical.py` script is the **only bridge**.
+The handoff is powered by **`skill-product-handoff`** and its modular scripts:
 
-1.  **Strict Gate:** Checks `docs/product/APPROVED_BACKLOG.md` for a specific Approval Hash.
-    -   **Hash Format:** `APPROVAL_HASH: $(python -c 'import uuid; print(uuid.uuid4())')-$(date +%s)-APPROVED`
+1.  **Strict Gate (`verify_gate.py`):** Checks `docs/product/APPROVED_BACKLOG.md` for a specific Approval Hash.
+    -   **Hash Format:** `APPROVAL_HASH: <UUID>-<TIMESTAMP>-APPROVED`
     -   *Note:* Only `p03` is authorized to generate this line, Script executes this command if needed for reproducibility
     -   *Benefit:* Ensures no unauthorized handoffs.
-2.  **BRD Compilation (New):**
+2.  **BRD Compilation (`compile_brd.py`):**
     -   The script *automatically compiles* `docs/BRD.md` (Business Requirements Document) by merging:
         -   `MARKET_STRATEGY.md` -> Sections: Problem, Market, Competition.
         -   `PRODUCT_VISION.md` -> Sections: Business Overview, Goals, Product Desc.
         -   `SOLUTION_BLUEPRINT.md` -> Sections: UX, Biz Model, Roadmap, Risks, NFRs.
     -   *Benefit:* Creates a single source of truth for Legal/Compliance/Investors without extra work.
-3.  **Synthesis Trigger:** The script writes `TASK.md` to `docs/` and outputs a completion message.
+3.  **Synthesis Trigger (`trigger_technical.py`):** The script writes `TASK.md` to `docs/` and outputs a completion message.
 
 ---
 
@@ -287,21 +287,42 @@ We will migrate the Phase 0 (Bootstrap) assets to the v3 Architecture.
     -   *Assign to:* `p02_product_analyst`.
     -   *Requirement:* Must follow TIER 2 isolation.
 
-2.  **`skill-strategic-analysis` (New):**
+2.  **`skill-product-strategic-analysis` (New):**
     -   *Use skill-creator:* Create new skill for TAM/SAM/SOM and Competitive Matrices.
     -   *Assign to:* `p01_strategic_analyst`.
 
-3.  **`skill-solution-blueprint` (New):**
+3.  **`skill-product-solution-blueprint` (New):**
     -   *Use skill-creator:* Create new skill for ROI calculation and Text-UX flow syntax.
     -   *Assign to:* `p04_solution_architect`.
 
-### Phase 3: The Handoff (Week 2)
-**Goal:** Build the automated bridge.
+### Phase 3: The Handoff & Workflows (Week 2)
+**Goal:** Build the strict Quality Gate and BRD Compilation logic.
 
-1.  **Script:** `handoff_to_technical.py`.
-    -   Logic: Verify Hash -> Synthesize TASK.md -> Move Files -> Trigger 01.
-    -   **Test:** Run verification on a "Dummy Idea" to ensure the gate holds.
-2. Implement BRD compilation logic in handoff script.
+1.  **`skill-product-handoff` (New):**
+    -   *Use skill-creator:* Create new skill to govern the handoff process.
+    -   *Owner:* Shared (System / p00).
+    -   *Deliverables (tied to skill):*
+        -   `scripts/product/verify_gate.py`: Checks `APPROVED_BACKLOG.md` for valid Hash.
+        -   `scripts/product/compile_brd.py`: Merges `MARKET/VISION/BLUEPRINT` into `docs/BRD.md`.
+        -   `templates/brd_master_template.md`: The 16-section Enterprise structure.
+
+2.  **Workflow Definition:**
+    -   Create `.agent/workflows/product-full-discovery.md`.
+    -   Create `.agent/workflows/product-quick-vision.md`.
+    -   Create `.agent/workflows/product-market-only.md`.
+    -   *Logic:* Defines the sequential agent calls (`p00`->`p01`...).
+
+### Phase 4: Automation & Integration (Week 2)
+**Goal:** Connect the Product Phase to the Technical Phase.
+
+1.  **Technical Trigger:**
+    -   *Script:* `scripts/product/trigger_technical.py`.
+    -   *Logic:* If `verify_gate.py` passes -> Generate `docs/TASK.md` -> Notify User.
+    -   *Binding:* Updates `skill-product-handoff`.
+
+2.  **End-to-End Verification:**
+    -   Test the full chain: `Launch` -> `Agents` -> `Approval` -> `BRD Gen` -> `Task Gen`.
+
 ---
 
 ## How to Start (User Experience)

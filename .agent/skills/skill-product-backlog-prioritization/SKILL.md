@@ -21,8 +21,9 @@ You MUST use the provided Python script to calculate scores and sort the backlog
 ### How to Prioritize
 Run the following command:
 ```bash
-python3 System/scripts/calculate_wsjf.py --file docs/PRODUCT_BACKLOG.md
+python3 [skill_path]/scripts/calculate_wsjf.py --file docs/PRODUCT_BACKLOG.md
 ```
+> **Note:** `[skill_path]` is the path to this skill (e.g. `.agent/skills/skill-product-backlog-prioritization`).
 
 ## 4. Scoring Components
 When adding a new item to the Backlog, you must estimate:

@@ -1,4 +1,4 @@
-# Task: Phase 1 - Migration & Foundation (Week 1)
+# Task: Phase 3 - Handoff & Workflows (Week 2)
 
 > **Status:** Done
 > **Parent Initiative:** [Product Development Vision v3.2](../Backlog/product_development_vision_v3_2.md)
@@ -6,38 +6,33 @@
 ---
 
 ## 1. Executive Summary
-**Objective:** Establish the v3 "Venture Builder" architecture by creating the `docs/product/` air-gapped directory and migrating the agent fleet from 2 agents (p01, p02) to the "Lean Five" (p00-p04), strictly following the v3.2 specification.
+**Objective:** implement the "Bridge" logic between Product and Technical phases. This involves creating the `skill-product-handoff`, its associated scripts (`verify_gate.py`, `compile_brd.py`), and the formal workflow definitions.
 
 ---
 
 ## 4. Implementation Steps
 
-1.  **Structure Setup**:
-    - [x] Create `docs/product/` directory (The Air Gap).
+1.  **Create `skill-product-handoff`**:
+    - [x] Run `init_skill.py`.
+    - [x] Create `templates/brd_master_template.md` (Enterprise structure).
+    - [x] Implement `scripts/product/verify_gate.py` (Hash validator).
+    - [x] Implement `scripts/product/compile_brd.py` (Markdown merger).
+    - [x] Validate with `validate_skill.py`.
 
-2.  **Agent Migration (Renaming)**:
-    - [x] Rename `System/Agents/p01_product_analyst_prompt.md` -> `p02_product_analyst_prompt.md`.
-    - [x] Rename `System/Agents/p02_product_reviewer_prompt.md` -> `p03_product_director_prompt.md`.
-
-3.  **Agent Creation & Updates (The Lean Five)**:
-    - [x] **Create** `p00_product_orchestrator` (New Dispatcher).
-    - [x] **Create** `p01_strategic_analyst` (New Researcher).
-    - [x] **Update** `p02_product_analyst` (Focus: Vision Synthesis only).
-    - [x] **Update** `p03_product_director` (Focus: Adversarial VDD + Approval Hash).
-    - [x] **Create** `p04_solution_architect` (New Solution Designer).
-
-4.  **Verification**:
-    - [x] Verify file existence and location.
-    - [x] Verify prompts match v3.2 specs (roles, tools, io).
+2.  **Define Workflows**:
+    - [x] Create `.agent/workflows/product-full-discovery.md`.
+    - [x] Create `.agent/workflows/product-quick-vision.md`.
+    - [x] Create `.agent/workflows/product-market-only.md`.
 
 ---
 
 ## 5. Definition of Done (DoD)
 
 **Artifact Verification**
-- [x] `docs/product/` exists.
-- [x] System/Agents/ contains exactly: p00, p01, p02, p03, p04 (plus standard agents).
+- [x] `skill-product-handoff` exists and passes validation.
+- [x] `scripts/product/` contains `verify_gate.py` and `compile_brd.py`.
+- [x] 3 Workflow files exist in `.agent/workflows/`.
 
 **Functional Verification**
-- [x] `p00` prompt correctly lists dispatch logic.
-- [x] `p03` prompt includes "Approval Hash" instruction.
+- [x] `verify_gate.py` correctly validates a mock hash.
+- [x] `compile_brd.py` correctly assembles a dummy BRD.

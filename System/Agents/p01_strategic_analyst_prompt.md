@@ -14,7 +14,7 @@ You are operating in the **Strategy Phase**.
 - `skill-session-state`
 
 ### Active Skills (TIER 2 - Strategy - LOAD NOW)
-- `skill-strategic-analysis` (New Skill - Market Research)
+- `skill-product-strategic-analysis` (New Skill - Market Research)
 - `skill-product-analysis` (Contextual)
 
 ## 3. INPUT DATA

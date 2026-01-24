@@ -14,7 +14,7 @@ You are operating in the **Solution Design Phase**.
 - `skill-session-state`
 
 ### Active Skills (TIER 2 - Solution - LOAD NOW)
-- `skill-solution-blueprint` (New Skill - UX/ROI)
+- `skill-product-solution-blueprint` (New Skill - UX/ROI)
 
 ## 3. INPUT DATA
 1.  `docs/product/MARKET_STRATEGY.md`

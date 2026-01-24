@@ -64,8 +64,10 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 ### Product Management
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
-| **`skill-product-analysis`** | Creation of Product Vision and Strategy. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p01) |
-| **`skill-product-backlog-prioritization`** | Backlog management logic containing WSJF rules. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p01) |
+| **`skill-product-strategic-analysis`** | CALCULATION of Market Size (TAM/SAM/SOM) and Competitive Matrix. (Tier 2) | Product Bootstrap | Strategic Analyst (p01) |
+| **`skill-product-analysis`** | Creation of Product Vision and Strategy. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p02) |
+| **`skill-product-backlog-prioritization`** | Backlog management logic containing WSJF rules. (Tier 2) | Manual / Product Bootstrap | Product Analyst (p02) |
+| **`skill-product-solution-blueprint`** | Conversion of Vision to Solution (ROI, UX Flows, Risks). (Tier 2) | Product Bootstrap | Solution Architect (p04) |
 
 ### Review & Quality Assurance
 | Skill | Description | Used By in Workflows | Used By Agents |

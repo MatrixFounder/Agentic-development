@@ -1,6 +1,6 @@
 # Skill Tiers (Authoritative)
 
-> **Source of Truth:** Optimization O5 (Backlog/agentic_development_optimisations.md)
+> **Source of Truth:** This document (System/Docs/SKILL_TIERS.md)
 > **Purpose:** Optimize token usage by defining strict loading protocols for skills.
 
 ## Overview

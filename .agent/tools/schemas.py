@@ -128,38 +128,5 @@ TOOLS_SCHEMAS = [
                 "required": ["slug"]
             }
         }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "init_product",
-            "description": "Scaffold a PRODUCT_VISION.md file. Use this to initialize the product vision.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "Product Name"},
-                    "problem": {"type": "string", "description": "Problem Statement"},
-                    "audience": {"type": "string", "description": "Target Audience"},
-                    "metrics": {"type": "string", "description": "Success Metrics (comma separated)"},
-                    "output": {"type": "string", "default": "docs/PRODUCT_VISION.md", "description": "Output file path"},
-                    "force": {"type": "boolean", "default": False, "description": "Overwrite existing file"}
-                },
-                "required": ["name", "problem", "audience", "metrics"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calculate_wsjf",
-            "description": "Calculate WSJF scores for a markdown backlog file. Updates the file in-place.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "file": {"type": "string", "description": "Path to the backlog file (e.g., docs/PRODUCT_BACKLOG.md)"}
-                },
-                "required": ["file"]
-            }
-        }
     }
 ]

@@ -178,7 +178,7 @@ When creating or modifying skills, follow these guidelines to ensure effectivene
 
 ### 2. Instruction Style
 - **Imperative**: Use "You MUST", "DO NOT".
-- **Example Separation**: **NEVER** put large examples inline in `SKILL.md`.
+- **Example Separation (Optimization O6a)**: **NEVER** put large examples inline in `SKILL.md`.
     - ✅ **Correct:** "See `examples/auth_flow.py`".
     - ❌ **Incorrect:** Large code blocks inside the prompt (wastes tokens).
 - **Resource Extraction**: Move checklists, templates, and patterns to `resources/` directory.
@@ -192,4 +192,3 @@ When creating or modifying skills, follow these guidelines to ensure effectivene
 - ❌ **Duplication**: Re-listing OWASP rules instead of linking to `security-audit`.
 - ❌ **Hardcoded Paths**: Use relative structure or standard vars.
 
-> **Note:** These standards are derived from the [Agentic Development Optimizations](../Backlog/agentic_development_optimisations.md) (O6/O6a) to ensure scalability.

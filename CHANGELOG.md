@@ -24,6 +24,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.1 — Documentation Sync & Cleanup** (Maintenance)
+
+#### **Optimized**
+* **Documentation Synchronization:**
+    * Updated `README.md` and `README.ru.md` to fully reflect Product Development capabilities (Agents, Workflows, Artifacts).
+    * Refactored `00_agent_development.md` description to "Meta-System Prompt".
+* **Standards Enforcement (O6a):**
+    * Updated `System/Docs/SKILLS.md` and `SKILL_TIERS.md` to strictly enforce "Script-First" and "Example Separation" patterns.
+    * Removed legacy references to `Backlog/agentic_development_optimisations.md`.
+* **Cleanup:**
+    * Archived `Backlog/agentic_development_optimisations.md` as all optimization milestones (O1-O7) are complete and documented in System Docs.
+
+---
+
 ### **v3.9.0 — Product Discovery & Handoff** (Feature)
 
 #### **Added**
@@ -697,6 +711,40 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.9.1 — Синхронизация Документации и Очистка** (Maintenance)
+
+#### **Оптимизировано**
+* **Синхронизация Документации:**
+    * Обновлены `README.md` и `README.ru.md` для полного отражения возможностей Product Development (Агенты, Воркфлоу, Артефакты).
+    * Описание `00_agent_development.md` уточнено как "Мета-Системный Промпт".
+* **Стандартизация (O6a):**
+    * Обновлены `System/Docs/SKILLS.md` и `SKILL_TIERS.md` для строгого соблюдения паттернов "Script-First" и "Example Separation".
+    * Удалены устаревшие ссылки на `Backlog/agentic_development_optimisations.md`.
+* **Очистка:**
+    * Архивирован `Backlog/agentic_development_optimisations.md`, так как все вехи оптимизации (O1-O7) завершены и задокументированы в System Docs.
+
+---
+
+### **v3.9.0 — Product Discovery & Handoff** (Feature)
+
+#### **Добавлено**
+* **Завершена Продуктовая Фаза:** Полный пайплайн "Venture Builder" с 5 новыми агентами (`p00`-`p04`).
+    * **Strategy:** `skill-product-strategic-analysis` (TAM/SAM/SOM).
+    * **Vision:** `skill-product-analysis` (Crossing the Chasm).
+    * **Solution:** `skill-product-solution-blueprint` (ROI, Risk, Text-UX).
+* **Ворота Качества (Quality Gate - VDD):**
+    * **Adversarial Director (`p03`):** Блокирует передачу в разработку, если "Рыночный ров" слаб.
+    * **Криптографический Handoff:** Цепочка `sign_off.py` -> `verify_gate.py` гарантирует, что только утвержденные бэклоги попадают к разработчикам.
+* **Сценарии (Workflows):**
+    * `/product-full-discovery`: Полный цикл Venture Building.
+    * `/product-quick-vision`: Для внутренних инструментов.
+    * `/product-market-only`: Для быстрой валидации идей.
+* **Документация:**
+    * `System/Docs/PRODUCT_DEVELOPMENT.md`: Полный плейбук.
+    * `System/Docs/WORKFLOWS.md`: Обновлен продуктовыми сценариями.
+
+---
 
 ### **v3.8.0 — Фаза 0: Product Bootstrap** (Feature)
 

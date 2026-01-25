@@ -167,41 +167,7 @@ def execute_tool(tool_call) -> Dict[str, Any]:
             result["success"] = result["status"] in ("generated", "corrected")
             return result
 
-        elif name == "init_product":
-            script_path = repo_root / "System" / "scripts" / "init_product.py"
-            
-            cmd = ["python3", str(script_path)]
-            
-            if args.get("name"):
-                cmd.extend(["--name", args["name"]])
-            if args.get("problem"):
-                cmd.extend(["--problem", args["problem"]])
-            if args.get("audience"):
-                cmd.extend(["--audience", args["audience"]])
-            if args.get("metrics"):
-                cmd.extend(["--metrics", args["metrics"]])
-            if args.get("output"):
-                cmd.extend(["--output", args["output"]])
-            if args.get("force"):
-                cmd.append("--force")
-                
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            return {"output": result.stdout, "error": result.stderr, "success": result.returncode == 0}
 
-        elif name == "calculate_wsjf":
-            script_path = repo_root / "System" / "scripts" / "calculate_wsjf.py"
-            file_path = args.get("file")
-            
-            if not file_path:
-                return {"error": "Missing 'file' argument", "success": False}
-                
-            # Basic validation
-            if not is_safe_path(file_path):
-                 return {"error": "Path traversal detected", "success": False}
-                 
-            cmd = ["python3", str(script_path), "--file", file_path]
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            return {"output": result.stdout, "error": result.stderr, "success": result.returncode == 0}
 
         else:
             return {"error": f"Unknown tool: {name}", "success": False}

@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.9.0
+# Multi-Agent Software Development System v3.9.1
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -15,19 +15,28 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 
 ## 📋 Table of Contents
 - [Installation & Setup](#-installation--setup)
-  - [Copy Folders](#1-copy-framework-folders)
-  - [Choose AI Assistant](#2-choose-your-ai-assistant)
+  - [1. Copy Framework Folders](#1-copy-framework-folders)
+  - [2. Choose Your AI Assistant](#2-choose-your-ai-assistant)
+  - [3. Installation Requirements (Python)](#3-installation-requirements-python)
 - [System Overview](#-system-overview)
   - [Directory Structure](#directory-structure)
-  - [Agents & Roles](#-the-agent-team-roles)
+  - [Meta-System Prompt](#-meta-system-prompt-00_agent_developmentmd)
+  - [The Agent Team (Roles)](#-the-agent-team-roles)
+  - [The Product Team (Roles)](#-the-product-team-roles)
   - [Skills System](#-skills-system)
 - [Workspace Workflows](#-workspace-workflows)
+  - [Quick Start](#quick-start)
+  - [Variants](#variants)
 - [How to Start Development](#-how-to-start-development-step-by-step-plan)
   - [Phase 0: Product Discovery](#phase-0-product-discovery-optional)
   - [Stages 1-5](#stage-1-pre-flight-check)
 - [Artifact Management](#-artifact-management)
-- [Migration Guide](#-migration-from-older-versions)
+- [What to do with .AGENTS.md files?](#-what-to-do-with-agentsmd-files)
+- [How to prepare for future iterations?](#-how-to-prepare-for-future-iterations)
+- [Reverse Engineering](#-reverse-engineering-if-documentation-is-outdated)
 - [Starter Prompts](#-starter-prompt-templates)
+- [Migration Guide](#-migration-from-older-versions)
+- [Integration with Cursor IDE](#-integration-with-cursor-ide-agentic-mode)
 
 
 ## 📁 Installation & Setup
@@ -105,20 +114,22 @@ project-root/
 ├── AGENTS.md                    # [Cursor] Context & Rules
 ├── GEMINI.md                    # [Antigravity] System Config
 ├── .agent/
-│   ├── skills/                  # [Common] Skills Library
+│   │   ├── ...
+│   │   └── skill-product-*      # [Product] Strategy, Vision, Handoff
 │   ├── workflows/               # [Common] Workflow Library
 │   └── tools/                   # [Common] Tool Logic & Schemas
 ├── System/
-│   ├── Agents/                  # [Common] Agent Personas (00-10)
+│   ├── Agents/                  # [Common] Agent Personas (00-10, p00-p04)
 │   ├── Docs/                    # [Common] Framework Documentation
 │   └── scripts/                 # [Common] Tool Dispatcher
 │       └── tool_runner.py
 └── src/                           # Your Source Code
 ```
 
-### 🔑 System Prompt (00_agent_development.md)
-The file `00_agent_development.md` contains **fundamental principles** (Meta-System Prompt).
-It **MUST** be added to the context for all other agents (01-10).
+### 🔑 Meta-System Prompt (00_agent_development.md)
+The file `00_agent_development.md` serves as the **Meta-System Prompt** for Cursor.
+It defines global principles (Skill Tiers, Task Boundaries) and **SHOULD** be included in the context for manual agent calls.
+For Antigravity, this logic is handled natively via `GEMINI.md`.
 
 ### 🤖 The Agent Team (Roles)
 
@@ -134,6 +145,16 @@ It **MUST** be added to the context for all other agents (01-10).
 | **Developer** | `08_agent_developer.md` | Writes code (Stubs -> Tests -> Implementation). |
 | **Code Reviewer** | `09_agent_code_reviewer.md` | Final code quality check. |
 | **Security Auditor** | `10_security_auditor.md` | Security vulnerability assessment and reporting. |
+
+### 🚀 The Product Team (Roles)
+
+| Role | File | Responsibility |
+|------|------|----------------|
+| **Product Orch** | `p00_product_orchestrator.md` | Dispatches product tasks to Strategy/Vision/Director. |
+| **Strategic Analyst** | `p01_strategic_analyst_prompt.md` | Market Research, TAM/SAM/SOM, Competitive Analysis. |
+| **Product Analyst** | `p02_product_analyst_prompt.md` | Product Vision, User Stories, Backlog Prioritization (WSJF). |
+| **Director** | `p03_product_director_prompt.md` | **Quality Gate**. Approves BRD with cryptographic hash. |
+| **Solution Arch** | `p04_solution_architect_prompt.md` | Feasibility Check, ROI, Solution Blueprint. |
 
 ### 📊 How the System Prompt is Loaded
 
@@ -172,6 +193,11 @@ Detailed description of all workflows: [WORKFLOWS](System/Docs/WORKFLOWS.md).
 ### Quick Start
 You can run a workflow simply by asking the agent:
 
+- **Product Discovery (New):**
+  - "Start Product Discovery" -> runs `/product-full-discovery` (Full pipeline)
+  - "Just the vision" -> runs `/product-quick-vision` (Fast track)
+  - "Analyze market" -> runs `/product-market-only` (Strategy only)
+
 - **Standard Mode (Stub-First):**
   - "Start feature X" -> runs `01-start-feature.md`
   - "Plan implementation" -> runs `02-plan-implementation.md`
@@ -204,6 +230,8 @@ This process will take you from an idea to finished code in the repository.
 4. **Director (p03):** **Adversarial Gatekeeper**. Rejects fluff. Signs off with a cryptographic hash.
 5. **Solution (p04):** Converts Vision to `SOLUTION_BLUEPRINT.md` (ROI, UX Flows).
 6. **Handoff:** Compiles `BRD.md` and triggers the Technical Phase.
+
+**[>> Read the full Product Development Playbook <<](System/Docs/PRODUCT_DEVELOPMENT.md)**
 
 ### Stage 1: Pre-flight Check
 1. **Initialization:** Ensure you are in the project root.
@@ -266,7 +294,11 @@ During the development process, agents create various artifacts. Here is how to 
 
 | Artifact | Path | Status | Recommendation |
 |----------|------|--------|----------------|
-| **Technical Specification** | `docs/TASK.md` | **Single Source of Truth (Current Task)** | **STRICTLY for current active task**. Overwrite for updates. Archive before new task. |
+| **Product Strategy** | `docs/product/MARKET_STRATEGY.md` | **Strategic** | TAM/SAM/SOM & Competitive Analysis. Update quarterly. |
+| **Product Vision** | `docs/product/PRODUCT_VISION.md` | **Strategic** | "North Star". Defines User Stories and Values. |
+| **Solution Blueprint** | `docs/product/SOLUTION_BLUEPRINT.md` | **Tactical** | ROI, Risk Register, UX Flows. |
+| **BRD** | `docs/product/BRD.md` | **Quality Gate** | Business Requirements. Signed with hash. Triggers dev. |
+| **Technical Specification** | `docs/TASK.md` | **Single Source of Truth (Technical)** | **STRICTLY for current active task**. Derived from BRD. |
 | **Architecture** | `docs/ARCHITECTURE.md` | **Source of Truth (System)** | **NEVER DELETE**. Keep updated. This is the map of your system. |
 | **Known Issues** | `docs/KNOWN_ISSUES.md` | **Living Document** | Keep. Document bugs, workarounds, and complex logic explanation. |
 | **Task Archive** | `docs/tasks/task-ID-name.md` | **History / Immutable** | **Mandatory Archive**. All completed TASKs move here. Never edit after archiving. |

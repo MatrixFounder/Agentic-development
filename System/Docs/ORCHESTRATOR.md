@@ -285,8 +285,7 @@ See the implementation in:
 | `git_add` | Stages files. |
 | `git_commit` | Commits changes. |
 | `generate_task_archive_filename` | Generates unique sequential ID for task archival. |
-| `init_product` | Scaffolds PRODUCT_VISION.md from a CLI or tool call. |
-| `calculate_wsjf` | Calculates WSJF scores for PRODUCT_BACKLOG.md. |
+
 
 
 ---

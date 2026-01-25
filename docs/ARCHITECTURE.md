@@ -107,7 +107,7 @@ The orchestration layer now supports **Structured Tool Calling**:
 
 ## 7. Skill Architecture & Optimization Standards
 
-> **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [Backlog/agentic_development_optimisations.md](../Backlog/agentic_development_optimisations.md).
+> **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).
 
 The system relies on a modular **Skills System** ([System/Docs/SKILLS.md](../System/Docs/SKILLS.md)) that separates "Who" (Agent) from "What" (Capabilities). To maintain performance and context limits, strict rules apply:
 

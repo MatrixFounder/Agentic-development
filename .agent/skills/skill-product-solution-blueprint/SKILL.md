@@ -54,6 +54,8 @@ To translate abstract "Vision" into concrete "Requirements" without writing code
 - **NPV (Net Present Value):** Must be Positive.
 - **Payback Period:** Ideal < 12 months.
 - **ROI:** Ideal > 3.0x.
+- **LTV/CAC:** Ideal > 3.0x.
+- **Verdict:** Script provides "Strong Case", "Long Game", or "Risky". Trust it.
 
 ## 4. Risk Register
 Track top 5 risks using this structure:
@@ -67,4 +69,5 @@ The output must be ready for `handoff_to_technical.py`.
 - **Constraint:** Ensure all NFRs (Non-Functional Requirements) are quantifiable (e.g. "Sub-200ms latency", not "Fast").
 
 ## 6. Examples
-- **Blueprint:** `examples/example_solution_blueprint.md` (Includes ROI and Risks).
+- **Simple (B2C):** `examples/01_simple_flexarb.md`
+- **Advanced (B2B SaaS):** `examples/02_advanced_loyaltyhub.md`

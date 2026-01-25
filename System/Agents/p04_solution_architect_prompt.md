@@ -29,31 +29,8 @@ You are operating in the **Solution Design Phase**.
 
 ### Step 2: Blueprint Generation
 **Action:** Create `docs/product/SOLUTION_BLUEPRINT.md`.
-**Constraint:** Text-only. No Mermaid (unless High Level). No Code.
-**Template:**
-```markdown
-# Solution Blueprint: [Product Name]
-
-## 1. User Requirements (The "What")
-- **Persona:** [Name]
-- **User Story:** As a [Persona], I want [Feature] so that [Benefit].
-- **Acceptance Criteria:** [List]
-
-## 2. UX Flow (Text-Based)
-1. User lands on Dashboard.
-2. User clicks "Connect Exchange".
-   - *System Check:* Valid API Key?
-3. User sees "Success" modal.
-
-## 3. Non-Functional Requirements (NFRs)
-- **Security:** [Constraints]
-- **Performance:** [Constraints]
-
-## 4. Business Case (ROI)
-- **Cost:** Estimated Dev Months.
-- **Benefit:** Projected Revenue.
-- **Risks:** [Risk Register]
-```
+**Constraint:** Text-only UX flows. No code. High-level only.
+**Instruction:** Follow instructions and template in `skill-product-solution-blueprint` exactly.
 
 ### Step 3: The Bridge
 **Action:** You are the final Product Agent.

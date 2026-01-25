@@ -159,11 +159,19 @@ def main():
     print(f"- **LLM-Accelerated Hours:** {effective_hours:.1f}h ({(1 - effective_hours/base_hours if base_hours else 0)*100:.1f}% savings)")
     print(f"- **Initial Investment:** ${metrics['investment']:,.2f} (incl. {int((config['risk']['buffer_base']-1)*100)}% buffer)")
     
+    print(f"\n### Unit Economics")
+    cac = config['financials']['cac']
+    arpu = args.price # Simplified for display
+    ltv_cac = metrics['ltv'] / cac if cac > 0 else 0
+    
+    print(f"- **ARPU:** ${arpu:.2f}")
+    print(f"- **CAC:** ${cac:.2f}")
+    print(f"- **LTV:** ${metrics['ltv']:.2f}")
+    print(f"- **LTV/CAC:** {ltv_cac:.1f}x")
+    
     print(f"\n### Returns (3-Year Projection)")
-    print(f"- **LTV:** ${metrics['ltv']:.2f} / user")
     print(f"- **ROI:** {metrics['roi_3yr']:.2f}x")
     print(f"- **NPV:** ${metrics['npv_3yr']:,.2f}")
-    
     pb_text = f"{metrics['payback_months']} months" if metrics['payback_months'] else "> 36 months"
     print(f"- **Payback Period:** {pb_text}")
     

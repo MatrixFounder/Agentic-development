@@ -44,6 +44,10 @@
         * Updated `solution_blueprint_template.md` (Unit Economics, Verdict).
         * Updated `calculate_roi.py` to output ARPU, CAC, LTV/CAC.
         * Added examples: `01_simple_flexarb` and `02_advanced_loyaltyhub`.
+* **Director (`p03`):**
+    * Refactored Prompt: Integrated `skill-product-backlog-prioritization`.
+    * Added Step 3: Auto-Prioritization (WSJF) before sign-off.
+    * Added Step 4: Auto-Hash generation via `sign_off.py`.
 
 #### **Improved**
 * **Consistency:** All Product Agents (`p01`, `p02`, `p04`) now use a unified "Prompt → Skill → External Template" architecture.
@@ -792,6 +796,10 @@ To upgrade from v3.0.x to v3.1.0:
         * Обновлен `solution_blueprint_template.md` (Unit Economics, Verdict).
         * Обновлен `calculate_roi.py`: вывод ARPU, CAC, LTV/CAC.
         * Добавлены примеры: `01_simple_flexarb` и `02_advanced_loyaltyhub`.
+* **Director (`p03`):**
+    * Промпт: Интегрирован навык `skill-product-backlog-prioritization`.
+    * Добавлен шаг "Auto-Prioritization" (WSJF) перед подписью.
+    * Добавлен шаг "Auto-Hash" через `sign_off.py`.
 
 #### **Улучшено**
 * **Консистентность:** Все продуктовые агенты (`p01`, `p02`, `p04`) теперь используют единую архитектуру "Промпт → Навык → Внешний Шаблон".

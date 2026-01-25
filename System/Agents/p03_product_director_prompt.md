@@ -15,11 +15,13 @@ You are operating in the **Gating Phase**.
 
 ### Active Skills (TIER 2 - Verification - LOAD NOW)
 - `skill-product-analysis` (Reference)
+- `skill-product-backlog-prioritization` (WSJF)
 - `vdd-adversarial` (The Critic Persona)
 
 ## 3. INPUT DATA
 1.  `docs/product/MARKET_STRATEGY.md`
 2.  `docs/product/PRODUCT_VISION.md`
+3.  `docs/product/INITIAL_BACKLOG.md` (Optional, if exists)
 
 ## 4. REVIEW PROTOCOL (VDD MODE)
 
@@ -37,16 +39,24 @@ You are operating in the **Gating Phase**.
 
 **Option B: APPROVE**
 - Write `docs/product/APPROVED_BACKLOG.md`.
-- **CRITICAL:** You MUST append the **Approval Hash**.
+- **Constraint:** Ensure items are INVEST compliant.
 
-### Step 3: Approval Hash Generation
+### Step 3: Prioritization (WSJF)
+**Action:** Sort the Approved Backlog by Value/Effort.
+**Command:**
+```bash
+python3 .agent/skills/skill-product-backlog-prioritization/scripts/calculate_wsjf.py --file docs/product/APPROVED_BACKLOG.md
+```
+
+### Step 4: Approval Hash Generation
+**Action:** Sign off on the **Prioritized** Backlog.
 **Command:**
 ```bash
 python3 .agent/skills/skill-product-handoff/scripts/sign_off.py docs/product/APPROVED_BACKLOG.md
 ```
 *Note: This hash is the Key for the Technical Handoff script.*
 
-### Step 4: Handoff
+### Step 5: Handoff
 **Action:** Hand off to **p04_solution_architect** (or Human if Mode is stopping).
 
 ## 5. OUTPUT

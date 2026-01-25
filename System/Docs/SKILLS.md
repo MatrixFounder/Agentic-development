@@ -66,7 +66,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 |-------|-------------|----------------------|----------------|
 | **`skill-product-strategic-analysis`** | CALCULATION of Market Size (TAM/SAM/SOM) and Competitive Matrix. (Tier 2) <br> **Output:** `MARKET_STRATEGY.md` | Product Bootstrap | Strategic Analyst (p01) |
 | **`skill-product-analysis`** | Creation of Product Vision and Strategy. <br> **Scripts:** <br> - `score_product.py`: 10-Factor Scoring. Args: `--problem_intensity`, `--market_size`, etc. (1-10 scores). <br> **Output:** `PRODUCT_VISION.md` | Manual / Product Bootstrap | Product Analyst (p02) |
-| **`skill-product-backlog-prioritization`** | Backlog prioritization. <br> **Scripts:** <br> - `calculate_wsjf.py`: Calculates WSJF. Supports granular T-Shirt sizes (XS=1, S=2...). <br> **Output:** `PRODUCT_BACKLOG.md` | Manual / Product Bootstrap | Product Analyst (p02) |
+| **`skill-product-backlog-prioritization`** | Backlog prioritization. <br> **Scripts:** <br> - `calculate_wsjf.py`: Calculates WSJF. Supports granular T-Shirt sizes (XS=1, S=2...). <br> **Output:** `PRODUCT_BACKLOG.md` | Manual / Product Bootstrap | Director (p03) |
 | **`skill-product-solution-blueprint`** | Conversion of Vision to Solution. <br> **Scripts:** <br> - `calculate_roi.py`: Financial model (NPV, LTV, ROI). Args: `--file docs/product/stories.json` (granular) or `--small`, `--large` (legacy). Params: `--users`, `--price`. <br> **Output:** `SOLUTION_BLUEPRINT.md` | Product Bootstrap | Solution Architect (p04) |
 | **`skill-product-handoff`** | Logic for `sign_off.py`, `verify_gate.py` and `compile_brd.py`. Quality Gates. <br> **Output:** `BRD.md`, `TASK.md` | Product Handoff | Director (p03) / System |
 

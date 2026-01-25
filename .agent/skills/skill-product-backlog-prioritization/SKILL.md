@@ -30,7 +30,12 @@ When adding a new item to the Backlog, you must estimate:
 1.  **User Value (UV):** Relative value to the customer (1-10).
 2.  **Time Criticality (TC):** Is there a deadline? (1-10).
 3.  **Risk Reduction (RR):** Does this open new options or fix security? (1-10).
-4.  **Job Size (JS):** Estimate of effort (1-10).
+4.  **Job Size (JS):** Estimate of effort. Support "T-Shirt Sizes" (XS, S, M, L, XL) or relative fibonacci (1, 2, 3, 5, 8, 13, 20).
+    - XS / ~1d -> 1
+    - S / ~2-3d -> 2
+    - M / ~1w -> 5
+    - L / ~1m -> 13
+    - XL / ~2m+ -> 20
 
 **Formula (Handled by Script):** `WSJF = (UV + TC + RR) / Job Size`
 

@@ -24,6 +24,27 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.2 — Product Skills Refactoring & Math Hardening** (Optimization)
+
+#### **Added**
+* **Advanced Financials:** `calculate_roi.py` now supports:
+    * **Granular Sizing:** T-Shirt sizes (XS-XXL) mapped to hours via `sizing_config.json`.
+    * **LLM Acceleration:** "Friendliness" score discounting based on global factors.
+    * **Metrics:** NPV (3yr), LTV, CAC, and Payback estimations.
+* **Product Scoring:** New `score_product.py` implementing 10-Factor Matrix (Problem Intensity, Moat, etc.).
+* **Documentation:**
+    * `System/Docs/PRODUCT_CALCULATIONS_MANUAL.md`: Detailed "Magic Math" FAQ.
+    * Updated `System/Docs/PRODUCT_DEVELOPMENT.md` with Calculation Manual reference.
+
+#### **Optimized**
+* **Prioritization:** `calculate_wsjf.py` now natively supports T-Shirt sizes (S, M, L) mapped to Fibonacci.
+* **Security (VDD):**
+    * Hardened `calculate_roi.py` against "Time Travel" bugs (negative duration).
+    * Clamped `score_product.py` inputs (1-10) to prevent overflow.
+    * Removed `PyYAML` dependency for lighter execution.
+
+---
+
 ### **v3.9.1 — Documentation Sync & Cleanup** (Maintenance)
 
 #### **Optimized**
@@ -711,6 +732,27 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.9.2 — Рефакторинг Продуктовых Навыков и Усиление Математики** (Оптимизация)
+
+#### **Добавлено**
+* **Продвинутые Финансы:** `calculate_roi.py` теперь поддерживает:
+    * **Гранулярная Оценка:** T-Shirt размеры (XS-XXL) с конфигом в `sizing_config.json`.
+    * **LLM Акселерация:** Скидка на часы разработки на основе "Friendliness" (дружелюбности к ИИ).
+    * **Метрики:** NPV (3 года), LTV, CAC и срок окупаемости.
+* **Скоринг Продукта:** Новый `score_product.py` с 10-факторной матрицей (Интенсивность проблемы, Ров и т.д.).
+* **Документация:**
+    * `System/Docs/PRODUCT_CALCULATIONS_MANUAL.md`: Подробное руководство "Magic Math".
+    * Обновлен `System/Docs/PRODUCT_DEVELOPMENT.md`.
+
+#### **Оптимизировано**
+* **Приоритизация:** `calculate_wsjf.py` поддерживает T-Shirt размеры (S, M, L) с маппингом в Фибоначчи.
+* **Безопасность (VDD):**
+    * Исправлен баг "Путешествия во времени" (отрицательная длительность) в `calculate_roi.py`.
+    * Ограничены инпуты `score_product.py` (1-10).
+    * Удалена зависимость `PyYAML`.
+
+---
 
 ### **v3.9.1 — Синхронизация Документации и Очистка** (Maintenance)
 

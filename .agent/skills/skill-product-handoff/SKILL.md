@@ -13,6 +13,12 @@ To ensure that NO technical work begins until the Product Artifacts are **Verifi
 ## 2. The Quality Gate
 You MUST verify that the Product Director (`p03`) has signed off.
 
+### Gate Prerequisites
+Before requesting sign-off, verify:
+1.  **Product Score:** > 70/100 (from `skill-product-analysis`).
+2.  **Financials:** Positive NPV & ROI > 2.0x (from `skill-product-solution-blueprint`).
+3.  **Backlog:** Prioritized with WSJF.
+
 ### Verification Command
 ```bash
 python3 [skill_path]/scripts/verify_gate.py docs/product/APPROVED_BACKLOG.md

@@ -23,7 +23,19 @@ python3 [skill_path]/scripts/init_product.py --name "Product Name" --problem "Pr
 ```
 > **Note:** `[skill_path]` is the path to this skill (e.g. `.agent/skills/skill-product-analysis`).
 
-## 3. Artifact Standards (`PRODUCT_VISION.md`)
+## 3. The 10-Factor Scoring Matrix
+Before drafting the Vision, you MUST score the idea to determine viability.
+
+### Protocol
+Run the scoring script with your estimated values (1-10, where 10 is Best/Easiest):
+```bash
+# Example: High problem intensity (9), but weak moat (3)
+python3 [skill_path]/scripts/score_product.py --problem_intensity 9 --moat_durability 3 --market_size 8
+```
+- **Goal:** Score > 70/100.
+- **Output:** Application of this script must be included in `PRODUCT_VISION.md`.
+
+## 4. Artifact Standards (`PRODUCT_VISION.md`)
 
 ### Template Structure
 See `resources/templates/vision_template.md` for the authoritative structure.

@@ -10,35 +10,48 @@ version: 1.0
 ## 1. Objective
 To translate abstract "Vision" into concrete "Requirements" without writing code. This skill powers the **Solution Architect (p04)** agent.
 
-## 2. Text-Based UX Flows
+## 2. Text-Based UX Flows (The "Skeleton")
 **Constraint:** Do NOT use Mermaid graphs for flows detailed enough to need steps. Use text lists.
 
 ### Syntax
 ```markdown
+## Flow 1: [User Story Name]
+- **Size:** M (60h) | **LLM Friendly:** 0.8
 1. User [Action] on [Page/Component].
    - *System:* [Validates/Checks/Loads].
    - *Error Path:* If [Condition], show [Error Message].
 2. User sees [Result].
 ```
 
-## 3. Business Case (ROI) Calculation
+## 3. Business Case (Enhanced ROI)
 
 ### Logic Locker (CRITICAL)
 > [!IMPORTANT]
-> **FORBIDDEN ACTION:** You are **strictly forbidden** from calculating ROI manually.
-> Use the provided script to ensure consistent "T-Shirt Sizing" standards.
-
-### How to Calculate
-Run the script with your estimated feature counts:
-```bash
-# Usage: python3 [skill_path]/scripts/calculate_roi.py --small <N> --medium <N> --large <N> --users <N> --price <N>
-python3 [skill_path]/scripts/calculate_roi.py --small 2 --medium 1 --users 1000 --price 10
-```
-> **Note:** `[skill_path]` is the path to this skill (e.g. `.agent/skills/skill-product-solution-blueprint`).
+> **FORBIDDEN ACTION:** You are **strictly forbidden** from calculating ROI/NPV manually.
+> You MUST first list all User Stories with sizes + friendliness, then run the script.
 
 ### Protocol
-- Copy the script output directly into `SOLUTION_BLUEPRINT.md`.
-- If ROI < 1.0 (Negative), flag as **High Risk**.
+1. **Estimate**: For each user story, assign a Size (XS, S, M, L, XL) and LLM Friendliness (0.0 - 1.0).
+2. **Prepare**: Create a temp JSON/YAML file:
+   ```yaml
+   stories:
+     - name: "Login"
+       size: "S"
+       llm_friendly: 0.9
+     - name: "Complex Dashboard"
+       size: "L"
+       llm_friendly: 0.3
+   ```
+3. **Execute**:
+   ```bash
+   # Usage: python3 [skill_path]/scripts/calculate_roi.py --file stories.yml --users <SOM> --price <PRICE>
+   python3 [skill_path]/scripts/calculate_roi.py --file stories.yml --users 5000 --price 29.99
+   ```
+
+### Output Interpretation
+- **NPV (Net Present Value):** Must be Positive.
+- **Payback Period:** Ideal < 12 months.
+- **ROI:** Ideal > 3.0x.
 
 ## 4. Risk Register
 Track top 5 risks using this structure:

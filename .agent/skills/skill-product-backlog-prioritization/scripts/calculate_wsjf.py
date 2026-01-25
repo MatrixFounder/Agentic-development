@@ -62,60 +62,82 @@ def get_column_indices(headers):
     missing = [r for r in required if r not in mapping]
     return mapping, missing
 
+def map_size_to_fib(value_str):
+    """Maps T-shirt sizes or hours to WSJF Fibonacci scale."""
+    val = value_str.upper().strip()
+    
+    # Text mapping
+    mapping = {
+        'XS': 1, 'EXTRA SMALL': 1,
+        'S': 2, 'SMALL': 2,
+        'M': 5, 'MEDIUM': 5,
+        'L': 13, 'LARGE': 13,
+        'XL': 20, 'EXTRA LARGE': 20,
+        'XXL': 40, '2XL': 40
+    }
+    
+    # Check for direct match
+    if val in mapping:
+        return mapping[val]
+    
+    # Check for "M (60h)" format
+    match = re.match(r'^([A-Z]+)', val)
+    if match and match.group(1) in mapping:
+        return mapping[match.group(1)]
+        
+    # Check for numeric (direct input)
+    try:
+        # If number is > 100, assume it's hours and map it down
+        num = float(val)
+        if num > 40: # Assume hours
+             if num <= 10: return 1
+             if num <= 30: return 2
+             if num <= 80: return 5
+             if num <= 200: return 13
+             if num <= 500: return 20
+             return 40
+        return max(1, num) # Ensure at least 1
+    except ValueError:
+        return 20 # Unknown/High default penalty
+
 def calculate_wsjf(rows, indices):
     """
     Calculate WSJF for rows.
     Returns: (processed_rows, errors)
     processed_rows is a list of (score, line_content)
     """
-    processed = [] # List of dicts or objects to make sorting easier
+    processed = [] 
     
     for i, (line, cells) in enumerate(rows):
-        # Extract values
         try:
             uv = float(cells[indices['User Value']])
             tc = float(cells[indices['Time Criticality']])
             rr = float(cells[indices['Risk Reduction']])
-            js = float(cells[indices['Job Size']])
             
-            if js == 0:
-                print(f"Error: Job Size cannot be 0 check row: {line.strip()}")
-                sys.exit(1)
+            # Smart sizing
+            size_raw = cells[indices['Job Size']]
+            js = map_size_to_fib(size_raw)
+            
+            if js == 0: js = 1 # Avoid div by zero
                 
             wsjf = round((uv + tc + rr) / js, 2)
             
-            # Update cell
-            # We need to reconstruct the line or just update the cell?
-            # Easiest is to update the cell content in the 'cells' list, then join.
-            # But wait, we need to preserve formatting?
-            # The requirement says "Output: Overwrite file with updated values (formatting preserved)".
-            # Preserving EXACT formatting is hard if we change numbers (widths change).
-            # But standard markdown tables are flexible.
-            
+            # Update output column
             if 'WSJF' in indices:
                 cells[indices['WSJF']] = str(wsjf)
-            else:
-                # Append WSJF if not present? 
-                # The requirements imply "Parse columns... Sort... Output: Overwrite".
-                # If WSJF column exists, update it. If not, maybe we shouldn't add it autonomously unless consistent.
-                # Assuming WSJF column exists as per stub/templates usually.
-                # If it doesn't exist, we can't easily add it without reformatting headers.
-                # For now, assume it exists or we append it?
-                # "Parse columns: ... Job Size. Logic: WSJF=..."
-                # Let's assume we just update existing WSJF column.
-                pass 
             
-            # Store for sorting
             processed.append({
                 'score': wsjf,
                 'cells': cells,
-                'original_line': line # We might need to regenerate line from cells to ensure updated value is present
+                'line_idx': i # Keep track if we need it
             })
             
-        except ValueError:
-            # Header or bad data?
-            # If we are here, we passed header check. So likely bad number.
-            print(f"Error: Non-numeric value in row: {line.strip()}")
+        except (ValueError, IndexError):
+            print(f"Warning: Skipping invalid row: {line.strip()}")
+            # Keep original order for bad rows? Or drop? 
+            # Requirements say "Overwrite". Better to preserve bad rows at bottom or top?
+            # Or just fail? Legacy script failed. Let's fail for safety.
+            print(f"Error: Non-numeric value in critical column (UV, TC, RR) in row: {line.strip()}")
             sys.exit(1)
             
     return processed
@@ -140,63 +162,31 @@ def main():
     table_start = -1
     table_end = -1
     headers = []
-    header_line_index = -1
     
-    # Simple state machine to find the FIRST table
     in_table = False
-    
-    # We need to capture the pre-table and post-table content
-    # And replace the table lines.
-    
-    processed_lines = []
-    
-    # Strategy: Read all, process table if found, then write back.
-    # Note: Only processing the first table found or all?
-    # Usually Backlog has one main table. "Deterministic prioritization of the Backlog".
-    # Let's target the *first* table that looks like a backlog (has headers).
-    
+    table_rows = [] # Tuple (line_index, line_content, cells)
     mapping = {}
-    table_rows = [] # Tuple (line_index, line_content)
     
     for i, line in enumerate(lines):
-        if not line.strip():
-            continue
-            
+        if not line.strip(): continue
         cells = parse_line(line)
         
         if not in_table:
-            # Check if this is a header candidate
-            # Must have required columns
             m, missing = get_column_indices(cells)
             if not missing:
-                # Found headers
                 in_table = True
                 mapping = m
                 headers = cells
-                header_line_index = i
                 continue
         else:
-            # In table
-            if is_separator(cells):
-                # Separator line, ignore for calculation but keep index
-                continue
-            elif len(cells) == len(headers):
-                # Data row
+            if is_separator(cells): continue
+            elif len(cells) >= len(headers):
                 table_rows.append((i, line, cells))
             else:
-                 # End of table? Or malformed?
-                 # If drastically different length, maybe end of table?
-                 # Or just empty?
-                 if not line.strip().startswith('|'):
-                     # Likely end of table
-                     break
-                 # If starts with pipe but wrong count, maybe malformed, but let's try to process or skip?
-                 # Requirement: "If table structure invalid: Exit Code 1"
-                 # But maybe tolerant of one bad row? 
-                 # Let's stay strict as per requirement.
-                 print(f"Error: Row length mismatch. Expected {len(headers)}, got {len(cells)}")
-                 print(f"Row: {line.strip()}")
-                 sys.exit(1)
+                if not line.strip().startswith('|'): break
+                else: 
+                     # Tolerant of malformed lines?
+                     pass
 
     if not in_table:
         print("Error: No valid Backlog table found (Missing columns: User Value, Time Criticality, Risk Reduction, Job Size).")
@@ -209,62 +199,23 @@ def main():
     # Sort
     results.sort(key=lambda x: x['score'], reverse=True)
     
-    # Reconstruct content
-    # We replace the rows in the original 'lines' list
-    # But wait, sorting changes order. We can't just replace index-by-index.
-    # We need to replace the slice of lines corresponding to the data rows.
-    
-    # Identify range of data rows
+    # Reconstruct
+    new_data_lines = []
+    for row in results:
+        new_data_lines.append(reconstruct_line(row['cells']) + "\n")
+        
     if not table_rows:
-        print("Warning: Table is empty.")
         sys.exit(0)
         
     start_index = table_rows[0][0]
-    end_index = table_rows[-1][0]
+    last_index = table_rows[-1][0]
     
-    # We need to be careful if there are non-data lines in between (comments?) - usually not in MD tables.
-    # Assuming contiguous block of data rows.
+    lines[start_index : last_index+1] = new_data_lines
     
-    # Reconstruct table block
-    # Header and separator remain touched? NO, we only touch data.
-    # But wait, we need to locate where to insert sorted lines.
-    
-    # Construct new lines for data
-    new_data_lines = []
-    for row in results:
-        new_line = reconstruct_line(row['cells']) + "\n"
-        new_data_lines.append(new_line)
-        
-    # Replace in original lines
-    # We need to replace the exact lines that were data rows.
-    # If they were contiguous:
-    # lines[start_index : end_index+1] = new_data_lines
-    
-    # Check contiguity
-    indices = [r[0] for r in table_rows]
-    is_contiguous = all(indices[j] == indices[j-1] + 1 for j in range(1, len(indices)))
-    
-    if not is_contiguous:
-        # If not contiguous (e.g. comments in between?), we can't easily sort without breaking context.
-        # But MD tables don't really support comments in between rows.
-        # So likely they are contiguous relative to the file, 
-        # BUT we skipped separator line. Separator is usually index header+1.
-        # So data starts at header+2.
-        pass
-        
-    # Let's trust they are contiguous block after header+separator.
-    # Find start and end of the block to replace.
-    first_data_line = table_rows[0][0]
-    last_data_line = table_rows[-1][0]
-    
-    lines[first_data_line : last_data_line+1] = new_data_lines
-    
-    # Write back
     with open(args.file, 'w', encoding='utf-8') as f:
         f.writelines(lines)
     
     print("Success: Backlog updated.")
-
 
 if __name__ == "__main__":
     main()

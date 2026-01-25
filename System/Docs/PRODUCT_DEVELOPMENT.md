@@ -15,6 +15,7 @@ We have expanded Agentic Development from a "Code Generator" to a **"Full-Cycle 
 - [7. How to Start](#7-how-to-start)
 - [8. Artifact Examples](#8-artifact-examples)
 - [9. Working Usage Examples](#9-working-usage-examples)
+- [10. Magic Math (Calculations FAQ)](#10-magic-math-calculations-faq)
 
 ---
 
@@ -114,7 +115,10 @@ We adopt a **Hybrid Isolation** strategy.
 **Role:** The Visionary.
 - **Tools:** `skill-product-analysis`.
 - **Output:** `PRODUCT_VISION.md`.
-- **Focus:** Defines the "Soul" (Crossing the Chasm), User Stories (INVEST), and Metrics.
+- **Focus:** 
+    - **Scoring:** Uses **10-Factor Matrix** (`score_product.py`) to validate viability (>70/100).
+    - **Soul:** Defines the "Soul" (Crossing the Chasm).
+    - **Stories:** Detailed INVEST user stories (needed for sizing).
 
 ### p03_product_director (The Gatekeeper)
 **Role:** The Adversarial Critic (VC Proxy).
@@ -129,7 +133,8 @@ We adopt a **Hybrid Isolation** strategy.
 - **Tools:** `skill-product-solution-blueprint`.
 - **Output:** `SOLUTION_BLUEPRINT.md`.
 - **Focus:** 
-    - **ROI:** Cost vs Benefit analysis.
+    - **Granular Sizing:** Estimates User Stories using T-Shirt sizes (XS-XXL) & LLM Friendliness.
+    - **Financials:** Calculates NPV, Payback, and Risk-Adjusted ROI (`calculate_roi.py`).
     - **UX:** Text-based flow definitions.
     - **NFRs:** Security and Performance constraints.
 
@@ -243,3 +248,17 @@ python3 .agent/skills/skill-product-strategic-analysis/scripts/init_strategy.py 
 # Calculate WSJF Score for Backlog
 python3 .agent/skills/skill-product-backlog-prioritization/scripts/calculate_wsjf.py --file docs/product/BACKLOG.md
 ```
+
+---
+
+## 10. Magic Math (Calculations FAQ)
+
+Confused about NPV, LTV, WSJF, or how we estimate "LLM Acceleration"? 
+
+👉 **[Read the Full Calculations Manual](PRODUCT_CALCULATIONS_MANUAL.md)**
+
+It covers:
+- **ROI Formula**: How we discount future cash flows.
+- **Scoring Matrix**: What the "10 Factors" actually mean.
+- **Customization**: How to change hourly rates and default sizes in `config/sizing_config.json`.
+- **Glossary**: NPV, CAC, LTV explained for non-financial founders.

@@ -49,5 +49,9 @@ Use the following Markdown table structure to identify the "Blue Ocean":
 - [ ] Is the "Gap" defensible? (Technology vs Marketing)
 - [ ] Are all numbers cited or estimated with disclaimers?
 
-## 5. Examples
-- **Strategy:** `examples/example_market_strategy.md` (Includes TAM/SAM/SOM and Competitive Matrix).
+## 5. Output
+> **[Use the Official Template](resources/market_strategy_template.md)** for the full structure.
+
+## 6. Examples
+- **Strong Case (Go):** `examples/01_strong_ai_assistant.md`
+- **Weak Case (No-Go):** `examples/02_nogo_vertical_video.md`

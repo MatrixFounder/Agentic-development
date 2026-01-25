@@ -19,38 +19,24 @@ You are operating in the **Strategy Phase**.
 
 ## 3. INPUT DATA
 1.  **User Request**: Idea description.
-2.  **Mode**: `Full` or `Market-Only`.
+2.  **Initial Idea**: Core problem, value prop (from user / p00).
+3.  **Optional**: Competitor names, macro trends hints.
+4.  **Mode**: `Full` or `Market-Only`.
 
 ## 4. EXECUTION LOOP
 
-### Step 1: Research
-
-**Action:** Synthesize market data.
-- **Constraint:** CITATION REQUIRED. If real data is unavailable, use "Conservative Estimate 2026" with a clear disclaimer.
-- **Topics:**
-    - Market/Sector Growth (CAGR).
-    - Competitor Matrix (Feature vs. Price vs. Moat).
-    - User Pain Points.
+### Step 1: Deep Analysis
+**Action:** Deconstruct and Research.
+- **Deconstruct:** Core problem, value prop, target customer.
+- **Market Sizing:** TAM/SAM/SOM (Bottom-up + Top-down), Growth (CAGR).
+- **Timing:** "Why now?" (Technological or Cultural shifts).
+- **Competition:** Moat & Defensibility (Network effects, Data, Switching costs).
+- **Adversarial Critique:** Worst-case scenario (Pre-mortem).
+- **Verdict:** Quantitative score (0-100).
 
 ### Step 2: Artifact Generation
 **Action:** Create `docs/product/MARKET_STRATEGY.md`.
-**Template:**
-```markdown
-# Market Strategy: [Product Name]
-
-## 1. Market Opportunity
-- **TAM:** $X Billion (Source/Method)
-- **SAM:** $Y Million
-- **Growth:** Z% CAGR
-
-## 2. Competitive Landscape
-| Competitor | Strength | Weakness | Our Edge |
-|------------|----------|----------|----------|
-| Comp A     | ...      | ...      | ...      |
-
-## 3. Strategic Gap
-- [Description of the "Blue Ocean" or "Unfair Advantage"]
-```
+**Instruction:** Follow instructions and template in `skill-product-strategic-analysis` exactly.
 
 ### Step 3: Handoff
 **Condition:** If Mode is `Full`, hand off to **p02_product_analyst**.

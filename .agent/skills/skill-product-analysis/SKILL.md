@@ -69,7 +69,7 @@ Every feature implementation plan must start with:
 - **Soul Check:** Does the Vision allow for emotional connection?
 
 ## 6. Output
-> **[Use the Official Template](resources/templates/vision_template.md)** for the full structure.
+> **[Use the Official Template](resources/vision_template.md)** for the full structure.
 
 ## 7. Examples
 - **Strong Go:** `examples/01_strong_go_devboost.md`

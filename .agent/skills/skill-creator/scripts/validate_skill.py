@@ -90,7 +90,17 @@ def validate_skill(skill_path):
             
             if 'description' not in meta:
                 errors.append("Frontmatter missing 'description'")
-            
+            else:
+                desc = meta['description']
+                # CSO Rule 1: Must start with "Use when"
+                if not desc.lower().strip().startswith("use when"):
+                    errors.append("CSO Violation: Description MUST start with 'Use when...'. Found: " + desc[:30] + "...")
+                
+                # CSO Rule 2: Token Efficiency (Approx 50 words)
+                word_count = len(desc.split())
+                if word_count > 50:
+                    errors.append(f"CSO Violation: Description is too long ({word_count} words). Keep under 50 words.")
+
             if 'tier' not in meta:
                 errors.append("Frontmatter missing 'tier'")
             elif str(meta['tier']) not in ['0', '1', '2']:

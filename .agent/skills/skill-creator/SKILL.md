@@ -59,36 +59,49 @@ version: 1.0
 *   **1 (Phase-Triggered)**: Skills loaded automatically when entering a specific phase (e.g., `requirements-analysis` for Analysis Phase) or working on a specific requirement (e.g., `planning-decision-tree` for Planning Phases).
 *   **2 (Extended)**: Specialized skills loaded only when explicitly needed or requested (e.g., `skill-creator`, `skill-reverse-engineering`). *Default for most new skills.*
 
-## 4. Content Guidelines
+## 4. Skills as Code Philosophy (TDD)
 
-### Philosophy
-Follow the **"Progressive Disclosure"** principle:
-1.  **High-Level Summary**: Start with *what* and *why*.
-2.  **Core Instructions**: The specific steps the agent must take.
-3.  **Details/Examples**: Concrete examples of Good vs Bad output.
+We treat skills as **executable code for agents**. You must test them.
+We follow a **Red-Green-Refactor** workflow:
 
-### Best Practices
-1.  **Be Imperative**: Use "You MUST", "DO NOT". Avoid "It is suggested...".
-    *   *Bad*: "You could check the file..."
-    *   *Good*: "1. Read the file. 2. If X, do Y."
-2.  **Modular**: Do not duplicate instructions from `skill-core-principles` or `skill-safe-commands`. Reference them instead.
-3.  **Atomic**: A skill should do ONE thing well. Split complex skills into smaller ones.
-4.  **No Hallucinations**: Do not assume file paths. Use relative paths or ask the user.
-5.  **Use Examples**: Include "Input -> Output" blocks (Few-Shot) to ground the model.
+1.  **RED (Fail)**: Run a "pressure scenario" with a subagent *without* the skill.
+    *   Observe the failure.
+    *   Record the specific **rationalization** (excuse) the agent used (e.g., "I'll test later").
+2.  **GREEN (Pass)**: Write the minimal skill instruction to close that specific loophole.
+3.  **REFACTOR**: Optimize for clarity and "Claude Search Optimization" (CSO).
 
-## 5. Writing High-Quality Instructions (`SKILL.md`)
+## 5. Claude Search Optimization (CSO)
+
+The `description` frontmatter field is the **single most important line**. It determines if your skill is loaded.
+
+### Rule: "Use when [TRIGGER]"
+*   **BAD**: "Guide for TDD workflow." (Summarizes content - Model may skip loading)
+*   **GOOD**: "Use when implementing a new feature or fixing a bug." (Triggering condition)
+
+**Constraint**: Keep descriptions under 50 words. Focus on *symptoms* and *triggers*, not solutions.
+
+## 6. Hardening Skills (Rationalization Management)
+
+Agents (like humans) will find excuses to skip steps. You must explicitly forbid these "rationalizations".
+
+### The "Red Flags" Section
+Every skill MUST include a list of Red Flags - specific excuses the agent might make.
+
+*   *Example*: "Stop if you think 'I already tested manually'. Delete code and start over."
+
+## 7. Writing High-Quality Instructions
 
 Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting point.
 
 ### Section Guidelines:
 1.  **Purpose**: Define the "Why".
-2.  **Capabilities**: Bulleted list of what is possible.
-3.  **Instructions**: Imperative, step-by-step algorithms.
-4.  **Examples (Few-Shot)**:
-    *   Include "Input -> Output" blocks directly in markdown or reference files in `examples/`.
-    *   Contrast **Good vs Bad** patterns.
+2.  **Red Flags**: Immediate "Stop and Rethink" triggers.
+3.  **Capabilities**: Bulleted list of what is possible.
+4.  **Instructions**: Imperative, step-by-step algorithms.
+5.  **Examples (Few-Shot)**: Input -> Output pairs.
+    *   *Reference*: See `examples/SKILL_EXAMPLE_LEGACY_MIGRATOR.md` for a **Gold Standard** example of a rich skill.
 
-## 6. Creation Process
+## 8. Creation Process
 
 When creating a new skill, you **MUST** strictly follow this sequence:
 
@@ -97,24 +110,16 @@ When creating a new skill, you **MUST** strictly follow this sequence:
     ```bash
     python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 2
     ```
-    *This creates the directory, templates, and required subdirectories.*
 3.  **Populate**:
-    *   **MANDATORY**: Copy content from `.agent/skills/skill-creator/resources/SKILL_TEMPLATE.md` into your new `SKILL.md`.
-    *   **MANDATORY**: Create at least one example file in `examples/` or an example block in `SKILL.md`.
+    *   **MANDATORY**: Edit the auto-generated `SKILL.md` (it already contains the template).
+    *   **MANDATORY**: Fill in the "Red Flags" and "Use when..." description.
 4.  **Validate**:
     ```bash
     python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/my-new-skill
     ```
-5.  **Register**: Add the skill to `System/Docs/SKILLS.md`.
+5.  **Register**: Add to `System/Docs/SKILLS.md`.
 
-## 7. Scripts Reference
+## 9. Scripts Reference
 
-The `skill-creator` includes automation scripts located in `.agent/skills/skill-creator/scripts/`:
-
-*   **`init_skill.py`**: Generates a compliant skill skeleton.
-    *   Creates `scripts/`, `examples/`, `resources/`.
-    *   Generates `SKILL.md` with valid YAML frontmatter.
-*   **`validate_skill.py`**: Checks for compliance errors.
-    *   Verifies folders (no `assets/` or `references/`).
-    *   Verifies YAML frontmatter (`tier`, `version`, `name`).
-    *   Checks for prohibited files (`README.md`).
+*   **`init_skill.py`**: Generates a compliant skill skeleton (`scripts/`, `examples/`, `resources/`) using the rich template.
+*   **`validate_skill.py`**: Enforces folder structure, frontmatter compliance, and CSO rules (description format).

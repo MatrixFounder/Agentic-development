@@ -1,44 +1,69 @@
 ---
 name: skill-legacy-migrator
-description: Guidelines for migrating legacy Python 2 code to Python 3 with type hints.
+description: Use when migrating legacy Python 2 codebases to Python 3 or when encountering `ImportError` due to deprecated modules.
 tier: 2
-version: 1.0
+version: 1.1
 ---
 # Legacy Code Migrator
 
-## Purpose
-This skill guides the agent through the process of migrating legacy Python 2.7 codebases to modern Python 3.10+ with strict typing. It ensures preserving business logic while upgrading syntax and libraries.
+**Purpose**: Guides the agent through the process of migrating legacy Python 2.7 codebases to modern Python 3.10+ with strict typing. It ensures business logic preservation while upgrading syntax and libraries.
 
-## 1. Process Overview
-1.  **Audit**: Analyze dependencies and syntax using `scripts/audit_legacy.py`.
-2.  **Stubbing**: Create type stubs for untyped modules.
-3.  **Conversion**: Apply 2to3 fixes and manual refactoring.
-4.  **Verification**: detailed testing.
+## 1. Red Flags (Anti-Rationalization)
+**STOP and READ THIS if you are thinking:**
+- "I'll just run 2to3 and commit" -> **WRONG**. Automated tools miss logic changes (e.g., unicode vs bytes).
+- "I don't need to run tests first" -> **WRONG**. You have no baseline.
+- "I'll add types later" -> **WRONG**. Add types *during* migration to catch bugs immediately.
 
-## 2. Detailed Instructions
+## 2. Capabilities
+- Audit legacy dependencies.
+- Generate type stubs for untyped modules.
+- Convert syntax safely using modern patterns.
+
+## 3. Instructions
 
 ### Phase 1: Audit
-- Run `python3 .agent/skills/skill-legacy-migrator/scripts/audit_legacy.py <path>`.
-- **CRITICAL**: Do not start editing until the audit report is generated in `defaults/audit_report.md`.
+1.  **Run Audit**: Execute `python3 .agent/skills/skill-legacy-migrator/scripts/audit_legacy.py <path>`.
+2.  **Verify Report**: Check `defaults/audit_report.md`.
+    - *Tip*: If the report contains "CRITICAL" warnings, ask User for guidance before proceeding.
 
 ### Phase 2: Refactoring
-- Use the `six` library for cross-version compatibility if immediate switch is impossible.
-- **MUST** add python type hints to every function signature.
+1.  **Strict Typing**: Add `typing` hints to every function signature you touch.
+2.  **Safe Conversion**: Use `six` library only if supporting both versions is required. Otherwise, use native Python 3.
 
-## 3. Examples
+## 4. Best Practices & Anti-Patterns
 
-**Bad Refactor:**
+| DO THIS | DO NOT DO THIS |
+| :--- | :--- |
+| **Audit First**: Know what you are breaking. | **Blind Rewrite**: Changing code without understanding dependencies. |
+| **Incremental**: Migrate one module at a time. | **Big Bang**: Migrating the entire repo in one go. |
+
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "It's just a print statement" | Python 3 print is a function. Parentheses matter. |
+| "I know the code works" | Logic changes in `map`/`filter` (iterators vs lists) cause silent bugs. |
+| "Types slow me down" | Types catch `bytes` vs `str` errors that will crash production. |
+
+## 5. Examples (Few-Shot)
+
+**Input:**
 ```python
-# Just printing
-print "Hello"
+# Legacy Code
+def process_data(data):
+    print "Processing", data
+    return map(lambda x: x*2, data)
 ```
 
-**Good Refactor:**
+**Output:**
 ```python
-# Modern print with typing
-def greet(name: str) -> None:
-    print(f"Hello, {name}")
+# Migrated Code
+from typing import List, Iterable
+
+def process_data(data: List[int]) -> Iterable[int]:
+    print(f"Processing {data}")
+    # Note: map returns iterator in Py3, cast to list if needed, or document return type as Iterable
+    return map(lambda x: x*2, data)
 ```
 
-## 4. Resources
+## 6. Resources
 - `resources/type_mapping.json`: Maps legacy types to `typing` equivalents.

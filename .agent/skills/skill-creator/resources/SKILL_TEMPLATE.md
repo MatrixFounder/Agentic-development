@@ -1,6 +1,6 @@
 ---
 name: skill-[name]
-description: [One-line summary of functionality]
+description: Use when [TRIGGER: specific symptoms or situations]...
 tier: [0|1|2]
 version: 1.0
 ---
@@ -8,12 +8,17 @@ version: 1.0
 
 **Purpose**: [Detailed explanation of WHY this skill exists and WHAT problem it solves]
 
-## 1. Capabilities
+## 1. Red Flags (Anti-Rationalization)
+**STOP and READ THIS if you are thinking:**
+- "[Common excuse 1]" -> [Why this is wrong]
+- "[Common excuse 2]" -> [Why this is wrong]
+
+## 2. Capabilities
 List what this skill allows the agent to do.
 - [Capability 1]
 - [Capability 2]
 
-## 2. Instructions
+## 3. Instructions
 Provide step-by-step instructions for the agent. Use imperative mood.
 
 ### [Phase/Action 1]
@@ -24,15 +29,20 @@ Provide step-by-step instructions for the agent. Use imperative mood.
 ### [Phase/Action 2]
 ...
 
-## 3. Best Practices & Anti-Patterns
-Crucial for avoiding common mistakes.
+## 4. Best Practices & Anti-Patterns
 
 | DO THIS | DO NOT DO THIS |
 | :--- | :--- |
 | [Best practice] | [Common mistake] |
 | [Best practice] | [Common mistake] |
 
-## 4. Examples (Few-Shot)
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "[Excuse 1]" | "[Counter-argument]" |
+| "[Excuse 2]" | "[Counter-argument]" |
+
+## 5. Examples (Few-Shot)
 Refer to `examples/` directory for full files, or include short snippets here.
 
 **Input:**
@@ -45,7 +55,7 @@ Refer to `examples/` directory for full files, or include short snippets here.
 [Ideal Agent Response/Action]
 ```
 
-## 5. Resources
+## 6. Resources
 Describe the usage of files in `resources/` (templates, assets) and scripts in `scripts/`.
 - `scripts/helpers.py`: [Description]
 - `resources/template.json`: [Description]

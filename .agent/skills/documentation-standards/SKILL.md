@@ -2,69 +2,53 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.2
+version: 1.3
 ---
 # Documentation Standards
 
-## 1. Docstrings & JSDoc
-All classes and functions must have documentation.
+**Purpose**: Defines the non-negotiable standards for code comments, docstrings, and global artifacts.
+
+## 1. Red Flags (Anti-Rationalization)
+**STOP if you are thinking:**
+- "I'll add comments later" -> **WRONG**. Undocumented code is technical debt from the moment it is written.
+- "The code is self-documenting" -> **WRONG**. Code explains *how*; comments explain *why*.
+- "Artifacts are optional" -> **WRONG**. Artifacts like `.AGENTS.md` are the agent's long-term memory.
+
+## 2. Docstrings & JSDoc
+All classes and functions MUST have documentation.
 
 ### Python
-```python
-def calculate(price: float, rate: float) -> float:
-    """
-    Calculates total price.
+Use Google-style docstrings.
+> [!TIP]
+> See `resources/templates/python_docstring.py` for the format.
 
-    Args:
-        price (float): Base price.
-        rate (float): Tax rate.
+### JavaScript / TypeScript
+Use JSDoc standards.
+> [!TIP]
+> See `resources/templates/jsdoc_template.ts` for the format.
 
-    Returns:
-        float: Total price.
-    """
-    return price * (1 + rate)
-```
+## 3. Comments
+- **Why vs What**: Explain the *reason* for logic, not the syntax.
+- **Work Tracking**: Use `# T O D O:` (Python) or `// T O D O:` (JS/TS) for future work.
 
-### JavaScript / TypeScript (JSDoc)
-```typescript
-/**
- * Calculates total price.
- * 
- * @param {number} price - Base price.
- * @param {number} rate - Tax rate.
- * @returns {number} Total price.
- */
-function calculate(price: number, rate: number): number {
-    return price * (1 + rate);
-}
-```
-
-## 2. Comments
-- **Why vs What:** Explain the *reason* for logic, not the syntax.
-- **TODOs:** Use `# TODO:` (Python) or `// TODO:` (JS/TS) for stubs.
-
-## 3. Path Standards (CRITICAL)
-- **Relative Paths Only:** When linking to internal files in Artifacts (PLAN.md, TASK.md), ALWAYS use relative paths.
+## 4. Path Standards (CRITICAL)
+- **Relative Paths Only**: When linking to internal files in Artifacts (PLAN.md, TASK.md), ALWAYS use relative paths.
     - ✅ `[Ref](src/main.py)`
     - ✅ `[.agent/skills/core.md](.agent/skills/core.md)`
     - ❌ `file:///Users/username/project/src/main.py`
     - ❌ `/Absolute/System/Path`
-- **Portability:** Absolute paths break portability. Relative paths work everywhere.
 
-## 4. Artifacts (`.AGENTS.md`)
-**MANDATORY:** Every directory must have this file.
+## 5. Artifacts (`.AGENTS.md`)
+**MANDATORY**: Every directory must have this file.
+> [!TIP]
+> Use the template at `resources/templates/agents_md_template.md`.
 
-### Template
-```markdown
-# Directory: src/example/
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "It's a throwaway script" | Scripts evolve into products. Documenting later costs 3x more time. |
+| "I don't know the types yet" | Use `Any` or `unknown` but document *what* the value represents. |
 
-## Purpose
-Handles specific business logic.
-
-## Files
-- `service.py` / `service.ts`: Main logic.
-- `models.py` / `types.ts`: Data definitions.
-
-## Dependencies
-- `src/database`: DB connection.
-```
+## 6. Resources
+- `resources/templates/`: Collections of templates.
+- `examples/good_documentation.py`: Gold standard example.

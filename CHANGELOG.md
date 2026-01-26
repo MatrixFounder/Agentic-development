@@ -24,6 +24,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.5 — Skill Hardening & Gold Standard Refactoring** (Optimization)
+
+#### **Refactored (Gold Standard)**
+* **`documentation-standards`**:
+    * **Token Optimization**: Extracted inline templates to `resources/templates/` (60%+ reduction).
+    * **Richness**: Added `examples/good_documentation.py` (Gold Standard example).
+    * **Resilience**: Added "Red Flags" and "Rationalization Table".
+* **`skill-planning-format`**:
+    * **Token Optimization**: Extracted massive templates (`PLAN.md`, `TASK.md`) to `resources/templates/`.
+    * **Richness**: Added `examples/PLAN_EXAMPLE.md` and `examples/TASK_EXAMPLE.md`.
+* **`skill-task-model`**:
+    * **Richness**: Extracted inline Use Case examples (Good/Bad) to `examples/`.
+    * **Resilience**: Added "Red Flags" and "Rationalization Table".
+
+#### **Fixed**
+* **`light-mode`**: Fixed YAML syntax error (`[LIGHT]` tag unquoted) and CSO violation in description.
+* **`skill-safe-commands`**: Updated documentation to allow `AGENTS.md` configuration.
+
+#### **Improved**
+* **System Resilience**:
+    * **No-Dependency Parsing**: Removed `PyYAML` dependency from `validate_skill.py` and `analyze_gaps.py`.
+    * **Robust Parsing**: Implemented manual YAML parser handling quotes, lists, and comments gracefully.
+* **CSO Schemas**: Updated `skill-creator` and `skill-enhancer` to allow richer description prefixes: `Use when`, `Guidelines for`, `Standards for`, `Defines`, `Helps with`.
+
+---
+
 ### **v3.9.4 — Product Skills Deepening & Refactoring** (Optimization)
 
 #### **Refactored**
@@ -775,6 +801,32 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.9.5 — Усиление навыков и Рефакторинг (Gold Standard)** (Оптимизация)
+
+#### **Рефакторинг (Gold Standard)**
+* **`documentation-standards`**:
+    * **Оптимизация токенов**: Шаблоны вынесены в `resources/templates/` (>60% экономии).
+    * **Полнота**: Добавлен пример `examples/good_documentation.py`.
+    * **Устойчивость**: Добавлены разделы "Red Flags" (Красные флаги) и "Rationalization Table" (Таблица оправданий).
+* **`skill-planning-format`**:
+    * **Оптимизация**: Массивные шаблоны (`PLAN.md`, `TASK.md`) вынесены в `resources/templates/`.
+    * **Примеры**: Добавлены реалистичные `examples/PLAN_EXAMPLE.md` и `examples/TASK_EXAMPLE.md`.
+* **`skill-task-model`**:
+    * **Полнота**: Примеры Use Case (Good/Bad) вынесены в файлы `examples/`.
+    * **Устойчивость**: Добавлены "Red Flags" и "Rationalization Table".
+
+#### **Исправлено**
+* **`light-mode`**: Исправлена ошибка YAML-синтаксиса (тег `[LIGHT]` теперь в кавычках) и нарушение CSO в описании.
+* **`skill-safe-commands`**: Обновлена документация (добавлено упоминание `AGENTS.md`).
+
+#### **Улучшено**
+* **Системная устойчивость**:
+    * **Без зависимостей**: Удалена зависимость `PyYAML` из `validate_skill.py` и `analyze_gaps.py`.
+    * **Надежный парсер**: Реализован ручной YAML-парсер, корректно обрабатывающий кавычки, списки и комментарии.
+* **CSO Схемы**: Обновлены `skill-creator` и `skill-enhancer`, добавлены разрешенные префиксы: `Use when`, `Guidelines for`, `Standards for`, `Defines`, `Helps with`.
+
+---
 
 ### **v3.9.4 — Глубокий рефакторинг продуктовых навыков** (Оптимизация)
 

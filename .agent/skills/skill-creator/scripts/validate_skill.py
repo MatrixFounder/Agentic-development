@@ -92,9 +92,11 @@ def validate_skill(skill_path):
                 errors.append("Frontmatter missing 'description'")
             else:
                 desc = meta['description']
-                # CSO Rule 1: Must start with "Use when"
-                if not desc.lower().strip().startswith("use when"):
-                    errors.append("CSO Violation: Description MUST start with 'Use when...'. Found: " + desc[:30] + "...")
+                # CSO Rule 1: Allowed Prefixes
+                allowed_prefixes = ["use when", "guidelines for", "standards for", "defines", "helps with", "helps to"]
+                desc_lower = desc.lower().strip()
+                if not any(desc_lower.startswith(prefix) for prefix in allowed_prefixes):
+                    errors.append(f"CSO Violation: Description MUST start with one of {allowed_prefixes}. Found: " + desc[:30] + "...")
                 
                 # CSO Rule 2: Token Efficiency (Approx 50 words)
                 word_count = len(desc.split())

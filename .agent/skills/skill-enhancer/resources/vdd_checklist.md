@@ -23,7 +23,13 @@
 - [ ] **Imperative Instructions**: Checked for passive words ("should", "can") and removed them.
 
 ## 4. Search Optimization (CSO)
-- [ ] **Trigger-Based**: Description starts with "Use when [symptom/situation]...", NOT "This skill does...".
+- [ ] **Prefix Logic**: Description starts with one of:
+    *   `Use when...` (Triggers)
+    *   `Guidelines for...` (Context)
+    *   'Helps with...` (Context)
+    *   'Helps to...` (Context)
+    *   `Standards for...` (Rules)
+    *   `Defines...` (Concepts)
 - [ ] **Concise**: Description is under 50 words.
 
 ## 5. Logic Hardening

@@ -58,8 +58,11 @@ def analyze_skill(skill_path):
     # 2. Check CSO (Description)
     if 'description' in meta:
         desc = meta['description']
-        if not desc.lower().strip().startswith("use when"):
-            gaps.append("[CSO] Description does not start with 'Use when...'")
+        # CSO Rule 1: Allowed Prefixes
+        allowed_prefixes = ["use when", "guidelines for", "standards for", "defines", "helps with", "helps to"]
+        desc_lower = desc.lower().strip()
+        if not any(desc_lower.startswith(prefix) for prefix in allowed_prefixes):
+            gaps.append(f"[CSO] Description should start with one of {allowed_prefixes}")
         
         if len(desc.split()) > 50:
              gaps.append(f"[CSO] Description too long ({len(desc.split())} words). Target < 50.")

@@ -74,9 +74,23 @@ We follow a **Red-Green-Refactor** workflow:
 
 The `description` frontmatter field is the **single most important line**. It determines if your skill is loaded.
 
-### Rule: "Use when [TRIGGER]"
-*   **BAD**: "Guide for TDD workflow." (Summarizes content - Model may skip loading)
-*   **GOOD**: "Use when implementing a new feature or fixing a bug." (Triggering condition)
+### Allowed Schemas (Validation Rules)
+You **MUST** start your description with one of these prefixes:
+
+1.  **Trigger-Based** (Preferred for Tools/Workflows):
+    *   `Use when...`
+    *   *Example*: "Use when debugging Python race conditions."
+
+2.  **Standards & Guidelines** (Passive Knowledge):
+    *   `Guidelines for...`
+    *   `Helps with...`
+    *   `Helps to...`
+    *   `Standards for...`
+    *   *Example*: "Standards for Secure Coding and OWASP compliance."
+
+3.  **Definitions**:
+    *   `Defines...`
+    *   *Example*: "Defines the Architect role and responsibilities."
 
 **Constraint**: Keep descriptions under 50 words. Focus on *symptoms* and *triggers*, not solutions.
 

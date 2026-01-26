@@ -69,6 +69,13 @@ def validate_skill(skill_path):
         if os.path.isdir(item_path):
             if item not in allowed_dirs:
                 errors.append(f"Unknown directory '{item}'. Allowed: {allowed_dirs}")
+            
+            # Enforce content for examples
+            if item == "examples":
+                # Check for files excluding .DS_Store and .keep
+                example_files = [f for f in os.listdir(item_path) if f not in [".DS_Store", ".keep"]]
+                if not example_files:
+                    errors.append("Directory 'examples/' is empty. You MUST provide at least one example file.")
 
     # 4. Check SKILL.md Content
     if os.path.exists(skill_md_path):

@@ -26,8 +26,32 @@ def create_skill(name, base_path, tier):
         print(f"Error creating directories: {e}")
         sys.exit(1)
 
-    # 2. Create SKILL.md Template
-    skill_md_content = f"""---
+    # 2. Create SKILL.md from Template
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(script_dir, "..", "resources", "SKILL_TEMPLATE.md")
+    
+    skill_md_content = ""
+    
+    if os.path.exists(template_path):
+        try:
+            with open(template_path, 'r') as f:
+                template_content = f.read()
+            
+            # Replace placeholders
+            skill_md_content = template_content.replace("skill-[name]", safe_name)
+            skill_md_content = skill_md_content.replace("[Skill Name]", name.replace("-", " ").title())
+            skill_md_content = skill_md_content.replace("[0|1|2]", tier)
+            # Basic cleanup of other placeholders to make it valid YAML
+            # We leave the [Detailed explanation...] parts for the user to fill
+            
+            print(f"Loaded template from {template_path}")
+        except Exception as e:
+            print(f"Warning: Could not read template file: {e}")
+            skill_md_content = ""
+    
+    # Fallback if template missing or failed
+    if not skill_md_content:
+        skill_md_content = f"""---
 name: {safe_name}
 description: "TODO: One-line summary of what this skill enables the agent to do."
 tier: {tier}
@@ -53,7 +77,7 @@ See `examples/` for reference usage.
     with open(os.path.join(skill_dir, "scripts", ".keep"), "w") as f:
         f.write("")
     with open(os.path.join(skill_dir, "examples", "usage_example.md"), "w") as f:
-        f.write("# Usage Example\n\nTODO: Add a concrete example of how to use this skill.")
+        f.write(f"# Usage Example for {name}\n\nTODO: Add a concrete example of how to use this skill.")
     with open(os.path.join(skill_dir, "resources", "template.txt"), "w") as f:
         f.write("TODO: Add any static templates or assets here.")
 

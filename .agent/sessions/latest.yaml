@@ -1,13 +1,13 @@
 session_id: "a4758e53-e829-4926-8b35-62e33b6d050a"
-last_updated: "2026-01-23T14:21:59.259302"
-mode: "EXECUTION"
+last_updated: "2026-01-27T10:12:40.712950"
+mode: "VERIFICATION"
 
 current_task:
-  name: "Documentation"
-  status: "Writing Docs"
-  predicted_steps: 3
+  name: "Update Installation Instructions in README"
+  status: "Task Completed"
+  predicted_steps: 0
 
-context_summary: "Documenting the new API"
+context_summary: "Updated README.md and README.ru.md with safe venv instructions."
 
 active_blockers:
   []
@@ -18,3 +18,5 @@ recent_decisions:
 completed_tasks:
   - "Fixing UI Bug"
   - "Refactoring API"
+  - "Updating Project Virtual Environments"
+  - "Update Installation Instructions in README"

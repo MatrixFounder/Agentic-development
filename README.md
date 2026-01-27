@@ -84,16 +84,28 @@ Antigravity supports this architecture out-of-the-box:
     ```
 
 ### 3. Installation Requirements (Python)
-If you plan to use the **Tool Execution Subsystem** (native tools), you need Python 3.9+ with the following packages:
+If you plan to use the **Tool Execution Subsystem** (native tools), you need Python 3.9+ installed.
 
-```bash
-# Required for tool execution
-pip install pytest  # For run_tests tool
+> [!IMPORTANT]
+> **Do not install dependencies globally.** Always use a virtual environment to prevent conflicts with your system Python.
 
-# Optional: for AI orchestration (if using custom scripts)
-pip install openai  # OpenAI API client
-pip install python-dotenv  # Environment variables
-```
+**Setup Instructions:**
+
+1. Create and install dependencies in a virtual environment:
+   ```bash
+   # Create .venv
+   python3 -m venv .venv
+
+   # Install packages (using absolute path ensures it goes into .venv)
+   ./.venv/bin/pip install pytest          # Required: For run_tests tool
+   ./.venv/bin/pip install openai          # Optional: For AI orchestration
+   ./.venv/bin/pip install python-dotenv   # Optional: For environment variables
+   ```
+
+2. Activate the environment (optional, but recommended for development):
+   ```bash
+   source .venv/bin/activate
+   ```
 
 **Minimal Setup** (read-only tools work without dependencies):
 ```bash

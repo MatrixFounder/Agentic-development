@@ -119,7 +119,15 @@ def analyze_skill(skill_path):
     
     for i, line in enumerate(body_lines, 1):
         line_lower = line.lower()
-        found = [w for w in passive_keywords if re.search(r'\b' + re.escape(w) + r'\b', line_lower)]
+        
+        # Skip Markdown tables
+        if line.strip().startswith("|"):
+            continue
+
+        # Strip quoted strings (handle matching pairs: "..." or '...')
+        line_clean = re.sub(r'("[^"]*"|\'[^\']*\')', '', line_lower)
+
+        found = [w for w in passive_keywords if re.search(r'\b' + re.escape(w) + r'\b', line_clean)]
         if found:
             snippet = line.strip()[:60] + "..." if len(line.strip()) > 60 else line.strip()
             deep_logic_gaps.append(f"Line {i}: Found {found} -> \"{snippet}\"")
@@ -129,7 +137,9 @@ def analyze_skill(skill_path):
         if len(deep_logic_gaps) > 5:
             gaps.append(f"    ... and {len(deep_logic_gaps) - 5} more.")
 
-    if "todo" in body_lower:
+    # remove quotes from body for TODO check to avoid false positives
+    body_clean = re.sub(r'("[^"]*"|\'[^\']*\')', '', body_lower)
+    if "todo" in body_clean:
         gaps.append("[Lazy] Found 'TODO' placeholder. Finish the skill.")
 
     # 6. Check Examples Content
@@ -161,6 +171,49 @@ def analyze_skill(skill_path):
                 # Start of block
                 in_block = True
                 block_start = i
+
+        # 8. Check Anti-Patterns (Windows Paths)
+        # Regex looks for: word chars + backslash + word chars (e.g., scripts\run)
+        # We ignore common escapes like \n, \t by ensuring the char after backslash is alphanumeric but not n/t/r if preceded by simple char? 
+        # Actually, simpler: Look for typical path structure "dir\file"
+        
+        # Match alphanumeric/dash/dot + backslash + alphanumeric/dash/dot
+        # Avoid matching simple latex/escapes if possible, but backslashes in non-code text are suspicious anyway.
+        if re.search(r'[a-zA-Z0-9_\-]+\\[a-zA-Z0-9_\-]+', line):
+             # Exclude obvious false positives if necessary (e.g. LaTeX), but for now warn.
+             gaps.append(f"[Anti-Pattern] Potential Windows-style path at line {i+1}. Use forward slashes.")
+
+        # 9. Check Anti-Patterns (Absolute Paths)
+        # Look for paths starting with / followed by word chars, excluding URLs (https://)
+        # Regex: space or start of line, then /, then word, then slash.
+        # Negative lookbehind for https:? No, regex module doesn't support variable length lookbehind easily.
+        # Just check if '://' is present in the match?
+        
+        # Simple heuristic: " /Users/" or " /home/" or just " /var/"
+        # We also catch "/System/..." because on Mac that is an OS path, but "System/..." is valid project path.
+        # So banning leading slash is the correct robust strategy.
+        # Match matches preceded by start, space, quote, backtick, bracket
+        abs_match = re.search(r'(?:^|[\s`"\'(\[])(/[\w\-\.]+(?:/[\w\-\.]+)+)', line)
+        if abs_match:
+            hit = abs_match.group(1)
+            # Filter out URLs or common text patterns if needed
+            if "://" not in line: # simplistic URL filter
+                gaps.append(f"[Anti-Pattern] Potential Absolute Path '{hit}' at line {i+1}. Use relative paths.")
+
+    # 9. Extended CSO Checks
+    if 'description' in meta:
+        desc = meta['description'].lower()
+        if "i can" in desc or "i help" in desc or "my job" in desc or "you can" in desc:
+             gaps.append("[CSO] Description uses First/Second Person POV. Use Third Person (e.g., 'Processes X', not 'I process X').")
+
+    # 10. Naming Convention Check (Warning)
+    if not skill_name.endswith("ing") and "-" in skill_name: 
+        # Heuristic: multi-word skill usually ends in -ing if gerund (e.g. processing-pdfs)
+        # But 'skill-creator' is an exception. Loose check.
+        # Let's just check if it LOOKS like a noun phrase vs gerund.
+        # Actually, let's just warn if it contains "helper" or "utils"
+        if "helper" in skill_name or "utils" in skill_name:
+            gaps.append(f"[Naming] Avoid vague names like '{skill_name}'. Use specific action-oriented names (e.g., 'processing-pdfs').")
 
     # Report
     if gaps:

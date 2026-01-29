@@ -24,6 +24,31 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.8 — Skill Best Practices & AGI-Agnostic Hardening** (Optimization)
+
+#### **Added**
+* **Extended Best Practices Integration**:
+    * **Checklist Workflows**: Added native support for the "Checklist Pattern" in `SKILL_TEMPLATE.md` and `skill_design_patterns.md`.
+    * **Gerund Naming**: `init_skill.py` now advises users to use Action-Oriented naming (e.g., `processing-files`).
+    * **POV Detection**: `analyze_gaps.py` now flags First/Second person POV ("I can...", "You can...") to enforce Third-Person objectivity.
+    * **Anti-Patterns**: `analyze_gaps.py` now detects Windows-style paths (`back\slashes`) to ensure cross-platform compatibility.
+* **Logic Hardening**:
+    * **"Solve, Don't Punt"**: Explicitly banned "Try to..." language in favor of deterministic scripts.
+    * **Rationalization Table**: Built-in to default templates to preemptively block agent excuses.
+
+#### **Improved**
+* **`analyze_gaps.py`**:
+    * **False Positive Reduction**: Fixed regex to ignore quoted words (e.g., prohibiting "should" no longer flags the rule itself) and Markdown tables.
+    * **Robust Parsing**: Enhanced Windows path detection to handle mixed text/code contexts.
+* **`skill-creator`**:
+    * **Self-Sufficiency**: Added `skill_design_patterns.md` resource to decouple the skill from external docs.
+    * **TDD Integration**: Evaluation-Driven Development is now a core pattern.
+
+#### **Verified**
+* **VDD Round 3**: Created an adversarial `bad-skill-helper` with intentional violations. The system successfully detected and flagged all anti-patterns (Vague Name, POV, Windows Paths).
+
+---
+
 ### **v3.9.7 — Iterative Design & VDD Robustness** (Feature)
 
 #### **Added**

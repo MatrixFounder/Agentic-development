@@ -29,6 +29,14 @@ Provide step-by-step instructions for the agent. Use imperative mood.
 ### [Phase/Action 2]
 ...
 
+## 4. Workflows (Optional)
+For complex tasks, use a checklist:
+```markdown
+- [ ] Analysis
+- [ ] Execution
+- [ ] Verification
+```
+
 ## 4. Best Practices & Anti-Patterns
 
 | DO THIS | DO NOT DO THIS |

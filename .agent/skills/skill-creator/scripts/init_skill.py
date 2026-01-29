@@ -53,7 +53,7 @@ def create_skill(name, base_path, tier):
     if not skill_md_content:
         skill_md_content = f"""---
 name: {safe_name}
-description: "TODO: One-line summary of what this skill enables the agent to do."
+description: "Use when [TRIGGER]... (One-line constraints)"
 tier: {tier}
 version: 1.0
 ---
@@ -62,10 +62,29 @@ version: 1.0
 ## Purpose
 TODO: Describe the primary purpose of this skill.
 
-## Usage
-TODO: Describe when and how to use this skill.
+## 1. Red Flags (Anti-Rationalization)
+**STOP and READ THIS if you are thinking:**
+- "I'll skip the tests" -> **WRONG**. Tests are mandatory.
+- "I'll just write text logic" -> **WRONG**. Logic > 5 lines must be a script.
 
-## Examples
+## 2. Capabilities
+- [Capability 1]
+
+## 3. Instructions
+1. Step 1 (Imperative)
+
+## 4. Best Practices
+
+| DO THIS | DO NOT DO THIS |
+| :--- | :--- |
+| Strong Verbs | Weak language (should, try) |
+
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "It's too simple" | Simple tasks are where quality slips. |
+
+## 5. Examples
 See `examples/` for reference usage.
 """
     
@@ -83,6 +102,9 @@ See `examples/` for reference usage.
 
     print(f"\nSkill '{safe_name}' initialized successfully!")
     print(f"Path: {os.path.abspath(skill_dir)}")
+    
+    if not safe_name.endswith("ing") and "-" in safe_name:
+        print("\n> [!TIP] Consideration: Best practices suggest using Gerund Form for names (e.g., 'processing-pdfs' instead of 'pdf-processor').")
 
 def main():
     parser = argparse.ArgumentParser(description="Initialize a new Agent Skill (Antigravity Standard).")

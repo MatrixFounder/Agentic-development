@@ -32,3 +32,18 @@ Turn "Passive Reference" into "Imperative Algorithms".
 > Verify `config.yaml`:
 > *   `version` MUST be `2`
 > *   `debug` MUST be `false`
+
+## Pattern 4: The "Text Logic" Trap (Script-First)
+
+**Bad (Text Algorithm):**
+> 1. Scan the directory for files.
+> 2. For each file, read line 1.
+> 3. If line 1 starts with "#", move it to /done.
+
+**Good (Script Tool):**
+> Run the organizer script:
+> `python3 scripts/organize_files.py --target ./`
+
+**Why?**
+*   Text loops > 5 lines satisfy the "Laziness Threshold". Agents give up.
+*   Scripts are deterministic.

@@ -1,8 +1,8 @@
 ---
 name: skill-creator
-description: "Guidelines for creating new Agent Skills following Anthropic standards and Gemini/Antigravity structures."
+description: Guidelines for creating new Agent Skills following Anthropic standards and Gemini/Antigravity structures. Use when defining new capabilities or upgrading existing skills.
 tier: 2
-version: 1.0
+version: 1.1
 ---
 # Skill Creator Guide
 
@@ -41,7 +41,18 @@ The user expects high-quality skills that include **Examples** and **Templates**
 - **Data**: `resources/lookup_table.csv`.
 - **Purpose**: Speed up execution by giving the agent ready-to-copy assets.
 
-## 3. Frontmatter & Metadata
+## 3. Script-First Methodology (Opt O6a)
+
+**CRITICAL RULE**: Agents are terrible at executing complex algorithmic logic from text instructions.
+If your skill requires logic (loops, conditions, parsing, scanning), you **MUST** write a Python script in `scripts/`.
+
+- **❌ Bad (Text)**: "Go through every file, check if it imports X, then if it does, check Y..."
+- **✅ Good (Script)**: "Run `python scripts/scanner.py`. It produces `report.json`."
+
+> [!IMPORTANT]
+> **The 5-Line Logic Limit:** If a step in `SKILL.md` requires more than 5 lines of logical "if/then/else" text to explain, **IT MUST BE A SCRIPT**.
+
+## 4. Frontmatter & Metadata
 
 The YAML frontmatter is CRITICAL for the Orchestrator's loading logic.
 
@@ -59,7 +70,7 @@ version: 1.0
 *   **1 (Phase-Triggered)**: Skills loaded automatically when entering a specific phase (e.g., `requirements-analysis` for Analysis Phase) or working on a specific requirement (e.g., `planning-decision-tree` for Planning Phases).
 *   **2 (Extended)**: Specialized skills loaded only when explicitly needed or requested (e.g., `skill-creator`, `skill-reverse-engineering`). *Default for most new skills.*
 
-## 4. Token Efficiency (Global Rule)
+## 5. Token Efficiency (Global Rule)
 
 To prevent context window saturation, we strictly enforce limits on inline content:
 
@@ -74,18 +85,39 @@ To prevent context window saturation, we strictly enforce limits on inline conte
 *   Large inline examples multiply token costs.
 *   External files are only read when needed.
 
-## 5. Skills as Code Philosophy (TDD)
+## 6. Anti-Laziness & AGI-Agnostic Language
 
-We treat skills as **executable code for agents**. You must test them.
-We follow a **Red-Green-Refactor** workflow:
+Agents are lazy by default. We must use **Imperative, Deterministic Language**.
+We assume the agent will try to skip steps. Instructions must be "AGI-Agnostic" (work for Model X, Model Y, and future Model Z).
 
-1.  **RED (Fail)**: Run a "pressure scenario" with a subagent *without* the skill.
-    *   Observe the failure.
-    *   Record the specific **rationalization** (excuse) the agent used (e.g., "I'll test later").
-2.  **GREEN (Pass)**: Write the minimal skill instruction to close that specific loophole.
-3.  **REFACTOR**: Optimize for clarity and "Claude Search Optimization" (CSO).
+### Prohibited Words (Weak Language)
+You **MUST NOT** use these weak words. They trigger lazy behavior.
 
-## 6. Claude Search Optimization (CSO)
+| ❌ Weak / Prohibited | ✅ Strong / Required |
+| :--- | :--- |
+| "should", "could" | **MUST**, **SHALL** |
+| "can", "might" | **WILL**, **ALWAYS** |
+| "try to", "attempt" | **EXECUTE**, **VERIFY** |
+| "recommended" | **MANDATORY** |
+| "consider" | **ENSURE** |
+| "if possible" | *(Remove condition completely)* |
+
+### Red Flags (Rationalization Management)
+Every skill **MUST** include a "Red Flags" section. This prevents the agent from making excuses.
+
+**Example Red Flags:**
+- "Stop if you think: 'I can skip the script and just read the file manually.'" -> **WRONG**. Run the script.
+- "Stop if you think: 'This is a small change, I don't need tests.'" -> **WRONG**. All changes need verification.
+- "Stop if you think: 'The user knows what they're doing, I'll skip the warning.'" -> **WRONG**. Always warn on destructive actions.
+
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "This skill is too simple for a script" | If logic > 5 lines, text instructions fail 30% of the time. Use a script. |
+| "I'll add examples later" | You won't. Do it now. Examples define behavior. |
+| "The description is descriptive enough" | No. `Use when` triggers are mechanical. Follow the schema. |
+
+## 7. Claude Search Optimization (CSO)
 
 The `description` frontmatter field is the **single most important line**. It determines if your skill is loaded.
 
@@ -98,8 +130,7 @@ You **MUST** start your description with one of these prefixes:
 
 2.  **Standards & Guidelines** (Passive Knowledge):
     *   `Guidelines for...`
-    *   `Helps with...`
-    *   `Helps to...`
+    *   `Helps with...` (Use sparingly)
     *   `Standards for...`
     *   *Example*: "Standards for Secure Coding and OWASP compliance."
 
@@ -108,15 +139,6 @@ You **MUST** start your description with one of these prefixes:
     *   *Example*: "Defines the Architect role and responsibilities."
 
 **Constraint**: Keep descriptions under 50 words. Focus on *symptoms* and *triggers*, not solutions.
-
-## 7. Hardening Skills (Rationalization Management)
-
-Agents (like humans) will find excuses to skip steps. You must explicitly forbid these "rationalizations".
-
-### The "Red Flags" Section
-Every skill MUST include a list of Red Flags - specific excuses the agent might make.
-
-*   *Example*: "Stop if you think 'I already tested manually'. Delete code and start over."
 
 ## 8. Writing High-Quality Instructions
 
@@ -130,25 +152,55 @@ Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting poi
 5.  **Examples (Few-Shot)**: Input -> Output pairs.
     *   *Reference*: See `examples/SKILL_EXAMPLE_LEGACY_MIGRATOR.md` for a **Gold Standard** example of a rich skill.
 
-## 9. Creation Process
+## 9. Best Practices (Extended)
+
+### Naming Conventions
+- **Gerund Form**: Use `verb-ing-noun` (e.g., `processing-pdfs`, `analyzing-data`).
+- **Consistent**: `finding-files` (not `file-finder`).
+- **Lowercase**: `my-skill` (not `MySkill`).
+
+### Scripting Standards
+- **Solve, Don't Punt**: Scripts must handle errors (try/except), not crash.
+- **No Voodoo Constants**: Document why a timeout is 30s.
+- **No Windows Paths**: ALWAYS use forward slashes (`/`), even for Windows support.
+- **Relativity**: ALWAYS use relative paths.
+    - **Local**: `scripts/tool.py` (inside skill)
+    - **Global**: `System/scripts/tool_runner.py` (project root)
+    - **BANNED**: `/Users/sergey/...` or `/System/...` (Absolute OS paths)
+
+## 10. Advanced Design Patterns
+> [!TIP]
+> See `resources/skill_design_patterns.md` for deep dives on **Degrees of Freedom**, **Progressive Disclosure**, and the **Evaluation-Driven Development**.
+
+## 11. Creation Process
 
 When creating a new skill, you **MUST** strictly follow this sequence:
 
 1.  **Check Duplicates**: Verify in `System/Docs/SKILLS.md`.
 2.  **Initialize**:
     ```bash
-    python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 2
+    # (From skill-creator directory)
+    python3 scripts/init_skill.py my-new-skill --tier 2
     ```
 3.  **Populate**:
     *   **MANDATORY**: Edit the auto-generated `SKILL.md` (it already contains the template).
     *   **MANDATORY**: Fill in the "Red Flags" and "Use when..." description.
+    *   **MANDATORY**: If logic > 5 lines, write a `scripts/` tool.
+    *   **MANDATORY**: Consult `resources/skill_design_patterns.md` and `resources/writing_skills_best_practices.md` for structural decisions.
 4.  **Validate**:
     ```bash
-    python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/my-new-skill
+    python3 scripts/validate_skill.py ../my-new-skill
     ```
 5.  **Register**: Add to `System/Docs/SKILLS.md`.
 
-## 10. Scripts Reference
+## 11. Scripts Reference
 
 *   **`init_skill.py`**: Generates a compliant skill skeleton (`scripts/`, `examples/`, `resources/`) using the rich template.
 *   **`validate_skill.py`**: Enforces folder structure, frontmatter compliance, and CSO rules (description format).
+
+## 12. Local Resources
+*   **`resources/writing_skills_best_practices_anthropic.md`**: The complete "Gold Standard" authoring guide.
+*   **`resources/output-patterns.md`**: Templates for agent output formats.
+*   **`resources/workflows.md`**: Guide for designing skill-internal workflows.
+*   **`resources/persuasion-principles.md`**: (Advanced) Psychological principles for writing compliant instructions.
+*   **`resources/testing-skills-with-subagents.md`**: (Advanced) TDD methodology for verifying skills.

@@ -22,7 +22,7 @@ version: 1.1
 ## 3. Instructions
 
 ### Phase 1: Audit
-1.  **Run Audit**: Execute `python3 .agent/skills/skill-legacy-migrator/scripts/audit_legacy.py <path>`.
+1.  **Run Audit**: Execute `python3 scripts/audit_legacy.py <path>`.
 2.  **Verify Report**: Check `defaults/audit_report.md`.
     - *Tip*: If the report contains "CRITICAL" warnings, ask User for guidance before proceeding.
 

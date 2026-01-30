@@ -1,6 +1,6 @@
 ---
 name: developer-guidelines
-description: "Specific guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation."
+description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation."
 tier: 1
 version: 1.0
 ---
@@ -37,9 +37,9 @@ version: 1.0
 5.  **Regression:** Run the full suite to ensure no regressions.
 
 ## 7. Language Specific Guidelines
-- **Dynamic Loading:** If you are working in a specific language, you MUST read the corresponding guideline file from `resources/languages/` if it exists.
-  - Rust: `resources/languages/rust.md`
-  - Solidity: `resources/languages/solidity.md`
-  - Python: `resources/languages/python.md`
-  - JavaScript/TypeScript: `resources/languages/javascript.md`
+- **Dynamic Loading:** If you are working in a specific language, you MUST read the corresponding guideline file from `references/languages/` if it exists.
+  - Rust: `references/languages/rust.md`
+  - Solidity: `references/languages/solidity.md`
+  - Python: `references/languages/python.md`
+  - JavaScript/TypeScript: `references/languages/javascript.md`
 - **Application:** Apply the specific rules in addition to the core guidelines above.

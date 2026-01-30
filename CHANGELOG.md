@@ -24,6 +24,23 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.9 — Skill Resources Migration & Validation Hardening** (Optimization)
+
+#### **Refactored**
+* **Skill Standardization (Gold Standard)**:
+    * **Directory Hygiene**: Migrated `resources/` folders to `assets/` (templates) and `references/` (knowledge) across all skills.
+    * **Legacy Removal**: Deprecated `resources/` directory to strictly enforce Semantic Folder Structure.
+
+#### **Fixed**
+* **Validation**:
+    * **Config Support**: Updated `validate_skill.py` to explicitly allow `config/` directories (restoring support for `skill-product-solution-blueprint`).
+    * **CSO Violations**: Fixed description prefixes in 6 skills (`developer-guidelines`, `requirements-analysis`, etc.) to meet "Gold Standard" compliance (`Use when`, `Guidelines for`).
+
+#### **Verified**
+* **Global Audit**: Ran verification script on all migrated skills to ensure 0 broken links and 100% validation pass rate.
+
+---
+
 ### **v3.9.8 — Meta-Skills Independence** (Refactoring)
 #### **Decoupled**
 * **Project-Agnostic Meta-Skills**: `skill-creator` and `skill-enhancer` are now fully portable and independent of the Antigravity project.
@@ -892,6 +909,23 @@ To upgrade from v3.0.x to v3.1.0:
 ---
 
 ## 🇷🇺 Русская версия
+
+### **v3.9.9 — Миграция Ресурсов Навыков и Усиление Валидации** (Оптимизация)
+
+#### **Рефакторинг**
+* **Стандартизация Навыков (Gold Standard)**:
+    * **Гигиена Папок**: Папки `resources/` мигрированы в `assets/` (шаблоны) и `references/` (знания) во всех навыках.
+    * **Удаление Legacy**: Директория `resources/` объявлена устаревшей для строгого соблюдения семантической структуры папок.
+
+#### **Исправлено**
+* **Валидация**:
+    * **Поддержка Config**: Обновлен `validate_skill.py`, теперь явно разрешена папка `config/` (восстановлена поддержка `skill-product-solution-blueprint`).
+    * **Нарушения CSO**: Исправлены префиксы описаний в 6 навыках (`developer-guidelines`, `requirements-analysis` и др.) для соответствия "Gold Standard" (`Use when`, `Guidelines for`).
+
+#### **Верифицировано**
+* **Глобальный Аудит**: Запущен скрипт верификации всех мигрированных навыков: 0 битых ссылок, 100% прохождение валидации.
+
+---
 
 ### **v3.9.8 — Независимость Мета-Навыков** (Рефакторинг)
 #### **Развязка (Decoupling)**

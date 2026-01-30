@@ -19,13 +19,13 @@ version: 1.1
 The Main Plan acts as the "Table of Contents" for the feature.
 
 > [!TIP]
-> Use the template at `resources/templates/plan_md_template.md`.
+> Use the template at `assets/templates/plan_md_template.md`.
 
 ## 3. Detailed Task Description Structure
 For **each** task in the plan, you must create a separate file: `docs/tasks/task-{ID}-{SubID}-{slug}.md`.
 
 > [!TIP]
-> Use the template at `resources/templates/task_md_template.md`.
+> Use the template at `assets/templates/task_md_template.md`.
 
 ### Rationalization Table
 | Agent Excuse | Reality / Counter-Argument |
@@ -39,5 +39,5 @@ For **each** task in the plan, you must create a separate file: `docs/tasks/task
 3. **CRITICAL:** Use only RELATIVE paths for file links (e.g., `[Link](docs/tasks/file.md)`), never absolute.
 
 ## 5. Resources
-- `resources/templates/`: Standard markdown templates.
+- `assets/templates/`: Standard markdown templates.
 - `examples/`: Real-world planning examples.

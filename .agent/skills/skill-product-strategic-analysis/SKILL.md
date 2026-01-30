@@ -50,7 +50,7 @@ Use the following Markdown table structure to identify the "Blue Ocean":
 - [ ] Are all numbers cited or estimated with disclaimers?
 
 ## 5. Output
-> **[Use the Official Template](resources/market_strategy_template.md)** for the full structure.
+> **[Use the Official Template](assets/market_strategy_template.md)** for the full structure.
 
 ## 6. Examples
 - **Strong Case (Go):** `examples/01_strong_ai_assistant.md`

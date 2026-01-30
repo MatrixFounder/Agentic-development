@@ -14,7 +14,7 @@ To translate abstract "Vision" into concrete "Requirements" without writing code
 **Constraint:** Do NOT use Mermaid graphs for detailed logical flows. Use text lists.
 
 ### Template
-> **[Use the Official Template](resources/solution_blueprint_template.md)** for the full structure.
+> **[Use the Official Template](assets/solution_blueprint_template.md)** for the full structure.
 
 ### Syntax Example
 ```markdown

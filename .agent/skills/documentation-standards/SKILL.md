@@ -20,12 +20,12 @@ All classes and functions MUST have documentation.
 ### Python
 Use Google-style docstrings.
 > [!TIP]
-> See `resources/templates/python_docstring.py` for the format.
+> See `assets/templates/python_docstring.py` for the format.
 
 ### JavaScript / TypeScript
 Use JSDoc standards.
 > [!TIP]
-> See `resources/templates/jsdoc_template.ts` for the format.
+> See `assets/templates/jsdoc_template.ts` for the format.
 
 ## 3. Comments
 - **Why vs What**: Explain the *reason* for logic, not the syntax.
@@ -41,7 +41,7 @@ Use JSDoc standards.
 ## 5. Artifacts (`.AGENTS.md`)
 **MANDATORY**: Every directory must have this file.
 > [!TIP]
-> Use the template at `resources/templates/agents_md_template.md`.
+> Use the template at `assets/templates/agents_md_template.md`.
 
 ### Rationalization Table
 | Agent Excuse | Reality / Counter-Argument |
@@ -50,5 +50,5 @@ Use JSDoc standards.
 | "I don't know the types yet" | Use `Any` or `unknown` but document *what* the value represents. |
 
 ## 6. Resources
-- `resources/templates/`: Collections of templates.
+- `assets/templates/`: Collections of templates.
 - `examples/good_documentation.py`: Gold standard example.

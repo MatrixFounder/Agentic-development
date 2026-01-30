@@ -1,6 +1,6 @@
 ---
 name: vdd-adversarial
-description: Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots.
+description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
 version: 1.0
 ---
@@ -25,6 +25,6 @@ version: 1.0
 If the User or Workflow requests a **Report**, **Critique**, or **Artifact**, you **MUST** use this standard template:
 
 If the User or Workflow requests a **Report**, **Critique**, or **Artifact**, you **MUST** use the standard template found in:
-`.agent/skills/vdd-adversarial/resources/template_critique.md`
+`.agent/skills/vdd-adversarial/assets/template_critique.md`
 
 Read this file using `read_resource` or `view_file` before generating the report.

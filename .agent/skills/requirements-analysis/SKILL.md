@@ -1,6 +1,6 @@
 ---
 name: requirements-analysis
-description: Process for gathering and refining requirements into a structured TASK.
+description: "Use when gathering and refining requirements into a structured TASK."
 tier: 1
 version: 1.3
 ---
@@ -13,7 +13,7 @@ version: 1.3
 
 ## 2. Technical Specification (TASK) Structure
 
-You MUST follow the structure defined in `resources/task_template.md`.
+You MUST follow the structure defined in `assets/task_template.md`.
 Read this file to understand the required headers and sections.
 
 ## 3. Important Rules

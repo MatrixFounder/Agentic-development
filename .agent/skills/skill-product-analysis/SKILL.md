@@ -1,6 +1,6 @@
 ---
 name: skill-product-analysis
-description: Process for creating and refining Product Vision and Strategy.
+description: "Guidelines for creating and refining Product Vision and Strategy."
 tier: 2
 version: 1.1
 ---
@@ -37,7 +37,7 @@ python3 [skill_path]/scripts/score_product.py --problem_intensity 9 --moat_durab
 ## 4. Artifact Standards (`PRODUCT_VISION.md`)
 
 ### Template Structure
-See `resources/vision_template.md` for the authoritative structure.
+See `assets/vision_template.md` for the authoritative structure.
 All sections are mandatory.
 
 ### INVEST Criteria (User Stories)
@@ -68,7 +68,7 @@ Every feature implementation plan must start with:
 - **Soul Check:** Does the Vision allow for emotional connection?
 
 ## 6. Output
-> **[Use the Official Template](resources/vision_template.md)** for the full structure.
+> **[Use the Official Template](assets/vision_template.md)** for the full structure.
 
 ## 7. Examples
 - **Strong Go:** `examples/01_strong_go_devboost.md`

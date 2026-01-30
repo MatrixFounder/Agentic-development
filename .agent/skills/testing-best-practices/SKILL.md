@@ -1,6 +1,6 @@
 ---
 name: testing-best-practices
-description: Best practices for implementing effective and maintainable tests.
+description: "Guidelines for implementing effective and maintainable tests."
 tier: 2
 version: 1.1
 ---
@@ -28,4 +28,4 @@ version: 1.1
   - JavaScript: `examples/jest_structure.js`
 
 ## 4. Resources
-- **Templates:** Use `resources/templates/test_boilerplate.py` to start new test files quickly.
+- **Templates:** Use `assets/templates/test_boilerplate.py` to start new test files quickly.

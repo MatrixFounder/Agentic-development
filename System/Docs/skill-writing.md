@@ -27,7 +27,8 @@ The scripts look for configuration in the following order:
 2.  **Bundled Defaults**: `scripts/skill_standards_default.yaml` (Fallback)
 
 ### Configuration Format
-The configuration file uses a JSON-compatible subset of YAML.
+The configuration file uses a JSON-compatible subset of YAML. 
+**Note:** Tiers are no longer referenced manually. You must use `init_skill.py --help` to see the active tiers for your project.
 
 ```yaml
 # .agent/rules/skill_standards.yaml
@@ -38,19 +39,21 @@ project_config:
   skills_root: "skills" # Default output dir
 
 taxonomy:
-  # Define your own Tier system
+  # Define your own Tier system (Overrides defaults)
   tiers:
     - value: 0
-      name: "Core"
-      description: "Always loaded."
+      name: "Bootstrap"
+      description: "Critical system skills..."
     - value: 1
-      name: "Standard"
-      description: "Loaded on demand."
+      name: "Phase-Triggered" 
+      description: "Auto-loaded..."
+    # ... Add your own tiers here ...
 
 validation:
   allowed_cso_prefixes: 
     - "Use when"
     - "Guidelines for"
+    - "Standards for"
   
   quality_checks:
     max_inline_lines: 12
@@ -58,6 +61,7 @@ validation:
     banned_words:
       - "should"
       - "can"
+      - "try to"
 ```
 
 ---
@@ -67,12 +71,14 @@ validation:
 ### Creating a New Skill
 Use `init_skill.py` to generate a compliant skeleton.
 
-```bash
-# Basic Usage
-python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill
+**Crucial**: Run `init_skill.py --help` first to see which Tiers are available in your project.
 
-# Specific Tier
-python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 1
+```bash
+# Check available Tiers
+python3 .agent/skills/skill-creator/scripts/init_skill.py --help
+
+# Create Skill (Example: using Tier 2 or 3 as commonly configured)
+python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 3
 ```
 
 **What it does:**

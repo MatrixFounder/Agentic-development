@@ -148,6 +148,11 @@ def analyze_skill(skill_path, config):
     if real_placeholders:
         gaps.append(f"[Lazy] Found {len(real_placeholders)} bracket placeholders (e.g., '[{real_placeholders[0]}]'). Fill them in.")
 
+    # 5.5 Check Deprecated Directories
+    resources_dir = os.path.join(skill_path, "resources")
+    if os.path.isdir(resources_dir):
+         gaps.append("[Structure] Found deprecated 'resources/' directory. Migrate contents to 'assets/' (output) or 'references/' (knowledge).")
+
     # 6. Check Examples Content
     examples_dir = os.path.join(skill_path, "examples")
     if not os.path.isdir(examples_dir) or not os.listdir(examples_dir):

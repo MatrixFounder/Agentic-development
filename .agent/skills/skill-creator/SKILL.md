@@ -18,28 +18,40 @@ skill-name/
 │   ├── YAML frontmatter (name, description, tier, version)
 │   └── Markdown body (instructions)
 └── Bundled Resources (Optional)
-    ├── scripts/       # Executable code (Python/Bash) for the skill to use
-    ├── examples/      # Reference implementations and usage examples
-    └── resources/     # Templates, static assets, and data files
+    ├── examples/      # FEW-SHOT TRAINING: Input/Output pairs to teach the Agent
+    ├── assets/        # USER OUTPUT: Templates/Files to be given to User or used in output
+    ├── references/    # AGENT KNOWLEDGE: Compendiums, Specs, Guidelines, Schemas
+    └── scripts/       # EXECUTABLE LOGIC: Python/Bash tools (if logic > 5 lines)
 ```
 
 > [!WARNING]
 > **Prohibited Files:** Do NOT create `README.md`, `CHANGELOG.md`, `INSTALLATION.md`, or other aux docs inside the skill folder. All instructions must be in `SKILL.md`.
 
-## 2. Rich Skill Philosophy
+## 2. Rich Skill Philosophy (Hybrid Standard)
 
-A "Rich Skill" is not just a text file. It is a comprehensive toolkit.
-The user expects high-quality skills that include **Examples** and **Templates**.
+A "Rich Skill" is comprehensive. We separate files by their **Semantic Purpose** to help the Agent understand *why* it is reading a file.
 
-### When to use `examples/`?
-- **User Stories**: "Show me how to use this."
-- **Files**: `examples/usage_demo.py`, `examples/complex_scenario.md`.
-- **Purpose**: Reduce hallucination by providing ground-truth input/output pairs.
+### `examples/` (The "Train" Data)
+*   **Purpose**: Teach the Agent **Behavior**.
+*   **Content**: "When user says X, do Y."
+*   **Files**: `examples/usage_demo.py`, `examples/complex_scenario.md`.
+*   **Rule**: Use these to reduce hallucination on complex flows.
 
-### When to use `resources/`?
-- **Templates**: `resources/boilerplate.py`, `resources/config_template.yaml`.
-- **Data**: `resources/lookup_table.csv`.
-- **Purpose**: Speed up execution by giving the agent ready-to-copy assets.
+### `assets/` (The "Material" Data)
+*   **Purpose**: Provide materials for the **User**.
+*   **Content**: "Here is the template you asked for."
+*   **Files**: `assets/boilerplate.py`, `assets/logo.svg`, `assets/report_template.md`.
+*   **Rule**: The Agent does not "learn" from these; it indiscriminately uses/copies them.
+
+### `references/` (The "Knowledge" Data)
+*   **Purpose**: Provide context for the **Agent**.
+*   **Content**: "Here are the rules/specs you must follow."
+*   **Files**: `references/api_spec.yaml`, `references/design_guidelines.md`.
+*   **Rule**: Heavy context that is read only when needed.
+
+### `scripts/` (The "Tool" Data)
+*   **Purpose**: **Execute** logic reliably.
+*   **Content**: Python scripts for deterministic tasks.
 
 ## 3. Script-First Methodology (Opt O6a)
 
@@ -76,7 +88,7 @@ To prevent context window saturation, we strictly enforce limits on inline conte
 
 ### The 12-Line Rule
 *   **PROHIBITED**: Inline code blocks, templates, or examples larger than **12 lines**.
-*   **REQUIRED**: Extract large blocks to `examples/` or `resources/` and reference them.
+*   **REQUIRED**: Extract large blocks to `examples/`, `assets/`, or `references/` and reference them.
     *   *Bad*: A 20-line JSON object inline.
     *   *Good*: "See `examples/payload.json`."
 
@@ -142,7 +154,7 @@ You **MUST** start your description with one of these prefixes:
 
 ## 8. Writing High-Quality Instructions
 
-Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting point.
+Use the **Template** found in `assets/SKILL_TEMPLATE.md` as your starting point.
 
 ### Section Guidelines:
 1.  **Purpose**: Define the "Why".
@@ -170,7 +182,7 @@ Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting poi
 
 ## 10. Advanced Design Patterns
 > [!TIP]
-> See `resources/skill_design_patterns.md` for deep dives on **Degrees of Freedom**, **Progressive Disclosure**, and the **Evaluation-Driven Development**.
+> See `references/skill_design_patterns.md` for deep dives on **Degrees of Freedom**, **Progressive Disclosure**, and the **Evaluation-Driven Development**.
 
 ## 11. Creation Process
 
@@ -186,7 +198,7 @@ When creating a new skill, you **MUST** strictly follow this sequence:
     *   **MANDATORY**: Edit the auto-generated `SKILL.md` (it already contains the template).
     *   **MANDATORY**: Fill in the "Red Flags" and "Use when..." description.
     *   **MANDATORY**: If logic > 5 lines, write a `scripts/` tool.
-    *   **MANDATORY**: Consult `resources/skill_design_patterns.md` and `resources/writing_skills_best_practices.md` for structural decisions.
+    *   **MANDATORY**: Consult `references/skill_design_patterns.md` and `references/writing_skills_best_practices_anthropic.md` for structural decisions.
 4.  **Validate**:
     ```bash
     python3 scripts/validate_skill.py ../my-new-skill
@@ -195,12 +207,12 @@ When creating a new skill, you **MUST** strictly follow this sequence:
 
 ## 11. Scripts Reference
 
-*   **`init_skill.py`**: Generates a compliant skill skeleton (`scripts/`, `examples/`, `resources/`) using the rich template.
+*   **`init_skill.py`**: Generates a compliant skill skeleton (`scripts/`, `examples/`, `assets/`, `references/`) using the rich template.
 *   **`validate_skill.py`**: Enforces folder structure, frontmatter compliance, and CSO rules (description format).
 
 ## 12. Local Resources
-*   **`resources/writing_skills_best_practices_anthropic.md`**: The complete "Gold Standard" authoring guide.
-*   **`resources/output-patterns.md`**: Templates for agent output formats.
-*   **`resources/workflows.md`**: Guide for designing skill-internal workflows.
-*   **`resources/persuasion-principles.md`**: (Advanced) Psychological principles for writing compliant instructions.
-*   **`resources/testing-skills-with-subagents.md`**: (Advanced) TDD methodology for verifying skills.
+*   **`references/writing_skills_best_practices_anthropic.md`**: The complete "Gold Standard" authoring guide.
+*   **`references/output-patterns.md`**: Templates for agent output formats.
+*   **`references/workflows.md`**: Guide for designing skill-internal workflows.
+*   **`references/persuasion-principles.md`**: (Advanced) Psychological principles for writing compliant instructions.
+*   **`references/testing-skills-with-subagents.md`**: (Advanced) TDD methodology for verifying skills.

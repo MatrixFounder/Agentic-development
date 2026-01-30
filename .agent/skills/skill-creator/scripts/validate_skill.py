@@ -87,12 +87,15 @@ def validate_skill(skill_path, config):
             errors.append(f"Prohibited file found: {item} (See .agent/rules/skill_standards.yaml)")
 
     # 3. Check Directory Structure (Standard)
-    allowed_dirs = ["scripts", "examples", "resources"]
+    allowed_dirs = ["scripts", "examples", "assets", "references"]
     for item in os.listdir(skill_path):
         item_path = os.path.join(skill_path, item)
         if os.path.isdir(item_path):
             if item not in allowed_dirs:
-                errors.append(f"Unknown directory '{item}'. Allowed: {allowed_dirs}")
+                if item == "resources":
+                     errors.append(f"Deprecated directory 'resources/'. Please split into 'assets/' (output materials) and 'references/' (knowledge).")
+                else:
+                     errors.append(f"Unknown directory '{item}'. Allowed: {allowed_dirs}")
             
             # Enforce content for examples
             if item == "examples":

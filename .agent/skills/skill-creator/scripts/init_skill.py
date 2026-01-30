@@ -25,14 +25,15 @@ def create_skill(name, base_path, tier_value, config):
         os.makedirs(skill_dir)
         os.makedirs(os.path.join(skill_dir, "scripts"))
         os.makedirs(os.path.join(skill_dir, "examples"))
-        os.makedirs(os.path.join(skill_dir, "resources"))
+        os.makedirs(os.path.join(skill_dir, "assets"))
+        os.makedirs(os.path.join(skill_dir, "references"))
         print(f"Created directory structure in {skill_dir}/")
     except OSError as e:
         print(f"Error creating directories: {e}")
         sys.exit(1)
 
     # 2. Create SKILL.md from Template
-    template_path = os.path.join(script_dir, "..", "resources", "SKILL_TEMPLATE.md")
+    template_path = os.path.join(script_dir, "..", "assets", "SKILL_TEMPLATE.md")
     skill_md_content = ""
     
     if os.path.exists(template_path):
@@ -72,8 +73,10 @@ TODO: Describe the primary purpose of this skill.
         f.write("")
     with open(os.path.join(skill_dir, "examples", "usage_example.md"), "w") as f:
         f.write(f"# Usage Example for {name}\n\nTODO: Add a concrete example of how to use this skill.")
-    with open(os.path.join(skill_dir, "resources", "template.txt"), "w") as f:
-        f.write("TODO: Add any static templates or assets here.")
+    with open(os.path.join(skill_dir, "assets", "template.txt"), "w") as f:
+        f.write("TODO: Add any static templates or assets here (files used for output).")
+    with open(os.path.join(skill_dir, "references", "guidelines.md"), "w") as f:
+        f.write("# Guidelines\nTODO: Add domain knowledge, API specs, or rules here.")
 
     print(f"\nSkill '{safe_name}' initialized successfully!")
     print(f"Path: {os.path.abspath(skill_dir)}")

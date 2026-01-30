@@ -18,7 +18,7 @@ version: 1.1
 
 ## 2. Capabilities
 - **Audit**: Detect gaps (missing Red Flags, inline blocks > 12 lines, poor CSO, weak language) using `analyze_gaps.py`.
-- **Plan**: Propose specific content improvements using `resources/refactoring_patterns.md`.
+- **Plan**: Propose specific content improvements using `references/refactoring_patterns.md`.
 - **Execute**: Apply refactoring patterns to upgrade the skill.
 
 ## 3. Instructions
@@ -33,7 +33,7 @@ version: 1.1
 ### Phase 2: Plan
 1.  **Read Target Skill**: Read the content of the target skill.
 2.  **Draft Improvements**:
-    *   *Token Efficiency*: Identify blocks > 12 lines and plan extraction to `examples/`.
+    *   *Token Efficiency*: Identify blocks > 12 lines and plan extraction to `examples/`, `assets/`, or `references/`.
     *   *Script-First*: Identify logic blocks > 5 lines and plan extraction to `scripts/`.
     *   *Anti-Laziness*: Replace weak words with strong imperatives.
     *   *Red Flags*: Identify 2-3 likely agent excuses for *this specific task*.
@@ -44,11 +44,11 @@ version: 1.1
 1.  **Update File**: Edit the target `SKILL.md` to insert the new sections.
     *   **CRITICAL**: Use `replace_file_content` or `multi_replace_file_content`.
     *   **DO NOT** use `write_to_file` to overwrite existing content (Data Loss Risk).
-    *   *Tip*: Use `resources/refactoring_patterns.md` (Coming in Iteration 2) for style guide.
+    *   *Tip*: Use `references/refactoring_patterns.md` (Coming in Iteration 2) for style guide.
 2.  **Verify**: Re-run `analyze_gaps.py`. Expect output "No Gaps Found".
 
 ### Phase 4: Final VDD Check
-1.  **Read Checklist**: Open `resources/vdd_checklist.md`.
+1.  **Read Checklist**: Open `references/vdd_checklist.md`.
 2.  **Self-Correction**: Verify your work against the 5 criteria (Data Safety, Anti-Laziness, etc.).
 3.  **Refine**: If any check fails (e.g., found "TODO", found "should"), fix it immediately.
 
@@ -84,5 +84,5 @@ Recommendation: Run 'Execute Improvement Plan'...
 
 ## 6. Resources
 - `scripts/analyze_gaps.py`: The gap detection tool.
-- `resources/writing_skills_best_practices_anthropic.md`: The authoritative "Gold Standard" guide used to verify compliance.
-- `resources/testing-skills-with-subagents.md`: Methodology for verifying fixes using TDD (Red-Green-Refactor).
+- `references/writing_skills_best_practices_anthropic.md`: The authoritative "Gold Standard" guide used to verify compliance.
+- `references/testing-skills-with-subagents.md`: Methodology for verifying fixes using TDD (Red-Green-Refactor).

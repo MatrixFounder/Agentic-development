@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guidelines for creating new Agent Skills following Anthropic standards and Gemini/Antigravity structures. Use when defining new capabilities or upgrading existing skills.
+description: Guidelines for creating new Agent Skills following Gold Standard structures. Use when defining new capabilities or upgrading existing skills.
 tier: 2
 version: 1.1
 ---
@@ -88,7 +88,7 @@ To prevent context window saturation, we strictly enforce limits on inline conte
 ## 6. Anti-Laziness & AGI-Agnostic Language
 
 Agents are lazy by default. We must use **Imperative, Deterministic Language**.
-We assume the agent will try to skip steps. Instructions must be "AGI-Agnostic" (work for Model X, Model Y, and future Model Z).
+We assume the agent will **attempt** to skip steps. Instructions must be defensive. "AGI-Agnostic" (work for Model X, Model Y, and future Model Z).
 
 ### Prohibited Words (Weak Language)
 You **MUST NOT** use these weak words. They trigger lazy behavior.
@@ -166,7 +166,7 @@ Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting poi
 - **Relativity**: ALWAYS use relative paths.
     - **Local**: `scripts/tool.py` (inside skill)
     - **Global**: `System/scripts/tool_runner.py` (project root)
-    - **BANNED**: `/Users/sergey/...` or `/System/...` (Absolute OS paths)
+    - **BANNED**: `<absolute_path>` (Absolute OS paths)
 
 ## 10. Advanced Design Patterns
 > [!TIP]
@@ -176,7 +176,7 @@ Use the **Template** found in `resources/SKILL_TEMPLATE.md` as your starting poi
 
 When creating a new skill, you **MUST** strictly follow this sequence:
 
-1.  **Check Duplicates**: Verify in `System/Docs/SKILLS.md`.
+1.  **Check Duplicates**: Verify in your **Skill Catalog** (the file path defined in `.agent/rules/skill_standards.yaml` under `catalog_file`).
 2.  **Initialize**:
     ```bash
     # (From skill-creator directory)
@@ -191,7 +191,7 @@ When creating a new skill, you **MUST** strictly follow this sequence:
     ```bash
     python3 scripts/validate_skill.py ../my-new-skill
     ```
-5.  **Register**: Add to `System/Docs/SKILLS.md`.
+5.  **Register**: Add to your **Skill Catalog** (if configured).
 
 ## 11. Scripts Reference
 

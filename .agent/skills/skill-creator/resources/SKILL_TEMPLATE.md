@@ -1,7 +1,7 @@
 ---
 name: skill-[name]
 description: Use when [TRIGGER: specific symptoms or situations]...
-tier: [0|1|2]
+tier: [TIER_VALUE] # See .agent/rules/skill_standards.yaml
 version: 1.0
 ---
 # [Skill Name]

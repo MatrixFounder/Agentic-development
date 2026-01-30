@@ -1,0 +1,49 @@
+# .agent/rules/skill_standards.yaml
+# NOTE: Must be compatible with Simple "Vanilla Python" Parser.
+# No advanced YAML features (anchors, complex mapping keys).
+
+project_config:
+  # Optional: Path to a documentation file listing all skills.
+  # If defined, scripts will remind the user to update this file.
+  catalog_file: "System/Docs/SKILLS.md" 
+
+  skills_root: ".agent/skills" 
+
+taxonomy:
+  tiers:
+    - value: 0
+      name: "Bootstrap"
+      description: "Critical system skills loaded at session start."
+    - value: 1
+      name: "Phase-Triggered"
+      description: "Loaded automatically when entering specific phases."
+    - value: 2
+      name: "Extended"
+      description: "Specialized skills loaded only when requested."
+    - value: 3
+      name: "High Assurance"
+      description: "Strict, rigorous protocols for critical stability."
+
+validation:
+  allowed_cso_prefixes: 
+    - "Use when"
+    - "Guidelines for"
+    - "Standards for"
+    - "Defines"
+    
+  required_sections:
+    - "Red Flags"
+    - "Rationalization Table"
+  
+  # Default is EMPTY []. Antigravity project override:
+  prohibited_files:
+    - "README.md"
+    - "CHANGELOG.md"
+    
+  quality_checks:
+    max_inline_lines: 12
+    max_description_words: 50
+    banned_words:
+      - "should"
+      - "can"
+      - "try to"

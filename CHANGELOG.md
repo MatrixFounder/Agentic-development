@@ -24,7 +24,23 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.9.8 — Skill Best Practices & AGI-Agnostic Hardening** (Optimization)
+### **v3.9.8 — Meta-Skills Independence** (Refactoring)
+#### **Decoupled**
+* **Project-Agnostic Meta-Skills**: `skill-creator` and `skill-enhancer` are now fully portable and independent of the Antigravity project.
+    * **Configurable**: Policies (Tiers, Banned Words, File Rules) are now loaded from `.agent/rules/skill_standards.yaml` instead of hardcoded Python dicts.
+    * **Zero-Dependency**: Removed `PyYAML` dependency. Implemented a custom "Vanilla Python" parser (`skill_utils.py`) to ensure tools run on any environment without `pip install` or `venv`.
+    * **Documentation**: Removed hardcoded references to `System/Docs/SKILLS.md` and "Gemini/Antigravity". Replaced with generic "Skill Catalog" concepts.
+
+#### **Added**
+* **New Manual**: `System/Docs/skill-writing.md` — A portable User Guide for using the meta-skills (Install, Config, Usage).
+* **Resilience**: Scripts now include a **Bundled Default Config** (`skill_standards_default.yaml`) for instant drop-in usage if project config is missing.
+
+#### **Verified**
+* **E2E Testing**: Validated proper functioning of dynamic tiers, parser correctness (including edge cases like inline dicts), and gap analysis on a test skill.
+
+---
+
+### **v3.9.7 — Skill Best Practices & AGI-Agnostic Hardening** (Optimization)
 
 #### **Added**
 * **Extended Best Practices Integration**:
@@ -868,7 +884,23 @@ To upgrade from v3.0.x to v3.1.0:
 
 ## 🇷🇺 Русская версия
 
-### **v3.9.5 — Усиление навыков и Рефакторинг (Gold Standard)** (Оптимизация)
+### **v3.9.8 — Независимость Мета-Навыков** (Рефакторинг)
+#### **Развязка (Decoupling)**
+* **Проектно-Агностичные Мета-Навыки**: `skill-creator` и `skill-enhancer` теперь полностью портативны и независимы от проекта Antigravity.
+    * **Конфигурируемость**: Политики (Уровни, Запрещенные слова, Правила файлов) теперь загружаются из `.agent/rules/skill_standards.yaml` вместо хардкода в Python словарях.
+    * **Без Зависимостей**: Удалена зависимость `PyYAML`. Реализован кастомный "Vanilla Python" парсер (`skill_utils.py`), чтобы инструменты работали в любом окружении без `pip install` или `venv`.
+    * **Документация**: Удалены хардкод-ссылки на `System/Docs/SKILLS.md` и "Gemini/Antigravity". Заменены на универсальные концепции "Каталога Навыков".
+
+#### **Добавлено**
+* **Новое Руководство**: `System/Docs/skill-writing.md` — Портативный гайд пользователя для мета-навыков (Установка, Конфиг, Использование).
+* **Устойчивость**: Скрипты теперь включают **Встроенный Дефолтный Конфиг** (`skill_standards_default.yaml`) для мгновенного запуска "из коробки".
+
+#### **Верифицировано**
+* **E2E Тестирование**: Подтверждена работа динамических уровней (tiers), корректность парсера (включая сложные случаи инлайн-словарей) и gap-анализа на тестовом навыке.
+
+---
+
+### **v3.9.7 — Усиление навыков и Рефакторинг (Gold Standard)** (Оптимизация)
 
 #### **Рефакторинг (Gold Standard)**
 * **`documentation-standards`**:

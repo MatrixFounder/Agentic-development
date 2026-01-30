@@ -1,0 +1,38 @@
+# skill-creator/scripts/skill_standards_default.yaml
+# Bundled Default Configuration (Safe Fallback)
+
+project_config:
+  catalog_file: null # Disabled by default
+  skills_root: "."   # Default to current dir if not specified
+
+taxonomy:
+  tiers:
+    - value: 0
+      name: "Bootstrap"
+      description: "Critical system skills."
+    - value: 1
+      name: "Standard"
+      description: "Standard capability."
+    - value: 2
+      name: "Extended"
+      description: "Specialized usage."
+
+validation:
+  allowed_cso_prefixes: 
+    - "Use when"
+    - "Guidelines for"
+    - "Standards for"
+    
+  required_sections:
+    - "Red Flags"
+    - "Rationalization Table"
+  
+  # Default is permissive (allow everything)
+  prohibited_files: []
+    
+  quality_checks:
+    max_inline_lines: 12
+    max_description_words: 50
+    banned_words:
+      - "should"
+      - "can"

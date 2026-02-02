@@ -14,7 +14,8 @@ The **English** version of documentation (`README.md`, `CHANGELOG.md`, `System/D
     -   THEN you MUST immediately update `README.ru.md` with the translated equivalent.
 
 2.  **CHANGELOG Sync**:
-    -   Release notes must be provided in both English and Russian sections of `CHANGELOG.md`.
+    -   IF you modify `CHANGELOG.md` (e.g., adding a new release note),
+    -   THEN you MUST immediately update `CHANGELOG.ru.md` with the translated equivalent.
 
 3.  **Critical Artifacts**:
     -   If a new critical documentation file is created (e.g., `System/Docs/ORCHESTRATOR.md`), consider if a translation is needed or if `README.ru.md` should link to it with a note.

@@ -33,8 +33,11 @@ Follow this process strictly:
 
 ### Step 1: Analysis & Comparison
 - **Read:** The target `docs/TASK.md`.
+- **RTM Check:**
+    - **Verify:** Does `TASK.md` contain a strict `Requirements Traceability Matrix` table?
+    - **Exceptions:** Skip this check if Task Title contains `[LIGHT]` or `skill-light-mode` is active.
 - **Compare:** Check against User Task Description (completeness).
-- **Verify:** Apply `skill-task-review-checklist` criteria (structure, detailed scenarios, verifiable acceptance criteria).
+- **Verify:** Apply `skill-task-review-checklist` criteria.
 
 ### Step 2: Comment Classification
 Classify every issue found:

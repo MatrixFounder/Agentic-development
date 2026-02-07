@@ -34,6 +34,10 @@ Follow this process strictly:
 
 ### Step 1: Structural Verification
 - **Read:** `docs/PLAN.md` and referenced task files.
+- **RTM Coverage:**
+    - **Verify:** Does `PLAN.md` cover every ItemID from the TASK RTM?
+    - **Constraint:** Checklist items MUST start with `[ID]`.
+    - **Exceptions:** Skip specific ID check if Task Title contains `[LIGHT]` or `skill-light-mode` is active.
 - **Trace:** Map TASK (Use Cases) -> PLAN (Tasks). Check for gaps.
 - **Verify:**
     - **Stub-First:** Does the plan explicitly schedule stubs first?

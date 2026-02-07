@@ -106,6 +106,9 @@ Instead, reply: "I must update the TASK and check Architecture first. Starting A
 
 Current task: Refinement and improvement of the framework. Permit modifications to files in `/System/Agents/`, `.agent/skills/`, and the `GEMINI.md` file itself.
 
-Mandatory requirement: After any changes to core components, run a full review pipeline (Code Reviewer + Security Auditor).
+Mandatory requirement: 
+1. **Meta-Audit**: You MUST use `skill-self-improvement-verificator` to validate your PLAN before executing changes.
+2. **Workflow**: Prefer using the `/framework-upgrade` workflow for safe execution.
+3. **Review**: After any changes to core components, run a full review pipeline (Code Reviewer + Security Auditor).
 
 Prohibited: Deleting or removing the `core-principles` or `artifact-management` skills without explicit approval.

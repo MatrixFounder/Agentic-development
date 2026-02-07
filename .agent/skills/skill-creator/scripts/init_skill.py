@@ -85,10 +85,19 @@ TODO: Describe the primary purpose of this skill.
     catalog_file = config.get('project_config', {}).get('catalog_file')
     if catalog_file and os.path.exists(catalog_file):
         print(f"\n> [!IMPORTANT] NEXT STEP: Please update '{catalog_file}' to register this new skill!")
-    elif catalog_file:
-         # Defined but missing - warn? Or stay silent?
-         # Proposal says "If defined but missing: Print Warning"
-         print(f"\n> [!NOTE] Catalog file '{catalog_file}' not found. Skipping auto-check.")
+    
+    # 5. Mandatory Cleanup Instructions
+    print("\n" + "="*60)
+    print("MANDATORY CLEANUP REQUIRED")
+    print("="*60)
+    print(f"Skill created at: {skill_dir}")
+    print("1. IMPLEMENT your skill (Add scripts, assets, examples).")
+    print("2. CLEANUP unused directories:")
+    print(f"   - Scripts: If logic < 5 lines, delete '{skill_dir}/scripts/'")
+    print(f"   - Assets: If no assets, delete '{skill_dir}/assets/'")
+    print(f"   - References: If no ext refs, delete '{skill_dir}/references/'")
+    print(f"   - Examples: Update usage_example.md or delete folder if Simple Skill.")
+    print("="*60 + "\n")
 
 def main():
     # 1. Load Configuration

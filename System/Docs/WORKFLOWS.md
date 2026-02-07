@@ -9,6 +9,7 @@ This document is the **Single Source of Truth** for all automation workflows in 
 - [2. Automation Loops](#2-automation-loops)
 - [3. Atomic Actions](#3-atomic-actions)
 - [4. Product Workflows](#4-product-workflows)
+- [5. Framework Self-Improvement](#5-framework-self-improvement)
 - [❓ FAQ](#-faq)
 - [🛡 Safety & Verification](#-safety--verification)
 - [📋 Getting Started: Workflow Call Sequences](#-getting-started-workflow-call-sequences)
@@ -91,6 +92,13 @@ graph TD
 
     Iterative -->|Output used by| Start
     Iterative -->|Output used by| Base
+    
+    %% Framework Upgrade
+    Upgrade([framework-upgrade]):::upgrade
+    Upgrade -->|Meta-Audit| SelfImpr{{skill-self-improvement-verificator}}:::audit
+    
+    classDef upgrade fill:#ffcc00,stroke:#333,stroke-width:2px;
+    classDef audit fill:#ff9900,stroke:#333,stroke-width:2px;
 ```
 
 ## 🚀 Workflow Categorization
@@ -110,8 +118,9 @@ The workflows are organized into three categories:
 | :--- | :--- | :--- |
 | **Standard Feature** | **Default Choice.** Runs the full "Stub-First" pipeline: Analysis, Architecture, Planning, and then Auto-Execution loop. | `run base-stub-first` |
 | **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) with **Strict TDD** (High Assurance) followed by a Security Audit. | `run full-robust` |
-| **VDD Enhanced** | Combines Stub-First planning with VDD Adversarial execution. | `run vdd-enhanced` |
+| **VDD Enhanced** | **Hardened Pipeline.** Stub-First Plan + **RTM Validation** + VDD Adversarial execution. | `run vdd-enhanced` |
 | **VDD Multi-Adversarial** | Sequential execution of 3 specialized critics: Logic → Security → Performance. | `run vdd-multi` |
+| **Framework Upgrade** | **Meta-Workflow.** Safely upgrades the Agentic System itself (Prompts/Skills) with Audit Gates. | `run /framework-upgrade` |
 | **Iterative Design** | **Concept Refinement Loop.** Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine. | `run /iterative-design` |
 | **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop. | `run light` or `/light` |
 
@@ -374,3 +383,26 @@ graph TD
 | Debugging a specific phase | Run that phase's atomic workflow |
 | Just need analysis | `run 01-start-feature` or `run vdd-01-start-feature` |
 | **Trivial task (typo, bugfix)** | `run light` or `/light` |
+
+---
+
+## 5. Framework Self-Improvement
+*Use these to safely upgrade the Agentic System itself.*
+
+| Workflow Name | Description | Command |
+| :--- | :--- | :--- |
+| **Framework Upgrade** | **Meta-Workflow.** Safely upgrades Prompts, Skills, and System Logic. Includes **Meta-Audit** gates using `skill-self-improvement-verificator` to prevent regression. | `run /framework-upgrade` |
+
+**Safety Protocol:**
+1. **Analysis Gate:** Checks `docs/TASK.md` for proper TIER usage and documentation updates.
+2. **Planning Gate:** Checks `docs/PLAN.md` for atomicity and rollback steps.
+3. **Execution Guard:** Changes are applied with the Self-Improvement Verificator active.
+4. **Rollback:** Automatic backup of core files to `.agent/archive/` before changes.
+
+### ✅ Recommended Strategy
+For critical system updates, follow this **Hybrid Verification Loop**:
+1. **Draft Spec:** Use `skill-self-improvement-verificator` (Analysis Mode) to draft `docs/TASK.md`.
+2. **Manual Verification (CRITICAL):** Manually review the spec and plan. Do not rely solely on automation.
+3. **Execution:** Once verified, execute using the **`/framework-upgrade`** workflow (for system) or **`/vdd-enhanced`** (for strict implementation).
+
+---

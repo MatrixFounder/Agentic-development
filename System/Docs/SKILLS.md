@@ -81,6 +81,8 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | - `architecture-review-checklist` | For checking System Architecture. | `01-start-feature` | Arch Reviewer |
 | - `plan-review-checklist` | For checking Development Plans. | `02-plan-implementation` | Plan Reviewer |
 | - `code-review-checklist` | For checking Code implementation. | `03-develop-task` | Code Reviewer |
+| **`skill-spec-validator`** | **Automated Gatekeeper.** Validates RTM existence and Atomic Plan coverage. | `vdd-enhanced` | System / Orchestrator |
+| **`skill-self-improvement-verificator`** | **Meta-Auditor.** Verifies safety of Framework Upgrades. | `/framework-upgrade` | System / Orchestrator |
 | **`security-audit`** | Vulnerability assessment (OWASP, secrets) and reporting. | `/security-audit`, `/full-robust` | Security Auditor |
 
 ### Executable Skills (Tools)

@@ -16,6 +16,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.11 — Hardened Pipeline & Self-Improvement System** (Feature)
+
+#### **Added**
+* **New Skill: `skill-spec-validator` (Tier 2)**:
+    * **RTM Validation**: Mechanically enforces that `docs/TASK.md` contains a Requirements Traceability Matrix.
+    * **Atomic Planning**: Mechanically enforces that `docs/PLAN.md` covers every RTM item with an ID-tagged task (e.g., `[R1]`).
+* **New Skill: `skill-self-improvement-verificator` (Tier 3)**:
+    * **Meta-Audit**: Acts as a "Guardian" for the framework itself. Audits specifications for `framework-upgrade` to prevent regression.
+* **New Workflow: `/framework-upgrade`**:
+    * Specialized pipeline for upgrading Prompts, Skills, and System Logic.
+    * Integrates `skill-self-improvement-verificator` gates at Analysis and Planning stages.
+
+#### **Improved**
+* **Workflows**:
+    * **`/vdd-enhanced`**: Upgraded to "Hardened Mode". Now includes `skill-spec-validator` checkpoints with auto-correction loops (Max 3 retries).
+* **Agent Prompts**:
+    * **Analyst**: Mandates RTM table generation (except for `[LIGHT]` tasks).
+    * **Planner**: Mandates Atomic Checklists with Strict ID linking.
+    * **Developer**: Enforces Strict Stub-First methodology (except for `[LIGHT]` tasks).
+* **Reliability**:
+    * **`skill-creator`**: now outputs mandatory cleanup instructions to prevent debris.
+    * **`validate.py`**: robustness fix for parsing Markdown tables with escaped characters.
+
+---
+
+
 ### **v3.9.10 — Skill Creator Cleanup & Brainstorming 2.1** (Optimization)
 
 #### **Improved**

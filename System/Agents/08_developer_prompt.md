@@ -36,10 +36,13 @@ Follow this process strictly:
 
 ### Step 1: Implementation Strategy
 - **Read:** The Task file.
-- **Plan:** Identify files to create/modifier.
-- **Check:** Does this match the "Stub" or "Logic" phase?
-    - If **Structure/Stub**: Create class skeletons + Failing E2E test.
-    - If **Logic**: Implement methods + Pass verify.
+- **Check Mode:**
+    - **IF** `skill-light-mode` is active OR Task Title contains `[LIGHT]`:
+        - **Action:** Implementing fix directly. Skip Stub/Mock phase if trivial.
+    - **ELSE** (Standard Mode):
+        - **Constraint:** You **MUST** use Stub-First Development.
+        - **Structure:** Create class skeletons + Failing E2E test.
+        - **Logic:** Implement methods + Pass verify.
 
 ### Step 2: Coding & Testing
 - **Execute:** Write code using `skill-developer-guidelines`.

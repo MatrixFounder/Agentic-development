@@ -39,6 +39,11 @@ Follow this process strictly:
 
 ### Step 2: Plan Formulation
 - **Structure:** Create `docs/PLAN.md`.
+- **RTM Linking (Mandatory):**
+    - **Constraint:** Feature grouping is PROHIBITED.
+    - **Requirement:** One RTM item (from TASK.md) = One Checklist item.
+    - **Format:** Checklist items MUST start with the RTM ID (e.g., `[R1] Implement recurring logic`).
+    - *Exception:* If Task Title contains `[LIGHT]`, this specific ID matching is optional, but Atomicity is still required.
 - **Phasing:**
     - Phase 1: Interfaces, Stubs, E2E Tests (Red -> Green).
     - Phase 2: Logic Implementation (Mock replacement).

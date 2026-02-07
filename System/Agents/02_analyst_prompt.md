@@ -48,12 +48,19 @@ Follow this process strictly:
 
 ### Step 3: Artifact Creation (docs/TASK.md)
 **Constraint:** You MUST use the structure defined in `skill-task-model`.
-**Content Requirements:**
+**Light Mode Bypass**:
+- **Condition:** IF active skill is `skill-light-mode` OR Task Title contains `[LIGHT]`:
+    - **Action:** Skip RTM generation. Focus on concise fix description.
+
+**Content Requirements (Standard Mode):**
 1.  **Meta Information:** ID, Slug, Context.
-2.  **Problem Description:** Clear summary.
-3.  **Use Cases:** detailed main/alternative scenarios.
-4.  **Acceptance Criteria:** Verifiable pass/fail conditions.
-5.  **Open Questions:** ANY ambiguity must be listed here.
+2.  **Requirements Traceability Matrix (RTM):**
+    - **Format:** Table with columns `| ID | Requirement | MVP? | Sub-features |`.
+    - **Constraint:** Granularity MUST be high (at least 3 sub-features per requirement).
+3.  **Problem Description:** Clear summary.
+4.  **Use Cases:** detailed main/alternative scenarios.
+5.  **Acceptance Criteria:** Verifiable pass/fail conditions.
+6.  **Open Questions:** ANY ambiguity must be listed here.
 
 > [!TIP]
 > **Examples:** Refer to `skill-task-model` for the exact Markdown structure and examples of high-quality scenarios.

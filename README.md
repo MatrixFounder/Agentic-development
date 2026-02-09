@@ -14,30 +14,30 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 ![Framework architecture](/Attachments/Framework_architecture_v2.png)
 
 ## 📋 Table of Contents
-- [Installation & Setup](#-installation--setup)
+- [Installation & Setup](#installation--setup)
   - [1. Copy Framework Folders](#1-copy-framework-folders)
   - [2. Choose Your AI Assistant](#2-choose-your-ai-assistant)
   - [3. Installation Requirements (Python)](#3-installation-requirements-python)
-- [System Overview](#-system-overview)
+- [System Overview](#system-overview)
   - [Directory Structure](#directory-structure)
-  - [Concept Deep Dive: Blueprint vs Driver](#-concept-deep-dive-blueprint-vs-driver)
-  - [The Agent Team (Roles)](#-the-agent-team-roles)
-  - [The Product Team (Roles)](#-the-product-team-roles)
-  - [Skills System](#-skills-system)
-- [Workspace Workflows](#-workspace-workflows)
+  - [Concept Deep Dive: Blueprint vs Driver](#concept-deep-dive-blueprint-vs-driver)
+  - [The Agent Team (Roles)](#the-agent-team-roles)
+  - [The Product Team (Roles)](#the-product-team-roles)
+  - [Skills System](#skills-system)
+- [Workspace Workflows](#workspace-workflows)
   - [Quick Start](#quick-start)
   - [Variants](#variants)
-- [How to Start Development](#-how-to-start-development-step-by-step-plan)
+- [How to Start Development](#how-to-start-development-step-by-step-plan)
   - [Phase 0: Product Discovery](#phase-0-product-discovery-optional)
   - [Stages 1-5](#stage-1-pre-flight-check)
-- [Practical Usage (Claude Code & Gemini)](#-practical-usage-claude-code--gemini)
-- [Artifact Management](#-artifact-management)
-- [What to do with .AGENTS.md files?](#-what-to-do-with-agentsmd-files)
-- [How to prepare for future iterations?](#-how-to-prepare-for-future-iterations)
-- [Reverse Engineering](#-reverse-engineering-if-documentation-is-outdated)
-- [Starter Prompts](#-starter-prompt-templates)
-- [Migration Guide](#-migration-from-older-versions)
-- [Integration with Cursor IDE](#-integration-with-cursor-ide-agentic-mode)
+- [Practical Usage (Claude Code & Gemini)](#practical-usage)
+- [Artifact Management](#artifact-management)
+- [What to do with .AGENTS.md files?](#agents-files)
+- [How to prepare for future iterations?](#future-iterations)
+- [Reverse Engineering](#reverse-engineering)
+- [Starter Prompts](#starter-prompts)
+- [Migration Guide](#migration-guide)
+- [Integration with Cursor IDE](#cursor-integration)
 
 
 ## 📁 Installation & Setup
@@ -360,6 +360,7 @@ For each pair of tasks in the plan (Stub -> Impl):
 ---
 
 
+<a id="practical-usage"></a>
 ## 🕹️ Practical Usage (Claude Code & Gemini)
 
 ### Scenario 1: Standard Development (Full Pipeline)
@@ -422,6 +423,7 @@ Resume work on the Email Notifications task.
 
 ---
 
+<a id="artifact-management"></a>
 ## 🗂 Artifact Management
 
 During the development process, agents create various artifacts. Here is how to handle them:
@@ -455,6 +457,7 @@ During the development process, agents create various artifacts. Here is how to 
 
 ---
 
+<a id="agents-files"></a>
 ## 📂 What to do with `.AGENTS.md` files?
 
 **DO NOT DELETE THEM!**
@@ -466,6 +469,7 @@ The `.AGENTS.md` files are the project's "long-term memory" for agents (and huma
 
 ---
 
+<a id="future-iterations"></a>
 ## 🔄 How to prepare for future iterations?
 
 To make the next iteration go smoothly:
@@ -475,6 +479,7 @@ To make the next iteration go smoothly:
 
 ---
 
+<a id="reverse-engineering"></a>
 ## 🛠 Reverse Engineering (If documentation is outdated)
 
 If the user made "free-form" fixes during development completion, the documentation (e.g., `docs/TASK.md`, `docs/ARCHITECTURE.md`) might have desynchronized with the actual code.
@@ -507,6 +512,7 @@ TASK:
 
 ---
 
+<a id="starter-prompts"></a>
 ## 📝 Starter Prompt Templates
 
 **IMPORTANT:** To launch the process, use **Composer** (Cmd+I) or chat.
@@ -566,6 +572,7 @@ ACTION:
 
 ---
 
+<a id="migration-guide"></a>
 ## 🔄 Migration from Older Versions
 
 ### Upgrading to v3.1.0 (Global Refactor)
@@ -590,6 +597,7 @@ ACTION:
 
 ---
 
+<a id="cursor-integration"></a>
 ## 🤖 Integration with Cursor IDE (Agentic Mode)
 
 For maximum automation, you can use a mode where the Orchestrator independently calls sub-agents via CLI.

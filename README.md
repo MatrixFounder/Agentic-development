@@ -37,7 +37,7 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 - [Reverse Engineering](#reverse-engineering)
 - [Starter Prompts](#starter-prompts)
 - [Migration Guide](#migration-guide)
-- [Integration with Cursor IDE](#cursor-integration)
+
 
 
 ## 📁 Installation & Setup
@@ -230,10 +230,14 @@ graph TD
 
 ### 📊 How the System Prompt is Loaded
 
-| Tool | System Prompt | Loading Method |
-|------|---------------|----------------|
-| **Cursor IDE** | `00` + role (01-10) | Manually or via `AGENTS.md` |
-| **Antigravity** | `GEMINI.md` (includes global principles) | **Automatically (Native)**. Manual concatenation of `00` is not required. |
+| Tool | System Prompt File | Loading Method |
+|------|-------------------|----------------|
+| **Cursor IDE** | `AGENTS.md` | Automatic (context rules) |
+| **Antigravity** | `GEMINI.md` | Automatic (native) |
+| **Claude Code** | `CLAUDE.md` (symlink) | Automatic (on launch) |
+| **Gemini CLI** | `GEMINI.md` | Automatic (system instruction) |
+
+**Note:** See [Blueprint vs Driver](#concept-deep-dive-blueprint-vs-driver) for the difference between `00_agent_development.md` (theory) and system prompt files (execution).
 
 
 ### 📚 Skills System
@@ -597,43 +601,4 @@ ACTION:
 
 ---
 
-<a id="cursor-integration"></a>
-## 🤖 Integration with Cursor IDE (Agentic Mode)
 
-For maximum automation, you can use a mode where the Orchestrator independently calls sub-agents via CLI.
-
-### 1. Utility Installation
-You will need the `cursor-agent` utility (or equivalent) allowing LLM requests from the terminal.
-```bash
-# Example installation (hypothetical)
-npm install -g cursor-agent
-```
-
-### 2. Universal "Super-Prompt" for Launch
-Use this prompt in Cursor chat to run the full development chain on a task.
-
-```text
-Using the multi-agent development orchestration approach (System/Agents/01_orchestrator.md),
-perform the modification: {LINK_TO_TASK_FILE_OR_DESCRIPTION}.
-
-PROJECT DESCRIPTION:
-{BRIEF DESCRIPTION OR LINK TO README}
-
-AGENT LAUNCH INSTRUCTION:
-Agent prompts are located in System/Agents (02*.md .. 09.md).
-You must call agents by executing shell commands like:
-`cursor-agent -f --model {MODEL} -p "{PROMPT_TEXT}"`
-
-CALL FORMAT:
-The prompt text must consist of:
-1. Content of the role's system prompt (e.g., System/Agents/02_analyst_prompt.md).
-2. Input data for this role (according to description in 01_orchestrator.md).
-
-RECOMMENDED MODELS:
-- Analyst, Architect, Planner — opus-4.5 (or high-accuracy equivalent)
-- Reviewers, Developer — composer-1 (or claude-3.5-sonnet for code)
-
-IMPORTANT:
-- Wait for the command execution result before the next step.
-- Follow the pipeline: Analysis -> Architecture -> Plan -> (Stub -> Test -> Impl).
-```

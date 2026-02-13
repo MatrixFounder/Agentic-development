@@ -50,6 +50,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`skill-creator`** | Guidelines for creating new Agent Skills. Based on [Anthropic](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) & [Antigravity](https://antigravity.google/docs/skills) standards. | Manual, `04-update-docs` | Developer, Architect |
 | **`skill-enhancer`** | Meta-skill for auditing and upgrading other skills to Gold Standard (TDD, CSO, Anti-Rationalization). Uses `analyze_gaps.py`. | Manual | Developer, Architect |
 | **`light-mode`** | Fast-track guidelines for trivial tasks (typos, UI tweaks). Skips Architect/Planner. (Tier 2) | `/light`, `light-01-start-feature` | Analyst, Developer, Code Reviewer |
+| **`skill-parallel-orchestration`** | Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Mock Runner for POC. (Tier 2) | Manual, Orchestrator | Orchestrator |
 
 ### Engineering Standards
 | Skill | Description | Used By in Workflows | Used By Agents |

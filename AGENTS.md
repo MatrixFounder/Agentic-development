@@ -64,6 +64,7 @@ The Orchestrator natively supports structured tool calling (Function Calling).
    - **Load Skills**: `skill-developer-guidelines`, `skill-documentation-standards`.
    - Execute the task in the codebase.
    - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
+   - **SKILL CREATION GATE**: Before creating ANY file in `.agent/skills/`, you **MUST** run `python3 .agent/skills/skill-creator/scripts/init_skill.py <name> --tier <N>`. Manual creation is **PROHIBITED**. For modifying existing skills, use `skill-enhancer`.
    - Verify with `System/Agents/09_agent_code_reviewer.md` using `skill-code-review-checklist`.
 
 ## BEHAVIOR RULES

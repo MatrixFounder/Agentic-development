@@ -16,12 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.9.12 — Framework Consistency & Safety Fixes** (Bugfix)
+### **v3.9.12 — Framework Consistency, Parallel Agents & Safety Fixes** (Feature / Bugfix)
+
+#### **Added**
+* **Parallel Agent Architecture (POC)**:
+    * **New Skill: `skill-parallel-orchestration` (Tier 2)**: Protocol for decomposing tasks into parallel sub-tasks and spawning sub-agents (mock runner).
+    * **Concurrent State Safety**: `update_state.py` now uses `fcntl` file locking for atomic read-modify-write on `latest.yaml`, preventing race conditions.
+    * **Mock Agent Runner**: `spawn_agent_mock.py` simulates async agent execution with state updates.
+    * **Documentation**: `docs/POC_PARALLEL_AGENTS.md` guide and `docs/ARCHITECTURE.md` updated with Parallel Execution Model.
+* **Skill Validation Hook**:
+    * **`.gemini/hooks/validate_skill_hook.sh`**: `AfterTool` hook that auto-validates skills via `validate_skill.py` on every write to `.agent/skills/`.
+    * **`.gemini/settings.json`**: Hook configuration with `$GEMINI_PROJECT_DIR` fallback for cross-runner compatibility.
+    * **Skill Creation Gate**: Added mandatory `init_skill.py` rule to `GEMINI.md` and `AGENTS.md` Development Phase. Manual skill creation is now prohibited.
 
 #### **Fixed**
 * **Data Loss Prevention**: Patched `trigger_technical.py` to abort if `docs/TASK.md` already exists, preventing accidental overwrites during product handoff.
 * **Protocol Integrity**: Updated `light-02-develop-task` workflow to enforce mandatory `.AGENTS.md` updates, preventing memory drift in Light Mode.
 * **Standardization**: Updated `vdd-01-start-feature` to use the authoritative `skill-archive-task` protocol instead of hardcoded manual steps.
+* **Shell Injection (VDD)**: Replaced heredoc interpolation with `jq -n` in `validate_skill_hook.sh` to prevent malformed JSON from `validation_output`.
+* **Invalid Mode (VDD)**: Fixed `spawn_agent_mock.py` using non-existent mode `"Wrapper"` → `"EXECUTION"`.
 
 ---
 

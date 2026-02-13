@@ -5,6 +5,7 @@ import uuid
 import datetime
 import argparse
 import re
+import fcntl
 
 # Constants
 SESSION_DIR = ".agent/sessions"
@@ -167,30 +168,83 @@ def main():
         if args.add_completed_task not in completed_tasks:
             completed_tasks.append(args.add_completed_task)
             
-    # 3. Construct New State
-    new_state = {
-        "session_id": session_id,
-        "mode": args.mode,
-        "task_name": args.task,
-        "task_status": args.status,
-        "predicted_steps": args.predicted_steps,
-        "context_summary": args.summary,
-        "active_blockers": active_blockers,
-        "recent_decisions": recent_decisions,
-        "completed_tasks": completed_tasks
-    }
     
-    # 4. Write Atomic
-    yaml_content = generate_yaml(new_state)
-    temp_path = fpath + ".tmp"
+    # 3. Construct New State
+    # Note: We construct it BEFORE locking to minimize lock time, 
+    # but we must re-read inside the lock to get the TRUE latest state.
+    
+    # --- CRITICAL SECTION START ---
+    # We use a separate lock file to avoid truncation issues with open(..., 'w')
+    lock_path = fpath + ".lock"
     
     try:
-        with open(temp_path, 'w') as f:
-            f.write(yaml_content)
-        os.replace(temp_path, fpath)
-        print(f"Session state updated: {fpath}")
+        with open(lock_path, 'w') as lockfile:
+            # Acquire Exclusive Lock
+            fcntl.flock(lockfile, fcntl.LOCK_EX)
+            
+            try:
+                # RE-READ existing state inside the lock to ensure we have the absolute latest
+                # (Another agent might have updated it while we were parsing args)
+                if os.path.exists(fpath):
+                    with open(fpath, 'r') as f:
+                        current_content = f.read()
+                        latest_data = parse_simple_yaml(current_content)
+                else:
+                    latest_data = {}
+
+                # Merge Logic (Re-apply on top of latest_data)
+                # We prioritize the LATEST data for lists, but the ARGS for current status
+                
+                # Session ID: Persist if exists
+                final_session_id = latest_data.get("session_id") or session_id
+                
+                # Active Blockers: Merge (Union)
+                final_blockers = latest_data.get("active_blockers", [])
+                if args.clear_blockers:
+                    final_blockers = []
+                elif args.add_blocker and args.add_blocker not in final_blockers:
+                    final_blockers.append(args.add_blocker)
+                    
+                # Recent Decisions: Append
+                final_decisions = latest_data.get("recent_decisions", [])
+                if args.add_decision:
+                    final_decisions.append(args.add_decision)
+                    if len(final_decisions) > 10:
+                        final_decisions = final_decisions[-10:]
+
+                # Completed Tasks: Append
+                final_completed = latest_data.get("completed_tasks", [])
+                if args.add_completed_task and args.add_completed_task not in final_completed:
+                    final_completed.append(args.add_completed_task)
+
+                # Construct Final State Object
+                final_state = {
+                    "session_id": final_session_id,
+                    "mode": args.mode,
+                    "task_name": args.task,
+                    "task_status": args.status,
+                    "predicted_steps": args.predicted_steps,
+                    "context_summary": args.summary,
+                    "active_blockers": final_blockers,
+                    "recent_decisions": final_decisions,
+                    "completed_tasks": final_completed
+                }
+                
+                # Generate YAML
+                yaml_content = generate_yaml(final_state)
+                
+                # Write to actual file
+                with open(fpath, 'w') as f:
+                    f.write(yaml_content)
+                    
+                print(f"Session state updated: {fpath} (Locked)")
+                
+            finally:
+                # Release Lock
+                fcntl.flock(lockfile, fcntl.LOCK_UN)
+                
     except Exception as e:
-        print(f"Error writing session state: {e}")
+        print(f"Error updating session state: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

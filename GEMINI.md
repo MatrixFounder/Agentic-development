@@ -60,6 +60,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - If no variant specified, default to standard `01-04`.
 3. **Execution**: If a matching workflow is found, execute its steps strictly.
    - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
+   - **MANDATORY**: After every `task_boundary` call, you **MUST** immediately execute `.agent/skills/skill-session-state/scripts/update_state.py` to persist context.
    - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
@@ -92,6 +93,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - Read `System/Agents/08_agent_developer.md`.
    - Execute the task in the codebase using `skill-developer-guidelines`.
    - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
+   - **SKILL CREATION GATE**: Before creating ANY file in `.agent/skills/`, you **MUST** run `python3 .agent/skills/skill-creator/scripts/init_skill.py <name> --tier <N>`. Manual creation is **PROHIBITED**. For modifying existing skills, use `skill-enhancer`.
    - Verify with `System/Agents/09_agent_code_reviewer.md` using `skill-code-review-checklist`.
 
 ## BEHAVIOR RULES

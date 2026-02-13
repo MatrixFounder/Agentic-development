@@ -1,0 +1,18 @@
+{
+    "hooks": {
+        "AfterTool": [
+            {
+                "matcher": "write_file|replace_file_content|multi_replace_file_content",
+                "hooks": [
+                    {
+                        "name": "skill-validator",
+                        "type": "command",
+                        "command": "${GEMINI_PROJECT_DIR:-.}/.gemini/hooks/validate_skill_hook.sh",
+                        "timeout": 10000,
+                        "description": "Auto-validates skills in .agent/skills/ after file writes."
+                    }
+                ]
+            }
+        ]
+    }
+}

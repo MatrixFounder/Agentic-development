@@ -62,3 +62,28 @@ python3 ...scripts/update_state.py ... --add_decision "Chose Redux over Context 
 ### Managing Blockers
 *   **Add Blocker**: `--add_blocker "Waiting for API key"`
 *   **Clear Blockers**: `--clear_blockers` (Use when unblocked)
+
+## 6. Shared State Protocol (v2 - Concurrent)
+> **For Parallel Agents**: When multiple agents run simultaneously, they must NOT overwrite each other's state in `latest.yaml`.
+
+### Locking Mechanism
+The `update_state.py` script now implements **Atomic File Locking** (`fcntl.lockf` on Unix).
+- **Read**: Shared Lock (allow others to read).
+- **Write**: Exclusive Lock (wait for others to finish).
+
+### Safe Usage Pattern
+1.  **Read State**:
+    ```python
+    # Pseudo-code
+    with FileLock("latest.yaml", "r"):
+        state = load()
+    ```
+2.  **Write State**:
+    ```python
+    # Pseudo-code
+    with FileLock("latest.yaml", "w"):
+        state = load() # Re-read to get latest
+        state.update(my_changes)
+        save(state)
+    ```
+

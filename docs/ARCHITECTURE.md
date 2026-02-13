@@ -5,9 +5,10 @@
 - [2. Directory Structure](#2-directory-structure)
 - [3. Workflow Logic (v3.1)](#3-workflow-logic-v31)
 - [4. Tool Execution Subsystem [NEW]](#4-tool-execution-subsystem-new)
-- [5. Key Principles](#5-key-principles)
-- [6. Localization Strategy](#6-localization-strategy)
-- [7. Skill Architecture & Optimization Standards](#7-skill-architecture--optimization-standards)
+- [5. Parallel Execution Model (POC) [NEW]](#5-parallel-execution-model-poc-new)
+- [6. Key Principles](#6-key-principles)
+- [7. Localization Strategy](#7-localization-strategy)
+- [8. Skill Architecture & Optimization Standards](#8-skill-architecture--optimization-standards)
 
 ## 1. Core Concept
 The system is built on a "Multi-Agent" architecture where different "Agents" (Personas defined by System Prompts) collaborate to solve tasks.
@@ -91,7 +92,18 @@ The orchestration layer now supports **Structured Tool Calling**:
 | `generate_task_archive_filename` | Generate unique sequential ID for task archival |
 
 
-## 5. Key Principles
+## 5. Parallel Execution Model (POC) [NEW]
+The system now supports a **Parallel Orchestration Protocol** to enable concurrent task execution.
+- **Orchestrator Role**: Decomposes tasks and spawns sub-agents.
+- **Shared State**: Uses `fcntl` file locking on `.agent/sessions/latest.yaml` to ensure safe concurrent updates.
+- **Agent Runner**: A `spawn_agent_mock.py` script simulates sub-agent behavior (as the environment lacks native LLM libraries).
+- **Protocol**: 
+  1. Orchestrator splits `TASK.md` -> `subtask-A.md`, `subtask-B.md`.
+  2. Orchestrator calls `spawn_agent_mock.py` for each subtask.
+  3. Sub-agents run in background processes, updating shared state.
+  4. Orchestrator merges results.
+
+## 6. Key Principles
 - **Modular Skills**: Logic is decoupled from Personas. Agents load `skills` to perform specific tasks.
 - **Local Artifacts**: `.AGENTS.md` provide distributed long-term memory per directory.
 - **Session State**: `latest.yaml` provides volatile short-term memory (GPS coordinates).
@@ -100,12 +112,12 @@ The orchestration layer now supports **Structured Tool Calling**:
 - **One Giant Column**: Keep context constraints in mind.
 - **Source of Truth**: Documentation (`docs/`), `System/Agents`, `.agent/skills`, and `latest.yaml`.
 
-## 6. Localization Strategy
+## 7. Localization Strategy
 - **Default**: English (`System/Agents`).
 - **Alternative**: Russian (`System/Agents_ru` -> `Translations/RU`).
 - Switching is done by swapping the source directory in the orchestrator config.
 
-## 7. Skill Architecture & Optimization Standards
+## 8. Skill Architecture & Optimization Standards
 
 > **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).
 

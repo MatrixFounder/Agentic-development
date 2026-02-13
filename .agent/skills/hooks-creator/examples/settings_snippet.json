@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "write_file|replace_file_content",
+        "hooks": [
+          {
+            "name": "secret-scanner",
+            "type": "command",
+            "command": "$GEMINI_PROJECT_DIR/.gemini/hooks/security_gate.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "BeforeToolSelection": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "intent-filter",
+            "type": "command",
+            "command": "node $GEMINI_PROJECT_DIR/.gemini/hooks/tool_filter.js"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 # Python Developer Guidelines
 
 ## Code Quality
-- **Ruff:** Use `ruff` for linting and formatting (replaces flak8/isort/black).
+- **Ruff:** Use `ruff` for linting and formatting (replaces flake8/isort/black).
 - **Type Hinting:** Strictly type all new code. Use `mypy` or `pyright`.
     - **Generics:** Use built-in types `list[str]` (Py3.9+) over `typing.List`.
     - **Self:** Use `typing.Self` (Py3.11+) for methods returning instance.

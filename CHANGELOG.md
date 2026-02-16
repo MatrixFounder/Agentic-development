@@ -16,7 +16,12 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.9.13 — Security Audit Enhancement (Gold Standard)** (Feature)
+### **v3.9.13 — Security Audit Enhancement & Security References** (Feature)
+
+#### **Added**
+* **Developer Guidelines**:
+    * **Security Quick-References**: Added condensed guides for 10 frameworks (Flask, Django, FastAPI, Express, Next.js, React, Vue, jQuery, JS General, Go).
+    * **Dynamic Loading**: Updated `SKILL.md` (v1.1) to dynamically load strict security references based on project context.
 
 #### **Improved**
 * **`security-audit` (v2.1)**:
@@ -26,6 +31,8 @@
     * **Checklist Restoration**: Explicitly linked and mandated usage of `solana_security.md`, `solidity_security.md`, and `fuzzing_invariants.md`.
 
 #### **Fixed** *(VDD Adversarial Hardening)*
+* **Security References**:
+    * Fixed factual inaccuracies in `flask.md` (deprecated `FLASK_ENV`, `safe_join` CVE) and `django.md` (middleware ordering) via VDD Adversarial Review.
 * **`run_audit.py`**:
     * Silent `except: pass` → stderr logging + `skipped_files` counter in report.
     * Self-flagging false positives → self-exclusion via `_is_self_path()`.
@@ -36,7 +43,9 @@
 * **`SKILL.md`**: Fixed OWASP category mappings (Secrets→A02, Deps→A06, Patterns→A03, Config→A05). Added Rationalization Table (Section 6).
 * **`owasp_top_10.md`**: Resolved duplicate A10 (merged SSRF into unified A10). Merged A08 into A03.
 
+
 ---
+
 
 ### **v3.9.12 — Framework Consistency, Parallel Agents & Safety Fixes** (Feature / Bugfix)
 

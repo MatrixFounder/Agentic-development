@@ -1,8 +1,8 @@
 ---
 name: developer-guidelines
-description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation."
+description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.0
+version: 1.1
 ---
 # Developers Guidelines
 
@@ -43,3 +43,19 @@ version: 1.0
   - Python: `references/languages/python.md`
   - JavaScript/TypeScript: `references/languages/javascript.md`
 - **Application:** Apply the specific rules in addition to the core guidelines above.
+
+## 8. Security Quick-Reference
+- **Dynamic Loading:** If the codebase uses a specific framework, you MUST read the corresponding security quick-reference from `references/security/` if it exists.
+  - Flask: `references/security/flask.md`
+  - Django: `references/security/django.md`
+  - FastAPI: `references/security/fastapi.md`
+  - Express: `references/security/express.md`
+  - Next.js: `references/security/nextjs.md` *(includes React-specific patterns; do NOT also load react.md)*
+  - React (standalone, no Next.js): `references/security/react.md`
+  - Vue.js: `references/security/vue.md`
+  - jQuery: `references/security/jquery.md`
+  - Vanilla JS/TS (frontend): `references/security/javascript-general.md`
+  - Go (net/http, Gin, Chi, Echo, Fiber): `references/security/golang.md`
+- **Loading Rule:** Load **one** framework-specific ref per file under review. Prefer the most specific match (e.g., Next.js over React, framework-specific over javascript-general).
+- **Application:** Apply the LLM anti-patterns, grep patterns, and edge cases from the loaded reference to avoid common security mistakes during code generation and review.
+- **Source:** Condensed from [OpenAI security-best-practices](https://github.com/openai/skills/tree/main/skills/.curated/security-best-practices) skill.

@@ -3,6 +3,7 @@ import os
 import argparse
 import sys
 import re
+import json
 
 # Add script directory to path to import skill_utils
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,7 +20,7 @@ def extract_frontmatter(file_path):
     Extracts frontmatter string and body from file.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
             content = f.read()
 
         lines = content.splitlines()
@@ -47,12 +48,13 @@ def extract_frontmatter(file_path):
     except Exception as e:
         return None, "", f"File Error: {str(e)}"
 
-def analyze_skill(skill_path, config):
+def analyze_skill(skill_path, config, json_output=False):
     """
     Analyzes a skill directory for gaps against the Standards.
     """
     skill_name = os.path.basename(os.path.normpath(skill_path))
-    print(f"Analyzing '{skill_name}' at {skill_path}...")
+    if not json_output:
+        print(f"Analyzing '{skill_name}' at {skill_path}...")
     
     validation_config = config.get('validation', {})
     quality_config = validation_config.get('quality_checks', {})
@@ -62,7 +64,11 @@ def analyze_skill(skill_path, config):
     # 1. Check SKILL.md existence
     skill_md_path = os.path.join(skill_path, "SKILL.md")
     if not os.path.exists(skill_md_path):
-        print(f"CRITICAL: Missing SKILL.md in {skill_path}")
+        msg = f"CRITICAL: Missing SKILL.md in {skill_path}"
+        if json_output:
+            print(json.dumps({"gaps": [msg], "status": "critical"}))
+            sys.exit(1)
+        print(msg)
         return
         
     fm_str, body, err = extract_frontmatter(skill_md_path)
@@ -202,31 +208,41 @@ def analyze_skill(skill_path, config):
         gaps.append(f"[Naming] Avoid vague names like '{skill_name}'. Use specific action-oriented names.")
 
     # Report
-    if gaps:
-        print(f"⚠️  Gaps Detected for '{skill_name}':")
-        for gap in gaps:
-            print(f"  - {gap}")
-        print("\nRecommendation: Run 'Execute Improvement Plan' to fix these gaps.")
-        sys.exit(1)
+    if json_output:
+        result = {
+            "skill": skill_name,
+            "gaps": gaps,
+            "status": "failed" if gaps else "passed"
+        }
+        print(json.dumps(result, indent=2))
+        sys.exit(1 if gaps else 0)
     else:
-        print(f"✅ No Gaps Found for '{skill_name}'. Skill is compliant.")
-        sys.exit(0)
+        if gaps:
+            print(f"⚠️  Gaps Detected for '{skill_name}':")
+            for gap in gaps:
+                print(f"  - {gap}")
+            print("\nRecommendation: Run 'Execute Improvement Plan' to fix these gaps.")
+            sys.exit(1)
+        else:
+            print(f"✅ No Gaps Found for '{skill_name}'. Skill is compliant.")
+            sys.exit(0)
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze a skill for Standard compliance gaps.")
-    parser.add_argument("path", help="Path to the skill directory")
+    parser.add_argument("path", help="Path to the skill directory.")
+    parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     
     args = parser.parse_args()
     
     if not os.path.isdir(args.path):
-        print(f"Error: Directory '{args.path}' not found.")
+        print(f"Error: Directory '{args.path}' not found.", file=sys.stderr)
         sys.exit(1)
     
     # Load Config
     project_root = os.getcwd() 
     config = skill_utils.load_config(project_root)
 
-    analyze_skill(args.path, config)
+    analyze_skill(args.path, config, json_output=args.json)
 
 if __name__ == "__main__":
     main()

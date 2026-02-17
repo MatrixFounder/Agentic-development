@@ -18,6 +18,7 @@ version: 1.1
 
 ## 2. Capabilities
 - **Audit**: Detect gaps (missing Red Flags, inline blocks > 12 lines, poor CSO, weak language) using `analyze_gaps.py`.
+- **Security Remediation**: Fix vulnerabilities flagged by `skill-validator` (e.g., `curl | bash`, secrets, weak permissions).
 - **Plan**: Propose specific content improvements using `references/refactoring_patterns.md`.
 - **Execute**: Apply refactoring patterns to upgrade the skill.
 
@@ -46,6 +47,14 @@ version: 1.1
     *   **DO NOT** use `write_to_file` to overwrite existing content (Data Loss Risk).
     *   *Tip*: Use `references/refactoring_patterns.md` (Coming in Iteration 2) for style guide.
 2.  **Verify**: Re-run `analyze_gaps.py`. Expect output "No Gaps Found".
+
+### Phase 3.5: Security Repair (If triggered by Validator)
+1.  **Analyze Report**: Read the `skill-validator` JSON output.
+2.  **Consult Guide**: Use `references/security_refactoring.md` to find safe alternatives for flagged patterns.
+3.  **Apply Fixes**:
+    *   *Shell Injection*: Replace direct execution with argument arrays.
+    *   *Downloads*: Replace `curl | bash` with download -> inspect -> execute.
+    *   *Secrets*: Move hardcoded keys to environment variables.
 
 ### Phase 4: Final VDD Check
 1.  **Read Checklist**: Open `references/vdd_checklist.md`.

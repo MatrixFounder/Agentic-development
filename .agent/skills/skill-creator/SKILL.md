@@ -2,7 +2,7 @@
 name: skill-creator
 description: Guidelines for creating new Agent Skills following Gold Standard structures. Use when defining new capabilities or upgrading existing skills.
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # Skill Creator Guide
 

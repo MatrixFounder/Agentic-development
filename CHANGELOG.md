@@ -16,12 +16,21 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.9.13 — Security Audit Enhancement & Security References** (Feature)
+### **v3.9.13 — Security Audit Enhancement & Workflow Alignment** (Feature / Maintenance)
 
 #### **Added**
 * **Developer Guidelines**:
     * **Security Quick-References**: Added condensed guides for 10 frameworks (Flask, Django, FastAPI, Express, Next.js, React, Vue, jQuery, JS General, Go).
     * **Dynamic Loading**: Updated `SKILL.md` (v1.1) to dynamically load strict security references based on project context.
+
+#### **Refactored**
+* **`security-audit` Workflow**:
+    * **Unified Script**: Updated `.agent/workflows/security-audit.md` to use the unified `run_audit.py` script.
+    * **Modernization**: Removed outdated prompt references and aligned manual review steps with the "Think Like a Hacker" protocol.
+* **`skill-adversarial-security` (v1.1)**:
+    * **Gold Standard**: Added strict "Red Flags" (Anti-Rationalization) and "Rationalization Table" (Developer Excuses).
+    * **Cleanup**: Removed duplicate sections and updated script execution commands to match v2 standards.
+    * **Verification**: Verified integration with `vdd-adversarial` and `vdd-multi` workflows.
 
 #### **Improved**
 * **`security-audit` (v2.1)**:

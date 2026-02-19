@@ -14,29 +14,29 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 ![Framework architecture](/Attachments/Framework_architecture_v2.png)
 
 ## 📋 Table of Contents
-- [Installation & Setup](#installation--setup)
+- [Installation & Setup](#-installation--setup)
   - [1. Copy Framework Folders](#1-copy-framework-folders)
   - [2. Choose Your AI Assistant](#2-choose-your-ai-assistant)
   - [3. Installation Requirements (Python)](#3-installation-requirements-python)
-- [System Overview](#system-overview)
+- [System Overview](#-system-overview)
   - [Directory Structure](#directory-structure)
-  - [Concept Deep Dive: Blueprint vs Driver](#concept-deep-dive-blueprint-vs-driver)
-  - [The Agent Team (Roles)](#the-agent-team-roles)
-  - [The Product Team (Roles)](#the-product-team-roles)
-  - [Skills System](#skills-system)
-- [Workspace Workflows](#workspace-workflows)
+  - [Concept Deep Dive: Blueprint vs Driver](#-concept-deep-dive-blueprint-vs-driver)
+  - [The Agent Team (Roles)](#-the-agent-team-roles)
+  - [The Product Team (Roles)](#-the-product-team-roles)
+  - [Skills System](#-skills-system)
+- [Workspace Workflows](#-workspace-workflows)
   - [Quick Start](#quick-start)
   - [Variants](#variants)
-- [How to Start Development](#how-to-start-development-step-by-step-plan)
+- [How to Start Development](#-how-to-start-development-step-by-step-plan)
   - [Phase 0: Product Discovery](#phase-0-product-discovery-optional)
   - [Stages 1-5](#stage-1-pre-flight-check)
-- [Practical Usage (Claude Code & Gemini)](#practical-usage)
-- [Artifact Management](#artifact-management)
-- [What to do with .AGENTS.md files?](#agents-files)
-- [How to prepare for future iterations?](#future-iterations)
-- [Reverse Engineering](#reverse-engineering)
-- [Starter Prompts](#starter-prompts)
-- [Migration Guide](#migration-guide)
+- [Practical Usage (Claude Code & Gemini)](#-practical-usage-claude-code--gemini)
+- [Artifact Management](#-artifact-management)
+- [What to do with .AGENTS.md files?](#-what-to-do-with-agentsmd-files)
+- [How to prepare for future iterations?](#-how-to-prepare-for-future-iterations)
+- [Reverse Engineering](#-reverse-engineering-if-documentation-is-outdated)
+- [Starter Prompts](#-starter-prompt-templates)
+- [Migration Guide](#-migration-from-older-versions)
 
 
 
@@ -154,6 +154,7 @@ project-root/
 ├── AGENTS.md                    # [Cursor] Context & Rules
 ├── GEMINI.md                    # [Antigravity] System Config
 ├── .agent/
+│   ├── skills/                  # [Common] Skill Catalog
 │   │   ├── ...
 │   │   └── skill-product-*      # [Product] Strategy, Vision, Handoff
 │   ├── workflows/               # [Common] Workflow Library
@@ -246,7 +247,7 @@ graph TD
 | **Claude Code** | `CLAUDE.md` (symlink) | Automatic (on launch) |
 | **Gemini CLI** | `GEMINI.md` | Automatic (system instruction) |
 
-**Note:** See [Blueprint vs Driver](#concept-deep-dive-blueprint-vs-driver) for the difference between `00_agent_development.md` (theory) and system prompt files (execution).
+**Note:** See [Blueprint vs Driver](#-concept-deep-dive-blueprint-vs-driver) for the difference between `00_agent_development.md` (theory) and system prompt files (execution).
 
 
 ### 📚 Skills System

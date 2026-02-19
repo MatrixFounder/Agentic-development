@@ -57,16 +57,18 @@ validation:
 - `validation.quality_checks.max_inline_lines` fallback: `12`
 - `validation.quality_checks.max_description_words` fallback: `50`
 
-## 4. Project-Level Extensions (Current Repository)
+## 4. Project-Level Extensions (Overlay-Dependent)
 
-The current project overlay adds or overrides several fields.
+Project overlays may add or override fields. This file must not be treated as repository-specific policy.
 
-Examples in this repository:
-- `validation.enforce_cso_prefix: false`
-- `validation.inline_exempt_skills` (legacy inline-block exceptions)
-- additional CSO prefix: `"Defines"`
-- `taxonomy.tiers` includes Tier `3` (`High Assurance`)
-- `validation.prohibited_files` includes `README.md`, `CHANGELOG.md`
+Typical override patterns:
+- `validation.enforce_cso_prefix` (`true`/`false`)
+- `validation.inline_exempt_skills` (legacy exceptions)
+- additional entries in `validation.allowed_cso_prefixes`
+- extended `taxonomy.tiers` (for example, custom Tier `3+`)
+- `validation.prohibited_files` adjustments
+
+To determine active behavior in the current repository, inspect the merged config output instead of assuming values from examples.
 
 ## 5. How To Inspect Effective Config
 

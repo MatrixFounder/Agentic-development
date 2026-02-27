@@ -2,7 +2,7 @@
 name: skill-enhancer
 description: Use when you need to audit, fix, or improve an existing agent skill to meet Gold Standard compliance.
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # Skill Enhancer
 
@@ -48,7 +48,10 @@ version: 1.1
 ### Phase 1: Audit
 1.  **Run Analyzer**: `python3 scripts/analyze_gaps.py <target-skill-path>`.
 2.  **Manual Checks**:
-    *   **Weak Language**: Does it use "should", "can", "try"? (Must be "MUST", "EXECUTE").
+    *   **Graduated Language Review**: Check instruction language against the graduated approach:
+        - **Safety-critical** steps (data loss, destructive ops): Must use `MUST`/`ALWAYS` **+ explanation why** — if the explanation is missing, add it
+        - **Behavioral** steps (formatting, style): Apply **explain-why + imperative** style — if bare `MUST` without rationale, add the rationale; if weak "should"/"could", strengthen to imperative + reason
+        - Do NOT blindly replace every "should" with "MUST" — evaluate whether the instruction is safety-critical or behavioral first
     *   **Script-First Gap**: Identify if complex logic steps (> 5 lines of text) **MUST** be converted to a `script/`.
 3.  **Review Gaps**: Read the analyzer output and your manual findings.
 
@@ -59,22 +62,32 @@ version: 1.1
 4.  Verify `Validation Evidence` section defines objective verification outputs.
 5.  Mark missing pieces as migration gaps (warning-first for legacy skills).
 
+### Phase 1.7: Behavioral Analysis (If Usage Logs Available)
+If transcripts or logs from real skill usage exist, analyze them for patterns:
+1.  **Repeated Code**: Did the agent write the same helper script across multiple runs? → Extract to `scripts/`.
+2.  **Repeated Questions**: Did the agent ask the same questions or re-discover the same context? → Add to `references/`.
+3.  **Excessive Token Usage**: Did the agent spend tokens reading large inline blocks? → Plan extraction to external files.
+4.  **Unused Sections**: Did the agent skip reading certain sections entirely? → Consider trimming or consolidating.
+
+If no usage logs are available, skip this phase — it will become relevant after the skill is deployed.
+
 ### Phase 2: Plan
 1.  **Read Target Skill**: Read the content of the target skill.
 2.  **Draft Improvements**:
     *   *Token Efficiency*: Identify blocks > 12 lines and plan extraction to `examples/`, `assets/`, or `references/`.
     *   *Script-First*: Identify logic blocks > 5 lines and plan extraction to `scripts/`.
     *   *Execution Policy*: Add missing policy sections and scope constraints.
-    *   *Anti-Laziness*: Replace weak words with strong imperatives.
+    *   *Graduated Language*: Replace weak words using the graduated approach — `MUST + why` for safety, `explain-why + imperative` for behavioral.
     *   *Red Flags*: Identify 2-3 likely agent excuses for *this specific task*.
-    *   *CSO*: Rewrite description to "Use when [TRIGGER]...".
+    *   *CSO & Pushiness*: Rewrite description to "Use when [TRIGGER]...". Check if description is "pushy" enough to prevent under-triggering — add edge-case triggers and phrases like "even if the user doesn't explicitly ask for…".
+    *   *Generalization*: Check if instructions are overfitted to specific examples. A skill must work across many prompts, not just the test cases it was developed with.
 3.  **Confirm**: Ensure improvements align with the "Skills as Code" philosophy.
 
 ### Phase 3: Execute
 1.  **Update File**: Edit the target `SKILL.md` to insert the new sections.
     *   **CRITICAL**: Use `replace_file_content` or `multi_replace_file_content`.
     *   **DO NOT** use `write_to_file` to overwrite existing content (Data Loss Risk).
-    *   *Tip*: Use `references/refactoring_patterns.md` (Coming in Iteration 2) for style guide.
+    *   *Tip*: Use `references/refactoring_patterns.md` for the style guide.
 2.  **Verify**: Re-run `analyze_gaps.py`. Expect output "No Gaps Found".
 
 ### Phase 3.5: Security Repair (If triggered by Validator)
@@ -88,7 +101,8 @@ version: 1.1
 ### Phase 4: Final VDD Check
 1.  **Read Checklist**: Open `references/vdd_checklist.md`.
 2.  **Self-Correction**: Verify your work against the 5 criteria (Data Safety, Anti-Laziness, etc.).
-3.  **Refine**: If any check fails (e.g., found "TODO", found "should"), fix it immediately.
+3.  **Refine**: If any check fails (e.g., found "TODO", found unmotivated "should"), fix it immediately.
+4.  **Test Coverage**: Verify the skill has at least 2-3 test prompts — either in `evals/evals.json` or documented inline. If none exist, create them based on the skill's intended use cases.
 
 ## 4. Best Practices
 
@@ -124,3 +138,6 @@ Recommendation: Run 'Execute Improvement Plan'...
 - `scripts/analyze_gaps.py`: The gap detection tool.
 - `references/writing_skills_best_practices_anthropic.md`: The authoritative "Gold Standard" guide used to verify compliance.
 - `references/testing-skills-with-subagents.md`: Methodology for verifying fixes using TDD (Red-Green-Refactor).
+- `../skill-creator/agents/grader.md`: Prompt for evaluating skill execution results against expectations.
+- `../skill-creator/agents/comparator.md`: Prompt for blind A/B comparison of two skill outputs.
+- `../skill-creator/agents/analyzer.md`: Prompt for post-hoc analysis — identifies why one skill version outperforms another.

@@ -1,27 +1,29 @@
 # Deep Refactoring Patterns
 
-Turn "Passive Reference" into "Imperative Algorithms".
+Turn "Passive Reference" into "Motivated Algorithms" using the graduated approach.
 
-## Pattern 1: The "Suggested" Trap
+## Pattern 1: The "Suggested" Trap → Graduated Fix
 
 **Bad (Passive):**
 > It is suggested that you check the file for errors before proceeding.
 
-**Good (Imperative):**
-> 1. Read the file.
-> 2. If errors exist -> STOP. Fix them.
-> 3. Else -> Proceed.
+**Okay (Imperative-Only, missing motivation):**
+> You MUST check the file for errors.
 
-## Pattern 2: The "Ambiguous Can"
+**Good (Graduated — imperative + why):**
+> You MUST check the file for errors before proceeding — undetected errors
+> compound silently and cause hard-to-debug failures downstream.
+
+## Pattern 2: The "Ambiguous Can" → Context-Dependent Fix
 
 **Bad (Passive):**
 > You can use the `--force` flag if needed.
 
-**Good (Imperative):**
+**Good (Graduated):**
 > **IF** the command fails with `EEXIST`:
-> *   Run with `--force`.
+>    Run with `--force` — this is safe because the file will be overwritten with the correct version.
 > **ELSE**:
-> *   Do not use `--force`.
+>    Do not use `--force` — it bypasses safety checks that prevent data loss.
 
 ## Pattern 3: The "Hidden Decision"
 
@@ -90,3 +92,11 @@ Turn "Passive Reference" into "Imperative Algorithms".
 **Why?**
 *   Prevents accidental framework or infrastructure changes.
 *   Makes rollback and review practical.
+
+## Pattern 8: Passive Description → Pushy Description
+
+**Bad (Passive):**
+> description: Guide for building dashboards.
+
+**Good (Pushy):**
+> description: Use when building dashboards, data visualization, metrics display, or showing structured data. Apply even if the user doesn't explicitly ask for a 'dashboard'.

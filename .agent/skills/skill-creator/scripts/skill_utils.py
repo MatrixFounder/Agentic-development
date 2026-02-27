@@ -18,16 +18,37 @@ class VanillaYamlParser:
         root = {}
         stack = [(root, -1)]  # (container, indent_level)
         last_key = None 
+        in_block_scalar = False
+        block_scalar_key = None
+        block_scalar_indent = -1
+        block_scalar_lines = []
+        block_scalar_type = None # '>' or '|'
         
         for line in lines:
             raw_line = line.rstrip()
             stripped = raw_line.lstrip()
             
             # Skip empty or comments
-            if not stripped or stripped.startswith('#'):
+            if not in_block_scalar and (not stripped or stripped.startswith('#')):
                 continue
                 
             indent = len(raw_line) - len(stripped)
+            
+            # Handle block scalar content
+            if in_block_scalar:
+                if not raw_line.strip():
+                    block_scalar_lines.append("")
+                    continue
+                if indent <= block_scalar_indent:
+                    # End of block scalar
+                    content_str = "\n".join(block_scalar_lines) if block_scalar_type.startswith('|') else " ".join(l.strip() for l in block_scalar_lines if l.strip())
+                    current_container, _ = stack[-1]
+                    current_container[block_scalar_key] = content_str
+                    in_block_scalar = False
+                    block_scalar_lines = []
+                else:
+                    block_scalar_lines.append(raw_line[block_scalar_indent+1:]) # strip up to indent
+                    continue
             line_content = stripped.split('#')[0].strip()
             
             # Hierarchy management
@@ -95,10 +116,21 @@ class VanillaYamlParser:
                     current_container[key] = new_container
                     last_key = key
                     stack.append((new_container, indent))
+                elif val.startswith('>') or val.startswith('|'):
+                    in_block_scalar = True
+                    block_scalar_key = key
+                    block_scalar_indent = indent
+                    block_scalar_type = val
                 else:
                     current_container[key] = self._parse_value(val)
                     last_key = key
                 continue
+
+        # Handle trailing block scalar at EOF
+        if in_block_scalar:
+             content_str = "\n".join(block_scalar_lines) if block_scalar_type.startswith('|') else " ".join(l.strip() for l in block_scalar_lines if l.strip())
+             current_container, _ = stack[-1]
+             current_container[block_scalar_key] = content_str
 
         return root
 

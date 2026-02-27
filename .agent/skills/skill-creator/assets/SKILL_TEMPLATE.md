@@ -10,8 +10,8 @@ version: 1.0
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
-- "[Common excuse 1]" -> [Why this is wrong]
-- "[Common excuse 2]" -> [Why this is wrong]
+- "[Common excuse 1]" -> [Why this is wrong — explain the consequence]
+- "[Common excuse 2]" -> [Why this is wrong — explain the consequence]
 
 ## 2. Capabilities
 List what this skill allows the agent to do.
@@ -44,7 +44,9 @@ Use this section when mode is `script-first` or `hybrid`.
 - **CI signal**: [job/check name if available]
 
 ## 7. Instructions
-Provide step-by-step instructions for the agent. Use imperative mood.
+Provide step-by-step instructions. Use graduated language:
+- **Safety-critical** steps: `MUST` + explain why
+- **Behavioral** steps: Explain why + imperative verb
 
 ### [Phase/Action 1]
 1.  **Step 1**: [Instruction]
@@ -93,3 +95,6 @@ Describe the usage of files in `assets/`, `references/`, and scripts in `scripts
 - `scripts/helpers.py`: [Description]
 - `assets/template.json`: [Description]
 - `references/guidelines.md`: [Description]
+
+## 12. Evals (Optional but Recommended)
+Define 2-3 test prompts in `evals/evals.json` — see skill-creator §14 for format.

@@ -28,6 +28,13 @@
     * Добавлен `.github/workflows/framework-gates.yml` для принудительных проверок tooling-тестов, валидации skills, smoke-проверок workflows, целостности ссылок и security lint.
 * **Регрессионное покрытие**:
     * Добавлены `tests/test_tool_runner_security_contract.py`, `tests/test_spec_validator.py`, `tests/test_product_handoff_scripts.py`.
+* **skill-creator v1.3 (Anthropic Skill Standards Sync)**:
+    * **Structured Evals Workflow**: Добавлена полноценная секция по написанию и запуску вендор-агностичных тестов (evals) для скиллов с использованием LLM-как-судья. Внедрен формат `evals/evals.json`.
+    * **Agent Prompts**: В папку `agents/` перенесены 3 готовых промпта для автоматизированной оценки скиллов: `grader.md`, `comparator.md`, `analyzer.md`.
+    * **Скрипты агрегации и отчетности**: В папке `scripts/` добавлена инфраструктура для работы с результатами эвалюаторов (`aggregate_benchmark.py`, `generate_report.py`, `generate_review.py`).
+    * **JSON Schemas**: Добавлен файл `references/eval_schemas.md`, задающий единый Source of Truth для 8 различных JSON-форматов оценки.
+* **skill-enhancer v1.2 (Anthropic Skill Standards Sync)**:
+    * **Phase 1.7: Behavioral Analysis**: В жизненный цикл аудита добавлена новая фаза. Теперь enhancer проверяет логи использования старого скилла и рекомендует вынести FAQ в `references/`, а helper-код в `scripts/`.
 
 #### **Улучшено**
 * **Безопасность выполнения инструментов (BI-001)**:
@@ -55,6 +62,18 @@
     * Обновлен `.agent/skills/skill-creator/SKILL.md`: добавлены ссылки на defaults map и `skill_utils.py` для просмотра эффективной merged-конфигурации.
 * **Точная настройка release checklist**:
     * Обновлен `System/Docs/RELEASE_CHECKLIST.md`: проверки Product Handoff сделаны опциональными и обязательны только при изменениях в `skill-product-handoff`.
+* **skill-creator v1.3 (Anthropic Skill Standards Sync)**:
+    * **Graduated Instructions**: Вместо жесткого требования `MUST/ALWAYS` везде, внедрен двухуровневый подход: жесткий `MUST + explanation` для критичных шагов и `explain why + do` для поведенческих настроек.
+    * **Description Pushiness Optimization (CSO)**: Расширено руководство по SEO-оптимизации описания скилла: рекомендуется писать более агрессивные триггеры для предотвращения under-triggering.
+    * **Behavior Iteration Loop**: Добавлен шаг в алгоритм создания скилла: выявлять повторяющийся код или вопросы агента во время тестов и переносить их в `scripts/` или `references/`.
+    * **Environment Adaptation**: Добавлены рекомендации по описанию Fallback-стратегий для скиллов, которые зависят от специфичных CLI или браузеров.
+    * **Target Audience Selection**: Инструкция теперь требует явно определить целевую аудиторию перед написанием скилла.
+* **skill-enhancer v1.2 (Anthropic Skill Standards Sync)**:
+    * **Graduated Language Check**: Скрипт `analyze_gaps.py` и инструкции теперь проверяют текст по "Двухуровневой" системе мотивации. Обновлены VDD-чеклисты и паттерны рефакторинга.
+    * **Description Pushiness Check**: Добавлено правило проверки описания оцениваемого скилла на достаточную "агрессивность" триггеров.
+    * **Test Coverage Check**: Фаза финальной проверки принудительно проверяет, имеет ли скилл хотя бы 2-3 тестовых промпта (в `evals.json` или описанных текстом).
+    * **Generalization Check**: Добавлен аудит на overfitting (переобучение) скилла под очень узкие примеры.
+    * Обновлены локальные ссылки на SSoT агентов (`skill-creator/agents/`).
 
 #### **Исправлено**
 * **Корректность spec-validator (BI-003)**:
@@ -70,6 +89,12 @@
     * Синхронизирован workflow/docs-контракт для миграционного запуска:
         * Обновлена bootstrap-команда в `.agent/workflows/04-update-docs.md` с `--development-root src`.
         * Обновлены `System/Docs/SOURCE_OF_TRUTH.md` и docs навыков (опциональность `.AGENTS.md` + scoped bootstrap policy).
+* **skill-creator v1.3**:
+    * Обновлен `validate_skill.py`: папки `agents/` и `evals/` теперь внесены в `allowed_dirs` во избежание false-positives при строгой проверке.
+    * Опечатки в JSON ключах (`input_files` -> `files`, `expected_outcomes` -> `expectations`) в примерах `SKILL.md` исправлены для полного соответствия схемам.
+* **skill-enhancer v1.2**:
+    * `analyze_gaps.py`: Улучшен парсинг markdown-файлов. Скрипт больше не триггерит false-positives на отсутствие префикса `Phase/Step` внутри блоков JSON.
+    * Отчищены фантомные ссылки на "(Coming in Iteration 2)" — вся заявленная архитектура теперь существует в реальности.
 
 #### **Проверено**
 * В target-репозитории проходят `System/scripts/check_prompt_references.py --root .` и `System/scripts/smoke_workflows.py --root .`.

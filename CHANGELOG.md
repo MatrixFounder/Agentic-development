@@ -28,6 +28,13 @@
     * Added `.github/workflows/framework-gates.yml` to enforce tooling tests, skill validation, workflow smoke checks, reference integrity, and security linting.
 * **Regression coverage**:
     * Added `tests/test_tool_runner_security_contract.py`, `tests/test_spec_validator.py`, and `tests/test_product_handoff_scripts.py`.
+* **skill-creator v1.3 (Anthropic Skill Standards Sync)**:
+    * **Structured Evals Workflow**: Added a full section for defining and running vendor-agnostic tests (evals) for skills using LLM-as-a-judge (`evals/evals.json`).
+    * **Agent Prompts**: Moved 3 ready-to-use prompts to `agents/` for automated skill evaluation (`grader.md`, `comparator.md`, `analyzer.md`).
+    * **Reporting Scripts**: Added infrastructure to `scripts/` for processing evaluator results (`aggregate_benchmark.py`, `generate_report.py`, `generate_review.py`).
+    * **JSON Schemas**: Added `references/eval_schemas.md` defining a Single Source of Truth for 8 JSON evaluation formats.
+* **skill-enhancer v1.2 (Anthropic Skill Standards Sync)**:
+    * **Phase 1.7 (Behavioral Analysis)**: Added a new audit phase to review usage logs and recommend extracting FAQs to `references/` and helpers to `scripts/`.
 
 #### **Improved**
 * **Tool execution security (BI-001)**:
@@ -55,6 +62,18 @@
     * Updated `.agent/skills/skill-creator/SKILL.md` to reference the defaults map and `skill_utils.py` for effective merged-config inspection.
 * **Release checklist scope tuning**:
     * Updated `System/Docs/RELEASE_CHECKLIST.md`: product handoff safety checks are optional and required only when modifying `skill-product-handoff`.
+* **skill-creator v1.3 (Anthropic Skill Standards Sync)**:
+    * **Graduated Instructions**: Replaced strict `MUST/ALWAYS` constraints with a two-tier approach (`MUST + explanation` for safety, `explain why + do` for behavioral tuning).
+    * **Description Pushiness Optimization (CSO)**: Expanded SEO-optimization guidelines for skill descriptions, advocating for more aggressive triggers.
+    * **Behavior Iteration Loop**: Added a step in skill creation to extract repetitive agent code/questions into `scripts/` or `references/`.
+    * **Environment Adaptation**: Added recommendations for Fallback strategies for skills relying on specific CLIs or browsers.
+    * **Target Audience Selection**: Guidelines now require explicitly defining the target audience before writing.
+* **skill-enhancer v1.2 (Anthropic Skill Standards Sync)**:
+    * **Graduated Language Check**: `analyze_gaps.py` and pipeline instructions now evaluate using the two-tier motivation system. Updates internal VDD checklists and refactoring patterns.
+    * **Description Pushiness Check**: Added rules to verify the "aggressiveness" of triggers in skill descriptions.
+    * **Test Coverage Check**: Final VDD Check now enforces the presence of at least 2-3 test prompts (either in `evals.json` or text).
+    * **Generalization Check**: Added audit to prevent overfitting of skills to overly narrow examples.
+    * **Agent References**: Local references to SSoT agents (`skill-creator/agents/`) updated.
 
 #### **Fixed**
 * **Spec validator correctness (BI-003)**:
@@ -70,6 +89,12 @@
     * Aligned workflow/docs contract for migration usage:
         * Updated `.agent/workflows/04-update-docs.md` bootstrap command to use `--development-root src`.
         * Updated `System/Docs/SOURCE_OF_TRUTH.md` and skill docs to reflect optional `.AGENTS.md` + scoped bootstrap policy.
+* **skill-creator v1.3**:
+    * Updated `validate_skill.py`: `agents/` and `evals/` directories are now whitelisted to avoid false-positives during strict checks.
+    * Corrected typos in JSON keys in `SKILL.md` examples for strict schema compliance (`input_files` -> `files`, `expected_outcomes` -> `expectations`).
+* **skill-enhancer v1.2**:
+    * `analyze_gaps.py`: Improved markdown parsing to prevent false-positives for missing `Phase/Step` prefixes inside JSON blocks.
+    * Cleaned up phantom links to "(Coming in Iteration 2)" — all declared architecture now actually exists.
 
 #### **Verified**
 * `System/scripts/check_prompt_references.py --root .` and `System/scripts/smoke_workflows.py --root .` pass in the target repository.

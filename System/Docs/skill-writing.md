@@ -10,9 +10,9 @@ This manual describes how to use the **Skill Creator** and **Skill Enhancer** to
 
 The Meta-Skill system consists of two primary components:
 
-1.  **Skill Creator**: Bootstraps new skills with a standardized structure (`scripts/`, `examples/`, `resources/`) and validates them against compliance rules.
-    *   *Scripts*: `init_skill.py`, `validate_skill.py`
-2.  **Skill Enhancer**: Analyzes existing skills for "gaps" (weak language, missing sections, poor examples) and guides refactoring.
+1.  **Skill Creator**: Bootstraps new skills with a standardized structure (`scripts/`, `examples/`, `references/`, `assets/`, `evals/`, `agents/`) and validates them against compliance rules.
+    *   *Scripts*: `init_skill.py`, `validate_skill.py`, `aggregate_benchmark.py`, `generate_report.py`, `generate_review.py`
+2.  **Skill Enhancer**: Analyzes existing skills for "gaps" (weak language, missing sections, poor examples, test coverage, overfitting) and guides refactoring. Performs Behavioral Analysis via logs to extract FAQs and helpers.
     *   *Scripts*: `analyze_gaps.py`
 
 ---
@@ -82,7 +82,7 @@ python3 .agent/skills/skill-creator/scripts/init_skill.py my-new-skill --tier 3
 ```
 
 **What it does:**
-- Creates directories: `scripts/`, `examples/`, `resources/`.
+- Creates directories: `scripts/`, `examples/`, `references/`, `assets/`, `evals/`, `agents/`.
 - Generates `SKILL.md` from the template.
 - Checks if you need to update your Catalog File.
 
@@ -96,8 +96,8 @@ python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/my-n
 **Checks:**
 - `SKILL.md` exists.
 - Frontmatter (YAML) is valid and matches config (Tiers).
-- No prohibited files (e.g., README.md).
-- Description starts with allowed prefixes.
+- No prohibited files (e.g., README.md). `agents/` and `evals/` are whitelisted.
+- Description starts with allowed prefixes and contains pushy/aggressive triggers.
 
 ### Enhancing a Skill
 Use `analyze_gaps.py` to check for quality issues and "Antigravity" compliance.
@@ -107,10 +107,11 @@ python3 .agent/skills/skill-enhancer/scripts/analyze_gaps.py .agent/skills/my-ne
 ```
 
 **Checks:**
-- **Weak Language**: Detects "passive" words like "should", "can".
+- **Weak Language**: Detects "passive" words like "should", "can" and enforces Graduated Language constraints.
 - **Structure**: Checks for required sections ("Red Flags").
 - **Token Efficiency**: Warns if inline code blocks > 12 lines.
-- **Richness**: Warns if `examples/` folder is empty.
+- **Richness & Coverage**: Warns if `examples/` is empty, checks for overfitting, and enforces at least 2-3 test prompts (in `evals.json` or text).
+- **Behavioral Gaps**: Checks usage logs, recommending FAQ extraction to `references/` and helpers to `scripts/`.
 
 ---
 
@@ -119,6 +120,9 @@ python3 .agent/skills/skill-enhancer/scripts/analyze_gaps.py .agent/skills/my-ne
 To write effective skills that work across different LLMs (Anthropic, OpenAI, etc.):
 
 1.  **Script-First**: If logic requires > 5 lines of text explanation, write a Python script instead. Agents follow code better than text.
-2.  **Imperative Language**: Use "MUST", "EXECUTE", "VERIFY". Avoid "should", "try".
+2.  **Graduated Instructions**: Use "MUST + rationale" for critical safety steps, and use "explain why + do" for behavioral tuning. Avoid "should", "try".
 3.  **Examples**: Provide real file examples in `examples/`. Do not force the agent to hallucinate content.
 4.  **Zero-Dependency**: Keep your skill scripts standard (Vanilla Python) so they run everywhere without setup.
+5.  **Structured Evaluation**: Always provide a vendor-agnostic `evals/evals.json`. Use LLM-as-a-judge via `agents/grader.md` or `agents/comparator.md` to ensure behavioral stability.
+6.  **Environment Adaptation**: Detail Fallback strategies if your skill depends on specific CLI tools or browser capabilities.
+7.  **Target Audience**: Explicitly define the target audience (e.g., developer, project manager) before writing your guidelines.

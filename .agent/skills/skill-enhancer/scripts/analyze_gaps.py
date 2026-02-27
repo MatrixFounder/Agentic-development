@@ -127,7 +127,8 @@ def analyze_skill(skill_path, config, json_output=False):
         desc = meta['description']
         # Configurable Prefixes
         allowed_prefixes = validation_config.get('allowed_cso_prefixes', ["Use when"])
-        desc_lower_meta = desc.lower().strip()
+        # Handle multi-line descriptions by replacing newlines with spaces for prefix matching
+        desc_lower_meta = " ".join(desc.split()).lower()
         if not any(desc_lower_meta.startswith(prefix.lower()) for prefix in allowed_prefixes):
             gaps.append(f"[CSO] Description should start with one of {allowed_prefixes}")
         
@@ -160,7 +161,18 @@ def analyze_skill(skill_path, config, json_output=False):
     missing_exec_normalized = {
         _normalize_section_title(section) for section in missing_exec_sections
     }
+    # Attempt to extract mode to skip Script Contract for prompt-first
+    mode_match = re.search(r'\*\*Mode\*\*:\s*`?(prompt-first|script-first|hybrid)`?', body, re.IGNORECASE)
+    mode = mode_match.group(1).lower() if mode_match else "unknown"
+
     for section in missing_exec_sections:
+        normalized_sec = _normalize_section_title(section)
+        # Script Contract is optional for prompt-first skills unless scripts/ is populated
+        if normalized_sec == _normalize_section_title("Script Contract") and mode == "prompt-first":
+            scripts_dir_check = os.path.join(skill_path, "scripts")
+            if not _has_real_files(scripts_dir_check):
+                continue # Skip reporting Script Contract missing if prompt-first and no scripts
+
         gaps.append(
             f"[Execution Policy] Missing '{section}' section (warning-first migration target)."
         )
@@ -193,7 +205,7 @@ def analyze_skill(skill_path, config, json_output=False):
                 "[Execution Policy] Script references found but 'Validation Evidence' is missing."
             )
 
-    # 4. Check Deep Logic (Passive Voice)
+    # 4. Check Deep Logic (Language Review — Graduated Approach)
     passive_keywords = quality_config.get('banned_words', ["should"])
     
     # Analyze line by line
@@ -216,7 +228,7 @@ def analyze_skill(skill_path, config, json_output=False):
             deep_logic_gaps.append(f"Line {i}: Found {found} -> \"{snippet}\"")
             
     if deep_logic_gaps:
-        gaps.append(f"[Deep Logic] Passive wording found. Rewrite to Imperative:\n    " + "\n    ".join(deep_logic_gaps[:5]))
+        gaps.append(f"[Language] Weak wording found. Apply graduated fix (MUST + why for safety, explain-why + imperative for behavioral):\n    " + "\n    ".join(deep_logic_gaps[:5]))
         if len(deep_logic_gaps) > 5:
             gaps.append(f"    ... and {len(deep_logic_gaps) - 5} more.")
 
@@ -233,18 +245,23 @@ def analyze_skill(skill_path, config, json_output=False):
     # If we see [text] NOT followed by (, it's likely a placeholder.
     
     # Detect [Placeholder] 
-    # Regex: \[ ([^\]]+) \] (?! \()
-    placeholders = re.findall(r'\[([^\]]+)\](?!\()', body)
+    # Regex: \[ ([^\]\n"'{}\\]+) \] (?! \() -> no newlines, quotes, or curly braces inside
+    placeholders = re.findall(r'\[([^\]\n\"\'\{\}\\]+)\](?!\()', body)
     # Filter out common false positives like " " (checkboxes) or single chars
     real_placeholders = [p for p in placeholders if len(p) > 3 and " " in p]
     
     if real_placeholders:
         gaps.append(f"[Lazy] Found {len(real_placeholders)} bracket placeholders (e.g., '[{real_placeholders[0]}]'). Fill them in.")
 
-    # 5.5 Check Deprecated Directories
-    resources_dir = os.path.join(skill_path, "resources")
-    if os.path.isdir(resources_dir):
-         gaps.append("[Structure] Found deprecated 'resources/' directory. Migrate contents to 'assets/' (output) or 'references/' (knowledge).")
+    # 5.5 Check Directory Structure Deviations
+    allowed_dirs = ["scripts", "examples", "assets", "references", "config", "agents", "evals"]
+    for item in os.listdir(skill_path):
+        item_path = os.path.join(skill_path, item)
+        if os.path.isdir(item_path):
+            if item == "resources":
+                 gaps.append("[Structure] Found deprecated 'resources/' directory. Migrate contents to 'assets/' (output) or 'references/' (knowledge).")
+            elif item not in allowed_dirs and not item.startswith("."):
+                 gaps.append(f"[Structure] Non-standard directory '{item}'. Known directories: {allowed_dirs}")
 
     # 6. Check Examples Content
     examples_dir = os.path.join(skill_path, "examples")

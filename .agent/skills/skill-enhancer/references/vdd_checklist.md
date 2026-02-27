@@ -6,11 +6,12 @@
 - [ ] **No Overwrites**: Did you use `replace_file_content` tailored to specific lines? (Banned: `write_to_file` on existing files).
 - [ ] **Backup**: Did you preserve the original intent of the skill? (e.g., didn't delete "Audit" capability while adding "Red Flags").
 
-## 2. Anti-Laziness (The "TODO" Ban)
+## 2. Graduated Language Check
 - [ ] **No Placeholders**: `grep -i "todo" SKILL.md` returns 0 results.
 - [ ] **No Generic Excuses**: "Red Flags" are specific to the task, not generic "Don't be lazy".
     *   *Bad*: "Don't run without testing."
-    *   *Good*: "Don't run `rm -rf` without dry-run first."
+    *   *Good*: "Don't run `rm -rf` without dry-run first — files cannot be recovered."
+- [ ] **Graduated Style**: Safety-critical steps use `MUST` + reason. Behavioral steps explain "why" + use imperative. No bare `MUST` without rationale.
 
 ## 3. "Rich Skill" Compliance & Integrity
 - [ ] **Examples Exist**: `examples/` directory is not empty.
@@ -31,7 +32,11 @@
     *   `Standards for...` (Rules)
     *   `Defines...` (Concepts)
 - [ ] **Concise**: Description is under 50 words.
+- [ ] **Pushiness**: Description includes edge-case triggers and adjacent domains to prevent under-triggering.
 
 ## 5. Logic Hardening
 - [ ] **Rationalization Table**: Does it contain at least 2 common excuses?
 - [ ] **Red Flags**: Do they stop the agent from making a catastrophic mistake?
+
+## 6. Test Coverage
+- [ ] **Evals Exist**: Skill has at least 2-3 test prompts (in `evals/evals.json` or documented inline).

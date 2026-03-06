@@ -12,6 +12,12 @@ def create_skill(name, base_path, tier_value, config):
     """
     Creates a new skill directory with the standard structure.
     """
+    # If name is an absolute/relative path, split into base_path + name
+    if os.sep in name or "/" in name:
+        resolved = os.path.abspath(name)
+        base_path = os.path.dirname(resolved)
+        name = os.path.basename(resolved)
+
     # Sanitize name
     safe_name = name.lower().replace(" ", "-").replace("_", "-")
     skill_dir = os.path.join(base_path, safe_name)

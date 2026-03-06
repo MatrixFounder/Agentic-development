@@ -254,7 +254,7 @@ def analyze_skill(skill_path, config, json_output=False):
         gaps.append(f"[Lazy] Found {len(real_placeholders)} bracket placeholders (e.g., '[{real_placeholders[0]}]'). Fill them in.")
 
     # 5.5 Check Directory Structure Deviations
-    allowed_dirs = ["scripts", "examples", "assets", "references", "config", "agents", "evals"]
+    allowed_dirs = ["scripts", "examples", "assets", "references", "config", "agents", "evals", "eval-viewer", "data"]
     for item in os.listdir(skill_path):
         item_path = os.path.join(skill_path, item)
         if os.path.isdir(item_path):

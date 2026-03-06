@@ -213,7 +213,7 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
             errors.append(f"Prohibited file found: {item} (See .agent/rules/skill_standards.yaml)")
 
     # 3. Check Directory Structure (Standard)
-    allowed_dirs = ["scripts", "examples", "assets", "references", "config", "agents", "evals"]
+    allowed_dirs = ["scripts", "examples", "assets", "references", "config", "agents", "evals", "eval-viewer", "data"]
     for item in os.listdir(skill_path):
         item_path = os.path.join(skill_path, item)
         if os.path.isdir(item_path):

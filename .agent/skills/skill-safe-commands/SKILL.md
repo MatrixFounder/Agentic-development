@@ -16,13 +16,14 @@ This skill defines **all commands that are SAFE TO AUTO-RUN** without user appro
 
 | Category | Commands | Reason |
 |----------|----------|--------|
-| **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `tree`, `wc` | Do not modify state |
+| **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `tree`, `wc`, `echo` | Do not modify state |
 | **File info** | `stat`, `file`, `du`, `df` | Informational only |
-| **Git read** | `git status`, `git log`, `git diff`, `git show`, `git branch` | Read-only git operations |
+| **Git read** | `git status`, `git log`, `git diff`, `git show`, `git branch`, `git remote`, `git tag` | Read-only git operations |
 | **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` | Documented, non-destructive moves |
 | **Directory** | `mkdir -p docs/tasks`, `mkdir -p .agent/skills/*` | Idempotent operations |
 | **Tool calls** | `generate_task_archive_filename`, `list_directory`, `read_file` | Native tools |
-| **Testing** | `python -m pytest ...`, `npm test`, `cargo test` | Tests don't modify source code |
+| **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 System/scripts/doctor.py` | Framework automation |
+| **Testing** | `python -m pytest ...`, `npm test`, `npx jest`, `cargo test` | Tests don't modify source code |
 
 ## Pattern Matching Rules
 
@@ -30,7 +31,7 @@ Commands are safe if they match these patterns:
 
 ```
 # Read-only filesystem
-^(ls|cat|head|tail|find|grep|tree|wc|stat|file|du|df)(?:\s|$)
+^(ls|cat|head|tail|find|grep|tree|wc|stat|file|du|df|echo)(?:\s|$)
 
 # Git read operations
 ^git\s+(status|log|diff|show|branch|remote|tag)
@@ -44,13 +45,17 @@ Commands are safe if they match these patterns:
 # Python testing
 ^(python|python3)\s+-m\s+pytest
 ^cd\s+\.agent/tools\s+&&\s+python
+^python3?\s+-c\s+'from\s+scripts\.tool_runner
 
 # Node testing
 ^npm\s+test
 ^npx\s+jest
 
-# Tool execution
-^python3?\s+-c\s+'from\s+scripts\.tool_runner
+# Framework scripts
+^python3\s+\.agent/skills/skill-session-state/scripts/update_state\.py
+^python3\s+\.agent/tools/task_id_tool\.py
+^python3\s+\.agent/skills/skill-creator/scripts/(validate_skill|init_skill)\.py
+^python3\s+System/scripts/doctor\.py
 ```
 
 ## Implementation Guidelines

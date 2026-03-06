@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.9.14
+# Multi-Agent Software Development System v3.9.15
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -86,14 +86,30 @@ Antigravity supports this architecture out-of-the-box:
 
 #### 🟠 Option C: Claude Code (Native)
 To use with Anthropic's `claude` CLI:
-1.  **Configuration**: Create a dedicated `CLAUDE.md` adapted from `AGENTS.md` (do not use a raw symlink when `AGENTS.md` contains Cursor-specific rules like `.cursor/skills`).
-2.  **Prompt Compatibility**: In `CLAUDE.md`, keep pipeline rules intact, but ensure skills path references resolve to `.agent/skills/`.
-3.  **Skills**: Create a `.claude/skills` symlink (optional, for compatibility):
-    ```bash
-    mkdir -p .claude
-    ln -s ../.agent/skills .claude/skills
-    ```
-4.  **Usage**: Run `claude` in the project root. `CLAUDE.md` will be loaded automatically.
+1.  **Configuration**: `CLAUDE.md` is included and ready to use.
+2.  **Hooks**: `.claude/settings.json` auto-validates skills on modification.
+3.  **Commands**: Available slash commands (in `.claude/commands/`):
+    - `/start-feature` — Analysis + Architecture
+    - `/plan` — Planning phase
+    - `/develop` — Develop single task
+    - `/develop-all` — Loop all tasks
+    - `/light` — Fast-track for trivial tasks
+    - `/vdd` — VDD Enhanced pipeline
+    - `/vdd-start-feature` — VDD Analysis + Architecture
+    - `/vdd-plan` — VDD Planning phase
+    - `/vdd-develop` — VDD Development phase
+    - `/vdd-adversarial` — VDD Adversarial testing
+    - `/vdd-multi` — VDD Multi-task pipeline
+    - `/full` — Full pipeline + Security Audit
+    - `/security-audit` — Security audit
+    - `/base-stub-first` — Standard full pipeline
+    - `/update-docs` — Documentation update
+    - `/framework-upgrade` — Framework upgrade
+    - `/iterative-design` — Iterative design
+    - `/product-full-discovery` — Full product discovery
+    - `/product-market-only` — Market-only product analysis
+    - `/product-quick-vision` — Quick product vision
+4.  **Usage**: Run `claude` in the project root. `CLAUDE.md` loads automatically.
 
 #### 🟢 Option D: Gemini CLI
 To use with Google's `gemini` CLI:
@@ -249,7 +265,7 @@ graph TD
 |------|-------------------|----------------|
 | **Cursor IDE** | `AGENTS.md` | Automatic (context rules) |
 | **Antigravity** | `GEMINI.md` | Automatic (native) |
-| **Claude Code** | `CLAUDE.md` (adapted from `AGENTS.md`) | Automatic (on launch) |
+| **Claude Code** | `CLAUDE.md` | Automatic (on launch) |
 | **Codex** | `AGENTS.md` (Codex-compatible) | Automatic (workspace policy) |
 | **Gemini CLI** | `GEMINI.md` | Automatic (system instruction) |
 

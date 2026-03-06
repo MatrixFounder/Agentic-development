@@ -16,6 +16,26 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.15 — Claude Code Integration**
+
+#### **Added**
+* **Claude Code entry point**: Created `CLAUDE.md` (136 lines) adapted from `GEMINI.md` with native Claude Code tool references (Read, Write, Edit, Bash, Grep, Glob), session state bootstrap, and explicit tier-based skill loading protocol.
+* **Claude Code hooks**: Added `.claude/settings.json` with `PostToolUse` hook and `.claude/hooks/validate_skill_hook.sh` for automatic skill validation on file modification.
+* **Claude Code commands**: Created 20 slash command files in `.claude/commands/` covering all 21 workflows (delegator pattern — single source of truth in `.agent/workflows/`).
+  * Core: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`
+  * VDD: `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-adversarial`, `/vdd-multi`
+  * Pipelines: `/full`, `/security-audit`, `/base-stub-first`, `/framework-upgrade`, `/iterative-design`
+  * Product: `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`
+  * Docs: `/update-docs`
+* **Migration specification**: Added `docs/migration-to-claude.md` with full platform comparison, tool mapping, hook adaptation guide, and validation checklist.
+
+#### **Improved**
+* **AGENTS.md**: Added missing "Session State Persistence" instruction (`update_state.py` on phase boundaries), achieving parity with `GEMINI.md`.
+* **SESSION_CONTEXT_GUIDE.md**: Added Section 5 "Platform Memory Integration" documenting how framework session state complements platform-specific memory systems (Claude Code, Cursor, Gemini).
+* **README.md / README.ru.md**: Updated "Option C: Claude Code" section — replaced manual setup instructions with ready-to-use configuration and full command list.
+
+---
+
 ### **v3.9.14 — Enterprise Hardening Wave (BI-001..009)** (Security / Reliability / Governance)
 
 #### **Added**

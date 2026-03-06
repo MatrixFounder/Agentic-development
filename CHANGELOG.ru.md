@@ -16,6 +16,26 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.9.15 — Интеграция Claude Code**
+
+#### **Добавлено**
+* **Точка входа Claude Code**: Создан `CLAUDE.md` (136 строк), адаптированный из `GEMINI.md` с нативными инструментами Claude Code (Read, Write, Edit, Bash, Grep, Glob), bootstrap сессии и явным протоколом загрузки навыков по тирам.
+* **Хуки Claude Code**: Добавлены `.claude/settings.json` с хуком `PostToolUse` и `.claude/hooks/validate_skill_hook.sh` для автоматической валидации навыков при модификации файлов.
+* **Команды Claude Code**: Созданы 20 файлов слэш-команд в `.claude/commands/`, покрывающих все 21 workflow (паттерн делегатора — единый источник истины в `.agent/workflows/`).
+  * Основные: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`
+  * VDD: `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-adversarial`, `/vdd-multi`
+  * Пайплайны: `/full`, `/security-audit`, `/base-stub-first`, `/framework-upgrade`, `/iterative-design`
+  * Продуктовые: `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`
+  * Документация: `/update-docs`
+* **Спецификация миграции**: Добавлен `docs/migration-to-claude.md` с полным сравнением платформ, маппингом инструментов, руководством по адаптации хуков и чеклистом валидации.
+
+#### **Улучшено**
+* **AGENTS.md**: Добавлена недостающая инструкция "Session State Persistence" (`update_state.py` на границах фаз) для паритета с `GEMINI.md`.
+* **SESSION_CONTEXT_GUIDE.md**: Добавлена секция 5 "Platform Memory Integration" — документация о взаимодополняемости сессионного состояния фреймворка и платформенных систем памяти (Claude Code, Cursor, Gemini).
+* **README.md / README.ru.md**: Обновлена секция "Вариант В: Claude Code" — ручные инструкции по настройке заменены на готовую конфигурацию и полный список команд.
+
+---
+
 ### **v3.9.14 — Волна Enterprise Hardening (BI-001..009)** (Security / Reliability / Governance)
 
 #### **Добавлено**

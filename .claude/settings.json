@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(tree *)",
+      "Bash(wc *)",
+      "Bash(stat *)",
+      "Bash(file *)",
+      "Bash(du *)",
+      "Bash(df *)",
+      "Bash(echo *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git remote*)",
+      "Bash(git tag*)",
+      "Bash(mv docs/TASK.md *)",
+      "Bash(mv docs/PLAN.md *)",
+      "Bash(mkdir -p docs*)",
+      "Bash(mkdir -p .agent*)",
+      "Bash(mkdir -p tests*)",
+      "Bash(python -m pytest*)",
+      "Bash(python3 -m pytest*)",
+      "Bash(npm test*)",
+      "Bash(npx jest*)",
+      "Bash(cargo test*)",
+      "Bash(python3 .agent/skills/skill-session-state/scripts/update_state.py *)",
+      "Bash(python3 .agent/tools/task_id_tool.py *)",
+      "Bash(python3 .agent/skills/skill-creator/scripts/validate_skill.py *)",
+      "Bash(python3 .agent/skills/skill-creator/scripts/init_skill.py *)",
+      "Bash(python3 System/scripts/doctor.py*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/validate_skill_hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

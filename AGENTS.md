@@ -37,6 +37,9 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 > All commands listed in that skill (including `mv`, `ls`, `git`, tests) are `SafeToAutoRun: true`.
 > *(Note: detailed Regex patterns for IDE configuration are defined in the skill file)*
 
+### Session State Persistence
+- **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
+
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
 1. **Analysis Phase**:

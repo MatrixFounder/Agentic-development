@@ -75,7 +75,20 @@ I have adversarialy analyzed potential downsides:
 **Cost:** Running `update_state.py` adds ~200ms to every `task_boundary` call.
 **Verdict:** Negligible compared to LLM generation time (seconds).
 
-## 5. Manual Override (Troubleshooting)
+## 5. Platform Memory Integration
+
+Different AI coding platforms have their own memory/context systems. The framework's session state complements (not replaces) these:
+
+| Layer | Mechanism | Purpose | Volatility |
+|:---|:---|:---|:---|
+| **Platform Memory** | Claude Code: `~/.claude/projects/*/memory/`, Cursor: composer history, Gemini: conversation context | Project patterns, preferences, long-term knowledge | Persistent across sessions |
+| **Session State (O7)** | `.agent/sessions/latest.yaml` | Pipeline execution state: current phase, task, status | Ephemeral, updated every phase boundary |
+
+**Key principle**: Platform memory answers "What do I know about this project?" Session state answers "What was I doing right now?"
+
+Both systems are independent and complementary. Session state works identically across all supported platforms (Claude Code, Gemini CLI, Cursor IDE).
+
+## 6. Manual Override (Troubleshooting)
 
 The session file is standard YAML. If the agent gets stuck or confused, you can edit it manually:
 
@@ -86,7 +99,7 @@ The session file is standard YAML. If the agent gets stuck or confused, you can 
 
 **Tip:** You can also simply delete the file to force a "fresh start".
 
-## 6. Deactivation Guide (How to Disable)
+## 7. Deactivation Guide (How to Disable)
 
 If you find this system conflicts with your workflow or IDE tools, you can disable it by downgrading the skill from **TIER 0** (Mandatory) to **TIER 2** (Optional).
 
@@ -95,7 +108,7 @@ If you find this system conflicts with your workflow or IDE tools, you can disab
 2.  Change `tier: 0` to `tier: 2`.
 
 ### Step 2: Removing Boot Instructions
-1.  Open `GEMINI.md` and `AGENTS.md`.
+1.  Open `GEMINI.md`, `AGENTS.md`, and `CLAUDE.md`.
 2.  Delete the **"SESSION RESTORATION (BOOTSTRAP)"** section.
 3.  Remove `skill-session-state` from the "Tier 0 Skills" list.
 

@@ -13,18 +13,21 @@ The system relies on a modular **Skills System**:
 
 ## SESSION RESTORATION (BOOTSTRAP)
 **ON SESSION START**:
-1. Check if `.agent/sessions/latest.yaml` exists.
-2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary.
-3. **IF NEW**: Proceed with normal analysis.
-4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
+1. Read `.agent/sessions/latest.yaml` using the Read tool.
+2. **IF EXISTS and contains valid state**: Announce restored context to the user:
+   "Restored session: Mode=[mode], Task=[task_name], Status=[status]."
+3. **IF NOT EXISTS or empty**: Proceed with new task analysis.
+4. **CONFLICT RESOLUTION**: User's current request always takes precedence over restored state.
 
+**ON PHASE BOUNDARY** (after completing each pipeline stage):
+1. Run via Bash: `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"`
+2. This persists context for session recovery.
 
-## TOOL EXECUTION PROTOCOL (v3.2.5+)
-The Orchestrator natively supports structured tool calling (Function Calling).
-1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
-2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
-3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`, `generate_task_archive_filename`) instead of asking the user to run shell commands.
-4.  **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for details.
+## TOOL EXECUTION PROTOCOL
+Use your built-in tools: Read (files), Write (files), Edit (files), Bash (commands, git, tests), Grep (search), Glob (find files).
+- **Priority**: ALWAYS use built-in tools instead of asking the user to run shell commands.
+- For `generate_task_archive_filename`: run `python3 .agent/tools/task_id_tool.py <slug>` via Bash.
+- **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for details.
 
 ### TIER 0 Skills (Boot at Session Start) — MANDATORY
 > **ALWAYS LOAD at session bootstrap — see `skill-phase-context` for full protocol.**
@@ -33,33 +36,51 @@ The Orchestrator natively supports structured tool calling (Function Calling).
 > - `artifact-management` — File protocol, archiving
 > - `skill-session-state` — Session Context Persistence (Boot/Boundary)
 
-### Safe Commands (Auto-Run)
-> **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.
-> All commands listed in that skill (including `mv`, `ls`, `git`, tests) are `SafeToAutoRun: true`.
-
-### Session State Persistence
-- **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
+### Safe Commands
+> Claude Code manages command permissions via `.claude/settings.json`.
+> You MUST read **`skill-safe-commands`** for the authoritative list of safe commands.
 
 ## CONTEXT LOADING PROTOCOL (MUST READ)
 When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`):
-1. Attempt to read it using your internal tools.
+1. Attempt to read it using the Read tool.
 2. **Review Active Skills**: Check the prompt for required skills (e.g., `skill-core-principles`) and read them from `.agent/skills/`.
 3. **VERIFICATION**: If you cannot access the file or are unsure if you have the *full content*, **STOP** and ask the user.
 4. Do not proceed until you have the specific instructions for that phase.
 
-## WORKSPACE WORKFLOWS (Dynamic Dispatch)
-Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.
-1. **Discovery**: Look for files matching the pattern `[variant]-[stage]-[action].md` in `.agent/workflows/`.
-    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`.
+## SKILL LOADING PROTOCOL (TIERS)
+
+**TIER 0 (Always load at session start):**
+Read these skill files immediately using the Read tool:
+- `.agent/skills/core-principles/SKILL.md`
+- `.agent/skills/skill-safe-commands/SKILL.md`
+- `.agent/skills/artifact-management/SKILL.md`
+- `.agent/skills/skill-session-state/SKILL.md`
+
+**TIER 1 (Load when entering a phase):**
+When transitioning to a pipeline phase, read the corresponding skills:
+- Analysis: `requirements-analysis`, `skill-archive-task`
+- Architecture: `architecture-design`, `architecture-format-core`
+- Planning: `planning-decision-tree`, `tdd-stub-first`
+- Development: `developer-guidelines`, `documentation-standards`
+- Review: `code-review-checklist` (or phase-specific checklist)
+
+**TIER 2+ (Load only when explicitly needed):**
+Read these skills only when their functionality is required:
+- `skill-reverse-engineering`, `vdd-adversarial`, `security-audit`, etc.
+
+## WORKSPACE WORKFLOWS (Commands)
+Before starting the standard pipeline, check if the user's request matches a workflow.
+Workflows are available as slash commands via `.claude/commands/` and as files in `.agent/workflows/`.
+1. **Discovery**: Check `.agent/workflows/` for matching workflow files.
+    - **Available Commands**: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`, `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-adversarial`, `/vdd-multi`, `/full`, `/security-audit`, `/base-stub-first`, `/update-docs`, `/framework-upgrade`, `/iterative-design`, `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`.
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.
    - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
    - If no variant specified, default to standard `01-04`.
-3. **Execution**: If a matching workflow is found, execute its steps strictly.
+3. **Execution**: If a matching workflow is found, read it from `.agent/workflows/` and execute its steps strictly.
    - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
-   - **MANDATORY**: After every `task_boundary` call, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
-   - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.
+   - **MANDATORY**: After every phase boundary, you **MUST** immediately run `python3 .agent/skills/skill-session-state/scripts/update_state.py` to persist context.
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
@@ -105,9 +126,9 @@ Instead, reply: "I must update the TASK and check Architecture first. Starting A
 
 ### Self-Improvement Mode
 
-Current task: Refinement and improvement of the framework. Permit modifications to files in `/System/Agents/`, `.agent/skills/`, and the `GEMINI.md` file itself.
+Current task: Refinement and improvement of the framework. Permit modifications to files in `/System/Agents/`, `.agent/skills/`, and the `CLAUDE.md` file itself.
 
-Mandatory requirement: 
+Mandatory requirement:
 1. **Meta-Audit**: You MUST use `skill-self-improvement-verificator` to validate your PLAN before executing changes.
 2. **Workflow**: Prefer using the `/framework-upgrade` workflow for safe execution.
 3. **Review**: After any changes to core components, run a full review pipeline (Code Reviewer + Security Auditor).

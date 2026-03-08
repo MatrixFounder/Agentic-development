@@ -16,6 +16,23 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.16 — Security Audit v3.2: Smart Contract Patterns & Modular Architecture**
+
+#### **Added**
+* **Solidity/Smart Contract patterns** (16 new): Reentrancy (`.call{value:}`, `.send()`, `.transfer()`), arbitrary execution (`delegatecall`, `selfdestruct` EIP-6780, `suicide()`), access control (`tx.origin`, public/external without modifier), oracle manipulation (`getReserves()`, `latestRoundData()`), unchecked return values, unprotected initializers, integer overflow (pre-0.8.0), locked ether, inline assembly.
+* **VDD Round 3 critique** document with real hack coverage matrix (Dec 2025 – Mar 2026).
+* **Real-world hack validation**: Scanner tested against contracts simulating SwapNet ($13.4M), Truebit ($26.4M), YieldBlox ($10.2M), Aperture ($4M) attack vectors — 7/10 vectors fully detected.
+
+#### **Improved**
+* **Modular scanner architecture**: Refactored 886-line monolith `run_audit.py` into 7-file package (`audit/config.py`, `audit/patterns.py`, `audit/helpers.py`, `audit/scanners.py`, `audit/external.py`, `audit/__init__.py`).
+* **MAX_FILE_SIZE consistency**: Added 5MB file size guard to `scan_configuration()` and `scan_iac()`.
+* **Pattern count**: 105 → 121 total patterns (28 secret + 62 dangerous + 25 IaC + 6 config).
+
+#### **Fixed**
+* **VDD Round 2** (8 issues): `os.popen()` CWE misclassification, missing `subprocess.run shell=True`, Flask open redirect regex, SQL `%` formatting detection, IaC false positives on non-IaC YAML, symlink following, SSRF pattern expansion.
+
+---
+
 ### **v3.9.15 — Claude Code Integration**
 
 #### **Added**

@@ -84,7 +84,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | - `code-review-checklist` | For checking Code implementation. | `03-develop-single-task` | Code Reviewer |
 | **`skill-spec-validator`** | **Automated Gatekeeper.** Validates RTM existence and Atomic Plan coverage. | `vdd-enhanced` | System / Orchestrator |
 | **`skill-self-improvement-verificator`** | **Meta-Auditor.** Verifies safety of Framework Upgrades. | `framework-upgrade` | System / Orchestrator |
-| **`security-audit`** | Vulnerability assessment (OWASP, secrets) and reporting. | `security-audit`, `full-robust` | Security Auditor |
+| **`security-audit`** | Vulnerability assessment v3.2: OWASP Top 10, smart contracts (Solidity reentrancy, delegatecall, oracle manipulation), secrets (28 patterns + entropy), IaC (Docker/K8s/Terraform), SBOM, CI/CD gates. 121 automated regex patterns + external tool integrations. | `security-audit`, `full-robust` | Security Auditor |
 
 ### Executable Skills (Tools)
 | Skill | Description | Used By in Workflows | Used By Agents |

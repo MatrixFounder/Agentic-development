@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.9.15
+# Multi-Agent Software Development System v3.9.16
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -247,7 +247,7 @@ graph TD
 | **Plan Reviewer** | `07_plan_reviewer_prompt.md` | Ensures the plan is logical and testable. |
 | **Developer** | `08_developer_prompt.md` | Writes code (Stubs -> Tests -> Implementation). |
 | **Code Reviewer** | `09_code_reviewer_prompt.md` | Final code quality check. |
-| **Security Auditor** | `10_security_auditor.md` | Security vulnerability assessment and reporting. |
+| **Security Auditor** | `10_security_auditor.md` | Security vulnerability assessment (OWASP, smart contracts, IaC, secrets, SBOM) and reporting. |
 
 ### 🚀 The Product Team (Roles)
 

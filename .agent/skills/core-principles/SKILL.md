@@ -25,6 +25,7 @@ All agents must adhere to these fundamental principles to ensure high quality an
 ## 1. Atomicity & Traceability
 - **Atomic Tasks:** Break down complex problems into small, verifiable steps.
 - **Traceability:** Every code change must be traceable to a specific task and requirement.
+- **Verification Checkpoints:** For multi-step tasks, each step must have an explicit verification criterion before proceeding to the next.
 
 ## 2. Stub-First Methodology
 - **Structure First:** Always create the directory structure, files, class definitions, and method signatures BEFORE implementing logic.
@@ -35,6 +36,7 @@ All agents must adhere to these fundamental principles to ensure high quality an
 - **Context Awareness:** Always read the relevant `.AGENTS.md` and project documentation before acting.
 - **No Assumptions:** If a requirement is unclear, ask questions. Do not guess.
 - **Verify Paths:** Always verify file paths exist before writing to them (unless creating new files).
+- **Ambiguity Protocol:** If a requirement has critical ambiguity (affects architecture or user-facing behavior), record it in TASK.md Open Questions. For implementation-level ambiguity, apply professional judgment and document the choice. (See `developer-guidelines` §1.5 for graduated protocol.)
 
 ## 4. Documentation First
 - **Single Source of Truth:** `System/Agents` and `docs/` are the sources of truth.

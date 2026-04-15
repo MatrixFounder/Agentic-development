@@ -16,6 +16,29 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.9.17 — Developer Discipline: Karpathy Guidelines Integration**
+
+#### **Added**
+* **§1.5 Think Before Implementing** (`developer-guidelines`): Graduated ambiguity handling protocol — critical ambiguity goes to TASK.md Open Questions, implementation-level decisions are made by the developer with brief documentation, trivial decisions are made silently.
+* **§1.6 Implementation Discipline** (`developer-guidelines`): Two-level decision framework — architectural decisions (new modules, public API, data models) must come from PLAN.md/ARCHITECTURE.md; implementation details (internal patterns, helpers, abstractions) are the developer's professional judgment. Speculative complexity is prohibited.
+* **§6.2 Multi-Step Tasks** (`developer-guidelines`): Generalized Verification Protocol with `Step → verify: [check]` pattern, extending the Bug Fixing Protocol to all multi-step work.
+* **Before/after code examples** (`developer-guidelines/examples/coding-anti-patterns.md`): 3 real-world examples — drive-by refactoring, speculative features vs. plan-driven implementation, silent interpretation vs. surfacing ambiguity. Adapted from Karpathy Guidelines for complex product development context.
+
+#### **Improved**
+* **Red Flags** (`developer-guidelines` §0): +2 entries — against silent architectural changes and speculative features.
+* **Strict Adherence** (`developer-guidelines` §1): +2 entries — Task Traceability (every change must serve the task, professional choices within scope are OK) and Style Matching (match existing code style).
+* **Rationalization Table** (`developer-guidelines` §9): +3 entries covering speculative additions, silent plan deviation, and drive-by improvements.
+* **Atomicity & Traceability** (`core-principles` §1): Added Verification Checkpoints for multi-step tasks.
+* **Minimizing Hallucinations** (`core-principles` §3): Added Ambiguity Protocol with cross-reference to developer-guidelines §1.5.
+* **Token budget** (`skill-phase-context`): Updated Development phase estimate from ~768 to ~1,100 to reflect expanded developer-guidelines.
+
+#### **Design Decisions**
+* **"Implementation Discipline" instead of "Simplicity First"**: Karpathy's "minimum code" principle was adapted for complex product development — architectural complexity is valid when plan-driven; only speculative complexity is prohibited.
+* **Graduated Ambiguity instead of "ask everything"**: Three-tier protocol prevents bombarding users with questions while ensuring critical decisions are surfaced.
+* **No new standalone skill created**: All changes integrated into existing `developer-guidelines` (Tier 1) and `core-principles` (Tier 0) to avoid skill bloat and tier conflicts.
+
+---
+
 ### **v3.9.16 — Security Audit v3.2: Smart Contract Patterns & Modular Architecture**
 
 #### **Added**

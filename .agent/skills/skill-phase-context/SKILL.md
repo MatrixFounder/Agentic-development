@@ -41,7 +41,7 @@ These skills are phase-specific and loaded when entering the corresponding phase
 | **Analysis** | `requirements-analysis`, `skill-task-model`, (`skill-archive-task` if new task) | ~2,000-2,900 |
 | **Architecture** | `architecture-design`, (`architecture-format-core` OR `-extended`) | ~1,750-3,100 |
 | **Planning** | `planning-decision-tree`, `skill-planning-format`, `tdd-stub-first` | ~1,425 |
-| **Development** | `developer-guidelines`, `documentation-standards` | ~768 |
+| **Development** | `developer-guidelines`, `documentation-standards` | ~1,100 |
 | **Review** | Phase-specific `-review-checklist` skill | ~300-400 |
 | **Security** | `security-audit` | ~500 |
 | **VDD** | `vdd-adversarial`, (`adversarial-*` per workflow) | ~1,000-2,500 |

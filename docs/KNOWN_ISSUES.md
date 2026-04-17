@@ -12,6 +12,6 @@ These apply to **Layer B** (`TeamCreate`/`SendMessage`) when it lands in Wave 4.
 - [ ] **No leadership transfer**: cannot promote a teammate to lead or hand off the team. The lead session that created the team must orchestrate cleanup via `TeamDelete`.
 - [ ] **Higher token costs**: each teammate is an independent Claude session — costs scale ~linearly with team size. Prefer Layer A for orthogonal critique where a peer mailbox is not required (see `skill-parallel-orchestration` §4 decision rule).
 
-## Wave-1 specific
+## Wave-1/2 specific
 
-- [ ] **Wrapper/SOT drift risk**: `.claude/agents/critic-*.md` wrappers reference methodology bodies in `.agent/skills/*/SKILL.md` and `assets/template_critique.md`. If an SOT file is renamed or moved, wrappers must be updated manually (no automatic sync in Wave 1). Verification: after any rename in `.agent/skills/vdd-adversarial/`, `skill-adversarial-security/`, or `skill-adversarial-performance/`, grep `.claude/agents/` for stale paths.
+- [ ] **Wrapper/SOT drift risk** (reduced after v3.11.1 thin refactor): each of the 12 `.claude/agents/*.md` wrappers references exactly one SOT path (its primary `System/Agents/XX_*.md` or `.agent/skills/*/SKILL.md`). Two critic wrappers also reference the `template_critique.md` / `sarcastic.md` asset paths. If an SOT file is renamed or moved, wrappers must be updated manually — no automatic sync. Verification after any rename in `System/Agents/` or `.agent/skills/{vdd-adversarial,skill-adversarial-*}/`: `grep -l '<old-path>' .claude/agents/` → should return no stale references.

@@ -46,6 +46,13 @@
 * **Не ожидается**. Критики и reviewer'ы продолжают читать те же SOT-файлы; методология живёт в SOT. Smoke-test Wave 1 должен воспроизвестись идентично (тот же SOT → то же качество критики).
 * **Сопровождение улучшено**: правки в SOT (например, новый skill в `02_analyst_prompt.md` §2) автоматически подхватятся subagent'ом `analyst` при следующем spawn'е — обновление обёртки не требуется.
 
+#### **Верифицировано (smoke-test на `docs/tasks/task-dummy.md`)**
+* **Параллельный spawn**: один LLM `requestId` (`req_011Ca9FA2hNt4PVJGVTYajEX`) на всех трёх critic `Agent` tool_use в одном сообщении — параллелизм сохранён.
+* **Покрытие seeded flaws**: critic-logic 2/2, critic-security 4/4, critic-performance 5/5 — совпадает или превосходит baseline Wave 1 (v3.10.0: 2/2, 4/4, 5/5).
+* **Обнаружение overlap'ов**: оба ожидаемых cross-category overlap'а найдены (line 20 flaw #5 SQLi+N+1, line 51/57 flaw #9 file-handle leak); правило эскалации 3 применено (flaw #9: logic:HIGH + perf:HIGH → CRITICAL).
+* **Галлюцинаций нет**. Bonus findings больше чем в v3.10.0 (path-traversal, missing input validation, no conn pooling, `returncode` check, second-order SQL injection, ambiguous return types) — доказательство, что тонкие обёртки не теряют доступ к SOT.
+* **Целостность фикстуры**: `git diff docs/tasks/task-dummy.md` пустой; read-only tool whitelist физически исполняется (reviewer'ы/критики без `Bash` не могут вызвать shell).
+
 ---
 
 ### **v3.11.0 — Agent Teams Mode Wave 2: обёртки для dev-pipeline**

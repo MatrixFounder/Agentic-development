@@ -46,6 +46,13 @@ All 12 wrappers rewritten as **true thin adapters**. The v3.10.0/v3.11.0 wrapper
 * **None expected**. Critics and reviewers continue to read the same SOT files; the SOT is where methodology lives. Wave 1 smoke-test behavior should reproduce identically (same SOT → same critique quality).
 * **Maintenance improved**: edits to SOT (e.g., new skill added to `02_analyst_prompt.md` §2) propagate automatically to the `analyst` subagent on next spawn — no wrapper update needed.
 
+#### **Verified (smoke-test on `docs/tasks/task-dummy.md`)**
+* **Parallel spawn**: single LLM `requestId` (`req_011Ca9FA2hNt4PVJGVTYajEX`) across three critic `Agent` tool_uses in one message — parallelism preserved.
+* **Seeded flaw coverage**: critic-logic 2/2, critic-security 4/4, critic-performance 5/5 — matches or exceeds the Wave 1 baseline (v3.10.0: 2/2, 4/4, 5/5).
+* **Overlap detection**: both expected cross-category overlaps detected (line 20 flaw #5 SQLi+N+1, line 51/57 flaw #9 file-handle leak); severity escalation rule 3 applied (flaw #9: logic:HIGH + perf:HIGH → CRITICAL).
+* **No hallucinations**. Bonus findings grew vs v3.10.0 (path-traversal, missing input validation, no conn pooling, `returncode` check, second-order SQL injection, ambiguous return types) — evidence that thin wrappers do not lose SOT access.
+* **Fixture integrity**: `git diff docs/tasks/task-dummy.md` empty; read-only tool whitelist physically enforced (reviewers/critics without `Bash` cannot invoke shell).
+
 ---
 
 ### **v3.11.0 — Agent Teams Mode Wave 2: Dev-Pipeline Subagent Wrappers**

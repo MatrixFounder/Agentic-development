@@ -1,82 +1,70 @@
-# TASK-058: Teams Mode Integration — Wave 1
+# TASK-059: Teams Mode Integration — Wave 2 (dev-pipeline wrappers)
 
-**Status**: Done (smoke test passed 2026-04-17)
-**Task ID**: 058
-**Slug**: teams-mode-wave-1
+**Status**: Done
+**Task ID**: 059
+**Slug**: teams-mode-wave-2
 **Created**: 2026-04-17
-**Mode**: VDD (Verification-Driven Development)
+**Mode**: Continuation of Wave 1 (TASK-058, committed in v3.10.0)
 
 ## Summary
 
-Parallelize the VDD Multi-Adversarial pipeline (`/vdd-multi`) by introducing thin Claude Code subagent wrappers (Option D) over existing adversarial skills. Preserve existing role-switching (Stage Cycle) and skills ecosystem. First iteration (Wave 1) covers three critics only; full agent-teams rollout is staged across Waves 2–5.
+Extend `.claude/agents/` with 9 thin Claude Code subagent wrappers for the dev-pipeline roles defined in `System/Agents/02–10`. Builds on Wave 1 (three critics for `/vdd-multi`). No workflow rewrites — existing sequential role-switching flows keep working unchanged.
 
-## Context
+Total subagent wrappers after Wave 2: **12** (3 critics + 9 dev-pipeline).
 
-Framework currently has three disjoint approaches to "multi-agent":
-1. **Role-switching personas** (`System/Agents/*.md`) — production, single Claude swaps prompts via Stage Cycle.
-2. **POC parallel orchestration** (`spawn_agent_mock.py`) — mock agents, no real LLM spawn.
-3. **Native Claude Code Agent Teams** — flag `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` enabled but unused.
+## Epic: Teams Mode Integration
 
-Wave 1 closes the gap minimally: wraps three adversarial skills as `.claude/agents/critic-*` subagents, rewrites `/vdd-multi` to spawn them in parallel via native `Agent` tool, and stubs Layer B (native TeamCreate) for future Wave 4.
+### Completed Waves
 
-## Epic E1: Teams Mode Integration — Wave 1
+| Wave | Scope | Release | Task |
+|---|---|---|---|
+| Wave 1 | 3 critics + parallel `/vdd-multi` | v3.10.0 | [docs/tasks/task-058-teams-mode-wave-1.md](tasks/task-058-teams-mode-wave-1.md) |
+| **Wave 2** | **9 dev-pipeline wrappers** | **v3.11.0** | **[docs/tasks/task-059-teams-mode-wave-2.md](tasks/task-059-teams-mode-wave-2.md)** |
 
-### Issue I1: Create Critic Subagents (Layer A foundation)
+### Remaining Waves
 
-**Acceptance**:
-- `[R1]` `.claude/agents/critic-logic.md` — valid frontmatter, tools `Read,Grep,Glob`, body points to `.agent/skills/vdd-adversarial/SKILL.md` + mandatory template.
-- `[R2]` `.claude/agents/critic-security.md` — valid frontmatter, tools `Read,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)`, body points to `.agent/skills/skill-adversarial-security/SKILL.md` + mandatory persona.
-- `[R3]` `.claude/agents/critic-performance.md` — valid frontmatter, read-only tools, body points to `.agent/skills/skill-adversarial-performance/SKILL.md`.
+| Wave | Scope | Status |
+|---|---|---|
+| Wave 3 | 4 product-pipeline wrappers (`strategic-analyst`, `product-analyst`, `product-director`, `solution-architect`) | Not started |
+| Wave 4 | Layer B (native `TeamCreate` + `/teams-vdd-multi` workflow) | Not started |
+| Wave 5 | Portable generator (if second vendor added) | Conditional |
 
-### Issue I2: Parallel `/vdd-multi` workflow
+## Issue I1 — Create 9 dev-pipeline wrappers
 
-**Acceptance**:
-- `[R4]` `.agent/workflows/vdd-multi.md` Phase 1 instructs a single message with three parallel `Agent` tool-uses via `subagent_type: critic-logic|critic-security|critic-performance`. Phase 2 defines merge/dedup rules (location-based, severity escalation on cross-category overlap). Sequential fallback documented for non-Claude-Code vendors.
+**Acceptance** (RTM):
+- `[R1]` `.claude/agents/analyst.md` — builder (Read, Write, Edit, Grep, Glob, git read-only), SOT `System/Agents/02_analyst_prompt.md`.
+- `[R2]` `.claude/agents/task-reviewer.md` — read-only, SOT `System/Agents/03_task_reviewer_prompt.md`.
+- `[R3]` `.claude/agents/architect.md` — builder, SOT `System/Agents/04_architect_prompt.md`.
+- `[R4]` `.claude/agents/architecture-reviewer.md` — read-only, SOT `System/Agents/05_architecture_reviewer_prompt.md`.
+- `[R5]` `.claude/agents/planner.md` — builder + `task_id_tool` Bash, SOT `System/Agents/06_planner_prompt.md`.
+- `[R6]` `.claude/agents/plan-reviewer.md` — read-only, SOT `System/Agents/07_plan_reviewer_prompt.md`.
+- `[R7]` `.claude/agents/developer.md` — full Bash, SOT `System/Agents/08_developer_prompt.md`.
+- `[R8]` `.claude/agents/code-reviewer.md` — read-only + git read-only, SOT `System/Agents/09_code_reviewer_prompt.md`.
+- `[R9]` `.claude/agents/security-auditor.md` — read-only + scanner Bash, SOT `System/Agents/10_security_auditor.md`.
 
-### Issue I3: Update skill-parallel-orchestration
-
-**Acceptance**:
-- `[R5]` `.agent/skills/skill-parallel-orchestration/SKILL.md` v2.0 — Phase 2 references native `Agent` tool (no mock); Layer B section present and marked `NOT IMPLEMENTED in Wave 1` with decision-rule criterion; `spawn_agent_mock.py` referenced as DEPRECATED.
-
-### Issue I4: Orchestrator Teams Dispatch section
-
-**Acceptance**:
-- `[R6]` `System/Agents/01_orchestrator.md` §5.1 present with scenario→layer dispatch table; role-switching explicitly retained as primary mode.
-
-### Issue I5: Archive POC
-
-**Acceptance**:
-- `[R7]` `docs/POC_PARALLEL_AGENTS.md` moved to `docs/archives/POC_PARALLEL_AGENTS.md` with SUPERSEDED header; `spawn_agent_mock.py` and `tests/test_mock_agent.py` have DEPRECATED module docstrings.
-
-### Issue I6: Update ARCHITECTURE + KNOWN_ISSUES
+## Issue I2 — Docs update
 
 **Acceptance**:
-- `[R8]` `docs/ARCHITECTURE.md` §5 marked SUPERSEDED; §5.1 "Two-Layer Teams Model (Wave 1)" added with ASCII diagram and scope description.
-- `[R9]` `docs/KNOWN_ISSUES.md` lists Native Teams gotchas (no session resume, task status lag, one team per session, no leadership transfer, higher token costs) + Wave 1 wrapper/SOT drift risk.
+- `[R10]` `docs/ARCHITECTURE.md` §5.1 lists all 12 wrappers (Wave 1 + Wave 2) with SOT + tools + role per row.
+- `[R11]` YAML frontmatter validation passes for all 12 wrappers.
+- `[R12]` No regression — Wave 1 artifacts (`/vdd-multi.md`, critic wrappers) unchanged; verified by `git diff`.
 
-### Issue I7: TASK.md + CLAUDE.md
+## Design principle — wrapper pattern (Option D)
 
-**Acceptance**:
-- `[R10]` `docs/TASK.md` (this file) contains Epic E1 with all Issues and RTM acceptance criteria; `CLAUDE.md` has a note about parallel `/vdd-multi` in Claude Code vs. sequential fallback elsewhere.
+All 12 wrappers follow the same pattern:
+- **Frontmatter**: Claude Code subagent spec (`name`, `description`, `tools`, `model=sonnet`).
+- **Body**: ≤ ~30 lines — SOT reference, mandatory skill loads (per SOT §2), return contract, guardrails.
+- **SOT is authoritative**: wrappers don't duplicate methodology; changes live in `System/Agents/` or `.agent/skills/`.
+- **Reviewers return text reports**: no broad filesystem Write; the orchestrator persists `docs/reviews/…` if needed. This mirrors Wave 1 critic pattern.
 
-### Issue I8: Verification
+## Out of scope (explicit)
 
-**Acceptance**:
-- `[R11]` Smoke test (manual, in IDE): `/vdd-multi` on a fixture produces a single Agent-tool-use with three parallel subagents; each returns a structured report; orchestrator merges without duplicates.
-- `[R12]` Regression: standard `/vdd` (sequential) still works — role-switching untouched.
-- Docs coherence: all references to `spawn_agent_mock` / `POC_PARALLEL_AGENTS` either live in `docs/archives/` or are marked DEPRECATED.
-
-## Out of Scope
-
-- Wave 2: 9 dev-pipeline wrappers (analyst..security-auditor).
-- Wave 3: 4 product-pipeline wrappers.
-- Wave 4: Layer B (`TeamCreate`/`SendMessage` + `/teams-vdd-multi` workflow).
-- Wave 5: portable generator `.agent/agents/ → per-vendor`.
-- Changes to `01_orchestrator.md` beyond the Teams Dispatch section.
-- Changes to `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag.
+- Workflow rewrites (dev-pipeline stays sequential role-switching through the Stage Cycle).
+- Orchestrator prompts (`01_orchestrator.md`, `p00_product_orchestrator_prompt.md`) — native Teams don't support nested teams, so these must stay as main-agent role personas.
+- `00_agent_development.md` — meta-doc, not an agent.
 
 ## References
 
-- Detailed execution plan: `/Users/sergey/.claude/plans/swirling-drifting-feigenbaum.md`.
-- Per-Bead task summary: `docs/tasks/task-058-teams-mode-wave-1.md`.
-- Archived POC: `docs/archives/POC_PARALLEL_AGENTS.md`.
+- Wave 1 task: `docs/tasks/task-058-teams-mode-wave-1.md`.
+- Wave 2 task: `docs/tasks/task-059-teams-mode-wave-2.md`.
+- Architecture: `docs/ARCHITECTURE.md` §5.1.

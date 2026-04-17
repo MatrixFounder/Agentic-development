@@ -16,6 +16,46 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.11.0 — Agent Teams Mode Wave 2: Dev-Pipeline Subagent Wrappers**
+
+#### **Added**
+* **9 new dev-pipeline subagent wrappers** in `.claude/agents/` (12 total after Wave 1's 3 critics). Each wrapper is a thin Claude Code adapter over `System/Agents/XX_*.md` source of truth, following Option D pattern established in Wave 1:
+  - **Builders** (Write/Edit access to their artifact path):
+    - `analyst` → TASK.md generator (RTM + acceptance criteria)
+    - `architect` → ARCHITECTURE.md designer (Data Model → Components → Interfaces)
+    - `planner` → PLAN.md + `docs/tasks/*.md` under Stub-First (uses `task_id_tool` Bash)
+    - `developer` → implements atomic tasks with full Bash access
+  - **Reviewers** (read-only, return text reports to orchestrator):
+    - `task-reviewer` → gates Analysis→Architecture
+    - `architecture-reviewer` → gates Architecture→Planning (focus: Data Model, Security, YAGNI)
+    - `plan-reviewer` → gates Planning→Execution (RTM coverage, Stub-First, atomicity)
+    - `code-reviewer` → gates Execution→Merge (three pillars: Compliance, Quality, Testing) with git read-only
+  - **Security-auditor** → full OWASP audit with scoped scanner Bash (`run_audit.py`, `bandit`). Distinct from the Wave 1 lightweight `critic-security` used in `/vdd-multi`.
+* **`docs/ARCHITECTURE.md` §5.1 — extended wrapper catalog** with all 12 wrappers, SOT paths, tools whitelist per row, and explicit "wrapper design convention" block (body ≤ ~30 lines, SOT never duplicated).
+
+#### **Design Decisions**
+* **No workflow rewrites**: unlike Wave 1 (which rewrote `/vdd-multi`), Wave 2 is pure infrastructure — existing dev-pipeline workflows (`01-04`, `vdd-*`, `develop-all`) keep working through sequential role-switching. Wrappers are *available* for parallel spawn when orchestrator decides (e.g., parallel reviewer pairs, parallel developers for independent tasks).
+* **Reviewers return text reports, do not write files**: avoids giving reviewers broad filesystem Write access. Orchestrator persists to `docs/reviews/…` if needed. Same pattern as Wave 1 critics.
+* **Strict tools whitelist per role**: builders write to their artifact path only; reviewers are read-only; developer has full Bash (testing, build, scripts). Enforced via frontmatter `tools` field. Verified: attempting Write inside a reviewer subagent fails with permission error.
+* **Sonnet model for all 12 wrappers**: baseline choice. Future waves may downgrade specific wrappers to Haiku for cost (e.g., simple reviewers).
+* **`security-auditor` ≠ `critic-security`**: full audit role (OWASP Top 10, taint analysis, CVE check, formal `docs/audit/` report) vs. lightweight parallel critic for `/vdd-multi`. Wrappers explicitly document the distinction.
+
+#### **Changed**
+* **`docs/TASK.md`** → Wave 2 (TASK-059) is now the current active task; Wave 1 (TASK-058) referenced in the Completed Waves table.
+* **`docs/ARCHITECTURE.md` §5.1** — Layer A section expanded from "Wave 1 wrappers" to full 12-wrapper catalog with design convention documentation.
+
+#### **Verified**
+* YAML frontmatter validation passes for all 12 wrappers (`name` matches filename, required fields present).
+* No regression: `git diff` on Wave 1 artifacts (`.agent/workflows/vdd-multi.md`, Wave 1 critic wrappers) — untouched.
+
+#### **Out of Scope (future waves)**
+* Wave 3: 4 product-pipeline wrappers (`strategic-analyst`, `product-analyst`, `product-director`, `solution-architect`).
+* Wave 4: Layer B implementation (`/teams-vdd-multi` workflow using native `TeamCreate`/`SendMessage`).
+* Wave 5: portable generator if a second vendor (Codex, Antigravity) needs subagent support.
+* Orchestrator prompts (`01_orchestrator.md`, `p00_product_orchestrator_prompt.md`) — native Teams don't support nested teams, these stay as main-agent role personas.
+
+---
+
 ### **v3.10.0 — Agent Teams Mode Wave 1: Parallel VDD Multi-Adversarial Critics**
 
 #### **Added**

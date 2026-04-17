@@ -131,13 +131,36 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 └──────┘    └──────────┘   └──────────────┘
 ```
 
-### Layer A — Framework-Agent (Wave 1, implemented)
+### Layer A — Framework-Agent (Wave 1 + Wave 2, implemented)
 
 - **Mechanism**: built-in `Agent` tool. Orchestrator issues N parallel tool-uses in **one message**.
-- **Subagent definitions**: `.claude/agents/<name>.md` — thin Claude-frontmatter wrappers that point (body) at source-of-truth in `.agent/skills/*/SKILL.md` or `System/Agents/`.
-- **Use cases**: orthogonal parallel critique (`/vdd-multi`), parallel exploration/research, independent atomic units with clear artifact contracts.
+- **Subagent definitions**: `.claude/agents/<name>.md` — thin Claude-frontmatter wrappers that point (body) at source-of-truth in `.agent/skills/*/SKILL.md` or `System/Agents/*.md`.
+- **Use cases**: orthogonal parallel critique (`/vdd-multi`), parallel exploration/research, independent atomic units with clear artifact contracts, dev-pipeline role invocation.
 - **Communication**: no inter-teammate messaging. Merge happens in the orchestrator after all teammates return.
-- **Wave 1 wrappers**: `critic-logic`, `critic-security`, `critic-performance`.
+
+**Wave 1 — critics** (read-only, return text reports):
+- `critic-logic`, `critic-security`, `critic-performance` — parallel critics used by `/vdd-multi`.
+
+**Wave 2 — dev pipeline** (12 total wrappers with Wave 1):
+
+| Wrapper | SOT | Tools | Role |
+|---|---|---|---|
+| `analyst` | `System/Agents/02_analyst_prompt.md` | Read, Write, Edit, Grep, Glob, git read-only | Produces `docs/TASK.md` with RTM |
+| `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Analysis→Architecture |
+| `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob, git read-only | Produces `docs/ARCHITECTURE.md` |
+| `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Architecture→Planning |
+| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, task_id_tool, git log | Produces `docs/PLAN.md` + `docs/tasks/*.md` |
+| `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Planning→Execution |
+| `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | Implements atomic task under Stub-First |
+| `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, git read-only | Returns review report; gates Execution→Merge |
+| `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, git log/diff, run_audit.py, bandit | Returns full OWASP audit report |
+
+**Wrapper design convention** (Option D):
+- Frontmatter = Claude Code subagent spec (`name`, `description`, `tools`, `model`).
+- Body ≤ ~30 lines: SOT reference + mandatory skill loads + return contract + guardrails.
+- Methodology body is NOT duplicated — wrappers point at `System/Agents/` or `.agent/skills/` for full instructions.
+- Reviewers return **text reports** to the orchestrator (read-only tools) instead of writing `docs/reviews/` directly — the orchestrator persists if needed. This mirrors the Wave 1 critic pattern and avoids giving reviewers broad filesystem Write access.
+- Builders (`analyst`, `architect`, `planner`, `developer`) have scoped Write/Edit access to produce their primary artifact (`docs/TASK.md`, `docs/ARCHITECTURE.md`, etc.).
 
 ### Layer B — Native Teams (Wave 4, stub)
 

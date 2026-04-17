@@ -16,6 +16,46 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.11.0 — Agent Teams Mode Wave 2: обёртки для dev-pipeline**
+
+#### **Добавлено**
+* **9 новых subagent-обёрток для dev-pipeline** в `.claude/agents/` (12 всего после Wave 1 с тремя критиками). Каждая обёртка — тонкий Claude Code адаптер поверх SOT в `System/Agents/XX_*.md` по паттерну Option D из Wave 1:
+  - **Builders** (Write/Edit к своему артефакту):
+    - `analyst` → генератор TASK.md (RTM + критерии приёмки)
+    - `architect` → дизайнер ARCHITECTURE.md (Data Model → Components → Interfaces)
+    - `planner` → PLAN.md + `docs/tasks/*.md` под Stub-First (использует `task_id_tool` через Bash)
+    - `developer` → реализация атомарных задач с полным доступом к Bash
+  - **Reviewers** (read-only, возвращают текст-отчёт оркестратору):
+    - `task-reviewer` → гейт Analysis→Architecture
+    - `architecture-reviewer` → гейт Architecture→Planning (фокус: Data Model, Security, YAGNI)
+    - `plan-reviewer` → гейт Planning→Execution (RTM coverage, Stub-First, атомарность)
+    - `code-reviewer` → гейт Execution→Merge (три столпа: Compliance, Quality, Testing) с git read-only
+  - **Security-auditor** → полный OWASP-аудит со scoped Bash для сканеров (`run_audit.py`, `bandit`). Отличается от Wave 1 легковесного `critic-security` в `/vdd-multi`.
+* **`docs/ARCHITECTURE.md` §5.1 — расширенный каталог обёрток** со всеми 12, указанием SOT-пути, tools whitelist по каждой обёртке и явным блоком "wrapper design convention" (тело ≤ ~30 строк, SOT никогда не дублируется).
+
+#### **Дизайн-решения**
+* **Без изменений workflow'ов**: в отличие от Wave 1 (переписал `/vdd-multi`), Wave 2 — чистая инфраструктура. Существующие dev-pipeline workflow'ы (`01-04`, `vdd-*`, `develop-all`) продолжают работать через sequential role-switching. Обёртки *доступны* для параллельного spawn'а когда оркестратор решит (пары ревьюеров, параллельные разработчики для независимых задач).
+* **Reviewer'ы возвращают текст-отчёт, не пишут файлы**: избегает выдачи reviewer'ам широкого Write к файловой системе. Оркестратор сохраняет `docs/reviews/…` при необходимости. Тот же паттерн, что критики Wave 1.
+* **Строгий tools whitelist по роли**: builders пишут только свой артефакт; reviewers — read-only; developer — полный Bash (тесты, build, скрипты). Forced через frontmatter `tools`. Верифицировано: попытка Write внутри reviewer-subagent отклоняется с permission error.
+* **Sonnet для всех 12 обёрток**: baseline. Будущие волны могут снизить конкретные обёртки до Haiku для экономии (простые reviewers).
+* **`security-auditor` ≠ `critic-security`**: полный аудит-роль (OWASP Top 10, taint analysis, CVE-check, формальный `docs/audit/` отчёт) против легковесного параллельного критика для `/vdd-multi`. Обёртки явно документируют различие.
+
+#### **Изменено**
+* **`docs/TASK.md`** → Wave 2 (TASK-059) теперь активная задача; Wave 1 (TASK-058) указан в таблице Completed Waves.
+* **`docs/ARCHITECTURE.md` §5.1** — секция Layer A расширена от "Wave 1 wrappers" до полного каталога 12 обёрток с документированием design convention.
+
+#### **Верифицировано**
+* YAML frontmatter валиден у всех 12 обёрток (`name` совпадает с filename, все required-поля на месте).
+* Нет регрессии: `git diff` на артефактах Wave 1 (`.agent/workflows/vdd-multi.md`, критики Wave 1) — не тронуты.
+
+#### **Вне scope (будущие волны)**
+* Wave 3: 4 обёртки product-pipeline (`strategic-analyst`, `product-analyst`, `product-director`, `solution-architect`).
+* Wave 4: реализация Layer B (`/teams-vdd-multi` workflow через native `TeamCreate`/`SendMessage`).
+* Wave 5: portable-генератор, если появится второй вендор (Codex, Antigravity).
+* Orchestrator'ы (`01_orchestrator.md`, `p00_product_orchestrator_prompt.md`) — native Teams не поддерживают nested teams, эти роли остаются role-switching персонами main-агента.
+
+---
+
 ### **v3.10.0 — Agent Teams Mode Wave 1: параллельные критики VDD Multi-Adversarial**
 
 #### **Добавлено**

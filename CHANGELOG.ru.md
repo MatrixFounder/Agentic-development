@@ -16,6 +16,60 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.13.0 — Параметры `/vdd-multi` + находки runtime-probe Wave 4**
+
+Добавляет first-class параметры в `/vdd-multi` для scoped-прогонов, CI-интеграции, PR-ревью и сохранения фикстур. Также документирует runtime-probe Native Teams (Layer B) — что работает, что сломано, и почему Wave 4 отложен.
+
+#### **Добавлено — параметры `/vdd-multi`**
+
+Раньше `/vdd-multi <path>` принимал только путь к таргету. Теперь принимает 5 inline флагов:
+
+* `--scope=logic|security|performance|all` (поддерживается список через запятую) — прогнать только выбранных критиков. Экономит токены когда область известна.
+* `--no-fix` — пропустить Phase 3 iterative fix loop (только отчёт). Для CI, smoke-тестов, pre-merge review-ботов.
+* `--fail-on=critical|high|medium|low|none` — выставить PASS/FAIL вердикт когда любая находка ≥ threshold. Workflow всегда завершается; флаг только управляет итоговым вердиктом.
+* `--output=<path>` — записать merged report в файл вместо inline-ответа; оркестратор возвращает короткий pointer. Для persistent-артефактов в `docs/reviews/`.
+* `--diff-only` — ограничить ревью файлами в `git diff` vs `main`. Авто-включается когда target не указан. Критики получают изменённые файлы + diff-контекст по каждому. Основной use case: PR-ревью.
+
+Пример CI-вызова: `/vdd-multi --diff-only --no-fix --fail-on=high --output=docs/reviews/pr-42.md`.
+
+Файл workflow [.agent/workflows/vdd-multi.md](.agent/workflows/vdd-multi.md) переписан:
+* Добавлена секция "Invocation / Parameters" с таблицей флагов + примеры.
+* Новая Phase 0 ("Parse invocation") нормализует флаги + выводит список файлов через `git diff` когда `--diff-only`.
+* Phase 2 "Merge & deduplicate" учитывает `--severity` фильтр и выводит вердикт из `--fail-on`.
+* Phase 3 "Iterative fix loop" пропускается при `--no-fix`.
+* Termination-строка теперь включает вердикт + pointer на output-path.
+* Sequential fallback (для не-Claude-Code вендоров) поддерживает все флаги.
+
+#### **Добавлено — runtime-probe Wave 4 Native Teams**
+
+Выполнен минимальный smoke-цикл `TeamCreate` + `Agent(team_name, name)` + `SendMessage` + `TeamDelete` для проверки runtime Layer B (экспериментальный флаг `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` уже установлен). Задокументированные находки:
+
+**Работает**:
+* `TeamCreate` создаёт `~/.claude/teams/<name>/config.json` + `~/.claude/tasks/<name>/.lock`.
+* `Agent(team_name, name, subagent_type)` спавнит teammate асинхронно (возвращает сразу с `agent_id`; teammate работает в background).
+* Teammate корректно выполняет задачу (проверено подсчётом `.md` файлов — вернул 16, совпадает с фактическим числом обёрток).
+* `SendMessage` доставляет в inbox-файл (`~/.claude/teams/<name>/inboxes/<recipient>.json`) как JSON-массив с `from`, `text`, `summary`, `timestamp`, `color`, `read`.
+* Shutdown round-trip (`shutdown_request` → `shutdown_approved`) завершается за ~2 секунды.
+
+**Сломано или неожиданно** (новые записи в [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)):
+* **`TeamDelete` НЕ чистит после protocol shutdown**: массив members в `config.json` не обновляется на `shutdown_approved`; `TeamDelete` падает с `Cannot cleanup team with N active member(s)`. Сообщение об ошибке ссылается на `requestShutdown` — такого tool'а нет. Workaround: ручной `rm -rf ~/.claude/teams/<name>/ ~/.claude/tasks/<name>/`.
+* **Async spawn ≠ sync return**: в отличие от Layer A где `Agent` возвращает результат subagent'а, Layer B `Agent(team_name)` возвращает сразу. Lead должен поллить inbox-файл или ждать auto-delivered turn.
+* **Наследование модели неконсистентно**: `subagent_type: "Explore"` teammate по умолчанию получил `model: "haiku"` независимо от модели lead'а. Нужно явно override'ить если Opus критичен.
+* **Runtime отправляет structured JSON несмотря на docs**: `{"type":"idle_notification",...}` и `{"type":"shutdown_approved",...}` auto-delivered в inbox lead'а хотя docs говорят "Do NOT send structured JSON status messages". Парсеры должны обрабатывать оба варианта.
+
+**Решение**: Wave 4 (полный Layer B `/teams-vdd-multi` workflow) остаётся отложенным. Layer A (параллельный `Agent` spawn в одном сообщении) полностью покрывает текущий use case `/vdd-multi`, дважды проверен smoke-тестами (Sonnet + Opus), и не имеет перечисленных Layer-B проблем. Wave 4 откроется снова только когда появится конкретный peer-debate сценарий, оправдывающий дополнительную сложность.
+
+#### **Изменено**
+* [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) — секция Native Teams расширена 3 новыми находками из probe (TeamDelete cleanup, async spawn, наследование модели, runtime JSON messages).
+* [docs/TASK.md](docs/TASK.md) — таблица Completed Waves добавляет строку `Wave 4 probe + /vdd-multi parameters (v3.13.0)`.
+
+#### **Не изменено (явно)**
+* Новых subagent-обёрток нет (по-прежнему 16).
+* Поведение Layer A не изменено — `/vdd-multi` без флагов работает идентично v3.12.0.
+* Нет Layer B workflow (`/teams-vdd-multi`) — отложен.
+
+---
+
 ### **v3.12.0 — Agent Teams Mode Wave 3: обёртки для product-pipeline**
 
 #### **Добавлено**

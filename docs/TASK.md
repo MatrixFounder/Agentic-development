@@ -20,13 +20,14 @@ Extend `.claude/agents/` with 4 thin Claude Code subagent wrappers for the produ
 | Wave 2 | 9 dev-pipeline wrappers | v3.11.0 | [docs/tasks/task-059-teams-mode-wave-2.md](tasks/task-059-teams-mode-wave-2.md) |
 | Hardening | Thin-wrapper refactor (842 → 160 lines) + adversarial-review fixes + `task_id_tool.py` CLI main | v3.11.1 | (CHANGELOG only) |
 | Opus upgrade | 8 verifiers → `model: opus` | v3.11.2 | (CHANGELOG only; smoke-verified) |
-| **Wave 3** | **4 product-pipeline wrappers** | **v3.12.0** | **[docs/tasks/task-060-teams-mode-wave-3.md](tasks/task-060-teams-mode-wave-3.md)** |
+| Wave 3 | 4 product-pipeline wrappers | v3.12.0 | [docs/tasks/task-060-teams-mode-wave-3.md](tasks/task-060-teams-mode-wave-3.md) |
+| **Wave 4 probe + /vdd-multi params** | **Native Teams runtime probe (documented gotchas); 5 new `/vdd-multi` flags (scope, no-fix, fail-on, output, diff-only). Wave 4 full workflow deferred.** | **v3.13.0** | **(CHANGELOG only)** |
 
 ### Remaining Waves
 
 | Wave | Scope | Status |
 |---|---|---|
-| Wave 4 | Layer B (native `TeamCreate` + `/teams-vdd-multi` workflow) | Not started |
+| Wave 4 | Layer B (native `TeamCreate` + `/teams-vdd-multi` workflow) | **Deferred after v3.13.0 probe** — runtime works but has blocking gotchas (TeamDelete cleanup, async spawn, model inheritance). Reopens on concrete peer-debate use case. |
 | Wave 5 | Portable generator (if second vendor added) | Conditional |
 
 ## Issue I1 — Create 4 product-pipeline wrappers

@@ -16,6 +16,60 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.13.0 — `/vdd-multi` parameters + Wave 4 runtime probe findings**
+
+Adds first-class parameters to `/vdd-multi` for scoped runs, CI integration, PR reviews, and fixture preservation. Also documents the Native Teams (Layer B) runtime probe — what works, what's broken, and why Wave 4 is deferred.
+
+#### **Added — `/vdd-multi` parameters**
+
+Previously `/vdd-multi <path>` took only a target path. Now accepts 5 inline flags:
+
+* `--scope=logic|security|performance|all` (comma-separated list supported) — run only selected critic(s). Saves tokens when area is known.
+* `--no-fix` — skip Phase 3 iterative fix loop (report-only mode). For CI, smoke tests, pre-merge review bots.
+* `--fail-on=critical|high|medium|low|none` — surface a PASS/FAIL verdict when any finding meets/exceeds the threshold. Workflow always completes; flag only controls the terminal verdict.
+* `--output=<path>` — write merged report to file instead of inline; orchestrator returns a short pointer. For persistent artifacts under `docs/reviews/`.
+* `--diff-only` — bound review to files in `git diff` vs `main`. Auto-on when no target is given. Critics receive changed files + per-file diff context. Primary use case: PR review.
+
+Example CI invocation: `/vdd-multi --diff-only --no-fix --fail-on=high --output=docs/reviews/pr-42.md`.
+
+Workflow file [.agent/workflows/vdd-multi.md](.agent/workflows/vdd-multi.md) rewritten:
+* Added "Invocation / Parameters" section with flag table + examples.
+* New Phase 0 ("Parse invocation") normalizes flag input + derives `git diff` target list when `--diff-only`.
+* Phase 2 "Merge & deduplicate" honors `--severity` filter and derives verdict from `--fail-on`.
+* Phase 3 "Iterative fix loop" skipped when `--no-fix`.
+* Termination line now includes verdict + output-path pointer.
+* Sequential fallback (non-Claude-Code vendors) honors all flags.
+
+#### **Added — Wave 4 Native Teams runtime probe**
+
+Ran a minimal `TeamCreate` + `Agent(team_name, name)` + `SendMessage` + `TeamDelete` smoke cycle to verify Layer B runtime (experimental flag `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` already set). Documented findings:
+
+**Works**:
+* `TeamCreate` creates `~/.claude/teams/<name>/config.json` + `~/.claude/tasks/<name>/.lock`.
+* `Agent(team_name, name, subagent_type)` spawns teammate asynchronously (returns immediately with `agent_id`; teammate runs in background).
+* Teammate executes task correctly (verified by counting `.md` files — returned 16, matches actual wrapper count).
+* `SendMessage` delivers to inbox file (`~/.claude/teams/<name>/inboxes/<recipient>.json`) as JSON array with `from`, `text`, `summary`, `timestamp`, `color`, `read`.
+* Shutdown round-trip (`shutdown_request` → `shutdown_approved`) completes within ~2 seconds.
+
+**Broken or surprising** (new entries in [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)):
+* **`TeamDelete` does NOT clean up after protocol shutdown**: `config.json` members array is not updated on `shutdown_approved`; `TeamDelete` fails with `Cannot cleanup team with N active member(s)`. Error message references `requestShutdown` which is not an available tool. Workaround: manual `rm -rf ~/.claude/teams/<name>/ ~/.claude/tasks/<name>/`.
+* **Async spawn ≠ sync return**: unlike Layer A where `Agent` returns the subagent's result, Layer B `Agent(team_name)` returns immediately. Lead must poll inbox file or await an auto-delivered turn.
+* **Model inheritance inconsistent**: `subagent_type: "Explore"` teammate defaulted to `model: "haiku"` regardless of lead's model. Must override explicitly if Opus needed.
+* **Runtime sends structured JSON despite docs**: `{"type":"idle_notification",...}` and `{"type":"shutdown_approved",...}` are auto-delivered to lead's inbox even though docs say "Do NOT send structured JSON status messages". Parsers must handle both.
+
+**Decision**: Wave 4 (full Layer B `/teams-vdd-multi` workflow) remains deferred. Layer A (parallel `Agent` spawn in one message) handles the current `/vdd-multi` use case fully, is proven twice under smoke tests (Sonnet + Opus), and has none of the Layer-B gotchas above. Wave 4 reopens only when a concrete peer-debate scenario makes the extra complexity justified.
+
+#### **Changed**
+* [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md) — Native Teams section expanded with 3 new findings from the probe (TeamDelete cleanup, async spawn, model inheritance, runtime JSON messages).
+* [docs/TASK.md](docs/TASK.md) — Completed Waves table adds `Wave 4 probe + /vdd-multi parameters (v3.13.0)` row.
+
+#### **Not changed (explicit)**
+* No new subagent wrappers (still 16).
+* No changes to Layer A behavior — `/vdd-multi` without flags runs identically to v3.12.0.
+* No Layer B workflow (`/teams-vdd-multi`) — deferred.
+
+---
+
 ### **v3.12.0 — Agent Teams Mode Wave 3: Product-Pipeline Subagent Wrappers**
 
 #### **Added**

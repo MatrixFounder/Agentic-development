@@ -145,22 +145,24 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 
 | Wrapper | SOT | Tools | Role |
 |---|---|---|---|
-| `analyst` | `System/Agents/02_analyst_prompt.md` | Read, Write, Edit, Grep, Glob, git read-only | Produces `docs/TASK.md` with RTM |
+| `analyst` | `System/Agents/02_analyst_prompt.md` | Read, Write, Edit, Grep, Glob | Produces `docs/TASK.md` with RTM |
 | `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Analysis→Architecture |
-| `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob, git read-only | Produces `docs/ARCHITECTURE.md` |
+| `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob | Produces `docs/ARCHITECTURE.md` |
 | `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Architecture→Planning |
-| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, task_id_tool, git log | Produces `docs/PLAN.md` + `docs/tasks/*.md` |
+| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
 | `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Planning→Execution |
 | `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | Implements atomic task under Stub-First |
-| `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, git read-only | Returns review report; gates Execution→Merge |
-| `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, git log/diff, run_audit.py, bandit | Returns full OWASP audit report |
+| `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, Bash | Returns review report; gates Execution→Merge (uses `git diff` to scope) |
+| `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, Bash | Returns full OWASP audit report (uses `run_audit.py`) |
 
-**Wrapper design convention** (Option D):
+Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
+
+**Wrapper design convention** (Option D — thin adapters):
 - Frontmatter = Claude Code subagent spec (`name`, `description`, `tools`, `model`).
-- Body ≤ ~30 lines: SOT reference + mandatory skill loads + return contract + guardrails.
-- Methodology body is NOT duplicated — wrappers point at `System/Agents/` or `.agent/skills/` for full instructions.
-- Reviewers return **text reports** to the orchestrator (read-only tools) instead of writing `docs/reviews/` directly — the orchestrator persists if needed. This mirrors the Wave 1 critic pattern and avoids giving reviewers broad filesystem Write access.
-- Builders (`analyst`, `architect`, `planner`, `developer`) have scoped Write/Edit access to produce their primary artifact (`docs/TASK.md`, `docs/ARCHITECTURE.md`, etc.).
+- Body ≤ ~15 lines: SOT link + subagent-specific adaptations only (what differs from SOT when running as subagent vs main-agent role — primarily "return text report instead of writing docs/reviews/").
+- Methodology, skill loads, guardrails, Prime Directives all live in SOT (`System/Agents/*.md` or `.agent/skills/*/SKILL.md`). Wrappers do NOT duplicate — on SOT changes, behavior updates automatically.
+- Reviewers and critics (read-only tools): return text reports to the orchestrator; the orchestrator persists to `docs/reviews/` or `docs/audit/` if needed. This mirrors the Wave 1 critic pattern.
+- Builders (`analyst`, `architect`, `planner`, `developer`) have Write/Edit to produce their primary artifact directly.
 
 ### Layer B — Native Teams (Wave 4, stub)
 

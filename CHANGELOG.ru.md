@@ -16,6 +16,38 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.11.1 — Thin-Wrapper рефакторинг + фиксы адверсарного ревью**
+
+Самоаудит v3.10.0 и v3.11.0 вскрыл 3 реальных бага и 7 anti-pattern'ов. Этот релиз их чинит.
+
+#### **Исправлено (HIGH — реальные баги)**
+* **`.agent/tools/task_id_tool.py`**: добавлен CLI main block (`argparse` + JSON на stdout). Был упомянут в [CLAUDE.md](../CLAUDE.md#L29) (`python3 .agent/tools/task_id_tool.py <slug>`) и в `planner` обёртке из v3.11.0, но в модуле не было `if __name__ == "__main__":` — запуск давал пустой вывод. Теперь возвращает `{"filename": "task-NNN-<slug>.md", "used_id": "NNN", "status": "generated|corrected", "message": null}`.
+* **`.claude/agents/security-auditor.md`**: убран `Bash(python3 -m bandit:*)` из tools — bandit не установлен в дефолтном окружении, декларирование было ложным обещанием.
+* **`.claude/agents/` — синтаксис Bash в tools**: убран нестандартный паттерн `Bash(cmd:*)` (с двоеточием) из всех обёрток. Subagent-frontmatter `tools` и проектный [.claude/settings.json](../.claude/settings.json) `permissions.allow` — **разные механизмы**; subagent tools теперь содержит только простые имена (`Read, Grep, Glob, Bash`), а settings.json определяет какие подкоманды Bash auto-approve vs prompt. Reviewer'ы/критики без `Bash` в tools **физически не могут** вызвать shell, что делает read-only-гарантию реально исполняемой.
+
+#### **Изменено — Thin-Wrapper рефакторинг (MED)**
+Все 12 обёрток переписаны как **истинно тонкие адаптеры**. Версии из v3.10.0/v3.11.0 разрослись до 50–90 строк каждая, с дублированными списками skill'ов, парафразом SOT guardrail'ов и собственными return-format блоками. Это drift hazard: при правках SOT обёртки молча отставали.
+
+* **Размер**: `.claude/agents/` total с **842 строк → 160 строк** (−81%). Каждая обёртка теперь 13–14 строк (7–8 строк body) и содержит только:
+  1. Frontmatter (`name`, `description`, `tools`, `model`).
+  2. Одну строку SOT-указателя: `You are the <Role> teammate. Full system prompt ... lives in [SOT path] — read and follow strictly.`
+  3. `Subagent adaptations`: 1–3 bullet'а — только то, что отличается от SOT при запуске как subagent (в основном «возвращай текст-отчёт оркестратору вместо записи `docs/reviews/…`»).
+* **Без дублированных списков skill'ов**: обёртки больше не пересказывают SOT §2 skill loads. SOT — источник правды.
+* **Без cargo-cult guardrail'ов**: обёртки больше не парафразят SOT Prime Directives. Guardrails живут в SOT.
+* **Без выдуманных return-форматов**: обёртки ссылаются на SOT-контракт; схема — зона ответственности оркестратора.
+* **Консистентная грамматика описаний**: все 12 начинаются с инфинитивного глагола (`Transform`, `Review`, `Design`, `Decompose`, `Implement`, `Perform`) — более предсказуемый auto-routing.
+* **Кросс-ссылка между `critic-security` и `security-auditor`**: обе обёртки теперь явно различают роли в `description` (легковесный параллельный критик vs. полный аудит).
+* **Убран aspirational `files_modified` merge claim** из `developer.md` — такой merge-логики в оркестраторе нет.
+
+#### **Изменено — Docs**
+* **`docs/ARCHITECTURE.md` §5.1 wrapper catalog**: колонка tools теперь показывает точные frontmatter-значения (без расплывчатого "git read-only" или фантомного "bandit"); добавлен блок "Tools note" объясняющий разделение между subagent `tools` frontmatter и settings.json `permissions`; дизайн-конвенция обновлена под реальную цель ~15 строк.
+
+#### **Влияние на поведение**
+* **Не ожидается**. Критики и reviewer'ы продолжают читать те же SOT-файлы; методология живёт в SOT. Smoke-test Wave 1 должен воспроизвестись идентично (тот же SOT → то же качество критики).
+* **Сопровождение улучшено**: правки в SOT (например, новый skill в `02_analyst_prompt.md` §2) автоматически подхватятся subagent'ом `analyst` при следующем spawn'е — обновление обёртки не требуется.
+
+---
+
 ### **v3.11.0 — Agent Teams Mode Wave 2: обёртки для dev-pipeline**
 
 #### **Добавлено**

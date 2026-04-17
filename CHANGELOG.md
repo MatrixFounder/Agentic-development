@@ -16,6 +16,38 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.11.1 — Thin-Wrapper Refactor + Adversarial Review Fixes**
+
+Self-review of v3.10.0 and v3.11.0 surfaced 3 real bugs and 7 anti-patterns. This release fixes them.
+
+#### **Fixed (HIGH — real bugs)**
+* **`.agent/tools/task_id_tool.py`**: added CLI main block (`argparse` + JSON output to stdout). Was referenced in [CLAUDE.md](../CLAUDE.md#L29) (`python3 .agent/tools/task_id_tool.py <slug>`) and in the v3.11.0 `planner` wrapper, but the module had no `if __name__ == "__main__":` — running it produced empty output. Now emits `{"filename": "task-NNN-<slug>.md", "used_id": "NNN", "status": "generated|corrected", "message": null}`.
+* **`.claude/agents/security-auditor.md`**: removed `Bash(python3 -m bandit:*)` from tools — bandit is not installed in the default environment, so declaring the tool was a false promise.
+* **`.claude/agents/` — Bash tool syntax**: removed non-standard `Bash(cmd:*)` colon pattern from all wrappers. The subagent-frontmatter `tools` field and project [.claude/settings.json](../.claude/settings.json) `permissions.allow` are distinct mechanisms; subagent tools now list simple names only (`Read, Grep, Glob, Bash`), and settings.json governs which Bash sub-commands auto-approve vs prompt. Reviewers/critics without `Bash` in tools cannot invoke any shell command, making the read-only guarantee actually enforced.
+
+#### **Changed — Thin-Wrapper Refactor (MED)**
+All 12 wrappers rewritten as **true thin adapters**. The v3.10.0/v3.11.0 wrappers had grown to 50–90 lines each with duplicated skill lists, paraphrased SOT guardrails, and restated return-format blocks. This was a drift hazard: on SOT edits, wrappers would silently fall behind.
+
+* **Size**: `.claude/agents/` total went from **842 lines → 160 lines** (−81%). Each wrapper is now 13–14 lines (7–8 lines body) and contains only:
+  1. Frontmatter (`name`, `description`, `tools`, `model`).
+  2. One-line SOT pointer: `You are the <Role> teammate. Full system prompt ... lives in [SOT path] — read and follow strictly.`
+  3. `Subagent adaptations`: 1–3 bullets covering only what differs from SOT when running as subagent (primarily "return text report to orchestrator instead of writing `docs/reviews/…`").
+* **No duplicated skill lists**: wrappers no longer restate SOT §2 skill loads. SOT is authoritative.
+* **No cargo-cult guardrails**: wrappers no longer paraphrase SOT Prime Directives. Guardrails live in SOT.
+* **No invented return formats**: wrappers link to SOT's contract; orchestrator handles the schema.
+* **Consistent description grammar**: all 12 start with an infinitive action verb (`Transform`, `Review`, `Design`, `Decompose`, `Implement`, `Perform`) for more predictable auto-routing.
+* **Cross-reference between `critic-security` and `security-auditor`**: both wrappers now disambiguate in their `description` field (lightweight parallel critic vs. full audit).
+* **Removed aspirational `files_modified` merge claim** from `developer.md` — no such merge logic exists in the orchestrator.
+
+#### **Changed — Docs**
+* **`docs/ARCHITECTURE.md` §5.1 wrapper catalog table**: tools column now shows exact frontmatter values (no vague "git read-only" or phantom "bandit"); added a "Tools note" explaining the division between subagent `tools` frontmatter and settings.json `permissions`; design convention block updated to reflect actual ~15-line size target.
+
+#### **Impact on behavior**
+* **None expected**. Critics and reviewers continue to read the same SOT files; the SOT is where methodology lives. Wave 1 smoke-test behavior should reproduce identically (same SOT → same critique quality).
+* **Maintenance improved**: edits to SOT (e.g., new skill added to `02_analyst_prompt.md` §2) propagate automatically to the `analyst` subagent on next spawn — no wrapper update needed.
+
+---
+
 ### **v3.11.0 — Agent Teams Mode Wave 2: Dev-Pipeline Subagent Wrappers**
 
 #### **Added**

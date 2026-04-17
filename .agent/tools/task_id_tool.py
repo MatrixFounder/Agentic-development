@@ -180,3 +180,39 @@ def generate_task_archive_filename(
         "status": "generated",
         "message": None
     }
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    import sys
+
+    parser = argparse.ArgumentParser(
+        description="Generate a unique sequential filename for task archival."
+    )
+    parser.add_argument("slug", help="Short task name (e.g. 'new-feature')")
+    parser.add_argument(
+        "--proposed-id",
+        default=None,
+        help="Optional desired ID (e.g. '031' or '31'); auto-generated if omitted",
+    )
+    parser.add_argument(
+        "--tasks-dir",
+        default="docs/tasks",
+        help="Tasks directory (default: docs/tasks)",
+    )
+    parser.add_argument(
+        "--no-correction",
+        action="store_true",
+        help="Error on ID conflict instead of auto-selecting next available",
+    )
+    args = parser.parse_args()
+
+    result = generate_task_archive_filename(
+        slug=args.slug,
+        proposed_id=args.proposed_id,
+        allow_correction=not args.no_correction,
+        tasks_dir=args.tasks_dir,
+    )
+    print(json.dumps(result, indent=2))
+    sys.exit(0 if result["status"] in ("generated", "corrected") else 1)

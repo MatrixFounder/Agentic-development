@@ -11,19 +11,31 @@ version: 3.0
 
 ---
 
-## 1. Load the right reference (mandatory step)
+## 1. Load the right reference (mandatory step — Read tool, now)
 
-Before applying any protocol below, **identify the active runtime and load the matching reference**. The reference supplies the concrete names and invocation syntax that the concepts in §2–§6 need to become executable.
+Before applying any protocol below, **use the `Read` tool to load the matching reference file now**. Do not proceed to §2 with only this SKILL.md in context — the reference supplies the concrete tool names and invocation syntax that the universal concepts below need to become executable.
 
-| Runtime indicator | Load reference | Status |
+### 1.1 Detection
+
+Walk upward from the current working directory toward the filesystem root (or stop at a `.git` boundary if that's closer) and check for vendor markers:
+
+| Runtime indicator (first match wins) | `Read` | Status |
 |---|---|---|
-| `CLAUDE.md` present + `.claude/agents/` populated | [`references/claude-code.md`](references/claude-code.md) | Reference implementation (complete) |
-| `GEMINI.md` present, no `.claude/agents/` | [`references/gemini-cli.md`](references/gemini-cli.md) | **Stub** — contribute when adopting |
-| `.cursor/` directory present | [`references/cursor.md`](references/cursor.md) | **Stub** — contribute when adopting |
-| Antigravity runtime marker present | [`references/antigravity.md`](references/antigravity.md) | **Stub** — contribute when adopting |
-| None of the above, or vendor has no parallel-spawn primitive | [`references/sequential-fallback.md`](references/sequential-fallback.md) | Universal fallback (role-switching, no parallelism) |
+| `CLAUDE.md` + `.claude/agents/` present | [`references/claude-code.md`](references/claude-code.md) | Reference implementation (complete, smoke-tested) |
+| `GEMINI.md` present, no `.claude/agents/` | [`references/gemini-cli.md`](references/gemini-cli.md) | **Stub** — not yet validated on real runtime |
+| `.cursor/` directory present | [`references/cursor.md`](references/cursor.md) | **Stub** — not yet validated on real runtime |
+| Antigravity runtime marker present | [`references/antigravity.md`](references/antigravity.md) | **Stub** — not yet validated on real runtime |
+| None of the above, or vendor has no parallel-spawn primitive | [`references/sequential-fallback.md`](references/sequential-fallback.md) | Universal-by-design; unvalidated on non-Claude runtimes (see file for caveats) |
 
-If multiple indicators match (e.g. both `CLAUDE.md` and `GEMINI.md` present), prefer the reference matching the runtime **currently executing** this skill, not the runtime that owns the files.
+If `cwd` is not the project root, walk up looking for the first marker; stop at `.git/` or filesystem root. If no marker found, the skill is being invoked outside a framework-managed project — emit a warning to the caller rather than silently falling back, then load `sequential-fallback.md`.
+
+### 1.2 Tie-break when multiple indicators match
+
+If a repo carries both `CLAUDE.md` and `GEMINI.md` (multi-vendor support), the agent cannot reliably introspect which CLI is hosting it. Use these concrete signals, in order:
+
+1. **Tool-list fingerprint**: if the agent has `Agent` (with `team_name` parameter) + `TeamCreate` + `SendMessage` available — load `claude-code.md`. If it has a Gemini-specific `run_shell_command` or Cursor's Composer primitives — load the matching reference. Tool availability is the most reliable signal.
+2. **Explicit caller hint**: if the orchestrator passed a `runtime:` parameter in the skill invocation, honor it.
+3. **Fallback**: if still ambiguous, emit a warning "ambiguous runtime; defaulting to sequential-fallback" and load `sequential-fallback.md`. Do not guess silently.
 
 ---
 
@@ -108,6 +120,8 @@ If the active runtime is stub-only (no `Agent` tool, no multi-tool-call, no spaw
 - Functionally equivalent for merge-at-end patterns; **cannot** do Layer B.
 
 All universal concepts (§2–§6) still apply; only the spawn mechanism changes.
+
+> **Caveat**: the fallback protocol is documented as universal-by-design but has only been validated on Claude Code itself (roleplay as a no-`Agent`-tool runtime). Until a real non-Claude runtime runs an end-to-end task through it, treat the fallback as a *proposed pattern* rather than a certified code path. File issues / PRs against `references/sequential-fallback.md` after your first real run.
 
 ---
 

@@ -1,42 +1,20 @@
-# Parallel Orchestration — Antigravity reference
+# Parallel Orchestration — Antigravity reference (STUB)
 
-**Status**: **STUB — contribute when adopting**. Framework's universal concepts (parent `SKILL.md` §2–§6) are runtime-agnostic and apply unchanged; this file needs to be filled in with Antigravity-specific primitives.
+> ⚠️ **DEGRADED MODE**: this vendor's reference is a **stub** — not yet validated on a real runtime. If you're here because `SKILL.md §1.1` matched this vendor, the skill will fall back to [`sequential-fallback.md`](sequential-fallback.md) for concrete invocation patterns. **The fallback is slower (~N× wall-clock) and loses per-teammate context isolation.** If you wanted parallel execution on this vendor, the reference is not yet implemented — contribute a PR after validating one end-to-end run.
 
-**Loads with**: `SKILL.md` (parent skill) when an Antigravity runtime marker is detected and no other vendor markers are active.
+**Loads with**: parent `SKILL.md` when an Antigravity runtime marker is detected and no other vendor markers are active (parent `SKILL.md §1.1`).
 
----
+## Vendor-specific notes
 
-## What this reference must provide (checklist)
+- **Runtime detection marker**: TBD — contributor must identify which file/env var/directory reliably signals Antigravity so parent `SKILL.md §1.1` detection can match.
+- **Known parallel primitive**: unknown — contribute after verifying.
+- **Known teammate definition convention**: unknown — contribute after verifying.
+- **Layer B support**: unknown — contribute after verifying.
 
-To match the completeness of [`claude-code.md`](claude-code.md), this file should document:
+## What this file should become
 
-- [ ] **Runtime identification**: what file/env var/directory signals "this is Antigravity" (so the parent SKILL.md's §1 selection table can match).
-- [ ] **Parallel-spawn primitive**: does Antigravity expose multi-agent spawn? If yes, syntax. If no, default to [`sequential-fallback.md`](sequential-fallback.md).
-- [ ] **Teammate definition convention**: equivalent of `.claude/agents/<name>.md`.
-- [ ] **Teammate type selector**: equivalent of `subagent_type`.
-- [ ] **Tools whitelist mechanism**.
-- [ ] **Layer B support** (peer messaging).
-- [ ] **Verification pattern**.
-- [ ] **Known gotchas**.
-- [ ] **Reference consumer** (analog of `.agent/workflows/vdd-multi.md`).
+See the shared checklist and contribution guidance in [`_stub-template.md`](_stub-template.md). A complete reference matches the depth of [`claude-code.md`](claude-code.md).
 
----
+## Until then
 
-## Minimum viable content to unblock
-
-If a full reference is not yet feasible, at minimum state:
-
-1. The detection marker that identifies Antigravity runtime.
-2. Whether parallel primitive exists; if not, point users to [`sequential-fallback.md`](sequential-fallback.md).
-
----
-
-## Universal fallback
-
-Until this reference is complete, agents on Antigravity should use [`sequential-fallback.md`](sequential-fallback.md).
-
----
-
-## Contribution guidance
-
-Propose a PR after running an end-to-end task on Antigravity. Include vendor marker details, parallel-execution evidence (or lack thereof), and any known-issue entries.
+Use [`sequential-fallback.md`](sequential-fallback.md) — universal concepts from parent `SKILL.md §2–§6` apply unchanged; only the spawn mechanism degrades to sequential persona-swap.

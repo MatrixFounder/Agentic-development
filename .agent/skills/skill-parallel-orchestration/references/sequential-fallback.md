@@ -1,6 +1,6 @@
-# Parallel Orchestration — Universal sequential fallback
+# Parallel Orchestration — Sequential fallback (universal-by-design)
 
-**Status**: Complete and vendor-agnostic. Works on any runtime that supports reading a file and swapping the active system prompt.
+> **Validation status**: **proposed pattern, not yet validated on a non-Claude runtime.** The protocol below is designed to be vendor-agnostic (requires only "Read a file" + "swap the active system prompt"), but all documented claims about wall-clock overhead, context-bleed, and persona-swap effectiveness have only been exercised on Claude Code itself (the native Layer A is used in practice; the fallback has been desk-checked, not end-to-end smoke-tested on a non-Claude runtime). Until the first real run on Gemini CLI / Cursor / Antigravity / etc., treat this as a design sketch rather than a proven code path. Report discrepancies via PR.
 
 **Loads with**: `SKILL.md` (parent skill) when no vendor-specific parallel primitive is available, or when debugging with maximum observability. See §1 and §7 of parent SKILL.md.
 
@@ -50,7 +50,19 @@ After all teammates have run sequentially, the orchestrator performs the same me
 
 ---
 
-## Concrete pattern (vendor-agnostic)
+## Orchestration style assumption
+
+The concrete pattern below assumes **chat-based orchestration** (most LLM CLIs — Claude Code, Gemini CLI, Cursor Composer) where the lead agent speaks in natural-language turns that the teammate persona consumes.
+
+For **SDK/API-based orchestration** (no chat loop; you're calling `messages.create` or equivalent directly), the equivalent implementation is:
+
+- One `system` message per teammate role (swap between calls instead of "persona swap via prompt").
+- `messages` list reset between roles (or: one `user` message per role, `assistant` response captured per role).
+- Merge logic unchanged — runs in your orchestrator code after the last persona completes.
+
+The teaching below uses the chat idiom for readability; translate to SDK calls mentally if that's your runtime.
+
+## Concrete pattern (chat-based)
 
 ```
 ## Sequential fallback for a 3-critic VDD run

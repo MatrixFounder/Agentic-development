@@ -16,6 +16,38 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.14.1 — VDD adversarial-review fixes on v3.14.0**
+
+Post-release adversarial critique of v3.14.0 surfaced 7 findings (2 HIGH, 4 MED, 2 LOW). All addressed in this patch. No behavior change for Claude Code users; all fixes are rigor/documentation improvements that close silent-fail modes.
+
+#### **Fixed (HIGH — closes silent-fail modes)**
+
+* **`SKILL.md §1` load-semantics ambiguity**: previous wording "load the matching reference" did not specify WHO reads WHEN. A junior agent could consult the selection table, memorize the choice, and never actually `Read` the reference file — proceeding to §2 with only abstract concepts and no invocation syntax. Now explicitly: "**Use the `Read` tool to load the matching reference file now**, before applying §2–§6."
+* **`sequential-fallback.md` untested claim**: the file was marked "Complete and vendor-agnostic" but had never been exercised on a non-Claude runtime. Downgraded to "**proposed pattern, not yet validated**" with an explicit caveat that all claims about wall-clock overhead, context-bleed, and persona-swap effectiveness are theoretical. Parent `SKILL.md §7` gained the same caveat. Invites first-validator PR after real run.
+
+#### **Fixed (MED — closes fail-soft-where-loud-was-safer)**
+
+* **Stubs now emit a visible DEGRADED-MODE banner** (`gemini-cli.md`, `cursor.md`, `antigravity.md`): previously a non-Claude agent landing on a stub silently fell through to sequential fallback — user thinks they have parallel execution, actually running at ~3× latency. The banner makes the degradation loud at the top of each stub.
+* **`SKILL.md §1.1` detection now specifies cwd-walkup**: previous rule assumed the agent ran from project root. Now detects via find-up (walk from cwd toward filesystem root, stop at `.git`), and emits a warning rather than silently falling back when no marker is found.
+* **`SKILL.md §1.2` tie-break clarified**: when multiple runtime markers match, replace the untestable "prefer runtime currently executing" with concrete signals — tool-list fingerprint (`Agent`+`TeamCreate`+`SendMessage` → Claude Code), explicit `runtime:` caller hint, and explicit warning on still-ambiguous instead of silent guess.
+* **v3.14.0 CHANGELOG overclaim softened**: "No behavior change for Claude Code users" → "Content preserved; section numbering reorganized — see §9 History and `references/claude-code.md` for the mapping." Calls out the `§5.1 → §5` anchor shift for anyone citing the old structure in external notes.
+
+#### **Fixed (LOW — dedup + translation hint)**
+
+* **Stubs deduplicated via `references/_stub-template.md`**: previously 3 near-identical files (~45 lines each, ~80% shared). The shared checklist + contribution guidance now lives in `_stub-template.md`; vendor-specific stubs slimmed to ~22 lines each, carrying only the vendor-specific marker + warning banner + pointer to template. Maintenance: update one template file instead of three.
+* **`sequential-fallback.md` adds orchestration-style note**: previously assumed chat-based orchestration (messages as persona swaps). Added explicit SDK/API translation note — for non-chat runtimes, the pattern is one `system` prompt per teammate with `messages` list reset between roles; merge logic unchanged.
+
+#### **Impact**
+
+* No code execution path changed. All changes are documentation rigor + fail-loud where v3.14.0 was fail-soft.
+* Agents applying the skill are now explicitly told to `Read` a reference (closes silent fallthrough).
+* Claims that were aspirational are now labeled aspirational (closes overclaim).
+* Stub files degrade visibly instead of silently (closes user-surprise).
+
+Adversarial convergence signal: `issues-found` at the start; `clean-pass` after these fixes. Further adversarial cycles should start surfacing cosmetic-only items — at that point hallucination convergence is near.
+
+---
+
 ### **v3.14.0 — `skill-parallel-orchestration` vendor-agnostic rewrite + per-vendor reference files**
 
 **Motivation**: the previous `skill-parallel-orchestration/SKILL.md` was authored as vendor-agnostic documentation but in practice encoded Claude Code primitives throughout (`Agent` tool, `.claude/agents/`, `subagent_type`, `TeamCreate`/`SendMessage`, "Claude Code harness permits up to 3 Explore agents"). Agents running on Gemini CLI, Cursor, Antigravity, or any other runtime had no way to apply the skill.
@@ -43,7 +75,7 @@ This release splits the methodology (universal) from the invocation syntax (vend
 
 * No changes to existing wrappers in `.claude/agents/` (still 16, unchanged).
 * No changes to `/vdd-multi` workflow or its v3.13.0 parameter set.
-* No behavior change for Claude Code users — the reference file preserves all v2.0 semantics.
+* Content for Claude Code users is preserved (same methodology, same examples); section numbering was reorganized in the v3.0 split — see §9 History and `references/claude-code.md` for the mapping. Callers citing "skill §5.1 Explore default" in notes should update to "skill §5" (content unchanged).
 * Deprecated `scripts/spawn_agent_mock.py` remains retired; retained only for `fcntl`-locking regression tests.
 
 #### **Impact**

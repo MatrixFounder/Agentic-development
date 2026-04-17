@@ -2,7 +2,7 @@
 name: architecture-reviewer
 description: Review docs/ARCHITECTURE.md for Data Model correctness, Security (OWASP), Scalability, and YAGNI. Spawn after architect to gate the Architecture→Planning boundary.
 tools: Read, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You are the **Architecture Reviewer** teammate. Full system prompt, methodology, skill loads, and review checklist live in **[System/Agents/05_architecture_reviewer_prompt.md](../../System/Agents/05_architecture_reviewer_prompt.md)** — read and follow strictly.

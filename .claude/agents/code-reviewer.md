@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Review implemented code for Compliance with task requirements, Quality (logic, edge cases), Testing (E2E pass, no over-mocking), and Docs (.AGENTS.md, docstrings updated). Spawn after developer to gate Execution→Merge.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: opus
 ---
 
 You are the **Code Reviewer** teammate. Full system prompt, methodology, skill loads, and review checklist live in **[System/Agents/09_code_reviewer_prompt.md](../../System/Agents/09_code_reviewer_prompt.md)** — read and follow strictly.

@@ -16,6 +16,31 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.11.2 — Verifier subagents upgraded to Opus**
+
+All 8 verifier wrappers now run on `model: opus`; 4 builder wrappers stay on `sonnet`.
+
+#### **Changed**
+* **8 verifiers → opus**:
+  - 3 adversarial critics: `critic-logic`, `critic-security`, `critic-performance`
+  - 4 pipeline reviewers: `task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`
+  - `security-auditor` (full-audit role)
+* **4 builders stay on sonnet**: `analyst`, `architect`, `planner`, `developer`
+
+#### **Rationale**
+Verification is a quality gate — missed bugs, missed vulnerabilities, and approved broken architecture cost orders of magnitude more than the extra token spend. Opus's deeper reasoning, stronger adversarial thinking, and more calibrated doubt (resistance to "it probably works" rationalization) justify the cost for the verifier tier. Creation tasks are template-driven under Stub-First and follow the SOT structure; Sonnet produces equivalent artifact quality there at ~5× lower cost and lower latency.
+
+Smoke-test cost impact: three parallel Opus critics in `/vdd-multi` ≈ 3–5× Sonnet's token cost per run. A single missed SQLi or logic regression in production easily exceeds that by orders of magnitude.
+
+#### **Impact on behavior**
+* `/vdd-multi` parallel critique now runs on Opus critics — expect slightly slower wall-clock per critic (Opus latency) but higher finding rates on edge cases and subtle adversarial scenarios. Merge/dedup rules unchanged.
+* Builder-stage workflows (`analyst` → `architect` → `planner` → `developer`) see no latency or cost change.
+
+#### **Documentation**
+* [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5.1 — added `Model` column to the 12-wrapper catalog + Model policy block explaining the split.
+
+---
+
 ### **v3.11.1 — Thin-Wrapper Refactor + Adversarial Review Fixes**
 
 Self-review of v3.10.0 and v3.11.0 surfaced 3 real bugs and 7 anti-patterns. This release fixes them.

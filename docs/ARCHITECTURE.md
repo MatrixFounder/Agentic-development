@@ -143,19 +143,24 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 
 **Wave 2 — dev pipeline** (12 total wrappers with Wave 1):
 
-| Wrapper | SOT | Tools | Role |
-|---|---|---|---|
-| `analyst` | `System/Agents/02_analyst_prompt.md` | Read, Write, Edit, Grep, Glob | Produces `docs/TASK.md` with RTM |
-| `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Analysis→Architecture |
-| `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob | Produces `docs/ARCHITECTURE.md` |
-| `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Architecture→Planning |
-| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
-| `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | Returns review report; gates Planning→Execution |
-| `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | Implements atomic task under Stub-First |
-| `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, Bash | Returns review report; gates Execution→Merge (uses `git diff` to scope) |
-| `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, Bash | Returns full OWASP audit report (uses `run_audit.py`) |
+| Wrapper | SOT | Tools | Model | Role |
+|---|---|---|---|---|
+| `analyst` | `System/Agents/02_analyst_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/TASK.md` with RTM |
+| `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Analysis→Architecture |
+| `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/ARCHITECTURE.md` |
+| `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Architecture→Planning |
+| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | sonnet | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
+| `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Planning→Execution |
+| `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | sonnet | Implements atomic task under Stub-First |
+| `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, Bash | **opus** | Returns review report; gates Execution→Merge (uses `git diff` to scope) |
+| `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, Bash | **opus** | Returns full OWASP audit report (uses `run_audit.py`) |
 
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
+
+**Model policy** (v3.11.2):
+- **Verifiers → Opus** (8 wrappers): all 4 reviewers + 3 adversarial critics + `security-auditor`. Verification is a quality gate — false negatives (missed bugs, missed vulnerabilities, approved broken architecture) are orders of magnitude more expensive than the extra token cost. Opus's deeper reasoning, better adversarial thinking, and stronger calibrated doubt (resistance to "it probably works" rationalization) justify the cost.
+- **Builders → Sonnet** (4 wrappers): `analyst`, `architect`, `planner`, `developer`. Creation tasks are template-driven (follow the SOT structure); Sonnet is fast, cheap, and produces the same artifact quality as Opus for well-specified creation work.
+- **Cost impact**: at `/vdd-multi` smoke, three Opus critics vs three Sonnet critics is ~3–5× token cost per run, but a single missed security or logic bug in production easily exceeds that by orders of magnitude.
 
 **Wrapper design convention** (Option D — thin adapters):
 - Frontmatter = Claude Code subagent spec (`name`, `description`, `tools`, `model`).

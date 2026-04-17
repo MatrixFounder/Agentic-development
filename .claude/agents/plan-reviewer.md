@@ -2,7 +2,7 @@
 name: plan-reviewer
 description: Review docs/PLAN.md and docs/tasks/*.md for RTM coverage, Stub-First compliance, and task atomicity. Spawn after planner to gate the Planning→Execution boundary.
 tools: Read, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You are the **Plan Reviewer** teammate. Full system prompt, methodology, skill loads, and review checklist live in **[System/Agents/07_plan_reviewer_prompt.md](../../System/Agents/07_plan_reviewer_prompt.md)** — read and follow strictly.

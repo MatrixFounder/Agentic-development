@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""DEPRECATED (Wave 1, 2026-04-17): superseded by native Claude Code Agent tool.
+
+This mock-agent runner was the POC implementation of parallel orchestration before
+`.claude/agents/` subagents and `TeamCreate` were available. Retained only to exercise
+the `fcntl`-locking regression in `update_state.py` via `tests/test_mock_agent.py`.
+
+Do not reference this script from workflows or skills. See
+`.agent/skills/skill-parallel-orchestration/SKILL.md` (v2.0) for the current protocol.
+"""
 import argparse
 import time
 import os

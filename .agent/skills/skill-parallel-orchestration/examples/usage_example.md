@@ -1,40 +1,53 @@
-# Example: Parallel Orchestration
+# Example: Parallel Orchestration (Layer A — Wave 1)
+
+> **Note**: This example reflects the current v2.0 protocol (native `Agent` tool). The previous v1.0 example used `spawn_agent_mock.py`; see `docs/archives/POC_PARALLEL_AGENTS.md` for historical context.
 
 ## Input (User Request)
 ```
-Build Login Page (Frontend) and Auth API (Backend) simultaneously.
+Review this PR for logic, security, and performance issues.
 ```
 
 ## Expected Orchestrator Actions
 
 ### Step 1: Decompose
-Create two independent task files:
-- `docs/tasks/subtask-frontend-login.md`
-- `docs/tasks/subtask-backend-auth.md`
+Identify three orthogonal critiques (logic, security, performance) — each with its own subagent definition in `.claude/agents/critic-*`. No file decomposition needed; each teammate reviews the same target from its own perspective.
 
-### Step 2: Spawn
-```bash
-python3 .agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py \
-  --task_name "frontend-login" \
-  --goal "Build Login Page with email/password form" \
-  --output_dir "docs/tasks/results" &
+### Step 2: Parallel Spawn (single message, three Agent tool-uses)
+In one assistant message, issue three parallel `Agent` calls:
 
-python3 .agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py \
-  --task_name "backend-auth" \
-  --goal "Build Auth API with JWT tokens" \
-  --output_dir "docs/tasks/results" &
+```
+Agent(
+  subagent_type="critic-logic",
+  description="Logic review of target",
+  prompt="Review <target> for edge cases, input validation, state consistency, error handling. Return a structured critique per your teammate contract."
+)
+
+Agent(
+  subagent_type="critic-security",
+  description="OWASP/security review of target",
+  prompt="Review <target> for injection, authn/authz, secrets, LLM-specific vulns. Return a structured security report per your teammate contract."
+)
+
+Agent(
+  subagent_type="critic-performance",
+  description="Performance review of target",
+  prompt="Review <target> for N+1, memory, async, complexity, resource leaks. Return a structured perf report per your teammate contract."
+)
 ```
 
-### Step 3: Monitor
-```bash
-# Check session state
-cat .agent/sessions/latest.yaml
-# Look for: completed_tasks containing both "frontend-login" and "backend-auth"
-```
+All three execute concurrently; results return as three tool results in the same turn.
 
-### Step 4: Merge
-Read result files:
-- `docs/tasks/results/frontend-login.result.md`
-- `docs/tasks/results/backend-auth.result.md`
+### Step 3: Merge
+Collect the three structured reports. Apply merge rules (see `.agent/workflows/vdd-multi.md` Phase 2):
+- Deduplicate issues at the same `(file, line ± 3)` across critics.
+- Escalate severity by one level when two critics independently flag the same location.
+- Produce a single `VDD Multi-Adversarial Report` with sections per category plus an "Overlaps" section.
 
-Synthesize into a unified response for the user.
+### Step 4: Iterative fix (per category)
+For any category that returned issues, apply fixes and re-spawn **only that critic** until clean-pass or hallucinating (not a full parallel triple — single-critic re-spawn is cheaper).
+
+## Alternative scenario — decomposed feature development (use Layer B in Wave 4)
+
+For "Build Login Page (Frontend) + Auth API (Backend) simultaneously" where teammates need to negotiate API schema mid-flight:
+- **Wave 1**: not the right use case for Layer A (needs inter-teammate communication).
+- **Wave 4 (planned)**: `TeamCreate` + teammates with `SendMessage` mailbox. Stub criterion in `SKILL.md` §4.

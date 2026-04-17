@@ -78,6 +78,7 @@ Workflows are available as slash commands via `.claude/commands/` and as files i
    - If user asks for "TDD", prioritize `tdd-*` workflows.
    - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
    - If no variant specified, default to standard `01-04`.
+3. **Teams Dispatch (Wave 1)**: `/vdd-multi` runs **parallel** in Claude Code — spawns `critic-logic`, `critic-security`, `critic-performance` via `Agent` tool in one message. On other vendors it falls back to sequential role-switching (each workflow documents its `## Fallback` section). Decision rule between Layer A (Agent tool) and Layer B (native `TeamCreate`, Wave 4 stub) lives in `.agent/skills/skill-parallel-orchestration/SKILL.md` §4 and `System/Agents/01_orchestrator.md` §5.1.
 3. **Execution**: If a matching workflow is found, read it from `.agent/workflows/` and execute its steps strictly.
    - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
    - **MANDATORY**: After every phase boundary, you **MUST** immediately run `python3 .agent/skills/skill-session-state/scripts/update_state.py` to persist context.

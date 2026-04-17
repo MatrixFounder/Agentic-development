@@ -47,6 +47,18 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 **Source of Truth:** `.agent/workflows/`
 **Logic:** If user request matches a workflow file, **OVERRIDE** standard pipeline and execute workflow.
 
+## 5.1 TEAMS DISPATCH (Wave 1)
+
+**Primary mode stays role-switching** (Stage Cycle in §3/§4). Teams are a **parallel path** for scenarios where multiple independent perspectives are cheaper to run concurrently than sequentially.
+
+| Scenario | Layer | Mechanism | Status |
+|---|---|---|---|
+| Parallel orthogonal critiques (logic + security + performance) | **A** | `Agent` tool, N parallel calls in one message, `subagent_type` from `.claude/agents/` | ✅ Wave 1 (see `.agent/workflows/vdd-multi.md`) |
+| Independent parallel exploration (research, discovery) | **A** | Same as above with Explore-type subagents | ✅ available |
+| Peer-debate / inter-teammate communication / long-running multi-session collab | **B** | `TeamCreate` + `SendMessage` + `Agent(team_name=...)` | ⏸ Wave 4 (stub in `skill-parallel-orchestration` §4) |
+
+**Decision rule**: use Layer A unless teammates need to exchange messages with each other during work. See `skill-parallel-orchestration` §4 for the full criterion. Non-Claude-Code vendors fall back to sequential role-switching (documented per-workflow).
+
 ## 6. STAGE-SPECIFIC INSTRUCTIONS
 
 ### 1. Analysis Init

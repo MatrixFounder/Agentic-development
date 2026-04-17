@@ -1,3 +1,7 @@
+> **SUPERSEDED — Wave 1 (2026-04-17).** Native Claude Code `Agent` tool + `.claude/agents/` subagent definitions replaced this mock-based POC. Open Question #1 ("Platform CLI Availability") is closed — the CLI spawn capability now exists via the built-in Agent tool and experimental TeamCreate. This document is retained for historical context and as background for the `fcntl`-locking regression tests that continue to live under `.agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py` and `tests/test_mock_agent.py` (both DEPRECATED).
+>
+> **Current source**: [.agent/skills/skill-parallel-orchestration/SKILL.md](../../.agent/skills/skill-parallel-orchestration/SKILL.md) (v2.0), [.agent/workflows/vdd-multi.md](../../.agent/workflows/vdd-multi.md), [docs/ARCHITECTURE.md](../ARCHITECTURE.md) §5.1.
+
 # Proof of Concept: Parallel Agent Architecture
 
 ## Overview

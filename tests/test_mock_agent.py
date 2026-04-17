@@ -1,3 +1,12 @@
+"""DEPRECATED (Wave 1, 2026-04-17): regression test for the legacy mock-agent runner.
+
+Retained to verify `fcntl`-locking in `skill-session-state/scripts/update_state.py`
+under concurrent writes. The mock agent it exercises is itself DEPRECATED — see
+`.agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py`.
+
+Do not add new test coverage here; write new concurrent-state tests directly
+against `update_state.py`.
+"""
 
 import subprocess
 import time

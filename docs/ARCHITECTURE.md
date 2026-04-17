@@ -5,7 +5,8 @@
 - [2. Directory Structure](#2-directory-structure)
 - [3. Workflow Logic (v3.1)](#3-workflow-logic-v31)
 - [4. Tool Execution Subsystem [NEW]](#4-tool-execution-subsystem-new)
-- [5. Parallel Execution Model (POC) [NEW]](#5-parallel-execution-model-poc-new)
+- [5. Parallel Execution Model (POC) [SUPERSEDED]](#5-parallel-execution-model-poc-superseded)
+- [5.1 Two-Layer Teams Model (Wave 1)](#51-two-layer-teams-model-wave-1)
 - [6. Key Principles](#6-key-principles)
 - [7. Localization Strategy](#7-localization-strategy)
 - [8. Skill Architecture & Optimization Standards](#8-skill-architecture--optimization-standards)
@@ -92,16 +93,65 @@ The orchestration layer now supports **Structured Tool Calling**:
 | `generate_task_archive_filename` | Generate unique sequential ID for task archival |
 
 
-## 5. Parallel Execution Model (POC) [NEW]
-The system now supports a **Parallel Orchestration Protocol** to enable concurrent task execution.
+## 5. Parallel Execution Model (POC) [SUPERSEDED]
+
+> **SUPERSEDED by §5.1 — Wave 1 (2026-04-17).** The mock-agent POC below is retained only for historical context. Native Claude Code `Agent` tool + `.claude/agents/` subagents replaced `spawn_agent_mock.py`. See [docs/archives/POC_PARALLEL_AGENTS.md](archives/POC_PARALLEL_AGENTS.md) for the original POC doc.
+
+The system formerly supported a **Parallel Orchestration Protocol** via mock agents:
 - **Orchestrator Role**: Decomposes tasks and spawns sub-agents.
-- **Shared State**: Uses `fcntl` file locking on `.agent/sessions/latest.yaml` to ensure safe concurrent updates.
-- **Agent Runner**: A `spawn_agent_mock.py` script simulates sub-agent behavior (as the environment lacks native LLM libraries).
-- **Protocol**: 
+- **Shared State**: Uses `fcntl` file locking on `.agent/sessions/latest.yaml` to ensure safe concurrent updates. *(This locking mechanism is retained and still in use under §5.1.)*
+- **Agent Runner** *(DEPRECATED)*: `spawn_agent_mock.py` script simulated sub-agent behavior.
+- **Protocol** *(DEPRECATED)*:
   1. Orchestrator splits `TASK.md` -> `subtask-A.md`, `subtask-B.md`.
   2. Orchestrator calls `spawn_agent_mock.py` for each subtask.
   3. Sub-agents run in background processes, updating shared state.
   4. Orchestrator merges results.
+
+## 5.1 Two-Layer Teams Model (Wave 1)
+
+Wave 1 replaces the mock POC with a concrete two-layer teams model based on Claude Code native capabilities. Role-switching (Stage Cycle, §3) remains the **primary** orchestration mode; teams are a **parallel path** for specific scenarios.
+
+### Layers
+
+```text
+ ┌─────────────────────────────────────────────────────────────────┐
+ │   Orchestrator (main session — role-switching primary)          │
+ └───────────────┬─────────────────────────────┬───────────────────┘
+                 │                             │
+     ┌───────────▼─────────────┐   ┌──────────▼────────────────┐
+     │  Layer A: Agent tool     │   │  Layer B: Native Teams   │
+     │  (parallel subagents)    │   │  (TeamCreate/SendMessage)│
+     │  ✅ Wave 1 — implemented │   │  ⏸ Wave 4 — stub only    │
+     └───────────┬──────────────┘   └──────────────────────────┘
+                 │
+   ┌─────────────┼─────────────┐
+   ▼             ▼             ▼
+┌──────┐    ┌──────────┐   ┌──────────────┐
+│logic │    │ security │   │ performance  │  ← .claude/agents/critic-*.md
+└──────┘    └──────────┘   └──────────────┘
+```
+
+### Layer A — Framework-Agent (Wave 1, implemented)
+
+- **Mechanism**: built-in `Agent` tool. Orchestrator issues N parallel tool-uses in **one message**.
+- **Subagent definitions**: `.claude/agents/<name>.md` — thin Claude-frontmatter wrappers that point (body) at source-of-truth in `.agent/skills/*/SKILL.md` or `System/Agents/`.
+- **Use cases**: orthogonal parallel critique (`/vdd-multi`), parallel exploration/research, independent atomic units with clear artifact contracts.
+- **Communication**: no inter-teammate messaging. Merge happens in the orchestrator after all teammates return.
+- **Wave 1 wrappers**: `critic-logic`, `critic-security`, `critic-performance`.
+
+### Layer B — Native Teams (Wave 4, stub)
+
+- **Mechanism**: `TeamCreate` + `SendMessage` + `Agent(team_name=…)`. Each teammate is a **separate session** with its own context window and mailbox.
+- **Gate**: experimental feature enabled via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in [.claude/settings.json](../.claude/settings.json).
+- **Use cases** (not implemented in Wave 1): peer-debate between critics, parallel feature development with mid-flight schema negotiation, multi-hour research with teammates exchanging findings.
+- **Decision rule**: use Layer B **iff** teammates need to exchange messages with each other during work (not just with the lead). Otherwise Layer A.
+- **Known gotchas**: see [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+
+### Shared infrastructure (both layers)
+
+- **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
+- **Source of truth**: methodology lives in `.agent/skills/*/SKILL.md` (critics) and `System/Agents/*.md` (pipeline roles). Wrapper files in `.claude/agents/` are thin adapters, not duplicated content.
+- **Vendor portability**: `.claude/agents/` is Claude Code specific. On other vendors (Codex, Antigravity), workflows fall back to sequential role-switching — see each workflow's `## Fallback` section.
 
 ## 6. Key Principles
 - **Modular Skills**: Logic is decoupled from Personas. Agents load `skills` to perform specific tasks.

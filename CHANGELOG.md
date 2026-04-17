@@ -16,6 +16,43 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.10.0 — Agent Teams Mode Wave 1: Parallel VDD Multi-Adversarial Critics**
+
+#### **Added**
+* **`.claude/agents/` directory** with three thin Claude Code subagent wrappers (Option D — thin adapters over existing SOT skills):
+  - `critic-logic` (read-only tools, points to `.agent/skills/vdd-adversarial/SKILL.md`)
+  - `critic-security` (read-only + `git log/diff/show`, points to `.agent/skills/skill-adversarial-security/SKILL.md` + `references/prompts/sarcastic.md`)
+  - `critic-performance` (read-only tools, points to `.agent/skills/skill-adversarial-performance/SKILL.md`)
+* **`System/Agents/01_orchestrator.md` §5.1 — Teams Dispatch**: scenario→layer dispatch table (Layer A: `Agent` tool parallel spawn; Layer B: native `TeamCreate`/`SendMessage` — Wave 4 stub). Role-switching remains primary mode.
+* **`docs/ARCHITECTURE.md` §5.1 — Two-Layer Teams Model** with ASCII diagram, shared infrastructure description (`fcntl`-locked session state, SOT-in-skills convention), vendor-portability notes.
+* **`docs/KNOWN_ISSUES.md`** — Native Teams gotchas (no session resumption, task status lag, one team per session, no leadership transfer, higher token costs) + Wave 1 wrapper/SOT drift risk.
+* **`docs/TASK.md` + `docs/tasks/task-058-teams-mode-wave-1.md`** — RTM with 12 acceptance criteria (R1–R12) across 8 Issues. Smoke-test passed.
+* **`docs/tasks/task-dummy.md`** — deterministic smoke fixture with 9 labelled flaws (seeded across logic/security/perf) and two cross-category overlaps for verifying severity-escalation logic. Repeatable — fixture intentionally left un-fixed.
+
+#### **Changed**
+* **`.agent/workflows/vdd-multi.md`** rewritten from sequential role-switching to **parallel three-critic spawn** in a single assistant message via `Agent` tool. Phase 2 adds merge rules (location dedup ±3 lines, cross-category re-attribution, severity escalation on overlap, hallucination filter). Phase 3 iterative fix-loop uses single-critic re-spawn (cheaper than re-parallelizing). Sequential fallback documented for non-Claude-Code vendors.
+* **`.agent/skills/skill-parallel-orchestration/SKILL.md` → v2.0**: removed `spawn_agent_mock.py` instructions; now references native `Agent` tool with parallel tool-uses in one message. Added Layer B stub (decision criterion: "use iff teammates need inter-teammate communication"). Red Flags and DO/DO-NOT tables updated to reflect native-spawn reality.
+* **`.agent/skills/skill-parallel-orchestration/examples/usage_example.md`** rewritten around VDD multi-critic scenario; old "frontend+backend decomposition" example moved to the Layer B (Wave 4) slot.
+* **`docs/ARCHITECTURE.md` §5 Parallel Execution Model (POC)** marked `[SUPERSEDED]` — retained for historical context; `fcntl`-locking notes carried forward into §5.1.
+* **`.claude/settings.json`**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` env flag (activates native Teams for Wave 4). Already enabled prior to commit; now formally part of Wave 1 scope.
+* **`CLAUDE.md`**: added Workflow Dispatch point 3 — notes that `/vdd-multi` is parallel in Claude Code with sequential fallback elsewhere; points to orchestrator §5.1 for the layer-decision rule.
+
+#### **Deprecated**
+* **`.agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py`** and **`tests/test_mock_agent.py`** — module-level `DEPRECATED` docstrings. Scripts retained only to exercise `fcntl`-locking regression tests in `update_state.py`; do not reference from new workflows.
+* **`docs/POC_PARALLEL_AGENTS.md`** → moved to `docs/archives/POC_PARALLEL_AGENTS.md` with `SUPERSEDED` header. Open Question #1 (CLI agent-spawn availability) marked closed — native `Agent` tool fills the gap.
+
+#### **Verified**
+* Smoke test: single LLM `requestId` observed across all three critic `Agent` tool_uses (`req_011Ca9BWa5rbziH6xcocS57c`) — parallel spawn confirmed via JSONL log analysis. All three critics returned structured `issues-found` reports; merged report deduped 14 issues with 2 cross-category escalations (flaws #5 SQLi+N+1 on fixture line 23, flaw #9 file-handle leak on lines 56–57). No hallucinations; bonus findings (path-traversal, dead API_KEY, missing authn) validated that critics correctly loaded SOT checklists.
+* Regression: standard `/vdd` (sequential role-switching) untouched — verified by inspection.
+
+#### **Out of Scope (future waves)**
+* Wave 2: 9 wrappers for `System/Agents/02–10` (dev pipeline).
+* Wave 3: 4 wrappers for product pipeline (`p01–p04`).
+* Wave 4: Layer B implementation (`/teams-vdd-multi` workflow using native `TeamCreate`/`SendMessage`).
+* Wave 5: portable generator if a second vendor (Codex, Antigravity) needs subagent support.
+
+---
+
 ### **v3.9.17 — Developer Discipline: Karpathy Guidelines Integration**
 
 #### **Added**

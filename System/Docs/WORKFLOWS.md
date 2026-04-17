@@ -17,6 +17,7 @@ This document is the **Single Source of Truth** for all automation workflows in 
 - [3. Atomic Actions](#3-atomic-actions)
 - [4. Product Workflows](#4-product-workflows)
 - [5. Framework Self-Improvement](#5-framework-self-improvement)
+- [6. Agent Teams Mode (Subagent Wrappers)](#6-agent-teams-mode-subagent-wrappers)
 - [❓ FAQ](#-faq)
 - [🛡 Safety & Verification](#-safety--verification)
 - [📋 Getting Started: Workflow Call Sequences](#-getting-started-workflow-call-sequences)
@@ -46,9 +47,8 @@ graph TD
         VDDE([vdd-enhanced]):::pipeline
         Robust([full-robust]):::pipeline
         VDDMulti([vdd-multi]):::pipeline
-        VDDMulti([vdd-multi]):::pipeline
         Light([light]):::pipeline
-        
+
         subgraph Product [Product Discovery]
             ProdFull([product-full-discovery]):::prod
             ProdQuick([product-quick-vision]):::prod
@@ -72,38 +72,55 @@ graph TD
         Start[01-start-feature]:::atomic
         Plan[02-plan-implementation]:::atomic
         Dev[03-develop-single-task]:::atomic
-        Sec[security-audit]:::atomic
+        SecAudit[security-audit]:::atomic
         VDDStart[vdd-01-start-feature]:::atomic
         LightStart[light-01-start-feature]:::atomic
         LightDev[light-02-develop-task]:::atomic
     end
 
+    %% Subagent wrappers (.claude/agents/ — Waves 1-3)
+    subgraph Agents [.claude/agents/ Subagent Wrappers — Layer A]
+        CritLogic[critic-logic]:::critic
+        CritSec[critic-security]:::critic
+        CritPerf[critic-performance]:::critic
+        DevPipe[dev-pipeline: analyst, architect,<br/>planner, developer, reviewers ×4,<br/>security-auditor]:::wrapper
+        ProdPipe[product-pipeline: strategic-analyst,<br/>product-analyst, product-director,<br/>solution-architect]:::wrapper
+    end
+    classDef critic fill:#ffdd99,stroke:#333,stroke-width:1px;
+    classDef wrapper fill:#ddeeff,stroke:#333,stroke-width:1px;
+
     %% Relationships
     Robust -->|1. calls| VDDE
-    Robust -->|2. calls| Sec
+    Robust -->|2. calls| SecAudit
 
     VDDE -->|1. calls| Base
-    VDDE -->|2. calls| Adv
+    VDDE -->|2. adversarial refine| VDDMulti
 
     Base -->|1. Analysis| Start
     Base -->|2. Planning| Plan
     Base -->|3. Loop| RunAll
 
     RunAll -->|Iterates| Dev
-    
-    VDDMulti -->|Seq Critics| Adv
-    VDDMulti -->|Seq Critics| Sec
+
+    VDDMulti -->|Parallel spawn Layer A| CritLogic
+    VDDMulti -->|Parallel spawn Layer A| CritSec
+    VDDMulti -->|Parallel spawn Layer A| CritPerf
 
     Light -->|1. Analysis| LightStart
     Light -->|2. Dev Loop| LightDev
 
     Iterative -->|Output used by| Start
     Iterative -->|Output used by| Base
-    
+
+    ProdFull -.-> ProdPipe
+    ProdQuick -.-> ProdPipe
+    ProdMark -.-> ProdPipe
+    Dev -.->|may delegate to| DevPipe
+
     %% Framework Upgrade
     Upgrade([framework-upgrade]):::upgrade
     Upgrade -->|Meta-Audit| SelfImpr{{skill-self-improvement-verificator}}:::audit
-    
+
     classDef upgrade fill:#ffcc00,stroke:#333,stroke-width:2px;
     classDef audit fill:#ff9900,stroke:#333,stroke-width:2px;
 ```
@@ -126,7 +143,7 @@ The workflows are organized into three categories:
 | **Standard Feature** | **Default Choice.** Runs the full "Stub-First" pipeline: Analysis, Architecture, Planning, and then Auto-Execution loop. | `run base-stub-first` |
 | **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) with **Strict TDD** (High Assurance) followed by a Security Audit. | `run full-robust` |
 | **VDD Enhanced** | **Hardened Pipeline.** Stub-First Plan + **RTM Validation** + VDD Adversarial execution. | `run vdd-enhanced` |
-| **VDD Multi-Adversarial** | Sequential execution of 3 specialized critics: Logic → Security → Performance. | `run vdd-multi` |
+| **VDD Multi-Adversarial** | **Parallel** execution of 3 specialized critics (logic, security, performance) via Layer A — single `Agent` tool-use spawning `.claude/agents/critic-*` subagents in one message. Supports 5 inline flags: `--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`. See §6 for wrapper details and `.agent/workflows/vdd-multi.md` for full parameter reference. | `run vdd-multi [target] [flags]` or `/vdd-multi ...` |
 | **Framework Upgrade** | **Meta-Workflow.** Safely upgrades the Agentic System itself (Prompts/Skills) with Audit Gates. | `run framework-upgrade` |
 | **Iterative Design** | **Concept Refinement Loop.** Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine. | `run iterative-design` |
 | **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop. | `run light` or `/light` |
@@ -385,7 +402,9 @@ graph TD
 | Quick feature, trusted automation | `run base-stub-first` |
 | Learning the system | TDD Multi-Step (`01` → `02` → `03/05` → `04`) |
 | High-quality production code | `run vdd-enhanced` |
-| Maximum code quality (3 critics) | `run vdd-multi` |
+| Maximum code quality (3 parallel critics) | `run vdd-multi <target>` |
+| Scoped parallel critique (one area only) | `/vdd-multi <target> --scope=security` |
+| CI / pre-merge review bot | `/vdd-multi --diff-only --no-fix --fail-on=high --output=docs/reviews/pr-<N>.md` |
 | Security-critical feature | `run full-robust` |
 | Debugging a specific phase | Run that phase's atomic workflow |
 | Just need analysis | `run 01-start-feature` or `run vdd-01-start-feature` |
@@ -411,5 +430,47 @@ For critical system updates, follow this **Hybrid Verification Loop**:
 1. **Draft Spec:** Use `skill-self-improvement-verificator` (Analysis Mode) to draft `docs/TASK.md`.
 2. **Manual Verification (CRITICAL):** Manually review the spec and plan. Do not rely solely on automation.
 3. **Execution:** Once verified, execute using the `run framework-upgrade` workflow (for system) or `run vdd-enhanced` (for strict implementation).
+
+---
+
+## 6. Agent Teams Mode (Subagent Wrappers)
+
+**Since v3.10.0 (Wave 1).** Workflows run through the Orchestrator can spawn Claude Code native subagents defined as thin wrappers in [`.claude/agents/`](../../.claude/agents/). Each wrapper is ~13 lines: frontmatter (`name`, `description`, `tools`, `model`) + one-line SOT pointer + 1–3 subagent-specific adaptations. Methodology lives in `System/Agents/*.md` or `.agent/skills/*/SKILL.md` — wrappers do not duplicate.
+
+### Current catalog (16 wrappers)
+
+| Tier | Count | Model | Wrappers |
+| :--- | :--- | :--- | :--- |
+| **Adversarial Critics** (Wave 1) | 3 | opus | `critic-logic`, `critic-security`, `critic-performance` |
+| **Dev-Pipeline Builders** (Wave 2) | 3 | sonnet | `analyst`, `architect`, `developer` |
+| **Dev-Pipeline Reviewers** (Wave 2) | 4 | opus | `task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer` |
+| **Dev-Pipeline Specialists** (Wave 2) | 2 | opus | `planner`, `security-auditor` |
+| **Product-Pipeline Builders** (Wave 3) | 3 | sonnet | `strategic-analyst`, `product-analyst`, `solution-architect` |
+| **Product-Pipeline Gatekeeper** (Wave 3) | 1 | opus | `product-director` |
+
+**Split**: 10 Opus (verifiers + rigor-heavy roles) + 6 Sonnet (builders). See [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) §5.1 for the full table with tools per wrapper and the Model policy rationale.
+
+### Two spawn layers
+
+- **Layer A — parallel `Agent` tool-use** (implemented, default). Orchestrator issues N parallel `Agent` calls in **one message**; each teammate runs synchronously and returns a result via `tool_result`. Used by `/vdd-multi`. Proven twice under smoke tests (Sonnet and Opus baselines).
+- **Layer B — native `TeamCreate` / `SendMessage`** (runtime probed v3.13.0; full workflow deferred). For scenarios requiring inter-teammate messaging mid-work. Probe confirmed core tools work but documented blocking gotchas in [docs/KNOWN_ISSUES.md](../../docs/KNOWN_ISSUES.md) — most notably `TeamDelete` fails to clean up after `shutdown_approved`. Reopens when a concrete peer-debate use case justifies the extra complexity.
+
+### `/vdd-multi` parameter reference (v3.13.0)
+
+| Flag | Values | Default | Effect |
+| :--- | :--- | :--- | :--- |
+| `--scope=<list>` | `logic`, `security`, `performance`, `all` (comma-separated) | `all` | Run only the selected critic(s). |
+| `--no-fix` | (boolean) | off | Skip Phase 3 iterative fix loop — report-only mode. |
+| `--fail-on=<sev>` | `critical`, `high`, `medium`, `low`, `none` | `none` | Emit PASS/FAIL verdict when any finding ≥ threshold. |
+| `--output=<path>` | file path | none | Write merged report to file instead of inline. |
+| `--diff-only` | (boolean) | auto-on if no target | Bound review to `git diff` vs `main`. |
+
+Full reference: [`.agent/workflows/vdd-multi.md`](../../.agent/workflows/vdd-multi.md).
+
+### Out-of-scope wrappers
+
+Orchestrator roles are NOT wrapped (remain as main-agent role-switching personas, per Claude Code native Teams limitation: no nested teams):
+- `01_orchestrator.md` (dev-pipeline orchestrator)
+- `p00_product_orchestrator_prompt.md` (product-pipeline orchestrator)
 
 ---

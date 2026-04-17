@@ -16,6 +16,38 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.12.0 — Agent Teams Mode Wave 3: Product-Pipeline Subagent Wrappers**
+
+#### **Added**
+* **4 new product-pipeline subagent wrappers** in `.claude/agents/` — brings total wrapper count to **16** (3 Wave-1 critics + 9 Wave-2 dev-pipeline + 4 Wave-3 product):
+  - **`strategic-analyst`** (sonnet) — The Researcher. Produces `docs/product/MARKET_STRATEGY.md` (TAM/SAM/SOM, competition, timing, pre-mortem, verdict score). SOT: `System/Agents/p01_strategic_analyst_prompt.md`.
+  - **`product-analyst`** (sonnet) — The Visionary. Produces `docs/product/PRODUCT_VISION.md` with INVEST stories, SMART KPIs, 10-factor viability score. SOT: `System/Agents/p02_product_analyst_prompt.md`.
+  - **`product-director`** (opus) — The Gatekeeper / VC Proxy. Applies Adversarial-VDD Acid Test (hallucination check, moat check, fluff check) to Strategy + Vision. Produces `docs/product/APPROVED_BACKLOG.md` (with WSJF + `APPROVAL_HASH` via sign-off script) or `REVIEW_COMMENTS.md`. SOT: `System/Agents/p03_product_director_prompt.md`.
+  - **`solution-architect`** (sonnet) — The Pragmatist. Verifies `APPROVAL_HASH` at entry (stops if missing/invalid — security violation). Produces `docs/product/SOLUTION_BLUEPRINT.md` (WHAT to build: requirements, UX flows, ROI — NOT HOW). SOT: `System/Agents/p04_solution_architect_prompt.md`.
+
+* **`docs/ARCHITECTURE.md` §5.1** — new Wave 3 catalog table (4 rows: SOT path, tools, model, role); Model policy block updated to **10 Opus + 6 Sonnet**.
+
+#### **Changed**
+* **`planner` wrapper model: sonnet → opus** (was silently updated post-v3.11.2; now formally documented). Rationale: plan decomposition (Stub-First, atomicity, RTM coverage) has verifier-like rigor — a weak plan corrupts every downstream developer invocation. Matches the verifier-tier pattern.
+* **Model policy documentation** now lists 10 Opus + 6 Sonnet roles and explains the inclusion of `planner` and `product-director` in the Opus tier.
+* **`docs/TASK.md`** — TASK-060 (Wave 3) now the current active task; Completed Waves table updated with `Hardening (v3.11.1)`, `Opus upgrade (v3.11.2)`, and `Wave 3 (v3.12.0)` rows.
+
+#### **Design decisions**
+* **`product-director` is a "verifier that writes"** (unlike dev-pipeline reviewers which return text reports). SOT prescribes specific output filenames (`APPROVED_BACKLOG.md`, `REVIEW_COMMENTS.md`) that downstream agents consume contractually (`solution-architect` requires `APPROVED_BACKLOG.md` with valid hash). Wrapper body documents this exception explicitly.
+* **`solution-architect` verifies `APPROVAL_HASH` at entry** — if missing/invalid, subagent STOPS and reports a security violation rather than producing a blueprint. This honors the Logic Locker from SOT §4.3.
+* **No workflow rewrites in Wave 3** — consistent with Wave 2: wrappers are infrastructure. Product workflows (`/product-full-discovery`, `/product-market-only`, `/product-quick-vision`) keep working via sequential role-switching; wrappers enable parallel or named-type spawn when useful.
+* **`p00_product_orchestrator_prompt.md` not wrapped** — orchestrator roles (`01`, `p00`) stay as main-agent personas because Claude Code native Teams do not support nested teams.
+
+#### **Verified**
+* All 16 wrappers: YAML frontmatter valid, `name` matches filename, thin-adapter body size unchanged (7–8 lines).
+* No regression: `git diff` limited to new Wave 3 files + `docs/ARCHITECTURE.md` §5.1 + `docs/TASK.md` + changelog/readme. Wave 1/2 artifacts untouched.
+
+#### **Out of Scope (future waves)**
+* Wave 4: Layer B implementation (`/teams-vdd-multi` workflow using native `TeamCreate`/`SendMessage`).
+* Wave 5: portable generator if a second vendor (Codex, Antigravity) needs subagent support.
+
+---
+
 ### **v3.11.2 — Verifier subagents upgraded to Opus**
 
 All 8 verifier wrappers now run on `model: opus`; 4 builder wrappers stay on `sonnet`.

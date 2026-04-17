@@ -149,17 +149,26 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 | `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Analysis→Architecture |
 | `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/ARCHITECTURE.md` |
 | `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Architecture→Planning |
-| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | sonnet | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
+| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | **opus** | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
 | `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Planning→Execution |
 | `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | sonnet | Implements atomic task under Stub-First |
 | `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, Bash | **opus** | Returns review report; gates Execution→Merge (uses `git diff` to scope) |
 | `security-auditor` | `System/Agents/10_security_auditor.md` | Read, Grep, Glob, Bash | **opus** | Returns full OWASP audit report (uses `run_audit.py`) |
 
+**Wave 3 — product pipeline** (4 wrappers; 16 total after Wave 3):
+
+| Wrapper | SOT | Tools | Model | Role |
+|---|---|---|---|---|
+| `strategic-analyst` | `System/Agents/p01_strategic_analyst_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/product/MARKET_STRATEGY.md` (TAM/SAM/SOM, competition, pre-mortem) |
+| `product-analyst` | `System/Agents/p02_product_analyst_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/product/PRODUCT_VISION.md` (INVEST stories, SMART KPIs, viability score) |
+| `product-director` | `System/Agents/p03_product_director_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | **opus** | Adversarial-VDD gatekeeper; produces `docs/product/APPROVED_BACKLOG.md` (WSJF + APPROVAL_HASH) or `REVIEW_COMMENTS.md` |
+| `solution-architect` | `System/Agents/p04_solution_architect_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/product/SOLUTION_BLUEPRINT.md` (requires valid APPROVAL_HASH from product-director) |
+
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
 
-**Model policy** (v3.11.2):
-- **Verifiers → Opus** (8 wrappers): all 4 reviewers + 3 adversarial critics + `security-auditor`. Verification is a quality gate — false negatives (missed bugs, missed vulnerabilities, approved broken architecture) are orders of magnitude more expensive than the extra token cost. Opus's deeper reasoning, better adversarial thinking, and stronger calibrated doubt (resistance to "it probably works" rationalization) justify the cost.
-- **Builders → Sonnet** (4 wrappers): `analyst`, `architect`, `planner`, `developer`. Creation tasks are template-driven (follow the SOT structure); Sonnet is fast, cheap, and produces the same artifact quality as Opus for well-specified creation work.
+**Model policy** (v3.11.2 + Wave 3):
+- **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner` (plan decomposition has verifier-like rigor), and `product-director` (Adversarial-VDD gatekeeper of the Product→Technical handoff). Verification is a quality gate — false negatives (missed bugs, vulnerabilities, approved broken architecture, poorly decomposed plans, weak product-market fit judgment) are orders of magnitude more expensive than the extra token cost.
+- **Builders → Sonnet** (6 wrappers): `analyst`, `architect`, `developer`, `strategic-analyst`, `product-analyst`, `solution-architect`. Creation tasks are template-driven (follow SOT structure); Sonnet produces equivalent artifact quality at ~5× lower cost and lower latency.
 - **Cost impact**: at `/vdd-multi` smoke, three Opus critics vs three Sonnet critics is ~3–5× token cost per run, but a single missed security or logic bug in production easily exceeds that by orders of magnitude.
 
 **Wrapper design convention** (Option D — thin adapters):

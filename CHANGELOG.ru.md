@@ -16,6 +16,38 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.12.0 — Agent Teams Mode Wave 3: обёртки для product-pipeline**
+
+#### **Добавлено**
+* **4 новые subagent-обёртки для product-pipeline** в `.claude/agents/` — общее число обёрток **16** (3 критика Wave 1 + 9 dev-pipeline Wave 2 + 4 product Wave 3):
+  - **`strategic-analyst`** (sonnet) — The Researcher. Производит `docs/product/MARKET_STRATEGY.md` (TAM/SAM/SOM, конкуренция, timing, pre-mortem, verdict score). SOT: `System/Agents/p01_strategic_analyst_prompt.md`.
+  - **`product-analyst`** (sonnet) — The Visionary. Производит `docs/product/PRODUCT_VISION.md` с INVEST-историями, SMART-KPI, 10-factor viability score. SOT: `System/Agents/p02_product_analyst_prompt.md`.
+  - **`product-director`** (opus) — The Gatekeeper / VC Proxy. Применяет Adversarial-VDD Acid Test (hallucination check, moat check, fluff check) к Strategy + Vision. Производит `docs/product/APPROVED_BACKLOG.md` (с WSJF + `APPROVAL_HASH` через sign-off скрипт) или `REVIEW_COMMENTS.md`. SOT: `System/Agents/p03_product_director_prompt.md`.
+  - **`solution-architect`** (sonnet) — The Pragmatist. Верифицирует `APPROVAL_HASH` на входе (останавливается если отсутствует/невалиден — security violation). Производит `docs/product/SOLUTION_BLUEPRINT.md` (ЧТО строить: requirements, UX flows, ROI — НЕ КАК). SOT: `System/Agents/p04_solution_architect_prompt.md`.
+
+* **`docs/ARCHITECTURE.md` §5.1** — новая таблица Wave 3 catalog (4 строки: SOT path, tools, model, role); блок Model policy обновлён под **10 Opus + 6 Sonnet**.
+
+#### **Изменено**
+* **`planner` wrapper model: sonnet → opus** (был тихо изменён после v3.11.2; теперь формально задокументирован). Обоснование: plan decomposition (Stub-First, атомарность, RTM coverage) имеет verifier-like строгость — слабый план портит все downstream invocation'ы developer'а. Соответствует verifier-tier паттерну.
+* **Model policy документация** теперь перечисляет 10 Opus + 6 Sonnet ролей и объясняет включение `planner` и `product-director` в Opus-tier.
+* **`docs/TASK.md`** — TASK-060 (Wave 3) теперь текущая активная задача; таблица Completed Waves обновлена строками `Hardening (v3.11.1)`, `Opus upgrade (v3.11.2)`, `Wave 3 (v3.12.0)`.
+
+#### **Дизайн-решения**
+* **`product-director` — "verifier that writes"** (в отличие от dev-pipeline reviewers, которые возвращают текст-отчёт). SOT предписывает конкретные имена выходных файлов (`APPROVED_BACKLOG.md`, `REVIEW_COMMENTS.md`), которые downstream-агенты потребляют контрактно (`solution-architect` требует `APPROVED_BACKLOG.md` с валидным hash). Тело обёртки явно документирует это исключение.
+* **`solution-architect` верифицирует `APPROVAL_HASH` на входе** — если отсутствует/невалиден, subagent STOP'ается и рапортует security violation, не производя blueprint. Это соответствует Logic Locker из SOT §4.3.
+* **Без изменений workflow'ов в Wave 3** — согласуется с Wave 2: обёртки это инфраструктура. Product workflows (`/product-full-discovery`, `/product-market-only`, `/product-quick-vision`) продолжают работать через sequential role-switching; обёртки позволяют параллельный или named-type spawn когда нужно.
+* **`p00_product_orchestrator_prompt.md` не оборачивается** — orchestrator роли (`01`, `p00`) остаются как main-agent персоны, потому что Claude Code native Teams не поддерживают nested teams.
+
+#### **Верифицировано**
+* Все 16 обёрток: YAML frontmatter валиден, `name` совпадает с filename, thin-adapter body size не изменился (7–8 строк).
+* Регрессий нет: `git diff` ограничен новыми Wave 3 файлами + `docs/ARCHITECTURE.md` §5.1 + `docs/TASK.md` + changelog/readme. Артефакты Wave 1/2 не тронуты.
+
+#### **Вне scope (будущие волны)**
+* Wave 4: реализация Layer B (`/teams-vdd-multi` workflow через native `TeamCreate`/`SendMessage`).
+* Wave 5: portable-генератор, если появится второй вендор (Codex, Antigravity).
+
+---
+
 ### **v3.11.2 — Субагенты-верификаторы переведены на Opus**
 
 Все 8 subagent'ов-верификаторов теперь работают на `model: opus`; 4 builder'а остаются на `sonnet`.

@@ -1,105 +1,126 @@
 ---
 name: skill-parallel-orchestration
-description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents."
+description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 2.0
+version: 3.0
 ---
 
 # Parallel Orchestration Skill
 
-**Purpose**: Defines the protocol for the **Orchestrator Role** to decompose large tasks into independent sub-tasks and execute them in parallel via native sub-agent spawning.
+**Purpose**: vendor-agnostic protocol for the Orchestrator Role to decompose large tasks into independent units and execute them via parallel sub-agent spawning. Specific tool names, directory layouts, and invocation syntax are delegated to per-vendor reference files in `references/`.
 
-**Two layers** (pick by scenario):
+---
 
-- **Layer A — Framework-Agent (Wave 1, implemented)**: parallel calls to the built-in `Agent` tool in a single message. Short, isolated tasks that return an artifact. No inter-teammate communication. Used by `/vdd-multi`.
-- **Layer B — Native Teams (Wave 4, stub)**: `TeamCreate` + `SendMessage` + `Agent(team_name=...)`. Long-lived multi-session scenarios with peer-to-peer communication (e.g., critics debating a security-vs-performance trade-off). **NOT IMPLEMENTED in Wave 1** — see `Layer B` section below for the decision criterion.
+## 1. Load the right reference (mandatory step)
 
-## 1. Red Flags (Anti-Rationalization)
+Before applying any protocol below, **identify the active runtime and load the matching reference**. The reference supplies the concrete names and invocation syntax that the concepts in §2–§6 need to become executable.
 
-**STOP and READ THIS if you are thinking:**
+| Runtime indicator | Load reference | Status |
+|---|---|---|
+| `CLAUDE.md` present + `.claude/agents/` populated | [`references/claude-code.md`](references/claude-code.md) | Reference implementation (complete) |
+| `GEMINI.md` present, no `.claude/agents/` | [`references/gemini-cli.md`](references/gemini-cli.md) | **Stub** — contribute when adopting |
+| `.cursor/` directory present | [`references/cursor.md`](references/cursor.md) | **Stub** — contribute when adopting |
+| Antigravity runtime marker present | [`references/antigravity.md`](references/antigravity.md) | **Stub** — contribute when adopting |
+| None of the above, or vendor has no parallel-spawn primitive | [`references/sequential-fallback.md`](references/sequential-fallback.md) | Universal fallback (role-switching, no parallelism) |
 
-- "I'll spawn agents sequentially, waiting for each one." → **WRONG**. For independent tasks this is slower and loses context-isolation. Issue all `Agent` calls in **one message** so the harness runs them in parallel.
-- "I'll pass the first critic's output to the second to save tokens." → **WRONG**. Cross-pollination defeats parallel critique. Merge happens AFTER all returns, in the orchestrator.
-- "I don't need shared state if agents are independent." → **WRONG**. If any teammate writes to `.agent/sessions/latest.yaml`, `fcntl`-locking is mandatory (already enforced by `skill-session-state`).
-- "One big Agent call covering everything is simpler." → **WRONG**. Separate teammates get separate context windows, stricter tool-whitelists, and clearer failure modes.
+If multiple indicators match (e.g. both `CLAUDE.md` and `GEMINI.md` present), prefer the reference matching the runtime **currently executing** this skill, not the runtime that owns the files.
 
-## 2. Capabilities
+---
 
-- **Decompose**: split complex tasks into independent units with clear artifact contracts.
-- **Spawn (Layer A)**: launch parallel `Agent` tool-uses in one message, each targeting a defined `subagent_type` from `.claude/agents/`.
-- **Synchronize**: merge returned artifacts into a single coherent result.
+## 2. Universal concepts
 
-## 3. Instructions
+### 2.1 Roles
 
-### Phase 1: Task Decomposition
+- **Orchestrator**: single lead agent that decomposes the task, invokes the parallel-spawn primitive, and merges results. Does **not** execute domain work itself.
+- **Teammate**: independent worker with isolated context and an explicit artifact contract. Returns a structured report to the orchestrator; does not write to shared files unless the contract says so.
 
-1. Analyze the user request.
-2. Identify independent units (no shared mutable state, no ordering constraints beyond "all-done → merge").
-3. For each unit, pick an existing subagent from `.claude/agents/` or note that a new wrapper is needed.
+### 2.2 Two layers
 
-### Phase 2: Parallel Spawn (Layer A)
+- **Layer A — Parallel independent spawn** (universal). N teammates working on orthogonal pieces. **No mid-work inter-teammate communication**; merge happens after all return. Covers parallel critique, parallel exploration, independent atomic tasks.
+- **Layer B — Peer communication** (vendor-dependent). Teammates message each other during work. Required **iff** teammate A's output depends on inspecting teammate B's in-progress state. Examples: security-vs-performance trade-off debate; frontend/backend API-schema negotiation mid-flight. Not all vendors support this natively — see your reference file.
 
-1. **Single message, multiple `Agent` tool-uses.** Example pattern:
-   ```
-   Message with three tool-use blocks, all Agent:
-     - Agent(subagent_type="critic-logic",       prompt="...", description="...")
-     - Agent(subagent_type="critic-security",    prompt="...", description="...")
-     - Agent(subagent_type="critic-performance", prompt="...", description="...")
-   ```
-2. Give each subagent an **independent prompt** (no references to sibling teammates' outputs — those don't exist yet).
-3. Respect each subagent's tools-whitelist (declared in `.claude/agents/<name>.md` frontmatter). Do not try to bypass via prompt.
-4. Await all three tool results before proceeding to merge.
+**Decision criterion for Layer A vs B**: use Layer B iff teammates must exchange messages *during* their work (not just in post-hoc merge). Otherwise Layer A.
 
-### Phase 3: Merge
+### 2.3 Three-phase protocol
 
-1. Collect structured reports from each subagent's tool result.
-2. Apply merge rules defined by the calling workflow (e.g., `.agent/workflows/vdd-multi.md` Phase 2 for critics).
-3. Emit the merged artifact to the user or to the next phase of the workflow.
+1. **Decompose**: split the task into independent units with clear artifact contracts. No shared mutable state. No ordering constraints beyond "all-done → merge". Each unit should fit a single teammate's context budget.
+2. **Spawn**: invoke all teammates in a **single atomic step** using the vendor's parallel-spawn primitive (see your reference file for syntax). Sequential invocations defeat the purpose.
+3. **Merge**: collect structured reports → deduplicate by location (±3 lines) → escalate severity on cross-category overlap → filter hallucinations → emit unified artifact.
 
-## 4. Layer B (Native Teams) — stub
+---
 
-**NOT IMPLEMENTED in Wave 1.** Document only; do not invoke `TeamCreate`/`SendMessage` from this skill yet.
+## 3. Red Flags (anti-rationalization — universal)
 
-**When to use Layer B** (criterion):
+- "Sequential for independent tasks saves complexity." → **WRONG**. Slower, and you lose per-teammate context isolation. Use the parallel primitive when the runtime supports it.
+- "Cross-pollinate critics' outputs to save tokens." → **WRONG**. Defeats parallel critique — each teammate's independent perspective is the whole point. Merge strictly after all return.
+- "One big combined agent call is simpler." → **WRONG**. Separate teammates get separate context windows, stricter tool restrictions, and clearer failure modes. Collapsing them erases those properties.
+- "Parallelism is a quality tool." → **WRONG**. Parallelism is a **scalability** tool. More agents ≠ better analysis. Default to 1; fan out only when objectively orthogonal subsystems are identified. See §5.
 
-> Layer B is required **iff** teammates need to exchange messages with each other (not just with the lead) during their work. Equivalently: if the set of artifacts produced by teammate A depends on inspecting teammate B's in-progress output, use Layer B.
+---
 
-Examples:
-- ✅ Layer B: security and performance critics debating whether an input-validation weakness is a DoS vector or a correctness bug.
-- ✅ Layer B: parallel feature implementation where backend-team needs to negotiate API schema with frontend-team mid-flight.
-- ❌ Layer A (sufficient): three orthogonal code critics each producing an independent report, merged by the orchestrator after all return.
-
-Full Layer B implementation is scheduled for **Wave 4** and will add `.agent/workflows/teams-vdd-multi.md`.
-
-## 5. Best Practices & Anti-Patterns
+## 4. Best Practices (universal)
 
 | DO | DO NOT |
-| :--- | :--- |
-| One message, N parallel `Agent` tool-uses | Sequential `Agent` calls for independent work |
-| Reference existing `.claude/agents/*` by `subagent_type` | Inline a full system prompt when a wrapper exists |
-| Give each teammate a clear return-format contract | Expect unstructured prose and post-hoc parsing |
-| Merge in the orchestrator after all returns | Stream partial results between teammates (use Layer B if you need that) |
+|---|---|
+| Single-invocation parallel spawn | Sequential invocations for independent work |
+| Reference an existing teammate definition (by name/type) | Inline a full system prompt when a wrapper exists |
+| Clear structured-return contract per teammate | Expect unstructured prose for post-hoc parsing |
+| Merge in the orchestrator after all returns | Stream partial outputs between teammates (use Layer B if you genuinely need that) |
 
-## 5.1 Explore parallelism — default to ONE
+---
 
-Even though the Claude Code harness permits "up to 3 Explore agents in parallel," that ceiling is a scalability tool, **not a quality tool**. For first-pass reconnaissance in the Analysis/Architecture phases, default to **one Explore subagent** with a well-scoped prompt.
+## 5. Exploration default — ONE
+
+Even if the runtime permits N parallel exploration agents, **default to 1** for first-pass reconnaissance. Fan out to 2–3 only when objectively orthogonal subsystems are identified.
 
 | Case | Default count |
 |---|---|
 | First-pass reconnaissance ("understand the current state") | **1** |
 | Well-scoped single-domain question | **1** |
-| Objectively orthogonal subsystems identified (e.g., frontend + backend + infra, no shared files) | **2–3**, one per domain |
+| Independent subsystems with no shared files (frontend + backend + infra) | **2–3**, one per domain |
 | Same area, larger search space | **1** (sharper prompt, not more agents) |
 
-**Why**: three parallel Explores on overlapping scope produce ~3× the noise with heavy content overlap, not 3× the signal. Symptom observed in practice: ~20k words returned of which ~30% was load-bearing for the actual plan.
+**Why**: three parallel Explores on overlapping scope produce ~3× noise with heavy content overlap, not 3× signal.
 
-**Rule**: fan out only when an initial report explicitly identifies independent subsystems requiring deeper dives. Parallelism is a last-step optimization for cost/wall-clock, applied after the scope is understood — not a default exploration tactic.
+**Rule**: parallelism is a last-step optimization for cost/wall-clock applied after scope is understood — not a default exploration tactic.
 
-## 6. Scripts and Resources
+---
 
-- `scripts/spawn_agent_mock.py` — **DEPRECATED** (Wave 1, 2026-04-17). Superseded by native `Agent` tool. Retained for historical `fcntl`-locking regression tests via `tests/test_mock_agent.py`. Do not use in new workflows.
+## 6. Merge rules (universal)
 
-## 7. History
+After all teammates return, apply these in order:
 
-- **v2.0 (Wave 1, 2026-04-17)**: replaced mock-spawn with native `Agent` tool (Layer A); added Layer B stub.
+1. **Location dedup**: issues at the same `(file, line ± 3)` with overlapping category → merge, keep highest severity, union descriptions and recommendations.
+2. **Cross-category re-attribution**: if a teammate flagged something belonging to a sibling's domain, re-section under the correct owner's block.
+3. **Severity escalation**: two teammates independently flagging the same location → escalate severity by one level (signal that two independent perspectives both see the issue).
+4. **Hallucination filter**: any teammate signaling `convergence: hallucinating` → drop its low-severity items from this iteration.
+5. **Optional severity filter**: drop items below a user-specified minimum severity (e.g. `--severity=high`).
+
+---
+
+## 7. When a runtime has no parallel primitive
+
+If the active runtime is stub-only (no `Agent` tool, no multi-tool-call, no spawn mechanism), fall back to [`references/sequential-fallback.md`](references/sequential-fallback.md):
+
+- Role-switching through a single session (persona-swap per teammate role).
+- Slower by ~N× wall-clock.
+- Loses per-teammate context isolation (everything lands in the same session window).
+- Functionally equivalent for merge-at-end patterns; **cannot** do Layer B.
+
+All universal concepts (§2–§6) still apply; only the spawn mechanism changes.
+
+---
+
+## 8. Scripts and Resources
+
+- `scripts/spawn_agent_mock.py` — **DEPRECATED** (Wave 1, 2026-04-17). POC mock runner. Retained only for `fcntl`-locking regression tests in `tests/test_mock_agent.py`. Do not reference from new workflows.
+- `examples/usage_example.md` — Claude Code–specific usage walk-through paired with `references/claude-code.md`.
+- `references/` — per-vendor reference implementations. See §1 for selection.
+
+---
+
+## 9. History
+
+- **v3.0 (2026-04-18)**: vendor-agnostic rewrite. Universal concepts (§2–§6) stay in `SKILL.md`; Claude-specific primitives (`Agent` tool, `.claude/agents/`, `subagent_type`, `TeamCreate`/`SendMessage`) extracted to `references/claude-code.md`. Added `references/sequential-fallback.md` as universal fallback and stubs for Gemini CLI, Cursor, Antigravity. Extraction point established for Wave 5 (multi-vendor generator).
+- **v2.0 (Wave 1, 2026-04-17)**: replaced mock-spawn with native Claude Code `Agent` tool (Layer A); added Layer B stub. Single-vendor assumption.
 - **v1.0 (POC)**: mock-agent via `spawn_agent_mock.py &`. See `docs/archives/POC_PARALLEL_AGENTS.md`.

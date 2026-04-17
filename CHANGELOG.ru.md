@@ -16,6 +16,44 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.14.0 — Vendor-agnostic рефакторинг `skill-parallel-orchestration` + per-vendor reference файлы**
+
+**Мотивация**: предыдущий `skill-parallel-orchestration/SKILL.md` был написан как vendor-agnostic документация, но по факту кодировал Claude Code primitives насквозь (`Agent` tool, `.claude/agents/`, `subagent_type`, `TeamCreate`/`SendMessage`, "Claude Code harness permits up to 3 Explore agents"). Агенты на Gemini CLI, Cursor, Antigravity или любом другом runtime не могли применить этот skill.
+
+Этот релиз разделяет методологию (универсальная) и invocation syntax (vendor-specific), не ломая Claude Code reference implementation.
+
+#### **Добавлено**
+
+* **Vendor-agnostic ядро** — [`SKILL.md`](.agent/skills/skill-parallel-orchestration/SKILL.md) переписан до v3.0. Теперь содержит только универсальные концепции: роли Orchestrator/Teammate, критерий выбора Layer A vs Layer B, трёхфазовый протокол (Decompose → Spawn → Merge), Red Flags, Best Practices, правило Exploration-default-ONE, Merge-правила. Ни одного Claude-specific имени инструмента, пути или синтаксиса.
+
+* **Per-vendor reference файлы** в `references/`:
+  - [`references/claude-code.md`](.agent/skills/skill-parallel-orchestration/references/claude-code.md) — **complete**. Claude Code primitives: `Agent` tool, конвенция `.claude/agents/`, `subagent_type`, single-message multi-tool-call паттерн, `requestId` верификация параллелизма, Layer B (`TeamCreate`/`SendMessage`) с находками probe из v3.13.0, tools whitelist конвенция. Парная к существующему `examples/usage_example.md`.
+  - [`references/sequential-fallback.md`](.agent/skills/skill-parallel-orchestration/references/sequential-fallback.md) — **complete, универсальная**. Role-switching через одну сессию для любого runtime без parallel-spawn primitive. Документирует trade-offs (N× медленнее, теряется per-teammate context isolation, нет Layer B), конкретный single-session persona-swap протокол, anti-patterns специфичные для single-session выполнения ("не давайте critic B видеть вывод critic A").
+  - [`references/gemini-cli.md`](.agent/skills/skill-parallel-orchestration/references/gemini-cli.md), [`references/cursor.md`](.agent/skills/skill-parallel-orchestration/references/cursor.md), [`references/antigravity.md`](.agent/skills/skill-parallel-orchestration/references/antigravity.md) — **stub'ы**. Содержат contribution checklist и направляют пользователей на universal fallback пока не заполнены кем-то, кто реально гоняет фреймворк на этом вендоре.
+
+* **Reference-selection протокол** — родительский `SKILL.md` §1 теперь обязывает загружать matching reference перед применением протокола, с таблицей runtime-индикаторов (`CLAUDE.md` + `.claude/agents/` → `claude-code.md`; `GEMINI.md` → `gemini-cli.md`; `.cursor/` → `cursor.md`; fallback на `sequential-fallback.md`).
+
+#### **Изменено**
+
+* **`examples/usage_example.md`** — header обновлён чтобы пометить пример как Claude Code–specific и направить vendor-agnostic пользователей в родительский `SKILL.md` + matching reference файл. Тело примера не изменилось (он уже был Claude-specific).
+
+* **`docs/ROADMAP.md` Wave 5** — обновлён с "Not started" на "Partially unlocked at v3.14.0". Methodology-level vendor split теперь на месте; остаётся subagent-definition portability layer (`.agent/agents/*.md` SOT + генератор-скрипт) — разблокируется когда реально появится второй вендор.
+
+#### **Не изменено**
+
+* Нет изменений в существующих wrapper'ах в `.claude/agents/` (всё те же 16).
+* Нет изменений в workflow `/vdd-multi` или в его параметрах из v3.13.0.
+* Нет изменений поведения для Claude Code пользователей — reference-файл сохраняет всю v2.0 семантику.
+* Deprecated `scripts/spawn_agent_mock.py` остаётся retired; сохранён только для `fcntl`-locking regression-тестов.
+
+#### **Влияние**
+
+* Multi-vendor заявление фреймворка (в README и CLAUDE.md) теперь реально на уровне методологии: универсальные концепции чисто отделены от Claude-specific invocation syntax.
+* Агенты на не-Claude runtime получают явный, vendor-neutral fallback-путь (sequential persona-swap), который сохраняет все универсальные концепции.
+* Extension point установлен: adopting нового вендора — это заполнить его `references/<vendor>.md` + добавить subagent-определения (оставшийся scope Wave 5), а не переписывать skill.
+
+---
+
 ### **v3.13.1 — Интеграция внешнего фидбэка: 2 немедленных фикса + абсорбция в roadmap**
 
 Применены actionable-уроки из многочасовой VDD-сессии во внешнем проекте (зафиксировано в [docs/agentic-refine.md](docs/agentic-refine.md)). Два small high-value фикса выпущены сразу; остальное интегрировано в [docs/ROADMAP.md](docs/ROADMAP.md) с явными reopen-критериями.

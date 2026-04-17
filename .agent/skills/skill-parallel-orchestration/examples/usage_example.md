@@ -1,6 +1,8 @@
-# Example: Parallel Orchestration (Layer A — Wave 1)
+# Example: Parallel Orchestration (Layer A — Claude Code reference)
 
-> **Note**: This example reflects the current v2.0 protocol (native `Agent` tool). The previous v1.0 example used `spawn_agent_mock.py`; see `docs/archives/POC_PARALLEL_AGENTS.md` for historical context.
+> **Vendor scope**: this example uses Claude Code primitives (`Agent` tool, `.claude/agents/*` wrappers, `subagent_type` parameter). For the vendor-agnostic protocol see the parent [`SKILL.md`](../SKILL.md); for the Claude-specific reference this example illustrates, see [`references/claude-code.md`](../references/claude-code.md); for other vendors see the matching file in `references/`. Users on a non-Claude runtime or in environments without a parallel-spawn primitive should follow [`references/sequential-fallback.md`](../references/sequential-fallback.md) and adapt Step 2 below to a sequential persona-swap.
+>
+> **History**: this example reflects the v2.0+ protocol (native `Agent` tool). The pre-v2.0 example used `spawn_agent_mock.py`; see `docs/archives/POC_PARALLEL_AGENTS.md` for the historical POC.
 
 ## Input (User Request)
 ```

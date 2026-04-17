@@ -73,17 +73,23 @@ Hypothetical qualifying scenarios (speculative):
 
 ### Wave 5 — Portable subagent generator
 
-**Status**: Not started. **Conditional on second vendor adoption.**
+**Status**: **Partially unlocked at v3.14.0.** The methodology-level vendor split is now in place: [`.agent/skills/skill-parallel-orchestration/`](../.agent/skills/skill-parallel-orchestration/) has a vendor-agnostic `SKILL.md` with per-vendor reference files under `references/` (Claude Code complete; Gemini CLI / Cursor / Antigravity as TBD stubs; `sequential-fallback.md` as universal fallback). What remains is the **subagent-definition portability layer**, which is the original Wave 5 scope.
 
-**Reopen when**: a second CLI vendor (Codex, Antigravity, or similar) is adopted by the project and needs its own subagent definitions.
+**Reopen when**: a second CLI vendor (Codex, Antigravity, Cursor, Gemini CLI) is adopted by the project and needs its own subagent definitions.
 
-**Scope** if reopened:
-- Introduce `.agent/agents/*.md` as vendor-portable source of truth (superset frontmatter).
-- Generator script `.agent/tools/generate_vendor_agents.py` reading `.agent/agents/` and emitting per-vendor directories (`.claude/agents/`, `.codex/agents/`, etc.).
-- Frontmatter mapping layer (Claude Code ↔ Codex tool-naming).
-- Pre-commit hook to regenerate on change.
+**Remaining scope**:
+- Introduce `.agent/agents/*.md` as vendor-portable source of truth (superset frontmatter) OR keep `System/Agents/` as SOT and generate per-vendor adapters.
+- Generator script `.agent/tools/generate_vendor_agents.py` reading the SOT and emitting per-vendor directories (`.claude/agents/`, `.codex/agents/`, etc.).
+- Frontmatter mapping layer (Claude Code ↔ Codex ↔ Gemini CLI tool-naming + tools whitelist).
+- Fill in the currently stubbed `references/{gemini-cli,cursor,antigravity}.md` files with runtime-verified details.
+- Pre-commit hook to regenerate on SOT change.
 
-**YAGNI note**: as long as Claude Code is the only vendor, the current manual `.claude/agents/` wrappers are sufficient and simpler.
+**Already done at v3.14.0** (do not re-do):
+- Vendor-agnostic methodology in `skill-parallel-orchestration/SKILL.md`.
+- Reference-file structure under `references/` with selection protocol in parent SKILL §1.
+- Universal `sequential-fallback.md` so agents on any runtime can at minimum execute the protocol sequentially.
+
+**YAGNI note**: the current single-vendor state is fully functional. Wave 5's remaining work only pays off once a second vendor is actually adopted — don't speculate generators under one-vendor conditions.
 
 ---
 

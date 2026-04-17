@@ -16,6 +16,44 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.14.0 — `skill-parallel-orchestration` vendor-agnostic rewrite + per-vendor reference files**
+
+**Motivation**: the previous `skill-parallel-orchestration/SKILL.md` was authored as vendor-agnostic documentation but in practice encoded Claude Code primitives throughout (`Agent` tool, `.claude/agents/`, `subagent_type`, `TeamCreate`/`SendMessage`, "Claude Code harness permits up to 3 Explore agents"). Agents running on Gemini CLI, Cursor, Antigravity, or any other runtime had no way to apply the skill.
+
+This release splits the methodology (universal) from the invocation syntax (vendor-specific), without breaking the Claude Code reference implementation.
+
+#### **Added**
+
+* **Vendor-agnostic core** — [`SKILL.md`](.agent/skills/skill-parallel-orchestration/SKILL.md) rewritten to v3.0. Now contains only universal concepts: Orchestrator/Teammate roles, Layer A vs Layer B decision criterion, three-phase protocol (Decompose → Spawn → Merge), Red Flags, Best Practices, Exploration-default-ONE rule, Merge rules. No Claude-specific tool names, paths, or syntax.
+
+* **Per-vendor reference files** in `references/`:
+  - [`references/claude-code.md`](.agent/skills/skill-parallel-orchestration/references/claude-code.md) — **complete**. Claude Code primitives: `Agent` tool, `.claude/agents/` convention, `subagent_type`, single-message multi-tool-call pattern, `requestId` parallelism verification, Layer B (`TeamCreate`/`SendMessage`) with v3.13.0 probe findings, tools whitelist convention. Paired with the existing `examples/usage_example.md`.
+  - [`references/sequential-fallback.md`](.agent/skills/skill-parallel-orchestration/references/sequential-fallback.md) — **complete, universal**. Role-switching through a single session for any runtime lacking a parallel-spawn primitive. Documents trade-offs (N× slower, loses per-teammate context isolation, no Layer B), concrete single-session persona-swap protocol, and anti-patterns specific to single-session execution ("don't let critic B see critic A's output").
+  - [`references/gemini-cli.md`](.agent/skills/skill-parallel-orchestration/references/gemini-cli.md), [`references/cursor.md`](.agent/skills/skill-parallel-orchestration/references/cursor.md), [`references/antigravity.md`](.agent/skills/skill-parallel-orchestration/references/antigravity.md) — **stubs**. Contain a contribution checklist and direct users to the universal fallback until filled in by someone running the framework on that vendor.
+
+* **Reference-selection protocol** — parent `SKILL.md` §1 now mandates loading the matching reference before applying the protocol, with a runtime-indicator table (`CLAUDE.md` + `.claude/agents/` → `claude-code.md`; `GEMINI.md` → `gemini-cli.md`; `.cursor/` → `cursor.md`; fallback to `sequential-fallback.md`).
+
+#### **Changed**
+
+* **`examples/usage_example.md`** — header updated to mark the example as Claude Code–specific and point vendor-agnostic users at the parent `SKILL.md` + the matching reference file. Example body unchanged (it was already a Claude-specific walk-through).
+
+* **`docs/ROADMAP.md` Wave 5** — updated from "Not started" to "Partially unlocked at v3.14.0". The methodology-level vendor split is now in place; what remains is the subagent-definition portability layer (`.agent/agents/*.md` SOT + generator script) — unblocked when a second vendor is actually adopted.
+
+#### **Not changed**
+
+* No changes to existing wrappers in `.claude/agents/` (still 16, unchanged).
+* No changes to `/vdd-multi` workflow or its v3.13.0 parameter set.
+* No behavior change for Claude Code users — the reference file preserves all v2.0 semantics.
+* Deprecated `scripts/spawn_agent_mock.py` remains retired; retained only for `fcntl`-locking regression tests.
+
+#### **Impact**
+
+* Framework's multi-vendor claim (stated in README and CLAUDE.md) is now real at the methodology layer: universal concepts are cleanly separated from Claude-specific invocation syntax.
+* Agents on non-Claude runtimes get an explicit, vendor-neutral fallback path (sequential persona-swap) that preserves all universal concepts.
+* Extension point established: adopting a new vendor is a matter of filling in its `references/<vendor>.md` plus adding subagent definitions (Wave 5 remaining scope), not rewriting the skill.
+
+---
+
 ### **v3.13.1 — External-feedback integration: 2 immediate fixes + roadmap absorption**
 
 Applied actionable lessons from a multi-hour VDD session in an external project (captured in [docs/agentic-refine.md](docs/agentic-refine.md)). Two small high-value fixes shipped immediately; the rest integrated into [docs/ROADMAP.md](docs/ROADMAP.md) with explicit reopen criteria.

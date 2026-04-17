@@ -4,5 +4,7 @@ __pycache__/
 .DS_Store
 .env
 *.log
+*.lock
+.agent/sessions/latest.yaml.lock
 .agent/rules/localization-sync.md
 

@@ -16,6 +16,46 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.13.1 — Интеграция внешнего фидбэка: 2 немедленных фикса + абсорбция в roadmap**
+
+Применены actionable-уроки из многочасовой VDD-сессии во внешнем проекте (зафиксировано в [docs/agentic-refine.md](docs/agentic-refine.md)). Два small high-value фикса выпущены сразу; остальное интегрировано в [docs/ROADMAP.md](docs/ROADMAP.md) с явными reopen-критериями.
+
+#### **Исправлено — silent false-positive tests_pass (Rec #1, small)**
+
+Subagent `developer` раньше возвращал `tests_pass: true` в structured output независимо от того, выполнялись ли тесты реально — shadow-pass, распространявший неверифицированные claim'ы в оркестратор. Return-contract обёртки теперь требует конкретного доказательства:
+
+* `tests_pass: true` **запрещено без `verification_evidence`** (вывод тестов, путь к отчёту, command-транскрипт).
+* `tests_pass: "syntax_only"` — parser/linter отработал, но runtime-тестов не было.
+* `tests_pass: null` — не можем запустить тесты (нет runtime-доступа, sandbox и т.п.); причина в `blocking_questions`.
+
+Закрывает известный класс silent-bug propagation, когда developer'ы без execution-прав shadow-pass'или тесты. Источник фидбэка поймал реальный SQL-migration баг, который бы ушёл в прод, если бы main-сессия доверила ложному `tests_pass: true`.
+
+#### **Изменено — дефолт параллелизма Explore 3 → 1 для рекогносцировки (Rec #3, small)**
+
+Добавлена §5.1 "Explore parallelism — default to ONE" в [.agent/skills/skill-parallel-orchestration/SKILL.md](.agent/skills/skill-parallel-orchestration/SKILL.md). Claude Code харнесс разрешает до 3 параллельных Explore-агентов, но потолок это scalability-инструмент, не quality-инструмент. First-pass рекогносцировка должна спавнить один well-scoped Explore; fan-out до 2–3 только когда объективно-ортогональные подсистемы идентифицированы (frontend + backend + infra, без shared files).
+
+Наблюдаемый симптом из источника фидбэка: три параллельных Explore вернули ~20k слов reference-материала, из которых ~30% load-bearing для плана. Один резче scoped промпт вернул бы тот же signal за ⅓ стоимости.
+
+#### **Отложено в [docs/ROADMAP.md](docs/ROADMAP.md) — оставшиеся 5 рекомендаций + meta-observation**
+
+Интегрировано как новые ROADMAP записи с явными reopen-критериями:
+
+* **Drift detection перед apply-to-live операциями** (Deferred, conditional on появления apply-to-live workflow'ов).
+* **`/vdd-recover` + `/vdd-post-deploy-watch` workflow'ы** (Deferred, conditional on Deploy-phase эпика или второго friction-инцидента).
+* **Deploy-as-a-phase** (потенциальный новый эпик — уровень идеи, большой scope).
+* **Structured drift-отчёты от reviewer'ов** (Nice-to-have, триггер на первое human-hunting через prose).
+* **Документация MCP truncation** (Nice-to-have, conditional on MCP adoption).
+* **TodoWrite nag rate-limiting** → out-of-scope (уровень харнесса Claude Code, не исходник этого фреймворка).
+
+Полный артефакт фидбэка сохранён в [docs/agentic-refine.md](docs/agentic-refine.md) для будущей справки.
+
+#### **Влияние**
+* Нет изменений поведения Layer A `/vdd-multi` (те же 16 обёрток, тот же parallel critic flow).
+* Machine-readable output developer subagent'а теперь честен относительно статуса выполнения тестов.
+* Analysis/Architecture фазы спавнят меньше Explore'ов по-умолчанию при рекогносцировке.
+
+---
+
 ### **v3.13.0 — Параметры `/vdd-multi` + находки runtime-probe Wave 4**
 
 Добавляет first-class параметры в `/vdd-multi` для scoped-прогонов, CI-интеграции, PR-ревью и сохранения фикстур. Также документирует runtime-probe Native Teams (Layer B) — что работает, что сломано, и почему Wave 4 отложен.

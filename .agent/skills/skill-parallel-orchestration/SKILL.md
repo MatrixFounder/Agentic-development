@@ -80,6 +80,21 @@ Full Layer B implementation is scheduled for **Wave 4** and will add `.agent/wor
 | Give each teammate a clear return-format contract | Expect unstructured prose and post-hoc parsing |
 | Merge in the orchestrator after all returns | Stream partial results between teammates (use Layer B if you need that) |
 
+## 5.1 Explore parallelism — default to ONE
+
+Even though the Claude Code harness permits "up to 3 Explore agents in parallel," that ceiling is a scalability tool, **not a quality tool**. For first-pass reconnaissance in the Analysis/Architecture phases, default to **one Explore subagent** with a well-scoped prompt.
+
+| Case | Default count |
+|---|---|
+| First-pass reconnaissance ("understand the current state") | **1** |
+| Well-scoped single-domain question | **1** |
+| Objectively orthogonal subsystems identified (e.g., frontend + backend + infra, no shared files) | **2–3**, one per domain |
+| Same area, larger search space | **1** (sharper prompt, not more agents) |
+
+**Why**: three parallel Explores on overlapping scope produce ~3× the noise with heavy content overlap, not 3× the signal. Symptom observed in practice: ~20k words returned of which ~30% was load-bearing for the actual plan.
+
+**Rule**: fan out only when an initial report explicitly identifies independent subsystems requiring deeper dives. Parallelism is a last-step optimization for cost/wall-clock, applied after the scope is understood — not a default exploration tactic.
+
 ## 6. Scripts and Resources
 
 - `scripts/spawn_agent_mock.py` — **DEPRECATED** (Wave 1, 2026-04-17). Superseded by native `Agent` tool. Retained for historical `fcntl`-locking regression tests via `tests/test_mock_agent.py`. Do not use in new workflows.

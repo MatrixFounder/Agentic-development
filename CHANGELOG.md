@@ -16,6 +16,46 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.13.1 — External-feedback integration: 2 immediate fixes + roadmap absorption**
+
+Applied actionable lessons from a multi-hour VDD session in an external project (captured in [docs/agentic-refine.md](docs/agentic-refine.md)). Two small high-value fixes shipped immediately; the rest integrated into [docs/ROADMAP.md](docs/ROADMAP.md) with explicit reopen criteria.
+
+#### **Fixed — silent false-positive tests_pass (Rec #1, small)**
+
+The `developer` subagent previously returned `tests_pass: true` in its structured output regardless of whether tests actually executed — a shadow-pass that propagated unverified claims to the orchestrator. The wrapper's return contract now requires concrete evidence:
+
+* `tests_pass: true` is **forbidden without `verification_evidence`** (test output, report path, or command transcript).
+* `tests_pass: "syntax_only"` — parser/linter ran but no runtime tests.
+* `tests_pass: null` — cannot execute tests (no runtime access, sandbox, etc.); reason goes in `blocking_questions`.
+
+This closes a known class of silent-bug propagation where developers without execution rights shadow-passed tests. The feedback source caught a real SQL-migration bug that would have shipped had the main session trusted the false `tests_pass: true`.
+
+#### **Changed — Explore parallelism default 3 → 1 for reconnaissance (Rec #3, small)**
+
+Added §5.1 "Explore parallelism — default to ONE" to [.agent/skills/skill-parallel-orchestration/SKILL.md](.agent/skills/skill-parallel-orchestration/SKILL.md). The Claude Code harness permits up to 3 parallel Explore agents, but the ceiling is a scalability tool, not a quality tool. First-pass reconnaissance should spawn one well-scoped Explore; fan out to 2–3 only when objectively orthogonal subsystems are identified (frontend + backend + infra, no shared files).
+
+Observed symptom from the feedback source: three parallel Explores returned ~20k words of reference material with ~30% load-bearing content. One sharper prompt would have returned the same signal at ⅓ the cost.
+
+#### **Deferred to [docs/ROADMAP.md](docs/ROADMAP.md) — remaining 5 recommendations + meta-observation**
+
+Integrated as new ROADMAP entries with explicit reopen criteria:
+
+* **Drift detection before apply-to-live operations** (Deferred, conditional on apply-to-live workflows appearing).
+* **`/vdd-recover` + `/vdd-post-deploy-watch` workflows** (Deferred, conditional on Deploy-phase epic or second friction incident).
+* **Deploy-as-a-phase** (potential new epic — idea level, large scope).
+* **Structured drift reports from reviewers** (Nice-to-have, triggers on first human hunting through prose).
+* **MCP tool truncation documentation** (Nice-to-have, conditional on MCP adoption).
+* **TodoWrite nag rate-limiting** → out-of-scope (Claude Code harness-level, not this framework's source).
+
+Full feedback artifact preserved at [docs/agentic-refine.md](docs/agentic-refine.md) for future reference.
+
+#### **Impact**
+* No behavior change in Layer A `/vdd-multi` (same 16 wrappers, same parallel critic flow).
+* Developer subagent's machine-readable output is now honest about test execution status.
+* Analysis/Architecture phases spawn fewer Explores by default when reconnoitering.
+
+---
+
 ### **v3.13.0 — `/vdd-multi` parameters + Wave 4 runtime probe findings**
 
 Adds first-class parameters to `/vdd-multi` for scoped runs, CI integration, PR reviews, and fixture preservation. Also documents the Native Teams (Layer B) runtime probe — what works, what's broken, and why Wave 4 is deferred.

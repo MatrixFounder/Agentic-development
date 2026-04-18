@@ -164,8 +164,13 @@ DANGEROUS_PATTERNS = [
 
     # Access Control (SWC-105, SWC-115)
     (r'\btx\.origin\b', "tx.origin for auth (phishing risk, SWC-115)", "high", "Access Control", "CWE-284"),
-    (r'function\s+\w+\s*\([^)]*\)\s*(?:external|public)\s*\{?\s*$',
-     "Public/external function without modifier", "medium", "Access Control", "CWE-284"),
+    # Only flag state-mutating functions (exclude view/pure/constant).
+    # Negative lookahead filters view/pure/constant. Trailing segment accepts optional
+    # `payable`/`nonpayable` and `returns (...)` clauses between `public/external` and `{`.
+    # Functions WITH custom modifiers (e.g. `onlyOwner`) won't match because the extra
+    # token isn't in the accepted tail, so this correctly flags unprotected mutators only.
+    (r'^(?!.*\b(?:view|pure|constant)\b)\s*function\s+\w+\s*\([^)]*\)\s*(?:external|public)(?:\s+(?:payable|nonpayable|returns\s*\([^)]*\)))*\s*\{?\s*$',
+     "Public/external state-mutating function without modifier", "medium", "Access Control", "CWE-284"),
 
     # Oracle Manipulation (YieldBlox $10.2M)
     (r'getReserves\s*\(\s*\)', "AMM getReserves (spot price, flash-loan vulnerable)", "high", "Oracle Manipulation", "CWE-345"),
@@ -186,6 +191,48 @@ DANGEROUS_PATTERNS = [
 
     # Assembly usage
     (r'\bassembly\s*\{', "Inline assembly (manual audit required)", "medium", "Assembly", "CWE-676"),
+
+    # --- Rust Patterns ---
+    # Unsafe blocks (memory-safety escape hatch)
+    (r'\bunsafe\s*\{', "Rust unsafe block (memory-safety escape)", "medium", "Unsafe Code", "CWE-119"),
+    (r'\bunsafe\s+fn\b', "Rust unsafe function", "medium", "Unsafe Code", "CWE-119"),
+    # Dangerous stdlib calls
+    (r'\bstd::mem::transmute\b', "std::mem::transmute (type-punning UB risk)", "high", "Unsafe Code", "CWE-843"),
+    (r'\bstd::mem::forget\b', "std::mem::forget (skip Drop; possible resource leak)", "medium", "Resource Leak", "CWE-401"),
+    (r'\.unwrap_unchecked\s*\(', "unwrap_unchecked (panic-UB on None/Err)", "high", "Unsafe Code", "CWE-754"),
+    (r'\bfrom_raw_parts(?:_mut)?\s*\(', "from_raw_parts (UB on invalid pointer/len)", "high", "Unsafe Code", "CWE-129"),
+    # Weak randomness (when used for security)
+    (r'\brand::random\b', "rand::random (non-cryptographic; use OsRng for secrets)", "medium", "Weak Randomness", "CWE-338"),
+
+    # --- Go Patterns ---
+    # Weak randomness. Go uses import alias `rand`, so call-sites read `rand.Intn(...)`,
+    # not `math/rand.Intn`. The import detection below covers most false positives
+    # because only Go files realistically have literal `"math/rand"` with the slash.
+    (r'"math/rand"', "math/rand import (non-cryptographic; use crypto/rand for secrets)", "medium", "Weak Randomness", "CWE-338"),
+    # Call-site pattern — accepts some false positives on Python `random.randint`-adjacent code
+    # (acceptable per v3.2 philosophy; regex scan is line-level without file-type awareness).
+    (r'\brand\.(?:Intn|Int31n?|Int63n?|Float32|Float64|Read|NewSource|Perm|Shuffle)\b',
+     "rand.* call (if math/rand: non-cryptographic — use crypto/rand for secrets)", "medium", "Weak Randomness", "CWE-338"),
+    # SQL injection
+    (r'\b(?:db|tx)\.(?:Query|Exec|QueryRow)\s*\(\s*(?:fmt\.Sprintf|[`"][^`"]*[`"]\s*\+)',
+     "Go SQL formatted/concatenated query", "critical", "SQL Injection", "CWE-89"),
+    # Missing TLS
+    (r'\bhttp\.ListenAndServe\s*\(', "http.ListenAndServe (no TLS — use ListenAndServeTLS)", "medium", "MITM", "CWE-319"),
+    # Path traversal
+    (r'\bfilepath\.Join\s*\([^)]*\br\.(?:URL|Form|PostForm)\b', "Go filepath.Join with request data", "high", "Path Traversal", "CWE-22"),
+    # Command injection
+    (r'\bexec\.Command\s*\(\s*(?:fmt\.Sprintf|[`"][^`"]*[`"]\s*\+)',
+     "exec.Command with formatted/concat string", "high", "Command Injection", "CWE-78"),
+
+    # --- GraphQL Patterns ---
+    (r'\bintrospection\s*:\s*true', "GraphQL introspection enabled (disable in production)", "medium", "Information Disclosure", "CWE-200"),
+    (r'\bGRAPHQL_PLAYGROUND\s*[=:]\s*(?:true|1|["\']?true["\']?)', "GraphQL Playground enabled (disable in production)", "medium", "Information Disclosure", "CWE-200"),
+    (r'\bgraphiql\s*:\s*true', "GraphiQL enabled (disable in production)", "medium", "Information Disclosure", "CWE-200"),
+    # ApolloServer instantiation — scan is line-based, so the config body (multi-line)
+    # cannot be inspected here. Flag on the constructor line; manual review required to
+    # verify depth/complexity limits (DoS via nested queries, CWE-400).
+    (r'\bnew\s+ApolloServer\s*\(|\bApolloServer\s*\(\s*\{',
+     "ApolloServer instantiated (manual: verify depth/complexity limits for DoS)", "medium", "DoS", "CWE-400"),
 ]
 
 

@@ -15,13 +15,17 @@ from .config import (
 )
 
 
-def run_command(cmd, cwd=None, shell=False, capture=False) -> Optional[subprocess.CompletedProcess]:
-    """Run a shell command, capture exit code, and report status."""
+def run_command(cmd, cwd=None, shell=False, capture=False, timeout=600) -> Optional[subprocess.CompletedProcess]:
+    """Run a shell command, capture exit code, and report status.
+
+    timeout: seconds (default 600s / 10min). External SAST tools like semgrep can easily
+    exceed 120s on non-trivial repos; earlier default silently killed them mid-scan.
+    """
     cmd_str = ' '.join(cmd) if isinstance(cmd, list) else cmd
     print(f"[*] Running: {cmd_str}", file=sys.stderr)
     try:
         result = subprocess.run(
-            cmd, cwd=cwd, shell=shell, check=False, timeout=120,
+            cmd, cwd=cwd, shell=shell, check=False, timeout=timeout,
             capture_output=capture, text=capture
         )
         if result.returncode != 0:
@@ -33,7 +37,7 @@ def run_command(cmd, cwd=None, shell=False, capture=False) -> Optional[subproces
         print(f"    Install: see project docs or run via Docker", file=sys.stderr)
         return None
     except subprocess.TimeoutExpired:
-        print(f"[!] Timeout: {cmd_str} exceeded 120s limit", file=sys.stderr)
+        print(f"[!] Timeout: {cmd_str} exceeded {timeout}s limit", file=sys.stderr)
         return None
 
 

@@ -29,7 +29,7 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
      a. Fix implementation (apply patches, rotate secrets).
      b. Add regression tests (security-focused).
      c. Re-run audit script until clean.
-   - Save report as `docs/SECURITY_AUDIT.md`.
+   - Save report as `docs/audit/security-{ID}.md` (consistent with `security-auditor` agent and `skill-archive-task` ID convention).
    - Update `.AGENTS.md` with security notes.
 
 **Completion:** Security-hardened code ready for final review.

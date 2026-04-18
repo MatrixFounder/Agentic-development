@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.2
+version: 3.3
 ---
 
-# Security Audit v3.2
+# Security Audit v3.3
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
@@ -18,19 +18,28 @@ version: 3.2
 ## 2. Automated Detection
 **EXECUTE** the unified audit script to detect vulnerabilities:
 ```bash
-python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] [--scan-type all|deps|secrets|patterns|config|iac|sbom|external] [--fail-on critical|high|medium] [--output json|summary] [--no-limit]
+python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
+  [--scan-type all|deps|secrets|patterns|config|iac|sbom|external] \
+  [--fail-on critical|high|medium] [--output json|summary] \
+  [--no-limit] [--max-size MB]
 ```
 - **Analysis**: Review the output. If tools fail or report Critical/High issues, they are **BLOCKERS**.
 - **Scope**: The script checks:
   - Secrets (OWASP A02, CWE-798) — 30+ patterns including cloud, AI, SaaS keys + entropy detection
-  - Dependencies (A06/A08, CWE-1104) — lock files, npm audit
+  - Dependencies (A06/A08, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum), npm audit
   - Code Patterns / Injection (A03, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
   - **Smart Contract / Solidity** — reentrancy, delegatecall, selfdestruct (EIP-6780), tx.origin, oracle manipulation, unchecked returns, unprotected initializers
+  - **Rust** — `unsafe{}`, `transmute`, `mem::forget`, `unwrap_unchecked`, weak RNG
+  - **Go** — `math/rand` for security, SQL concat, missing TLS, command injection
+  - **GraphQL** — introspection/playground enabled in prod, missing depth limits
   - Config / Misconfiguration (A05, CWE-16) — debug mode, CORS, headers
   - IaC / Containers — Docker, Kubernetes, Terraform, CloudFormation patterns
-  - SBOM — Software Bill of Materials presence check
-- **External Tools**: Auto-runs `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `checkov`, `trivy` if detected.
+  - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
+- **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected.
+- **`--scan-type external`** runs **ONLY** external tools and SKIPS the in-process regex scans. Use `--scan-type all` (default) to run both.
 - **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines.
+- **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).
+- **ReDoS guard**: lines longer than 4000 chars are skipped during pattern scanning (prevents catastrophic backtracking on minified code).
 - **Self-Exclusion**: The scanner skips its own source files to prevent false positives.
 - **CWE Mapping**: All findings include CWE identifiers for compliance integration.
 - **Known Limitation**: The scanner uses **regex-only** (no AST parsing). It WILL match patterns inside comments, docstrings, and string literals. This is a deliberate trade-off: false positives on comments are preferable to false negatives on real vulnerabilities. Always **manually verify** findings before acting.

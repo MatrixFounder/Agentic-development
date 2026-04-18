@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-04-17T15:45:35.237891"
-mode: "IDLE"
+last_updated: "2026-04-19T01:47:19.943163"
+mode: "update-docs"
 
 current_task:
-  name: "(none)"
-  status: "Teams Mode epic closed at v3.13.0"
+  name: "security-audit-v3.3"
+  status: "done"
   predicted_steps: 0
 
 context_summary: |
-  Epic delivered: 16 subagent wrappers (.claude/agents/; 10 Opus + 6 Sonnet), parallel /vdd-multi via Layer A with 5 inline parameters, Wave-4 runtime probe findings documented. Wave 4 full workflow and Wave 5 portable generator deferred to docs/ROADMAP.md as conditional items. docs/TASK.md reset to idle placeholder; epic archive at docs/archives/teams-mode-epic-v3.10-to-v3.13.md.
+  Applied 14 improvements to security-audit skill (P1 bug fixes + P2 coverage + P3 extensions + P4 docs). Version 3.2 -> 3.3. CHANGELOG v3.14.2 entry added (EN + RU).
 
 active_blockers:
   []

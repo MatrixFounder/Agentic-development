@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Skill: security-audit
-Script: run_audit.py v3.2
+Script: run_audit.py v3.3
 Purpose: CLI entry point for security audit scanner.
 Usage: python run_audit.py [project_path] [--scan-type all|deps|secrets|patterns|config|iac|external|sbom]
        [--fail-on critical|high|medium] [--output json|summary] [--no-limit]
@@ -22,6 +22,7 @@ except AttributeError:
 
 from audit import (
     SEVERITY_ORDER,
+    __version__ as AUDIT_VERSION,
     detect_project_types,
     run_external_tools,
     scan_code_patterns,
@@ -31,6 +32,7 @@ from audit import (
     scan_sbom,
     scan_secrets,
 )
+from audit import config as _audit_config
 
 
 def run_full_scan(project_path: str, scan_type: str = "all", no_limit: bool = False) -> Dict[str, Any]:
@@ -92,7 +94,7 @@ def run_full_scan(project_path: str, scan_type: str = "all", no_limit: bool = Fa
 def print_summary(report: Dict[str, Any]):
     """Print human-readable summary to stdout."""
     print(f"\n{'='*60}")
-    print(f"Security Scan v3.2: {report['project']}")
+    print(f"Security Scan v{AUDIT_VERSION}: {report['project']}")
     print(f"Timestamp: {report['timestamp']}")
     print(f"{'='*60}")
     print(f"Status: {report['summary']['overall_status']}")
@@ -130,7 +132,7 @@ def print_summary(report: Dict[str, Any]):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Security Audit Tool v3.2")
+    parser = argparse.ArgumentParser(description=f"Security Audit Tool v{AUDIT_VERSION}")
     parser.add_argument("project_path", nargs="?", default=".", help="Project directory")
     parser.add_argument("--scan-type",
                         choices=["all", "deps", "secrets", "patterns", "config", "iac", "sbom", "external"],
@@ -141,8 +143,17 @@ def main():
                         default=None, help="Exit with code 1 if findings >= this severity (for CI/CD)")
     parser.add_argument("--no-limit", action="store_true",
                         help="Do not truncate findings list")
+    parser.add_argument("--max-size", type=int, default=None, metavar="MB",
+                        help=f"Max file size to scan in MB (default: {_audit_config.MAX_FILE_SIZE // (1024*1024)}). "
+                             "Increase for large minified bundles.")
 
     args = parser.parse_args()
+
+    if args.max_size is not None:
+        if args.max_size <= 0:
+            print(json.dumps({"error": "--max-size must be positive"}))
+            sys.exit(1)
+        _audit_config.MAX_FILE_SIZE = args.max_size * 1024 * 1024
 
     if not os.path.isdir(args.project_path):
         print(json.dumps({"error": f"Directory not found: {args.project_path}"}))

@@ -16,6 +16,59 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.14.2 — `security-audit` skill v3.2 → v3.3 (bug fixes + coverage + hardening)**
+
+Post-analysis critique of the `security-audit` skill surfaced 2 real bugs, 4 coverage gaps, and 6 refinement opportunities. All 14 items addressed. Scanner integrity is visibly improved; no breaking changes to CLI surface (new `--max-size` is additive).
+
+#### **Fixed (HIGH — correctness bugs)**
+
+* **Pip lock-file detection**: [scanners.py](.agent/skills/security-audit/scripts/audit/scanners.py) previously treated `requirements.txt` as a lock file (it is not — it does not pin a transitive graph with hashes) AND had no `is_type` branch for Python at all, so `Missing Lock File` never fired for pip projects. Rewrote `scan_dependencies` to use ecosystem groups with explicit `markers` (presence of `pyproject.toml`/`setup.py`/`setup.cfg`/`requirements.txt`/`Pipfile`) and `locks` (real lock files only: `Pipfile.lock`, `poetry.lock`, `uv.lock`, `pdm.lock`). Also fixed JS over-flagging (previously `yarn`+`pnpm` both fired when `package-lock.json` was present — now any of the three locks satisfies the JS ecosystem).
+* **Report-path rassinchron**: [`.agent/workflows/security-audit.md`](.agent/workflows/security-audit.md) wrote `docs/SECURITY_AUDIT.md`; the [`security-auditor`](.claude/agents/security-auditor.md) agent (and [`System/Agents/10_security_auditor.md`](System/Agents/10_security_auditor.md)) writes `docs/audit/security-{ID}.md`. Aligned workflow → agent convention (supports multiple audits + integrates with `skill-archive-task` ID convention).
+
+#### **Fixed (MED — coverage + refinement)**
+
+* **SBOM scan was non-recursive** ([scanners.py](.agent/skills/security-audit/scripts/audit/scanners.py) `scan_sbom`): `glob("*sbom*")` only looked in the project root. SBOMs are commonly placed in `build/`, `dist/`, `artifacts/`, `docs/`. Switched to `rglob` with `SKIP_DIRS` filter and duplicate dedup. Nested `docs/sbom.json` now detected.
+* **Dead SBOM-probe block removed**: previous code ran `syft --version` / `cdxgen --version` and printed "tool is available for SBOM generation" without actually generating anything. Either misleading or unfinished — removed entirely; generation instructions remain in the `Missing SBOM` finding message.
+* **`MAX_FILE_SIZE` 5 MB → 15 MB + CLI `--max-size MB`**: 5 MB was silently skipping most modern minified production bundles (`vendor.js`/`bundle.js` routinely exceed 10 MB after Webpack `DefinePlugin`). Bumped default to 15 MB; added `--max-size` flag with runtime override (scanners now read `config.MAX_FILE_SIZE` via module-reference, not import-time copy).
+* **Solidity `public/external` false positives on view/pure**: pattern flagged every non-modifier `public` function, noisily firing on view/pure getters. Tightened regex with negative lookahead `(?!.*\b(?:view|pure|constant)\b)` — getters no longer flagged; state-mutators still flagged.
+
+#### **Added (coverage expansion)**
+
+* **+16 regex patterns across 3 language stacks** (`patterns.py`):
+  * **Rust** (6): `unsafe {}` blocks, `unsafe fn`, `std::mem::transmute`, `std::mem::forget`, `.unwrap_unchecked`, `from_raw_parts`, `rand::random` (weak RNG for security).
+  * **Go** (6): `"math/rand"` import + call-site, SQL concat/`Sprintf` in `db.Query`/`Exec`, `http.ListenAndServe` (missing TLS), `filepath.Join` with request data, `exec.Command` with formatted/concat string.
+  * **GraphQL** (4): `introspection: true`, `GRAPHQL_PLAYGROUND=true`, `graphiql: true`, `ApolloServer({...})` config (verify depth/complexity limits for DoS).
+* **External tools — cross-cutting additions** ([external.py](.agent/skills/security-audit/scripts/audit/external.py)):
+  * `semgrep --config auto` (de-facto SAST standard since 2024) now runs for any project type.
+  * `gitleaks detect` (primary) with `trufflehog filesystem` fallback — stronger secret detection than regex-only.
+  * Missing tools remain non-fatal (per `run_command` contract).
+* **ReDoS guard**: added `MAX_LINE_LENGTH = 4000` to [config.py](.agent/skills/security-audit/scripts/audit/config.py); `scan_code_patterns` now skips pathologically long lines (minified JS routinely has >100k-char single lines, triggering catastrophic backtracking on complex regex). Real source code lines almost never exceed 4k chars.
+* **`fuzzing_invariants.md` expanded 42 → 170+ lines**: 8 invariant categories (accounting, access control, monotonicity, pausability, ERC-20, ERC-4626, oracle, reentrancy); Foundry / Echidna / Medusa / Halmos setup; mandatory handler-based fuzzing pattern with ghost state; depth requirement table by criticality; 10-item edge-case checklist; post-fuzz regression discipline.
+
+#### **Documentation**
+
+* [SKILL.md §2](.agent/skills/security-audit/SKILL.md) now documents `--max-size` flag, Rust/Go/GraphQL coverage, semgrep/gitleaks cross-cutting tools, ReDoS guard, and clarifies that `--scan-type external` runs ONLY external tools (SKIPS regex scans) — previously ambiguous.
+* Version bumped to v3.3 in SKILL.md frontmatter, header, and `run_audit.py` module docstring + CLI description.
+
+#### **Verification (smoke-tested)**
+
+* Self-exclusion holds on own skill dir (0 findings).
+* `pyproject.toml` alone → `Missing Lock File` (pip) — previously silent.
+* `requirements.txt` alone → `Missing Lock File` (pip) — previously silent.
+* Nested `docs/sbom.json` detected via rglob — previously reported missing.
+* Rust test file (`unsafe {}`, `std::mem::transmute`, `rand::random::<u32>()`) → all 3 patterns fire.
+* Solidity test: `view` getter skipped, `public` state-mutator flagged.
+* Config/deps/IaC/SBOM scans on repo root all pass without regression.
+
+#### **Impact**
+
+* Python projects without real lock files (Pipfile.lock/poetry.lock/uv.lock/pdm.lock) now receive supply-chain warnings — previously false-negative. Hash-pinned `requirements.txt` (pip-compile output with `--hash=sha256:` lines) is accepted as a lock (avoids false-positive on pip-tools mainstream pattern, added in Round 4).
+* Rust, Go, and GraphQL codebases receive **initial** in-process regex coverage. For depth, `gosec`/`govulncheck`/`semgrep`/`cargo-audit`/`clippy` remain primary (invoked via `--scan-type external`); the in-process patterns are fast signalling, not a replacement.
+* Minified bundles up to 15 MB are now scanned for accidentally-committed secrets (previously 5 MB cutoff).
+* Adversarial convergence signal: `issues-found` at R3 (3 actionable bugs fixed in P1–P2) and again at R4 (10 defects — 4 broken patterns + pip-compile false-positive regression + SBOM perf regression + test gap — all fixed before release tag).
+
+---
+
 ### **v3.14.1 — VDD adversarial-review fixes on v3.14.0**
 
 Post-release adversarial critique of v3.14.0 surfaced 7 findings (2 HIGH, 4 MED, 2 LOW). All addressed in this patch. No behavior change for Claude Code users; all fixes are rigor/documentation improvements that close silent-fail modes.

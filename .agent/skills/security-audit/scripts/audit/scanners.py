@@ -8,12 +8,12 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
+from . import config as _config
 from .config import (
     CODE_EXTENSIONS,
     CONFIG_EXTENSIONS,
     IAC_EXTENSIONS,
     IAC_FILENAMES,
-    MAX_FILE_SIZE,
     SEVERITY_ORDER,
     SKIP_DIRS,
 )
@@ -30,36 +30,57 @@ def scan_dependencies(project_path: str) -> Dict[str, Any]:
     """Validate supply chain security (OWASP A06/A08, CWE-1104)."""
     results = {"tool": "dependency_scanner", "findings": [], "status": "[OK] Secure"}
 
-    lock_files = {
-        "npm": ["package-lock.json", "npm-shrinkwrap.json"],
-        "yarn": ["yarn.lock"],
-        "pnpm": ["pnpm-lock.yaml"],
-        "pip": ["requirements.txt", "Pipfile.lock", "poetry.lock", "uv.lock"],
-        "rust": ["Cargo.lock"],
-        "go": ["go.sum"],
+    # Ecosystem -> (type markers, accepted lock files).
+    # `requirements.txt` lists deps but does NOT pin a full transitive graph
+    # with hashes, so it is NOT counted as a lock file by default. Exception:
+    # pip-compile output with `--hash=sha256:` lines IS effectively a lock.
+    ecosystems = {
+        "javascript": {
+            "markers": ["package.json"],
+            "locks": ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"],
+        },
+        "python": {
+            "markers": ["pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile"],
+            "locks": ["Pipfile.lock", "poetry.lock", "uv.lock", "pdm.lock"],
+        },
+        "rust": {
+            "markers": ["Cargo.toml"],
+            "locks": ["Cargo.lock"],
+        },
+        "go": {
+            "markers": ["go.mod"],
+            "locks": ["go.sum"],
+        },
     }
 
-    for manager, files in lock_files.items():
-        if manager == "pip" and (Path(project_path) / "requirements.txt").exists():
+    def _python_has_hash_pinned_requirements(base: Path) -> bool:
+        """pip-compile output: requirements.txt with `--hash=sha256:` is a de-facto lock."""
+        req = base / "requirements.txt"
+        if not req.exists():
+            return False
+        try:
+            with open(req, 'r', encoding='utf-8', errors='ignore') as f:
+                # Stop scanning after 1MB; hash lines appear early in real pip-compile output.
+                sample = f.read(1024 * 1024)
+            return '--hash=sha256:' in sample
+        except OSError:
+            return False
+
+    for eco, spec in ecosystems.items():
+        base = Path(project_path)
+        is_type = any((base / m).exists() for m in spec["markers"])
+        if not is_type:
             continue
-
-        is_type = False
-        if manager in ["npm", "yarn", "pnpm"] and (Path(project_path) / "package.json").exists():
-            is_type = True
-        elif manager == "rust" and (Path(project_path) / "Cargo.toml").exists():
-            is_type = True
-        elif manager == "go" and (Path(project_path) / "go.mod").exists():
-            is_type = True
-
-        if is_type:
-            has_lock = any((Path(project_path) / f).exists() for f in files)
-            if not has_lock:
-                results["findings"].append({
-                    "type": "Missing Lock File",
-                    "severity": "high",
-                    "cwe": "CWE-1104",
-                    "message": f"{manager}: No lock file found. Supply chain integrity at risk."
-                })
+        has_lock = any((base / f).exists() for f in spec["locks"])
+        if not has_lock and eco == "python" and _python_has_hash_pinned_requirements(base):
+            has_lock = True  # pip-compile hash-pinned requirements.txt counts as lock
+        if not has_lock:
+            results["findings"].append({
+                "type": "Missing Lock File",
+                "severity": "high",
+                "cwe": "CWE-1104",
+                "message": f"{eco}: No lock file found (expected one of: {', '.join(spec['locks'])}). Supply chain integrity at risk."
+            })
 
     # Run npm audit if applicable
     if (Path(project_path) / "package.json").exists():
@@ -133,9 +154,9 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
                 continue
 
             try:
-                if filepath.stat().st_size > MAX_FILE_SIZE:
+                if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
-                    print(f"[WARN] Skipped {filepath}: exceeds {MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
+                    print(f"[WARN] Skipped {filepath}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
                     continue
             except OSError:
                 continue
@@ -145,8 +166,19 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
             try:
                 with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
+                    # ReDoS guard: filter out pathologically long lines before regex.
+                    # All SECRET_PATTERNS are line-local (no multi-line matches in the
+                    # current pattern set, including BEGIN...KEY which is one-line marker).
+                    safe_lines = [
+                        ln for ln in content.splitlines()
+                        if len(ln) <= _config.MAX_LINE_LENGTH
+                    ]
+                    safe_content = "\n".join(safe_lines)
+                    skipped_lines = content.count("\n") + 1 - len(safe_lines)
+                    if skipped_lines > 0:
+                        print(f"[WARN] {filepath}: skipped {skipped_lines} line(s) > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
                     for pattern, secret_type, severity, cwe in SECRET_PATTERNS:
-                        matches = re.findall(pattern, content, re.IGNORECASE)
+                        matches = re.findall(pattern, safe_content, re.IGNORECASE)
                         if matches:
                             results["findings"].append({
                                 "file": str(filepath.relative_to(project_path)),
@@ -160,7 +192,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
 
                     # High-entropy string detection for suspicious variable names
                     entropy_pattern = r'(?:secret|private[_-]?key|auth[_-]?token|api[_-]?key|password|credential)\s*[=:]\s*["\']([^"\']{16,})["\']'
-                    for match in re.finditer(entropy_pattern, content, re.IGNORECASE):
+                    for match in re.finditer(entropy_pattern, safe_content, re.IGNORECASE):
                         value = match.group(1)
                         entropy = shannon_entropy(value)
                         if entropy > 4.5:
@@ -211,9 +243,9 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
                 continue
 
             try:
-                if filepath.stat().st_size > MAX_FILE_SIZE:
+                if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
-                    print(f"[WARN] Skipped {filepath}: exceeds {MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
+                    print(f"[WARN] Skipped {filepath}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
                     continue
             except OSError:
                 continue
@@ -224,6 +256,9 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
                 with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                     lines = f.readlines()
                     for line_num, line in enumerate(lines, 1):
+                        # ReDoS guard: skip pathologically long lines (minified bundles, token blobs).
+                        if len(line) > _config.MAX_LINE_LENGTH:
+                            continue
                         for pattern, name, severity, category, cwe in DANGEROUS_PATTERNS:
                             if re.search(pattern, line, re.IGNORECASE):
                                 results["findings"].append({
@@ -271,7 +306,7 @@ def scan_configuration(project_path: str) -> Dict[str, Any]:
                 continue
 
             try:
-                if filepath.stat().st_size > MAX_FILE_SIZE:
+                if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
                     continue
             except OSError:
@@ -327,7 +362,7 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
                 continue
 
             try:
-                if filepath.stat().st_size > MAX_FILE_SIZE:
+                if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
                     continue
             except OSError:
@@ -338,6 +373,15 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
             try:
                 with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
+
+                    # ReDoS guard: IaC patterns may span lines (re.MULTILINE). Instead of
+                    # filtering lines (breaks multi-line patterns), skip the entire file
+                    # if any line is pathologically long. Legit YAML/Dockerfile/Terraform
+                    # never has >4k-char lines; only minified blobs do.
+                    if any(len(ln) > _config.MAX_LINE_LENGTH for ln in content.splitlines()):
+                        results["skipped_files"] += 1
+                        print(f"[WARN] Skipped IaC {filepath}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
+                        continue
 
                     # Heuristic: for generic YAML/JSON files, only apply patterns
                     # matching the detected IaC type (prevents false positives on docs)
@@ -387,19 +431,33 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
 
 
 def scan_sbom(project_path: str) -> Dict[str, Any]:
-    """Check for SBOM presence and optionally generate one."""
+    """Check for SBOM presence recursively via os.walk with early SKIP_DIRS prune.
+
+    Uses os.walk (not Path.rglob) because rglob traverses SKIP_DIRS first and only
+    filters after yielding — on a monorepo with node_modules, that is O(millions).
+    os.walk with `dirs[:] = ...` pruning skips those subtrees entirely.
+    """
     results = {
         "tool": "sbom_scanner",
         "findings": [],
         "status": "[OK] SBOM check passed",
     }
 
-    sbom_files = list(Path(project_path).glob("*sbom*")) + \
-                 list(Path(project_path).glob("bom.json")) + \
-                 list(Path(project_path).glob("bom.xml")) + \
-                 list(Path(project_path).glob("*.spdx*")) + \
-                 list(Path(project_path).glob("*.cdx.*")) + \
-                 list(Path(project_path).glob("cyclonedx-bom.*"))
+    # Compiled fnmatch-style checks; case-insensitive so "SBOM.json" is caught.
+    sbom_patterns_re = [
+        re.compile(r'.*sbom.*', re.IGNORECASE),
+        re.compile(r'^bom\.(?:json|xml)$', re.IGNORECASE),
+        re.compile(r'.*\.spdx.*', re.IGNORECASE),
+        re.compile(r'.*\.cdx\..*', re.IGNORECASE),
+        re.compile(r'^cyclonedx-bom\..*$', re.IGNORECASE),
+    ]
+
+    sbom_files = []
+    for current_dir, dirs, files in os.walk(project_path, followlinks=False):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        for f in files:
+            if any(rx.match(f) for rx in sbom_patterns_re):
+                sbom_files.append(Path(current_dir) / f)
 
     if not sbom_files:
         results["findings"].append({
@@ -412,21 +470,5 @@ def scan_sbom(project_path: str) -> Dict[str, Any]:
         results["status"] = "[?] SBOM missing"
     else:
         results["status"] = f"[OK] SBOM found: {', '.join(f.name for f in sbom_files[:3])}"
-
-    # Try to run syft or cdxgen if available
-    for tool_cmd, tool_name in [
-        (["syft", ".", "-o", "json", "--quiet"], "syft"),
-        (["npx", "@cyclonedx/cdxgen", "--no-recurse", "-o", "/dev/null"], "cdxgen"),
-    ]:
-        try:
-            result = subprocess.run(
-                [tool_cmd[0], "--version"],
-                capture_output=True, text=True, timeout=10
-            )
-            if result.returncode == 0:
-                print(f"[*] {tool_name} is available for SBOM generation", file=sys.stderr)
-                break
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            continue
 
     return results

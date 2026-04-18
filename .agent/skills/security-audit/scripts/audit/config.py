@@ -27,8 +27,18 @@ IAC_FILENAMES = {
     'Containerfile', 'kustomization.yaml', 'kustomization.yml',
 }
 
-# Self-exclusion: skip the scanner's own directory to prevent false positives
-SELF_DIR = str(Path(__file__).resolve().parent.parent)
+# Self-exclusion: skip the scanner's ENTIRE skill directory (scripts + tests +
+# fixtures that intentionally contain "bad" patterns as regression evidence).
+# __file__ = .../security-audit/scripts/audit/config.py
+# .parent.parent.parent = .../security-audit/ (skill root)
+SELF_DIR = str(Path(__file__).resolve().parent.parent.parent)
 
-# Max file size to scan (5MB) — prevents OOM on large minified bundles
-MAX_FILE_SIZE = 5 * 1024 * 1024
+# Max file size to scan (15MB default). Minified production bundles
+# (vendor.js, bundle.js) can be 10-25MB; 5MB skipped too many of them.
+# Mutable so CLI can override via --max-size (see run_audit.py).
+MAX_FILE_SIZE = 15 * 1024 * 1024
+
+# ReDoS guard: lines longer than this are skipped during pattern scanning.
+# Minified JS lines regularly exceed 100k chars and trigger catastrophic backtracking
+# on some patterns. Real source code lines almost never exceed 4k chars.
+MAX_LINE_LENGTH = 4000

@@ -16,6 +16,68 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.14.3 — `/vdd-develop-all`: VDD chain workflow with Sarcasmotron review**
+
+New workflow composing the chain-iteration of `/develop-all` with the per-task adversarial Sarcasmotron loop of `/vdd-develop`. Walks the full `docs/PLAN.md`, applies hostile review to each task, gates progression on explicit user input between tasks, and **never auto-commits**. Built end-to-end through the framework's own VDD pipeline (Analyst → Architect → Planner → Developer → Sarcasmotron); the build itself surfaced 1 honest REJECTED iteration that fixed a real control-flow bug before merge. No architectural changes — pure composition of existing Layer A / Stage Cycle patterns.
+
+#### **Added**
+
+* **`.agent/workflows/vdd-05-run-full-task.md`** (53 lines) — new chain workflow with 5 numbered steps:
+  1. **Plan parsing** with `--dry-run` flag (preview chain without executing).
+  2. **Per-task VDD cycle** A→D: Builder → Verification → Sarcasmotron-roast → Refinement loop. Sarcasmotron persona is **delegated** to `vdd-03-develop.md` Step 3 (DRY — not inlined).
+  3. **HITL gate** between tasks (`yes / pause / abort`) with optional `--auto-continue=<seconds>` flag for unattended runs.
+  4. **Session-state persistence** on both APPROVED-merge and 3-REJECTED-STOP paths, with explicit ordering `merge → persist → HITL` (load-bearing — persist BEFORE the HITL prompt to survive runner crashes during user wait).
+  5. **Finalization** with full regression suite (`python3 tests/run_tests.py` + `validate_skill.py`) and metrics report (merged tasks, REJECTED iterations, Hallucination-Convergence vs honest APPROVED counts). **Auto-commit forbidden**; commit/PR decision belongs to the user.
+* **`.claude/commands/vdd-develop-all.md`** — slash-command registration, byte-identical structure to `develop-all.md` / `vdd-develop.md` modulo the workflow path.
+* **Resumability** section + behavioral smoke test: re-invoke `/vdd-develop-all` after `pause` reads `.agent/sessions/latest.yaml` and resumes from the first non-merged task in `docs/PLAN.md`.
+* **Refinement loop limit**: 3 REJECTED iterations per task before STOP + escalation (chosen over `/03-develop-single-task`'s 2 because Sarcasmotron is stricter — 2 escalates noisily, 4+ wastes tokens on stuck tasks).
+
+#### **Changed**
+
+* **[CLAUDE.md](CLAUDE.md) `## WORKSPACE WORKFLOWS`**: `+1 −1` — `/vdd-develop-all` inserted into Available Commands list next to `/vdd-develop`.
+* **[GEMINI.md](GEMINI.md)**: `+1 −1` — `vdd-05-run-full-task` added to Available Workflows enumeration.
+* **[AGENTS.md](AGENTS.md)** §Development Phase: `+1` — chain-execution pointer comparing `/develop-all` (auto-commit) vs `/vdd-develop-all` (adversarial, HITL, no auto-commit).
+* **[System/Docs/WORKFLOWS.md](System/Docs/WORKFLOWS.md)**: `+22 −5` across 4 surgical edits:
+  - **Mermaid diagram**: `VDDRunAll{{vdd-05-run-full-task}}` node added to Automation Loops, with edge labels distinguishing auto-commit (`RunAll`) from Sarcasmotron+HITL (`VDDRunAll`).
+  - **Automation Loops table**: new row for `vdd-05-run-full-task`; clarified existing `05-run-full-task` row to mention auto-commit; clarified `vdd-03-develop` as "single task".
+  - **FAQ**: new entry "When should I use `vdd-05-run-full-task` instead of `05-run-full-task`?" listing the 3 load-bearing differences (adversarial review, mandatory HITL, no auto-commit).
+  - **VDD Multi-Step example**: Step 3 expanded into 3a (single-task) and 3b (chain) variants.
+* **[.agent/workflows/vdd-03-develop.md](.agent/workflows/vdd-03-develop.md)**: `+2` — trailing cross-link note pointing at `/vdd-develop-all` for chain execution.
+
+#### **Fixed (caught during the build itself)**
+
+* **Hallucinated test path** (caught in Verification, before Sarcasmotron): user's original brief and intermediate spec drafts referenced `bash tests/test_e2e.sh` — a file that does not exist in this repo. The actual test harness is `python3 tests/run_tests.py`. Workflow file now uses the real path. Spec drift remains in `docs/TASK.md` and `docs/tasks/task-061-02-workflow-impl.md`; left as-is per "specs are write-once snapshots" — the implementation is canonical.
+* **Step 3 ↔ Step 4 control-flow ambiguity** (caught by Sarcasmotron, iteration 1 of 061-02): Step 2D originally said "APPROVED → merge → Step 3 (HITL)", but Step 4 (session-state persist) sat below Step 3 numerically and claimed "after every merge", leaving the persist-vs-HITL execution order undefined. Could lose merge state if a runner crashes during user wait. **Fix**: Step 2D now explicitly states `merge → Step 4 (persist) → Step 3 (HITL gate) → next task`, with "Order is load-bearing" callout.
+* **Missing failure-path session-state persist** (caught by Sarcasmotron, iteration 1 of 061-02): the 3-REJECTED-STOP path did not persist failure state, so resumption after escalation would silently retry from scratch. **Fix**: Step 2D now invokes Step 4 with `--status "failed_sarcasmotron" --add_blocker "Task <name>: 3 REJECTED iterations"` on the STOP path; Step 4 header annotates "called from Step 2D — both APPROVED and 3-REJECTED-STOP paths".
+
+#### **Verification**
+
+* All 7 RTM checks for Task 061-01 (stubs) GREEN on iteration 1.
+* All 7 RTM checks for Task 061-02 (logic) GREEN after iteration 2 (1 Verification fix + 2 Sarcasmotron fixes).
+* All 4 RTM checks for Task 061-03 (cross-links) GREEN on iteration 1 (`+1 −1` to CLAUDE.md, `+2 −0` to `vdd-03-develop.md`, no other workflow regressions).
+* Final regression suite: `python3 tests/run_tests.py` → 5/5 passed.
+* Workflow file 53 lines (≤150 line budget).
+
+#### **Process metrics (chain build)**
+
+| Metric | Value |
+|---|---|
+| Tasks merged | 3/3 |
+| Total REJECTED iterations across chain | 1 |
+| Hallucination-Convergence APPROVED | 3 |
+| Honest APPROVED (no nitpick-inversion) | 0 |
+| Verification-phase finds (caught **before** Sarcasmotron) | 1 |
+
+The single honest REJECTED iteration was a genuine save: Sarcasmotron caught a control-flow bug that would have made session-state semantics ambiguous to a future LLM consumer. The Verification phase separately caught a hallucinated test path inherited from the brief — exactly the filter Step B is designed to provide.
+
+#### **Impact**
+
+* New chain primitive for high-rigor multi-task batches: per-task adversarial scrutiny + mandatory HITL + zero accidental commits. Pairs with the existing `/develop-all` (fast path with auto-commit) — pick by required rigor, not by default.
+* Resumability via `latest.yaml` makes pause/resume a first-class operation: long batches can run across context-window resets without losing merge state.
+* Demonstrates the framework can build its own next-tier workflow under its own VDD pipeline, including catching real bugs via the adversarial loop. The Sarcasmotron persona's "Hallucination Convergence" exit rule worked as intended: round 1 produced 2 honest findings, round 2 reduced to bikeshedding.
+
+---
+
 ### **v3.14.2 — `security-audit` skill v3.2 → v3.3 (bug fixes + coverage + hardening)**
 
 Post-analysis critique of the `security-audit` skill surfaced 2 real bugs, 4 coverage gaps, and 6 refinement opportunities. All 14 items addressed. Scanner integrity is visibly improved; no breaking changes to CLI surface (new `--max-size` is additive).

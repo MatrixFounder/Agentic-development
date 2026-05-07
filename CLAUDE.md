@@ -72,7 +72,7 @@ Read these skills only when their functionality is required:
 Before starting the standard pipeline, check if the user's request matches a workflow.
 Workflows are available as slash commands via `.claude/commands/` and as files in `.agent/workflows/`.
 1. **Discovery**: Check `.agent/workflows/` for matching workflow files.
-    - **Available Commands**: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`, `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-adversarial`, `/vdd-multi`, `/full`, `/security-audit`, `/base-stub-first`, `/update-docs`, `/framework-upgrade`, `/iterative-design`, `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`.
+    - **Available Commands**: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`, `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-develop-all`, `/vdd-adversarial`, `/vdd-multi`, `/full`, `/security-audit`, `/base-stub-first`, `/update-docs`, `/framework-upgrade`, `/iterative-design`, `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`.
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.

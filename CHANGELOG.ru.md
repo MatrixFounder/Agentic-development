@@ -16,6 +16,68 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.14.3 — `/vdd-develop-all`: VDD chain workflow с Sarcasmotron-ревью**
+
+Новый workflow, композирующий итерацию по цепочке из `/develop-all` с per-task adversarial-петлёй Sarcasmotron из `/vdd-develop`. Проходит весь `docs/PLAN.md`, применяет hostile-review к каждой задаче, гейтит продвижение явным user input'ом между задачами и **никогда не делает auto-commit**. Собран end-to-end через VDD-пайплайн самого фреймворка (Analyst → Architect → Planner → Developer → Sarcasmotron); сама сборка всплыла 1 честный REJECTED-итерационный фикс реального control-flow бага до merge'а. Архитектурных изменений нет — чистая композиция существующих Layer A / Stage Cycle паттернов.
+
+#### **Добавлено**
+
+* **`.agent/workflows/vdd-05-run-full-task.md`** (53 строки) — новый chain-workflow с 5 пронумерованными шагами:
+  1. **Plan parsing** + флаг `--dry-run` (preview цепочки без исполнения).
+  2. **Per-task VDD-цикл** A→D: Builder → Verification → Sarcasmotron-роаст → Refinement loop. Persona Sarcasmotron **делегирована** в `vdd-03-develop.md` Step 3 (DRY — не инлайнится).
+  3. **HITL-гейт** между задачами (`yes / pause / abort`) с опциональным флагом `--auto-continue=<seconds>` для unattended-прогонов.
+  4. **Persist session-state** на обоих путях — APPROVED-merge и 3-REJECTED-STOP — с явным порядком `merge → persist → HITL` (load-bearing — persist ДО HITL-промпта, чтобы пережить crash runner'а во время ожидания user'а).
+  5. **Финализация** + полный regression-suite (`python3 tests/run_tests.py` + `validate_skill.py`) и метрики (merged tasks, REJECTED-итерации, Hallucination-Convergence vs honest APPROVED). **Auto-commit запрещён**; решение про commit/PR — за пользователем.
+* **`.claude/commands/vdd-develop-all.md`** — регистрация slash-команды, byte-identical структура к `develop-all.md` / `vdd-develop.md` за вычетом пути workflow'а.
+* **Секция Resumability** + behavioral smoke-test: повторный вызов `/vdd-develop-all` после `pause` читает `.agent/sessions/latest.yaml` и продолжает с первой не-merged задачи в `docs/PLAN.md`.
+* **Лимит Refinement-loop**: 3 REJECTED-итерации на задачу до STOP + escalation (выбрано против 2 в `/03-develop-single-task`, потому что Sarcasmotron строже — 2 эскалирует шумно, 4+ тратит токены на застрявшие задачи).
+
+#### **Изменено**
+
+* **[CLAUDE.md](CLAUDE.md) `## WORKSPACE WORKFLOWS`**: `+1 −1` — `/vdd-develop-all` вставлен в Available Commands рядом с `/vdd-develop`.
+* **[GEMINI.md](GEMINI.md)**: `+1 −1` — `vdd-05-run-full-task` добавлен в Available Workflows enumeration.
+* **[AGENTS.md](AGENTS.md)** §Development Phase: `+1` — chain-execution pointer, сравнение `/develop-all` (auto-commit) vs `/vdd-develop-all` (adversarial, HITL, no auto-commit).
+* **[System/Docs/WORKFLOWS.md](System/Docs/WORKFLOWS.md)**: `+22 −5`, 4 хирургических правки:
+  - **Mermaid-диаграмма**: добавлен node `VDDRunAll{{vdd-05-run-full-task}}` в Automation Loops, с edge-лейблами отличающими auto-commit (`RunAll`) от Sarcasmotron+HITL (`VDDRunAll`).
+  - **Таблица Automation Loops**: новая строка под `vdd-05-run-full-task`; уточнена строка `05-run-full-task` (упомянут auto-commit); уточнено `vdd-03-develop` как "single task".
+  - **FAQ**: новый вопрос "Когда использовать `vdd-05-run-full-task` вместо `05-run-full-task`?" — 3 load-bearing различия (adversarial-ревью, обязательный HITL, no auto-commit).
+  - **VDD Multi-Step example**: Step 3 расширен на 3a (single-task) и 3b (chain) варианты.
+* **[.agent/workflows/vdd-03-develop.md](.agent/workflows/vdd-03-develop.md)**: `+2` — trailing cross-link на `/vdd-develop-all` для прогона цепочки.
+
+#### **Исправлено (поймано в процессе самой сборки)**
+
+* **Галлюцинированный путь до тестов** (поймано в Verification, ДО Sarcasmotron'а): исходный бриф пользователя и промежуточные spec-черновики ссылались на `bash tests/test_e2e.sh` — файла, которого в репозитории нет. Реальный test-harness — `python3 tests/run_tests.py`. В workflow теперь корректный путь. Spec-drift остался в `docs/TASK.md` и `docs/tasks/task-061-02-workflow-impl.md`; оставлено как есть по правилу «спецификации — write-once снимки» — каноном является имплементация.
+* **Step 3 ↔ Step 4 control-flow ambiguity** (поймано Sarcasmotron'ом, итерация 1 в 061-02): Step 2D изначально говорил «APPROVED → merge → Step 3 (HITL)», но Step 4 (session-state persist) лежал ниже Step 3 численно и заявлял «after every merge», оставляя порядок persist-vs-HITL undefined. Можно было потерять merge-state при crash'е runner'а во время ожидания user'а. **Фикс**: Step 2D теперь явно указывает `merge → Step 4 (persist) → Step 3 (HITL gate) → next task`, с пометкой «Order is load-bearing».
+* **Отсутствующий persist на failure-пути** (поймано Sarcasmotron'ом, итерация 1 в 061-02): путь 3-REJECTED-STOP не сохранял failure-state, и резумирование после escalation тихо ретраило с нуля. **Фикс**: Step 2D теперь вызывает Step 4 с `--status "failed_sarcasmotron" --add_blocker "Task <name>: 3 REJECTED iterations"` на STOP-пути; заголовок Step 4 уточнён — «called from Step 2D — both APPROVED and 3-REJECTED-STOP paths».
+
+#### **Верификация**
+
+* Все 7 RTM-чеков для Task 061-01 (stubs) GREEN на итерации 1.
+* Все 7 RTM-чеков для Task 061-02 (logic) GREEN после итерации 2 (1 Verification-фикс + 2 Sarcasmotron-фикса).
+* Все 4 RTM-чека для Task 061-03 (cross-links) GREEN на итерации 1 (`+1 −1` в CLAUDE.md, `+2 −0` в `vdd-03-develop.md`, без регрессий в других workflow-файлах).
+* Финальный regression-suite: `python3 tests/run_tests.py` → 5/5 passed.
+* Workflow-файл 53 строки (≤150 line budget).
+
+#### **Метрики процесса (chain build)**
+
+| Метрика | Значение |
+|---|---|
+| Задач merged | 3/3 |
+| Всего REJECTED-итераций по цепочке | 1 |
+| APPROVED via Hallucination Convergence | 3 |
+| Honest APPROVED (без nitpick-инверсии) | 0 |
+| Находки Verification-фазы (поймано **до** Sarcasmotron'а) | 1 |
+
+Единственная честная REJECTED-итерация — реальный save: Sarcasmotron поймал control-flow баг, который сделал бы семантику session-state неоднозначной для будущего LLM-консумера. Verification-фаза отдельно поймала галлюцинированный путь до тестов, унаследованный из брифа — ровно тот фильтр, для которого Step B и нужен.
+
+#### **Impact**
+
+* Новый chain-примитив для высоко-rigor batch'ей: per-task adversarial-скрутiny + обязательный HITL + ноль случайных коммитов. Парится с существующим `/develop-all` (fast path с auto-commit) — выбор по требуемому уровню rigor'а, не by default.
+* Resumability через `latest.yaml` делает pause/resume first-class операцией: длинные batch'и могут идти через context-window resets без потери merge-state.
+* Демонстрирует, что фреймворк способен собрать свой собственный next-tier workflow под собственным VDD-пайплайном, включая ловлю реальных багов adversarial-петлёй. Exit-правило Sarcasmotron'а «Hallucination Convergence» сработало как задумано: round 1 — 2 честных findings, round 2 — bikeshedding.
+
+---
+
 ### **v3.14.2 — skill `security-audit` v3.2 → v3.3 (баг-фиксы + покрытие + hardening)**
 
 Post-analysis критика скила `security-audit` выявила 2 реальных бага, 4 пробела в покрытии и 6 полировочных пунктов. Все 14 закрыты. Целостность сканера заметно улучшена; breaking-changes в CLI-поверхности нет (новый `--max-size` аддитивный).

@@ -50,7 +50,7 @@ When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`
 ## WORKSPACE WORKFLOWS (Dynamic Dispatch)
 Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.
 1. **Discovery**: Look for files matching the pattern `[variant]-[stage]-[action].md` in `.agent/workflows/`.
-    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`.
+    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`.
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.

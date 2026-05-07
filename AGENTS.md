@@ -69,6 +69,7 @@ The Orchestrator natively supports structured tool calling (Function Calling).
    - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
    - **SKILL CREATION GATE**: Before creating ANY file in `.agent/skills/`, you **MUST** run `python3 .agent/skills/skill-creator/scripts/init_skill.py <name> --tier <N>`. Manual creation is **PROHIBITED**. For modifying existing skills, use `skill-enhancer`.
    - Verify with `System/Agents/09_code_reviewer_prompt.md` using `skill-code-review-checklist`.
+   - **Chain execution**: For executing all tasks in `docs/PLAN.md` automatically, use `/develop-all` (standard Developer→Reviewer loop, auto-commits at end) or `/vdd-develop-all` (per-task adversarial Sarcasmotron review, mandatory inter-task HITL gate, **no auto-commit**, resumable from session-state, max 3 REJECTED iterations before escalation).
 
 ## BEHAVIOR RULES
 - **Context Loading**: When moving to a new phase, explicitly read the prompt file AND the required skills.

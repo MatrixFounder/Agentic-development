@@ -65,6 +65,7 @@ graph TD
     %% Automation Loops
     subgraph Loops [Automation Loops]
         RunAll{{05-run-full-task}}:::loop
+        VDDRunAll{{vdd-05-run-full-task}}:::loop
     end
 
     %% Atomic Actions
@@ -100,7 +101,8 @@ graph TD
     Base -->|2. Planning| Plan
     Base -->|3. Loop| RunAll
 
-    RunAll -->|Iterates| Dev
+    RunAll -->|Iterates + auto-commits| Dev
+    VDDRunAll -->|Iterates with Sarcasmotron + HITL gate, no auto-commit| Dev
 
     VDDMulti -->|Parallel spawn Layer A| CritLogic
     VDDMulti -->|Parallel spawn Layer A| CritSec
@@ -155,8 +157,9 @@ The workflows are organized into three categories:
 
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
-| **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. Stops on error. | `run 05-run-full-task` |
-| **VDD Develop** | The VDD Loop Engine. Runs the Adversarial "Sarcasmotron" loop for tasks. | `run vdd-03-develop` |
+| **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. **Auto-commits at end.** Stops on error. | `run 05-run-full-task` |
+| **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task. | `run vdd-03-develop` |
+| **VDD Run Full Task** | **VDD Chain Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, applies adversarial Sarcasmotron review per task. Mandatory inter-task HITL gate (`yes / pause / abort`). Max 3 REJECTED iterations before escalation. **No auto-commit.** Resumable from `.agent/sessions/latest.yaml` after `pause`. Supports `--dry-run` and `--auto-continue=<sec>` flags. | `run vdd-05-run-full-task` or `/vdd-develop-all` |
 
 ---
 
@@ -197,6 +200,14 @@ A: It parses `../../docs/PLAN.md`. For each entry (e.g., "Task 1.1"), it:
 2.  Waits for success.
 3.  Moves to the next task.
 4.  Verification is handled inside `03` (Developer <-> Reviewer loop).
+
+### Q: When should I use `vdd-05-run-full-task` instead of `05-run-full-task`?
+A: Pick `vdd-05-run-full-task` (slash: `/vdd-develop-all`) when you want **adversarial review per task** (Sarcasmotron persona — see `vdd-03-develop`) and explicit human checkpoints between tasks. It differs from `05-run-full-task` in three load-bearing ways:
+1.  **Adversarial review** instead of standard `code-reviewer`. Sarcasmotron rejects until the only remaining nitpicks are bikeshedding ("Hallucination Convergence" exit rule).
+2.  **Mandatory HITL gate** between tasks (`yes / pause / abort`) — chain stops by default, optionally `--auto-continue=<seconds>` for unattended runs.
+3.  **No auto-commit ever.** Final step prints metrics + `git status`; commit/PR decision belongs to the user. This is the load-bearing difference.
+
+It also escalates after **3 consecutive REJECTED** iterations (no silent retry) and is **resumable** from `.agent/sessions/latest.yaml` after `pause`. Use the standard `05-run-full-task` for fast, trusted, auto-committed runs; use the VDD variant when adversarial scrutiny matters more than throughput.
 
 ---
 
@@ -327,9 +338,15 @@ run vdd-01-start-feature
 run vdd-02-plan
 # → Review ../../docs/PLAN.md (structured as Epics → Issues → Sub-issues)
 
-# Step 3: VDD Development with Adversarial Loop
+# Step 3a: VDD Development — single task with Adversarial Loop
 run vdd-03-develop
-# → Each task goes through Builder → Verification → Sarcasmotron Roast
+# → One task: Builder → Verification → Sarcasmotron Roast
+
+# Step 3b (alternative): VDD Development — chain over the entire PLAN.md
+run vdd-05-run-full-task        # or: /vdd-develop-all
+# → For each task in PLAN.md: vdd-03-develop cycle + HITL gate between tasks.
+# → Max 3 REJECTED iterations per task before escalation. No auto-commit.
+# → Resumable: re-invoke after `pause` to continue from the first non-merged task.
 
 # Step 4 (Optional): Run adversarial refinement on entire codebase
 run vdd-adversarial

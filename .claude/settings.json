@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(ls *)",
@@ -35,7 +38,17 @@
       "Bash(python3 .agent/tools/task_id_tool.py *)",
       "Bash(python3 .agent/skills/skill-creator/scripts/validate_skill.py *)",
       "Bash(python3 .agent/skills/skill-creator/scripts/init_skill.py *)",
-      "Bash(python3 System/scripts/doctor.py*)"
+      "Bash(python3 System/scripts/doctor.py*)",
+      "Bash(bash /Users/sergey/.claude/plugins/cache/universal-skills/marp-slide/1.0.0/skills/marp-slide/scripts/install.sh)",
+      "Bash(/Users/sergey/.claude/plugins/cache/universal-skills/marp-slide/1.0.0/skills/marp-slide/scripts/render docs/presentation/FRAMEWORK_WEBINAR.marp.md --format pptx)",
+      "Bash(python3 /Users/sergey/dev-projects/agentic-development/.agent/tools/task_id_tool.py --help)",
+      "Bash(python3 /Users/sergey/dev-projects/agentic-development/.agent/tools/task_id_tool.py vdd-develop-all)",
+      "Bash(python3 tests/run_tests.py)",
+      "Bash(python3 -m unittest discover -s tests -v)"
+    ],
+    "additionalDirectories": [
+      "/Users/sergey/.claude/plugins/cache/universal-skills/marp-slide/1.0.0/skills/marp-slide/scripts",
+      "/Users/sergey/.claude/plugins/marketplaces/universal-skills/skills/marp-slide/scripts"
     ]
   },
   "hooks": {
@@ -50,8 +63,5 @@
         ]
       }
     ]
-  },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }

@@ -21,3 +21,5 @@ description: Develop a task using the Adversarial Loop
 4. **Refinement Strategy**:
     - **REJECTED**: If Sarcasmotron finds legitimate logical flaws, security risks, or slop -> **Go to Step 2.1**.
     - **APPROVED**: If Sarcasmotron starts nitpicking style or inventing issues ("Hallucination Convergence") -> **Merge and Proceed**.
+
+> **Для прогона всей цепочки задач — см. `/vdd-develop-all` (`.agent/workflows/vdd-05-run-full-task.md`).**

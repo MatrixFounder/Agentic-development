@@ -85,5 +85,21 @@ class TestProductSkills(unittest.TestCase):
         processed = wsjf_script.calculate_wsjf(rows, indices)
         self.assertEqual(processed[0]['score'], 4.0)
 
+def load_tests(loader, standard_tests, pattern):
+    """Augment the curated suite with the installer test package (Task 063-11).
+
+    `tests/installer/` is a flat (non-package) directory of unittest modules;
+    discovering it with its own `top_level_dir` lets the test modules import
+    their sibling `_base` helper.
+    """
+    installer_dir = PROJECT_ROOT / "tests" / "installer"
+    if installer_dir.is_dir():
+        standard_tests.addTests(
+            loader.discover(start_dir=str(installer_dir),
+                            top_level_dir=str(installer_dir))
+        )
+    return standard_tests
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,98 @@
+# agentic-development framework installer — vendor profiles.
+#
+# Config-as-data: a new vendor is added here without touching Python.
+# See docs/ARCHITECTURE.md §9.3 and docs/TASK.md (Task 063, Issue I1.3).
+#
+# Path conventions:
+#   - `source` paths are relative to the framework root (= .agentic-development/).
+#   - `path` values are relative to the target project root.
+#
+# Component actions:
+#   link_per_item  - symlink each entry of `source` into `path` (per-item)
+#   link_folder    - one folder-level symlink `path` -> `source`
+#   copy           - shutil.copytree(source -> path), symlinks dereferenced
+#   mkdir          - create an empty directory `path` (no `source` allowed)
+#
+# Component flags:
+#   optional: true     - skip silently if `source` is absent in the framework
+#   if_missing: true   - apply only when `path` does not already exist
+#                        (protects user-customized settings files)
+
+version: 1
+
+defaults:
+  agent_components:
+    - { path: ".agent/skills",    action: link_per_item, source: ".agent/skills" }
+    - { path: ".agent/workflows", action: link_per_item, source: ".agent/workflows" }
+    - { path: ".agent/tools",     action: link_folder,   source: ".agent/tools" }
+    - { path: ".agent/rules",     action: link_folder,   source: ".agent/rules" }
+    - { path: ".agent/sessions",  action: mkdir }
+  root_components:
+    - { path: "System", action: link_folder, source: "System" }
+
+vendors:
+
+  # Claude Code — full profile. Claude-native `@import` 3-file bootstrap.
+  claude:
+    bootstrap_strategy: at_import
+    bootstrap_file: CLAUDE.md
+    bootstrap_aliases: []
+    bootstrap_source: null
+    vendor_dir: .claude
+    git_root_required: false
+    components:
+      - { path: ".claude/skills",   action: link_per_item, source: ".claude/skills" }
+      - { path: ".claude/commands", action: link_per_item, source: ".claude/commands" }
+      - { path: ".claude/agents",   action: link_per_item, source: ".claude/agents" }
+      - { path: ".claude/hooks",    action: copy,          source: ".claude/hooks" }
+      - { path: ".claude/settings.json",       action: copy, source: ".claude/settings.json",       if_missing: true }
+      - { path: ".claude/settings.local.json", action: copy, source: ".claude/settings.local.json", if_missing: true }
+
+  # Google Antigravity — reads the shared .agent/ tree natively.
+  # Bootstrap: GEMINI.md only (Antigravity's native instruction file).
+  antigravity:
+    bootstrap_strategy: marker_block
+    bootstrap_file: GEMINI.md
+    bootstrap_aliases: []
+    bootstrap_source: GEMINI.md
+    vendor_dir: null
+    git_root_required: false
+    components:
+      - { path: ".agent/agents", action: link_per_item, source: ".claude/agents", optional: true }
+
+  # OpenAI Codex — AGENTS.md bootstrap; skills under .agents/ (plural).
+  # Codex walks from git-root down, so the target must be a git root.
+  codex:
+    bootstrap_strategy: marker_block
+    bootstrap_file: AGENTS.md
+    bootstrap_aliases: []
+    bootstrap_source: AGENTS.md
+    vendor_dir: .codex
+    git_root_required: true
+    components:
+      - { path: ".agents/skills", action: link_folder, source: ".agent/skills" }
+      - { path: ".codex",         action: mkdir }
+
+  # Gemini CLI — legacy profile (distinct from Antigravity).
+  gemini-cli:
+    bootstrap_strategy: marker_block
+    bootstrap_file: GEMINI.md
+    bootstrap_aliases: []
+    bootstrap_source: GEMINI.md
+    vendor_dir: .gemini
+    git_root_required: false
+    components:
+      - { path: ".gemini/hooks",         action: copy, source: ".gemini/hooks" }
+      - { path: ".gemini/settings.json", action: copy, source: ".gemini/settings.json", if_missing: true }
+
+  # Cursor — consumes .cursor/skills/ directly; reads AGENTS.md for instructions
+  # (Cursor supports the cross-tool AGENTS.md standard).
+  cursor:
+    bootstrap_strategy: marker_block
+    bootstrap_file: AGENTS.md
+    bootstrap_aliases: []
+    bootstrap_source: AGENTS.md
+    vendor_dir: .cursor
+    git_root_required: false
+    components:
+      - { path: ".cursor/skills", action: link_per_item, source: ".agent/skills" }

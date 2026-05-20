@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.14.2
+# Multi-Agent Software Development System v3.15.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -15,7 +15,7 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 
 ## 📋 Table of Contents
 - [Installation & Setup](#-installation--setup)
-  - [1. Copy Framework Folders](#1-copy-framework-folders)
+  - [1. Install the Framework](#1-install-the-framework)
   - [2. Choose Your AI Assistant](#2-choose-your-ai-assistant)
   - [3. Installation Requirements (Python)](#3-installation-requirements-python)
 - [System Overview](#-system-overview)
@@ -42,7 +42,37 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 
 ## 📁 Installation & Setup
 
-### 1. Copy Framework Folders
+### 1. Install the Framework
+
+#### Recommended — automated installer (`install.sh`)
+
+Deploy the framework into a clean project with the installer:
+
+```bash
+cd /path/to/your-project
+/path/to/agentic-development/install.sh install --vendor claude
+```
+
+The installer (`install.sh` → `System/scripts/install.py`) supports **five vendor
+profiles** — `claude`, `antigravity`, `codex`, `cursor`, `gemini-cli` — and **five
+subcommands**:
+
+| Subcommand | Purpose |
+|------------|---------|
+| `install`   | Deploy the framework into a target project |
+| `switch`    | Switch the installed agent system (e.g. `--vendor antigravity`) |
+| `update`    | Re-sync framework symlinks after the framework changes |
+| `uninstall` | Remove framework artifacts (`--purge` also removes the framework itself) |
+| `doctor`    | Verify install integrity (`--json` for a machine-readable report) |
+
+The framework lives in `<project>/.agentic-development/` — a **symlink** to a sibling
+clone (default, `--mode symlink`) or a **full copy** (`--mode copy`, for airgapped / CI).
+Per-item relative symlinks point into it, and a managed `.gitignore` block keeps
+framework files out of your project's git history. Pre-flight conflict scanning never
+overwrites your own files (`CLAUDE.md`, `settings.json`, a user-owned `System/`, …);
+`--dry-run` previews the plan without touching the filesystem.
+
+#### Manual alternative — copy the folders
 
 Copy these folders to your project root:
 

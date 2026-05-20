@@ -1,25 +1,29 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-05-07T16:54:01.154171"
-mode: "update-docs"
+last_updated: "2026-05-20T15:10:55.950366"
+mode: "vdd-multi"
 
 current_task:
-  name: "vdd-develop-all-doc-sync"
-  status: "done"
+  name: "framework-installer"
+  status: "vendor-profiles-corrected"
   predicted_steps: 0
 
 context_summary: |
-  Documentation sync for /vdd-develop-all workflow complete. Updated 3 files: GEMINI.md (workflows list +1), AGENTS.md (Development Phase chain-execution note), System/Docs/WORKFLOWS.md (Mermaid diagram +1 node + edge, Automation Loops table +1 row + clarified existing row, FAQ +1 entry, VDD Multi-Step example expanded). Tests still GREEN (5/5).
+  Vendor-profile correction per user testing: antigravity now bootstrap=GEMINI.md only (was GEMINI.md+AGENTS.md — dual caused double-load); cursor now marker_block bootstrap=AGENTS.md (was 'none' — Cursor supports the AGENTS.md standard). vendors.yaml + test_bootstrap.py rewrite + test_subcommands/e2e + ARCHITECTURE 9.3 + TASK FR-15 updated. 172 installer tests OK. test-agentic antigravity+cursor reinstalled & verified.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "No ARCHITECTURE.md update — workflow is composition of existing Layer A / Stage Cycle patterns"
-  - "Stale PLAN.md (Documentation Extension epic) archived to docs/archives/PLAN-documentation-extension.md"
-  - "Task 061-01 APPROVED via Hallucination Convergence (Sarcasmotron forced into bikeshedding); 0 honest findings"
-  - "Spec drift in TASK.md / 061-02: 'bash tests/test_e2e.sh' path was hallucinated (file does not exist); workflow now uses 'python3 tests/run_tests.py'. TASK.md and 061-02 task spec NOT updated — left to user discretion to backport"
-  - "Task 061-03 APPROVED via Hallucination Convergence (all 6 Sarcasmotron attacks reduced to scope-pushback/aesthetics)"
-  - "Did not add full WORKSPACE WORKFLOWS section to AGENTS.md (would close pre-existing drift vs CLAUDE.md/GEMINI.md but is scope creep) — added single inline pointer in Development Phase instead"
+  - "063-07 APPROVED via Hallucination Convergence. Refinement: documented apply_bootstrap state-mutation side effect; +1 test for missing bootstrap_source branch."
+  - "063-08 APPROVED via Hallucination Convergence. Spec-drift fix: gitignore predicate uses resolve() not the spec's buggy readlink-parts[0]. Refinement: extracted installer/paths.py to eliminate triple-duplicated path-confinement helper (touched symlinks.py + state.py — justified single-sourcing of a safety-critical check)."
+  - "063-09 APPROVED via Hallucination Convergence. Real bug caught by test+fixed: dry-run was creating .agentic-development before the dry-run gate (moved ensure_agentic_dev after preflight). Refinement: +2 tests for FR-14 codex git-root check. Signature deviations documented: classify_path drops unused state param; preflight_scan drops profile/state, adds force_system_link."
+  - "063-10 APPROVED via Hallucination Convergence. 2 real bugs caught by tests+fixed: create_snapshot crashed on overlapping dir+children paths (now sorts shallowest-first, skips captured descendants); stale TestStubDispatch removed. Refinement: +1 test (update leaves settings.json untouched)."
+  - "063-11 APPROVED via Hallucination Convergence. Real bug caught by integration suite + fixed: copy_tree relied on shutil ignore_dangling_symlinks which resolves relative symlink targets against process CWD — framework's broken .cursor/skills crashed copy mode when CWD=repo root. Fixed with a CWD-independent ignore callback. Refinement: test_wrapper.sh now truly simulates missing PyYAML via a stub python3 (was a structural grep)."
+  - "Step 5 finalization: full regression green for all Task 063 scope. Pre-existing unrelated failure noted: tests/test_product_scripts.py fails under bare 'unittest discover -s tests' (import init_product) — untouched by Task 063, out of scope. 3 real bugs caught+fixed by the Verify->Roast loop during the chain: dry-run FS-mutation ordering (063-09), create_snapshot overlapping-paths crash (063-10), copy_tree CWD-dependent dangling-symlink resolution (063-11)."
+  - "/vdd-multi fixed: _remove_install ownership-preserving (no wholesale rmtree of user vendor dirs); switch writes fresh state (no stale-hash inheritance, crash-safe); managed_block rejects marker-line injection; doctor validates state schema; update handles cross-FS IntegrityError; _atomic_symlink random temp; apply_retention floors at 1; System added to _SCAN_DIRS (was leaking on uninstall); install.sh English; ARCHITECTURE 9.6 TOCTOU wording corrected. Completeness: all 11 tasks confirmed fully implemented, no stubs."
+  - "/update-docs: did NOT archive docs/TASK.md (Task 063) — the installer work is still uncommitted; task rotation is premature. TASK.md/ARCHITECTURE.md verified current; no reverse-engineering needed."
+  - "Live install test caught a genuine copy-mode bug: shutil.copytree(symlinks=False) skipped the framework's .claude/skills symlink (valid but relative -> CWD-resolved as dangling). Fix: copy_tree uses symlinks=True, preserving framework-internal relative symlinks self-consistently inside the copy. +1 regression test (test_copy_mode_populates_symlink_sourced_component)."
+  - "antigravity: bootstrap_file GEMINI.md, bootstrap_aliases [] (no AGENTS.md). cursor: bootstrap_strategy none->marker_block, bootstrap_file AGENTS.md. FR-15 reframed from 'Antigravity dual bootstrap' to 'per-vendor bootstrap-file mapping'."
 
 completed_tasks:
   - "Task A"
@@ -28,3 +32,14 @@ completed_tasks:
   - "task-061-01-workflow-stubs"
   - "task-061-02-workflow-impl"
   - "task-061-03-cross-links"
+  - "task-063-01-installer-skeleton"
+  - "task-063-02-vendors-errors"
+  - "task-063-03-state-backup"
+  - "task-063-04-framework-root"
+  - "task-063-05-symlink-engine"
+  - "task-063-06-managed-block"
+  - "task-063-07-bootstrap"
+  - "task-063-08-gitignore"
+  - "task-063-09-conflict-install"
+  - "task-063-10-subcommands"
+  - "task-063-11-integration-tests"

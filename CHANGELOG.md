@@ -16,6 +16,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.15.0 — Framework Installer: `install.sh` (5 vendors, 5 subcommands)**
+
+A bootstrap-time CLI that deploys the framework into a clean target project under a chosen agent-system profile — replacing manual folder copying. The framework lives in the target's `.agentic-development/` (a symlink to a sibling clone, or a full copy); per-item relative symlinks point into it; a SHA-256-hash-protected managed `.gitignore` block keeps framework files out of the project's git history. Built end-to-end through the framework's own VDD pipeline (Analyst → Architect → Planner → an 11-task `/vdd-develop-all` chain → 3-critic `/vdd-multi` adversarial review). The adversarial passes caught and fixed real bugs before merge — a `--dry-run` that mutated the filesystem, a snapshot crash on overlapping paths, a CWD-dependent `copytree` symlink-resolution bug, and an `uninstall` that could delete user-owned content. The installer is a standalone bootstrap tool — **no runtime-pipeline changes**.
+
+#### **Added**
+
+* **`install.sh`** — minimal bash wrapper (`BASH_VERSION` guard, `python3`/PyYAML dependency check, `exec python3`).
+* **`System/scripts/install.py`** + **`System/scripts/installer/`** — 16-module Python package (stdlib + PyYAML only, per NFR-5).
+* **`System/scripts/vendors.yaml`** — declarative vendor profiles; a new agent system is added without touching Python.
+* **Five subcommands** — `install` / `switch` / `update` / `uninstall` / `doctor`.
+* **Five vendor profiles** — `claude`, `antigravity`, `codex`, `cursor`, `gemini-cli`.
+* **Two deployment modes** — `--mode symlink` (default, `.agentic-development/` → sibling clone) and `--mode copy` (self-contained, for airgapped / CI).
+* **Pre-flight conflict prevention** — every target path is classified (`safe` / `our` / `hard_conflict` / `soft_conflict`) before any write; `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`, user `settings.json`, and a user-owned `System/` are never overwritten. `--dry-run` previews the plan with **zero** filesystem mutation.
+* **Anti-clobber engine** — managed blocks in `.gitignore` and bootstrap files are SHA-256-hashed; a hand-edited block aborts the run with a unified diff unless `--force` (which backs the old version up first).
+* **`doctor`** — read-only integrity verifier with a `--json` report schema (broken symlinks, hash mismatches, state-schema check).
+* **`tests/installer/`** — 169 `unittest` tests (per-module unit + 10-scenario end-to-end + bash-wrapper smoke), wired into `tests/run_tests.py`.
+
+#### **Changed**
+
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — new **§9 Framework Installer Subsystem** (data model, components, invariants, security & safety).
+* **[README.md](README.md) §Installation** — `install.sh` documented as the recommended deployment method; manual folder-copy retained as the alternative.
+
+#### **Fixed**
+
+* Adversarial-review fixes folded in before merge: `--dry-run` filesystem mutation; snapshot overlapping-path crash; `copytree` CWD-dependent dangling-symlink resolution; `uninstall`/`switch` over-broad deletion of user content; `inject_block` marker-line injection; `doctor` state-schema gap; `apply_retention` able to delete every backup; a stale `System` symlink surviving `uninstall`.
+
 ### **v3.14.3 — `/vdd-develop-all`: VDD chain workflow with Sarcasmotron review**
 
 New workflow composing the chain-iteration of `/develop-all` with the per-task adversarial Sarcasmotron loop of `/vdd-develop`. Walks the full `docs/PLAN.md`, applies hostile review to each task, gates progression on explicit user input between tasks, and **never auto-commits**. Built end-to-end through the framework's own VDD pipeline (Analyst → Architect → Planner → Developer → Sarcasmotron); the build itself surfaced 1 honest REJECTED iteration that fixed a real control-flow bug before merge. No architectural changes — pure composition of existing Layer A / Stage Cycle patterns.

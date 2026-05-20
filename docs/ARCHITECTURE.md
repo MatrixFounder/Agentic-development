@@ -10,6 +10,7 @@
 - [6. Key Principles](#6-key-principles)
 - [7. Localization Strategy](#7-localization-strategy)
 - [8. Skill Architecture & Optimization Standards](#8-skill-architecture--optimization-standards)
+- [9. Framework Installer Subsystem](#9-framework-installer-subsystem)
 
 ## 1. Core Concept
 The system is built on a "Multi-Agent" architecture where different "Agents" (Personas defined by System Prompts) collaborate to solve tasks.
@@ -18,6 +19,7 @@ The Source of Truth for these agents is located in `System/Agents`.
 ## 2. Directory Structure
 ```text
 project-root/
+├── install.sh                     # [NEW v3.15] Framework installer (bash wrapper)
 ├── GEMINI.md                    # Orchestrator + core-principles
 ├── .cursor/rules/                 # Cursor Rules
 ├── AGENTS.md                      # References to rules + reading .AGENTS.md
@@ -40,7 +42,10 @@ project-root/
 │   │   ├── PRODUCT_DEVELOPMENT.md #[NEW] Product Playbook
 │   │   └── ...
 │   └── scripts/                 # [NEW] Framework Utilities (Tool Dispatcher)
-│       └── tool_runner.py
+│       ├── tool_runner.py
+│       ├── install.py           # [NEW v3.15] Installer entry-point
+│       ├── vendors.yaml         # [NEW v3.15] Vendor profiles config
+│       └── installer/           # [NEW v3.15] Installer module (see §9)
 ├── Translations/                # Localizations (RU)
 ├── src/                         # Project Code
 │   ├── services/
@@ -235,3 +240,140 @@ All new skills must be generated using `skill-creator`.
 - **Reason:** Enforces directory structure (`scripts/`, `examples/`, `tests/`) and runs validation checks (`validate_skill.py`).
 
 **[>> Read Full Skills Documentation <<](../System/Docs/SKILLS.md)**
+
+## 9. Framework Installer Subsystem
+
+> **Added in v3.15** (see [docs/TASK.md](TASK.md) — Task 063). Bootstrap-time tool, **not** part of the runtime agent pipeline.
+
+### 9.1 Purpose
+
+The installer deploys the agentic-development framework into a clean **target project** (separate from this repository) under a chosen vendor profile (Claude Code / Antigravity / Codex / Cursor / Gemini CLI). It is invoked from the framework root (this repo) but operates exclusively on the target project. Reference example of a manually-installed project: [/Users/sergey/dev-projects/Universal-skills](/Users/sergey/dev-projects/Universal-skills).
+
+### 9.2 Components
+
+```text
+agentic-development/                              # framework repo (source-of-truth)
+├── install.sh                                    # Bash wrapper (minimal: BASH_VERSION guard + exec python3)
+└── System/scripts/
+    ├── install.py                                # argparse entry-point (subcommands: install/switch/update/uninstall/doctor)
+    ├── vendors.yaml                              # Vendor profile config (5 profiles + defaults)
+    └── installer/                                # Python module (stdlib + PyYAML)
+        ├── cli.py                                # Subcommand dispatch
+        ├── vendors.py                            # vendors.yaml loader + per-action schema validator
+        ├── state.py                              # <target>/.agentic-installer-state.json
+        ├── framework_root.py                     # Creates/validates target/.agentic-development/ (symlink|copy)
+        ├── symlinks.py                           # link_one, link_per_item + reachability check
+        ├── copy.py                               # shutil.copytree wrapper with ignore-list
+        ├── managed_block.py                      # Marker block + sha256 hash (shared by gitignore + bootstrap)
+        ├── bootstrap.py                          # at_import + marker_block strategies
+        ├── gitignore.py                          # managed_block + !-exception scanner
+        ├── backup.py                             # Timestamped snapshots + retention
+        ├── platform.py                           # Windows detection, symlink probe
+        └── errors.py                             # InstallerError hierarchy + exit codes
+```
+
+After install, `target/.agentic-development/install.sh` is also available — re-runs don't require the original framework path.
+
+### 9.3 Data Model
+
+**`vendors.yaml`** (config-as-data; new vendor added without Python changes):
+
+```yaml
+version: 1
+defaults:
+  agent_components: [{path, action: link_per_item|link_folder|copy|mkdir, source?, optional?, if_missing?}]
+  root_components:  [{path, action, source}]
+vendors:
+  <vendor_name>:
+    bootstrap_strategy: at_import | marker_block | none
+    bootstrap_file:    str | null
+    bootstrap_aliases: [str]                      # extra bootstrap files beyond bootstrap_file (none of the shipped vendors use this)
+    bootstrap_source:  str                        # framework file whose content fills managed-block
+    vendor_dir:        str | null
+    git_root_required: bool                       # Codex only
+    components:        [<component-action-spec>]
+```
+
+**`<target>/.agentic-installer-state.json`** (lives at target project root, not inside `.agent/` — survives switch/uninstall):
+
+```json
+{
+  "version": 1,
+  "vendor": "claude",
+  "mode": "symlink",
+  "framework_path": "/path/to/agentic-development",
+  "agentic_development_is_symlink": true,
+  "installed_at": "ISO-8601 UTC",
+  "gitignore_block_hash": "sha256:...",
+  "bootstrap_blocks_hash": {"AGENTS.md": "sha256:...", "GEMINI.md": "sha256:..."},
+  "managed_paths": [".agent/skills/foo", ".claude/agents/bar.md", ...],
+  "skipped_components": ["System"]                 // user-conflict bypasses; single source of truth for any skipped path
+                                                   // (no separate boolean flags like `system_link_skipped` — the plan's wording was
+                                                   //  illustrative; the array carries the same information).
+}
+```
+
+**`doctor --json` output schema** (read-only diagnostic):
+
+```json
+{
+  "ok": true,                                       // overall health
+  "vendor": "claude",
+  "errors": [                                       // hard failures (exit 1)
+    {"code": "BROKEN_SYMLINK", "path": ".agent/skills/foo", "detail": "..."},
+    {"code": "HASH_MISMATCH",  "path": ".gitignore",        "detail": "..."},
+    {"code": "STATE_CORRUPT",  "path": ".agentic-installer-state.json", "detail": "..."}
+  ],
+  "warnings": [                                     // soft issues (exit 0)
+    {"code": "SKIPPED_COMPONENT", "path": "System", "reason": "user-owned at install time"},
+    {"code": "FOREIGN_FILE",      "path": ".claude/skills/my-local", "reason": "project-local — OK"}
+  ]
+}
+```
+
+### 9.4 Target Project Layout (after install)
+
+```text
+myapp/                                                  ← target project root
+├── .agentic-development/                              ← symlink|copy of framework (gitignored)
+├── .agent/{skills,workflows,agents}/<name>            ← per-item relative symlinks (../../.agentic-development/...)
+├── .agent/{tools,rules}                               ← folder symlinks
+├── .agent/sessions/                                   ← local runtime state (.gitkeep)
+├── .claude/ | .gemini/ | .codex/ | .cursor/           ← per-vendor (only the chosen one is populated)
+│   ├── settings.json                                  ← copy (if_missing — protects user customization)
+│   ├── hooks/                                         ← copy
+│   └── {skills,commands,agents}/<name>                ← per-item symlinks
+├── System → .agentic-development/System               ← folder symlink (skipped if user-owned)
+├── CLAUDE.md / AGENTS.md / GEMINI.md                  ← project-owned (NEVER overwritten)
+├── CLAUDE.local.md, CLAUDE.agentic.md                 ← Claude only (bridge files, gitignored)
+├── .agentic-installer-state.json                      ← installer state (gitignored)
+└── .gitignore                                         ← contains managed marker-block (hash-protected)
+```
+
+### 9.5 Key Invariants
+
+- **Anti-clobber:** Managed-blocks (gitignore + bootstrap) are SHA-256-hashed; on hash mismatch installer aborts with diff. `--force` saves the old version to `.agent/backups/` before overwriting.
+- **Don't-overwrite list:** `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` are NEVER overwritten, even with `--force` — installer only touches managed-blocks inside them.
+- **Pre-flight conflict scan:** Every path is classified `safe | our | hard_conflict | soft_conflict` BEFORE any FS operation. Conflicts default to skip + warning; `--force` enables overwrite (except the don't-overwrite list).
+- **Idempotency:** Re-running `install` with no source changes → `0 created, N already linked`.
+- **State outside `.agent/`:** `.agentic-installer-state.json` lives at target root so it survives `switch`/`uninstall` operations on `.agent/`.
+- **Vendor-aware bootstrap:** Claude uses Claude-native `@import` (3-file pattern); Antigravity/Codex/Gemini-CLI use marker-block injection (their bootstrap formats don't support `@import`).
+
+### 9.6 Security & Safety
+
+- No network access; no `git clone`; no shell execution of vendor content. Pure file operations.
+- No PyPI installs beyond the user-explicit `pip install pyyaml` (wrapper prints hint, doesn't install).
+- All destructive operations (overwrite, delete) require an explicit `--force` or `--purge` flag and are preceded by timestamped backup with retention (`--max-backups N`, default 5).
+- **Reachability check** (`os.stat(follow_symlinks=True)`) after each symlink creation guards against cross-FS dangling links.
+- **Canonical-path validation** (architecture-review fix): immediately after creating any symlink inside `target/`, installer asserts `Path(link).resolve().is_relative_to(framework_root.resolve())`. Symlinks whose resolved target escapes `framework_root` (e.g. crafted source name `../../../etc/passwd`) are deleted and a `ConflictError` is raised. Defends against malicious source-name traversal even though installer source paths come from a trusted `vendors.yaml`.
+- **TOCTOU between pre-flight scan and write**: pre-flight classifies each path at time `t0`. For the `link_folder` action (the only one that conditionally overwrites a single target), the path is re-verified via `reclassify_before_write()` at write-time `t1` before any FS mutation. `link_per_item` does not re-classify the whole component; instead each individual symlink is created by `link_one()`, which independently refuses to overwrite a foreign real file (`ConflictError`) and confines every link to the framework root (canonical-path guard). `copy` components are copy-if-absent (never overwrite). Net effect: no action silently clobbers user content under a TOCTOU window, though only `link_folder` performs an explicit second classification.
+- **Don't-overwrite enforcement**: `is_protected(filename)` returns True for `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` regardless of `--force`. The flag only modifies overwrite policy for managed-blocks inside protected files, never the files themselves.
+
+### 9.7 Out-of-Scope (post-MVP)
+
+- Git clone / submodule population strategies.
+- Migration to plural `.agents/` (currently fixed at singular `.agent/`).
+- MD→MDC transformer for Cursor `.cursor/rules/`.
+- `System/` rename in framework to remove the high-risk collision.
+
+See [docs/TASK.md §5](TASK.md) for full open-question list.

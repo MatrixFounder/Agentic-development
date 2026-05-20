@@ -30,6 +30,10 @@ def _make_fake_framework(root) -> None:
     (root / ".git" / "HEAD").write_text("ref", encoding="utf-8")
     (root / "__pycache__").mkdir()
     (root / "stale.pyc").write_text("x", encoding="utf-8")
+    # Runtime session state — must NOT land in the copy.
+    (root / ".agent" / "sessions").mkdir(parents=True)
+    (root / ".agent" / "sessions" / "latest.yaml").write_text("mode: dev\n", encoding="utf-8")
+    (root / ".agent" / "sessions" / "latest.yaml.lock").write_text("", encoding="utf-8")
     # A deliberately broken symlink (mirrors the framework's own .cursor/skills).
     os.symlink("does/not/exist", root / "broken.lnk")
 
@@ -114,6 +118,12 @@ class TestCopyMode(InstallerTestCase):
         self.assertFalse((agentic / ".git").exists())
         self.assertFalse((agentic / "__pycache__").exists())
         self.assertFalse((agentic / "stale.pyc").exists())
+
+    def test_copy_excludes_session_runtime_state(self) -> None:
+        # The framework's .agent/sessions/ runtime state must never be copied.
+        agentic = ensure_agentic_dev_copy(self.target, self.framework, force=False)
+        self.assertFalse((agentic / ".agent" / "sessions" / "latest.yaml").exists())
+        self.assertFalse((agentic / ".agent" / "sessions" / "latest.yaml.lock").exists())
 
     def test_copy_tolerates_broken_symlink(self) -> None:
         # _make_fake_framework planted broken.lnk — copy must not crash.

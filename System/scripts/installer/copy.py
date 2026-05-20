@@ -16,21 +16,36 @@ IGNORE_NAMES = (
     ".hypothesis",
     ".ruff_cache",
     "*.pyc",
+    "*.lock",
 )
 
 
+def _is_sessions_dir(directory: str) -> bool:
+    """True if ``directory`` is the framework's ``.agent/sessions`` runtime dir."""
+    path = Path(directory)
+    return path.name == "sessions" and path.parent.name == ".agent"
+
+
 def _ignore_factory():
-    """Build a ``copytree`` ignore callable: :data:`IGNORE_NAMES` + broken symlinks.
+    """Build a ``copytree`` ignore callable: :data:`IGNORE_NAMES` + broken
+    symlinks + the contents of ``.agent/sessions/`` (runtime session state).
 
     ``shutil.copytree``'s own ``ignore_dangling_symlinks`` resolves a symlink's
     raw (often relative) target against the *process CWD*, which misidentifies
     relative dangling symlinks (e.g. the framework's own ``.cursor/skills``).
     Excluding broken symlinks here — where the correct full path is known — is
     CWD-independent and reliable.
+
+    ``.agent/sessions/`` holds the framework's own runtime session state
+    (``latest.yaml`` and locks); it is never copied into an installed
+    framework — the target gets a fresh empty ``.agent/sessions/`` via the
+    ``mkdir`` component instead.
     """
     pattern_ignore = shutil.ignore_patterns(*IGNORE_NAMES)
 
     def ignore(directory, names):
+        if _is_sessions_dir(directory):
+            return set(names)  # drop all runtime session state from the copy
         ignored = set(pattern_ignore(directory, names))
         for name in names:
             full = os.path.join(directory, name)

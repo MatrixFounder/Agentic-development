@@ -1,7 +1,7 @@
 ---
 name: architecture-format-core
 description: Core structure for Architecture documents. For full templates with examples, load architecture-format-extended.
-version: 1.0
+version: 1.1
 tier: 1
 ---
 
@@ -153,12 +153,68 @@ List of questions requiring clarification from user.
 
 ---
 
+## Living Document & Index-Mode
+
+> [!IMPORTANT]
+> `docs/ARCHITECTURE.md` is a **single LIVING document**. It is updated **in place**
+> across tasks and is **NEVER** archived or rotated per-task. There is no
+> `docs/architectures/architecture-NNN-*.md`, nothing is moved into `docs/archives/`,
+> and `skill-archive-task` does **not** touch it. The only structural operation
+> permitted is the size-driven Index-Mode split below.
+
+### Size Threshold
+
+After writing/updating `docs/ARCHITECTURE.md`, check its size:
+
+```bash
+wc -l docs/ARCHITECTURE.md      # read-only, SAFE TO AUTO-RUN
+```
+
+- **≤ 1500 lines** → keep as a single file. Done.
+- **> 1500 lines** → perform the **Index-Mode split** below.
+
+### Index-Mode Split Procedure
+
+1. `mkdir -p docs/architectures` (idempotent, SAFE TO AUTO-RUN).
+2. Enumerate top-level (`## N. Title`) sections.
+3. **Extract large sections.** Rule of thumb: any section larger than ~150 lines is a
+   candidate; extract enough sections to bring the rewritten index under ~200 lines.
+   Small sections (e.g. Task Description, Open Questions) MAY stay inline in the index.
+4. For each extracted section, write its full content to
+   `docs/architectures/<section-slug>.md`, where `<section-slug>` is the kebab-case of
+   the section title **with no numeric prefix** (e.g. `## 7. Security` →
+   `docs/architectures/security.md`).
+   - Numeric prefixes are forbidden — they imply per-task versioning, the exact drift
+     this protocol removes. Section-slug names stay stable as content evolves.
+   - Each chunk file opens with an H1 = the section title and a one-line back-link:
+     `> Part of [docs/ARCHITECTURE.md](../ARCHITECTURE.md).`
+5. **Rewrite `docs/ARCHITECTURE.md` as an INDEX** (~under 200 lines) containing only:
+   - The H1 title.
+   - A banner: `> This is a living INDEX. Section bodies live in docs/architectures/.`
+   - A Table of Contents.
+   - Per extracted section: its heading + a **one-line summary** + a relative link,
+     e.g. `→ [details](architectures/security.md)`.
+   - Any small sections kept inline.
+
+### After the Split
+
+Once in Index-Mode:
+- Edit the relevant `docs/architectures/<slug>.md` chunk; keep the index's one-line
+  summary in sync.
+- A new top-level section becomes a new chunk file + a new index entry.
+- If a section is renamed, update **both** the chunk filename and the index link in the
+  same edit (avoids broken links).
+- Re-check the index against the ~200-line target after large edits.
+
+---
+
 ## Loading Conditions
 
 | Condition | Load |
 |-----------|------|
 | Updating existing architecture (minor change) | `core` only |
 | Adding new component to existing system | `core` only |
+| ARCHITECTURE.md exceeds 1500 lines (Index-Mode split) | `core` only |
 | Creating NEW system from scratch | `extended` |
 | Major refactor (>3 components changed) | `extended` |
 | Sophisticated requirement / complex task | `extended` |

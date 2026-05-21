@@ -90,7 +90,7 @@ Workflows are available as slash commands via `.claude/commands/` and as files i
    - **Apply Skill**: `skill-requirements-analysis`.
    - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
    - If `docs/TASK.md` exists and this is a new task:
-     - **Apply Skill**: `skill-archive-task` (handles archiving protocol).
+     - **Apply Skill**: `skill-archive-task` (rotates `docs/TASK.md` → `docs/tasks/` and `docs/PLAN.md` → `docs/plans/` in lockstep).
    - Create/Update `docs/TASK.md` based on user task.
    - (Self-Correction): Check your own TASK against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 
@@ -98,7 +98,7 @@ Workflows are available as slash commands via `.claude/commands/` and as files i
    - Read `System/Agents/04_architect_prompt.md`.
    - **Apply Skill**: `skill-architecture-design`.
    - Read `docs/ARCHITECTURE.md` (Current Source of Truth).
-   - Update `docs/ARCHITECTURE.md` if the new feature changes the system structure.
+   - Update `docs/ARCHITECTURE.md` **in place** if the new feature changes the system structure (living document — never per-task archived; split into `docs/architectures/` chunks only when it exceeds 1500 lines).
    - **CONSTRAINT**: Respect the "Stub-First" and "One Giant Column" strategies defined in Architecture.
    - (Verification): Validate with `System/Agents/05_architecture_reviewer_prompt.md` using `skill-architecture-review-checklist`.
 

@@ -1,13 +1,20 @@
 """
 Test Archive Protocol
 
-Tests for the 8 archiving scenarios from Task 033, plus VDD adversarial tests.
+Tests for the 8 archiving scenarios from Task 033, plus VDD adversarial tests
+and PLAN.md lockstep archiving (Step 7).
 
 Core Scenarios (from skill-archive-task):
 1. New task when TASK.md exists → archive
 5. New task when TASK.md does NOT exist → skip
 6. Refinement → skip (overwrite, no archive)
 8. ID conflict → tool returns corrected ID
+
+PLAN.md Lockstep (Step 7):
+- PLAN.md archived to docs/plans/plan-NNN-slug.md, reusing the TASK id/slug
+- Lockstep holds on a corrected ID
+- PLAN.md absent → skip; collision → error; docs/plans/ auto-created
+- Orphan guard: no lockstep id/slug → error
 
 VDD Adversarial Tests:
 - Missing Meta Information
@@ -24,7 +31,8 @@ from unittest.mock import patch, MagicMock
 from archive_protocol import (
     parse_task_meta,
     should_archive,
-    archive_task
+    archive_task,
+    archive_plan
 )
 
 
@@ -69,6 +77,14 @@ def task_malformed_id(clean_docs_dir):
     content = (FIXTURES_DIR / "task_malformed_id.md").read_text()
     task_file.write_text(content)
     return task_file
+
+
+@pytest.fixture
+def existing_plan(clean_docs_dir):
+    """Create docs/PLAN.md (a plan has no Meta block of its own)."""
+    plan_file = clean_docs_dir / "PLAN.md"
+    plan_file.write_text("# Development Plan\n\n- [ ] Phase 1: Stubs\n- [ ] Phase 2: Logic\n")
+    return plan_file
 
 
 # ============================================================================
@@ -322,6 +338,149 @@ class TestVDDAdversarial:
         
         assert result["status"] == "error"
         assert result["reason"] == "tool_error"
+
+
+# ============================================================================
+# PLAN.md LOCKSTEP TESTS (Step 7)
+# ============================================================================
+
+class TestArchivePlanLockstep:
+    """Tests for PLAN.md lockstep archiving (skill-archive-task Step 7)."""
+
+    def test_plan_archived_in_lockstep(self, clean_docs_dir, existing_task, existing_plan):
+        """
+        PLAN.md is archived to docs/plans/plan-NNN-slug.md, reusing the
+        id/slug returned by the TASK.md archive.
+        """
+        task_result = archive_task(
+            docs_dir=str(clean_docs_dir),
+            is_new_task=True,
+            current_task_slug="existing-feature",
+            current_task_id="042",
+        )
+        assert task_result["status"] == "archived"
+
+        plan_result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id=task_result["used_id"],
+            slug=task_result["slug"],
+        )
+
+        assert plan_result["status"] == "archived"
+        assert not existing_plan.exists(), "Original PLAN.md should be moved"
+
+        archived = clean_docs_dir / "plans" / "plan-042-existing-feature.md"
+        assert archived.exists(), "Plan archive should exist"
+
+    def test_lockstep_pairing(self, clean_docs_dir, existing_task, existing_plan):
+        """The archived TASK and PLAN filenames share the same ID and slug."""
+        task_result = archive_task(
+            docs_dir=str(clean_docs_dir),
+            is_new_task=True,
+            current_task_slug="existing-feature",
+            current_task_id="042",
+        )
+        plan_result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id=task_result["used_id"],
+            slug=task_result["slug"],
+        )
+
+        task_name = Path(task_result["archived_to"]).name   # task-042-existing-feature.md
+        plan_name = Path(plan_result["archived_to"]).name   # plan-042-existing-feature.md
+        assert task_name == plan_name.replace("plan-", "task-", 1)
+
+    def test_plan_lockstep_on_corrected_id(self, clean_docs_dir, existing_task, existing_plan):
+        """
+        When the TASK ID is corrected (042 -> 043) due to a conflict, PLAN.md
+        archives under the SAME corrected ID — not the originally proposed one.
+        """
+        # Force a conflict so the tool corrects 042 -> 043.
+        conflict = clean_docs_dir / "tasks" / "task-042-existing-feature.md"
+        conflict.write_text("# Conflict file")
+
+        task_result = archive_task(
+            docs_dir=str(clean_docs_dir),
+            is_new_task=True,
+            current_task_slug="existing-feature",
+            current_task_id="042",
+        )
+        assert task_result["status"] == "archived"
+        assert task_result["used_id"] == "043", "TASK ID should be corrected"
+
+        plan_result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id=task_result["used_id"],
+            slug=task_result["slug"],
+        )
+        assert plan_result["status"] == "archived"
+        assert (clean_docs_dir / "plans" / "plan-043-existing-feature.md").exists()
+
+    def test_plan_absent_skips(self, clean_docs_dir):
+        """No docs/PLAN.md → skip, no error."""
+        result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id="042",
+            slug="existing-feature",
+        )
+        assert result["status"] == "skipped"
+        assert result["reason"] == "no_plan"
+
+    def test_plan_collision_guard(self, clean_docs_dir, existing_plan):
+        """An existing plan archive is never overwritten."""
+        plans_dir = clean_docs_dir / "plans"
+        plans_dir.mkdir()
+        (plans_dir / "plan-042-existing-feature.md").write_text("# Existing archive")
+
+        result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id="042",
+            slug="existing-feature",
+        )
+        assert result["status"] == "error"
+        assert result["reason"] == "conflict"
+        assert existing_plan.exists(), "PLAN.md must NOT be moved on collision"
+
+    def test_plans_dir_auto_created(self, clean_docs_dir, existing_plan):
+        """docs/plans/ is created on demand (mkdir -p)."""
+        assert not (clean_docs_dir / "plans").exists()
+
+        result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id="007",
+            slug="feature",
+        )
+        assert result["status"] == "archived"
+        assert (clean_docs_dir / "plans").is_dir()
+
+    def test_plan_missing_lockstep_id(self, clean_docs_dir, existing_plan):
+        """
+        Orphan guard: a PLAN.md with no TASK identity (no used_id) cannot be
+        archived — it has no defensible ID of its own.
+        """
+        result = archive_plan(
+            docs_dir=str(clean_docs_dir),
+            used_id=None,
+            slug="feature",
+        )
+        assert result["status"] == "error"
+        assert result["reason"] == "missing_lockstep_id"
+        assert existing_plan.exists(), "PLAN.md must be left in place"
+
+    def test_plan_archive_permission_denied(self, clean_docs_dir, existing_plan):
+        """VDD: a failed move returns a clear error, not a crash."""
+        with patch('archive_protocol.shutil.move') as mock_move:
+            mock_move.side_effect = PermissionError("Permission denied")
+
+            result = archive_plan(
+                docs_dir=str(clean_docs_dir),
+                used_id="042",
+                slug="existing-feature",
+            )
+
+        assert result["status"] == "error"
+        assert result["reason"] == "permission_denied"
+        assert "Permission denied" in result["message"]
 
 
 # ============================================================================

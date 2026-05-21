@@ -9,6 +9,7 @@
 > 1. **Data First:** The Data Model is the foundation. Design it BEFORE components or APIs.
 > 2. **Simplicity:** YAGNI (You Ain't Gonna Need It). Avoid over-engineering.
 > 3. **Security:** Security must be built-in (AuthN/AuthZ), not bolted on.
+> 4. **Living Document:** `docs/ARCHITECTURE.md` is updated IN PLACE across tasks. Never per-task archive it; the only restructuring is the >1500-line Index-Mode split.
 
 ## 2. CONTEXT & SKILL LOADING
 You are operating in the **Architecture Phase**.
@@ -38,7 +39,7 @@ You are operating in the **Architecture Phase**.
 Follow this process strictly:
 
 ### Step 1: Reconnaissance & Analysis
-- **Read:** TASK and existing `docs/ARCHITECTURE.md`.
+- **Read:** TASK and existing `docs/ARCHITECTURE.md`. If ARCHITECTURE.md is already an INDEX (Index-Mode), also read the relevant `docs/architectures/` section chunk(s).
 - **Analyze:** Identify core entities, data flows, and security boundaries.
 - **Select Template:** Decide between `Core` (default) vs `Extended` (complex) based on TIER 2 rules.
 
@@ -56,6 +57,17 @@ Follow this process strictly:
 
 ### Step 4: Output Generation
 **Action:** Write the file `docs/ARCHITECTURE.md`.
+
+### Step 4b: Size Check (Index-Mode)
+After writing, run `wc -l docs/ARCHITECTURE.md`:
+- **≤ 1500 lines** → keep as a single file.
+- **> 1500 lines** → apply the **Index-Mode split** from `architecture-format-core`
+  ("Living Document & Index-Mode"): extract large sections into
+  `docs/architectures/<section-slug>.md` and rewrite `docs/ARCHITECTURE.md` as a short
+  index (~under 200 lines).
+
+`docs/ARCHITECTURE.md` is a LIVING document — update it in place; **never** per-task
+archive it or create `architecture-NNN-*.md` snapshots.
 
 **Return Format (JSON):**
 ```json
@@ -80,3 +92,4 @@ Before returning result:
 - [ ] **Traceability:** Does it cover all Use Cases from TASK?
 - [ ] **Security:** Is AuthN/AuthZ defined?
 - [ ] **Template:** Did I use the correct Core/Extended format?
+- [ ] **Size:** Is `docs/ARCHITECTURE.md` ≤1500 lines, or split into `docs/architectures/` with a ≤200-line index?

@@ -1,8 +1,9 @@
 """
 Archive Protocol Module
 
-Testable Python implementation of the 6-step archiving protocol
-from skill-archive-task. This module enables automated testing
+Testable Python implementation of the archiving protocol from
+skill-archive-task: TASK.md archiving (Steps 1-6) and PLAN.md
+lockstep archiving (Step 7). This module enables automated testing
 of the archiving scenarios.
 
 Note: This duplicates logic from skill-archive-task for testability.
@@ -206,9 +207,122 @@ def archive_task(
             "message": "Archived file does not exist after move"
         }
     
+    # Derive the normalized slug from the archived filename (task-{id}-{slug}.md)
+    # so PLAN.md can reuse the EXACT same id/slug for lockstep archiving (Step 7).
+    used_id = tool_result["used_id"]
+    archived_slug = tool_result["filename"][len(f"task-{used_id}-"):-len(".md")]
+
     return {
         "status": "archived",
         "reason": "success",
         "archived_to": str(archived_path),
-        "message": f"Archived with ID {tool_result['used_id']}"
+        "message": f"Archived with ID {used_id}",
+        # Lockstep handoff: present ONLY on status == "archived".
+        # Pass these straight to archive_plan() to keep TASK and PLAN paired.
+        "used_id": used_id,
+        "slug": archived_slug,
+    }
+
+
+def archive_plan(docs_dir: str, used_id: str, slug: str) -> dict:
+    """
+    Execute Step 7 of skill-archive-task: archive docs/PLAN.md in lockstep
+    with a TASK.md archive that has just completed.
+
+    PLAN.md has no Meta block or identity of its own — it reuses the ID and
+    slug that TASK.md was archived under. Call this ONLY after a successful
+    new-task archive_task() (status == "archived"), passing that call's
+    result["used_id"] and result["slug"]. The result is the pairing
+    docs/tasks/task-NNN-slug.md <-> docs/plans/plan-NNN-slug.md.
+
+    Args:
+        docs_dir: Path to docs/ directory (e.g., "/path/to/docs").
+        used_id: The post-correction ID from archive_task (result["used_id"]).
+        slug: The normalized slug from archive_task (result["slug"]).
+
+    Returns:
+        dict with keys:
+            - status: "archived" | "skipped" | "error"
+            - reason: Explanation for the status
+            - archived_to: Path to archived file (if archived)
+            - message: Optional additional info
+    """
+    docs_path = Path(docs_dir)
+    plan_file = docs_path / "PLAN.md"
+    plans_dir = docs_path / "plans"
+
+    # Step 7.1: Condition check — no PLAN.md means the task never reached
+    # planning. Not an error.
+    if not plan_file.exists():
+        return {
+            "status": "skipped",
+            "reason": "no_plan",
+            "archived_to": None,
+            "message": "docs/PLAN.md does not exist — nothing to rotate",
+        }
+
+    # Step 7.4 (guard): PLAN.md has no independent ID. Without the TASK
+    # archive's used_id/slug it cannot be safely archived (orphan case).
+    if not used_id or not slug:
+        return {
+            "status": "error",
+            "reason": "missing_lockstep_id",
+            "archived_to": None,
+            "message": "archive_plan requires used_id and slug from a completed TASK.md archive",
+        }
+
+    # Step 7.4: Derive filename — reuse the TASK archive's id/slug verbatim.
+    filename = f"plan-{used_id}-{slug}.md"
+    archived_path = plans_dir / filename
+
+    # Step 7.5: Collision guard — never overwrite an existing plan archive.
+    if archived_path.exists():
+        return {
+            "status": "error",
+            "reason": "conflict",
+            "archived_to": None,
+            "message": f"Plan archive collision: {archived_path} already exists",
+        }
+
+    # Step 7.3 + 7.6: Ensure destination exists, then move.
+    try:
+        plans_dir.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(plan_file), str(archived_path))
+    except PermissionError as e:
+        return {
+            "status": "error",
+            "reason": "permission_denied",
+            "archived_to": None,
+            "message": f"Permission denied: {e}",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "reason": "move_failed",
+            "archived_to": None,
+            "message": f"Failed to move file: {e}",
+        }
+
+    # Step 7.7: Validate.
+    if plan_file.exists():
+        return {
+            "status": "error",
+            "reason": "validation_failed",
+            "archived_to": str(archived_path),
+            "message": "Original PLAN.md still exists after move",
+        }
+
+    if not archived_path.exists():
+        return {
+            "status": "error",
+            "reason": "validation_failed",
+            "archived_to": None,
+            "message": "Archived plan file does not exist after move",
+        }
+
+    return {
+        "status": "archived",
+        "reason": "success",
+        "archived_to": str(archived_path),
+        "message": f"Archived PLAN.md in lockstep with ID {used_id}",
     }

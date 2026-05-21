@@ -6,7 +6,7 @@ description: Plan the implementation using Chainlink Decomposition
 
 1. **Planner Prompt**: Read `System/Agents/06_planner_prompt.md`.
 2. **Chainlink Decomposition (Part 2 - The Beads)**:
-    - Create/Update `docs/PLAN.md`.
+    - Create/Update `docs/PLAN.md`. (Re-planning the SAME task → overwrite in place; for a NEW task the old PLAN.md was already rotated to `docs/plans/` by `skill-archive-task` in Analysis.)
     - **Requirement**: Break down every "Issue" into "Sub-issues" (The Beads).
     - **Format**: Nested Markdown list (Epic -> Issue -> **Sub-issue**).
     - **Rule**: A "Bead" must be small enough to be Verified via a single test case.

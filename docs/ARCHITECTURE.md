@@ -53,14 +53,26 @@ project-root/
 │   └── ...
 ├── docs/                        # Project Artifacts
 │   ├── product/                 # [NEW] Product Artifacts (Strategy, Vision, BRD)
+│   ├── tasks/                    # Archived TASK.md (task-NNN-slug.md) + planner sub-tasks (task-NNN-SubID-slug.md)
+│   ├── plans/                    # [NEW v3.16] Archived PLAN.md (plan-NNN-slug.md) — lockstep with tasks/
+│   ├── architectures/            # [NEW v3.16] ARCHITECTURE.md section chunks (Index-Mode, size-driven split only)
 │   ├── TASK.md                  # Current Technical Task
-│   ├── ARCHITECTURE.md          # System Architecture (This file)
+│   ├── PLAN.md                  # Current Development Plan
+│   ├── ARCHITECTURE.md          # System Architecture (This file) — LIVING doc / index, never per-task archived
 │   └── ...
 ├── tests/                       # Tests & Test Reports
 │   ├── tests-{ID}/              # Test Reports per Task (e.g. tests-016/)
 │   └── ...
 └── archives/
 ```
+
+**Artifact rotation.** `docs/TASK.md` and `docs/PLAN.md` rotate **in lockstep** on each
+new task — `skill-archive-task` archives them to `docs/tasks/task-NNN-slug.md` and
+`docs/plans/plan-NNN-slug.md`, sharing the same ID and slug. `docs/ARCHITECTURE.md` is a
+single **living document**, updated in place and **never per-task archived**; it is only
+restructured into `docs/architectures/` section chunks (with a short index) when it
+exceeds 1500 lines. See `artifact-management`, `skill-archive-task`, and
+`architecture-format-core` ("Living Document & Index-Mode") for the protocols.
 
 ## 3. Workflow Logic (v3.1)
 1. **Orchestrator** receives the user task and manages the **Tool Execution Loop**.

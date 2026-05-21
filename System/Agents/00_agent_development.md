@@ -104,8 +104,12 @@ Standard flows can be overridden by Workflows (`.agent/workflows/`):
 - **Archiving:** (Skill: `skill-archive-task`) Old tasks are moved to `docs/tasks/task-XXX-slug.md`.
 - **Never Delete:** History is preserved in `docs/tasks/`.
 
+### PLAN.md Lifecycle
+- **Lockstep Archiving:** (Skill: `skill-archive-task`, Step 7) When a new task starts, the old `docs/PLAN.md` is archived to `docs/plans/plan-XXX-slug.md`, reusing the same ID/slug as the TASK.md it accompanied. Re-planning the same task overwrites `docs/PLAN.md` in place.
+
 ### ARCHITECTURE.md
 - **Modular Format:** Uses `architecture-format-core` for updates and `architecture-format-extended` for new systems.
+- **Living Document:** `docs/ARCHITECTURE.md` is updated in place and **never per-task archived**. When it exceeds 1500 lines it is split into `docs/architectures/` section chunks with a short index (see `architecture-format-core` → "Living Document & Index-Mode").
 
 ---
 

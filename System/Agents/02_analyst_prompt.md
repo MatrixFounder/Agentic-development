@@ -35,9 +35,9 @@ Follow this process strictly:
 ### Step 1: Pre-Flight Check
 - **Check Task Status:** Read `docs/TASK.md`.
     - IF `docs/TASK.md` exists AND describes a DIFFERENT task:
-        - **Execute:** `skill-archive-task` to move old task to `docs/tasks/`.
+        - **Execute:** `skill-archive-task`. This rotates **both** `docs/TASK.md` → `docs/tasks/` **and** `docs/PLAN.md` → `docs/plans/` in lockstep (same ID/slug).
     - IF `docs/TASK.md` exists AND describes CURRENT task:
-        - **Continue:** You are refining an existing draft.
+        - **Continue:** You are refining an existing draft (do NOT archive — TASK.md and PLAN.md are overwritten in place).
 
 ### Step 2: Analysis & Meta-Data
 - **Read:** Project structure and available documentation.
@@ -88,7 +88,7 @@ IF you receive detailed feedback from `03_task_reviewer`:
 
 ## 6. QUALITY CHECKLIST (VDD)
 Before returning result:
-- [ ] **Archive:** Did I archive the old task to `docs/tasks/`?
+- [ ] **Archive:** Did `skill-archive-task` rotate the old TASK.md → `docs/tasks/` (and PLAN.md → `docs/plans/`, if present) in lockstep?
 - [ ] **Meta:** Is Section 0 (Meta Info) present?
 - [ ] **Structure:** Are Use Cases and Scenarios detailed?
 - [ ] **Verification:** Are Acceptance Criteria verifiable?

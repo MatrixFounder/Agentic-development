@@ -16,6 +16,29 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.16.0 — Детерминированное архивирование артефактов (lockstep PLAN.md + Index-Mode для ARCHITECTURE.md)**
+
+Закрывает давний дрейф: `docs/TASK.md` архивировался надёжно, а `docs/PLAN.md` и `docs/ARCHITECTURE.md` — нет: в одних проектах планы архивировались в `docs/plans/`, в других сваливались плоско в `docs/archives/`, в третьих не архивировались вовсе; `ARCHITECTURE.md` рос без ограничений (в одном проекте достиг 2037 строк). Архивирование PLAN.md и ARCHITECTURE.md теперь — явный детерминированный протокол, встроенный в те же скиллы, промпты и воркфлоу, которые уже обеспечивают работу архивирования TASK.md. Изменение протокола — без новых скриптов и без правки инструментов runtime-конвейера; существующий тестовый mirror `archive_protocol.py` получает соответствующее покрытие `archive_plan()`.
+
+#### **Добавлено**
+
+* **Lockstep-архивирование PLAN.md** — `skill-archive-task` теперь архивирует `docs/PLAN.md` → `docs/plans/plan-NNN-slug.md` синхронно с TASK.md, переиспользуя тот же ID и slug (`task-NNN-slug.md` ↔ `plan-NNN-slug.md`). Новый шаг протокола Step 7 с явными краевыми случаями (PLAN.md отсутствует, осиротевший PLAN.md, повторное планирование, скорректированный ID).
+* **Index-Mode для ARCHITECTURE.md** — в `architecture-format-core` добавлен раздел «Living Document & Index-Mode»: `docs/ARCHITECTURE.md` — единый живой документ, обновляется на месте и никогда не архивируется по задачам; при превышении **1500 строк** он разбивается на чанки `docs/architectures/<section-slug>.md` с коротким (~≤200 строк) индексным файлом.
+
+#### **Изменено**
+
+* **`skill-archive-task`** v1.1 → v1.2 (теперь покрывает TASK.md + PLAN.md).
+* **`artifact-management`** v1.0 → v1.1, **`architecture-format-core`** v1.0 → v1.1, **`architecture-review-checklist`** v1.0 → v1.1, **`skill-safe-commands`** v1.0 → v1.1.
+* **Промпты агентов** — Analyst, Architect, Planner, Architecture Reviewer настроены на lockstep-архивирование + проверку размера Index-Mode / backstop у ревьюера.
+* **Воркфлоу** — `01-start-feature`, `vdd-01-start-feature`, `light-01-start-feature`, `light-02-develop-task`, `04-update-docs`, `02-plan-implementation`, `vdd-02-plan` дополнены новыми правилами.
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — раздел Directory Structure дополнен `docs/plans/` и `docs/architectures/`; добавлена заметка «Artifact rotation».
+* **`.agent/tools/archive_protocol.py`** (тестовый mirror skill-archive-task) — новая функция `archive_plan()`, реализующая Step 7, + 8 lockstep-тестов (всего 23 теста архивирования, все зелёные).
+
+#### **Исправлено**
+
+* **Дрейф архивирования PLAN.md** — планы больше не сваливаются плоско в `docs/archives/` и не остаются без архивации. Унаследованные `docs/archives/PLAN-*.md` самого репозитория перенесены в `docs/plans/plan-NNN-slug.md`.
+* **Неограниченный рост ARCHITECTURE.md** — порог Index-Mode в 1500 строк плюс 🟡 MAJOR backstop у Architecture Reviewer предотвращают монолитные файлы архитектуры.
+
 ### **v3.15.0 — Установщик фреймворка: `install.sh` (5 вендоров, 5 подкоманд)**
 
 Bootstrap-CLI, который развёртывает фреймворк в чистый целевой проект под выбранную систему агентов — заменяет ручное копирование папок. Фреймворк живёт в `.agentic-development/` целевого проекта (симлинк на соседний клон либо полная копия); per-item относительные симлинки указывают внутрь неё; защищённый SHA-256-хешем managed-блок в `.gitignore` не даёт файлам фреймворка попасть в git-историю проекта. Построен сквозным прогоном через собственный VDD-конвейер фреймворка (Analyst → Architect → Planner → цепочка из 11 задач `/vdd-develop-all` → adversarial-ревью тремя критиками `/vdd-multi`). Adversarial-проходы поймали и исправили реальные баги до мержа — `--dry-run`, изменявший файловую систему, падение снапшота на пересекающихся путях, CWD-зависимый баг разрешения симлинков в `copytree`, и `uninstall`, способный удалить пользовательский контент. Установщик — отдельный bootstrap-инструмент: **изменений в runtime-конвейере нет**.

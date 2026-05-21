@@ -2,7 +2,7 @@
 name: architecture-review-checklist
 description: Detailed checklist for verifying System Architecture and Data Models.
 tier: 1
-version: 1.0
+version: 1.1
 ---
 # Architecture Review Checklist
 
@@ -21,6 +21,8 @@ version: 1.0
 - [ ] **Simplicity:** Least moving parts? (No overengineering).
 - [ ] **Style:** Pattern matches problem (Monolith vs Microservices).
 - [ ] **Boundaries:** Clear segregation of duties (SRP).
+- [ ] **Document Size:** `docs/ARCHITECTURE.md` is ≤1500 lines, OR is an INDEX (~≤200 lines) with section chunks in `docs/architectures/` and all links resolving.
+- [ ] **No Per-Task Drift:** ARCHITECTURE.md is a single living document — no `architecture-NNN-*.md` snapshots, nothing moved into `docs/archives/`.
 
 ## 4. Security
 - [ ] **Auth:** Authentication & Authorization defined?
@@ -33,5 +35,5 @@ version: 1.0
 
 ## Criticality Protocol
 - 🔴 **BLOCKING:** Data Model error, Security hole, Unmet TASK requirement.
-- 🟡 **MAJOR:** Missing index, Questionable tech choice, Vague interface.
+- 🟡 **MAJOR:** Missing index, Questionable tech choice, Vague interface, Single-file `ARCHITECTURE.md` over 1500 lines (needs Index-Mode split).
 - 🟢 **MINOR:** Description clarity, typos.

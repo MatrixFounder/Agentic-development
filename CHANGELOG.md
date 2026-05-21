@@ -16,6 +16,29 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.16.0 — Deterministic Artifact Archiving (PLAN.md lockstep + ARCHITECTURE.md Index-Mode)**
+
+Closes a long-standing drift: `docs/TASK.md` archived reliably, while `docs/PLAN.md` and `docs/ARCHITECTURE.md` did not — some projects archived plans to `docs/plans/`, some dumped them flat into `docs/archives/`, some never archived; `ARCHITECTURE.md` grew unbounded (one project reached 2037 lines). Archiving of PLAN.md and ARCHITECTURE.md is now an explicit, deterministic protocol wired into the same skills, prompts, and workflows that already make TASK.md archiving work. Protocol change — no new scripts and no runtime-pipeline tools touched; the existing `archive_protocol.py` test mirror gains matching `archive_plan()` coverage.
+
+#### **Added**
+
+* **PLAN.md lockstep archiving** — `skill-archive-task` now archives `docs/PLAN.md` → `docs/plans/plan-NNN-slug.md` in lockstep with TASK.md, reusing the same ID and slug (`task-NNN-slug.md` ↔ `plan-NNN-slug.md`). New protocol Step 7 with explicit edge cases (PLAN.md absent, orphan PLAN.md, re-plan, corrected ID).
+* **ARCHITECTURE.md Index-Mode** — `architecture-format-core` gains a "Living Document & Index-Mode" section: `docs/ARCHITECTURE.md` is a single living document, updated in place and never per-task archived; when it exceeds **1500 lines** it is split into `docs/architectures/<section-slug>.md` chunks with a short (~≤200-line) index.
+
+#### **Changed**
+
+* **`skill-archive-task`** v1.1 → v1.2 (now covers TASK.md + PLAN.md).
+* **`artifact-management`** v1.0 → v1.1, **`architecture-format-core`** v1.0 → v1.1, **`architecture-review-checklist`** v1.0 → v1.1, **`skill-safe-commands`** v1.0 → v1.1.
+* **Agent prompts** — Analyst, Architect, Planner, Architecture Reviewer wired for lockstep archiving + the Index-Mode size check / reviewer backstop.
+* **Workflows** — `01-start-feature`, `vdd-01-start-feature`, `light-01-start-feature`, `light-02-develop-task`, `04-update-docs`, `02-plan-implementation`, `vdd-02-plan` annotated with the new rules.
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Directory Structure updated with `docs/plans/` and `docs/architectures/`; new "Artifact rotation" note.
+* **`.agent/tools/archive_protocol.py`** (the skill-archive-task test mirror) — new `archive_plan()` function implementing Step 7 + 8 lockstep tests (23 archive tests total, all green).
+
+#### **Fixed**
+
+* **PLAN.md archiving drift** — plans are no longer dumped flat into `docs/archives/` or left unarchived. This repo's own legacy `docs/archives/PLAN-*.md` migrated to `docs/plans/plan-NNN-slug.md`.
+* **ARCHITECTURE.md unbounded growth** — the 1500-line Index-Mode threshold plus an Architecture Reviewer 🟡 MAJOR backstop prevent monolithic architecture files.
+
 ### **v3.15.0 — Framework Installer: `install.sh` (5 vendors, 5 subcommands)**
 
 A bootstrap-time CLI that deploys the framework into a clean target project under a chosen agent-system profile — replacing manual folder copying. The framework lives in the target's `.agentic-development/` (a symlink to a sibling clone, or a full copy); per-item relative symlinks point into it; a SHA-256-hash-protected managed `.gitignore` block keeps framework files out of the project's git history. Built end-to-end through the framework's own VDD pipeline (Analyst → Architect → Planner → an 11-task `/vdd-develop-all` chain → 3-critic `/vdd-multi` adversarial review). The adversarial passes caught and fixed real bugs before merge — a `--dry-run` that mutated the filesystem, a snapshot crash on overlapping paths, a CWD-dependent `copytree` symlink-resolution bug, and an `uninstall` that could delete user-owned content. The installer is a standalone bootstrap tool — **no runtime-pipeline changes**.

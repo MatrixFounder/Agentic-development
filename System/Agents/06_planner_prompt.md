@@ -37,6 +37,13 @@ Follow this process strictly:
 - **Extract:** Task ID (e.g., `002`) and Slug. Use this ID for ALL filenames.
 - **Strategy:** Decide on Stub-First breakdown using `skill-planning-decision-tree`.
 
+> [!NOTE]
+> **PLAN.md lifecycle:** Archiving of the previous `docs/PLAN.md` is handled by
+> `skill-archive-task` during the Analysis phase — it rotates to
+> `docs/plans/plan-NNN-slug.md` in lockstep with TASK.md. You do NOT archive PLAN.md
+> yourself. When **re-planning the SAME task**, overwrite `docs/PLAN.md` in place — do
+> not archive.
+
 ### Step 2: Plan Formulation
 - **Structure:** Create `docs/PLAN.md`.
 - **RTM Linking (Mandatory):**
@@ -76,3 +83,4 @@ Before returning result:
 - [ ] **Paths:** Are all file paths RELATIVE?
 - [ ] **Tests:** Does every task include a verification step?
 - [ ] **Completeness:** Did I create a file for EVERY task in the plan?
+- [ ] **Lockstep:** For a NEW task, was the previous PLAN.md already archived to `docs/plans/` by `skill-archive-task` (Analysis phase)? For a re-plan of the same task, did I overwrite `docs/PLAN.md` in place?

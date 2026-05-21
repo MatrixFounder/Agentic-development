@@ -35,7 +35,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 // turbo
 1. Stage changes: `git add -A`.
 2. Commit with message: `fix: [LIGHT] <short description>`.
-3. Archive `docs/TASK.md` using `skill-archive-task`.
+3. Archive `docs/TASK.md` using `skill-archive-task` (also rotates `docs/PLAN.md` → `docs/plans/` in lockstep, if present).
 4. Inform user: "Light Mode task complete."
 
 ## Escalation

@@ -17,7 +17,7 @@ description: Start a feature using Light Mode (fast-track for trivial tasks)
 // turbo
 1. Read `System/Agents/02_analyst_prompt.md`.
 2. Load skill: `.agent/skills/light-mode/SKILL.md`.
-3. If `docs/TASK.md` exists: Apply `skill-archive-task`.
+3. If `docs/TASK.md` exists: Apply `skill-archive-task` (rotates `docs/TASK.md` → `docs/tasks/` and `docs/PLAN.md` → `docs/plans/` in lockstep).
 4. Create `docs/TASK.md` with **`[LIGHT]`** tag in the title.
    - Example: `# Task 048: [LIGHT] Fix typo in README`.
 5. **Skip Task Reviewer** (task is trivial).

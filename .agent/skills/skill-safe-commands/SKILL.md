@@ -2,7 +2,7 @@
 name: skill-safe-commands
 description: "Centralized list of commands safe for auto-execution without user approval. Single source of truth."
 tier: 0
-version: 1.0
+version: 1.1
 ---
 # Safe Commands Protocol
 
@@ -19,8 +19,8 @@ This skill defines **all commands that are SAFE TO AUTO-RUN** without user appro
 | **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `tree`, `wc`, `echo` | Do not modify state |
 | **File info** | `stat`, `file`, `du`, `df` | Informational only |
 | **Git read** | `git status`, `git log`, `git diff`, `git show`, `git branch`, `git remote`, `git tag` | Read-only git operations |
-| **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` | Documented, non-destructive moves |
-| **Directory** | `mkdir -p docs/tasks`, `mkdir -p .agent/skills/*` | Idempotent operations |
+| **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` | Documented, non-destructive moves (TASK/PLAN rotate in lockstep) |
+| **Directory** | `mkdir -p docs/tasks`, `mkdir -p docs/plans`, `mkdir -p docs/architectures`, `mkdir -p .agent/skills/*` | Idempotent operations |
 | **Tool calls** | `generate_task_archive_filename`, `list_directory`, `read_file` | Native tools |
 | **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 System/scripts/doctor.py` | Framework automation |
 | **Testing** | `python -m pytest ...`, `npm test`, `npx jest`, `cargo test` | Tests don't modify source code |

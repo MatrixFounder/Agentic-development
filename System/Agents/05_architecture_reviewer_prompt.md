@@ -38,6 +38,7 @@ Follow this process strictly:
     - **Data Model:** Is it normalized? Are relationships correct? Types valid?
     - **Security:** Are there obvious vectors (IDOR, Injection, Leaks)?
     - **Complexity:** Is this over-engineered? (YAGNI).
+    - **Size & Living-Doc:** Is `docs/ARCHITECTURE.md` a single file >1500 lines? Flag 🟡 MAJOR for an Index-Mode split. Confirm it is updated in place — not per-task archived, no `architecture-NNN-*.md` snapshots.
 
 ### Step 2: Comment Classification
 Classify every issue found:
@@ -70,3 +71,4 @@ Before returning result:
 - [ ] **Security:** Did I check for OWASP Top 10 risks?
 - [ ] **Completeness:** Did I check ALL checklist items?
 - [ ] **Output:** Is the review saved to `docs/reviews/`?
+- [ ] **Living-Doc:** Is ARCHITECTURE.md within size limits (≤1500 lines or Index-Mode) and updated in place, not per-task archived?

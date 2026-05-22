@@ -29,9 +29,20 @@ validation:
   
   # Default is permissive (allow everything)
   prohibited_files: []
-    
+
+  # Fence languages exempt from the inline-size check entirely (diagrams).
+  inline_exempt_fence_langs:
+    - "mermaid"
+  # Fence languages that can only warn, never hard-fail (output samples).
+  inline_softcheck_fence_langs:
+    - "text"
+    - "console"
+    - "output"
+
   quality_checks:
-    max_inline_lines: 12
+    # Two-tier inline code-block policy (Task 064): > warn -> warning, > fail -> error.
+    max_inline_lines_warn: 20
+    max_inline_lines_fail: 60
     max_description_words: 50
     banned_words:
       - "should"

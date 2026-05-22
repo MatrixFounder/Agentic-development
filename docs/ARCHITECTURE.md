@@ -240,6 +240,7 @@ If a skill requires analyzing project structure, calculating metrics, or validat
 - ❌ **Bad:** Embedding 50 lines of JSON example in `SKILL.md`.
 - ✅ **Good:** "Refer to `examples/template.json`."
 *Why?* Skills are loaded into the context window. Static text wastes tokens.
+*Enforcement:* `validate_skill.py` applies a two-tier inline-block check — a fenced block over 20 lines warns, over 60 lines fails (`mermaid` exempt; `text`/`console`/`output` warn-only). Thresholds are config-driven via `validation.quality_checks.max_inline_lines_warn`/`_fail`.
 
 ### Rule 3: Tiered Loading Protocol (O5)
 Every skill must be assigned a **TIER** in its YAML frontmatter to support Lazy Loading.

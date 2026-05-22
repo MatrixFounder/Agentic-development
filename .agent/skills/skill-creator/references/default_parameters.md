@@ -35,8 +35,15 @@ validation:
     - "Red Flags"
     - "Rationalization Table"
   prohibited_files: []
+  inline_exempt_fence_langs:
+    - "mermaid"
+  inline_softcheck_fence_langs:
+    - "text"
+    - "console"
+    - "output"
   quality_checks:
-    max_inline_lines: 12
+    max_inline_lines_warn: 20
+    max_inline_lines_fail: 60
     max_description_words: 50
     banned_words:
       - "should"
@@ -54,7 +61,10 @@ validation:
 - `validation.enforce_cso_prefix` fallback: `true`
 - `validation.allowed_cso_prefixes` fallback (only if enforcement is enabled and list is empty): `["Use when"]`
 - `taxonomy.tiers` fallback for validation: `[0, 1, 2]`
-- `validation.quality_checks.max_inline_lines` fallback: `12`
+- `validation.quality_checks.max_inline_lines_warn` fallback: `20`
+- `validation.quality_checks.max_inline_lines_fail` fallback: `60`
+- `validation.inline_exempt_fence_langs` fallback: `["mermaid"]`
+- `validation.inline_softcheck_fence_langs` fallback: `["text", "console", "output"]`
 - `validation.quality_checks.max_description_words` fallback: `50`
 
 ## 4. Project-Level Extensions (Overlay-Dependent)

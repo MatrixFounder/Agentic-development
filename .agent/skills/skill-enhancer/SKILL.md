@@ -2,7 +2,7 @@
 name: skill-enhancer
 description: Use when you need to audit, fix, or improve an existing agent skill to meet Gold Standard compliance.
 tier: 2
-version: 1.2
+version: 1.3
 ---
 # Skill Enhancer
 

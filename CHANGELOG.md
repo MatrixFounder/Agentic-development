@@ -16,6 +16,27 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.17.0 — Skill-Validator Inline-Block Rule Reform (two-tier warn/fail)**
+
+The skill quality gate hard-failed CI on any fenced code block over 12 lines — an arbitrary, line-based threshold with no warning tier and no awareness of block type, stricter than `ARCHITECTURE.md` §8 itself (which cites "50 lines" as the bad case). v3.16.0's `skill-archive-task` tripped it. The principle (progressive disclosure — keep `SKILL.md` lean) is kept; the crude implementation is replaced with a two-tier, fence-type-aware, config-driven check. Validator-only change — no runtime-pipeline tools touched.
+
+#### **Added**
+
+* **Two-tier inline-block policy** — a fenced block over **20 lines** emits a non-blocking warning; over **60 lines** a hard error. Thresholds are config-driven (`validation.quality_checks.max_inline_lines_warn` / `_fail`).
+* **Fence-type awareness** — `mermaid` fences are exempt (diagrams); `text`/`console`/`output` fences can only warn, never fail (output samples). Configurable via `inline_exempt_fence_langs` / `inline_softcheck_fence_langs`.
+* **Unclosed-fence detection** — an unclosed ` ``` ` is now reported explicitly instead of being silently swallowed by the parser.
+* **`tests/test_inline_efficiency.py`** — 9 regression tests (warn / fail / exempt / softcheck / unclosed branches + a drift guard asserting the `validate_skill.py` and `analyze_gaps.py` copies stay behaviourally identical), wired into the `Framework Gates` CI.
+
+#### **Changed**
+
+* **`check_inline_efficiency`** now returns `(errors, warnings)` — warnings route to the non-blocking channel instead of failing CI.
+* **`skill-creator`** v2.0 → v2.1, **`skill-enhancer`** v1.2 → v1.3 — both validator copies reformed in lockstep; **`skill-archive-task`** v1.2 → v1.3.
+* Config updated across `.agent/rules/skill_standards.yaml` and all bundled `skill_standards_default.yaml`; `skill-creator` docs, `System/Docs/skill-writing.md`, and `ARCHITECTURE.md` §8 updated.
+
+#### **Fixed**
+
+* **`skill-archive-task` CI failure** — the v3.16.0 Step-7 protocol block (35 lines) and Example Flow (17 lines) hard-failed the old 12-line rule; both were restructured into smaller labelled blocks, and the rule itself reformed so coherent procedural content is no longer penalised.
+
 ### **v3.16.0 — Deterministic Artifact Archiving (PLAN.md lockstep + ARCHITECTURE.md Index-Mode)**
 
 Closes a long-standing drift: `docs/TASK.md` archived reliably, while `docs/PLAN.md` and `docs/ARCHITECTURE.md` did not — some projects archived plans to `docs/plans/`, some dumped them flat into `docs/archives/`, some never archived; `ARCHITECTURE.md` grew unbounded (one project reached 2037 lines). Archiving of PLAN.md and ARCHITECTURE.md is now an explicit, deterministic protocol wired into the same skills, prompts, and workflows that already make TASK.md archiving work. Protocol change — no new scripts and no runtime-pipeline tools touched; the existing `archive_protocol.py` test mirror gains matching `archive_plan()` coverage.

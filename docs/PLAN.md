@@ -1,160 +1,100 @@
-# Development Plan — Framework Installer Script (Task 063)
+# Development Plan — Skill-Validator Inline-Rule Reform (Task 064)
 
-**Parent**: [docs/TASK.md](TASK.md) — Technical Specification: Framework Installer Script
-**Architecture**: [docs/ARCHITECTURE.md §9](ARCHITECTURE.md#9-framework-installer-subsystem) — Framework Installer Subsystem
-**Mode**: VDD (Verification-Driven Development)
-**Source plan**: `/Users/sergey/.claude/plans/snug-foraging-wind.md` (approved)
+**Parent**: [docs/TASK.md](TASK.md) — Skill-Validator Inline-Code-Block Rule Reform
+**Architecture**: [docs/ARCHITECTURE.md §8](ARCHITECTURE.md#8-skill-architecture--optimization-standards) — Skill Architecture Standards (Rule 2: Example Separation). No structural change; §8 Rule 2 already cites "50 lines" as the bad case, so the reform aligns the implementation to the existing architecture intent.
+**Mode**: Framework Upgrade (`/framework-upgrade`) — meta-operation
+**Meta-Audit**: [docs/reviews/framework-audit-064.md](reviews/framework-audit-064.md) (Mode A PASS)
 
-## Goal
+## Approved Design Decisions (from Analysis gate)
+- **D1 (Q1)**: Threshold strategy = **fixed line count** (no tokenizer dependency in CI). Token-budget recorded as future work.
+- **D2 (Q2)**: **Two-tier severity** — `warn` band `> 20` lines, hard `fail` ceiling `> 60` lines. The single hard FAIL at 12 is removed.
+- **D3 (Q3-TASK)**: De-duplication = **verified-identical logic**, not a cross-skill shared module (skills must stay self-contained). A fixture asserts `validate_skill.py` and `analyze_gaps.py` agree.
 
-Decompose the TASK (10 Epics E1–E10, ~35 Issues) into **11 atomic, verifiable tasks** under Stub-First discipline. Stage 1 builds the full module skeleton + config + test scaffold (`[STUB CREATION]`); Stage 2 implements logic layer-by-layer with per-module unit tests (`[LOGIC IMPLEMENTATION]`); Stage 3 wires integration tests.
+## Design Spec (inputs for implementation)
+- Config keys (replace `max_inline_lines: 12`):
+  - `max_inline_lines_warn: 20`
+  - `max_inline_lines_fail: 60`
+  - `inline_exempt_fence_langs: [mermaid]` — fully exempt (diagrams).
+  - `inline_softcheck_fence_langs: [text, console, output]` — fail suppressed, warn kept.
+- Code fallback (backward compat): `fail = get('max_inline_lines_fail', get('max_inline_lines', 60))`; `warn = get('max_inline_lines_warn', 20)`.
+- Fence info-string = opening-fence line `[3:].strip()`. Empty/untagged + known code langs → full two-tier.
+- Parser hardening: after the scan, if still `in_block` → emit explicit "unclosed fence" error.
 
-**Already done (uncommitted stubs)**: [install.sh](../install.sh) (Issue I1.1 ✅) and [System/scripts/install.py](../System/scripts/install.py) argparse skeleton (Issue I1.2 ✅). `install.py` already imports `installer.cli.main` — Task 063-01 must create that package or the entry-point is broken.
+## Stub-First Strategy
+Phase 1 writes fixtures + the verification harness **first** (Red). Phases 2–4 implement logic until the harness is Green. No production logic before its fixture exists.
 
-## Stub-First strategy
+---
 
-Per [planning-decision-tree](../.agent/skills/planning-decision-tree/SKILL.md) §1: every functional module is split into structure (signatures + `NotImplementedError` stubs + docstrings) and logic. The installer is a 12-module Python package, so Stage 1 is one structural task covering **all** skeletons + `vendors.yaml` (pure config — single task per decision-tree rule) + the E2E test harness that goes Red→Green on stubs. Stage 2 then replaces stubs one layer at a time, bottom-up (no module implemented before its dependencies).
+## Phase 0 — Backup (rollback safety)
 
-## Task Execution Sequence
+### T0 — Backup edited files
+- [ ] `mkdir -p .agent/archive`
+- [ ] Copy each target before edit: `validate_skill.py`, `analyze_gaps.py`, `.agent/rules/skill_standards.yaml`, all `skill_standards_default.yaml`, affected docs → `.agent/archive/`.
+- **Verifies**: NFR Safety. **Rollback**: `cp .agent/archive/<file> <orig>`.
 
-### Stage 1 — Structure & Stubs `[STUB CREATION]`
+## Phase 1 — Fixtures & Harness (Stub-First / Red)
 
-- **Task 063-01** — Installer package skeleton + `vendors.yaml` + test scaffold
-  - Epics/Issues: E1 (I1.3 vendors.yaml), all-module skeletons for E2–E9, E10/I10 scaffold
-  - RTM: NFR-3 (stub-first), NFR-5 (minimal deps)
-  - Description: [docs/tasks/task-063-01-installer-skeleton.md](tasks/task-063-01-installer-skeleton.md)
-  - Priority: Critical
-  - Dependencies: none (consumes existing `install.py`/`install.sh`)
+### T1 — Create fixture skills + verification harness
+- [ ] Add fixture `SKILL.md` cases under `skill-creator/tests/` (or existing test dir): (a) code block 13–20 lines → expect PASS; (b) 21–60 lines → expect WARN; (c) >60 lines → expect FAIL; (d) `mermaid` block >60 → expect PASS (exempt); (e) `text` block >60 → expect WARN not FAIL; (f) unclosed fence → expect FAIL.
+- [ ] Add a test asserting `check_inline_efficiency` (validate_skill.py) and the `analyze_gaps.py` inline logic return the **same** verdict per fixture (D3).
+- [ ] Run harness against current code → confirm **Red** (current logic fails fixtures b/d/e/f).
+- **Verifies**: UC-01 AC, UC-02 AC, UC-03 (fixture coverage).
 
-### Stage 2 — Core Logic `[LOGIC IMPLEMENTATION]`
+## Phase 2 — Logic Reform
 
-- **Task 063-02** — Errors + vendor profile loader & validator
-  - Epics/Issues: E1 — I1.4 (`vendors.py`), I1.5 (`errors.py`)
-  - RTM: FR-2 (vendor profile system), FR-14 (codex `git_root_required` profile field)
-  - Description: [docs/tasks/task-063-02-vendors-errors.md](tasks/task-063-02-vendors-errors.md)
-  - Priority: Critical · Dependencies: 063-01
+### T2 — Reform `check_inline_efficiency()` in `validate_skill.py`
+- [ ] Track opening-fence language; apply `inline_exempt_fence_langs` / `inline_softcheck_fence_langs`.
+- [ ] Two-tier: `> warn` → warning; `> fail` → error.
+- [ ] Detect unclosed fence (odd fence count).
+- [ ] Return `(errors, warnings)` tuple instead of a flat error list.
+- [ ] Update remediation text: always-needed → "split into labelled sub-blocks"; rarely-needed → "extract to resources/".
+- **Verifies**: UC-01 AC 1–5.
 
-- **Task 063-03** — State management + backup engine
-  - Epics/Issues: E7 — I7.1 (`state.py`), I7.2 (heuristic mode), I7.3 (`backup.py` + retention)
-  - RTM: FR-9 (state management), FR-10 (backup part)
-  - Description: [docs/tasks/task-063-03-state-backup.md](tasks/task-063-03-state-backup.md)
-  - Priority: Critical · Dependencies: 063-01, 063-02
+### T3 — Update caller in `validate_skill.py`
+- [ ] Route `check_inline_efficiency` warnings into the `warnings` channel, errors into `errors` (mirror Execution-Policy warning handling).
+- **Verifies**: UC-01 A1/A2.
 
-- **Task 063-04** — `.agentic-development/` root management + platform
-  - Epics/Issues: E2 — I2.1 (symlink mode), I2.2 (copy mode), I2.3 (target guards); `platform.py`, `copy.py`
-  - RTM: FR-3 (root management), FR-13 (platform fallback)
-  - Description: [docs/tasks/task-063-04-framework-root.md](tasks/task-063-04-framework-root.md)
-  - Priority: Critical · Dependencies: 063-01, 063-02
+### T4 — Mirror reform into `analyze_gaps.py` (skill-enhancer)
+- [ ] Apply identical thresholds/fence logic; `[Token Efficiency]` gap fires at the `fail` ceiling, soft note at `warn`.
+- [ ] Confirm parity test from T1 passes.
+- **Verifies**: UC-02 AC 1.
 
-- **Task 063-05** — Symlink engine
-  - Epics/Issues: E3 — I3.1 (`link_one`), I3.2 (`link_per_item`), I3.3 (`link_folder`), I3.4 (`mkdir`)
-  - RTM: FR-4 (per-item symlinks + reachability)
-  - Description: [docs/tasks/task-063-05-symlink-engine.md](tasks/task-063-05-symlink-engine.md)
-  - Priority: Critical · Dependencies: 063-01, 063-02
+## Phase 3 — Config & Docs
 
-- **Task 063-06** — Managed-block engine
-  - Epics/Issues: E4 — I4.1 (`inject_block`), I4.2 (marker formats), I4.3 (atomic write + force backup)
-  - RTM: FR-5 (managed-block engine), NFR-2 (no silent clobber)
-  - Description: [docs/tasks/task-063-06-managed-block.md](tasks/task-063-06-managed-block.md)
-  - Priority: Critical · Dependencies: 063-01, 063-02, 063-03 (backup)
+### T5 — Update config (all copies)
+- [ ] `.agent/rules/skill_standards.yaml` (live config) — new keys per Design Spec.
+- [ ] 4× `skill_standards_default.yaml` (creator/enhancer × agentic) — same.
+- [ ] Re-evaluate `inline_exempt_skills` (`skill-safe-commands`, `skill-orchestrator-patterns`): if they pass under the 60-line ceiling, note it (removal optional, not forced).
+- **Verifies**: UC-02 AC 2.
 
-- **Task 063-07** — Vendor-aware bootstrap
-  - Epics/Issues: E5 — I5.1 (`at_import`), I5.2 (`marker_block`), I5.3 (`none`), I5.4 (don't-overwrite list)
-  - RTM: FR-6 (vendor-aware bootstrap), FR-15 (Antigravity dual bootstrap)
-  - Description: [docs/tasks/task-063-07-bootstrap.md](tasks/task-063-07-bootstrap.md)
-  - Priority: High · Dependencies: 063-06 (managed-block), 063-05 (symlinks)
+### T6 — Update documentation
+- [ ] `skill-creator/SKILL.md`, `skill-creator/references/default_parameters.md`, `System/Docs/skill-writing.md` — replace the "12" rule with the two-tier model.
+- [ ] ARCHITECTURE.md §8 Rule 2 — optional one-line clarification referencing warn/fail thresholds (living doc, in place).
+- **Verifies**: NFR Documentation; Audit Mode A check 3.
 
-- **Task 063-08** — `.gitignore` patch + `!`-exception scanner
-  - Epics/Issues: E9 — I9.1 (`update_gitignore`), I9.2 (`!`-scanner)
-  - RTM: FR-7 (`.gitignore` block)
-  - Description: [docs/tasks/task-063-08-gitignore.md](tasks/task-063-08-gitignore.md)
-  - Priority: High · Dependencies: 063-06 (managed-block)
+## Phase 4 — Sync & Verify
 
-- **Task 063-09** — Conflict prevention + `install` end-to-end
-  - Epics/Issues: E6 — I6.1 (classifier), I6.2 (`System/` case), I6.3 (`--dry-run`), I6.4 (`--skip`); `install` algorithm in `cli.py`
-  - RTM: FR-1 (`install` subcommand), FR-8 (conflict prevention), FR-14 (codex git-root check), NFR-1 (idempotency)
-  - Description: [docs/tasks/task-063-09-conflict-install.md](tasks/task-063-09-conflict-install.md)
-  - Priority: Critical · Dependencies: 063-02…063-08 (all layers)
+### T7 — Re-sync Universal-skills independent copies
+- [ ] `Universal-skills/skills/skill-creator/scripts/validate_skill.py` ← canonical.
+- [ ] `Universal-skills/skills/skill-creator|skill-enhancer/scripts/skill_standards_default.yaml` ← canonical.
+- [ ] `Universal-skills/skills/skill-enhancer/scripts/analyze_gaps.py` ← canonical.
+- [ ] Confirm symlinked artifacts (`.agent/skills/*`, `System/`) need no action.
+- **Verifies**: UC-02 AC 3.
 
-- **Task 063-10** — Subcommands `switch` / `uninstall` / `update` / `doctor`
-  - Epics/Issues: E8 — I8.1 (`switch`), I8.2 (`uninstall`), I8.3 (`update`), I8.4 (`doctor`)
-  - RTM: FR-1 (remaining subcommands), FR-10 (`switch`), FR-11 (`uninstall`), FR-12 (`doctor`)
-  - Description: [docs/tasks/task-063-10-subcommands.md](tasks/task-063-10-subcommands.md)
-  - Priority: High · Dependencies: 063-09
+### T8 — Full verification
+- [ ] `python System/scripts/validate_skills.py --root . --quiet` → `43/43 passed`, exit 0.
+- [ ] Run T1 harness → **Green**; each new branch (warn / fail / exempt / softcheck / unclosed) exercised.
+- [ ] Confirm `skill-archive-task` still passes (regression check on the original CI failure).
+- **Verifies**: UC-03 AC 1–3.
 
-### Stage 3 — Integration & Verification
+---
 
-- **Task 063-11** — Integration E2E suite + bash wrapper smoke test
-  - Epics/Issues: E10 — I10.2 (integration tests), I10.3 (wrapper smoke test)
-  - RTM: NFR-1 (idempotency), NFR-4 (testability)
-  - Description: [docs/tasks/task-063-11-integration-tests.md](tasks/task-063-11-integration-tests.md)
-  - Priority: High · Dependencies: 063-10
+## Rollback Plan
+On any instability: restore each file from `.agent/archive/` (`cp .agent/archive/<file> <orig>`), re-run T8 to confirm the pre-reform green state.
 
-> **Issue I10.1 (per-module unit tests)** is intentionally *not* a separate task — under Stub-First, unit tests ship in Phase 2 alongside the logic they cover. Each Stage-2 task (063-02 … 063-10) delivers its own `tests/installer/test_<module>.py` as an acceptance criterion. Task 063-11 covers only the cross-module integration recipe (I10.2) and the bash smoke test (I10.3).
-
-## Dependency Graph
-
-```
-063-01 (skeleton + vendors.yaml + test scaffold)
-   │
-   ├─► 063-02 (errors, vendors)
-   │       ├─► 063-03 (state, backup)
-   │       ├─► 063-04 (framework_root, platform, copy)
-   │       └─► 063-05 (symlinks)
-   │
-   ├─► 063-06 (managed_block)  ◄── needs 063-03 (backup)
-   │       ├─► 063-07 (bootstrap)  ◄── also needs 063-05
-   │       └─► 063-08 (gitignore)
-   │
-   └─► 063-09 (conflict + install)  ◄── needs 063-02…063-08 (ALL layers)
-           └─► 063-10 (switch/uninstall/update/doctor)
-                   └─► 063-11 (integration tests)
-```
-
-**Serial VDD execution order**: `01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11`. This order satisfies every edge above (063-06 lands before 063-07/063-08; all layers before 063-09). Tasks 063-03/04/05 are mutually independent and *could* run in parallel after 063-02, but VDD runs them serially so each gets its own verification gate.
-
-## RTM Coverage Matrix
-
-One requirement → at least one task; every task carries an RTM ID per [06_planner_prompt](../System/Agents/06_planner_prompt.md) §2.
-
-| RTM      | Requirement                              | Covered by task(s)        |
-|----------|------------------------------------------|---------------------------|
-| `[FR-1]`  | CLI subcommands + flags + exit codes     | 063-01 (skeleton), 063-09 (`install`), 063-10 (`switch`/`update`/`uninstall`/`doctor`) |
-| `[FR-2]`  | Vendor profile system (`vendors.yaml`)   | 063-01 (yaml), 063-02 (loader+validator) |
-| `[FR-3]`  | `.agentic-development/` root management  | 063-04 |
-| `[FR-4]`  | Per-item symlinks + reachability         | 063-05 |
-| `[FR-5]`  | Managed-block engine                     | 063-06 |
-| `[FR-6]`  | Vendor-aware bootstrap                   | 063-07 |
-| `[FR-7]`  | `.gitignore` block + hash protection     | 063-08 |
-| `[FR-8]`  | Pre-flight conflict prevention           | 063-09 |
-| `[FR-9]`  | State management                         | 063-03 |
-| `[FR-10]` | `switch` with backup                     | 063-03 (backup), 063-10 (`switch`) |
-| `[FR-11]` | `uninstall` with `--purge`               | 063-10 |
-| `[FR-12]` | `doctor` read-only verifier              | 063-10 |
-| `[FR-13]` | Platform fallback (Windows)              | 063-04 |
-| `[FR-14]` | Codex git-root requirement               | 063-02 (profile field), 063-09 (check) |
-| `[FR-15]` | Antigravity dual bootstrap               | 063-07 |
-| `[NFR-1]` | Idempotency                              | 063-09, 063-11 |
-| `[NFR-2]` | No silent clobber                        | 063-06, 063-11 |
-| `[NFR-3]` | Stub-First implementation                | 063-01 |
-| `[NFR-4]` | Testability                              | 063-02…063-10 (unit), 063-11 (integration) |
-| `[NFR-5]` | Minimal dependencies                     | 063-01 |
-
-## Verification (chain-end)
-
-After Task 063-11 merges, run the full installer test suite:
-
-```bash
-python3 -m pytest tests/installer/ -v          # all unit + integration tests pass
-bash tests/installer/test_wrapper.sh           # wrapper smoke test (bash/sh/zsh)
-python3 -m pytest tests/ -q                    # full regression — no pre-existing tests broken
-```
-
-End-to-end the installer must satisfy the recipe in `/Users/sergey/.claude/plans/snug-foraging-wind.md` §Verification (fresh install, conflict prevention, idempotency, switch, copy mode, anti-clobber, uninstall).
-
-## Out of Scope (post-MVP — see [TASK §5](TASK.md))
-
-- Git clone / submodule population strategies.
-- Migration to plural `.agents/`.
-- MD→MDC transformer for Cursor `.cursor/rules/`.
-- `System/` rename in framework.
+## Verification Summary (Definition of Done)
+- [ ] All 43 catalog skills validate; CI `Skill validate` green.
+- [ ] Fixtures cover warn / fail / exempt / softcheck / unclosed branches.
+- [ ] `validate_skill.py` and `analyze_gaps.py` verified verdict-identical.
+- [ ] Config consistent across `.agent/rules/` + 4 `_default.yaml`; Universal-skills copies re-synced.
+- [ ] Docs updated; backups present in `.agent/archive/`.

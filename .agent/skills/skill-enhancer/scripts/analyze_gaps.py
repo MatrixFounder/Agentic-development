@@ -85,6 +85,71 @@ def _has_real_files(directory: str) -> bool:
         return True
     return False
 
+def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
+                            exempt_fence_langs=None, softcheck_fence_langs=None):
+    """Two-tier inline code-block size check.
+
+    Returns (errors, warnings). A fenced block longer than fail_lines yields an
+    error; longer than warn_lines yields a warning. Fences tagged with a
+    language in exempt_fence_langs (e.g. mermaid diagrams) are skipped entirely;
+    fences in softcheck_fence_langs (e.g. text output samples) can only warn,
+    never fail. An unclosed fence is reported as an error.
+
+    Shared logic — this function is duplicated verbatim in
+    skill-creator/scripts/validate_skill.py and skill-enhancer/scripts/analyze_gaps.py;
+    tests/test_inline_efficiency.py asserts the two copies stay behaviourally identical.
+    """
+    if exempt_fence_langs is None:
+        exempt_fence_langs = ["mermaid"]
+    if softcheck_fence_langs is None:
+        softcheck_fence_langs = ["text", "console", "output"]
+    exempt = {str(x).lower() for x in exempt_fence_langs}
+    softcheck = {str(x).lower() for x in softcheck_fence_langs}
+    warn_lines = int(warn_lines)
+    fail_lines = int(fail_lines)
+
+    errors = []
+    warnings = []
+    lines = content.splitlines()
+    in_block = False
+    block_start = 0
+    block_lang = ""
+
+    for i, raw_line in enumerate(lines):
+        line = raw_line.strip()
+        if not line.startswith("```"):
+            continue
+        if in_block:
+            block_length = i - block_start - 1
+            if block_lang not in exempt:
+                is_soft = block_lang in softcheck
+                if block_length > fail_lines and not is_soft:
+                    errors.append(
+                        f"Inline code block at line {block_start + 1} is too large "
+                        f"({block_length} lines, max {fail_lines}). If this is core "
+                        f"procedural content, split it into labelled sub-blocks; if "
+                        f"it is reference material, extract it to references/ or assets/."
+                    )
+                elif block_length > warn_lines:
+                    warnings.append(
+                        f"Inline code block at line {block_start + 1} is large "
+                        f"({block_length} lines, warn threshold {warn_lines}). "
+                        f"Consider splitting it or extracting to references/."
+                    )
+            in_block = False
+        else:
+            in_block = True
+            block_start = i
+            info = line[3:].strip()
+            block_lang = info.split()[0].lower() if info else ""
+
+    if in_block:
+        errors.append(
+            f"Unclosed code fence: ``` opened at line {block_start + 1} is never "
+            f"closed. Add the matching closing fence."
+        )
+    return errors, warnings
+
 def analyze_skill(skill_path, config, json_output=False):
     """
     Analyzes a skill directory for gaps against the Standards.
@@ -274,22 +339,24 @@ def analyze_skill(skill_path, config, json_output=False):
             if os.path.getsize(fp) < 10:
                 gaps.append(f"[Richness] Example '{f}' is too small/empty. Real examples required.")
 
-    # 7. Check Token Efficiency (Inline Blocks)
-    in_block = False
-    block_start = 0
-    max_inline = quality_config.get('max_inline_lines', 12)
-    
+    # 7. Check Token Efficiency (Inline Blocks) — shared two-tier policy
+    warn_lines = quality_config.get('max_inline_lines_warn', 20)
+    fail_lines = quality_config.get('max_inline_lines_fail', 60)
+    exempt_fence = validation_config.get('inline_exempt_fence_langs', ['mermaid'])
+    softcheck_fence = validation_config.get(
+        'inline_softcheck_fence_langs', ['text', 'console', 'output'],
+    )
+    eff_errors, eff_warnings = check_inline_efficiency(
+        body, warn_lines, fail_lines, exempt_fence, softcheck_fence,
+    )
+    for msg in eff_errors:
+        gaps.append(f"[Token Efficiency] {msg}")
+    for msg in eff_warnings:
+        gaps.append(f"[Token Efficiency] (minor) {msg}")
+
+    # 7b. Anti-Pattern line checks
     for i, line in enumerate(body_lines):
         line = line.strip()
-        if line.startswith("```"):
-            if in_block:
-                block_length = i - block_start - 1
-                if block_length > max_inline:
-                    gaps.append(f"[Token Efficiency] Inline code block at line {block_start + 1} is too large ({block_length} lines). Max allowed is {max_inline}.")
-                in_block = False
-            else:
-                in_block = True
-                block_start = i
 
         # Anti-Patterns Checks
         if re.search(r'[a-zA-Z0-9_\-]+\\[a-zA-Z0-9_\-]+', line):

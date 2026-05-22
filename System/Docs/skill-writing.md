@@ -56,7 +56,8 @@ validation:
     - "Standards for"
   
   quality_checks:
-    max_inline_lines: 12
+    max_inline_lines_warn: 20
+    max_inline_lines_fail: 60
     max_description_words: 50
     banned_words:
       - "should"
@@ -109,7 +110,7 @@ python3 .agent/skills/skill-enhancer/scripts/analyze_gaps.py .agent/skills/my-ne
 **Checks:**
 - **Weak Language**: Detects "passive" words like "should", "can" and enforces Graduated Language constraints.
 - **Structure**: Checks for required sections ("Red Flags").
-- **Token Efficiency**: Warns if inline code blocks > 12 lines.
+- **Token Efficiency**: Two-tier inline code-block check — warns over 20 lines, fails over 60 (`mermaid` exempt, `text`/`console`/`output` warn-only). Thresholds are config-driven.
 - **Richness & Coverage**: Warns if `examples/` is empty, checks for overfitting, and enforces at least 2-3 test prompts (in `evals.json` or text).
 - **Behavioral Gaps**: Checks usage logs, recommending FAQ extraction to `references/` and helpers to `scripts/`.
 

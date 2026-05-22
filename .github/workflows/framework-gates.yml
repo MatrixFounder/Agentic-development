@@ -26,7 +26,7 @@ jobs:
 
       - name: Run tooling regression tests
         run: |
-          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py -q
+          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py tests/test_inline_efficiency.py -q
 
   skill-validate:
     name: Skill validate

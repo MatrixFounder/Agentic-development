@@ -2,7 +2,7 @@
 name: skill-creator
 description: Use when creating new Agent Skills, upgrading existing skills, running evals to test a skill, benchmarking skill performance, or optimizing a skill's description for better triggering accuracy. Guidelines for Gold Standard skill structures.
 tier: 2
-version: 2.0
+version: 2.1
 ---
 # Skill Creator Guide
 
@@ -59,7 +59,7 @@ All subdirectories are optional. Do NOT create `README.md`, `CHANGELOG.md`, or o
 ### Key Rules
 
 - **Script-First**: If a step requires >5 lines of if/then/else logic, it MUST be a Python script in `scripts/` — agents are unreliable at executing complex logic from text.
-- **12-Line Rule**: Inline code blocks, templates, or examples >12 lines MUST be extracted to `examples/`, `assets/`, or `references/`.
+- **Inline-Block Policy**: Fenced code blocks are checked two-tier — over 20 lines warns, over 60 lines fails. `mermaid` fences are exempt; `text`/`console`/`output` fences can only warn. Bulk reference material or templates SHOULD move to `examples/`, `assets/`, or `references/`; core procedural blocks may instead be split into labelled sub-blocks. Thresholds are config-driven (`validation.quality_checks.max_inline_lines_warn` / `_fail`).
 - **Graduated Language**: Skills must work across LLMs (Claude, Gemini, Codex, Qwen, Llama). Use graduated instruction strength:
   - Safety-critical: `MUST`/`ALWAYS` + explain why
   - Behavioral: Explain why + imperative verb

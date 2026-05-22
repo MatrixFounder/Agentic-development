@@ -2,7 +2,7 @@
 name: skill-archive-task
 description: "Complete protocol for archiving TASK.md and PLAN.md (lockstep) with ID generation. Single source of truth for archiving."
 tier: 1
-version: 1.2
+version: 1.3
 ---
 # Task Archiving Protocol
 
@@ -117,41 +117,57 @@ under.
 ### Step 7: Archive PLAN.md (Lockstep)
 
 Run this **only after Step 6 validation passed** (TASK.md successfully archived for a
-NEW task).
+NEW task). Execute sub-steps 7.1–7.7 in order.
+
+**7.1 — Condition check.** No PLAN.md means the task never reached planning:
 
 ```
-# 7.1 — Condition check
 IF NOT exists("docs/PLAN.md"):
-    SKIP plan archiving (no PLAN.md to rotate — task never reached planning)
-    DONE
+    SKIP plan archiving → DONE
+```
 
-# 7.2 — Refinement guard
-IF the Step 1 decision was REFINEMENT (not a NEW task):
-    DO NOT archive PLAN.md — it is overwritten in place by the Planner.
-    DONE
-# (Step 7 is normally only reached on the NEW-task path; this guard is stated
-#  explicitly so re-planning the SAME task overwrites docs/PLAN.md.)
+**7.2 — Refinement guard.** Step 7 is normally only reached on the NEW-task path; this
+guard is stated explicitly so re-planning the SAME task overwrites `docs/PLAN.md`:
 
-# 7.3 — Ensure destination
-mkdir -p docs/plans          # idempotent, SAFE TO AUTO-RUN
+```
+IF Step 1 decision was REFINEMENT (not a NEW task):
+    DO NOT archive PLAN.md — Planner overwrites it in place → DONE
+```
 
-# 7.4 — Derive filename (NO new ID generation)
+**7.3 — Ensure destination** (idempotent, SAFE TO AUTO-RUN):
+
+```bash
+mkdir -p docs/plans
+```
+
+**7.4 — Derive filename** (NO new ID generation):
+
+```
 plan_filename = "plan-{used_id}-{slug}.md"
-# CRITICAL: {used_id} and {slug} are REUSED VERBATIM from the TASK.md archive just
-# completed — specifically the post-correction `used_id` returned by
-# generate_task_archive_filename (Step 3), NOT the ID read from TASK.md's Meta block.
-# If the tool corrected a conflicting ID (e.g. 100 -> 101), TASK and PLAN must both
-# use the corrected ID to stay paired.
+```
 
-# 7.5 — Collision guard
+`{used_id}` and `{slug}` are REUSED VERBATIM from the TASK.md archive just completed —
+specifically the post-correction `used_id` returned by `generate_task_archive_filename`
+(Step 3), NOT the ID read from TASK.md's Meta block. If the tool corrected a conflicting
+ID (e.g. `100 → 101`), TASK and PLAN must both use the corrected ID to stay paired.
+
+**7.5 — Collision guard:**
+
+```
 IF exists("docs/plans/{plan_filename}"):
     STOP. Do NOT overwrite. Report to user:
       "Plan archive collision: docs/plans/{plan_filename} already exists."
+```
 
-# 7.6 — Archive (move)
+**7.6 — Archive (move):**
+
+```bash
 mv docs/PLAN.md docs/plans/{plan_filename}
+```
 
-# 7.7 — Validate
+**7.7 — Validate:**
+
+```
 ASSERT NOT exists("docs/PLAN.md")
 ASSERT exists("docs/plans/{plan_filename}")
 IF validation fails: retry mv once, else notify user.
@@ -178,6 +194,20 @@ Key commands for this skill:
 - `ls`, `cat` — validation
 
 
+## Safety Boundaries
+
+This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries apply:
+
+- **Move, never delete.** Archiving uses `mv` only — `docs/TASK.md` / `docs/PLAN.md`
+  content is relocated, never destroyed.
+- **No overwrite.** Step 5 and Step 7.5 enforce collision guards: if the target archive
+  filename already exists, **STOP** and report — never overwrite an existing archive.
+- **Lockstep integrity.** PLAN.md is archived only after TASK.md archiving is validated
+  (Step 6). A failed TASK archive aborts the PLAN archive.
+- **Living documents untouched.** `docs/ARCHITECTURE.md` is never moved or archived.
+- **Validate before proceeding.** Each `mv` is followed by an existence assertion
+  (Steps 6, 7.7); on failure, retry once then notify the user — do not continue blindly.
+
 ## Integration
 
 ### Required by Agents
@@ -186,23 +216,19 @@ Key commands for this skill:
 
 ## Example Flow
 
-```
-User: "Create new task for implementing login feature"
+**Trigger:** User says *"Create new task for implementing login feature."*
 
-1. Agent loads skill-archive-task
-2. Agent checks: docs/TASK.md exists? → YES (contains "Task {OLD_ID}: {Old Feature}")
-3. Decision: This is NEW task (different feature) → Archive
-4. Extract: Task ID = {OLD_ID}, Slug = "{old-slug}"
-5. Generate Filename:
-   - Try tool → If tool not found, use manual fallback
-   - Fallback: Construct filename "task-{OLD_ID}-{old-slug}.md"
-6. Execute: mv docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md
-7. Validate: docs/TASK.md does NOT exist ✓
-8. PLAN Lockstep (Step 7): docs/PLAN.md exists? → YES
-   - mkdir -p docs/plans
-   - Reuse {OLD_ID} + {old-slug} from the TASK archive above
-   - Execute: mv docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md
-   - Validate: docs/PLAN.md does NOT exist ✓
-9. Create new TASK.md for login feature with ID {NEW_ID}
-```
+1. Agent loads `skill-archive-task`.
+2. Checks `docs/TASK.md` exists? → YES (contains `Task {OLD_ID}: {Old Feature}`).
+3. Decision: NEW task (different feature) → Archive.
+4. Extract: Task ID = `{OLD_ID}`, Slug = `{old-slug}`.
+5. Generate filename: try tool; on miss, manual fallback → `task-{OLD_ID}-{old-slug}.md`.
+6. Execute: `mv docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md`.
+7. Validate: `docs/TASK.md` does NOT exist ✓.
+8. PLAN lockstep (Step 7): `docs/PLAN.md` exists? → YES.
+   - `mkdir -p docs/plans`
+   - Reuse `{OLD_ID}` + `{old-slug}` from the TASK archive above.
+   - Execute: `mv docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md`.
+   - Validate: `docs/PLAN.md` does NOT exist ✓.
+9. Create new `docs/TASK.md` for the login feature with ID `{NEW_ID}`.
 

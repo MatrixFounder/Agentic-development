@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-05-20T15:10:55.950366"
-mode: "vdd-multi"
+last_updated: "2026-05-23T00:04:07.070158"
+mode: "Framework Upgrade"
 
 current_task:
-  name: "framework-installer"
-  status: "vendor-profiles-corrected"
+  name: "validator-inline-rule-reform"
+  status: "Execution complete — all 5 CI gates green locally"
   predicted_steps: 0
 
 context_summary: |
-  Vendor-profile correction per user testing: antigravity now bootstrap=GEMINI.md only (was GEMINI.md+AGENTS.md — dual caused double-load); cursor now marker_block bootstrap=AGENTS.md (was 'none' — Cursor supports the AGENTS.md standard). vendors.yaml + test_bootstrap.py rewrite + test_subcommands/e2e + ARCHITECTURE 9.3 + TASK FR-15 updated. 172 installer tests OK. test-agentic antigravity+cursor reinstalled & verified.
+  Task 064 done: validator inline-rule reformed to two-tier (warn>20/fail>60), fence-type aware, unclosed-fence detection, config-driven. T0-T8 complete. 43/43 skills pass, 28 tests pass. Universal-skills copies synced. Awaiting user decision on commit/push.
 
 active_blockers:
   []

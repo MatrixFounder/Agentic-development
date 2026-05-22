@@ -9,30 +9,70 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 import skill_utils
 
-def check_inline_efficiency(content: str, max_lines: int) -> list:
+def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
+                            exempt_fence_langs=None, softcheck_fence_langs=None):
+    """Two-tier inline code-block size check.
+
+    Returns (errors, warnings). A fenced block longer than fail_lines yields an
+    error; longer than warn_lines yields a warning. Fences tagged with a
+    language in exempt_fence_langs (e.g. mermaid diagrams) are skipped entirely;
+    fences in softcheck_fence_langs (e.g. text output samples) can only warn,
+    never fail. An unclosed fence is reported as an error.
+
+    Shared logic — this function is duplicated verbatim in
+    skill-creator/scripts/validate_skill.py and skill-enhancer/scripts/analyze_gaps.py;
+    tests/test_inline_efficiency.py asserts the two copies stay behaviourally identical.
     """
-    Checks for inline code blocks larger than max_lines.
-    """
+    if exempt_fence_langs is None:
+        exempt_fence_langs = ["mermaid"]
+    if softcheck_fence_langs is None:
+        softcheck_fence_langs = ["text", "console", "output"]
+    exempt = {str(x).lower() for x in exempt_fence_langs}
+    softcheck = {str(x).lower() for x in softcheck_fence_langs}
+    warn_lines = int(warn_lines)
+    fail_lines = int(fail_lines)
+
     errors = []
+    warnings = []
     lines = content.splitlines()
     in_block = False
     block_start = 0
-    
-    for i, line in enumerate(lines):
-        line = line.strip()
-        if line.startswith("```"):
-            if in_block:
-                # End of block
-                block_length = i - block_start - 1
-                if block_length > max_lines:
-                    errors.append(f"Inline code block at line {block_start + 1} is too large ({block_length} lines). Max allowed is {max_lines}. Extract to examples/ or resources/.")
-                in_block = False
-            else:
-                # Start of block
-                in_block = True
-                block_start = i
-                
-    return errors
+    block_lang = ""
+
+    for i, raw_line in enumerate(lines):
+        line = raw_line.strip()
+        if not line.startswith("```"):
+            continue
+        if in_block:
+            block_length = i - block_start - 1
+            if block_lang not in exempt:
+                is_soft = block_lang in softcheck
+                if block_length > fail_lines and not is_soft:
+                    errors.append(
+                        f"Inline code block at line {block_start + 1} is too large "
+                        f"({block_length} lines, max {fail_lines}). If this is core "
+                        f"procedural content, split it into labelled sub-blocks; if "
+                        f"it is reference material, extract it to references/ or assets/."
+                    )
+                elif block_length > warn_lines:
+                    warnings.append(
+                        f"Inline code block at line {block_start + 1} is large "
+                        f"({block_length} lines, warn threshold {warn_lines}). "
+                        f"Consider splitting it or extracting to references/."
+                    )
+            in_block = False
+        else:
+            in_block = True
+            block_start = i
+            info = line[3:].strip()
+            block_lang = info.split()[0].lower() if info else ""
+
+    if in_block:
+        errors.append(
+            f"Unclosed code fence: ``` opened at line {block_start + 1} is never "
+            f"closed. Add the matching closing fence."
+        )
+    return errors, warnings
 
 def extract_frontmatter(file_path):
     """
@@ -296,11 +336,19 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
             with open(skill_md_path, 'r') as f:
                  raw_content = f.read()
             
-            max_inline = quality_config.get('max_inline_lines', 12)
+            warn_lines = quality_config.get('max_inline_lines_warn', 20)
+            fail_lines = quality_config.get('max_inline_lines_fail', 60)
+            exempt_fence = validation_config.get('inline_exempt_fence_langs', ['mermaid'])
+            softcheck_fence = validation_config.get(
+                'inline_softcheck_fence_langs', ['text', 'console', 'output'],
+            )
             inline_exempt_skills = set(validation_config.get('inline_exempt_skills', []))
             if skill_name not in inline_exempt_skills:
-                efficiency_errors = check_inline_efficiency(raw_content, max_inline)
-                errors.extend(efficiency_errors)
+                eff_errors, eff_warnings = check_inline_efficiency(
+                    raw_content, warn_lines, fail_lines, exempt_fence, softcheck_fence,
+                )
+                errors.extend(eff_errors)
+                warnings.extend(eff_warnings)
 
             body_content = extract_body_content(skill_md_path)
             warnings.extend(

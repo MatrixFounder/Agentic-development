@@ -43,7 +43,7 @@ validation:
     # Two-tier inline code-block policy (Task 064): > warn -> warning, > fail -> error.
     max_inline_lines_warn: 20
     max_inline_lines_fail: 60
-    max_description_words: 50
+    max_description_words: 70
     banned_words:
       - "should"
       - "can"

@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-05-23T00:04:07.070158"
+last_updated: "2026-05-23T00:09:46.012544"
 mode: "Framework Upgrade"
 
 current_task:
   name: "validator-inline-rule-reform"
-  status: "Execution complete — all 5 CI gates green locally"
+  status: "DONE — v3.17.0 committed, pushed, CI green"
   predicted_steps: 0
 
 context_summary: |
-  Task 064 done: validator inline-rule reformed to two-tier (warn>20/fail>60), fence-type aware, unclosed-fence detection, config-driven. T0-T8 complete. 43/43 skills pass, 28 tests pass. Universal-skills copies synced. Awaiting user decision on commit/push.
+  Task 064 complete. Validator inline-rule reformed (two-tier warn>20/fail>60). Commit d34e640 v3.17.0 pushed to main, Framework Gates CI all green. Universal-skills/skills copies synced locally (separate repo, left uncommitted per user).
 
 active_blockers:
   []

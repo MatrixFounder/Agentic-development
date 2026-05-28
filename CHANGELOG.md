@@ -50,7 +50,7 @@ Three reviewer weaknesses, plus a cross-vendor backup gap, hardened without merg
 * **Reviewer-contract drift** — `09_…` previously emitted only `{review_status, has_critical_issues}` while three consumers expected `e2e_tests_pass`/`stubs_replaced`; now consistent.
 * **Subjective exit fabrication** — approval could be triggered by the auditor inventing nitpicks (an unobservable, gameable signal); approval is now bound to the objective bar in every definition. The Phase-4 adversarial review (eating its own dogfood against the new bar) caught two further normative residuals (`VDD.md`, `TDD_VS_VDD.md`, `/vdd-adversarial`) which were folded in. The `/vdd-multi` `convergence: hallucinating` dedup noise-filter is a distinct mechanism, intentionally left untouched.
 
-
+### v3.17.0 — Skill-Validator Inline-Block Rule Reform (two-tier warn/fail)
 
 The skill quality gate hard-failed CI on any fenced code block over 12 lines — an arbitrary, line-based threshold with no warning tier and no awareness of block type, stricter than `ARCHITECTURE.md` §8 itself (which cites "50 lines" as the bad case). v3.16.0's `skill-archive-task` tripped it. The principle (progressive disclosure — keep `SKILL.md` lean) is kept; the crude implementation is replaced with a two-tier, fence-type-aware, config-driven check. Validator-only change — no runtime-pipeline tools touched.
 

@@ -46,7 +46,7 @@ Collect the three structured reports. Apply merge rules (see `.agent/workflows/v
 - Produce a single `VDD Multi-Adversarial Report` with sections per category plus an "Overlaps" section.
 
 ### Step 4: Iterative fix (per category)
-For any category that returned issues, apply fixes and re-spawn **only that critic** until clean-pass or hallucinating (not a full parallel triple — single-critic re-spawn is cheaper).
+For any category that returned issues, apply fixes and re-spawn **only that critic** until clean-pass or bikeshedding-only (no legitimate findings left — not a full parallel triple, single-critic re-spawn is cheaper).
 
 ## Alternative scenario — decomposed feature development (use Layer B in Wave 4)
 

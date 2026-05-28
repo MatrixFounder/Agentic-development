@@ -104,7 +104,7 @@ Merge the reports from critics that ran. Apply:
 1. **Location dedup**: issues at the same `(file, line ± 3)` with overlapping category → merge, keep highest severity, union descriptions and recommendations.
 2. **Cross-category re-attribution**: if a critic flagged something belonging to a sibling's domain, re-section into the correct critic's block.
 3. **Severity escalation**: two critics independently flagging the same location → escalate severity by one level.
-4. **Hallucination filter**: any critic reporting `convergence: hallucinating` → drop its low-severity items from this iteration.
+4. **Bikeshedding filter**: any critic reporting `convergence: bikeshedding-only` (no legitimate findings left — only style nits) → drop its low-severity items from this iteration.
 5. **`--severity` filter** (if present): drop items below the threshold from the merged report (but still count for `--fail-on`).
 
 ### Merged report structure
@@ -141,7 +141,7 @@ Merge the reports from critics that ran. Apply:
 
 Otherwise, for each non-clean category, apply fixes and re-spawn **only that critic** until:
 1. **Clean pass**: no real issues found → category ✓.
-2. **Hallucinating**: critic inventing problems → category ✓.
+2. **Bikeshedding-only**: no legitimate findings remain — only style/nits (objective bar; NOT "critic inventing problems") → category ✓.
 3. **Diminishing returns**: only micro-optimizations remain → category ✓.
 4. **Iteration cap** (`--max-iterations` if provided, default unbounded): force-stop and flag in termination.
 

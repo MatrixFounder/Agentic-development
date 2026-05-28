@@ -16,6 +16,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.19.0 — Multi-Critic Objective Convergence (parallel adversarial pipeline)**
+
+Follow-up to v3.18.0: the parallel critics (`critic-logic` / `critic-security` / `critic-performance`) still self-certified convergence via a subjective `hallucinating` state — the same gameable pattern v3.18.0 removed from Sarcasmotron, and worse, `/vdd-multi`'s Phase-3 termination marked a category *done* on it. Replaced with an objective state, so both the termination gate and the merge noise-filter are objective.
+
+#### **Changed**
+
+* **Critic `Convergence signal` enum** `clean-pass | issues-found | hallucinating` → `clean-pass | issues-found | **bikeshedding-only**` across the three critic agents, with `bikeshedding-only` defined objectively ("no legitimate findings remain — only style/nits; NOT 'forced to invent problems'").
+* **`/vdd-multi` Phase-3 termination** now marks a category ✓ on the objective `bikeshedding-only` / `clean-pass` state instead of "critic inventing problems".
+* **Merge noise-filter** (`vdd-multi.md` + `skill-parallel-orchestration`) re-keyed off `bikeshedding-only`; the "drop a converged critic's low-severity items this iteration" mechanic is unchanged. Satellite references (`skill-parallel-orchestration` §2.3, `examples/usage_example.md`, `references/sequential-fallback.md`) refreshed to the objective terminology.
+
+#### **Unchanged (invariants)**
+
+* All other merge rules — location dedup (±3 lines), cross-category re-attribution, severity escalation on independent overlap, `--severity` filter, iteration cap — and the Layer A / Layer B decision rule are byte-identical. Skill gate 43/43; VDD adversarial review APPROVED with zero findings.
+
 ### **v3.18.0 — Reviewers Hardening (provable clean review + objective Sarcasmotron exit, cross-vendor)**
 
 Three reviewer weaknesses, plus a cross-vendor backup gap, hardened without merging or re-toning the two review roles. The Code Reviewer's clean pass is now *provable*; its output contract is converged across four drifting definitions; the Sarcasmotron exit is moved off a subjective trigger onto an objective bar across every authoritative definition; and `/framework-upgrade` now backs up all vendor bootstrap files. `has_critical_issues` and the orchestrator DECISION TABLE are byte-for-byte unchanged — control-flow is identical before and after.

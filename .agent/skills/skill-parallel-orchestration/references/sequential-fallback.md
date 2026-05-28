@@ -45,7 +45,7 @@ After all teammates have run sequentially, the orchestrator performs the same me
 1. Location dedup (±3 lines).
 2. Cross-category re-attribution.
 3. Severity escalation on independent overlap.
-4. Hallucination filter.
+4. Bikeshedding filter (`bikeshedding-only` critics → drop low-severity noise).
 5. Optional severity filter.
 
 ---

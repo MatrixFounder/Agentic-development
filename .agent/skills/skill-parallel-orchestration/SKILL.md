@@ -57,7 +57,7 @@ If a repo carries both `CLAUDE.md` and `GEMINI.md` (multi-vendor support), the a
 
 1. **Decompose**: split the task into independent units with clear artifact contracts. No shared mutable state. No ordering constraints beyond "all-done → merge". Each unit should fit a single teammate's context budget.
 2. **Spawn**: invoke all teammates in a **single atomic step** using the vendor's parallel-spawn primitive (see your reference file for syntax). Sequential invocations defeat the purpose.
-3. **Merge**: collect structured reports → deduplicate by location (±3 lines) → escalate severity on cross-category overlap → filter hallucinations → emit unified artifact.
+3. **Merge**: collect structured reports → deduplicate by location (±3 lines) → escalate severity on cross-category overlap → drop low-severity noise from `bikeshedding-only` teammates → emit unified artifact.
 
 ---
 
@@ -105,7 +105,7 @@ After all teammates return, apply these in order:
 1. **Location dedup**: issues at the same `(file, line ± 3)` with overlapping category → merge, keep highest severity, union descriptions and recommendations.
 2. **Cross-category re-attribution**: if a teammate flagged something belonging to a sibling's domain, re-section under the correct owner's block.
 3. **Severity escalation**: two teammates independently flagging the same location → escalate severity by one level (signal that two independent perspectives both see the issue).
-4. **Hallucination filter**: any teammate signaling `convergence: hallucinating` → drop its low-severity items from this iteration.
+4. **Bikeshedding filter**: any teammate signaling `convergence: bikeshedding-only` (no legitimate findings left — only style nits) → drop its low-severity items from this iteration.
 5. **Optional severity filter**: drop items below a user-specified minimum severity (e.g. `--severity=high`).
 
 ---

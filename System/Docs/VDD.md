@@ -11,7 +11,7 @@ It uses an **Adversarial Agent** (often called "Sarcasmotron") to actively try t
 1.  **Build**: Developer implements the feature (often using Stub-First TDD).
 2.  **Attack (The Roast)**: The Adversarial Agent reviews the code with the specific goal of finding flaws, security holes, or bad practices.
 3.  **Refine**: Developer fixes the identified issues.
-4.  **Repeat**: The loop continues until the Adversary runs out of substantial things to criticize (The "Hallucination Exit").
+4.  **Repeat**: The loop continues until the **objective bar** is met — the full test run has executed, zero CRITICAL, zero legitimate logic/security/slop findings, and only bikeshedding remains (the **"Objective Convergence"** exit). Approval is bound to that bar — never to "the adversary was forced to invent nitpicks".
 
 ## When to use VDD?
 *   Security-sensitive modules (Auth, Payments).

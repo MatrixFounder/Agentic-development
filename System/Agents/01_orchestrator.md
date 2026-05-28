@@ -86,7 +86,7 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 ### 11. Code Review
 **Input:** {modified_files}, {test_report}
 **Action:** Execute `09_code_reviewer_prompt`.
-**Expected:** `{ comments, has_critical_issues, e2e_tests_pass, stubs_replaced }`
+**Expected (structured footer):** `{ review_status, has_critical_issues, e2e_tests_pass, stubs_replaced }` — plus a prose review report (three pillars + "Verified" block) passed to the developer for fixes. `comments` is that prose body, not a footer key.
 
 ### 12. Code Fix (Revision)
 **Input:** {review_comments}

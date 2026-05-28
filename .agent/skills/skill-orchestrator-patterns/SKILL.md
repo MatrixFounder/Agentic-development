@@ -125,9 +125,13 @@ missing_descriptions: [...]
 
 ### Extended Schema (Code Reviewer)
 
+Structured footer (control-flow + status). The prose review report — three
+pillars plus the "Verified" block — is passed to the developer as the report
+**body**; it is NOT a structured key.
+
 ```yaml
-comments: "text"
-has_critical_issues: true/false
+review_status: "APPROVED | REJECTED"
+has_critical_issues: true/false   # sole control-flow key (see DECISION TABLE)
 e2e_tests_pass: true/false
 stubs_replaced: true/false
 ```

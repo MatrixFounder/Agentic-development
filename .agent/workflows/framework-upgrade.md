@@ -25,9 +25,11 @@ description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skill
    - **Gate**: If Audit fails, GOTO Step 2.
 
 ## 3. Execution (Atomic Updates)
-1. **Backup**: 
+1. **Backup**:
    - `mkdir -p .agent/archive`
-   - `cp GEMINI.md .agent/archive/GEMINI.bak` (and other targets).
+   - Back up **every present bootstrap file** (not just one vendor's — the repo uses `CLAUDE.md` for Claude Code, `AGENTS.md` for Codex/Cursor, `GEMINI.md` for Gemini CLI):
+     `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done`
+   - Also back up any other files this upgrade will edit (prompts, skills, workflows) to `.agent/archive/`.
 2. **Implement**: Execute `08_developer_prompt.md` with `skill-self-improvement-verificator` active.
 3. **Verify**:
    - Run affected tests.
@@ -40,4 +42,6 @@ description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skill
 
 ## 5. Fallback
 If the system becomes unstable during upgrade:
-- **Run**: `cp .agent/archive/GEMINI.bak GEMINI.md` to restore.
+- **Restore every backed-up bootstrap file** (covers Claude Code / Codex·Cursor / Gemini CLI):
+  `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f ".agent/archive/$f.bak" ] && cp ".agent/archive/$f.bak" "$f"; done`
+- Restore any other edited file from its `.agent/archive/<file>.bak` backup the same way.

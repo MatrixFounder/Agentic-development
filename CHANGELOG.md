@@ -16,7 +16,27 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.17.0 — Skill-Validator Inline-Block Rule Reform (two-tier warn/fail)**
+### **v3.18.0 — Reviewers Hardening (provable clean review + objective Sarcasmotron exit, cross-vendor)**
+
+Three reviewer weaknesses, plus a cross-vendor backup gap, hardened without merging or re-toning the two review roles. The Code Reviewer's clean pass is now *provable*; its output contract is converged across four drifting definitions; the Sarcasmotron exit is moved off a subjective trigger onto an objective bar across every authoritative definition; and `/framework-upgrade` now backs up all vendor bootstrap files. `has_critical_issues` and the orchestrator DECISION TABLE are byte-for-byte unchanged — control-flow is identical before and after.
+
+#### **Added**
+
+* **Code Reviewer "Verified" block** — when `has_critical_issues = false`, the report must carry a plain-markdown block proving the *scope* of the clean pass (requirements cross-checked + edge cases considered), so "looked and clean" is distinguishable from "didn't look". Body text only — never a structured key — so it cannot affect control-flow (`09_code_reviewer_prompt.md`).
+* **Objective Convergence** — the Sarcasmotron exit is now bound to an objective bar (full test run executed · 0 CRITICAL · 0 legitimate logic/security/slop findings · only bikeshedding left), replacing the subjective "forced to invent nitpicks → approve" trigger that let a lazy/sycophantic model exit early.
+
+#### **Changed**
+
+* **Reviewer output contract converged to one superset** `{ review_status, has_critical_issues, e2e_tests_pass, stubs_replaced }` across all four definitions — SOT `09_…`, `skill-orchestrator-patterns` Extended Schema, the `.claude/agents/code-reviewer.md` wrapper, and `01_orchestrator.md` Step 11. `comments` is reconciled everywhere as the prose report body, not a JSON key. Additive only; `has_critical_issues` semantics untouched.
+* **Objective-Convergence criterion applied identically** across all authoritative Sarcasmotron definitions — `vdd-03-develop.md`, `vdd-adversarial/SKILL.md`, `vdd-sarcastic/SKILL.md`, `vdd-adversarial/references/vdd-methodology.md`, plus the `/vdd-adversarial` workflow — with hostile tone and "assume broken until proven" stance preserved. Stale "Hallucination Convergence/Exit" terminology refreshed in `vdd-05-run-full-task.md`, `System/Docs/WORKFLOWS.md`, `VDD.md`, and `TDD_VS_VDD.md`. VDD-loop mechanics (3-REJECT / escalation / HITL) unchanged.
+* **`/framework-upgrade` backup/rollback is now vendor-aware** — Step 3.1 and Step 5 iterate over every present bootstrap file (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) and skip absent ones, instead of hard-coding `GEMINI.md` alone.
+
+#### **Fixed**
+
+* **Reviewer-contract drift** — `09_…` previously emitted only `{review_status, has_critical_issues}` while three consumers expected `e2e_tests_pass`/`stubs_replaced`; now consistent.
+* **Subjective exit fabrication** — approval could be triggered by the auditor inventing nitpicks (an unobservable, gameable signal); approval is now bound to the objective bar in every definition. The Phase-4 adversarial review (eating its own dogfood against the new bar) caught two further normative residuals (`VDD.md`, `TDD_VS_VDD.md`, `/vdd-adversarial`) which were folded in. The `/vdd-multi` `convergence: hallucinating` dedup noise-filter is a distinct mechanism, intentionally left untouched.
+
+
 
 The skill quality gate hard-failed CI on any fenced code block over 12 lines — an arbitrary, line-based threshold with no warning tier and no awareness of block type, stricter than `ARCHITECTURE.md` §8 itself (which cites "50 lines" as the bad case). v3.16.0's `skill-archive-task` tripped it. The principle (progressive disclosure — keep `SKILL.md` lean) is kept; the crude implementation is replaced with a two-tier, fence-type-aware, config-driven check. Validator-only change — no runtime-pipeline tools touched.
 

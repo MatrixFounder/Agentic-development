@@ -25,8 +25,8 @@ This skill implements the **Iterative Adversarial Refinement** phase ("The Roast
 - **Context Resetting**: Each adversarial review MUST use a fresh context to prevent "relationship drift."
 - **Linear Accountability**: Every line of code MUST trace to a corresponding issue and verification step.
 
-### Convergence Signal (Exit Strategy)
-The review cycle STOPS when the Adversary's critiques become **hallucinated** — fabricated problems that do not exist in the code. This signals "Maximum Viable Refinement" (Zero-Slop).
+### Convergence Signal (Exit Strategy) — Objective Convergence
+The review cycle STOPS only when an **objective bar** is met: (1) the full test run has actually been executed, (2) zero CRITICAL findings, (3) zero legitimate findings in logic / security / slop, and (4) only bikeshedding/style remains. That — not "I was forced to invent a flaw" — is the signal of "Maximum Viable Refinement" (Zero-Slop). Approval is bound to the objective bar; fabricating a nitpick is never the trigger to approve. Until the bar is met, keep rejecting.
 
 ## 3. Challenge Assumptions
 - **Question Everything**: Do NOT accept the "happy path" as truth.

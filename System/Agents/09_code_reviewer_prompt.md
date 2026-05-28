@@ -53,18 +53,34 @@ Classify every issue found:
 2.  **Assessment:** General verdict.
 3.  **Comments:** Grouped by 3 pillars: Compliance, Quality, Testing.
 4.  **Final Decision:** MERGE / REJECT.
+5.  **Verified (MANDATORY when `has_critical_issues = false`):** A plain-markdown block in the report body that proves the *scope* of a clean pass — which TASK requirements / acceptance criteria you cross-checked, and which edge cases you considered. This makes "looked and clean" distinguishable from "didn't look". It is body text only — **never** a structured-output key — so it cannot affect control-flow. When critical issues exist, this block is optional (the Comments carry the signal). Example shape:
+
+    ```markdown
+    ## Verified (clean pass)
+    - Requirements checked: <TASK req / acceptance IDs cross-checked against the diff>
+    - Edge cases considered: <null/empty, boundary, failure-path, concurrency, …>
+    - Tests observed: <which E2E/unit results were inspected and their outcome>
+    ```
 
 ### Step 4: Output Generation
 **Action:** Return text response (Plan to support file output in future).
 *Note: Current protocol accepts text response for code reviews, but preferred to save to `docs/reviews/code-{ID}-review.md` if complex.*
 
-**Return Format (JSON):**
+The **prose report** (three pillars + the "Verified" block) is the body the orchestrator passes to the developer for fixes; it is the `comments`/report text, **not** a structured-output key. The structured footer below carries control-flow and status only.
+
+**Return Format (JSON footer):**
 ```json
 {
   "review_status": "APPROVED | REJECTED",
-  "has_critical_issues": true
+  "has_critical_issues": false,
+  "e2e_tests_pass": true,
+  "stubs_replaced": true
 }
 ```
+- `has_critical_issues` is the **sole control-flow field** — its name, type, and semantics are fixed; never rename or repurpose it.
+- `e2e_tests_pass`, `stubs_replaced` are informational fields consumed by the orchestrator/wrapper (additive — not used for routing).
+- `review_status` is retained for the wrapper and human readers.
+- The footer is **additive**: it must always carry at least these keys so the orchestrator schema and the `.claude/agents/code-reviewer.md` wrapper stay in sync.
 
 ## 5. QUALITY CHECKLIST (VDD)
 Before returning result:

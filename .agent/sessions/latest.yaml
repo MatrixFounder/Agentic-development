@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-05-23T00:09:46.012544"
+last_updated: "2026-05-29T00:19:40.962473"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "validator-inline-rule-reform"
-  status: "DONE — v3.17.0 committed, pushed, CI green"
+  name: "reviewers-hardening"
+  status: "DONE — Task 065 implemented; 14 files edited; skill gate 43/43; VDD APPROVED"
   predicted_steps: 0
 
 context_summary: |
-  Task 064 complete. Validator inline-rule reformed (two-tier warn>20/fail>60). Commit d34e640 v3.17.0 pushed to main, Framework Gates CI all green. Universal-skills/skills copies synced locally (separate repo, left uncommitted per user).
+  Task 065 reviewers-hardening (v3.18.0) complete. Code Reviewer: added mandatory 'Verified' block (markdown body, only when has_critical_issues=false); converged output contract to superset {review_status,has_critical_issues,e2e_tests_pass,stubs_replaced} across 4 defs (09_, orchestrator-patterns, wrapper, 01_orchestrator); comments reframed as prose. Sarcasmotron: objective exit bar (tests run/0 CRITICAL/0 legit findings/only bikeshedding) replacing 'forced to invent nitpicks' across vdd-03, vdd-adversarial+vdd-sarcastic skills, vdd-methodology, /vdd-adversarial workflow; label 'Hallucination Convergence/Exit' -> 'Objective Convergence' in vdd-05, WORKFLOWS.md, VDD.md, TDD_VS_VDD.md. framework-upgrade.md: backup/rollback now loops CLAUDE.md/AGENTS.md/GEMINI.md. has_critical_issues + DECISION TABLE byte-identical (control-flow invariant). Phase-4 adversarial review caught 3 normative residuals (folded in via C-4). /vdd-multi convergence:hallucinating dedup-filter intentionally out of scope. Not committed (awaiting user). Core prompts changed -> session restart recommended.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "063-07 APPROVED via Hallucination Convergence. Refinement: documented apply_bootstrap state-mutation side effect; +1 test for missing bootstrap_source branch."
   - "063-08 APPROVED via Hallucination Convergence. Spec-drift fix: gitignore predicate uses resolve() not the spec's buggy readlink-parts[0]. Refinement: extracted installer/paths.py to eliminate triple-duplicated path-confinement helper (touched symlinks.py + state.py — justified single-sourcing of a safety-critical check)."
   - "063-09 APPROVED via Hallucination Convergence. Real bug caught by test+fixed: dry-run was creating .agentic-development before the dry-run gate (moved ensure_agentic_dev after preflight). Refinement: +2 tests for FR-14 codex git-root check. Signature deviations documented: classify_path drops unused state param; preflight_scan drops profile/state, adds force_system_link."
   - "063-10 APPROVED via Hallucination Convergence. 2 real bugs caught by tests+fixed: create_snapshot crashed on overlapping dir+children paths (now sorts shallowest-first, skips captured descendants); stale TestStubDispatch removed. Refinement: +1 test (update leaves settings.json untouched)."
@@ -24,6 +23,7 @@ recent_decisions:
   - "/update-docs: did NOT archive docs/TASK.md (Task 063) — the installer work is still uncommitted; task rotation is premature. TASK.md/ARCHITECTURE.md verified current; no reverse-engineering needed."
   - "Live install test caught a genuine copy-mode bug: shutil.copytree(symlinks=False) skipped the framework's .claude/skills symlink (valid but relative -> CWD-resolved as dangling). Fix: copy_tree uses symlinks=True, preserving framework-internal relative symlinks self-consistently inside the copy. +1 regression test (test_copy_mode_populates_symlink_sourced_component)."
   - "antigravity: bootstrap_file GEMINI.md, bootstrap_aliases [] (no AGENTS.md). cursor: bootstrap_strategy none->marker_block, bootstrap_file AGENTS.md. FR-15 reframed from 'Antigravity dual bootstrap' to 'per-vendor bootstrap-file mapping'."
+  - "065 APPROVED via Objective Convergence (the new bar, dogfooded on its own diff): 0 CRITICAL, 0 MAJOR, contract converged 4/4, DECISION TABLE byte-identical, skill gate 43/43. VDD loop caught residuals in VDD.md/TDD_VS_VDD.md/vdd-adversarial.md -> fixed."
 
 completed_tasks:
   - "Task A"
@@ -43,3 +43,4 @@ completed_tasks:
   - "task-063-09-conflict-install"
   - "task-063-10-subcommands"
   - "task-063-11-integration-tests"
+  - "task-065-reviewers-hardening"

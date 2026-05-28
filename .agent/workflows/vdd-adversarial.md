@@ -20,5 +20,5 @@ Post-implementation adversarial cycle for zero-slop robustness.
    b. If real issues found:
       - Call workflow `03-develop-single-task` to fix issues.
       - Repeat this workflow (recursive call if needed).
-   c. Terminate when adversary hallucinations dominate (Convergence Signal — see skill).
+   c. Terminate on **Objective Convergence** — the full test run has executed, 0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains (see `vdd-adversarial` / `vdd-sarcastic` skills). Never approve because the adversary was forced to invent nitpicks.
 3. Announce: "VDD cycle complete: zero-slop achieved"

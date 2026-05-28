@@ -6,7 +6,7 @@
 | **Key Mechanism** | Unit/E2E Tests (Red-Green-Refactor) | Adversarial Critique (The "Roast") |
 | **Driver** | Test Coverage | Adversarial Agent (Sarcasmotron) |
 | **Mindset** | "Does it work as expected?" | "Can I break it? Is it lazy?" |
-| **Exit Condition** | All tests pass | Adversary runs out of valid critiques |
+| **Exit Condition** | All tests pass | Objective bar met: tests run, 0 CRITICAL, 0 legitimate findings, only bikeshedding left ("Objective Convergence") |
 | **Cost (Time)** | Medium (Standard) | High (Iterative) |
 | **Best For** | General features, MVPs, UI | Security, Core Logic, High-Reliability Systems |
 

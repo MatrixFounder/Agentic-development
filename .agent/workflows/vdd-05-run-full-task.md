@@ -10,14 +10,14 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
 2. **Per-task VDD cycle** (apply for each task in dependency order):
    - Step A — Builder: implement per `System/Agents/08_developer_prompt.md` + `tdd-stub-first` (Stub → Logic). Strict adherence to the task file; no creative reinterpretation.
    - Step B — Verification: run `python3 tests/run_tests.py` (the project test harness; or `pytest tests/` if available) and `validate_skill.py` where the task touches `.agent/skills/`. **Red tests force a Builder loop before Sarcasmotron** — never roast a broken build.
-   - Step C — Sarcasmotron-roast: **delegate to `.agent/workflows/vdd-03-develop.md` Step 3** (DRY — do not inline the persona overlay here). Adopt the persona exactly as defined there, then return a verdict: REJECTED or APPROVED (incl. Hallucination Convergence).
+   - Step C — Sarcasmotron-roast: **delegate to `.agent/workflows/vdd-03-develop.md` Step 3** (DRY — do not inline the persona overlay here). Adopt the persona exactly as defined there, then return a verdict: REJECTED or APPROVED (incl. Objective Convergence).
    - Step D — Refinement loop:
      - REJECTED → return to Step A. **Max 3 iterations.**
      - On the 3rd consecutive REJECTED → STOP. **Persist failure to session-state** via Step 4 with `--status "failed_sarcasmotron" --add_blocker "Task <name>: 3 REJECTED iterations"`, then escalate to user with a digest of findings (no silent retry — escalation is a feature).
-     - APPROVED (incl. Hallucination Convergence) → merge task, **then call Step 4 (persist) → then Step 3 (HITL gate) → then loop to next task**. Order is load-bearing: persist BEFORE the HITL prompt so a runner crash during user wait does not lose merge state.
+     - APPROVED (incl. Objective Convergence) → merge task, **then call Step 4 (persist) → then Step 3 (HITL gate) → then loop to next task**. Order is load-bearing: persist BEFORE the HITL prompt so a runner crash during user wait does not lose merge state.
 3. **HITL gate (between tasks)**: After each merged task, emit a one-page digest:
    ```
-   Task X.Y merged. Verdict: APPROVED via {Hallucination Convergence | clean approval}.
+   Task X.Y merged. Verdict: APPROVED via {Objective Convergence | clean approval}.
    {N} {LOW/MED} findings polished. Iterations: {k}/3.
    Continue to Task X.Y+1? [yes / pause / abort]
    ```
@@ -32,7 +32,7 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    See `.agent/skills/skill-session-state/SKILL.md` §3–§4. This is load-bearing for resumability — do not skip.
 5. **Finalization (no auto-commit)**: At chain end (all tasks merged, or chain aborted/paused), run the full regression suite: `python3 tests/run_tests.py` + `validate_skill.py` across changed skills. Emit a final report containing:
    - Merged tasks list (in order).
-   - **Metrics**: total tasks merged | total REJECTED iterations across the chain | count of `Hallucination-Convergence APPROVED` vs honest APPROVED.
+   - **Metrics**: total tasks merged | total REJECTED iterations across the chain | count of post-refinement APPROVED (`Objective Convergence` reached after ≥1 REJECT) vs first-pass clean APPROVED.
    - Current `git status` snapshot.
 
    **Auto-commit is forbidden.** Commit/PR decision belongs to the user. This is the load-bearing difference from `/develop-all`.

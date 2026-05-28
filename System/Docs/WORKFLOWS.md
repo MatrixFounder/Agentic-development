@@ -203,7 +203,7 @@ A: It parses `../../docs/PLAN.md`. For each entry (e.g., "Task 1.1"), it:
 
 ### Q: When should I use `vdd-05-run-full-task` instead of `05-run-full-task`?
 A: Pick `vdd-05-run-full-task` (slash: `/vdd-develop-all`) when you want **adversarial review per task** (Sarcasmotron persona — see `vdd-03-develop`) and explicit human checkpoints between tasks. It differs from `05-run-full-task` in three load-bearing ways:
-1.  **Adversarial review** instead of standard `code-reviewer`. Sarcasmotron rejects until the only remaining nitpicks are bikeshedding ("Hallucination Convergence" exit rule).
+1.  **Adversarial review** instead of standard `code-reviewer`. Sarcasmotron rejects until an objective bar is met — the full test run has executed, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding remains ("Objective Convergence" exit rule).
 2.  **Mandatory HITL gate** between tasks (`yes / pause / abort`) — chain stops by default, optionally `--auto-continue=<seconds>` for unattended runs.
 3.  **No auto-commit ever.** Final step prints metrics + `git status`; commit/PR decision belongs to the user. This is the load-bearing difference.
 

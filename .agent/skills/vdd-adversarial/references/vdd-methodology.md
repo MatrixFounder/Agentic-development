@@ -34,10 +34,10 @@ As the refinement cycle progresses, the adversarial pressure often reveals edge 
 - Adversarial Cryptography/Security: Integrating suites like Wycheproof to test the implementation against known cryptographic vulnerabilities.
 - Automated Correctness Gating: Once these formal methods are established, they are added to the CI/CD pipeline. The Builder is then tasked with ensuring every PR not only passes the "Roast" but also satisfies the mathematical proof requirements of the formal verifiers.
 
-### IV. Convergence and the Exit Strategy
-A unique feature of VDD is its hallucination-based termination. The cycle of refinement continues until the Builder detects that Sarcasmotron's critiques have become hallucinated.
-- Maximum Viable Refinement: When the code is so lean and robust that a hyper-critical adversary is forced to invent problems that do not exist, the software is considered "Zero-Slop."
-- The Exit Signal: Once the Builder identifies that the critique is no longer grounded in the code's reality, the cycle stops.
+### IV. Convergence and the Exit Strategy (Objective Convergence)
+VDD terminates on an **objective bar** ("Objective Convergence"), not on a subjective "the critic ran out of real bugs" signal. The refinement cycle continues until all four conditions hold simultaneously: (1) the full test run has actually been executed, (2) zero CRITICAL findings, (3) zero legitimate findings in logic / security / slop, and (4) only bikeshedding/style remains.
+- Maximum Viable Refinement ("Zero-Slop"): the state in which the code provably clears the objective bar above — not the state in which a hyper-critical adversary feels forced to invent problems.
+- The Exit Signal: approval is bound to the objective bar. A lazy or sycophantic adversary that fabricates a nitpick to exit early is exactly the failure mode this criterion eliminates; until the bar is met, the cycle continues.
 
 ### V. Core Principles of VDD
 1. Anti-Slop Bias: Assumes that the first "correct" version of code is likely the most dangerous due to hidden technical debt.

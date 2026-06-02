@@ -16,6 +16,23 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.19.1 — Symlink-Aware Prompt Discovery (Codex / `AGENTS.md` hardening)**
+
+In the default `--mode symlink` install, framework prompts/skills land as symlinks into `.agentic-development/`. Agents whose default file-discovery does not descend into symlinked directories saw those paths as empty on the first probe. Verified live on dummy projects: **Antigravity follows symlinks natively** (no change needed), but **Codex** recognized the content only on a *second* attempt — its first read-only probe was a plain `find` (which silently skips symlinked dirs); the next step used `find -L` and everything resolved. Fixed at the instruction + safe-command-policy layer; the installer (`vendors.yaml`, Python) is untouched.
+
+#### **Added**
+
+* **`AGENTS.md` → `SYMLINK RESOLUTION (MANDATORY)`** — states that framework paths (`.agent/`, `.agents/`, `System/`, `.agentic-development/`, …) may be symlinks, mandates following them when reading prompts/skills/tools, and declares that targets resolving inside `.agentic-development/` are *expected and trusted*, not a path-traversal escape. Propagates to every Codex/Cursor install via the `marker_block` bootstrap (whole `AGENTS.md` = managed block).
+* **`AGENTS.md` → `SYMLINK-AWARE COMMAND DEFAULTS`** — mandates `find -L` / `ls -L` / `rg --follow` (`rg -L`) / `fd -L` when inspecting framework dirs (plain `find`/`ls`/`rg` skip symlinked directories), notes direct reads (`cat`/`sed`/`head`/`tail`) follow symlinks automatically, and adds a **retry-once** rule: an empty probe under a known framework dir must be retried with symlink-following before the path is treated as empty/missing.
+
+#### **Changed**
+
+* **`skill-safe-commands` v1.1 → v1.2** — new **Symlink-aware** command category (`find -L`, `ls -L`, `rg --follow` / `rg -L`, `fd -L`); `rg`/`fd` added to the Read-only set; matching regex patterns added; an `[!IMPORTANT]` retry-rule block added to runtime behavior; the Antigravity "Allow List Terminal Commands" line extended with the symlink-aware variants.
+
+#### **Unchanged (invariants)**
+
+* Installer logic (`System/scripts/installer/*`, `vendors.yaml`) byte-identical — no copy/symlink mode change. `GEMINI.md` and `CLAUDE.md` not modified: Antigravity (verified) and Claude follow symlinks by default. Skill gate: `skill-safe-commands` validates PASSED (pre-existing warnings only).
+
 ### **v3.19.0 — Multi-Critic Objective Convergence (parallel adversarial pipeline)**
 
 Follow-up to v3.18.0: the parallel critics (`critic-logic` / `critic-security` / `critic-performance`) still self-certified convergence via a subjective `hallucinating` state — the same gameable pattern v3.18.0 removed from Sarcasmotron, and worse, `/vdd-multi`'s Phase-3 termination marked a category *done* on it. Replaced with an objective state, so both the termination gate and the merge noise-filter are objective.

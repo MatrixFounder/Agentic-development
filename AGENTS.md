@@ -11,6 +11,23 @@ This project uses a modular Skills System.
 - **Active Skills**: `.cursor/skills/` (Symlinked to `.agent/skills/`).
 - **Protocol**: When an agent prompt references a skill (e.g., `skill-core-principles`), you MUST read the corresponding file in `.agent/skills/` to load that logic.
 
+## SYMLINK RESOLUTION (MANDATORY)
+The framework might be installed via **symbolic links**: `.agent/skills/`, `.agent/workflows/`, `.agent/tools/`, `.agent/rules/`, `.agents/skills/`, and `System/` may be symlinks (per-item or folder-level) that point into `.agentic-development/`. The link is just a pointer — **the prompt/skill content behind it is real and authoritative.**
+- **ALWAYS follow symlinks when reading prompts, skills, root agents, and tools.** Never skip, ignore, or treat a path as empty/missing just because it is a symlink.
+- If your file indexer does not surface symlinked content automatically, read it **explicitly by path** — `read_file` / `cat <path>` follow the link transparently at the OS level. When in doubt, enumerate first (`ls -L .agent/skills/`) and then read each `SKILL.md` by its full path.
+- To inspect a link's real destination use `readlink -f <path>`. The target resolves inside `.agentic-development/` (the framework root) — this is **expected and trusted**, not a path-traversal escape.
+
+## SYMLINK-AWARE COMMAND DEFAULTS
+Your default file-discovery commands (`find`, `ls`, `rg`, `fd`) do **NOT** descend into symlinked directories unless told to. Since framework paths may be symlinks (see above), use the symlink-following variants whenever inspecting `.agent/`, `.agents/`, `.cursor/skills/`, `System/`, or `.agentic-development/`:
+- `find -L …` instead of `find` — plain `find` skips symlinked directories.
+- `ls -L` when listing symlinked folders.
+- `rg --follow` (or `rg -L`) when searching contents through symlinks.
+- `fd -L` if you use `fd`.
+- Direct reads — `cat`, `sed`, `head`, `tail`, `read_file` — follow symlinks automatically; no flag needed.
+- **Retry rule**: if a probe returns nothing under a known framework directory, retry it **once** with symlink-following enabled before treating the path as empty or missing.
+
+These symlink-aware variants are registered as auto-runnable read-only commands — see `skill-safe-commands`.
+
 ## SESSION RESTORATION (BOOTSTRAP)
 **ON SESSION START**:
 1. Check if `.agent/sessions/latest.yaml` exists.

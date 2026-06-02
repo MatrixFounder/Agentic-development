@@ -2,7 +2,7 @@
 name: skill-safe-commands
 description: "Centralized list of commands safe for auto-execution without user approval. Single source of truth."
 tier: 0
-version: 1.1
+version: 1.2
 ---
 # Safe Commands Protocol
 
@@ -16,7 +16,8 @@ This skill defines **all commands that are SAFE TO AUTO-RUN** without user appro
 
 | Category | Commands | Reason |
 |----------|----------|--------|
-| **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `tree`, `wc`, `echo` | Do not modify state |
+| **Read-only** | `ls`, `cat`, `head`, `tail`, `find`, `grep`, `rg`, `fd`, `tree`, `wc`, `echo` | Do not modify state |
+| **Symlink-aware** | `find -L`, `ls -L`, `rg --follow` / `rg -L`, `fd -L` | Read-only, but follow symlinks into framework dirs (`.agent/`, `.agents/`, `.cursor/skills/`, `System/`, `.agentic-development/`). Plain `find`/`ls`/`rg` do **not** descend into symlinked directories |
 | **File info** | `stat`, `file`, `du`, `df` | Informational only |
 | **Git read** | `git status`, `git log`, `git diff`, `git show`, `git branch`, `git remote`, `git tag` | Read-only git operations |
 | **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` | Documented, non-destructive moves (TASK/PLAN rotate in lockstep) |
@@ -31,7 +32,13 @@ Commands are safe if they match these patterns:
 
 ```
 # Read-only filesystem
-^(ls|cat|head|tail|find|grep|tree|wc|stat|file|du|df|echo)(?:\s|$)
+^(ls|cat|head|tail|find|grep|rg|fd|tree|wc|stat|file|du|df|echo)(?:\s|$)
+
+# Symlink-aware read-only — framework dirs (.agent/, .agents/, System/, .agentic-development/) may be symlinks
+^find\s+-L
+^ls\s+-[a-zA-Z]*L
+^rg\s+(--follow|-L)
+^fd\s+-[a-zA-Z]*L
 
 # Git read operations
 ^git\s+(status|log|diff|show|branch|remote|tag)
@@ -66,6 +73,15 @@ When calling `run_command` in **ANY** environment:
 2. If match found → Set `SafeToAutoRun: true`.
 3. If no match → Set `SafeToAutoRun: false` (require approval).
 
+> [!IMPORTANT]
+> **Symlink-following is the default for framework paths.** When listing or
+> searching `.agent/`, `.agents/`, `.cursor/skills/`, `System/`, or
+> `.agentic-development/`, prefer the symlink-aware variants (`find -L`,
+> `ls -L`, `rg --follow`) — a plain `find`/`ls`/`rg` silently skips symlinked
+> directories. If a read-only probe returns **nothing** under a known
+> framework directory, retry it **once** with symlink-following enabled before
+> treating the path as empty or missing.
+
 ### For Users (Configuration)
 > **Note for Agents:** Do NOT create configuration files (like `.cursorrules` or `AGENTS.md`) automatically. These are user-managed files.
 
@@ -74,7 +90,7 @@ When calling `run_command` in **ANY** environment:
 
 **Antigravity Users:**
 - Add the command list below to "Allow List Terminal Commands" setting in IDE options:
-  `ls,cat,head,tail,find,grep,tree,wc,stat,file,du,df,git status,git log,git diff,git show,git branch,git remote,git tag,mv docs/TASK.md,mv docs/PLAN.md,mkdir -p docs,mkdir -p .agent,mkdir -p tests,python -m pytest,python3 -m pytest,npm test,npx jest,cargo test`
+  `ls,cat,head,tail,find,find -L,ls -L,grep,rg,rg --follow,fd,fd -L,tree,wc,stat,file,du,df,git status,git log,git diff,git show,git branch,git remote,git tag,mv docs/TASK.md,mv docs/PLAN.md,mkdir -p docs,mkdir -p .agent,mkdir -p tests,python -m pytest,python3 -m pytest,npm test,npx jest,cargo test`
 
 ### Troubleshooting
 If the IDE still requests approval for commands listed here:

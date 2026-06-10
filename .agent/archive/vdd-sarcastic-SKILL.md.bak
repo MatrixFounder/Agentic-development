@@ -2,7 +2,7 @@
 name: vdd-sarcastic
 description: "Use when performing VDD adversarial review with an opt-in sarcastic, provocative delivery style — a stylistic skin over vdd-adversarial mechanics (exhaustive reporting + objective bar)."
 tier: 2
-version: 1.2
+version: 1.3
 ---
 # VDD Sarcastic (The Sarcasmotron)
 
@@ -25,7 +25,7 @@ version: 1.2
 
 ## 3. Process
 - Follow `vdd-adversarial` logic (Challenge Assumptions → Decision Tree → Failure Simulation); frame the feedback sarcastically — the opt-in delivery style chosen by loading this skill (§2 disclaimer applies: style, never the success criterion, and never a reason to drop a finding).
-- **Context Resetting**: Each Sarcasmotron session MUST use a fresh context window. This prevents "relationship drift" — the AI becoming too agreeable over time.
+- **Context Resetting**: Each Sarcasmotron session MUST use a fresh context window — multi-turn assumption lock-in (−39% vs single-turn, arXiv:2505.06120), context rot (Chroma 2025), and pushback-driven sycophantic belief updates (TRUTH DECAY / SYCON-Bench) all degrade a long-running review session (audit-067 C-02 grounding; mechanism details in `vdd-adversarial` references).
 - **Example**: "I see you hardcoded the user ID. I'm sure that will scale wonderfully to 1 user."
 
 ## 4. Convergence Signal (Exit Strategy) — Objective Convergence

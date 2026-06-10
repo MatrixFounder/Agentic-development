@@ -27,7 +27,7 @@
 - **File:** `.agent/skills/skill-adversarial-security/SKILL.md` §3, §5
 - **Done in:** commit `a9c032a`. §3 now: if script can't run (critic-security has no Bash), report `scan: NOT RUN`, manual review only, **never fabricate scanner output**; orchestrator is responsible for running `run_audit.py` and passing results into the critic prompt. §5 step 1 synced.
 - **Verified:** 2026-06-10.
-- **Residual (tracked in item 11):** the orchestrator side of the contract — `vdd-multi.md` Phase 1 does not yet instruct the orchestrator to run `run_audit.py` and inject results into the critic-security prompt. Until item 11 lands, critic-security legitimately reports `scan: NOT RUN` on every `/vdd-multi` run.
+- **Residual (tracked in item 11):** ✅ resolved in Task 074 / v3.20.5 — `vdd-multi.md` Phase 1 Step 1.0 now instructs the orchestrator to run `run_audit.py` (and the test suite) and inject results into critic prompts; absence of the evidence block → finding "exit-bar condition unverifiable", never clean-pass.
 
 ---
 
@@ -165,7 +165,9 @@ Document in `references/claude-code.md` + critic wrappers: `fable` tier exists a
 - **Verified:** §1–§7 headings unshifted (diff); pytest 30/30 (no script change); skill gate 43/43.
 `security-audit/SKILL.md`: methodology section gets an explicit two-layer model — (1) deterministic floor: regex + external tools (reproducible, cheap, CI-gateable); (2) LLM semantic pass: long-context taint/logic review + tool-description poisoning check (the class regex categorically cannot catch). Add semgrep licensing footnote (CE since Dec 2024; Opengrep fork as drop-in alternative). Reference frontier evidence (AIxCC, Big Sleep, Codex Security / Claude Code Security) as rationale.
 
-### 11. 🔜 [C-13] Resolve critic capability asymmetry (orchestrator-supplies-evidence contract)
+### 11. ✅ [C-13] Resolve critic capability asymmetry (orchestrator-supplies-evidence contract)
+- **Done in:** Task 074 / v3.20.5 (2026-06-10), gate artifact `docs/reviews/framework-audit-074.md`. `vdd-multi.md` Phase 1 Step 1.0 (orchestrator runs tests + `run_audit.py` before spawn) + `Execution evidence` block in the prompt skeleton (tests → all critics; scan → critic-security) + absence rule; Phase 2 Summary evidence line; sequential fallback step 0 (contract parity). Exit-bar condition (1) extended with a byte-identical supplied-evidence parenthetical in its 3 lockstep locations (vdd-adversarial 1.4, vdd-sarcastic 1.4, methodology §IV); absence-rule clauses in `skill-adversarial-security` §3 (1.4) and `skill-adversarial-performance` Termination (1.3); `skill-parallel-orchestration` 3.3. Wrappers untouched (thin-wrapper discipline). Closes the P0 item 2 residual; removes experiment 13's arm-D handicap.
+- **Verified:** contract grep → exactly 7 files; 3 lockstep parentheticals hash-identical; merge rules/enum/flags 0 lines touched; skill gate 43/43; pytest 30/30.
 Critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their exit bar requires "full test run executed". Chosen direction (consistent with P0 item 2 residual): **orchestrator supplies execution evidence** — `vdd-multi.md` Phase 1 prompt template includes: test-run output (or `tests: NOT RUN`), `run_audit.py` JSON for critic-security. Critics treat supplied evidence as input; absence → finding "exit-bar condition unverifiable", not approval. Alternative (rejected for now): granting critics Bash — widens attack/cost surface, breaks read-only critic guarantee.
 
 ### 12. ✅ [C-16] Align skill-adversarial-performance termination with the objective bar
@@ -192,7 +194,7 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
 7 R3c (cross-vendor)      — BLOCKED BY 6 (tier-diverse form available now in Claude Code)
 8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
-11                        — pairs naturally with 7 (both edit vdd-multi Phase 1/2) → one cycle
+11                        — ✅ DONE (Task 074 / v3.20.5; un-handicaps experiment 13 arm D)
 13 (experiment)           — anytime; informs 5 and 7/R3c final decisions
 ```
 

@@ -16,6 +16,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.5 — Orchestrator-Supplies-Evidence Contract (audit-067 item 11, C-13 + P0 item 2 residual)**
+
+Closes the critic capability asymmetry: critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their shared exit bar requires "the full test run has actually been executed". Chosen direction per roadmap (Bash for critics rejected — attack/cost surface, read-only guarantee): **the orchestrator runs the evidence commands and injects results into every critic prompt**. Also closes the P0 item 2 residual — critic-security no longer legitimately reports `scan: NOT RUN` on every `/vdd-multi` run — and removes experiment 13's known arm-D handicap. Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-074.md`, Task 074). **Zero functional change**: doc-only diff, pytest 30/30, skill gate 43/43.
+
+#### **Changed**
+
+* **`vdd-multi.md` Phase 1** gains Step 1.0 "Gather execution evidence": orchestrator runs the test suite (summary or `tests: NOT RUN (<reason>)`) and `run_audit.py` (summary or `scan: NOT RUN (<reason>)`) **before** spawning; the prompt skeleton gains an `Execution evidence` block (tests for all critics, scan additionally for critic-security) + the critic-side rule: evidence is INPUT — never re-run or fabricate; a missing block → finding **"exit-bar condition unverifiable — no execution evidence supplied"**, never `clean-pass`. Phase 2 Summary records evidence state; the sequential fallback gets the same contract (step 0 + flag-parity sentence). Merge rules 1–5, enum, and flags byte-unchanged.
+* **Exit-bar lockstep ×3** (`vdd-adversarial` 1.3→1.4, `vdd-sarcastic` 1.3→1.4, `vdd-methodology.md` §IV): condition (1) extended with one byte-identical parenthetical — executed by you, or via orchestrator-supplied evidence in critic/subagent mode; neither → unverifiable, report as finding, never approve.
+* **Absence-rule clauses** added to the existing critic-side groundwork: `skill-adversarial-security` §3 (1.3→1.4) and `skill-adversarial-performance` Termination cond 1 (1.2→1.3). `skill-parallel-orchestration` 3.2→3.3 (`sequential-fallback.md` concrete pattern step 0 + evidence lines in persona messages; anti-pattern line aligned: target + shared evidence block = legitimate persona input). Critic wrappers untouched (thin-wrapper anti-drift discipline — the rule lives in SOT skills + the Phase-1 prompt).
+
+> **Acceptance evidence:** `exit-bar condition unverifiable` grep → exactly the 7 contract files; the 3 lockstep parentheticals hash-identical (1 unique md5); merge-rule/enum/flag lines 0 touched in diff; skill gate 43/43; pytest 30/30; `.md`-only diff.
+
+---
+
 ### **v3.20.4 — P2 "Aging" Batch: Fresh-Context Rationale, Model-Pin Hygiene, Two-Layer Audit Model, Perf-Critic Objective Bar (audit-067 items 8/9/10/12, C-02/C-06/C-10/C-16)**
 
 Closes the four independent P2 claims in one `/framework-upgrade` cycle (the roadmap's own suggested batch), gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-073.md`, Task 073). In all four cases the **practice is unchanged** — only the rationale/contract text is modernized. **Zero functional change**: doc-only diff, pytest 30/30, skill gate 43/43.

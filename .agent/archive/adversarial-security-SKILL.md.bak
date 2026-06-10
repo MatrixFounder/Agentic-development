@@ -2,7 +2,7 @@
 name: skill-adversarial-security
 description: Use when performing OWASP security critique in adversarial style (optional sarcastic skin). Part of VDD Multi-Adversarial pipeline.
 tier: 2
-version: 1.4
+version: 1.3
 ---
 # Adversarial Security Critic
 
@@ -25,7 +25,7 @@ Before you start your manual review, run the unified audit script to find low-ha
 ```bash
 python3 .agent/skills/security-audit/scripts/run_audit.py . --scan-type all
 ```
-*If the script cannot be executed in your context (the `critic-security` subagent has no Bash tool), report `scan: NOT RUN` in your critique and proceed with manual review only — **never fabricate scanner output**. The orchestrator is responsible for running `run_audit.py` and passing its results into the critic prompt (`vdd-multi` Phase 1 evidence contract, audit-067 C-13). If the prompt carries no execution-evidence block at all (contract breach), emit the finding 'exit-bar condition unverifiable — no execution evidence supplied' and do not signal `clean-pass`.*
+*If the script cannot be executed in your context (the `critic-security` subagent has no Bash tool), report `scan: NOT RUN` in your critique and proceed with manual review only — **never fabricate scanner output**. The orchestrator is responsible for running `run_audit.py` and passing its results into the critic prompt.*
 
 ## 4. The Checklist (Manual Review)
 Do not duplicate effort. Use the high-grade checklists from `security-audit`.

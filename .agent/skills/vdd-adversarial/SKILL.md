@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.3
+version: 1.4
 ---
 # VDD Adversarial
 
@@ -26,7 +26,7 @@ This skill implements the **Iterative Adversarial Refinement** phase ("The Roast
 - **Linear Accountability**: Every line of code MUST trace to a corresponding issue and verification step.
 
 ### Convergence Signal (Exit Strategy) — Objective Convergence
-The review cycle STOPS only when an **objective bar** is met: (1) the full test run has actually been executed, (2) zero CRITICAL findings, (3) zero legitimate findings in logic / security / slop, and (4) only bikeshedding/style remains. That — not "I was forced to invent a flaw" — is the signal of "Maximum Viable Refinement" (Zero-Slop). Approval is bound to the objective bar; fabricating a nitpick is never the trigger to approve. Until the bar is met, keep rejecting.
+The review cycle STOPS only when an **objective bar** is met: (1) the full test run has actually been executed (by you, or — in critic/subagent mode — via execution evidence supplied by the orchestrator; if neither exists, the condition is unverifiable: report the finding 'exit-bar condition unverifiable', never approve), (2) zero CRITICAL findings, (3) zero legitimate findings in logic / security / slop, and (4) only bikeshedding/style remains. That — not "I was forced to invent a flaw" — is the signal of "Maximum Viable Refinement" (Zero-Slop). Approval is bound to the objective bar; fabricating a nitpick is never the trigger to approve. Until the bar is met, keep rejecting.
 
 ## 3. Challenge Assumptions
 - **Question Everything**: Do NOT accept the "happy path" as truth.

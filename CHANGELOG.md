@@ -16,14 +16,14 @@
 
 ## 🇺🇸 English Version (Primary)
 
-### **v3.20.12 — Dispatcher Repositioned: Fallback + Additional Tools (corrects 082's "legacy")**
+### **v3.20.12 — Corrected description of the framework's helper tools (additional + fallback)**
 
-Corrects task 082's overstatement: the `schemas.py`/`tool_runner.execute_tool` dispatcher is **not** abandoned legacy — it is the framework's **additional-tools + fallback** subsystem. Docs-only, no archiving, no code change. Task 083, gate `docs/reviews/framework-audit-083.md`. Gates 43/43, pytest 30/30.
+The framework ships a small set of helper tools — generate a unique archive filename, run tests, check/stage/commit with git, and read/write/list files. A previous release mistakenly described this whole subsystem as obsolete and unused. This release fixes the description only: behaviour, code, and files are unchanged, and nothing was deleted or moved.
 
 #### **Changed**
-* **Two tool classes made explicit.** `generate_task_archive_filename` is **framework-unique** (no native-harness equivalent — always usable via `python3 .agent/tools/task_id_tool.py`, backing `skill-archive-task` Step 3 Option A). The rest (`run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory`) **mirror native tools** → **fallback**. The dispatch primitive (`execute_tool`) is implemented + tested; the LLM loop that would drive it is **not yet wired** (honest status now in `ORCHESTRATOR.md`).
-* **Framework additional tools re-established in bootstrap files** (deleted in 082), **grounded in official vendor docs**: `AGENTS.md` (Cursor/Codex — built-in tools + MCP `mcp.json`/`config.toml`); `GEMINI.md` (Gemini CLI `run_shell_command` + `tools.discoveryCommand`/MCP `mcpServers`, **and Antigravity** — this file serves both). `CLAUDE.md` **unchanged** (already correct).
-* **System/Docs reframed** legacy→additional/fallback: `ORCHESTRATOR.md` (Status Active→Fallback subsystem + `[!NOTE]` banner), `SOURCE_OF_TRUTH.md`, `SKILLS.md`, `RELEASE_CHECKLIST.md`. `SESSION_CONTEXT_GUIDE.md` `task_boundary`→"phase boundary" (genuinely fictional tool). **Nothing archived; dispatcher code untouched.**
+* **The helper tools now fall into two clear groups.** The archive-filename generator has no equivalent among a coding assistant's own tools, so it is always used — run it with `python3 .agent/tools/task_id_tool.py <name>`. The rest (run tests, git, file read/write/list) duplicate what an assistant already does on its own, so they act as a **fallback** for assistants that lack those built-ins. The code that runs an individual tool is implemented and tested; the piece that would let an assistant drive these tools by itself is documented honestly as **not yet built**.
+* **The tool list was restored in the assistant setup files** — `AGENTS.md` (Cursor, Codex) and `GEMINI.md` (Gemini CLI, Antigravity) — where the previous release had removed it. Each entry was written to match that assistant's own official documentation for running commands and adding extra tools. The Claude Code setup file was already correct and left unchanged.
+* **Supporting documents were brought in line** — `ORCHESTRATOR.md`, `SOURCE_OF_TRUTH.md`, `SKILLS.md`, and `RELEASE_CHECKLIST.md` now present the subsystem as additional/fallback tools, and a leftover reference to a tool that never actually existed was corrected. Nothing was archived; all automated checks pass.
 
 ### **v3.20.11 — Vendor-Currency: Tool-Layer Reword + GEMINI.md Symlink Re-sync**
 

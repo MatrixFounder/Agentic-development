@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .config import (
-    MCP_CONFIG_FILENAMES,
     SELF_DIR,
     SEVERITY_ORDER,
     SKIP_DIRS,
@@ -80,10 +79,4 @@ def detect_project_types(root_dir: str) -> List[str]:
             types.add("go")
         if any(f in IAC_FILENAMES for f in files) or any(f.endswith(".tf") for f in files):
             types.add("iac")
-        if any(f in MCP_CONFIG_FILENAMES for f in files):
-            types.add("mcp")
-    # .vscode is in SKIP_DIRS (pruned above) but is the canonical mcp.json home —
-    # probe the project root explicitly so detection still triggers.
-    if (Path(root_dir) / ".vscode" / "mcp.json").exists():
-        types.add("mcp")
     return list(types)

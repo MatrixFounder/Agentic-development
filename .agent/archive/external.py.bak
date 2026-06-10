@@ -56,12 +56,3 @@ def run_external_tools(project_path: str, types: List[str]):
     if "iac" in types:
         run_command(["checkov", "-d", "."], cwd=cwd)
         run_command(["trivy", "fs", "--scanners", "misconfig", "."], cwd=cwd)
-
-    if "mcp" in types:
-        # snyk-agent-scan (formerly Invariant mcp-scan): tool poisoning, tool
-        # shadowing, toxic flows across MCP servers and agent skills.
-        # SAFETY: NEVER pass --dangerously-skip-permissions-style flags here
-        # (e.g. --dangerously-run-mcp-servers) — an audit must not auto-start
-        # untrusted MCP servers; starting them is the operator's consent-gated call.
-        if not run_command(["snyk-agent-scan", "."], cwd=cwd):
-            run_command(["mcp-scan"], cwd=cwd)  # legacy Invariant CLI fallback

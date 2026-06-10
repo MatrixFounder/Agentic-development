@@ -16,6 +16,30 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.20.0 — Апгрейд безопасности Agentic/MCP (P1-пункт 3 аудита 067 — наивысший реальный риск)**
+
+Закрывает утверждения **C-11** (agentic/MCP-угрозы покрыты однострочниками, ноль паттернов детекции) и **C-14** (у роли Security Auditor нет агентной модели угроз) из аудита актуальности verification-стека (задача 067). Внешняя планка сдвинулась, пока чек-листы стояли на месте: **OWASP Top 10 for Agentic Applications 2026** (ASI01–ASI10, 09.12.2025), **NSA AISC CSI «MCP: Security Design Considerations»** (U/OO/6030316-26, май 2026), CVE-2025-6514 (9.6) / CVE-2025-49596 (9.4) / кластер MCP-STDIO из 11 CVE, инциденты «в дикой природе» (rug pull postmark-mcp, s1ngularity, Shai-Hulud) — и всё это в домашнем домене самого фреймворка. Выполнено циклом `/framework-upgrade` под гейтом `skill-self-improvement-verificator` (режимы A+B, `docs/reviews/framework-audit-069.md`, задача 069); имена ASI, контроли NSA и CLI сканеров **сверены с первоисточниками** (genai.owasp.org, nsa.gov, github.com/snyk/agent-scan), а не взяты из памяти модели.
+
+#### **Добавлено**
+
+* **`references/checklists/mcp_agentic_security.md`** — секции **1:1 к ASI01–ASI10**, операционные контроли NSA CSI (least-privilege-токены, маркировка контекста, криптоизоляция, аудит-логирование, исходящий фильтрующий прокси/DLP, подписанный provenance, hardening реестров, локальные MCP-сканы), семь именованных паттернов атак (tool poisoning, rug pull, tool shadowing, full-schema poisoning, confused deputy, token passthrough, session hijacking), блок калибровки по инцидентам и честная граница «regex-floor vs LLM-ревью».
+* **Сканер: новый `--scan-type mcp`** (`scan_mcp_agentic`, входит в `all`) — **10 regex-паттернов**, каждый с реальным CWE **и** ASI-меткой, плюс поле `scope` (известные MCP-конфиги / любые конфиги / код): auto-approve-ключи, флаги обхода разрешений, незапиненные `npx -y`/`uvx` (вкл. `@latest`), незапиненные JSON `args`, `mcp-remote` (класс CVE-2025-6514), MCP-URL по cleartext HTTP, inline-секреты в `env`, серверы-оболочки shell, эвристика императивных описаний, маркер `<IMPORTANT>`. Provenance-находка (low) на каждый `mcp.json`/`.mcp.json`/`claude_desktop_config.json`; **заходит в `.vscode/`** (свой prune-набор — канонический дом mcp.json, который прятал `SKIP_DIRS`); whole-file-матчинг с ReDoS-гардом в стиле IaC; **потолок severity = HIGH** по дизайну (regex не доказывает эксплуатируемость конфига → MCP-находки сами по себе не валят `--fail-on critical`). Markdown сознательно не сканируется — семантическое отравление прозы относится к классу LLM-ревью. `detect_project_types()` получил тип `"mcp"`. **12 новых регрессионных тестов** (всего 29), включая дыру prune для `.vscode`, многострочные env-блоки и негативы pinned-vs-unpinned.
+* **Ростер внешних тулов**: `snyk-agent-scan` (бывший Invariant `mcp-scan`; легаси-CLI как fallback) автоматически запускается при обнаружении MCP-артефактов — **никогда** с флагами автозапуска серверов; запуск недоверенных MCP-серверов остаётся consent-gated действием оператора.
+* **`10_security_auditor.md` v3.6.0 → v3.7.0** — новый **Step 1.5: Agentic Threat Model** (goal hijack ASI01, подмена тулов ASI02, identity/privilege + confused deputy ASI03, supply chain/rug pull ASI04, отравление памяти ASI06, межагентное доверие ASI07) + указатель TIER 1 на новый чек-лист для agentic/MCP-целей. Блок TIER 0 байт-в-байт прежний.
+
+#### **Изменено**
+
+* **Скилл `security-audit` 3.3 → 3.4** — §2 (scope + usage) получил MCP-строку и scan-type; в §3 добавлена обязательная подсекция «Agentic / MCP» с примечанием об ограничениях regex-floor; frontmatter `description` теперь триггерится на MCP/agentic; версия синхронизирована (frontmatter/заголовок/докстринг `run_audit.py`/`audit.__version__`).
+* **Реестр `System/Docs/SKILLS.md`** — строка security-audit обновлена (устарела на «v3.2 / 121 паттерн»; теперь v3.4 / **148 паттернов**, вкл. MCP/ASI).
+
+#### **Исправлено (найдено при dogfooding)**
+
+* **Фантомное ReDoS-предупреждение в `scan_secrets`** — `skipped_lines` считался как `content.count("\n") + 1 - len(safe_lines)`, что переоценивает на 1 для файлов с завершающим переводом строки (`splitlines()` не даёт хвостового пустого элемента), поэтому **каждый** обычный файл печатал вводящее в заблуждение `[WARN] skipped 1 line(s) > 4000 chars (ReDoS guard)`. Реально ничего не пропускалось, но ложный сигнал «skipped» подрывает собственное правило скила («проверь `skipped_files` = false negatives»). Теперь считаются только действительно длинные строки (`len(all_lines) - len(safe_lines)`). +1 регресс-тест (нет фантомного варнинга на коротких строках; реальный варнинг по-прежнему срабатывает на строке > лимита). Найдено прогоном сканера на dogfood-корпусе из 17 файлов разных доменов.
+
+#### **Верификация**
+
+* pytest **30/30**; `run_audit.py` на этом репозитории: счётчики находок байт-в-байт равны базовой линии до изменений (22: 10 critical / 12 medium — давние FP regex-floor в скриптах фреймворка) + **0 MCP-находок**; skill gate **43/43**; drift-grep чистые; dogfood-корпус (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP) → 100 находок по всем сканерам, каждый заложенный класс багов задетектирован; остальной бэклог аудита 067 (пункты 4–13) не тронут.
+
 ### **v3.19.2 — Security-критик: объективное завершение + запрет фабрикации скана (P0 аудита 067)**
 
 Аудит актуальности verification-стека (`docs/reviews/verification-stack-currency-audit-067.md`, задача 067) оценил два утверждения в `skill-adversarial-security` как **HARMFUL** — остатки, которые не зацепил hardening v3.18/v3.19 (Objective Convergence). Оба исправлены циклом `/framework-upgrade` под гейтом `skill-self-improvement-verificator` (режимы A+B, `docs/reviews/framework-audit-068.md`); остальной verification-стек не тронут.

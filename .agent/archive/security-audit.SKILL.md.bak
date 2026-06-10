@@ -1,11 +1,11 @@
 ---
 name: security-audit
-description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
+description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.4
+version: 3.3
 ---
 
-# Security Audit v3.4
+# Security Audit v3.3
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
@@ -19,7 +19,7 @@ version: 3.4
 **EXECUTE** the unified audit script to detect vulnerabilities:
 ```bash
 python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
-  [--scan-type all|deps|secrets|patterns|config|iac|mcp|sbom|external] \
+  [--scan-type all|deps|secrets|patterns|config|iac|sbom|external] \
   [--fail-on critical|high|medium] [--output json|summary] \
   [--no-limit] [--max-size MB]
 ```
@@ -34,9 +34,8 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
   - **GraphQL** — introspection/playground enabled in prod, missing depth limits
   - Config / Misconfiguration (A05, CWE-16) — debug mode, CORS, headers
   - IaC / Containers — Docker, Kubernetes, Terraform, CloudFormation patterns
-  - **MCP / Agentic (OWASP ASI Top 10 2026)** — MCP config provenance (`mcp.json`, `.mcp.json`, `claude_desktop_config.json`, incl. `.vscode/`), auto-approve keys, permission-bypass flags, unpinned `npx -y`/`uvx` servers, `mcp-remote`, cleartext MCP URLs, inline env secrets, shell-spawning servers, tool-description poisoning heuristics — all findings CWE+ASI tagged
   - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
-- **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected; `snyk-agent-scan` (ex-Invariant `mcp-scan`) when MCP config artifacts are detected — never with auto-start flags (servers stay consent-gated).
+- **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected.
 - **`--scan-type external`** runs **ONLY** external tools and SKIPS the in-process regex scans. Use `--scan-type all` (default) to run both.
 - **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines.
 - **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).
@@ -89,15 +88,6 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 2. **Insecure Output Handling (LLM02)**: Is LLM output sanitized before use in HTML/SQL/shell?
 3. **Excessive Agency (LLM06)**: Does the agent have minimal permissions? Human-in-the-loop for destructive actions?
 4. **Supply Chain (LLM05)**: Are models from trusted sources? Plugins verified?
-
-### Agentic / MCP (OWASP ASI Top 10 2026 + NSA MCP CSI)
-**MANDATORY:** Read `references/checklists/mcp_agentic_security.md`.
-**Top Checks:**
-1. **Goal Hijack (ASI01)**: Can untrusted content (tool outputs, RAG docs, web pages) reach the agent as instructions?
-2. **Tool Poisoning / Rug Pull (ASI01/ASI04)**: Are tool descriptions clean of steering language? Are definitions pinned + provenance-verified (post-approval mutation = rug pull)?
-3. **Excessive Agency (ASI03)**: Auto-approve disabled for destructive tools? Least-privilege token per tool/action? No confused-deputy / token passthrough?
-4. **Supply Chain (ASI04)**: Every MCP server version-pinned (no `npx -y pkg` / `@latest`), from a trusted registry?
-> **Limitation (honest floor):** the regex layer (`--scan-type mcp`) only catches crude markers. **Semantic** tool-description poisoning, rug-pull dynamics, and toxic flow composition require LLM/manual review — a clean scan is not clearance for those classes.
 
 ## 4. Threat Modeling
 Before declaring "Secure", perform lightweight threat modeling:

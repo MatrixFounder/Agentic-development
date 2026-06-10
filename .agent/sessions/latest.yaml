@@ -1,22 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T10:22:07.529467"
+last_updated: "2026-06-10T11:36:03.518531"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "adversarial-security-p0-fixes"
-  status: "done"
+  name: "mcp-agentic-security-upgrade"
+  status: "completed-v3.20.0-dogfooded"
   predicted_steps: 0
 
 context_summary: |
-  Task 068 DONE (v3.19.2): both HARMFUL claims from audit 067 fixed in skill-adversarial-security v1.2. C-05: §7 termination rebound to objective bar only (snarky-comment condition deleted). C-15: §3 'Mock the results' deleted -> scan: NOT RUN no-fabrication protocol + orchestrator-runs-run_audit.py note; §5 step 1 aligned. Gates: verificator Modes A+B APPROVED (framework-audit-068.md); validator PASS; stale-grep zero hits; skill gate 43/43; Code Reviewer APPROVED; Security Auditor PASS (0 findings). CHANGELOG v3.19.2 EN+RU + README headers. Remaining audit-067 backlog (5xP1, 5xP2, 1xP2-experiment) still open for future cycles.
+  Task 069 (v3.20.0) DONE + dogfooded. Built 17-file multi-domain corpus in /tmp/sec-audit-dogfood (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP); run_audit caught 100 findings (23C/45H/29M+3low) across ALL scanners incl. new MCP feature (all 10 patterns + .vscode descent + provenance + code-scope poisoning). Dogfood surfaced + fixed a phantom ReDoS-warning bug in scan_secrets (count(\n)+1 off-by-one on newline-terminated files); +1 regression test. pytest 30/30, repo baseline still (22,10,0,12), gate 43/43. Observations flagged (not fixed): .pem not in scanned extensions; cross-language send() FP (Solidity pattern on JS) = documented regex-not-file-type-aware limitation.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "Step 5 finalization: full regression green for all Task 063 scope. Pre-existing unrelated failure noted: tests/test_product_scripts.py fails under bare 'unittest discover -s tests' (import init_product) — untouched by Task 063, out of scope. 3 real bugs caught+fixed by the Verify->Roast loop during the chain: dry-run FS-mutation ordering (063-09), create_snapshot overlapping-paths crash (063-10), copy_tree CWD-dependent dangling-symlink resolution (063-11)."
-  - "/vdd-multi fixed: _remove_install ownership-preserving (no wholesale rmtree of user vendor dirs); switch writes fresh state (no stale-hash inheritance, crash-safe); managed_block rejects marker-line injection; doctor validates state schema; update handles cross-FS IntegrityError; _atomic_symlink random temp; apply_retention floors at 1; System added to _SCAN_DIRS (was leaking on uninstall); install.sh English; ARCHITECTURE 9.6 TOCTOU wording corrected. Completeness: all 11 tasks confirmed fully implemented, no stubs."
-  - "/update-docs: did NOT archive docs/TASK.md (Task 063) — the installer work is still uncommitted; task rotation is premature. TASK.md/ARCHITECTURE.md verified current; no reverse-engineering needed."
   - "Live install test caught a genuine copy-mode bug: shutil.copytree(symlinks=False) skipped the framework's .claude/skills symlink (valid but relative -> CWD-resolved as dangling). Fix: copy_tree uses symlinks=True, preserving framework-internal relative symlinks self-consistently inside the copy. +1 regression test (test_copy_mode_populates_symlink_sourced_component)."
   - "antigravity: bootstrap_file GEMINI.md, bootstrap_aliases [] (no AGENTS.md). cursor: bootstrap_strategy none->marker_block, bootstrap_file AGENTS.md. FR-15 reframed from 'Antigravity dual bootstrap' to 'per-vendor bootstrap-file mapping'."
   - "065 APPROVED via Objective Convergence (the new bar, dogfooded on its own diff): 0 CRITICAL, 0 MAJOR, contract converged 4/4, DECISION TABLE byte-identical, skill gate 43/43. VDD loop caught residuals in VDD.md/TDD_VS_VDD.md/vdd-adversarial.md -> fixed."
@@ -24,6 +21,9 @@ recent_decisions:
   - "067 scope (user, 2026-06-10): full audit in-session; A/B experiment design-only; cross-vendor verdict capped at Unvalidated"
   - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
   - "068: C-15 fix wording avoids 'snarky' token entirely so future tone-residual greps stay clean; §7 doctrine note phrases the guard as 'never invent a flaw — or a sarcastic remark'"
+  - "Roadmap discipline: 7-R3a/b/d shippable now; 7-R3c cross-vendor blocked by item 6; item 11 pairs with 7 in one vdd-multi cycle; adapter validation (6a-6c) requires operator machines with real CLIs"
+  - "069: MCP patterns carry scope field (mcp-config/any-config/code) - file targeting in data not code; .md never scanned (LLM-review class); severity ceiling HIGH so MCP findings cannot trip --fail-on critical alone"
+  - "Dogfood fix folded into uncommitted v3.20.0 (CHANGELOG Fixed subsection EN+RU); .pem coverage + Solidity-pattern file-gating left as flagged recommendations, not in-scope edits"
 
 completed_tasks:
   - "Task A"
@@ -46,3 +46,4 @@ completed_tasks:
   - "task-065-reviewers-hardening"
   - "task-066-multi-critic-objective-convergence"
   - "task-067-verification-stack-currency-audit"
+  - "task-068-adversarial-security-p0-fixes"

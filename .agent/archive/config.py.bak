@@ -27,15 +27,6 @@ IAC_FILENAMES = {
     'Containerfile', 'kustomization.yaml', 'kustomization.yml',
 }
 
-# Well-known MCP config artifacts (presence => provenance review; targeted by
-# scan_mcp_agentic and detect_project_types).
-MCP_CONFIG_FILENAMES = {'mcp.json', '.mcp.json', 'claude_desktop_config.json'}
-
-# MCP scan prune set: .vscode is in SKIP_DIRS for noise reasons, but it is the
-# canonical home of mcp.json / settings.json auto-approve keys — the MCP scanner
-# must descend into it (filename-targeted, so traversal stays cheap).
-MCP_SCAN_PRUNE = SKIP_DIRS - {'.vscode'}
-
 # Self-exclusion: skip the scanner's ENTIRE skill directory (scripts + tests +
 # fixtures that intentionally contain "bad" patterns as regression evidence).
 # __file__ = .../security-audit/scripts/audit/config.py

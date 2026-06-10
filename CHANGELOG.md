@@ -16,6 +16,30 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.0 — Agentic/MCP Security Upgrade (audit-067 P1 item 3 — highest real-world risk)**
+
+Closes claims **C-11** (agentic/MCP threats covered by one-liners, zero detection patterns) and **C-14** (Security Auditor role has no agentic threat model) from the verification-stack currency audit (Task 067). The external bar moved while the checklists stood still: **OWASP Top 10 for Agentic Applications 2026** (ASI01–ASI10, 2025-12-09), **NSA AISC CSI "MCP: Security Design Considerations"** (U/OO/6030316-26, May 2026), CVE-2025-6514 (9.6) / CVE-2025-49596 (9.4) / the MCP-STDIO 11-CVE cluster, and in-the-wild incidents (postmark-mcp rug pull, s1ngularity, Shai-Hulud) — in the framework's own home domain. Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-069.md`, Task 069); ASI names, NSA controls, and scanner CLIs **verified against primary sources** (genai.owasp.org, nsa.gov, github.com/snyk/agent-scan) instead of model memory.
+
+#### **Added**
+
+* **`references/checklists/mcp_agentic_security.md`** — sections mapped **1:1 to ASI01–ASI10**, NSA CSI operational controls (least-privilege tokens, context labeling, cryptographic isolation, audit logging, outgoing filtering proxy/DLP, signed provenance, registry hardening, local MCP scans), the seven named attack patterns (tool poisoning, rug pull, tool shadowing, full-schema poisoning, confused deputy, token passthrough, session hijacking), an incident-calibration block, and an honest "scanner floor vs LLM review" boundary.
+* **Scanner: new `--scan-type mcp`** (`scan_mcp_agentic`, included in `all`) — **10 regex patterns**, each tagged with a real CWE **and** an ASI ID, with a per-pattern `scope` field (known MCP configs / any config / code): auto-approve keys, permission-bypass flags, unpinned `npx -y`/`uvx` (incl. `@latest`), unpinned JSON `args`, `mcp-remote` (CVE-2025-6514 class), cleartext MCP URLs, inline `env` secrets, shell-spawning servers, imperative-description heuristic, `<IMPORTANT>` poisoning marker. Provenance finding (low) for every `mcp.json`/`.mcp.json`/`claude_desktop_config.json`; **descends into `.vscode/`** (custom prune — the canonical mcp.json home that `SKIP_DIRS` hid); whole-file matching with the IaC-style ReDoS guard; **severity ceiling HIGH** by design (regex can't prove config exploitability → MCP findings alone can never trip `--fail-on critical`). Markdown is deliberately not scanned — semantic prose poisoning is the LLM-review class. `detect_project_types()` gains `"mcp"`. **12 new regression tests** (29 total), including the `.vscode` prune hole, multi-line env blocks, and pinned-vs-unpinned negatives.
+* **External tool roster**: `snyk-agent-scan` (formerly Invariant `mcp-scan`; legacy CLI as fallback) auto-attempted when MCP config artifacts are detected — **never** with server-auto-start flags; starting untrusted MCP servers stays a consent-gated operator action.
+* **`10_security_auditor.md` v3.6.0 → v3.7.0** — new **Step 1.5: Agentic Threat Model** (goal hijack ASI01, tool tampering ASI02, identity/privilege + confused deputy ASI03, supply chain/rug pull ASI04, memory poisoning ASI06, inter-agent trust ASI07) + TIER 1 pointer to the new checklist for agentic/MCP targets. TIER 0 block byte-identical.
+
+#### **Changed**
+
+* **`security-audit` skill 3.3 → 3.4** — §2 scope + usage gain the MCP line and scan type; §3 gains the "Agentic / MCP" mandatory-checklist subsection with the regex-floor limitation note; frontmatter `description` now triggers on MCP/agentic; version lockstep across frontmatter/header/`run_audit.py` docstring/`audit.__version__`.
+* **`System/Docs/SKILLS.md` registry** — security-audit line refreshed (was stale at "v3.2 / 121 patterns"; now v3.4 / **148 patterns** incl. MCP/ASI capability).
+
+#### **Fixed (surfaced by dogfooding)**
+
+* **`scan_secrets` phantom ReDoS warning** — `skipped_lines` used `content.count("\n") + 1 - len(safe_lines)`, which over-counts by 1 on newline-terminated files (`splitlines()` yields no trailing empty element), so **every** normal file printed a misleading `[WARN] skipped 1 line(s) > 4000 chars (ReDoS guard)`. No content was actually skipped, but a false "skipped" signal undermines the skill's own "check `skipped_files` = false negatives" guidance. Now counts only genuinely over-long lines (`len(all_lines) - len(safe_lines)`). +1 regression test (no phantom warning on short lines; real warning still fires on a >limit line). Found by running the scanner against a 17-file multi-domain dogfood corpus.
+
+#### **Verification**
+
+* pytest **30/30**; `run_audit.py` on this repo: finding counts byte-identical to pre-change baseline (22: 10 critical / 12 medium — pre-existing regex-floor FPs in framework scripts) + **0 MCP findings**; skill gate **43/43**; drift greps clean; dogfood corpus (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP) → 100 findings across all scanners, every planted bug class detected; remaining audit-067 backlog (items 4–13) unchanged.
+
 ### **v3.19.2 — Adversarial-Security Critic: Objective Termination + No-Fabrication Recon (audit-067 P0)**
 
 The verification-stack currency audit (`docs/reviews/verification-stack-currency-audit-067.md`, Task 067) graded two claims in `skill-adversarial-security` **HARMFUL** — the residuals the v3.18/v3.19 Objective-Convergence hardening missed. Both fixed in a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-068.md`); nothing else in the verification stack touched.

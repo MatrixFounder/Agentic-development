@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "Dedup key is only msg.to (recipient address), so any two distinct messages to the same recipient result in the second being silently dropped and counted as skipped; subject and body are ignored, making the dedup semantically wrong for multi-message-per-recipient use cases.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "smtplib.SMTP() constructor is outside the try block; if it raises (network error, DNS failure), the exception propagates and aborts the entire loop, leaving _pending uncleared so a subsequent flush() will re-attempt all messages including any already successfully sent in prior loop iterations.",
+   "bikeshedding": false
+  },
+  {
+   "line": 63,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.93,
+   "description": "On sendmail() failure the exception escapes the loop, _pending.clear() on line 65 is never reached, and a subsequent flush() call will re-send messages already delivered in earlier loop iterations (double-send), while no error is logged and the failure is completely silent.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "_seen is never cleared in flush(), so after a successful flush any re-enqueue attempt for the same recipient address is permanently silently dropped as a duplicate across all future batches until the caller explicitly calls clear_dedup_cache().",
+   "bikeshedding": false
+  },
+  {
+   "line": 74,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "clear_dedup_cache() clears _seen but not _pending, so a caller can re-enqueue a recipient that is already in _pending (not yet flushed), producing a duplicate _pending entry that causes double-send on the next flush().",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.72,
+   "description": "_render() builds a raw RFC 2822 message string without encoding non-ASCII characters in subject or body per RFC 2047, which will silently produce a malformed message if msg.subject or msg.body contains non-ASCII content, and behavior depends entirely on SMTP server leniency.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.99,
+   "description": "A new SMTP TCP connection is opened and closed per message inside the loop; for N messages this incurs N full handshake round-trips; noted briefly per scope \u2014 defer detail to critic-performance.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

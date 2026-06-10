@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reserve() uses strict greater-than (`stock > quantity`), so a reservation for exactly the available stock quantity always fails; the correct guard is `>=`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "reserve() reads stock and writes in two separate statements with no transaction isolation; concurrent calls can both pass the stock check and drive stock negative (TOCTOU race).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "reserve() performs no validation on `quantity`; zero quantity returns True (no-op commit), and negative quantity increments stock via `stock - (-n)`, allowing silent stock inflation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "search_by_name() constructs the SQL query via f-string interpolation of `fragment`, enabling SQL injection; parameterized LIKE with `?` and `'%' || ? || '%'` is required.",
+   "bikeshedding": false
+  },
+  {
+   "line": 98,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.93,
+   "description": "restock() never checks cursor.rowcount after UPDATE, so restocking a non-existent SKU silently commits and returns None, indistinguishable from a successful restock.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.91,
+   "description": "restock() does not validate that `quantity` is positive; a negative argument silently decrements stock, bypassing all reserve() guards.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.88,
+   "description": "low_stock_report() issues one SELECT COUNT(*) per under-stocked product (N+1 query pattern); a single JOIN or subquery would eliminate the loop overhead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "get_product() unpacks sqlite3.Row into Product(**row); any schema drift (added/renamed column) raises a runtime TypeError rather than failing at import or load time.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

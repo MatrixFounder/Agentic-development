@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "`random.choice` uses the Mersenne Twister PRNG which is not cryptographically secure; an attacker who observes a handful of tokens can reconstruct the PRNG state and predict all past/future session tokens \u2014 replace with `secrets.choice` or `secrets.token_urlsafe(32)`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "`touch()` extends `expires_at` for any token that exists in the dict without checking whether it has already expired, so an expired-but-not-yet-purged session is silently resurrected by any caller who holds the old token.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "`touch()` reads `_sessions` directly without calling `_purge_expired()` first, making it inconsistent with `get()` and `active_count()` which do purge: a single expired token can cause `touch()` to return True while the immediately following `get()` returns None.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.93,
+   "description": "`user_sessions()` omits the `_purge_expired()` call that `active_count()` makes, so it returns expired sessions as if they were live \u2014 callers cannot distinguish valid from dead sessions in the result list.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.72,
+   "description": "`create()` stores the newly generated token without checking for collisions: if the same token is already in `_sessions`, the existing session is silently overwritten, logging no error and invalidating the displaced user's session.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "`_sessions` is an unsynchronised plain dict; concurrent calls to `create`, `destroy`, and `_purge_expired` from multiple threads (e.g., a WSGI worker pool) can corrupt the dict or raise `RuntimeError: dictionary changed size during iteration` inside `_purge_expired`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 10,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.99,
+   "description": "`logger` is declared but never invoked anywhere in the module \u2014 it is dead code and its absence means all error/expiry events are completely silent in production.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

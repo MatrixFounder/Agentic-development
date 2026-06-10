@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "reachable() never uses the 'seen' set to gate enqueueing, so on any cyclic graph (docstring admits cycles) the BFS never terminates and the queue grows without bound, causing CPU spin and OOM from untrusted edge data (CWE-835/CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.85,
+   "description": "count_paths() recurses with no visited-set or depth limit, so cyclic input triggers infinite recursion / stack-exhaustion crash, and even valid DAGs can have an exponential call tree, yielding algorithmic-complexity DoS (CWE-674/CWE-407).",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "_edges is a defaultdict(list); read paths (reachable/count_paths/neighbors/topological_order) index missing keys and silently insert empty lists, so probing with many distinct unknown node names grows the dict without bound (memory amplification, CWE-400) \u2014 use .get(node, []) on reads.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "topological_order() keys 'indegree' only on _nodes and relies on the invariant that every edge endpoint is in _nodes; safe under current add_edge but a future direct _edges mutation would raise KeyError (robustness, minimal security impact).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

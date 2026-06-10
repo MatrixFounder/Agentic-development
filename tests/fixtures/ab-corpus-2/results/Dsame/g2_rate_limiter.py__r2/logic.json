@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Off-by-one: `len(hits) <= self.limit` admits the request when there are already `limit` timestamps in the window (e.g. 100 <= 100 appends a 101st), so the limiter permits `limit + 1` requests per window instead of `limit` \u2014 the configured limit is silently exceeded by one for every client every window.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "No concurrency control: `check` does a non-atomic read-modify-write (prune via `pop(0)`, length test, then `append`) on shared mutable `_hits` state, so on a concurrent 'public API gateway' two requests can both observe the count as under the limit and both be admitted, over-admitting beyond even the off-by-one and corrupting the per-key list under racing pop/append.",
+   "bikeshedding": false
+  },
+  {
+   "line": 45,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "`remaining` can be returned negative: the over-permitting branch computes `self.limit - len(hits)` after appending, yielding -1 on the (limit+1)-th allowed request, leaking a negative value through the `Decision.remaining` int contract that callers typically surface as an `X-RateLimit-Remaining` header.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "`sweep` iterates `self._hits.items()` and deletes keys based on that snapshot of membership; if `check`/`reset`/`current_usage` mutate `_hits` (add or remove a key) concurrently during the sweep, Python raises `RuntimeError: dictionary changed size during iteration`, crashing the background memory-bounding task.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "`current_usage` reads `self._hits[key]` on a `defaultdict`, which has the side effect of creating and persisting a new empty bucket for any key queried \u2014 a nominally read-only method mutating state and contributing to unbounded `_hits` growth when called for many distinct/never-seen clients (e.g. monitoring/probing).",
+   "bikeshedding": false
+  },
+  {
+   "line": 28,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "`_client_key` trusts the first hop of the client-supplied `X-Forwarded-For` header with no allowlist/validation, so a client can spoof a unique value per request to obtain a fresh bucket each time (rate-limit bypass) and simultaneously drive unbounded-cardinality `_hits` growth (memory exhaustion); primarily a security finding \u2014 deferring exploit detail to critic-security, noted here for its logic/memory-growth dimension.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

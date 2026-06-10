@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.75,
+   "description": "StreamingMedian.add uses bisect.insort on a flat Python list \u2014 the search is O(log n) but list.insert memmoves the tail, so each add is O(n) and n adds are O(n^2) total (a 1M-element 'stream' costs ~5e11 element shifts, i.e. minutes); replace with the classic two-heap (heapq max-half/min-half) structure for O(log n) add and O(1) median.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "_data retains every value ever added with no eviction, so a long-lived pipeline stream grows memory without bound until OOM \u2014 exact median does require all points, but a component named 'Streaming' should offer a bounded window or an approximate sketch (P-squared, t-digest) for unbounded inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "safe_mean accepts an Iterable (inviting generators) then immediately materializes it with list(values) just to get sum and count \u2014 O(n) memory where a single-pass total/count loop is O(1), which bites when a multi-million-row pipeline generator is fed through it (~hundreds of MB of boxed floats).",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Sliding-window update `current += values[i] - values[i - window]` accumulates floating-point rounding drift over long series (accuracy, not speed \u2014 Kahan summation or periodic window re-sum fixes it); noted briefly, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "insort is bisect-then-insert (not atomic even under the GIL), so concurrent add() calls from pipeline workers can insert at a stale index and silently break the sorted invariant, corrupting all future medians \u2014 speculative since no concurrent caller is in scope; defer depth to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "percentile re-sorts the input on every call, so the standard dashboard pattern of p50/p90/p99 over the same data sorts it three times \u2014 largely mitigated by Timsort being ~O(n) on already-sorted copies, hence a nit; a multi-percentile helper (or statistics.quantiles) would avoid the redundancy.",
+   "bikeshedding": true
+  },
+  {
+   "line": 19,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "running_total hand-rolls a Python-level accumulate loop where list(itertools.accumulate(values)) does the same work at C speed \u2014 same O(n), constant-factor-only micro-optimization.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

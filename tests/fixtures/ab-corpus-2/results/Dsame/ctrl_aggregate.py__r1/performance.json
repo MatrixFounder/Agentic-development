@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "StreamingMedian.add uses bisect.insort, whose list insertion shifts all trailing elements at O(n) per call, making building a stream of N values O(n^2) despite the class advertising a 'running/streaming' median that a two-heap (heapq) structure would serve in O(log n) per insert.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "safe_mean materializes the full iterable into a list when a single-pass running sum plus count would compute the same result in O(1) extra space, but for typical dashboard-sized inputs the memory cost is negligible.",
+   "bikeshedding": true
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "percentile performs a full O(n log n) sort for a single percentile query; if many percentiles of one dataset were needed a single shared sort or O(n) selection (quickselect) would be cheaper, but for one-shot calls the full sort is inherent and fine.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

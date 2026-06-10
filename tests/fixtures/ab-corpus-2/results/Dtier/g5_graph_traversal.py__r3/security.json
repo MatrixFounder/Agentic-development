@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 28,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "reachable() never checks the 'seen' set before enqueuing neighbors, so on a cyclic graph (explicitly declared supported) the BFS loop never terminates and the deque grows without bound \u2014 an uncontrolled-resource/infinite-loop DoS (CWE-835/CWE-400) reachable directly via a public entry point with untrusted graph data.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.82,
+   "description": "count_paths() recurses with no cycle guard or memoization; a cyclic input (nothing enforces the 'DAG assumed' contract) causes uncontrolled recursion and stack exhaustion (CWE-674), and even a valid diamond/lattice DAG yields exponential-time algorithmic-complexity DoS (CWE-407) on attacker-shaped data.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "add_node() logs the raw node identifier at INFO; if node names originate from untrusted pipeline input and contain newline/control characters this permits log forging/injection (CWE-117).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

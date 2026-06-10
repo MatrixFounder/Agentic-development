@@ -16,6 +16,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.7 — R3c Tier-Diverse Escalation: Model Heterogeneity Re-earns a Guarded +1 (audit-067 C-08, roadmap item 7 — last open slice)**
+
+Closes the final slice of claim **C-08**: severity-escalation merge rule 3 gains a **model-independence axis**. Same-model critic agreement stays corroboration-only (R3a, task 072); under a **tier-diverse** `--models` config (critics on different model tiers within one vendor) same-mechanism agreement now earns +1 **for CRITICAL/HIGH only** (tag `tier-diverse`). The cross-vendor row stays ⏳ blocked by vendor adapters (item 6). Motivated by experiment 075 rule 2 (same-model committee fails its cost bar → heterogeneity is the remaining lever). Task 077, gate artifact `docs/reviews/framework-audit-077.md`. **Zero mechanics regression** — additive config (absent `--models` → unchanged R3a behavior); gates 43/43, pytest 30/30, doc-only.
+
+#### **Changed**
+* **Merge rule 3 — model-independence gradation** (lockstep, byte-identical modulo critics↔teammates across `vdd-multi.md` Phase 2 + `skill-parallel-orchestration` §6, normalized-diff-verified): new 3-row gradation table (same-model none / same-vendor-tier-diverse partial / cross-vendor quasi-independent) + a third bullet for the tier-diverse case. R3a/R3b/R3d bullets byte-unchanged.
+* **`/vdd-multi --models=logic:<t>,security:<t>,performance:<t>`** (`<t>` ∈ haiku/sonnet/opus/fable): Phase 0 parses the map + resolves the run's `escalation_tier`; Phase 1 spawns each critic on its assigned tier. Partial maps allowed; unset critics fall back to the wrapper default (opus).
+* **Env-flatten guard:** Phase 0 detects `CLAUDE_CODE_SUBAGENT_MODEL` (which silently overrides per-critic pins), warns, and **downgrades escalation to R3a** — never awards the `tier-diverse` +1 on a heterogeneity the env erased.
+* Sequential fallback: tier-diverse declared **impossible** (single instance) — gradation N/A, stays never-escalate. `usage_example.md` + `claude-code.md` Model-pin hygiene § cross-referenced. `skill-parallel-orchestration` 3.3→3.4.
+* **Ships as a pilot** — the tier-diverse +1 is theory-grounded (partial within-family independence, arXiv:2506.07962/2601.12307); empirical payoff is under validation in the experiment-075 follow-up (task 078).
+
+---
+
 ### **v3.20.6 — Evidence-Based Repositioning of vdd-multi / K1 / K2 (ab-experiment-075 rules 1–3) + Corpus Documentation**
 
 Applies the pre-registered verdicts of A/B experiment 075 (`docs/reviews/ab-experiment-075.md`, Task 075: 240 runs, 24 sealed seeded bugs, frozen scorer) to the framework's positioning text — **zero mechanics changed** (merge rules, flags, evidence contract, exit bars all byte-identical; gates 43/43, pytest 30/30). Task 076, gate artifact `docs/reviews/framework-audit-076.md`.

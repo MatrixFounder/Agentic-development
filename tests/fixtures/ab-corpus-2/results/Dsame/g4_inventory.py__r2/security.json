@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "SQL injection: the `fragment` parameter is interpolated via f-string into a LIKE clause and executed (line 67), allowing admin-console input to inject SQL (e.g. ' OR '1'='1 or UNION SELECT) to exfiltrate or dump data; CWE-89 / OWASP A03 \u2014 fix by parameterizing with `WHERE name LIKE ?` and `(f'%{fragment}%',)`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "`reserve` does not validate quantity > 0, so a negative quantity passes the `stock > quantity` guard and the UPDATE `stock - quantity` increases stock, enabling inventory inflation (improper business-rule/input validation, CWE-840/CWE-20).",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "TOCTOU race in `reserve`: the stock SELECT (43-45) and the decrementing UPDATE (49-52) are not atomic and lack an immediate transaction, so concurrent reservations can both pass the check and oversell stock (CWE-367); use an atomic conditional UPDATE `WHERE sku=? AND stock>=?` and check rowcount.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Off-by-one: the guard `row['stock'] > quantity` should be `>=`, otherwise reserving exactly the remaining stock fails (non-security logic bug, deferred to logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "`low_stock_report` issues a separate movements COUNT query per low-stock product (N+1 queries inside the loop); could be a single grouped/joined query (performance, deferred to performance critic).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

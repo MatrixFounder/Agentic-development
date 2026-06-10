@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "CSV formula injection: untrusted 'name'/'email' cells from parse() are written back verbatim by the writer, so a value beginning with =, +, -, @, tab, or CR becomes an active formula when the exported file is opened in Excel/Sheets/LibreOffice (code execution / data exfiltration on the analyst's machine); cells must be neutralized (e.g., prefix-quote) on export.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "Arbitrary file read / path traversal: count_rows opens the caller-supplied 'path' with no validation or base-directory confinement, so since public methods are the trust boundary an attacker who influences 'path' can read any file the process can access (e.g., /etc/passwd, app secrets).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Unhandled exceptions on untrusted input: int(row[0])/float(row[2]) and positional row[1]/row[3] raise ValueError/IndexError on any malformed or short row, aborting the entire parse of an uploaded file \u2014 a single crafted line is an availability/DoS lever against batch ingestion (CWE-20/CWE-248).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Resource leak: open(path).readlines() never closes the file handle (no context manager), so repeated calls can exhaust file descriptors (CWE-772); CPython refcounting only partially mitigates this and not on PyPy/under exceptions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "The resolved header 'index' map is computed but never used; fields are read by hard-coded positions row[0..3], so a CSV whose columns are present but reordered silently mis-coerces data (e.g., email parsed as id), a data-integrity defect with marginal security relevance (defer detail to logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 71,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Weak/illusory email validation: '@' in record.email is trivially satisfied by malformed/hostile values and is not real validation, so stream_valid provides only a false sense of a security gate if any caller relies on it to sanitize records.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "export() uses os.path.basename (which does correctly block ../ traversal) but performs no extension whitelist or collision check, so any existing same-basename file in export_dir is silently overwritten; impact is confined to export_dir, hence low.",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "Constructor calls os.makedirs(export_dir, exist_ok=True) on a caller-supplied path; if export_dir is ever attacker-influenced this creates arbitrary directory trees, so the default constant is safe but the parameter is a latent injection point depending on config trust.",
+   "bikeshedding": false
+  },
+  {
+   "line": 75,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "float() in parse accepts 'nan'/'inf', which then poison summarize()'s total/avg (a NaN total propagates), a minor data-integrity / result-corruption nit rather than a memory-safety issue.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

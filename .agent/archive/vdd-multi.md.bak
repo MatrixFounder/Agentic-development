@@ -6,6 +6,14 @@ description: VDD Multi-Adversarial — parallel critics via Layer-A teammate spa
 
 Parallel execution of three specialized adversarial critics (logic, security, performance) via Claude Code native subagent-spawn (Layer A). On vendors without `Agent` tool + `.claude/agents/`, falls back to sequential role-switching.
 
+## Positioning (evidence: ab-experiment-075, pre-registered rule 2)
+
+`/vdd-multi` is a **coverage and CI-gating tool, not the default review path**. In the pre-registered A/B (`docs/reviews/ab-experiment-075.md`, N=3, 24 sealed seeded bugs): the 3-critic pipeline scored the highest recall (0.986 mean, **100% pooled — the only arm to find every bug**, including the only catch of the unbounded-cache perf bug) but missed its pre-registered cost bar — +5.6pp over the best single reviewer (< +10pp required) at 3.25× tokens and higher FP/file (9.63 vs 7.37).
+
+- **Use `/vdd-multi`** for CI `--fail-on` gates, pre-release/coverage-critical passes (class-complete: a dedicated critic per domain), and when missing a single bug costs more than 3× review tokens.
+- **Default for routine recall-oriented review:** a single strong reviewer with the plain exhaustive prompt ("report every issue incl. low-confidence ones, with confidence + severity; filter downstream") — 93% recall at ~1/3 of the cost.
+- The remaining lever that could re-earn the committee's cost is **model-heterogeneous critics** (roadmap item 7/R3c tier-diverse pilot) — same-model critics share failure modes (corroboration ≠ confirmation, see Phase 2 rule 3).
+
 ## Invocation
 
 ```

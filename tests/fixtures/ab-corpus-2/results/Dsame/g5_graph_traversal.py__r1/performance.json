@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reachable() enqueues every neighbor with zero visited-guard (no 'if neighbor not in seen' before append), so on a 'possibly cyclic' graph \u2014 which the docstring explicitly admits \u2014 the queue never drains and BFS runs forever / OOMs the deque; even on an acyclic diamond-shaped DAG each shared node is re-enqueued and re-expanded, degrading to exponential work instead of O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "count_paths() recurses with no memoization, so a diamond/lattice DAG re-walks identical subgraphs and blows up to O(2^n) \u2014 textbook 'Fibonacci without a cache'; a dict[(node)] -> count memo on dst collapses it to O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "count_paths() uses unbounded native Python recursion (one stack frame per graph depth), so a long dependency chain pays the per-frame call overhead and hits RecursionError ~1000 deep \u2014 an explicit stack or the memoized iterative form avoids both the cost and the crash.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.78,
+   "description": "Read paths self._edges[node] on a defaultdict(list) silently insert an empty-list entry for every leaf node touched (here and at lines 40, 47, 54, 61), permanently growing _edges with junk keys across calls; use self._edges.get(node, ()) on read paths to avoid the unbounded dict growth.",
+   "bikeshedding": false
+  },
+  {
+   "line": 45,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "topological_order() rebuilds the full indegree map from scratch on every call (O(V+E) each invocation) with no caching despite the graph being mutated only via add_edge/add_node; if called repeatedly on a static graph the recomputation is pure waste, though acceptable if topo order is needed once.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

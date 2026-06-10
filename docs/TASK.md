@@ -1,36 +1,36 @@
-# Technical Specification: Post-Experiment Repositioning + Corpus Documentation (rules 2/3 of ab-experiment-075)
+# Technical Specification: Tier-Diverse Mini-Experiment (validates R3c, item 7 / C-12 follow-up)
 
 ### 0. Meta Information
-- **Task ID:** 076
-- **Slug:** `post-experiment-repositioning`
-- **Mode:** Framework Upgrade (meta-operation — 1 workflow file, 2 Tier-2 skills, roadmap; plus 2 new documentation artifacts in `tests/fixtures/ab-corpus/`)
-- **Type:** Follow-up cycle mandated by experiment 075's pre-registered decision rules 2/3 (`docs/reviews/ab-experiment-075.md`) + corpus documentation (README with infographics + `.AGENTS.md`).
-- **Workflow:** `/framework-upgrade` (verificator Modes A+B).
-- **Source:** User request (2026-06-10): (1) README с инфографикой в tests/fixtures/ab-corpus — методология, принципы, расшифровка результатов, вердикт, доступным языком; (1b, добавлено сообщением пользователя) `.AGENTS.md` рядом — описание всех python-модулей и артефактов; (2) репозиционирование vdd-multi + K1 по правилам 2/3; (3) обновить roadmap.
+- **Task ID:** 078
+- **Slug:** `tier-diverse-mini-experiment`
+- **Mode:** Experiment (🧪 — new sealed corpus + scorer + report; validates task 077's R3c pilot; **modifies no framework component**; any rule adjustment is a separate follow-up cycle)
+- **Type:** Empirical validation of roadmap item 7 R3c (tier-diverse escalation), follow-up to experiment 075. Protocol: a focused 3-arm A/B in the same pre-registered spirit as Appendix A.
+- **Source:** User request (2026-06-10): "выполни R3c tier-diverse и затем мини-эксперимент". Answers the question experiment 075 left open: does model-tier heterogeneity restore the +10pp committee cost-bar that the same-model committee failed (rule 2: D−A was only +5.6pp)?
 
-## 1. General Description
+## 1. Question & pre-registered rules
 
-Experiment 075 produced three mechanical verdicts. Rule 1 (sarcasm survives → K2 kept) needs only a disclaimer refresh — the old text still says the decision "awaits" the A/B. Rules 2/3 mandate repositioning text: **vdd-multi** is не дефолт, а инструмент покрытия/CI (D: +5.6pp < +10pp bar, FP хуже, 3.25× токенов — но единственный 100% pooled recall); **K1 (vdd-adversarial)** — инструмент точности, не полноты (B−A = −6.9pp recall, FP −16%, bikeshedding 3.9% vs 13.0%). Никакие механики не меняются — только позиционирующий текст с цитатой на отчёт. Плюс два документационных артефакта в корпусе эксперимента.
+Experiment 075 found a same-model 3-critic committee (arm D) beat the best single reviewer by only +5.6pp — below the +10pp bar that justifies its 3.25× cost (rule 2 FAILED). R3c's thesis: critics on **different model tiers** are partially independent, so a tier-diverse committee should find more than a same-model one. This experiment tests that on a **fresh sealed corpus** (the 075 corpus is burned — its arms have seen it).
+
+**Arms** (fresh context per run, N=3):
+- **A** — single reviewer, plain exhaustive prompt, `opus` (the 075 best-value baseline).
+- **D-same** — `/vdd-multi` committee, all 3 critics on `opus` (reproduces 075 arm D on the new corpus).
+- **D-tier** — `/vdd-multi --models=logic:sonnet,security:opus,performance:fable` — 3 distinct tiers.
+
+**Pre-registered decision rules (fixed before any run):**
+- **T1 (tier-diversity earns the committee cost):** recall(D-tier) − recall(A) ≥ **+10pp** at FP/file no worse than A. If yes → R3c tier-diverse +1 is empirically justified; if no → committee still doesn't beat the single reviewer even with heterogeneity.
+- **T2 (heterogeneity adds over same-model committee):** recall(D-tier) − recall(D-same) > pooled run variance of the two. If yes → tier-diversity adds signal; if no → the diversity buys nothing measurable here.
+- **T3 (corroboration-quality, secondary):** on same-mechanism overlaps, report how often D-tier's agreeing critics were CORRECT vs D-same's — the mechanism R3c's escalation bets on (does cross-tier agreement track truth better than same-tier?).
 
 ## 2. RTM
+| ID | Requirement | Verification |
+|----|-------------|--------------|
+| R1 | NEW corpus: 6 seeded files + 1 control, **18 bugs** (6 logic/6 security/6 performance; 6 CRITICAL/6 HIGH/6 MEDIUM); different domain from 075 (ETL/data-pipeline) to avoid any overlap. `ground_truth.json` + `seal.json` sealed before runs | seal predates results; anchors grep-derived |
+| R2 | `analyze2.py` frozen pre-data: match = file + \|Δline\|≤3 + class; per-arm recall mean±var, pooled, FP/file, bikeshedding; rules T1/T2/T3 mechanical; tier-diverse merge = deterministic (same as 075 D) | script exists pre-run |
+| R3 | Runs: A (21 single opus), D-same (21×3 opus critics), D-tier (21×3 mixed-tier critics); findings persisted per (arm,file,run); evidence line `tests: NOT RUN` per v3.20.5; D-security gets scan slice | result-file completeness |
+| R4 | Report `docs/reviews/tier-diverse-experiment-078.md`: tables, T1/T2/T3 verdicts, limitations (tier↔domain confound, N=3, same-vendor family), consequence for R3c pilot status (confirm / keep-as-pilot / flag); roadmap item 7 update; session-state | file read |
 
-| ID | Requirement | Target file(s) | Verification |
-|----|-------------|----------------|--------------|
-| R1 | README (RU, доступный язык) в корпусе: зачем эксперимент, методология (seal-before-run, 5 армов, N=3, frozen scorer), инфографика (mermaid-пайплайн + unicode-бар-чарты recall/FP/токены), детальная расшифровка таблиц, три вердикта + честные нюансы, ссылки на EN-отчёт/analysis.json | NEW `tests/fixtures/ab-corpus/README.md` | file read; renders in VSCode preview |
-| R2 | `.AGENTS.md` в корпусе: назначение каталога; каждый python-модуль (build_ground_truth.py, analyze.py, files/f1–f8 с ролью посеянных багов, files/c1–c2 контроли) и каждый артефакт (ground_truth.json, seal.json, scan_floor.json, scan_summary.txt, analysis.json, results/-layout, wallclock.log) с однострочным описанием + предупреждение «корпус запечатан — не редактировать без re-seal» | NEW `tests/fixtures/ab-corpus/.AGENTS.md` | file read |
-| R3 | vdd-multi repositioning (rule 2): новый блок "Positioning (evidence: ab-experiment-075)" после интро — когда vdd-multi (CI `--fail-on`, coverage-critical: единственный арм 100% pooled, единственный f4-PER catch), когда single strong reviewer (дефолт для recall-задач: A=0.931 при 1/3.25 цены); существующие механики/флаги не тронуты | `.agent/workflows/vdd-multi.md` | file read; G2 |
-| R4 | K1 repositioning (rule 3): evidence-note в §2 — precision tool, not recall lever (−6.9pp recall vs plain exhaustive; FP −16%; bikeshedding 3.9% vs 13.0%; N=3); для recall-critical pass — plain exhaustive baseline. Version 1.4→1.5 | `.agent/skills/vdd-adversarial/SKILL.md` | file read; validate_skill |
-| R5 | K2 disclaimer refresh (rule 1): "awaits the pre-registered A/B" → resolved KEPT (rule 1: C−B=+4.2pp at lower FP; полный порядок recall всё же ставит plain baseline выше обоих скинов). Version 1.4→1.5 | `.agent/skills/vdd-sarcastic/SKILL.md:19` | G1 stale-grep empty |
-| R6 | Roadmap: item 13 Follow-ups строка → repositioning DONE (Task 076); item 5/13 строки согласованы | `docs/verification_roadmap.md` | file read |
-| R7 | Bookkeeping: CHANGELOG EN+RU v3.20.6, README EN+RU header, audit artifact `framework-audit-076.md`, session-state | стандартный набор | file reads |
+## 3. Out of Scope
+Changing the R3c rule text based on results — separate cycle if T1/T2 fail. Cross-vendor arms (need item 6). Corpus reuse from 075.
 
-## 3. Acceptance Criteria (Gates)
-- **G1:** `grep -rn "awaits the pre-registered" .agent/ .claude/ System/` (excl. archive/sessions) → empty.
-- **G2:** vdd-multi.md: merge rules 1–5, enum, флаги, Phase 1.0 evidence contract — byte-неизменны (diff inspection); добавлен только Positioning-блок.
-- **G3:** skill gate 43/43; **G4:** pytest security-audit 30/30; **G5:** doc-only diff (.md only).
-
-## 4. Out of Scope
-WORKFLOWS.md:148/422 quick-pick rows («Maximum code quality (3 parallel critics)») — проверены: описывают coverage-механику, не recall-claim; не редактируются (флаг в аудит-артефакте). R3c pilot, vendor adapters (6) — отдельные циклы. Механики vdd-multi/K1 — не тронуты.
-
-## 5. Open Questions
-None. Формулировки позиционирования предписаны отчётом 075 (§Consequences); README/.AGENTS.md — документация без влияния на пайплайны.
+## 4. Known limitations (declared pre-run)
+(a) **Tier↔domain confound:** each domain gets a fixed tier (logic:sonnet/security:opus/performance:fable), so a per-class recall delta blends tier and domain — overall recall is the pre-registered metric, the confound is noted; (b) same-vendor family (Claude tiers) — partial independence by design, not the cross-vendor quasi-independence; (c) N=3 low power, rules use pooled variance not significance; (d) deterministic merge in scorer; (e) fable/sonnet availability assumed (harness aliases).

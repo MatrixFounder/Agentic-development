@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "IP spoofing: _client_key trusts the leftmost (client-supplied) X-Forwarded-For entry, so an attacker rotating forged XFF values gets a fresh bucket per request and fully bypasses the limiter (CWE-348/CWE-290).",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "Off-by-one: `len(hits) <= self.limit` allows and appends when already at the cap, letting each client make limit+1 requests per window instead of limit, weakening the throttling control (should be `<`) (CWE-799/CWE-770).",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Unbounded memory DoS: _hits is a defaultdict keyed by attacker-controllable IP strings and sweep() is never invoked within this module, so spoofed-key floods grow the dict without bound (CWE-770/CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "check() reads self._hits[key] via defaultdict, materializing a bucket even for requests that will be denied, amplifying the memory-exhaustion vector from novel keys.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "current_usage() looks read-only but `self._hits[key]` on a defaultdict inserts an empty bucket for any unseen key, so a monitoring/attacker call with novel keys leaks memory; use .get(key, []).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Race condition: the prune/len-check/append on hits has no locking, so concurrent check() calls for one key can both pass the limit and append, bypassing the limiter under load; sweep() mutating _hits during a concurrent check() key-insert can also raise 'dictionary changed size during iteration' (CWE-362).",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "hits.pop(0) is O(n) making the prune loop O(n^2) for a hot bucket (algorithmic-complexity DoS angle); a collections.deque gives O(1) popleft \u2014 perf detail deferred to the performance critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

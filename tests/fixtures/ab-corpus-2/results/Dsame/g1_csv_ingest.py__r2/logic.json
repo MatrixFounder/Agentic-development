@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse() validates required columns exist via set membership but builds a name->position index map (line 36) that is never used; fields are read by hardcoded position row[0..3], so a valid CSV with reordered or extra columns silently maps values to the wrong Record attributes or crashes on coercion.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "A single malformed data row (non-numeric or empty id via int(row[0]), or bad amount via float(row[2]) on line 46) raises ValueError and aborts the entire parse, discarding all valid records with no per-row error isolation; this propagates through stream_valid too.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Data rows with fewer than 4 fields (ragged CSV rows are valid) raise IndexError at row[0..3] because there is no row-length guard before positional access.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "count_rows returns -1 for an empty file because len(lines)-1 underflows when there are zero lines; a row count must never be negative and callers may misbehave on the negative value.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "count_rows counts physical lines via readlines() rather than CSV records, so quoted fields containing embedded newlines (valid CSV) inflate the count, contradicting the 'data rows' docstring and diverging from parse()'s csv-module semantics.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "The file handle from open(path) is never closed (no with-statement or context manager), leaking a file descriptor on each count_rows call.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "os.path.basename(filename) on degenerate inputs ('', '/', or a trailing-slash path) yields an empty or directory basename, causing export to open the export directory itself or an unexpected path.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse() does list(reader) to fully materialize all rows, then builds a second full list of Record objects, doubling peak memory on large uploads instead of streaming row-by-row.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "count_rows() reads the entire file via readlines() just to return len-1, using O(filesize) memory to compute a single integer that sum(1 for _ in f) would yield in O(1) memory.",
+   "bikeshedding": false
+  },
+  {
+   "line": 68,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "stream_valid() advertises lazy yielding but calls parse(), which eagerly materializes 100% of records before the first yield, defeating the streaming contract.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "count_rows() leaks the file handle (open() without with/close), relying on CPython refcount GC and risking descriptor exhaustion under repeated calls.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "index dict is built from the header on every parse() call but never read (loop hardcodes row[0..3]), wasting an allocation per invocation.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

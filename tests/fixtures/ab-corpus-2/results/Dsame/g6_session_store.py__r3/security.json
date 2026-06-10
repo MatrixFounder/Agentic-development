@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "Session tokens are generated with random.choice() from the non-cryptographic Mersenne Twister PRNG (CWE-330/CWE-338); ~624 observed tokens let an attacker reconstruct PRNG state and predict all future tokens, enabling session hijacking \u2014 must use the secrets module.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "touch() slides expiry forward without checking expires_at, so a logically-expired session can be resurrected/kept alive indefinitely whenever touch is called before a get()/active_count() purge runs (CWE-613 Insufficient Session Expiration).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "No absolute session-lifetime cap combined with sliding renewal in touch() means a token can be renewed forever, and create() has no limit on session count so repeated calls grow _sessions unboundedly (expired entries reaped only lazily) \u2014 memory-exhaustion DoS (CWE-770) and indefinite session lifetime (CWE-613).",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "The store is not thread-safe: _purge_expired() iterates/mutates self._sessions while create()/destroy() can mutate it concurrently, risking 'dictionary changed size during iteration' RuntimeError on the auth path (availability/DoS) and inconsistent expiry state (CWE-362).",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "user_sessions() skips _purge_expired() so it can return already-expired Session objects (stale-credential read), and it returns raw token values directly, risking credential exposure if the result is logged or serialized (CWE-200/CWE-613).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

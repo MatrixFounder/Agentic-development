@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "count_rows does open(path).readlines() to materialize the entire file as a list of line-strings just to compute len()-1, costing O(file-size) memory (multi-GB on large CSVs) for a result obtainable in O(1) memory by iterating, plus it leaks the unclosed file descriptor.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse does rows = list(reader), fully materializing every CSV row before processing so peak memory holds the raw string, the StringIO copy, the entire rows list, and the records list at once (~3-4x input size) instead of iterating the csv.reader one row at a time.",
+   "bikeshedding": false
+  },
+  {
+   "line": 68,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "stream_valid is typed Iterator[Record] and named 'stream_' implying constant-memory streaming, but it calls self.parse(raw) which fully buffers the whole input first, so callers pay the entire parse memory cost up front and get none of the promised streaming behavior on large inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "find_by_id is an O(n) linear scan that is fine for a single call but becomes a latent O(n*m) trap if a caller invokes it per-target over the same list (no such caller is in scope).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

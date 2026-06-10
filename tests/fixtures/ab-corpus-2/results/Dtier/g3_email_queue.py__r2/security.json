@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Email/SMTP header injection (CWE-93): _render hand-builds raw RFC822 headers via f-string interpolation of unvalidated msg.subject/msg.to/msg.body joined by CRLF, so a subject or to value containing \\r\\n injects arbitrary headers (Bcc, Reply-To) and body, enabling spam relay, recipient exfiltration, and message spoofing.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Unvalidated msg.to is passed both as the SMTP envelope recipient and interpolated into rendered DATA; CRLF/header-injection payloads in 'to' can smuggle extra recipients/headers into the transmitted message (CWE-93), and 'to' is never validated as a single well-formed address.",
+   "bikeshedding": false
+  },
+  {
+   "line": 6,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "MIMEText is imported but unused; the safe email-construction API that would encode headers and prevent injection is bypassed in favor of manual string concatenation in _render, which is the root cause of the header-injection exposure.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "Cleartext SMTP submission (CWE-319): flush opens plain smtplib.SMTP on port 587 with no starttls() and no authentication, exposing message bodies and recipients to network eavesdropping and submitting unauthenticated (mitigated only if smtp.internal is a trusted relay on a private segment).",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Dedup keys solely on msg.to, so a second distinct message to an already-seen recipient is silently dropped (counted as skipped); a security-adjacent availability/correctness quirk rather than an exploit \u2014 defer detail to the logic critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

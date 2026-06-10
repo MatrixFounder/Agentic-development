@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "Off-by-one: `row['stock'] > quantity` rejects a reservation when stock exactly equals the requested quantity; `>=` is required to allow full-stock drawdown.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "No guard on `quantity <= 0`: a zero quantity passes the stock check and commits a no-op returning True; a negative quantity subtracts a negative value (i.e., adds stock) and returns True, silently corrupting inventory.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 1,
+   "description": "SQL injection: `fragment` is interpolated directly into the query string via an f-string; any caller-supplied value executes arbitrary SQL (defer detail to critic-security, flagged here as a logic/correctness defect too).",
+   "bikeshedding": false
+  },
+  {
+   "line": 99,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "`restock()` issues no guard on negative `quantity`: `restock(sku, -10)` silently decrements stock via `stock + (-10)`, corrupting inventory with no error or return value.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "`restock()` never checks whether the SKU exists; the UPDATE silently affects zero rows and commits successfully, giving the caller no indication that the SKU was invalid.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.99,
+   "description": "N+1 query pattern in `low_stock_report()`: one extra query per low-stock product is issued inside the loop; defer detail to critic-performance, noted here for completeness.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.72,
+   "description": "`Product(**row)` unpacks a `sqlite3.Row` by keyword; any future schema column not present in the dataclass (or vice versa) raises a silent `TypeError` at runtime with no defensive handling.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

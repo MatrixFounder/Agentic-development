@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Dedup key is the recipient address alone (key = msg.to), so a second genuinely-different message (different subject/body/template) to the same recipient is silently dropped as a 'duplicate', contradicting the docstring and losing legitimate mail.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "_seen is never pruned after flush() (only _pending is cleared on line 65), so once a recipient is enqueued they can never be enqueued again across all future batches until clear_dedup_cache() is called manually \u2014 legitimate follow-up emails are permanently suppressed.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.82,
+   "description": "self._pending.clear() sits after the loop and outside any try, so if sendmail() raises mid-flush the list is NOT cleared and already-sent messages remain queued; the next flush() re-sends every previously-successful message (duplicate delivery) instead of resuming from the failure point.",
+   "bikeshedding": false
+  },
+  {
+   "line": 62,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.78,
+   "description": "stats.sent (and the returned count) double-counts on a retry after partial failure: messages sent in a prior flush() stay in _pending and increment stats.sent again on the next flush, so the counter overstates real deliveries.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "_render interpolates msg.to and msg.subject directly into CRLF-delimited headers with no sanitization, allowing SMTP header injection (e.g. an attacker-controlled 'to' or 'subject' containing \\r\\n can inject Bcc/extra headers); deferred to critic-security for full treatment but flagged as it also produces malformed messages.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "The SMTP envelope recipient passed to sendmail() is the raw msg.to string; if it is empty, malformed, or comma/newline-bearing the send will raise or misroute, and because of the unclean _pending (line 65) one bad address aborts the entire remaining batch.",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "server.quit() in the finally can itself raise (broken connection), which would mask the original sendmail exception and propagate a misleading error; a bare try/except around quit() would preserve the real failure cause.",
+   "bikeshedding": false
+  },
+  {
+   "line": 74,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "clear_dedup_cache() empties _seen but leaves _pending intact, so re-enqueuing a recipient that is still pending creates a true duplicate in the queue that will be sent twice on the next flush.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "A fresh smtplib.SMTP connection is opened and torn down per message inside the flush loop rather than reusing one connection for the batch; deferred to critic-performance.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

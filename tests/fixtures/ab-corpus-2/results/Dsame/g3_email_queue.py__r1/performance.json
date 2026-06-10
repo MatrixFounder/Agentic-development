@@ -1,0 +1,21 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "flush() opens and tears down a brand-new SMTP connection inside the per-message loop, paying the full TCP+EHLO+STARTTLS+AUTH handshake cost N times; open one connection before the loop and reuse server.sendmail() for all messages, quitting once after.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "_seen grows unbounded across flushes (only cleared via explicit clear_dedup_cache), a slow memory leak in a long-lived queue; dedup semantics keyed only on msg.to is a correctness concern deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

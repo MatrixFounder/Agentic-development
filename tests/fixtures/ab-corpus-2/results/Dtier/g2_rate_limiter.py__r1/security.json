@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.93,
+   "description": "_client_key trusts the client-supplied X-Forwarded-For header and uses its leftmost value as identity, so an attacker can spoof a fresh value per request and fully bypass rate limiting (CWE-290 auth bypass by spoofing; the leftmost XFF entry is always client-controlled, not the proxy-observed peer).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "self._hits is a defaultdict(list) keyed by the spoofable client key, and check() materializes a bucket per distinct key with no global cap, enabling unbounded-memory DoS (CWE-770) since sweep() is never invoked automatically.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Off-by-one: 'len(hits) <= self.limit' admits and appends when count equals the limit, so exactly limit+1 requests pass per window \u2014 the configured limit is under-enforced by one (CWE-697 incorrect comparison).",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "current_usage() reads self._hits[key] on a defaultdict, inserting an empty bucket for unseen keys; this read-style method mutates state and amplifies the unbounded-key memory DoS when reachable with attacker-controlled keys (CWE-770).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "The attacker-controlled key (from X-Forwarded-For) is logged verbatim, allowing CRLF/control-character log injection and log forging (CWE-117).",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "hits.pop(0) on a list is O(n) per pruned element (and sweep/current_usage do full list scans); under attacker-driven bursts this algorithmic cost is a secondary DoS vector \u2014 use collections.deque with popleft() (CWE-407).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

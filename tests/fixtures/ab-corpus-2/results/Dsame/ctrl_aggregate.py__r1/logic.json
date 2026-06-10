@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "moving_average uses an incremental add-then-subtract sliding sum (current += values[i] - values[i-window]); floating-point rounding error accumulates and is never reset, so on long series mixing large and small magnitudes the reported average silently drifts from the true window mean, violating the docstring's unqualified 'moving average' contract.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "clamp(NaN, low, high) returns low silently because max(low, min(NaN, high)) collapses NaN to a bound rather than raising or propagating it, so a caller clamping an upstream-computed NaN gets a plausible but wrong in-range value that masks the error.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "percentile does no element-level validation; if values contains NaN, sorted() yields a non-deterministically ordered list (NaN breaks total ordering) and the linear interpolation silently returns a meaningless number instead of erroring or returning None.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "StreamingMedian.add inserts via insort, which relies on '<'; adding NaN silently corrupts the sorted invariant, after which median() returns incorrect results even for the previously-inserted finite values, with no guard or error.",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "safe_mean materializes the iterable into a list and offers no protection against non-finite elements; a single inf/-inf pair or NaN yields NaN with no signal, but this is inherent float semantics rather than a clear defect (noted for completeness).",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

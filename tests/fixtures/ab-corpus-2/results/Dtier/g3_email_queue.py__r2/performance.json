@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "New smtplib.SMTP connection opened per message inside the flush() loop (TCP+EHLO+QUIT per send, ~50-300ms overhead each; 1000 messages = 1000 connections plus relay rate-limit risk) instead of one reused connection hoisted outside the loop.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "smtplib.SMTP created without a timeout, so a hung relay blocks flush() and the calling pipeline indefinitely; pass timeout= explicitly.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "flush() clears _pending but never _seen, leaving an unbounded dedup cache (no max size/TTL) that grows for the process lifetime in a long-running pipeline; clear per-batch or bound with LRU/TTL (cross-flush blocking side effect deferred to critic-logic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "EmailQueue mutates _pending/_seen/stats with no synchronization, racy if the pipeline enqueues or flushes from multiple threads (speculative; usage unknown).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Unvalidated msg.to/msg.subject interpolated into raw CRLF-delimited headers in _render enables SMTP header injection - brief note, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Mail sent over plaintext SMTP on port 587 with no STARTTLS or authentication - brief note, deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "A sendmail exception mid-loop propagates before _pending.clear() runs, leaving already-sent messages queued so a retry of flush() re-sends duplicates - brief note, deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Dedup key is recipient address only, so a second distinct message (different subject/body) to the same recipient is silently dropped - brief note, deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 6,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.95,
+   "description": "MIMEText is imported but never used; dead import.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

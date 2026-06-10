@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.82,
+   "description": "sorted() with nan values produces implementation-dependent ordering (nan comparisons return False in CPython, so nan can land at any position); the returned percentile is silently wrong whenever the input contains nan, with no error raised.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Incremental sliding-window accumulation (current += values[i] - values[i-window]) accumulates floating-point rounding error over long sequences; for large N or large-magnitude values the running sum drifts from the true window sum, producing silently wrong averages.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "insort uses bisect which relies on __lt__; since nan < x is always False, nan is inserted at an unpredictable index, permanently breaking the sorted invariant of _data; every subsequent median() call silently returns a wrong value.",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "safe_mean returns nan (not None) when any element is nan; the Optional[float] return type and 'None for empty input' docstring imply valid-float-or-None, so a nan-contaminated non-empty input silently violates the implied contract.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "clamp(float('nan'), low, high) silently returns low because Python's max/min with nan returns the non-nan operand; the caller receives a plausible-looking value with no indication the input was invalid.",
+   "bikeshedding": false
+  },
+  {
+   "line": 1,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 1,
+   "description": "Exit-bar condition unverifiable: tests were NOT RUN (fixture corpus, no test suite); the convergence bar requires a full passing test run \u2014 this condition cannot be satisfied from static analysis alone.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

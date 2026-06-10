@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "hits.pop(0) on a list is O(n) per removal (CPython shifts all elements); the per-client bucket should be a collections.deque using popleft() for O(1) amortized sliding-window pruning.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Backing store is list (defaultdict(list)); the entire sliding-window pattern here (append-tail / pop-head) is the canonical use case for deque, and switching it eliminates the quadratic pop(0) cost on the hot check() path.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "current_usage() does an O(n) scan and reads expired timestamps without ever pruning them, so buckets touched only by current_usage()/check() rejections never shrink and grow unbounded until a sweep().",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "self._hits[key] on a defaultdict(list) inserts a fresh empty bucket on every read (lines 39/54/57), so merely querying a novel client key permanently grows the dict between sweeps \u2014 the read path allocates, not just the write path.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "sweep() is O(N*limit) and only deletes buckets that are entirely empty, so a bucket with one live hit plus many un-pruned dead timestamps is scanned every sweep yet never reclaimed or compacted.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Off-by-one: 'len(hits) <= self.limit' admits and appends at the boundary, letting the bucket reach limit+1 and allowing one request over the intended cap (deferred to critic-logic; flagged here because the bucket size drives pop(0) cost).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "flush() constructs a new smtplib.SMTP connection (TCP connect + EHLO handshake) and quit()s it per message inside the loop \u2014 O(n) connections per flush instead of one reused session, adding ~50-200ms overhead per email and risking relay rate-limiting; hoist a single 'with smtplib.SMTP(...) as server' outside the loop.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "smtplib.SMTP is created without a timeout, so a hung or unreachable SMTP server blocks flush() indefinitely and stalls the entire pipeline stage; pass an explicit timeout.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "_seen is an unbounded dedup cache with no TTL or max size that flush() never clears (line 65 only clears _pending), so a long-running pipeline process accumulates every recipient ever enqueued \u2014 a slow memory leak; clear on flush or bound the set.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "A single sendmail exception escapes flush() before _pending.clear() runs, leaving already-sent messages queued for duplicate re-send on retry (and losing per-message error isolation) \u2014 defer detail to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Dedup key is recipient address only and survives flush, contradicting the 'duplicate already queued' docstring and silently dropping distinct messages to the same recipient \u2014 defer to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "_render interpolates msg.to and msg.subject unsanitized into raw SMTP headers, enabling CRLF header/body injection \u2014 defer to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "Plaintext SMTP on submission port 587 with no STARTTLS or authentication \u2014 defer to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.3,
+   "description": "No synchronization on _pending/_seen, so concurrent enqueue/flush from multiple pipeline workers would race (lost or duplicated sends) \u2014 speculative since no multithreaded caller is in scope.",
+   "bikeshedding": false
+  },
+  {
+   "line": 6,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.95,
+   "description": "MIMEText is imported and the 'email' logger (line 9) is created but neither is ever used \u2014 dead code.",
+   "bikeshedding": true
+  },
+  {
+   "line": 20,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "Message.template field is never consumed by _render/flush/preview \u2014 dead field.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Session tokens are generated with the non-cryptographic `random` module (Mersenne Twister), whose internal state is recoverable from observed outputs, enabling token prediction and session hijacking / auth bypass (CWE-330/CWE-338, OWASP A07); use `secrets`/`os.urandom`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "`touch()` slides an expired-but-not-yet-purged session's expiry forward without checking `expires_at`, resurrecting it and defeating the TTL/idle-timeout control (CWE-613 Insufficient Session Expiration).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.66,
+   "description": "`user_sessions()` reads `self._sessions` without purging, so it can return expired sessions that callers may treat as valid (inconsistent with `get()`, which purges first) \u2014 expired-credential exposure (CWE-613).",
+   "bikeshedding": false
+  },
+  {
+   "line": 38,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Expiry purge runs only lazily on `get()`/`active_count()` and there is no per-user session cap, so create-heavy or read-free usage allows unbounded session/memory growth (CWE-770 resource exhaustion / DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "The `_sessions` dict is mutated without synchronization; concurrent create/destroy/purge can race (e.g., `del self._sessions[t]` after a concurrent pop raises KeyError) \u2014 robustness/availability concern, defer to logic critic for detail.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

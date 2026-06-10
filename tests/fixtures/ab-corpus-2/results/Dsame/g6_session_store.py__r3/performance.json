@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "get() calls _purge_expired() on every lookup, turning an O(1) token fetch into a full O(n) scan of the entire session dict \u2014 the read hot path degrades linearly with the number of active sessions; expiry should be lazy (check the single fetched session) or amortized, not a full sweep per read.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "_purge_expired() materializes a full intermediate list of dead tokens via a comprehension over all sessions every time it runs, allocating O(n) garbage per invocation on top of the scan cost.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "active_count() triggers another full O(n) _purge_expired() sweep; if polled by metrics/monitoring this repeatedly scans the whole store, and the purge could be decoupled from the count.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "_new_token() builds the token with a Python-level generator calling random.choice 32 times per token; random.choices(alphabet, k=TOKEN_LENGTH) is a single C-level call and faster on the create path under high churn.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Tokens are generated with the non-cryptographic random module, making them predictable \u2014 security concern, deferring detail to critic-security.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

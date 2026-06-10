@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "reachable() never checks `seen` before enqueuing neighbors, so on a cyclic graph (which the docstring explicitly claims to support) the BFS loops forever with an unbounded-growing queue, causing a DoS via untrusted graph input (CWE-835 / CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "count_paths() recurses with no cycle guard and no memoization, so an attacker-supplied cyclic graph triggers unbounded recursion / stack exhaustion (CWE-674) and even a valid but diamond-shaped DAG yields exponential time and an exponential return value (CWE-407 algorithmic-complexity DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "reachable(), count_paths(), topological_order() and neighbors() all index `self._edges[node]`, a defaultdict(list), so each lookup of an unknown key silently inserts an empty list; repeated queries with distinct unknown keys cause unbounded memory growth driven by query input (CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "add_node() logs the raw node identifier at INFO; if node names are untrusted and contain CR/LF or control characters this enables log injection / forging and unbounded log volume (CWE-117).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "reachable() adds neighbors to `seen` but never marks the start node, and (separately from the loop bug) builds `seen` as an accumulator rather than a true visited set, so results are incorrect for revisited/self-referential nodes (noted for sibling logic critic).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

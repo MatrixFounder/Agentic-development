@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "reachable() has no visited-guard before enqueueing neighbors, so on the cyclic graphs its own docstring promises to support, the queue never drains and it loops forever / exhausts memory (e.g. edges a->b, b->a).",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Even on an acyclic graph reachable() re-enqueues already-seen nodes (no dedup before append), causing exponential queue growth on diamond/DAG shapes \u2014 a denial-of-service-grade blowup, not just slowness.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "reachable() never adds `start` to `seen`, so a node reachable from itself only via a cycle is reported but a plain start is omitted; the set is inconsistent with the 'all nodes reachable from start' contract (start is reachable from itself at distance 0).",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Reads of self._edges[node] (here and in count_paths/topological_order/neighbors) mutate the defaultdict by inserting empty lists for missing keys, so read-only traversals silently grow internal state and desync _edges from _nodes.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "neighbors() (and reachable) on an unknown node returns [] while silently creating that key in _edges via defaultdict access, masking caller bugs and registering a node in _edges that node_count()/_nodes never sees.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "count_paths() recurses unconditionally with no cycle guard or memoization; on any cyclic input it hits RecursionError (the 'DAG assumed' contract is undefended) and on a wide DAG it is exponential.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "count_paths() counts parallel/duplicate edges as distinct paths because add_edge permits multi-edges, so the 'number of distinct paths' result is inflated for multigraphs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 15,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "add_edge() accepts self-loops (add_edge(x,x)), which silently make topological_order() return None and make reachable()/count_paths() loop or recurse infinitely, with no validation or warning.",
+   "bikeshedding": false
+  },
+  {
+   "line": 49,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "topological_order() seeds and traverses from a set (_nodes), so among multiple valid orderings the chosen one is non-deterministic across runs due to set/hash ordering; if callers expect a stable order this is a latent contract gap.",
+   "bikeshedding": false
+  },
+  {
+   "line": 20,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "add_node() logs at INFO on every call while add_edge() logs nothing, an inconsistent/noisy logging contract that will flood logs in bulk-load pipelines.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

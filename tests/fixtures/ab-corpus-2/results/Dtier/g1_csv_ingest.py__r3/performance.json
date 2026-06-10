@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse() materializes the entire CSV via list(reader) and then builds a second full list of Record objects (plus the rows[1:] slice copy at line 41), roughly tripling peak memory on large uploads; iterate the reader lazily with header = next(reader) instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_rows() loads the whole file into memory with readlines() just to count lines (per-line str object overhead can exceed the file size several-fold); use 'with open(path) as f: sum(1 for _ in f)' or chunked binary b'\\n' counting for O(1) memory.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "File opened without a context manager or explicit close, so the descriptor leaks on exception paths and non-refcounting runtimes (checklist category 6: resource leaks).",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "stream_valid() is fake streaming: it generator-wraps the fully materialized parse() result, so peak memory is identical to the non-streaming path and the Iterator return type is misleading; make parse() yield rows lazily to get actual bounded-memory streaming.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "The header index dict is computed on every parse() call and never used \u2014 dead per-call work, negligible cost but pure waste.",
+   "bikeshedding": true
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Rows are parsed by hard-coded position row[0..3] while the computed header index is ignored, so a CSV with valid-but-reordered columns passes the REQUIRED_COLUMNS check yet silently mis-parses (or raises IndexError on short rows) \u2014 brief note only, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "count_rows() returns -1 for an empty file and miscounts logical CSV records when quoted fields contain embedded newlines \u2014 deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "find_by_id() is an O(n) linear scan per call, so any caller looping over targets degrades to O(n*m); if repeated lookups are expected, build a {id: record} dict once \u2014 speculative since no callers are in scope.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reachable() never uses its `seen` set as a visited-guard, so on a cyclic graph (which the docstring explicitly permits) `queue.append(neighbor)` enqueues forever \u2014 non-terminating loop and unbounded memory growth; even on a DAG, nodes reachable via k paths are re-expanded k times, making work exponential in graph depth. Fix: only `append`/`add` when `neighbor not in seen`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "count_paths() recursively recomputes count_paths(neighbor, dst) with no memoization, so on a diamond/lattice DAG the call count blows up to ~O(2^depth) (classic un-memoized recursion); memoize on src (dst is fixed per call) or use lru_cache to drop it to O(V+E). Secondary: unbounded recursion depth risks a stack overflow on deep graphs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "add_node() emits logger.info per registration; in a bulk data-pipeline load of millions of nodes the per-call logging dispatch/handler overhead adds up \u2014 consider DEBUG level or batched logging (lazy %s formatting already keeps the string cost low, so this is borderline).",
+   "bikeshedding": true
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "neighbors() returns a fresh list(self._edges[node]) defensive copy on every call (O(degree)); intentional and standard, but if called in a hot loop callers could be handed the internal list view instead \u2014 micro-optimization only.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

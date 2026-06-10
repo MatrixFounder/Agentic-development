@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "reserve() uses strict `row[\"stock\"] > quantity`, so an exact-stock reservation (stock == quantity, e.g. reserve all 10 of 10 units) wrongly fails; the boundary should be `>=` to match 'reserve if enough stock is available'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "reserve() reads stock then updates in a separate statement with no transaction/atomic guard (no `WHERE stock >= ?` on the UPDATE), so concurrent reservations both pass the check and oversell, driving stock negative (TOCTOU race).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.83,
+   "description": "reserve() never validates `quantity > 0`: a negative quantity makes `stock > quantity` trivially true and `stock - (negative)` INCREASES stock while returning True, turning a reservation into a silent stock inflation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "restock() never validates `quantity`; a negative value reduces stock, and there is no guard against accidental stock corruption.",
+   "bikeshedding": false
+  },
+  {
+   "line": 98,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.78,
+   "description": "restock() on a non-existent SKU updates 0 rows but returns None, silently swallowing the failure so the caller cannot distinguish a successful restock from a no-op on a bad SKU (same silent-miss applies to reserve's UPDATE path).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "search_by_name() inlines `fragment` directly into a LIKE pattern, so LIKE metacharacters (%, _) in user input are interpreted as wildcards rather than literals, yielding incorrect matches; the docstring's 'case-insensitive' claim also only holds for ASCII under SQLite's default LIKE (non-ASCII is case-sensitive).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "search_by_name() builds the query via f-string interpolation of untrusted `fragment` instead of a bound parameter \u2014 SQL injection; noted in passing, defer detail to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 8,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "A module logger is configured but never used: failure paths (missing SKU in reserve/restock, empty reservations) are returned silently with no logging, hampering operational diagnosis.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "low_stock_report() issues one COUNT(*) query per low-stock product inside the loop (N+1 query pattern); noted in passing, defer detail to critic-performance.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Classic N+1: low_stock_report fires a separate movements COUNT(*) query per low-stock product (N+1 round-trips); collapse into a single GROUP BY aggregate LEFT JOINed against the products query so the whole report is one statement.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "search_by_name uses a leading-wildcard LIKE '%fragment%', which is non-sargable and forces a full table scan of products on every admin search (no index can help); consider FTS5 / a trigram index or at minimum a prefix LIKE 'fragment%'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Every public method opens and closes a brand-new SQLite connection via _connect(); when these methods are driven in a loop by the pipeline this repeats connection setup / schema parsing / page-cache discard each call, so reuse a single long-lived connection or a pool.",
+   "bikeshedding": false
+  },
+  {
+   "line": 84,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "Hot predicates rely on indexes that are unverifiable in scope: products.sku (get_product/reserve/restock) and a composite movements(sku, created_at) for the 30-day count; absent these, every lookup and the per-product COUNT degrade to table scans.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "search_by_name (and the initial products fetch at line 76) run unbounded SELECTs with no LIMIT and materialize every matching row into a Product list; a broad fragment on a large catalog loads the entire result set into memory at once.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Deferred to critic-security: fragment is string-interpolated directly into the SQL (f-string), a textbook SQL injection vector; should be a parameterized LIKE with ? binding.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Deferred to critic-logic: reserve uses 'row[\"stock\"] > quantity' so a request for exactly the available stock is rejected (off-by-one; should be >=), and the read-then-UPDATE is a non-atomic check that races under concurrency.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

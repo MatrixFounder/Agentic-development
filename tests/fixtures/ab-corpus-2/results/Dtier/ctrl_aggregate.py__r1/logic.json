@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Sliding-window accumulator in moving_average subtracts the outgoing element on each step; floating-point subtraction accumulates rounding error over long sequences, silently producing incorrect averages that can drift arbitrarily far from the true window sum.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "percentile materialises values with sorted() after the pct guard, so a partially-consumed generator yields a truncated ordered list and returns a silently wrong result; the Iterable[float] signature advertises generator support but the function cannot safely handle one that has already been partially read.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "safe_mean materialises values with list() and is subject to the same silently-wrong-result problem as percentile when given a partially-consumed iterator; both functions share this contract gap with no documentation or guard.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.65,
+   "description": "StreamingMedian.add has no type guard before calling insort; passing None or a non-comparable value raises TypeError from inside bisect.insort mid-operation, and while insort is typically atomic for the common case, the failure surface is undocumented and callers receive no early, clear error.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "The min(low+1, len(ordered)-1) guard in percentile is a defensive no-op when the single-element early-return on line 32 has already guaranteed len>=2 at this point; harmless but indicates incomplete reasoning about the guard's necessity.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

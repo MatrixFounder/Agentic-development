@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 9,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "safe_mean materializes the full iterable via list(values) with no size cap, so an attacker-controlled unbounded/huge stream causes unbounded memory consumption (CWE-770 uncontrolled resource allocation / DoS) \u2014 defense-in-depth only, as bounding input is properly the caller's responsibility for a pure library helper.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "percentile calls sorted(values), fully materializing and O(n log n)-sorting an unbounded iterable; a hostile huge input drives memory/CPU exhaustion (CWE-770/CWE-400 DoS), again a caller-side bounding concern rather than a fixable flaw in this layer.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "StreamingMedian.add uses insort into a Python list, which is O(n) per insertion (element shifting), so n adds are O(n^2) CPU and the list grows without bound \u2014 an attacker who can drive many add() calls causes quadratic-time/unbounded-memory DoS (CWE-407/CWE-770); the docstring documents the sorted-list tradeoff, so this is an accepted-design note, not a regression.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.15,
+   "description": "moving_average accepts NaN/Inf values (no float sanitization), letting a malicious input poison the rolling sum and propagate NaN across all subsequent windows via the incremental subtraction on line 51 \u2014 primarily a data-integrity/correctness concern with negligible security impact for an internal dashboard helper.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "bikeshedding-only"
+}

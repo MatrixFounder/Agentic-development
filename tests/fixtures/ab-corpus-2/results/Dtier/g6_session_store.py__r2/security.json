@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Session tokens are generated with random.choice() backed by the non-cryptographic Mersenne Twister PRNG (CWE-330/CWE-338); an attacker who observes a handful of issued tokens can recover the PRNG state and predict all past/future session tokens, enabling session hijacking and authentication bypass \u2014 must use the secrets module (e.g., secrets.choice or secrets.token_urlsafe).",
+   "bikeshedding": false
+  },
+  {
+   "line": 28,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.9,
+   "description": "_new_token() seeds no per-token entropy from a CSPRNG and relies entirely on the global random module state, so token unpredictability is the root weakness; the fix is to replace the entire generator body with a cryptographically secure source rather than just swapping one call.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() reads self._sessions.get(token) directly without calling _purge_expired() or checking expires_at, so an already-expired (but not-yet-purged) session can be resurrected and slid forward by a full TTL \u2014 an expiry/session-lifetime bypass (CWE-613) that contradicts get()'s purge-first behavior.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "create() never purges and there is no cap on total or per-user sessions; since expired entries are only reclaimed lazily by get()/active_count(), an attacker repeatedly calling create() can grow self._sessions without bound, causing memory-exhaustion DoS (CWE-770 unrestricted resource allocation).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "user_sessions() does not call _purge_expired() and filters only on user_id, so it returns expired sessions as if active, which can defeat expiry-based access decisions and leak stale session objects (improper session expiration, CWE-613) for any caller relying on it to enumerate live sessions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "All mutations of self._sessions are unsynchronized; in a multi-threaded server the read-then-del sequence in _purge_expired() can race with concurrent create()/destroy() and raise KeyError, turning a session store into a crash/DoS vector (CWE-362) \u2014 primarily a concurrency-correctness issue, deferred to the logic critic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.15,
+   "description": "Token validation uses a dict hash lookup rather than a constant-time comparison; timing-side-channel risk is largely impractical for hashed dict access (noted for completeness, not a credible exploit here).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

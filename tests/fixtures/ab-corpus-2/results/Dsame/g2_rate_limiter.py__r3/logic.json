@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Off-by-one: the gate `len(hits) <= self.limit` admits one request too many, so each window allows limit+1 (e.g. 101 with DEFAULT_LIMIT=100) before rejecting; should be `< self.limit`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 45,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Because of the same off-by-one, on the boundary request `self.limit - len(hits)` evaluates to -1, returning a negative `remaining` which violates the count contract and will mis-render in any X-RateLimit-Remaining header.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "List mutation (`hits.pop(0)`/`append`) on a shared defaultdict with no lock is not thread-safe; concurrent callers on a public API gateway can corrupt counts or drop hits, silently defeating the limiter.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.65,
+   "description": "`current_usage` reads via `self._hits[key]` (defaultdict.__getitem__), which creates an empty bucket as a side effect; a read-only usage probe across many keys silently grows memory until sweep runs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Client key trusts the leftmost (client-controllable) X-Forwarded-For entry, letting a caller rotate that token to bypass the per-client limit; logic-adjacent, defer detail to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Pruning via repeated `hits.pop(0)` on a Python list is O(n) per removed element (each pop shifts the whole list); under sustained load a deque or index-based slice would avoid the quadratic behavior.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "`sweep` only deletes fully-empty/all-stale buckets but never prunes the stale prefix of still-active buckets, so memory for bursty-then-quiet keys is not reclaimed as the docstring implies it bounds memory.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

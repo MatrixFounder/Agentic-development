@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() reads the session dict raw without purging or checking expires_at, so calling it on an expired-but-not-yet-purged token resurrects a dead session and returns True, contradicting get()'s expired=gone contract.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "user_sessions() neither calls _purge_expired() nor filters on expires_at, so it returns expired-but-unpurged sessions, inconsistent with get() and active_count() which treat expiry as authoritative.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "create() assigns self._sessions[token] without checking for an existing token, so a (astronomically rare) token collision silently overwrites and destroys the prior user's session.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "ttl is accepted unvalidated; a zero or negative ttl makes every session expire immediately (get always returns None after purge) with no error raised.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.6,
+   "description": "Out of logic scope, noted in passing: _new_token() uses non-cryptographic random instead of secrets, making session tokens predictable \u2014 defer detail to critic-security.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

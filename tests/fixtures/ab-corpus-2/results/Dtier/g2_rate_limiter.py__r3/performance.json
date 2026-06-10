@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 26,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "_hits is an unbounded per-key store with no TTL/max-size and nothing in the module ever schedules sweep(), so every distinct client key (mintable via X-Forwarded-For) retains a dict entry plus timestamp list (~200-300 B/key, multi-GB at 10M keys) until an external caller remembers to sweep; add automatic eviction (max-keys/LRU) or amortized pruning inside check().",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "hits.pop(0) on a list is O(limit) per pop (O(k*limit) per request as k timestamps expire) on the hot path of every check; use collections.deque.popleft() (O(1)) or, since the list is sorted, del hits[:bisect_left(hits, cutoff)].",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "self._hits[key] on a defaultdict inserts an empty bucket for every queried key, so the read-only current_usage() monitoring path mutates state and leaks one dict entry per probed client between sweeps; use self._hits.get(key, ()).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "sweep() scans timestamps oldest-first via any(), O(keys*limit) total (~100M comparisons under the GIL for 1M keys at limit 100), even though lists are sorted ascending so 'hits and hits[-1] >= cutoff' answers liveness in O(1) per bucket, making sweep O(keys).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "A synchronous logger.warning per denied request makes log volume scale 1:1 with attack rate -- I/O amplification exactly when the gateway is being flooded; sample or log once per key per window.",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "No synchronization: in a threaded gateway, sweep() iterating self._hits.items() while check() inserts a new key raises 'dictionary changed size during iteration', and concurrent check/reset on one key can interleave pops/appends; guard with a lock or snapshot via list(self._hits.items()) (deployment-dependent, hence reduced confidence).",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Off-by-one: len(hits) <= self.limit admits limit+1 requests per window and yields remaining=-1 on the boundary request (should be <); detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Client identity is taken from the unauthenticated, spoofable X-Forwarded-For header, allowing limiter bypass via minted identities and attacker-controlled _hits cardinality; detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "current_usage() linearly scans a sorted list where len(hits) - bisect_left(hits, cutoff) would do; bounded by limit+1 entries, so a micro-optimization only.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

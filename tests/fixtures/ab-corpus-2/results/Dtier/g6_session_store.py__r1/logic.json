@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "`_new_token` uses `random.choice` (Mersenne Twister), a non-CSPRNG; session tokens are security-sensitive material and a predictable PRNG allows token-forgery attacks \u2014 use `secrets.choice` or `secrets.token_urlsafe` instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.82,
+   "description": "`create()` unconditionally overwrites an existing entry if `_new_token()` returns a colliding token, silently replacing one user's live session with another's \u2014 no uniqueness check or retry loop is present.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "`create()` never consults `user_sessions()` or enforces any per-user session cap, allowing a single user to accumulate an unbounded number of sessions and exhaust memory.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "`touch()` calls `self._sessions.get(token)` directly without invoking `_purge_expired()` first, so an already-expired-but-not-yet-purged session can be successfully renewed, resurrecting a session that should be dead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "`user_sessions()` iterates `self._sessions.values()` without calling `_purge_expired()`, so it returns sessions whose TTL has elapsed, giving callers a stale view of active sessions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.88,
+   "description": "No locking protects any method; in a multi-threaded deployment the compound read-modify-delete in `_purge_expired()` and the read-then-write in `create()` / `touch()` are non-atomic, creating TOCTOU race conditions that can corrupt the session map or silently drop sessions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "The `ttl` constructor parameter accepts any integer including zero or negative values; a caller passing `ttl=0` creates sessions that are immediately expired, silently failing with no error or log entry.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

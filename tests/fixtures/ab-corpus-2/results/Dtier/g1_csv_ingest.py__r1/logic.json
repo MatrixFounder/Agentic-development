@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "The `index` dict built from the header is never used; field extraction uses hardcoded positional indices (row[0]..row[3]), so any CSV whose columns are not in the exact order id/name/amount/email will silently assign wrong values to fields \u2014 dead validation code that gives a false sense of column-order independence.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "Positional indexing row[0]..row[3] ignores the header-derived `index` map; a CSV with columns reordered (e.g. email first) will misassign data silently or raise an unguarded ValueError/IndexError with no row-number context.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "count_rows counts raw newlines, not CSV records; any CSV with quoted multi-line field values will overcount rows, returning a number larger than the actual record count, which is a silent wrong answer for any caller relying on this value.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.99,
+   "description": "count_rows returns -1 when the file is empty (0 lines minus 1), which is a nonsensical negative count; callers expecting a non-negative row count will receive an invalid value with no error raised.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "other",
+   "severity": "MEDIUM",
+   "confidence": 0.99,
+   "description": "count_rows opens the file without a `with` statement, leaking the file descriptor if any exception is raised before readlines() returns.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "If `filename` is an empty string, os.path.basename('') returns '' and os.path.join(export_dir, '') evaluates to the directory path; opening a directory for writing raises IsADirectoryError with no guard or meaningful error message.",
+   "bikeshedding": false
+  },
+  {
+   "line": 71,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "The email validity check `'@' in record.email` accepts trivially invalid values such as '@', '@@', or 'a@' as valid emails; if downstream consumers treat stream_valid output as having been validated, they will process structurally invalid emails.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.88,
+   "description": "Rows with fewer than 4 columns raise an unguarded IndexError from positional access row[0]..row[3]; the exception carries no row number or offending content, making debugging in production silent and opaque.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "parse() builds a column-name->position `index` dict but never uses it; rows are read positionally (row[0..3]) while validation only checks column existence as a set, so a CSV with reordered-but-present columns (e.g. header 'email,name,amount,id') passes validation and silently maps fields to the wrong attributes or raises ValueError on int(email).",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_rows returns len(lines) - 1, so an empty file yields -1 (and a header-only file yields 0 indistinguishably); the unguarded subtraction produces a negative/incorrect row count for empty or no-header inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "count_rows counts physical newlines via readlines() instead of CSV records, so any quoted field containing an embedded newline inflates the count and disagrees with parse()'s real CSV row semantics.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.88,
+   "description": "int(row[0]) / float(row[2]) have no per-row error handling, so a single non-numeric or empty cell (e.g. '', 'N/A', '$5') raises an unhandled ValueError that aborts the entire parse of an otherwise-valid file.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Rows are indexed up to row[3] with no length check, so a ragged/short row (fewer than 4 fields) or an empty trailing line raises an unhandled IndexError and crashes the whole parse.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "open(path).readlines() never closes the file handle (no context manager), leaking a descriptor on each call.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "export uses os.path.basename(filename); an empty filename or one ending in '/' yields basename '' and open() then targets the directory itself, raising IsADirectoryError rather than producing a usable file.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "count_rows opens a caller-supplied path with no validation (path-traversal/arbitrary-read surface); flagged in passing only \u2014 defer detailed assessment to critic-security.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

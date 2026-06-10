@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "get() calls _purge_expired() on every read, turning an O(1) token lookup into a full O(n) scan-plus-list-allocation of the entire session dict on the hottest code path; purge lazily (evict only the fetched session) or throttle the full sweep behind a timestamp/call-count.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "_purge_expired() does a full O(n) iteration over all sessions and allocates a throwaway 'dead' list every invocation, and it is invoked eagerly from both get() and active_count() rather than amortized in the background.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "active_count() forces a full O(n) purge before returning len(); if polled by a metrics/monitoring loop this couples every scrape to a whole-store scan.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "_new_token() makes 32 individual random.choice() calls through a generator per token; '\"\".join(random.choices(alphabet, k=TOKEN_LENGTH))' is a single C-level call and several times faster on the create() path.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "user_sessions() linearly scans every session to filter by user_id with no secondary user_id->tokens index; a latent quadratic risk if called inside a loop, severity depends on call frequency not visible from this single file.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Tokens are generated from the non-cryptographic random (Mersenne Twister), which is predictable for session identifiers; deferring detail to critic-security, noted here only as out-of-lane.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "moving_average uses an incremental running sum (current += values[i] - values[i-window]) which accumulates floating-point rounding error over long inputs and can drift from a per-window recomputed sum; correct for short dashboard series but numerically imprecise at scale.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "moving_average is typed list[float] while sibling helpers (safe_mean, running_total, percentile) accept Iterable[float], an API inconsistency; it relies on len()/slicing/indexing so it genuinely needs a sequence, but the divergent contract is a minor design nit, not a latent crash.",
+   "bikeshedding": true
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "clamp(value, low, high) with value=NaN silently returns low (NaN comparisons collapse max/min), an undefined/surprising result; acceptable for pure float helpers but undocumented.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "bikeshedding-only"
+}

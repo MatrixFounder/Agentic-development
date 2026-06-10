@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reachable() BFS never checks `seen` before enqueueing a neighbor, so on the explicitly-promised cyclic graph the queue grows without bound (non-terminating / OOM), and even on a DAG diamond fan-in causes exponential re-expansion of nodes.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "count_paths() recurses with no memoization, yielding O(2^n) blowup on diamond-shaped DAGs (every shared subpath is recomputed from scratch); add an lru_cache/visited-memo on (node,dst) to make it O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "self._edges is a defaultdict(list), so every read of a leaf/unknown node's neighbors here (and on lines 40, 61) silently inserts a new empty list, causing steady memory growth on read-only traversals and turning these 'reads' into non-thread-safe mutations; use self._edges.get(node, ()).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "count_paths() has unbounded recursion depth (RecursionError on long chains) and infinite-recurses on any cycle despite the 'DAG assumed' comment \u2014 adjacent correctness issue; defer detailed handling to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "reachable() marks a node 'seen' at enqueue time but never adds `start` itself, and combined with the missing visited-guard the returned set is also semantically wrong (excludes start, may duplicate-process) \u2014 defer detail to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

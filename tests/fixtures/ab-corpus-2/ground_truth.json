@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "corpus": "ab-corpus-2",
+  "total_bugs": 18,
+  "by_class": {
+    "logic": 6,
+    "security": 6,
+    "performance": 6
+  },
+  "by_severity": {
+    "CRITICAL": 6,
+    "HIGH": 6,
+    "MEDIUM": 6
+  },
+  "controls": [
+    "ctrl_aggregate.py"
+  ],
+  "bugs": [
+    {
+      "id": "g1-LOG",
+      "file": "g1_csv_ingest.py",
+      "line": 44,
+      "class": "logic",
+      "severity": "CRITICAL",
+      "description": "parse() builds a header->index map but then maps fields by hardcoded positions 0-3, silently corrupting every record when the CSV columns are in any other order"
+    },
+    {
+      "id": "g1-SEC",
+      "file": "g1_csv_ingest.py",
+      "line": 64,
+      "class": "security",
+      "severity": "HIGH",
+      "description": "CSV formula injection: name/email written to the export without neutralizing a leading =,+,-,@ \u2014 formula executes when the file is opened in a spreadsheet"
+    },
+    {
+      "id": "g1-PER",
+      "file": "g1_csv_ingest.py",
+      "line": 54,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "count_rows loads the entire file into memory via readlines() just to count rows instead of streaming"
+    },
+    {
+      "id": "g2-LOG",
+      "file": "g2_rate_limiter.py",
+      "line": 43,
+      "class": "logic",
+      "severity": "HIGH",
+      "description": "off-by-one: <= allows limit+1 requests per window (append happens when len already equals limit)"
+    },
+    {
+      "id": "g2-SEC",
+      "file": "g2_rate_limiter.py",
+      "line": 32,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "rate-limit identity trusts the client-controlled X-Forwarded-For first hop \u2014 spoofing the header rotates the key and bypasses the limit entirely"
+    },
+    {
+      "id": "g2-PER",
+      "file": "g2_rate_limiter.py",
+      "line": 42,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "hits is a list; pop(0) is O(n) per evicted timestamp \u2014 should be a deque (or ring buffer)"
+    },
+    {
+      "id": "g3-LOG",
+      "file": "g3_email_queue.py",
+      "line": 37,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "dedup keyed only by recipient address \u2014 two distinct messages to the same address are silently collapsed to one"
+    },
+    {
+      "id": "g3-SEC",
+      "file": "g3_email_queue.py",
+      "line": 48,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "email header injection: subject/to interpolated into a raw header string with CRLF, then handed to sendmail \u2014 attacker can inject Bcc/extra headers"
+    },
+    {
+      "id": "g3-PER",
+      "file": "g3_email_queue.py",
+      "line": 58,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "opens a fresh SMTP connection per message inside the flush loop \u2014 no connection reuse/pooling (handshake per send)"
+    },
+    {
+      "id": "g4-LOG",
+      "file": "g4_inventory.py",
+      "line": 48,
+      "class": "logic",
+      "severity": "HIGH",
+      "description": "reserve uses > instead of >=, so reserving the exact remaining stock fails (off-by-one), leaving stranded inventory"
+    },
+    {
+      "id": "g4-SEC",
+      "file": "g4_inventory.py",
+      "line": 65,
+      "class": "security",
+      "severity": "MEDIUM",
+      "description": "SQL injection: search fragment interpolated into the LIKE clause via f-string (admin-console search, hence MEDIUM)"
+    },
+    {
+      "id": "g4-PER",
+      "file": "g4_inventory.py",
+      "line": 83,
+      "class": "performance",
+      "severity": "CRITICAL",
+      "description": "N+1 query: a movements COUNT(*) is issued per product inside low_stock_report, scanning the whole catalog on every dashboard load"
+    },
+    {
+      "id": "g5-LOG",
+      "file": "g5_graph_traversal.py",
+      "line": 31,
+      "class": "logic",
+      "severity": "CRITICAL",
+      "description": "reachable() enqueues neighbors with no visited guard before append \u2014 any cyclic graph causes an infinite loop (hang)"
+    },
+    {
+      "id": "g5-SEC",
+      "file": "g5_graph_traversal.py",
+      "line": 22,
+      "class": "security",
+      "severity": "MEDIUM",
+      "description": "log injection: a user-controlled node id is written to the log unescaped \u2014 CRLF lets an attacker forge log lines"
+    },
+    {
+      "id": "g5-PER",
+      "file": "g5_graph_traversal.py",
+      "line": 41,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "count_paths recurses without memoization \u2014 exponential blowup on DAGs with many overlapping paths"
+    },
+    {
+      "id": "g6-LOG",
+      "file": "g6_session_store.py",
+      "line": 54,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "touch() slides expiry without checking the current one, resurrecting an already-expired (but not yet purged) session"
+    },
+    {
+      "id": "g6-SEC",
+      "file": "g6_session_store.py",
+      "line": 30,
+      "class": "security",
+      "severity": "HIGH",
+      "description": "session tokens generated with the random module (Mersenne Twister, predictable) instead of secrets \u2014 tokens are guessable"
+    },
+    {
+      "id": "g6-PER",
+      "file": "g6_session_store.py",
+      "line": 46,
+      "class": "performance",
+      "severity": "CRITICAL",
+      "description": "get() runs a full O(n) sweep of all sessions on every single lookup \u2014 purge belongs on a timer, not the hot path"
+    }
+  ]
+}

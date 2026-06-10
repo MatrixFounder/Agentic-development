@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.75,
+   "description": "StreamingMedian.add uses bisect.insort on a Python list \u2014 O(n) memmove per insert, O(n^2) total over a stream; replace with the two-heap pattern (heapq) for O(log n) adds and O(1) median, or sortedcontainers.SortedList.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "StreamingMedian retains every value forever, so memory grows O(n) with stream length \u2014 acceptable for bounded batches but an OOM risk for unbounded streams; use a quantile sketch (P2/t-digest) if approximation is acceptable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "safe_mean materializes the entire Iterable via list(values) just to compute sum and len, turning an O(1)-memory single-pass mean into O(n) memory for generator inputs; use a sum+count loop or statistics.fmean.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "percentile re-sorts the full dataset (O(n log n)) on every call, so computing several percentiles (p50/p90/p99) over the same data repeats identical sorts; provide a multi-percentile variant or a pre-sorted input path.",
+   "bikeshedding": false
+  },
+  {
+   "line": 19,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "running_total's manual Python loop can be itertools.accumulate for a ~2-3x constant-factor speedup at C level; same O(n) complexity, micro-optimization only.",
+   "bikeshedding": true
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Sliding-window add/subtract in moving_average accumulates floating-point error over long series (the trade-off for O(n)); numeric-accuracy concern, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 69,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "StreamingMedian is not thread-safe (insort is a non-atomic bisect+insert and can corrupt ordering if shared across workers); only relevant if used concurrently, and no concurrent usage is in scope.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "If sendmail (line 60) or the SMTP() constructor (line 58) raises on a transient/recipient error, the exception propagates out of flush so the loop aborts, remaining messages are never sent, and _pending.clear() (line 65) never runs \u2014 leaving already-sent messages in the queue so a retry re-delivers them (duplicate emails).",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Dedup key is msg.to (recipient only), so two genuinely different messages (different subject/body/template) to the same address cause the second to be silently skipped and counted as skipped \u2014 distinct emails are lost; the key should be content-based, not recipient-only.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "flush clears _pending but never _seen, so an address stays deduplicated for the queue's entire lifetime (until manual clear_dedup_cache): the same recipient can never be enqueued again after a flush, and _seen grows unbounded (memory leak) in a long-running pipeline \u2014 contradicting the docstring's 'already queued' scope.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Out-of-scope passing note (defer to critic-security): _render interpolates unsanitized msg.to and msg.subject into CRLF-delimited headers, enabling SMTP header/body injection (e.g. injected Bcc) if those fields contain \\r\\n.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "Out-of-scope passing note (defer to critic-performance): a fresh SMTP connection is opened and quit() per message inside the loop, so each message pays a full TCP+SMTP handshake \u2014 the connection should be reused across the batch.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

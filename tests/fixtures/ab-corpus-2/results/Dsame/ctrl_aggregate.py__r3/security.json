@@ -1,0 +1,13 @@
+{
+ "findings": [
+  {
+   "line": 67,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.2,
+   "description": "StreamingMedian._data grows unbounded across add() calls (and safe_mean/percentile/running_total fully materialize or sort arbitrary-length iterables), so a long-lived instance fed attacker-controlled unbounded input could exhaust memory (CWE-400 uncontrolled resource consumption); borderline and likely out of scope since no attacker-controlled-input vector is in scope and unbounded accumulation is the documented design of an exact streaming median.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "clean-pass"
+}

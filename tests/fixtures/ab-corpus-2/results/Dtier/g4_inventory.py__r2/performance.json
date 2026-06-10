@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Classic N+1 in low_stock_report(): one COUNT(*) query against movements per low-stock product inside the loop (5,000 low-stock SKUs = 5,001 round trips); replace with a single LEFT JOIN ... GROUP BY or correlated-subquery aggregate.",
+   "bikeshedding": false
+  },
+  {
+   "line": 76,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Unbounded SELECT of the entire products table via fetchall() with the stock <= reorder_level predicate applied in Python \u2014 full-table transfer and in-memory materialization; push the filter into SQL (WHERE stock <= reorder_level).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "Leading-wildcard LIKE '%fragment%' is non-sargable (full table scan per search) and the query has no LIMIT, so a short or empty fragment materializes the whole catalog as Product objects; add LIMIT/pagination and consider SQLite FTS if search volume matters.",
+   "bikeshedding": false
+  },
+  {
+   "line": 84,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.4,
+   "description": "Each per-SKU COUNT filters movements on sku and created_at; without a composite index movements(sku, created_at) every loop iteration is a full scan of the movements table \u2014 schema not in scope, verify the index exists.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "A fresh sqlite3 connection is opened and torn down on every method call, discarding the per-connection prepared-statement cache and any PRAGMA tuning; in a per-record pipeline loop the connection churn rivals the query cost \u2014 reuse a long-lived connection or pool per thread.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "fragment is f-string-interpolated into the LIKE clause \u2014 SQL injection (and breaks on quotes); use parameterized LIKE ? with escaped wildcards \u2014 detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Check-then-act race in reserve(): SELECT stock then UPDATE in separate statements allows overselling under concurrent calls; atomic 'UPDATE products SET stock = stock - ? WHERE sku = ? AND stock >= ?' with rowcount check fixes it (and halves round trips) \u2014 detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Off-by-one: 'stock > quantity' refuses a reservation that exactly exhausts remaining stock (should be >=) \u2014 deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

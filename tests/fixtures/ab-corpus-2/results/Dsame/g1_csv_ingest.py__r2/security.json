@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "CSV/Formula Injection: export() writes untrusted name/email fields back to a CSV with no neutralization of leading =,+,-,@,tab,CR, so payloads like '=HYPERLINK(...)' or '=cmd|...' execute when the 'cleaned' file is opened in Excel/LibreOffice/Sheets (CWE-1236, OWASP A05).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Path traversal / arbitrary file read: count_rows() opens a fully attacker-controlled 'path' with no confinement or basename stripping, allowing reads of /etc/passwd, ../../secrets, etc. (CWE-22/CWE-73, OWASP A01).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Unbounded read plus leaked file handle: open(path).readlines() loads the entire file into memory (OOM/DoS via a huge file or /dev/zero) and never closes the handle (no context manager) (CWE-400/CWE-772, OWASP A10).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "Unhandled exceptional conditions: int(row[0])/float(row[2]) raise ValueError and row[0..3] raise IndexError on malformed/short rows, so a single crafted row aborts the whole ingest with an unhandled exception (CWE-754/CWE-755, OWASP A10).",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Data-integrity / type confusion: the 'index' header map is built but never used; parse() reads hardcoded positions row[0..3] while only validating that required column names exist as a set, so a valid-but-reordered header (e.g. email,amount,name,id) silently produces type-confused records (CWE-345, OWASP A08; primarily a logic bug, deferred to the logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 46,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "float() accepts 'nan'/'inf'/'-inf', poisoning summarize() total/avg aggregates and corrupting stream_valid()'s 'amount >= 0' gate (NaN silently dropped, inf passes) (CWE-1284, OWASP A08).",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "Permissions: export dir (makedirs default mode) and export files (open 'w' default 0o644) are created with umask defaults and are typically world-readable, exposing PII (email) written into them (CWE-276, OWASP A02/A04).",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Caller-controlled filename: os.path.basename() correctly blocks directory traversal, but an attacker-influenced filename can still overwrite/clobber an existing export within export_dir (e.g. another tenant's report.csv) (CWE-434-adjacent, OWASP A01).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

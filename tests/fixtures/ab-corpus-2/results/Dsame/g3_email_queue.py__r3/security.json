@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "SMTP/email header injection (CWE-93): _render interpolates unsanitized msg.to and msg.subject into a CRLF-delimited header block, letting CRLF in either field inject arbitrary headers (e.g. Bcc for silent exfiltration) or forge the body; MIMEText is imported but unused and should be used instead of manual header string-building.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Subject header is built from raw msg.subject at line 48 with no newline stripping, the primary CRLF-injection sink enabling header smuggling into the SMTP DATA payload.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Cleartext SMTP transmission (CWE-319): smtplib.SMTP connects on submission port 587 but never calls server.starttls(), so recipients, subjects, and bodies are sent unencrypted and are exposed to MITM/passive sniffing.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "Uncontrolled resource consumption / outbound DoS vector (CWE-400): flush opens one new SMTP connection per pending message with no cap, batching, or rate limit, and dedup keys only on recipient, so an enqueue flood with varying msg.to maps directly to unbounded outbound connections.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "No exception handling around connect/sendmail means one failed send aborts the entire flush before self._pending.clear() (line 65), leaving already-incremented stats.sent inconsistent with cleared/uncleared queue and risking duplicate sends on retry (security-adjacent availability; defer detail to logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Deduplication keys solely on msg.to, so distinct messages (different subject/body) to the same recipient are silently dropped and counted as skipped \u2014 correctness bug, noted for the logic critic; key should hash full message content.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

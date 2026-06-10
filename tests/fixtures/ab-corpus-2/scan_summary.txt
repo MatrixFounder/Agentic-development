@@ -1,0 +1,1 @@
+run_audit.py on corpus-2 files/: no code-pattern findings (only a repo-level "Missing SBOM" notice). Security bugs here are semantic — not regex-detectable.

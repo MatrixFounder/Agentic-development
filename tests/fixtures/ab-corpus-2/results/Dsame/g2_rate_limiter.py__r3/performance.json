@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "list.pop(0) inside the prune loop is O(n) per pop (shifts every remaining element), making each check() O(k*n) on the hottest per-request path; replace the per-key list with collections.deque and use popleft() for O(1) pruning.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "self._hits[key] on a defaultdict materializes an empty bucket for every distinct client key seen (including denied/first-touch requests), so unique forged X-Forwarded-For values grow memory unbounded between sweep() calls \u2014 flag the attacker-controlled-key DoS framing to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.78,
+   "description": "sweep() relies on any(t >= cutoff) but check() only prunes lazily on access, so quiet clients accumulate fully-stale lists that sweep must scan end-to-end (no short-circuit), making each sweep O(total retained timestamps) rather than O(buckets).",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "current_usage() does a full O(n) linear scan of the per-key list on every call and never prunes, so the cost grows with un-pruned stale entries for clients that call this without going through check().",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "len(hits) <= self.limit followed by append admits limit+1 requests per window (off-by-one) \u2014 not a performance concern; defer detail to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

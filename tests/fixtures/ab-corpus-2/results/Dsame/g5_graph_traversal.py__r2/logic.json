@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reachable() has no visited-guard: it enqueues every neighbor unconditionally, so on any cyclic graph (the exact case its docstring promises to support) the queue never drains, causing an infinite loop and unbounded memory growth.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "reachable() never adds `start` to `seen` (only neighbor nodes are added), so an isolated start node yields an empty set and `start` is inconsistently excluded from its own reachable set unless a self-loop exists.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Reading `self._edges[node]` on a defaultdict(list) (here and at lines 40, 54, 61) inserts an empty list for every leaf node touched, silently mutating `_edges` and polluting the key set that topological_order() later iterates at line 46.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "count_paths() recurses with no cycle guard despite operating on the same graph type reachable() claims may be cyclic; a cyclic input causes unbounded recursion (RecursionError), and deep DAGs can also overflow the recursion limit (exponential cost without memoization is a related performance concern \u2014 deferred to critic-performance).",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "count_paths() returns 0 indistinguishably for 'no path exists', 'dst unreachable', and 'src/dst not in graph', giving callers no way to detect an invalid/absent node argument.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "reachable() never guards on 'if neighbor not in seen' before enqueuing; on any cycle (which the docstring explicitly permits \u2014 'possibly cyclic graph') nodes are re-enqueued indefinitely, producing an infinite loop that never terminates.",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "The BFS start node is never added to 'seen', so if 'start' is part of a cycle it gets re-enqueued when a neighbor points back to it, compounding the infinite-loop defect even if a guard were added for other nodes.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "count_paths() is a plain unbounded recursion with no cycle detection; on any graph with a cycle it recurses infinitely and raises RecursionError, despite the caller having no way to enforce the 'DAG assumed' precondition at the call site.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.93,
+   "description": "count_paths() has no memoization; on a valid DAG with diamond-shaped sub-paths it recomputes identical sub-problems exponentially (2^n calls for n-layer diamond), making it unusable for any non-trivial dependency graph \u2014 defer detail to critic-performance.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "neighbors() reads self._edges[node] on a defaultdict; for any node that has never been a source this silently auto-creates an empty adjacency-list entry, mutating internal graph state as a side-effect of a read-only query and polluting subsequent topological_order() or reachable() iterations.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "reachable() silently returns an empty set when 'start' is not present in self._nodes or self._edges, giving the caller no signal to distinguish 'node exists but has no outgoing edges' from 'node does not exist at all'.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

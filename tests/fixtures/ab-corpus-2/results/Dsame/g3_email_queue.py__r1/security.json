@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Email/SMTP header injection (CWE-93/CWE-80): _render() interpolates attacker-controllable msg.to and msg.subject directly into a hand-built RFC822 header block separated by \\r\\n, so a CRLF in either field injects arbitrary headers (Bcc/Cc/Reply-To) or splits in a forged body; output flows to sendmail() in flush().",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.88,
+   "description": "The To/Subject header lines built with raw f-string \\r\\n separators perform no CRLF sanitization or header encoding; the imported-but-unused MIMEText (line 6) shows the safe email API was abandoned, leaving the header block injectable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Cleartext SMTP transmission (CWE-319): flush() opens a plain smtplib.SMTP connection on submission port 587 and never calls starttls(), so message contents (potentially sensitive bodies) traverse the network unencrypted.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "No SMTP authentication: server.login() is never called before sendmail(), so the queue relies solely on an unauthenticated open relay on the internal host, broadening abuse if that host is reachable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "Envelope-recipient injection: msg.to is passed unvalidated as sendmail() to_addrs; while smtplib escapes SMTP commands, an unvalidated recipient string combined with the header-injection root cause widens the CRLF attack surface.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "Dedup key is only msg.to, so a second, genuinely different message to the same recipient is silently skipped/dropped (correctness bug with a minor availability angle); defer detail to logic critic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 20,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Message.template is declared but never referenced in _render(); dead field with no effect; defer to logic critic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "flush() opens a new SMTP connection per message inside the loop instead of reusing one connection, adding connection/TLS overhead per send; defer detail to performance critic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "_pending and _seen grow without bound and _seen is never trimmed except via clear_dedup_cache(), so an actor able to enqueue many distinct recipients could drive unbounded memory growth (low-confidence memory DoS).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

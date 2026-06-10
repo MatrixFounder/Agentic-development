@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "Session tokens are generated with random.choice (Mersenne Twister, a non-cryptographic PRNG), making auth tokens predictable once the recoverable PRNG state is observed \u2014 direct session-hijacking/auth-bypass; use the secrets module (CWE-330/CWE-338, OWASP A07).",
+   "bikeshedding": false
+  },
+  {
+   "line": 49,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "touch() renews expiry without checking expires_at or purging, so an already-expired session token can be resurrected indefinitely, defeating the TTL/idle-timeout control (CWE-613 Insufficient Session Expiration).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "_sessions grows unbounded \u2014 create() never purges and there is no size cap, while _purge_expired only fires lazily on get()/active_count(), enabling memory-exhaustion DoS via repeated session minting (CWE-770/CWE-400); perf critic owns the throughput angle.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.2,
+   "description": "Token validation uses dict.get (not constant-time compare_digest), a theoretical timing side-channel (CWE-208); practical leakage for a 32-char token is negligible vs network jitter \u2014 borderline, likely dismissible.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

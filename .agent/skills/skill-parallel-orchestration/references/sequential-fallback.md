@@ -44,7 +44,7 @@ For each teammate role in the decomposition:
 After all teammates have run sequentially, the orchestrator performs the same merge as in parent §6:
 1. Location dedup (±3 lines).
 2. Cross-category re-attribution.
-3. Severity escalation: **never in sequential mode**. Agreement between sequential personas is the weakest form of corroboration — same session window, same model instance — so it never escalates severity: tag `corroborated` only. Different-failure-mechanism findings at the same location (parent §6 rule 3 exception) get at most a `priority` flag here, never +1.
+3. Severity escalation: **never in sequential mode**. Agreement between sequential personas is the weakest form of corroboration — same session window, same model instance — so it never escalates severity: tag `corroborated` only. Different-failure-mechanism findings at the same location (parent §6 rule 3 exception) get at most a `priority` flag here, never +1. The tier-diverse escalation (parent §6 rule 3, R3c) is **impossible** in sequential mode — one instance cannot run multiple model tiers — so that gradation row never applies here.
 4. Bikeshedding filter (`bikeshedding-only` critics → drop low-severity noise).
 5. Optional severity filter.
 

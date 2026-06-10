@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "SQL injection (CWE-89): search_by_name interpolates the untrusted `fragment` argument into the query via f-string instead of a bound parameter, allowing filter bypass and UNION/boolean-blind exfiltration of other tables.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "TOCTOU race / non-atomic check-then-act (CWE-367): reserve reads stock then UPDATEs in a separate statement, so concurrent callers can both pass the check and oversubscribe inventory below zero; the guard should be a conditional `UPDATE ... WHERE stock >= ?` checking rowcount in one transaction.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "restock (and reserve) do not validate that `quantity` is non-negative, so a negative value silently inverts the stock operation; missing input validation with integrity impact (primarily a logic/validation concern, deferred to logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "Off-by-one: `row[\"stock\"] > quantity` rejects reservations when stock exactly equals quantity; should be `>=` (logic bug, deferred to logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 8,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "`logger` is imported and configured but never used anywhere in the module (dead code).",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

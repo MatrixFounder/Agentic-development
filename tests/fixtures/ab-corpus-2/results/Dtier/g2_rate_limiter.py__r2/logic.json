@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "Off-by-one: guard uses `<=` so a client with exactly `limit` recorded hits is still allowed through, appending a (limit+1)-th timestamp and enforcing a ceiling of limit+1 instead of limit. Fix: change to `< self.limit`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 45,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "`remaining` is computed after `hits.append(now)`, so it underreports by 1 and goes negative (-1) when the off-by-one on line 43 permits the extra request; should be computed before the append or use `self.limit - len(hits)` pre-append.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "`self._hits[key]` on a `defaultdict` materialises and permanently inserts an empty bucket for every unseen key, including on read-paths; an adversary cycling arbitrary X-Forwarded-For values causes unbounded dict growth with no cap or eviction until sweep() runs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "Client identity is the first element of the caller-supplied X-Forwarded-For header with no validation; any client can spoof an arbitrary IP to impersonate another tenant or rotate forged IPs to bypass the rate limit entirely.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "`list.pop(0)` is O(n); under a full window of hits every `check()` call degrades to O(limit) \u2014 use `collections.deque` with `popleft()` for O(1). Deferring detail to critic-performance.",
+   "bikeshedding": false
+  },
+  {
+   "line": 53,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.88,
+   "description": "`current_usage()` neither prunes stale entries nor shares a `now` timestamp with `check()`, so its count can diverge from what `check()` would enforce; callers relying on it for pre-flight decisions will see a stale or inconsistent view.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "No thread-safety: `_hits` is a plain `defaultdict` with no lock; concurrent requests from the same client can both pass the `len(hits) < limit` check before either appends, allowing simultaneous over-limit requests in any multi-threaded WSGI/ASGI deployment.",
+   "bikeshedding": false
+  },
+  {
+   "line": 46,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.78,
+   "description": "`retry_after = hits[0] + self.window - now` can yield a negative value at floating-point boundary conditions (hit exactly at cutoff not pruned due to strict `<`), which would produce an invalid negative Retry-After for the caller.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "`sweep()` removes a bucket only when all timestamps are outside the window but does not compact partially-stale buckets, so large hit lists for quiet clients remain in memory until every timestamp ages out rather than being pruned progressively.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

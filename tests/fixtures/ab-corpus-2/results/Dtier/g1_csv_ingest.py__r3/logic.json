@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "The `index` dict built from the header (line 36) is never used; rows are indexed by hard-coded positions row[0]..row[3], so any CSV whose column order differs from id,name,amount,email silently maps wrong values to wrong fields \u2014 the column-presence check on line 37 is completely ineffective as a guard.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "No bounds check before accessing row[0]..row[3]; a short row (e.g., trailing comma produces fewer fields, or a blank line yields an empty list) raises IndexError and aborts the entire parse with no error recovery or skip logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "int(row[0]) and float(row[2]) are unguarded; a single malformed value (empty string, non-numeric text) raises ValueError that propagates out of parse(), discarding all already-processed records and giving the caller no indication of which row failed.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "count_rows returns len(lines) - 1, which is -1 for a zero-line file, a nonsensical negative count that callers cannot distinguish from a valid result without their own guard.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "open(path) is called without a context manager (no 'with' statement), leaking the file descriptor if an exception occurs; count_rows also loads the entire file into memory via readlines(), which will OOM on large files.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.99,
+   "description": "The `index` dict is dead code: it is constructed but never referenced anywhere in the method; the column-order assumption on lines 44-47 makes the REQUIRED_COLUMNS presence check (line 37) a false safety net \u2014 columns can be present in any order and the wrong data will be silently assigned.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "os.path.basename strips Unix path separators but not Windows backslashes when running on Linux, so a filename like 'foo\\\\..\\\\bar' would not be stripped correctly, enabling a partial path traversal outside export_dir; deferred to critic-security for full analysis.",
+   "bikeshedding": false
+  },
+  {
+   "line": 71,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "stream_valid accepts any string containing '@' as a valid email, including '@', '@@', or 'a@'; junk emails pass the filter silently and propagate to callers and the exported CSV without warning.",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "os.makedirs is called unconditionally in __init__, making instantiation fail with PermissionError for any caller that only intends to use parse() or stream_valid() and has no need for the export directory.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

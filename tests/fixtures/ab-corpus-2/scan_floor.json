@@ -1,0 +1,69 @@
+{
+  "project": "tests/fixtures/ab-corpus-2/files",
+  "timestamp": "2026-06-10T15:54:16.259659",
+  "scan_type": "all",
+  "scans": {
+    "dependencies": {
+      "tool": "dependency_scanner",
+      "findings": [],
+      "status": "[OK] Secure"
+    },
+    "secrets": {
+      "tool": "secret_scanner",
+      "findings": [],
+      "status": "[OK] No secrets detected",
+      "scanned_files": 7,
+      "skipped_files": 0,
+      "by_severity": {
+        "critical": 0,
+        "high": 0
+      }
+    },
+    "code_patterns": {
+      "tool": "pattern_scanner",
+      "findings": [],
+      "status": "[OK] No dangerous patterns",
+      "scanned_files": 7,
+      "skipped_files": 0
+    },
+    "configuration": {
+      "tool": "config_scanner",
+      "findings": [],
+      "status": "[OK] Config secure",
+      "skipped_files": 0
+    },
+    "iac": {
+      "tool": "iac_scanner",
+      "findings": [],
+      "status": "[OK] IaC secure",
+      "scanned_files": 0,
+      "skipped_files": 0
+    },
+    "mcp_agentic": {
+      "tool": "mcp_agentic_scanner",
+      "findings": [],
+      "status": "[OK] No MCP/agentic risks detected",
+      "scanned_files": 7,
+      "skipped_files": 0
+    },
+    "sbom": {
+      "tool": "sbom_scanner",
+      "findings": [
+        {
+          "type": "Missing SBOM",
+          "severity": "medium",
+          "cwe": "CWE-1104",
+          "message": "No SBOM (Software Bill of Materials) found. Required by EU CRA & EO 14028. Generate with: npx @cyclonedx/cdxgen -o sbom.json (or syft . -o cyclonedx-json > sbom.json)"
+        }
+      ],
+      "status": "[?] SBOM missing"
+    }
+  },
+  "summary": {
+    "total_findings": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "overall_status": "[?] REVIEW RECOMMENDED"
+  }
+}

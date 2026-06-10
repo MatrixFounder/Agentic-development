@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "reachable() enqueues every neighbor with no 'not in seen' guard, so on the cyclic graph its own docstring promises to support (e.g. A->B, B->A) the queue grows without bound and the loop never terminates.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_paths() recurses with no cycle detection or recursion guard despite only 'DAG assumed'; any cyclic input causes infinite recursion / RecursionError, and very deep DAGs can also blow the stack.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Even on acyclic input the BFS queue is never deduplicated, so shared descendants in a diamond/lattice graph are re-enqueued and re-expanded once per incoming edge, degrading to exponential traversal work.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Pure query methods index self._edges[node] (a defaultdict), which inserts an empty list for leaf/unknown nodes as a read side effect, silently growing internal state and violating the query-does-not-mutate invariant (also lines 40, 54, 61).",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "reachable() never adds `start` to `seen`, so the start node is reported as not reachable from itself; this self-reachability semantics is undocumented and likely surprising to callers.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "reachable(), count_paths(), and neighbors() silently return empty/0/[] for a node absent from _nodes instead of signaling an error, masking caller bugs that pass invalid node ids (also lines 35, 60).",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "topological_order() returns None to signal a cycle but this overloads None and is undocumented, so callers cannot distinguish 'graph has a cycle' from any other empty/failure result.",
+   "bikeshedding": false
+  },
+  {
+   "line": 5,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "`Iterable` is imported but never used anywhere in the module.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

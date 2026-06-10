@@ -107,7 +107,11 @@
 
 ---
 
-### 7. ⏳(R3a/R3b/R3d ✅ · R3c pending) [C-08] Severity-escalation redesign — *detailed*
+### 7. ⏳(R3a/R3b/R3d ✅ · R3c tier-diverse ✅ · R3c cross-vendor ⏳ item 6) [C-08] Severity-escalation redesign — *detailed*
+
+- **R3c tier-diverse done in:** Task 077 / v3.20.7 (2026-06-10), gate artifact `docs/reviews/framework-audit-077.md`. Merge rule 3 gained the model-independence gradation table + a third bullet: same-mechanism agreement under a tier-diverse `--models` config earns +1 for CRITICAL/HIGH only (tag `tier-diverse`). `/vdd-multi --models=logic:<t>,security:<t>,performance:<t>` (Phase 0 parse + escalation-tier resolution, Phase 1 per-critic spawn); `CLAUDE_CODE_SUBAGENT_MODEL` flatten-guard downgrades to R3a. Lockstep across 5 surfaces (vdd-multi/SKILL byte-identical mod noun); sequential declared tier-diverse-impossible. `skill-parallel-orchestration` 3.3→3.4. Ships as **pilot** — empirical validation = task 078 mini-experiment. **Cross-vendor row still ⏳ BLOCKED BY item 6.**
+- **Verified:** tier-diverse grep = 5 surfaces + env-guard; gradation normalized-diff identical mod noun; R3a/R3b/R3d bullets byte-unchanged; gate 43/43; pytest 30/30.
+- **Empirical validation (Task 078, `docs/reviews/tier-diverse-experiment-078.md`, 2026-06-10):** mini-experiment on a fresh sealed corpus (3 arms A/D-same/D-tier, 18 bugs, N=3). **The `--models` config validated as a recall/coverage tool** (D-tier 0.981 recall, 100% pooled, cleared the +10pp bar same-model failed in 075). **BUT the tier-diverse +1 escalation premise FAILED:** cross-tier agreement was *less* precise than same-tier (overlap precision 0.66 vs 0.73, T3) — agreement quality dropped, so escalating on it would amplify false positives. **Recommendation (operator decision, follow-up cycle): demote the tier-diverse +1 to `corroborated`** (keep the config; the cross-vendor row remains the genuine open question, ⏳ item 6). T1 also failed its FP conjunct (recall +11.1pp but FP nearly doubled — committee reports more, not better).
 
 - **R3a/R3b/R3d done in:** Task 072 / v3.20.3 (2026-06-10), gate artifact `docs/reviews/framework-audit-072.md`. Merge rule 3 redesigned in lockstep across all 4 locations (byte-identical modulo the pre-existing critics↔teammates noun split, normalized-diff-verified): same-mechanism agreement → `corroborated` tag + severity = max, no +1 (R3a); different-failure-mechanism overlap at the same location keeps +1 with a documented mechanism-difference test (R3b); sequential fallback explicitly never escalates — tag only, `priority` flag at most for cross-mechanism (R3d). Do-not-touch list respected (rules 1/2/4/5, iteration caps). `skill-parallel-orchestration` 3.0→3.1.
 - **Verified:** old-wording greps empty (scope excludes `.agent/archive/` + `.agent/sessions/`); `escalate severity by one level` survives only inside the new R3b bullets; skill gate 43/43; pytest 30/30 (security-audit; parallel-orchestration has no test suite — its SKILL §8 reference to `tests/test_mock_agent.py` is pre-existing drift, flagged not fixed).
@@ -196,7 +200,8 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); K2 final form resolved by 13: KEEP as opt-in skin (rule 1)
 6 (vendor adapters)       — independent; per-vendor validation needs operator machines
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
-7 R3c (cross-vendor)      — BLOCKED BY 6 (tier-diverse form available now in Claude Code)
+7 R3c (tier-diverse)      — config ✅ (Task 077 / v3.20.7); escalation premise ✗ refuted by Task 078 (T3) → demote-to-corroborated recommended
+7 R3c (cross-vendor)      — ⏳ BLOCKED BY 6 (needs vendor adapters; the still-open independence bet)
 8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
 11                        — ✅ DONE (Task 074 / v3.20.5; un-handicaps experiment 13 arm D)
 13 (experiment)           — ✅ DONE (Task 075, ab-experiment-075.md): R1 sarcasm survives (K2 kept) · R2 multi fails cost bar · R3 adversarial framing = −6.9pp recall

@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "CSV/Formula Injection (CWE-1236): export() writes the untrusted 'name' and 'email' fields verbatim via csv.writer, so a field beginning with =, +, -, @, TAB or CR (e.g. '=cmd|'/c calc'!A1') becomes an executable formula when the 'cleaned' CSV is opened in Excel/LibreOffice/Sheets \u2014 the module's stated job is to clean, yet the dangerous part is never sanitized.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Unbounded memory consumption / DoS: parse() does list(reader) on attacker-controlled CSV text with no row, field, or total-size cap, so a large or 'billion-laughs'-style upload exhausts memory and crashes the process.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Unhandled exceptions on hostile input cause a DoS: int(row[0])/float(row[2]) raise ValueError on non-numeric fields, row[3] raises IndexError on short rows, and float() silently accepts 'inf'/'nan' (poisoning summarize() totals) \u2014 none are caught or validated, so malformed input reliably kills the caller.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "count_rows() opens a caller-supplied path with no context manager (file-descriptor leak on the readlines() exception path, enabling fd exhaustion) and readlines() loads the entire file into memory (unbounded read / DoS); the path is also fully attacker-controllable arbitrary-file-read with no allow-listing.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "export() relies solely on os.path.basename(filename) for path containment; while this defangs '../' traversal, it does not validate the result \u2014 a trailing-slash input yields '' producing a write to the directory itself (IsADirectoryError DoS), and there is no extension/allow-list control so an attacker can overwrite arbitrary *.csv-named files in export_dir or clobber unrelated basenames.",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "__init__ calls os.makedirs(export_dir, exist_ok=True) on a constructor-supplied path; if any caller passes an attacker-influenced export_dir, this allows arbitrary directory creation (and, combined with export(), arbitrary file write) outside the intended /var/data/clean root.",
+   "bikeshedding": false
+  },
+  {
+   "line": 71,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "stream_valid()'s email 'validation' is just substring \"@\" in record.email, which is trivially bypassed (e.g. 'a@' or 'x@y') and provides no real address validation \u2014 a security-relevant input-validation weakness if downstream logic trusts these as deliverable/validated addresses.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

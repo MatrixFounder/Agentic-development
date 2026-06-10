@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "CSV/formula injection (CWE-1236): export() writes attacker-controlled name/email fields verbatim with no neutralization of leading =,+,-,@,TAB,CR, so the 'cleaned' CSV opened in Excel/Sheets/LibreOffice executes formulas (=WEBSERVICE/=HYPERLINK exfil, DDE =cmd|'/c calc'!A0 command exec).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Unvalidated path passed straight to open() in count_rows() is an arbitrary-file-read / existence-and-size oracle (CWE-22/CWE-73); readlines() also loads the whole file into memory (CWE-400 DoS) and the file handle is never closed.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "parse() hardcodes row[0..3] (the computed header 'index' on line 36 is dead code) and wraps int()/float()/indexing with no error handling, so a short row (IndexError) or non-numeric field (ValueError) raises an unhandled exception \u2014 input-driven crash/DoS (CWE-20).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "parse() calls list(reader) to fully materialize untrusted input with no row-count/size cap (CWE-400 memory-exhaustion DoS), and stream_valid() routes through it so its advertised 'streaming' property is defeated and offers no protection against oversized uploads.",
+   "bikeshedding": false
+  },
+  {
+   "line": 46,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "float(row[2]) accepts 'nan'/'inf'/'-inf' from attacker input (CWE-20 incomplete validation), poisoning summarize() so total/avg become NaN/Inf and corrupting any downstream aggregation or comparison.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "export() relies on os.path.basename() which blocks directory traversal but provides no extension allowlist or overwrite protection, so an attacker-chosen filename can clobber arbitrary existing files within export_dir.",
+   "bikeshedding": false
+  },
+  {
+   "line": 27,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "Constructor calls os.makedirs(export_dir, exist_ok=True) with no mode argument and no caller validation of export_dir, creating directories with default (potentially world-readable) permissions for data described as cleaned/exportable (CWE-732/CWE-276).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "reserve() uses `row[\"stock\"] > quantity` so reserving exactly the available stock fails (off-by-one boundary); per the docstring 'if enough stock is available' this must be `>=`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "reserve() check-then-update is non-atomic (TOCTOU): two concurrent callers can both read the same stock, both pass the check, and both decrement, overselling and driving stock negative; should be a conditional UPDATE ... WHERE stock >= ? guarded by rowcount.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "reserve() never validates `quantity`; a negative quantity passes the `stock > quantity` check and the UPDATE then computes `stock - (negative)` = stock + N, inflating inventory while returning True.",
+   "bikeshedding": false
+  },
+  {
+   "line": 98,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "restock() ignores UPDATE rowcount, so an unknown SKU silently affects 0 rows yet returns None as if it succeeded (inconsistent with reserve() which returns False on missing SKU), and a negative quantity is accepted and silently reduces stock.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "search_by_name() interpolates `fragment` directly into the SQL via f-string, enabling SQL injection; must use a parameterized LIKE placeholder (detail deferred to critic-security).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "search_by_name() does not escape LIKE wildcard metacharacters (% and _) in `fragment`, so a search for a literal '%' or '_' silently behaves as a wildcard and returns incorrect results.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Docstring claims 'Case-insensitive' but SQLite's default LIKE is case-insensitive only for ASCII; non-ASCII names are matched case-sensitively, so the documented contract is partially inaccurate.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "low_stock_report() issues one movements COUNT query per low-stock product (N+1 pattern); a single GROUP BY / LEFT JOIN would suffice (detail deferred to critic-performance).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

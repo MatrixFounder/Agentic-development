@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "Session tokens are generated with random.choice() (Mersenne Twister PRNG), which is not cryptographically secure; observing enough emitted tokens lets an attacker reconstruct the MT19937 state and predict future session tokens, enabling session hijacking / auth bypass (CWE-330/338, OWASP A07/A02) \u2014 must use the secrets module / secrets.token_urlsafe.",
+   "bikeshedding": false
+  },
+  {
+   "line": 4,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "Importing and using the `random` module for security-sensitive token material is the root cause of the predictable-token vulnerability; the import should be `secrets`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() renews expiry via a raw dict lookup without calling _purge_expired() or checking expires_at <= now, so a logically-expired-but-unpurged session can be revived and kept alive indefinitely, defeating the TTL/idle-timeout control (OWASP A07 insufficient session expiration).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "create() imposes no cap on total or per-user session count and _purge_expired() only removes expired entries, so an attacker can loop create() to allocate unbounded Session objects until TTL elapses, exhausting memory (resource-exhaustion DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "user_sessions() does not purge expired sessions before returning, so it can hand callers logically-expired sessions that may be treated as valid, undermining 'log out everywhere' / enumeration logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "Token lookup relies on dict key comparison rather than a constant-time compare; a timing side-channel on token validation is largely theoretical for in-memory dict lookups but worth noting for defense-in-depth.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "get() purges before returning so it correctly rejects expired tokens, but the inconsistent purge-on-some-methods-only design (get/active_count purge; touch/user_sessions do not) is an error-prone pattern that invites expiry-bypass regressions.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

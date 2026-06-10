@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse() does list(reader) to materialize the whole CSV, then builds a second full list of Record objects, holding two complete copies of the dataset in memory (O(n) blowup / OOM risk on large uploads); iterate the reader in a single pass instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.88,
+   "description": "stream_valid() advertises streaming via its name and Iterator return type but calls self.parse(raw), eagerly materializing the entire file into a list[Record] before the first yield, so peak memory is O(n) regardless of how few records the caller consumes; parse incrementally inside the generator.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "count_rows() uses open(path).readlines() to load the entire file into a discarded list just to count lines (O(file-size) memory where O(1) suffices); use a with-block and sum(1 for _ in f) - 1.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "parse() builds a name->index map (index) but never uses it, instead hardcoding positional row[0..3], so a column-order mismatch silently corrupts data and a short row raises IndexError \u2014 defer detail to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

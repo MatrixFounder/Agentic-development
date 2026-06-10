@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "BFS in reachable() enqueues neighbors without consulting the seen set, causing an infinite loop (100% CPU, never returns) on the cyclic graphs the docstring claims to support and exponential O(#paths) re-enqueueing on DAGs with shared substructure instead of O(V+E); fix: guard with `if neighbor not in seen` before appending (also a correctness bug \u2014 detail deferred to critic-logic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_paths() recurses with no memoization, making runtime O(number of paths) \u2014 roughly 2^(n/2) calls on diamond-chain DAGs \u2014 where an lru_cache or single DP pass over the existing topological_order() yields O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "count_paths() recursion depth equals the longest dependency chain, so graphs deeper than Python's ~1000-frame limit crash with RecursionError; an iterative DP removes both this scalability ceiling and the memoization gap.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Read paths index the defaultdict directly (lines 30, 40, 54, 61), auto-vivifying a permanent empty list for every sink or unknown node queried \u2014 read-only operations mutate and bloat _edges by O(nodes) wasted entries on large graphs; use `self._edges.get(node, ())` in readers.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "add_node() emits an INFO log per node, so bulk-loading millions of nodes becomes dominated by logging I/O when handlers are attached; log at DEBUG or batch-summarize instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "add_edge() appends without dedup, so repeated registration of the same dependency grows adjacency lists without bound and multiplies the cost of every traversal (compounding the line 31 and line 41 blowups).",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "neighbors() returns a fresh O(degree) defensive copy on every call, which is wasteful only in tight loops \u2014 micro-optimization at best.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

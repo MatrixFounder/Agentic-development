@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "CSV/formula injection (CWE-1236): export() writes attacker-controlled name/email fields verbatim, so a parsed value starting with =, +, -, @, tab or CR becomes an executable formula when the exported file is opened in Excel/LibreOffice/Sheets, enabling command execution or data exfiltration.",
+   "bikeshedding": false
+  },
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "Untrusted CSV string fields (name at row[1], email at row[3]) are stored into Record without any sanitization or length bounding, making them the unescaped source that feeds the formula-injection sink at line 64 and any downstream consumer.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "count_rows() opens a fully caller-supplied path with no validation/allowlist, permitting arbitrary-file path injection (CWE-22/73); impact is limited to disclosing a line count rather than contents, but the path is unconstrained.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "open(path).readlines() leaks the file descriptor (no context manager) and loads the entire file into memory, an unbounded-resource / fd-exhaustion DoS vector (CWE-400/772) on large or repeated inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "export() relies solely on os.path.basename(filename) to sanitize the destination; while basename neutralizes ../ traversal for the final component, an attacker-chosen filename can still silently overwrite/clobber arbitrary existing files inside export_dir (no exists-check or unique-name guarantee).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "parse() calls list(reader) to materialize the entire untrusted CSV in memory with no size/row cap, allowing a large upload to exhaust memory (CWE-400 algorithmic/resource DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "parse() performs int(row[0])/float(row[2]) and positional row[0..3] access with no length or type guarding, so malformed rows raise unhandled IndexError/ValueError; if exposed at an entry point this is an availability (DoS) concern, otherwise primarily a robustness bug.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "The header-derived index map is built but never used; fields are read by hardcoded positions row[0..3], so a differently-ordered header maps columns to the wrong fields and can bypass the email/amount checks in stream_valid (logic bug noted for sibling critics, mild validation-bypass relevance).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

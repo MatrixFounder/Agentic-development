@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "BFS in reachable() enqueues every neighbor without ever consulting the `seen` set, so on cyclic input (explicitly permitted by its docstring) the loop never terminates and the queue grows until OOM, and even on DAGs each node is re-expanded once per distinct path (exponential time); fix is `if neighbor not in seen: seen.add(neighbor); queue.append(neighbor)` to restore O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_paths() recurses with no memoization, making runtime O(number of paths) \u2014 exponential on any DAG with diamond fan-in (~10^12 calls for 40 stacked diamonds) \u2014 and any accidental cycle or chain deeper than ~1000 nodes hits RecursionError; replace with memoized DP or counting along topological order for O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "_edges is a defaultdict(list) indexed directly on every read path (lines 30, 40, 54, 61), so read-only queries permanently insert an empty list (~120+ bytes) for each sink or unknown node probed \u2014 unbounded memory growth from queries and unsafe mutation under concurrent readers; use `self._edges.get(node, ())` on reads.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "add_node() emits an INFO log per registered node, so at data-pipeline scale (10^5-10^6 nodes) graph construction is dominated by handler I/O and floods logs; drop to DEBUG or log aggregate counts.",
+   "bikeshedding": false
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "add_edge() never deduplicates, so repeated registration of the same dependency in a long-running process grows adjacency lists without bound, multiplies traversal cost, and amplifies the exponential blowups in reachable()/count_paths(); low confidence since multigraph semantics may be intentional.",
+   "bikeshedding": false
+  },
+  {
+   "line": 49,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "topological_order() seeds its queue from hash-randomized set iteration order, making output nondeterministic across processes (reproducibility risk for a pipeline) \u2014 noted briefly, detail deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

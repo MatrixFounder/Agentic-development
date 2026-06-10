@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Client identity is derived from the attacker-controllable X-Forwarded-For header (leftmost value, the most spoofable one) with no trusted-proxy allowlist, so an attacker rotating XFF values gets a fresh bucket per request and trivially bypasses the rate limit entirely, defeating brute-force/credential-stuffing/DoS protection (CWE-348 / CWE-290).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "_hits is a defaultdict keyed on the spoofable client key and check() never bounds its size; an attacker rotating X-Forwarded-For values floods the map with unbounded buckets (reclaimed only by externally-scheduled sweep()), enabling memory-exhaustion DoS (CWE-770).",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "Off-by-one comparison `len(hits) <= self.limit` appends and allows when the count already equals the limit, permitting limit+1 requests per window and weakening the intended ceiling (CWE-697).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Read-modify-write on shared _hits and per-key lists has no locking, so concurrent check() calls in a threaded server race (TOCTOU on the count), allowing bursts to exceed the limit; severity depends on the gateway's concurrency model which is unspecified.",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Pruning via hits.pop(0) in a loop is O(n) per removal on a Python list (a deque would be O(1)); not attacker-amplifiable beyond the memory-growth finding, so deferred to the performance critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "Sliding-window running sum accumulates unbounded floating-point error: subtracting values[i-window] from a running float each iteration causes rounding drift that grows with series length and magnitude, producing a result that diverges from a correctly recomputed window sum for large or high-magnitude inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "clamp() does not constrain NaN: clamp(float('nan'), 0.0, 1.0) returns NaN because Python's min/max comparisons with NaN always return NaN, silently violating the documented contract of 'constrain value to [low, high]' and corrupting any downstream dashboard metric.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "clamp() raises only when high < low but has no guard for NaN bounds: clamp(1.0, float('nan'), 2.0) passes the high < low check (NaN comparisons are always False) and then silently returns NaN instead of raising, making the inverted-bounds guard unreliable for non-finite inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.65,
+   "description": "safe_mean, percentile, and moving_average accept and silently propagate NaN or inf inputs \u2014 no guard exists anywhere in the module \u2014 so a single corrupted upstream value produces a NaN dashboard metric with no error signal; low confidence because Python numeric convention sometimes permits this, but for a dashboard helper it is a silent correctness hazard.",
+   "bikeshedding": false
+  },
+  {
+   "line": 1,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 1,
+   "description": "Exit-bar condition unverifiable: tests were NOT RUN (fixture corpus), so the objective convergence bar (zero CRITICAL + full test pass) cannot be confirmed regardless of static analysis results.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

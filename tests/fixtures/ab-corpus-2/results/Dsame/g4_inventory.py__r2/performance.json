@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "N+1 query: low_stock_report() fires a separate COUNT(*) movements query per low-stock product inside the loop instead of a single LEFT JOIN/GROUP BY, producing tens of thousands of round-trips at scale.",
+   "bikeshedding": false
+  },
+  {
+   "line": 84,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.6,
+   "description": "The per-product COUNT(*) over movements filtered by sku + created_at requires a composite index on (sku, created_at) or it full-scans movements on every iteration, turning the N+1 into a quadratic scan (schema not in scope, so flagged as a dependency).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "search_by_name() uses a leading-wildcard LIKE '%fragment%' which cannot use a B-tree index, forcing a full table scan of products on every admin-console search.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "Every public method opens and tears down a fresh sqlite3 connection with no pooling or reuse, paying per-call open/close overhead in hot loops (lower impact for SQLite than a network DB, but still wasteful and loses prepared-statement/cache warmth).",
+   "bikeshedding": false
+  },
+  {
+   "line": 76,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "low_stock_report() fetches the entire products table into a Python list and filters by reorder level in Python (line 81); pushing 'WHERE stock <= reorder_level' into SQL would avoid materializing the full catalog in memory and reduce data transfer.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Out-of-scope for perf but noted: f-string SQL interpolation of `fragment` into the LIKE clause is a SQL injection vector \u2014 defer detail to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Out-of-scope for perf but noted: reserve() uses `stock > quantity` so an exact-stock reservation (stock == quantity) is rejected; likely should be `>=` \u2014 defer to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

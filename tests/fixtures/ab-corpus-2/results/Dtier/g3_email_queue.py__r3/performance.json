@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "New TCP connection + SMTP handshake created per message inside the flush loop (the SMTP equivalent of N+1): tens of ms overhead each, so a 10k-message flush wastes minutes on handshakes and churns 10k TIME_WAIT sockets risking ephemeral-port exhaustion \u2014 hoist a single `with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:` outside the loop and reuse it for the whole batch (O(1) connections instead of O(n)).",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "`smtplib.SMTP(...)` is constructed with no `timeout=`, which defaults to block-forever, so a single unresponsive SMTP server hangs `flush()` (and the pipeline stage calling it) indefinitely \u2014 pass an explicit timeout (e.g. `timeout=10`).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "The `_seen` dedup set is an unbounded cache (no max size, no TTL, never cleared by `flush()`), so a long-running pipeline accumulates every recipient ever enqueued (~100B+ per entry, ~1GB per 10M addresses) until `clear_dedup_cache()` is called manually \u2014 bound it (LRU/TTL) or clear it as part of flush if cross-flush dedup is not intended.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Sends are strictly serial (one blocking server round-trip per message even after connection reuse), capping throughput at roughly 10-50 msg/s; for bulk pipeline volumes consider a small pool of connections/workers or chunked sends.",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "`_pending` and `_seen` have no synchronization, so concurrent enqueue-during-flush from multiple pipeline threads races (lost/duplicated messages, set/list mutation during iteration) \u2014 low confidence since usage context is unknown; document single-threaded use or add a lock.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "If any `sendmail` raises, the exception escapes `flush()` before `self._pending.clear()` runs, leaving already-sent messages queued so the next flush re-sends them as duplicates and unsent ones are stuck behind the failure \u2014 noted briefly, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Dedup key is `msg.to` alone, so a second, different message to the same recipient is silently dropped (and stays dropped across flushes because `_seen` is never reset) \u2014 deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "`msg.to` and `msg.subject` are interpolated raw into RFC-822 headers in `_render`, enabling CRLF header injection (the unused `MIMEText` import is what should have been used) \u2014 deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "Plain SMTP on submission port 587 with no STARTTLS or authentication \u2014 deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 5,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "Dead weight: `field` (line 5), `MIMEText` (line 6), the module-level `logger` (line 9), and the `Message.template` field (line 20) are declared and never used.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

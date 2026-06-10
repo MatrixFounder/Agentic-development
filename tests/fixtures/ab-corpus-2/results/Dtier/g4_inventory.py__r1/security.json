@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "SQL injection: `search_by_name` interpolates the user-supplied `fragment` directly into the query via f-string into the LIKE clause (CWE-89 / OWASP A03:2021 Injection), unlike every other method here which correctly parameterizes with `?`; an attacker can break out of the string literal (e.g. fragment=\"' UNION SELECT sku,name,stock,reorder_level FROM <other_table> --\") to exfiltrate arbitrary tables or perform blind boolean extraction \u2014 note Python sqlite3.execute() blocks `;`-stacked statements so DROP-style stacking fails, but UNION/blind reads are fully viable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Missing input validation on `quantity` in `reserve`: a negative quantity passes the `row[\"stock\"] > quantity` guard and then runs `stock = stock - (negative)`, inflating stock and breaking inventory integrity (CWE-20 Improper Input Validation / business-logic integrity).",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "Missing input validation on `quantity` in `restock`: a negative quantity silently decrements stock with no bounds/sign check (CWE-20), an integrity bypass if any caller forwards untrusted input.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "TOCTOU / lost-update race in `reserve`: stock is read (line 43-45) then conditionally written (line 49-52) without row locking or an atomic conditional UPDATE, so two concurrent reservations can both pass the check and oversell inventory (CWE-367); low confidence on exploitability since SQLite serializes writes, but the read-then-write window is real under shared connections/WAL.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "Off-by-one in `reserve`: strict `>` means reserving exactly the available stock fails (cannot reserve the last N units when stock==quantity); should be `>=` \u2014 flagged briefly as a logic concern, defer detail to the logic critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

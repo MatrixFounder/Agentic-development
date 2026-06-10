@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 28,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "reachable() never checks `seen` before enqueuing neighbors (line 31), so on any cyclic graph the queue grows without bound and the while-loop never terminates \u2014 an uncontrolled-resource-consumption / infinite-loop DoS (CWE-835/CWE-400) triggerable by untrusted graph input.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "count_paths() recurses with no cycle guard despite only 'DAG assumed': a cyclic input causes infinite recursion -> RecursionError/stack-overflow, and even a valid deep or diamond-shaped DAG blows the recursion limit or explodes exponentially (no memoization) \u2014 an algorithmic-complexity DoS (CWE-674/CWE-407) reachable from untrusted data.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "reachable() omits `start` from the returned set and, combined with the missing visited-check, returns incorrect reachability \u2014 a correctness flaw whose security relevance is that callers relying on reachability for access/dependency decisions could be misled; primary impact is the unbounded loop noted on line 28.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "Node name is logged at INFO via %s; if node identifiers are attacker-controlled and logs are later rendered in a control-character-sensitive sink, this is a minor log-injection/forging consideration (CWE-117) \u2014 no format-string flaw since %s is used.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

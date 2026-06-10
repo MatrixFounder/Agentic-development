@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Client identity is taken from the leftmost, fully attacker-controlled value of X-Forwarded-For (CWE-290/CWE-348); an attacker can rotate this header per request to get a fresh bucket and completely bypass the rate limit, or set it to a victim's IP to throttle that victim \u2014 trust the rightmost proxy-appended hop or Remote-Addr instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.92,
+   "description": "Off-by-one in the limit check: `len(hits) <= self.limit` permits limit+1 requests per window (e.g. 101 when limit=100), weakening the security control; should be `len(hits) < self.limit`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.78,
+   "description": "Unbounded memory growth / DoS (CWE-770): the _hits dict is only pruned by the manual sweep(); check() never evicts, so combined with the attacker-controlled XFF key (line 32) an adversary can create unlimited buckets via distinct X-Forwarded-For values and exhaust server memory.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "No locking around the shared _hits / per-key list mutations (CWE-362): the prune\u2192length-check\u2192append sequence in check() is a non-atomic read-modify-write, so concurrent gateway requests can both pass the limit check before appending and exceed the limit (TOCTOU) or interleave list ops into a corrupt/erroring state.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "Log injection / forging (CWE-117): the client key, which is fully attacker-controlled via X-Forwarded-For, is written to the warning log unsanitized, allowing newline/control-char injection of forged log entries; denial floods also amplify log volume.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "All clients missing both headers collapse into a single shared \"unknown\" bucket, so one abusive header-less client can exhaust that quota and get every other anonymous client throttled (shared-bucket unfairness, A06).",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "hits.pop(0) is O(n) per removed element (list shift); pruning a window is up to O(n^2) \u2014 bounded small by limit so low impact, but a collections.deque with popleft() would be O(1) (deferring depth to the performance critic).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

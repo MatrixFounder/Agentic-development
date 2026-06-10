@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "SQL injection: the user-supplied `fragment` is interpolated via f-string directly into the SQL text (WHERE name LIKE '%{fragment}%'), allowing UNION-based data exfiltration, boolean/blind extraction, and schema enumeration via sqlite_master (CWE-89, OWASP A03 Injection); fix by parameterizing with `LIKE ?` and binding `('%'+fragment+'%',)`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "TOCTOU race in reserve(): the stock SELECT and the decrement UPDATE are not atomic, so concurrent callers can both pass the check and oversell, violating inventory integrity; fix with an atomic conditional UPDATE (... WHERE sku=? AND stock>=?) checking rowcount, or a locked transaction.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Missing input validation on `quantity` in restock()/reserve(): a negative quantity passed by a caller can corrupt stock levels (integrity), though this is a logic-class concern deferred to sibling critics.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Off-by-one in reserve(): `row[\"stock\"] > quantity` rejects reservations that exactly equal available stock (should be >=); logic-class, noted for completeness and deferred to sibling critics.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

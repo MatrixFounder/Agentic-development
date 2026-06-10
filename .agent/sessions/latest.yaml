@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T15:33:10.842656"
-mode: "Framework Upgrade"
+last_updated: "2026-06-10T16:46:35.830195"
+mode: "Experiment"
 
 current_task:
-  name: "post-experiment-repositioning"
-  status: "completed-v3.20.6-token-split-toc-pending-commit"
+  name: "tier-diverse-mini-experiment"
+  status: "completed-documented-pending-operator-review"
   predicted_steps: 0
 
 context_summary: |
-  Task 076 addendum 2: input/output token split recovered from agent jsonl transcripts (1924 API calls): in 4.50M / out 1.15M / cache-write 10.16M / cache-read 21.26M (full footprint 37.1M; harness aggregate differs ~2.8% - transcripts primary). Notable: fable arm E out=515k (8.5x arm A) - verbosity is its cost driver. Split tables + 3 observations added to both READMEs; TOC (10 chapters) added to both; results/token_split.json saved + artifact maps and .AGENTS.md synced.
+  Task 078 mini-exp fully documented: bilingual README pair (README.md EN + README.ru.md RU, 10 sections each, cross-linked, TOC, mermaid, infographics, token accounting incl. in/out split from transcripts) + .AGENTS.md for tests/fixtures/ab-corpus-2/. Verdicts unchanged: T1 fails conjunct (FP doubled), T2 trivial +1.9pp, T3 DECISIVE negative (tier-diverse overlap precision 0.66<0.73) refutes R3c escalation premise. Recommendation stands: demote tier-diverse +1 to corroborated (operator decision), keep --models config. token_split.json saved. Roadmap remaining open: 6 (vendor adapters), 7-R3c-cross-vendor (item6), 7-R3c-escalation-demote (operator follow-up). Uncommitted: v3.20.7 R3c cycle + both experiment corpora docs.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "Dogfood fix folded into uncommitted v3.20.0 (CHANGELOG Fixed subsection EN+RU); .pem coverage + Solidity-pattern file-gating left as flagged recommendations, not in-scope edits"
   - "070: A03/A08 split: CI/CD tampering + code signing + deps-audit -> A03 Supply Chain; deserialization + artifact-signature + unsigned auto-update stay A08; CWE-209 stack-trace check moves old-A05 -> new A10"
   - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
   - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
@@ -24,6 +23,7 @@ recent_decisions:
   - "074: critic wrappers untouched - critic-side rule lives in SOT skills + Phase-1 prompt (thin-wrapper anti-drift)"
   - "075: experiment artifacts are evidence, not framework edits - rules 2/3 implications recorded as recommendations pending operator review"
   - "076: corpus README in Russian per operator request; EN technical report remains SOT for citations"
+  - "078: T3 overlap-precision is the key metric - same-vendor tier diversity produces MORE but LOWER-quality agreement, refuting the +1 escalation rationale; cross-vendor independence remains untested (item 6)"
 
 completed_tasks:
   - "Task A"
@@ -54,3 +54,6 @@ completed_tasks:
   - "verification-p2-aging-batch"
   - "orchestrator-supplies-evidence"
   - "ab-experiment-sarcasm-multicritic"
+  - "post-experiment-repositioning"
+  - "r3c-tier-diverse-escalation"
+  - "tier-diverse-mini-experiment"

@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Off-by-one boundary error in reserve(): guard `stock > quantity` rejects the case stock == quantity, so an order for exactly the available stock fails and the last units can never be reserved, contradicting the 'if enough stock is available' docstring (should be `>=`).",
+   "bikeshedding": false
+  },
+  {
+   "line": 50,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Lost-update / TOCTOU race in reserve(): the SELECT stock check and the unconditional `UPDATE SET stock = stock - ?` are separate statements with no `AND stock >= ?` guard, so two concurrent reservations can both pass the check and over-decrement, overselling inventory and driving stock negative.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "No validation of `quantity` in reserve(): a negative quantity passes the `stock > quantity` guard (always true for non-negative stock) and `stock - (negative)` INFLATES stock while returning True, turning a reservation into a stock increase.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "search_by_name() interpolates `fragment` via f-string instead of a parameter, so legitimate inputs containing a single quote crash with OperationalError and inputs containing % or _ act as unintended SQL LIKE wildcards, returning incorrect results (also a SQL-injection security issue \u2014 defer detail to critic-security).",
+   "bikeshedding": false
+  },
+  {
+   "line": 99,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "restock() does not check rowcount, so calling it with an unknown SKU updates 0 rows and silently returns None with no signal the restock was a no-op; a negative `quantity` also silently decrements stock.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "low_stock_report() issues an N+1 query: a separate movements COUNT query runs per low-stock product instead of a single grouped JOIN \u2014 perf smell, noted in passing (defer detail to critic-performance).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Product(**row) relies on SELECT column names exactly matching the dataclass field names; works today because of the aliased SELECT, but is brittle to schema column renames (low-confidence robustness note).",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.9,
+   "description": "Email/SMTP header injection (CWE-93): msg.to and msg.subject are interpolated into raw CRLF-delimited headers with no newline sanitization, letting a crafted subject/to inject Bcc/Cc headers or body content; the imported MIMEText/EmailMessage (which would escape headers) is unused.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.9,
+   "description": "Subject header is built via f-string interpolation of attacker-influenceable msg.subject without stripping/rejecting CR/LF, the primary header-injection sink feeding sendmail.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.78,
+   "description": "sendmail passes unvalidated msg.to as the envelope recipient (and the same tainted value reaches the To: header) with no RFC 5321/5322 address validation, allowing envelope/recipient manipulation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 38,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Dedup keys only on msg.to, so a distinct security-relevant email to a recipient can be silently dropped if any prior message to that same address was queued (notification/delivery suppression vector); key should hash subject+body.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.62,
+   "description": "SMTP submission on port 587 is opened in cleartext with no server.starttls() and no authentication, transmitting bodies and recipients unencrypted (CWE-319).",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.55,
+   "description": "smtplib.SMTP is created without a timeout, so an unresponsive/malicious SMTP server can hang flush() indefinitely across the pending loop (CWE-400, availability/DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "A new SMTP connection is opened and torn down per message inside the flush loop instead of reusing one connection; performance concern deferred to sibling critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

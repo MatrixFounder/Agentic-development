@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.99,
+   "description": "SQL injection: `fragment` is interpolated raw into the query via f-string inside a LIKE string literal (CWE-89, OWASP A03 Injection) \u2014 attacker breaks out with a quote and uses UNION/sub-selects to exfiltrate any table; every other method here uses parameterized queries, so this is a clear deviation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Execution sink for the line-65 injection: the attacker-controlled `query` string is passed to conn.execute with no parameter binding, completing the injectable code path reachable from the public search_by_name entry point.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.82,
+   "description": "TOCTOU / race condition (CWE-367/CWE-362): stock is read here then the decrement decision/UPDATE happens at lines 48-52 in a separate statement with no row lock or transaction, so concurrent reserve() calls can both pass the check on a stale read and oversell stock to a negative value; fix with a single conditional UPDATE ... WHERE stock >= ? and check rowcount.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Missing input validation on `quantity` (CWE-20): a negative quantity makes restock() silently DECREMENT stock (stock = stock + -N) bypassing the reserve availability path and driving stock negative; no bound/sign check on this untrusted public entry point.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Missing input validation on `quantity` in reserve(): a negative quantity inverts the decrement (stock = stock - -N increases stock) and an absurdly large positive value combined with the TOCTOU race widens oversell impact; validate sign/magnitude before use.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "Off-by-one: strict `stock > quantity` refuses reserving the exact last available units (quantity == stock should be allowed); business-integrity logic bug, not a security breach in the dangerous direction (deferred to logic critic for depth).",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "Information disclosure (CWE-209): an injection-induced or malformed-input SQL error from this admin-console call propagates uncaught and, if surfaced to the user, leaks SQLite schema/query structure; contingent on caller error handling (out-of-module).",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "Trust boundary on db_path: sqlite3.connect on a constructor-supplied path is safe if the path is trusted, but if ever sourced from untrusted input it permits arbitrary-file / SQLite-URI targeting (CWE-22); informational given normal dependency injection.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.15,
+   "description": "Product(**row) splats DB columns into the dataclass; safe as written because the SELECT column list is fixed and matches the fields, noted only as brittleness if the schema/query drift (no exploit today).",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "get() runs _purge_expired() \u2014 a full O(n) scan and list build over all sessions (line 40) \u2014 on every lookup, degrading the hottest path from O(1) to O(n) (O(n*m) aggregate; ~50M item visits/sec at 50k sessions x 1k req/s); fix: check only the requested token's expires_at in get() and amortize full sweeps (time-gated or a min-heap on expires_at).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Expired sessions are reclaimed only via get()/active_count(), so create/touch/destroy-heavy (read-light) workloads accumulate expired Session objects without bound \u2014 a slow memory leak; fix: amortized purge on create() (e.g., every N inserts or T seconds) or a background sweep.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "user_sessions() is an O(n) linear scan over every session in the store; if called per-request (e.g., concurrent-session limits at login) maintain a user_id -> set[token] secondary index updated in create/destroy/purge for O(k) lookups.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "No synchronization: _purge_expired() and user_sessions() iterate _sessions while a concurrent create() can mutate it, raising 'RuntimeError: dictionary changed size during iteration' under any threaded server, and touch()/get() have check-then-act races; fix: guard mutations and scans with a threading.Lock (or document single-thread-only).",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Session tokens generated with the random module (Mersenne Twister) are predictable and forgeable \u2014 use secrets.token_urlsafe/secrets.choice; noted briefly, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "touch() renews without checking expires_at, so an expired-but-not-yet-purged session can be resurrected (expiry enforcement depends on whether a get() happened to run first); noted briefly, deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "user_sessions() neither purges nor filters by expires_at, so it returns expired sessions that get() would report as dead \u2014 inconsistent liveness semantics; noted briefly, deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Session dataclass lacks slots=True, so each instance carries a per-object __dict__; for a store whose entire purpose is holding many sessions in memory, @dataclass(slots=True) roughly halves per-session footprint (Python 3.10+).",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "Micro-nit: the alphabet string is rebuilt on every _new_token() call and per-character random.choice in a genexpr is slower than random.choices(alphabet, k=TOKEN_LENGTH) \u2014 moot anyway once the token source moves to secrets.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

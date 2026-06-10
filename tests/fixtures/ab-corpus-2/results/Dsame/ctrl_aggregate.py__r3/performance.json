@@ -1,0 +1,13 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "StreamingMedian.add uses bisect.insort, which is O(n) per insertion (list.insert shifts all trailing elements), so building a stream of N values is O(N^2); a two-heap structure would give O(log n) per add \u2014 though the sorted-list approach is a documented, correct simplicity tradeoff acceptable for small N.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "clean-pass"
+}

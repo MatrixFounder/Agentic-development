@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Dedup key is only msg.to, so two different messages (distinct subject/body) to the same recipient are treated as duplicates and the second is silently skipped, contradicting the intuitive 'duplicate message' contract in the docstring.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "flush() clears _pending but never clears _seen, so any recipient that received one email is permanently blocked from being enqueued again for the queue's lifetime (and _seen grows unbounded) unless clear_dedup_cache() is called manually.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "No per-message error isolation: an exception from smtplib.SMTP() or sendmail() (host down / one bad recipient) propagates out of flush() and skips the _pending.clear() on line 65, so already-delivered messages remain in _pending and are re-sent on the next flush(), causing duplicate emails and inflated stats.sent.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "flush() has no try/except around the loop and no graceful degradation; a single failing message aborts the entire batch with no recovery, and despite a configured module logger no error is logged (silent failure path).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.75,
+   "description": "Email header / CRLF injection: _render interpolates unsanitized msg.to and msg.subject directly into CRLF-delimited headers, letting a value containing \\r\\n inject arbitrary headers (e.g. Bcc) or body \u2014 noted in passing, defer detail to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "A fresh SMTP connection and handshake is opened and torn down per message instead of reusing one connection for the batch \u2014 noted in passing, defer detail to critic-performance.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Skipped (deduped) enqueues and successful sends produce no log output despite a module-level logger, leaving the silent dedup-drop and send activity unobservable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 56,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "flush() maintains both a local 'sent' counter and self.stats.sent in parallel (redundant), and stats.sent is incremented per successful send so it over-counts when messages are re-sent after a partial-failure abort.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

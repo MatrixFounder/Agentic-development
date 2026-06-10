@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "flush() opens and tears down a fresh SMTP connection (TCP + EHLO + likely STARTTLS on port 587) for every message inside the loop, turning O(1) connection setup into O(N) round-trips that dominate send cost; connect once before the loop and reuse the server.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "smtplib.SMTP() is constructed with no timeout, so an unresponsive SMTP host makes flush() block the entire pipeline indefinitely (latency/availability risk on the connection path).",
+   "bikeshedding": false
+  },
+  {
+   "line": 5,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.95,
+   "description": "'field' is imported from dataclasses but never used (dead import).",
+   "bikeshedding": true
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "Dedup key is msg.to only, so two distinct messages to the same recipient are silently skipped; not a perf issue, deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

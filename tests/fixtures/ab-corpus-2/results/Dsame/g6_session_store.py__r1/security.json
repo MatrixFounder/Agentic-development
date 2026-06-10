@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Session tokens are generated with random.choice() (Mersenne Twister PRNG), which is not cryptographically secure and is state-recoverable/predictable, allowing an attacker to forge or predict other users' session tokens (CWE-338/CWE-330, OWASP A07/A02); use the secrets module instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 4,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "Importing and relying on the `random` module as the entropy source for authentication-bearer tokens is the root cause of the weak-token vulnerability; replace with `secrets` / os.urandom-backed generation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() slides expiry forward without checking expires_at or purging, so an expired-but-unpurged session can be resurrected and kept alive indefinitely, bypassing the TTL session-expiration control (CWE-613).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "create() enforces no cap on total or per-user sessions and purging only removes already-expired entries, so a flood of create() calls within the TTL window grows _sessions without bound (unbounded memory/DoS, CWE-770).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "user_sessions() neither purges nor filters on expires_at, so it can return already-expired sessions; if a caller uses the result for 'is this user logged in'/authorization decisions, expired sessions are treated as active (expiry bypass, CWE-613).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.12,
+   "description": "Token lookup uses a non-constant-time dict.get comparison; theoretically a timing side channel but not practically exploitable for 32-char high-entropy keys (reported for completeness per exhaustive-reporting mandate).",
+   "bikeshedding": false
+  },
+  {
+   "line": 10,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.2,
+   "description": "No security/audit logging of session lifecycle events (create/destroy/expire); the declared logger is never used, leaving no audit trail for session hijacking investigation (CWE-778, informational).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

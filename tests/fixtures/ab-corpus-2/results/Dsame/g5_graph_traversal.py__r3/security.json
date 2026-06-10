@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "count_paths recurses with no cycle detection and no memoization, so an attacker-supplied cyclic graph causes unbounded recursion (RecursionError/stack exhaustion) and even a valid diamond-shaped DAG yields exponential-time path counting \u2014 a resource-exhaustion DoS (CWE-674/CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 31,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "reachable() enqueues every neighbor with no visited guard, so on any cyclic graph the queue grows without bound and the loop never terminates, exhausting memory/CPU (CWE-400 resource exhaustion / CWE-835 infinite loop) on untrusted graph input.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "The BFS uses `seen` only to record visited nodes, never to prune enqueueing, making traversal non-terminating and incorrect on cyclic graphs; the standard `if neighbor not in seen` guard before append is missing (logic root cause of the reachable() DoS; defer full logic treatment to the logic critic).",
+   "bikeshedding": false
+  },
+  {
+   "line": 11,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "The module imposes no caps on graph size, recursion depth, or traversal work, so it provides no resource limits when fed untrusted/attacker-influenced graph data \u2014 the umbrella mitigation for the count_paths/reachable DoS vectors (CWE-770 allocation/work without limits).",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "topological_order assumes every edge endpoint exists as an indegree key; this holds through the current public API (add_edge registers both endpoints), but the unchecked `indegree[dst] += 1` would raise an unhandled KeyError (availability) if that internal invariant were ever broken \u2014 low-confidence defensive note.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

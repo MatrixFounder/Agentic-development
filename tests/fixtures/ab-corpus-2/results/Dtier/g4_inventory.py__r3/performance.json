@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "N+1 query: low_stock_report() runs one movements COUNT(*) per low-stock product inside a Python loop (K+1 round-trips); replace with a single correlated-subquery/JOIN query.",
+   "bikeshedding": false
+  },
+  {
+   "line": 76,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Entire products table fetched with fetchall() and the stock <= reorder_level filter applied in Python instead of SQL, wasting memory and transfer proportional to catalog size.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "A new sqlite3 connection is opened and closed for every method call (no pooling or long-lived connection), paying file-open/schema-parse cost and discarding the page cache on each hot-path operation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "search_by_name() has no LIMIT and uses a leading-wildcard LIKE that forces a full table scan, materializing an unbounded list of Product objects; add LIMIT/pagination or FTS.",
+   "bikeshedding": false
+  },
+  {
+   "line": 53,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Each reserve/restock write is its own commit (full fsync) under the default rollback journal with no batch API, capping pipeline write throughput at disk fsync rate; enable WAL and add bulk operations.",
+   "bikeshedding": false
+  },
+  {
+   "line": 84,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.4,
+   "description": "If movements(sku, created_at) lacks a composite index (schema not in scope, unverifiable), each per-product COUNT is a full scan of movements, multiplying the N+1 cost; verify and index.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.95,
+   "description": "fragment is f-string-interpolated into the LIKE clause (SQL injection, also defeats prepared-statement reuse); noted briefly, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "reserve() is a non-atomic check-then-act (SELECT then UPDATE in separate statements), so concurrent reservations can oversell; a single conditional UPDATE with rowcount check fixes it and halves round-trips; detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "Off-by-one: stock > quantity should be stock >= quantity, making the last available unit unreservable; detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "try/finally with manual close() in every method could use contextlib.closing or a shared context-manager helper; purely stylistic.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

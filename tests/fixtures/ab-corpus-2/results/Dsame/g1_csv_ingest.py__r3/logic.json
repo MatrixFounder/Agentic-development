@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "parse() builds a column-name->index map (line 36) and validates required columns are present (lines 37-39), but then reads fields by hardcoded positional index (row[0..3]) instead of via that map, so any CSV whose columns are present but in a different order is silently mis-parsed (wrong field assignments) or crashes \u2014 the validation gives false confidence in correctness.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.88,
+   "description": "int(row[0]) and float(row[2]) (and row[3]) are unguarded: a single non-numeric value (e.g. empty 'amount', currency symbol, text 'id') raises ValueError, and a short row with fewer than 4 fields raises IndexError, aborting the entire batch on one malformed row with no per-row error handling or skip.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_rows() returns len(lines) - 1, which yields -1 for an empty file (0 lines) \u2014 a nonsensical negative data-row count that callers will treat as a real value.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "count_rows() counts physical newlines via readlines(), but parse() uses a real csv.reader; for any CSV containing RFC-4180 quoted fields with embedded newlines the two disagree (count_rows over-counts records), so count_rows is not a reliable row count for the same data parse() accepts.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "open(path) in count_rows() is never closed (no context manager), leaking the file handle until GC; under CPython it usually closes promptly but is non-deterministic and will exhaust descriptors under high call volume.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "export() derives the destination filename solely from os.path.basename(filename), so two distinct source paths sharing the same basename silently overwrite each other in the export dir, and an empty/trailing-slash filename yields basename '' which writes to (or errors on) the directory path itself.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "other",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "The 'index' dict mapping header names to positions is computed but never used (dead code), which is the symptom of the positional-parse bug on line 44 \u2014 it was presumably intended to drive field lookup.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "parse() returns [] for empty input but a CSV containing only a header row falls through the loop to also return [] with no error, while a header missing required columns raises \u2014 inconsistent contract for the 'no data rows' cases that callers may not anticipate.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

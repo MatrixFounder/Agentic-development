@@ -1,0 +1,327 @@
+{
+  "arms": {
+    "A": {
+      "arm": "A",
+      "per_run": [
+        {
+          "run": 1,
+          "recall": 0.9444444444444444,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 4.857142857142857,
+          "fp_control": 7,
+          "findings": 68,
+          "bikeshed_ratio": 0.17647058823529413
+        },
+        {
+          "run": 2,
+          "recall": 0.7777777777777778,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 5.285714285714286,
+          "fp_control": 3,
+          "findings": 75,
+          "bikeshed_ratio": 0.2
+        },
+        {
+          "run": 3,
+          "recall": 0.8888888888888888,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-LOG",
+            "g6-SEC"
+          ],
+          "fp_per_file": 5.285714285714286,
+          "fp_control": 4,
+          "findings": 72,
+          "bikeshed_ratio": 0.1527777777777778
+        }
+      ],
+      "recall_mean": 0.8703703703703703,
+      "recall_var": 0.004801097393689984,
+      "pooled_recall": 0.9444444444444444,
+      "fp_per_file_mean": 5.142857142857142,
+      "fp_control_total": 14,
+      "bikeshed_ratio_mean": 0.1764161220043573,
+      "pooled_by_class": {
+        "logic": 6,
+        "security": 5,
+        "performance": 6
+      },
+      "overlap_events": 0,
+      "overlap_correct": 0,
+      "overlap_precision": null
+    },
+    "Dsame": {
+      "arm": "Dsame",
+      "per_run": [
+        {
+          "run": 1,
+          "recall": 1.0,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g5-SEC",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 7.857142857142857,
+          "fp_control": 6,
+          "findings": 80,
+          "bikeshed_ratio": 0.0875
+        },
+        {
+          "run": 2,
+          "recall": 0.9444444444444444,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 8.428571428571429,
+          "fp_control": 5,
+          "findings": 78,
+          "bikeshed_ratio": 0.02564102564102564
+        },
+        {
+          "run": 3,
+          "recall": 0.9444444444444444,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 7.571428571428571,
+          "fp_control": 7,
+          "findings": 78,
+          "bikeshed_ratio": 0.10256410256410256
+        }
+      ],
+      "recall_mean": 0.9629629629629629,
+      "recall_var": 0.0006858710562414272,
+      "pooled_recall": 1.0,
+      "fp_per_file_mean": 7.9523809523809526,
+      "fp_control_total": 18,
+      "bikeshed_ratio_mean": 0.0719017094017094,
+      "pooled_by_class": {
+        "logic": 6,
+        "security": 6,
+        "performance": 6
+      },
+      "overlap_events": 168,
+      "overlap_correct": 122,
+      "overlap_precision": 0.7261904761904762
+    },
+    "Dtier": {
+      "arm": "Dtier",
+      "per_run": [
+        {
+          "run": 1,
+          "recall": 1.0,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g5-SEC",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 10.857142857142858,
+          "fp_control": 11,
+          "findings": 100,
+          "bikeshed_ratio": 0.06
+        },
+        {
+          "run": 2,
+          "recall": 0.9444444444444444,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 9.428571428571429,
+          "fp_control": 7,
+          "findings": 89,
+          "bikeshed_ratio": 0.06741573033707865
+        },
+        {
+          "run": 3,
+          "recall": 1.0,
+          "matched": [
+            "g1-LOG",
+            "g1-PER",
+            "g1-SEC",
+            "g2-LOG",
+            "g2-PER",
+            "g2-SEC",
+            "g3-LOG",
+            "g3-PER",
+            "g3-SEC",
+            "g4-LOG",
+            "g4-PER",
+            "g4-SEC",
+            "g5-LOG",
+            "g5-PER",
+            "g5-SEC",
+            "g6-LOG",
+            "g6-PER",
+            "g6-SEC"
+          ],
+          "fp_per_file": 9.857142857142858,
+          "fp_control": 9,
+          "findings": 97,
+          "bikeshed_ratio": 0.09278350515463918
+        }
+      ],
+      "recall_mean": 0.9814814814814815,
+      "recall_var": 0.0006858710562414272,
+      "pooled_recall": 1.0,
+      "fp_per_file_mean": 10.047619047619047,
+      "fp_control_total": 27,
+      "bikeshed_ratio_mean": 0.07339974516390595,
+      "pooled_by_class": {
+        "logic": 6,
+        "security": 6,
+        "performance": 6
+      },
+      "overlap_events": 232,
+      "overlap_correct": 154,
+      "overlap_precision": 0.6637931034482759
+    }
+  },
+  "rules": {
+    "T1_committee_vs_single": {
+      "recall_Dtier": 0.9814814814814815,
+      "recall_A": 0.8703703703703703,
+      "delta": 0.11111111111111116,
+      "bar": 0.1,
+      "fp_ok": false,
+      "tier_diversity_earns_committee": false
+    },
+    "T2_hetero_vs_same": {
+      "recall_Dtier": 0.9814814814814815,
+      "recall_Dsame": 0.9629629629629629,
+      "delta": 0.0185185185185186,
+      "pooled_var": 0.0006858710562414272,
+      "heterogeneity_adds": true
+    },
+    "T3_overlap_quality": {
+      "Dsame_overlap_precision": 0.7261904761904762,
+      "Dtier_overlap_precision": 0.6637931034482759,
+      "Dsame_overlaps": 168,
+      "Dtier_overlaps": 232,
+      "tier_agreement_more_truthful": false
+    }
+  }
+}

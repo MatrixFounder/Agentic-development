@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "A class named StreamingMedian that gets slower with every value it streams: bisect.insort on a Python list is O(n) per insertion (element shifting), so N streamed values cost O(N^2) total (~4TB of pointer memmove at N=1e6, i.e. minutes of pure shifting) when the textbook two-heap design gives O(log n) add and O(1) median.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "StreamingMedian retains every value forever \u2014 inherent for an exact median, but in a long-running pipeline process this is unbounded memory growth; if the stream is genuinely unbounded, a windowed median or quantile sketch (P-squared / t-digest) caps memory at O(1) with bounded error.",
+   "bikeshedding": false
+  },
+  {
+   "line": 9,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "safe_mean advertises Iterable[float] then materializes the whole thing into a list just to sum it, turning an O(1)-memory single pass (running sum + count, or statistics.fmean) into O(n) memory \u2014 hand it a large generator and it silently buffers the entire stream (~320MB for 10M floats).",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "percentile re-sorts the full input on every call (O(n log n)), so a dashboard asking for p50/p90/p99 of the same series pays three identical sorts \u2014 accept pre-sorted input or add a multi-percentile variant; note a single-call quickselect rewrite would NOT help in CPython (C-implemented sorted() wins on constants), so this only matters for repeated calls on large data.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Not my beat, noting briefly for critic-logic: the sliding-window add/subtract trick accumulates floating-point error over long series (the running sum drifts relative to a freshly computed window sum); periodic re-summation or Kahan compensation fixes it without losing the O(n) win.",
+   "bikeshedding": false
+  },
+  {
+   "line": 19,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "running_total is a Python-level loop that itertools.accumulate would do ~2-3x faster in C; the algorithm is already the right O(n), so this is a pure micro-optimization.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

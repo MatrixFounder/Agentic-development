@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 1,
+   "description": "BFS in `reachable()` never guards against revisiting nodes: neighbors are unconditionally appended to the queue without checking `seen`, causing an infinite loop on any cycle. The docstring explicitly states the graph may be cyclic, making this a guaranteed hang on valid inputs. Fix: check `if neighbor not in seen` before enqueuing and add `seen.add(neighbor)` at that point; also add `seen.add(start)` at initialization if the start node should be included in the visited set.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "`count_paths()` performs unbounded recursion with no cycle guard: it relies on the undocumented/unenforced invariant that the graph is a DAG, but nothing prevents a caller from invoking it on a graph that has cycles (built with the public `add_edge` API), which triggers infinite recursion and a Python `RecursionError` (stack overflow). Fix: either enforce DAG-ness at construction time, add a `visited` set parameter to detect cycles, or validate via `topological_order()` before recursing.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "`reachable()` excludes the `start` node from the returned set regardless of graph structure. If a cycle eventually leads back to `start`, the caller receives a result set that does not include a node that is, by the graph's own edges, reachable from itself. Whether this is a bug depends on the contract, but the asymmetry is undocumented and will silently produce wrong answers for callers that expect `start in reachable(start)` when a self-loop or back-edge exists.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "`neighbors()` and any BFS/DFS loop that reads `self._edges[node]` on a `defaultdict(list)` silently auto-inserts a phantom empty-list entry for every unknown node key, permanently mutating the graph's adjacency structure. Subsequent calls to `topological_order()` or `reachable()` will operate on a graph that now 'knows about' nodes that were never explicitly added, potentially changing indegree counts and reachability results.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "`topological_order()` computes indegree only from `self._edges` keys (source nodes), but edge destination nodes that have no outgoing edges are never iterated as sources. Because `add_edge` always adds both endpoints to `_nodes`, all destinations ARE in `indegree` with their initial value of 0 \u2014 this is correct. However, accessing `self._edges[node]` inside the BFS at line 54 on a sink node auto-creates a defaultdict entry (same phantom-mutation issue as finding at line 61), meaning `_edges` is silently modified during every topological sort call.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "`count_paths()` recomputes identical sub-problems: on a diamond graph (A->B, A->C, B->D, C->D) each shared suffix is recomputed independently, giving exponential time in the number of paths. Noted briefly per role scope; defer detail to critic-performance. Fix: memoize with `functools.lru_cache` or a `memo` dict.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

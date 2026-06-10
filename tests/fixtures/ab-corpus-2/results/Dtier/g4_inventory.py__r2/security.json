@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "SQL injection (CWE-89): user-controlled `fragment` is interpolated directly into the LIKE clause via an f-string instead of a bound parameter, allowing UNION-based data exfiltration and query-logic tampering; fix with `WHERE name LIKE ?` and `(f\"%{fragment}%\",)`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "TOCTOU race / oversell (CWE-367): the stock read on line 44 and the decrement UPDATE on line 50 are separate non-atomic statements, so concurrent `reserve` calls can both pass the availability check and drive stock below zero; use a guarded `UPDATE ... WHERE sku = ? AND stock >= ?` and check rowcount.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "Boundary/business-integrity nit (logic critic's domain): `row[\"stock\"] > quantity` uses strict greater-than, so reserving exactly the available quantity fails; minimal security relevance, noted for cross-discipline awareness.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

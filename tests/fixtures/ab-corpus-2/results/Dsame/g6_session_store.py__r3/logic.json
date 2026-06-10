@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() reads the session directly without purging or checking expires_at, so it resurrects an already-expired (but not-yet-purged) session by sliding its expiry forward and returning True, contradicting the expiry semantics enforced everywhere else (get/active_count purge first).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "user_sessions() neither purges nor filters by expires_at, so it returns expired sessions for a user \u2014 inconsistent with get()/active_count() which exclude expired ones, breaking any caller that uses it to count or display active sessions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "create() assigns self._sessions[token] with no collision check, so a duplicated token from _new_token() would silently overwrite and destroy an existing user's session (astronomically unlikely at 62^32, but unguarded).",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Out-of-scope (security) noted in passing: _new_token() uses the random module (Mersenne Twister), which is predictable and unsuitable for session tokens; use secrets.token_urlsafe/SystemRandom instead \u2014 defer detail to critic-security.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 9,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "safe_mean materializes the entire input via list(values); an entry point streaming an unbounded or attacker-sized iterable could exhaust memory (O(n) memory DoS, but amplification is caller-bounded with no small-input blow-up).",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.25,
+   "description": "percentile calls sorted(values), fully materializing the iterable; same unbounded-input memory-exhaustion exposure as safe_mean if a public entry point feeds attacker-controlled stream data.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "StreamingMedian.add uses insort on a Python list (O(n) shift per insertion, O(n^2) total); an attacker who can drive a high-volume median stream causes quadratic CPU consumption \u2014 a weak algorithmic-complexity DoS, caller-volume-bounded rather than single-payload amplified.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "clean-pass"
+}

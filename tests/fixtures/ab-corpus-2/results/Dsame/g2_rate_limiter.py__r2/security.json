@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "_client_key trusts the leftmost (client-controlled) X-Forwarded-For token as the rate-limit identity, so an attacker bypasses the limit entirely by sending an arbitrary or rotating XFF header per request (CWE-290 spoofing); use the trusted proxy-appended rightmost hop or a configured trusted-proxy depth instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.92,
+   "description": "Off-by-one: the check uses len(hits) <= self.limit, so a client with limit timestamps already stored is allowed to append one more, permitting limit+1 requests per window and weakening the enforcement control; condition should be len(hits) < self.limit.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "self._hits is an unbounded defaultdict keyed by the attacker-controlled client identity, and check()/current_usage() create a new bucket on every unseen key, so unique XFF values per request grow the map without bound (memory-exhaustion DoS); sweep() is never called internally and nothing caps the number of buckets.",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "No locking around the non-atomic prune/length-check/append read-modify-write in check() (or around sweep()'s dict mutation while check() iterates), so concurrent requests for the same client race past the limit (CWE-362 TOCTOU bypass) and cross-thread dict mutation can raise RuntimeError; a gateway limiter is invariably hit concurrently.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "current_usage indexes self._hits[key] on a defaultdict, so a nominally read-only usage probe inserts an empty bucket for any unseen key, letting an attacker inflate the map via probes alone (distinct code path feeding the unbounded-growth DoS).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Pruning via hits.pop(0) in a loop is O(n) per pop / O(n^2) when many entries expire at once (algorithmic-DoS-adjacent); a deque with popleft() or slicing avoids it, though the per-bucket size is roughly bounded so real impact is small.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

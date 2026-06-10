@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "moving_average uses an incremental sliding sum (current += values[i] - values[i-window]) which accumulates floating-point rounding error across the whole series, so trailing windows drift from a freshly-summed window for long/large-magnitude inputs, contradicting the docstring's unqualified 'trailing moving average' contract.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "The incremental running sum permanently poisons all subsequent windows when the series contains inf or NaN: once a +inf/-inf or NaN enters `current`, subtracting it back out yields NaN forever, so every later window is NaN even after the offending value leaves the window (a per-window recompute would recover).",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "percentile calls sorted(values) with no NaN guard; a NaN in the data silently breaks sorted()'s ordering invariant and produces a wrong, non-monotonic percentile with no error raised.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.45,
+   "description": "StreamingMedian.add uses insort, which silently mis-positions NaN values and corrupts the maintained sort order, so median() can return a wrong value with no error once any NaN is added.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "clamp returns NaN unchanged when value is NaN (max(low, min(nan, high)) evaluates to nan), silently passing an out-of-range/undefined value through instead of constraining it to [low, high] as the contract implies.",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "safe_mean propagates NaN silently (any NaN element yields a NaN mean) and offers no separation between 'empty input' (None) and 'contaminated input' (NaN); arguably correct math but a robustness gap for dashboard inputs.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "StreamingMedian relies on insort (O(n) shift per insertion) giving O(n^2) total ingestion despite the 'streaming' name; a two-heap structure would be O(log n) per add \u2014 out of logic scope, deferred to critic-performance.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

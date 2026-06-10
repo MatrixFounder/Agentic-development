@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "touch() fetches the session without purging or checking expiry and unconditionally resets expires_at, so an already-expired (but not-yet-purged) session is resurrected and returns True \u2014 directly contradicting get(), which purges first and would return None for that same token.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "user_sessions() does not call _purge_expired() (unlike get() and active_count()), so it returns expired sessions whenever a purge has not run recently, making the result non-deterministic and inconsistent with the rest of the store's expiry semantics.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "user_sessions() returns live references to the internal mutable Session dataclasses, letting a caller mutate expires_at/user_id and corrupt store state (encapsulation leak; borders on design rather than a pure logic defect).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "create() writes self._sessions[token] without checking for an existing key, so a token collision (astronomically unlikely with 62^32 space) would silently clobber another user's active session instead of regenerating.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "Out-of-scope note (defer to critic-security): tokens are generated with the non-cryptographic random module rather than secrets, making session tokens predictable/guessable; not a logic defect.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

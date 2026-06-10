@@ -1,0 +1,61 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "get() calls _purge_expired() on every lookup, turning the hot-path O(1) dict read into a full O(n) scan plus list allocation over all sessions, so n requests each scan n sessions.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "_purge_expired() does a full O(n) scan and allocates a throwaway 'dead' list on every invocation; because it is invoked from read paths (get/active_count) this dominates aggregate cost instead of being amortized via lazy or timer-based eviction.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "active_count() triggers a full O(n) purge scan with list allocation on every call, which is costly if polled by a metrics/dashboard endpoint.",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "user_sessions() is an unindexed O(n) linear scan over all sessions; with no user_id->tokens index it scales poorly if called on login/enforcement paths.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "_new_token() rebuilds the alphabet constant per call and generates per-character via a Python-level comprehension; random.choices(alphabet, k=TOKEN_LENGTH) with a module-level alphabet is a single C-level call and faster.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Session tokens use the non-cryptographic random module instead of secrets, making tokens predictable (deferred to critic-security; noted because it co-locates with the token perf nit).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "touch() does not purge and can slide expiry on an already-expired session that get() would report as gone, yielding inconsistent expiry semantics (deferred to critic-logic).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

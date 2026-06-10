@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_rows reads the entire file into memory via readlines() just to count lines (O(file-size) memory for an O(1)-memory task); replace with a streaming 'with open(path) as f: sum(1 for _ in f)'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "list(reader) materializes every CSV row into an intermediate list (then a second full Record list is built at lines 40-49), roughly tripling peak memory versus iterating the already-lazy csv.reader with 'header = next(reader)'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 70,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "stream_valid advertises Iterator[Record] but calls self.parse(raw), which fully materializes all rows and records first, so the 'streaming' API delivers zero memory benefit and is an OOM trap for large uploads; parse should itself be a generator (or this method should parse incrementally).",
+   "bikeshedding": false
+  },
+  {
+   "line": 29,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "parse(raw: str) forces callers to slurp entire uploaded files into one string before parsing begins; accepting a file-like/iterable of lines would enable end-to-end streaming for the pipeline.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "File opened without a context manager in count_rows, so the descriptor's lifetime depends on GC timing (fd exhaustion risk under load on non-refcounting runtimes); use 'with open(path) as f:'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "find_by_id is an O(n) linear scan per call, degrading to O(n*m) under the typical repeated-lookup pattern; build a {record.id: record} dict once for O(1) lookups if callers query multiple ids.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "The header index dict is rebuilt on every parse call and never used afterwards - dead computation (negligible cost, but pure waste).",
+   "bikeshedding": true
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.7,
+   "description": "Rows are parsed by hard-coded positions row[0..3] while the (unused) line-36 index map and the presence-only REQUIRED_COLUMNS check ignore header order, so a CSV with reordered columns silently mis-assigns fields or crashes - defer detail to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "len(lines) - 1 returns -1 for an empty file and physical line count miscounts CSV records containing quoted embedded newlines - defer detail to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 63,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Per-record writer.writerow loop could be a single writer.writerows(generator) call; micro-optimization with negligible real-world impact.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

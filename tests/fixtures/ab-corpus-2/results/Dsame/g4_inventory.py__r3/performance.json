@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Classic N+1 query: low_stock_report runs one COUNT(*) on movements per low-stock product inside the Python loop, turning a report into 1+M round-trips; collapse into a single LEFT JOIN/GROUP BY against movements so the whole report is one query.",
+   "bikeshedding": false
+  },
+  {
+   "line": 76,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Unbounded SELECT of the entire products table with fetchall(), then filtered in Python at line 81; push 'WHERE stock <= reorder_level' (and a LIMIT) into SQL so the DB filters and you stop materializing every row into memory only to discard most of them.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "search_by_name uses LIKE '%fragment%' with a leading wildcard, which is non-sargable and forces a full table scan no index can serve; for large product catalogs this is O(n) per search and should use FTS5 / a trigram index or at least a prefix LIKE 'fragment%'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 84,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "The per-product movements COUNT filters on sku and created_at but no composite index movements(sku, created_at) is established in scope, so each of the N+1 counts likely scans movements, compounding the N+1 cost.",
+   "bikeshedding": false
+  },
+  {
+   "line": 23,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "_connect opens a brand-new sqlite3 connection (plus row_factory setup) on every public method call with no pooling or reuse; under any meaningful call volume the per-call connection open/teardown dominates latency for these otherwise-cheap point queries.",
+   "bikeshedding": false
+  },
+  {
+   "line": 67,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "search_by_name calls fetchall() with no LIMIT, materializing every matching row into a list at once; a broad fragment on a large table loads the whole result set into memory instead of streaming or capping it.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Out-of-scope for perf but flagging: the LIKE clause is built via f-string interpolation of untrusted 'fragment', a SQL injection vector; defer detail to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Out-of-scope for perf but flagging: 'row[\"stock\"] > quantity' rejects reserving exactly the available stock (off-by-one, should be >=) and the read-then-update is a non-atomic TOCTOU race; defer detail to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Style/nit (bikeshedding): try/finally with conn.close() is correct and leak-free, but the connection-handling boilerplate could use 'with sqlite3.connect(...) as conn' / contextlib.closing for clarity; no measurable performance impact.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "hits.pop(0) is O(n) and is called in a while-loop on the per-request hot path (check()), making prefix pruning O(n^2) worst-case (e.g. an idle client whose whole window expired); use collections.deque so popleft()/hits[0]/append are all O(1).",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "The per-client hit log is a list, forcing O(n) pop(0) pruning; switching the backing structure to collections.deque is the root fix that turns the line-42 prune from O(n^2) into O(k).",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "current_usage does a full O(n) linear scan to count live timestamps even though the bucket is sorted (monotonic time.time() inserts); bisect.bisect_left on cutoff gives the same count in O(log n).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.83,
+   "description": "sweep() runs any(t >= cutoff for t in hits) over every bucket, which is O(total stored timestamps) and short-circuits the wrong way (scans oldest-first, so still-active buckets walk past all stale entries); checking hits[-1] >= cutoff makes the keep-decision O(1) and sweep O(num_buckets).",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "len(hits) <= self.limit followed by append admits limit+1 requests before rejecting (off-by-one over-admission) \u2014 flagged for critic-logic, not a performance issue.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

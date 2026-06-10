@@ -1,0 +1,29 @@
+{
+ "findings": [
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "SMTP/email header injection: _render interpolates unvalidated msg.subject and msg.to into CRLF-terminated headers, so an attacker-controlled subject containing '\\r\\n' can inject arbitrary headers (e.g., Bcc) or split header/body (CWE-93).",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "Unvalidated msg.to is passed as the sendmail recipient and also rendered into the To: header, allowing envelope/recipient manipulation when the address contains commas or CRLF.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "SMTP connection on submission port 587 never calls starttls() and never authenticates, so message bodies are transmitted in cleartext (CWE-319).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

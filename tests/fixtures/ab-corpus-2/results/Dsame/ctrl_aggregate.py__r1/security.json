@@ -1,0 +1,13 @@
+{
+ "findings": [
+  {
+   "line": 70,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.15,
+   "description": "StreamingMedian.add uses insort (O(n) per insert), making an N-element stream O(N-squared); this is a uniform complexity characteristic, not a crafted-input amplification DoS, so the substance belongs to the performance critic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "clean-pass"
+}

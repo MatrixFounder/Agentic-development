@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "get() runs _purge_expired(), an O(n) full-store scan plus list allocation, on every token lookup, turning the hot-path O(1) dict read into O(n) per request; fix by checking only the fetched session's expires_at in get() and amortizing the sweep (every N ops, background task, or probabilistic sampling).",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "create() never purges and the store has no size cap or background sweep, so create/touch/destroy-only workloads accumulate expired Session objects indefinitely (unbounded memory growth until OOM); expiry reclamation only fires on get()/active_count(); the flood-of-creates DoS angle is deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "user_sessions() is an O(n) linear scan over the entire store per call; if used per-request (device lists, max-sessions-per-user enforcement) maintain a secondary dict[user_id, set[token]] index for O(k) lookup.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "No synchronization anywhere: a concurrent create() while _purge_expired() iterates _sessions.items() raises 'RuntimeError: dictionary changed size during iteration' under multi-threaded use; add a threading.Lock or document single-thread-only.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Session tokens generated with the non-cryptographic random module are predictable/forgeable; use secrets.token_urlsafe \u2014 brief note only, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "touch() does not check expires_at before renewing, so an already-expired session still present in the dict gets resurrected for a full TTL window \u2014 brief note, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "user_sessions() neither purges nor filters by expires_at, so it returns expired sessions as if active \u2014 brief note, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 34,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "TTL arithmetic uses wall-clock time.time(), so NTP steps or clock changes can mass-expire or over-extend sessions; time.monotonic() is the robust choice for in-process TTLs \u2014 brief note, deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.9,
+   "description": "Micro-optimization: alphabet string is rebuilt on every _new_token() call and 32 individual random.choice() calls are made per token; hoist the alphabet to a module constant and use one random.choices(alphabet, k=32) call (moot once switched to secrets).",
+   "bikeshedding": true
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "Micro-optimization: Session dataclass lacks slots=True, costing roughly 2x per-instance memory via __dict__ overhead for a class designed to exist in large quantities in an in-memory store (Python 3.10+: @dataclass(slots=True)).",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 45,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "Email/SMTP header injection (CWE-93/CRLF): _render interpolates unvalidated msg.to and msg.subject directly into CRLF-delimited headers, so a value containing \\r\\n can inject arbitrary headers (e.g. Bcc) or rewrite the body.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "msg.to is placed raw into the 'To:' header line with \\r\\n separators, allowing recipient/header spoofing via CRLF injection in the address field.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "msg.subject is placed raw into the 'Subject:' header line, the most attacker-controllable field, enabling header injection and body rewrite via embedded \\r\\n.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "sendmail uses unvalidated msg.to as the SMTP envelope recipient and the injection-prone _render output as the message, so malicious to/subject values manipulate the actual mail transaction and delivery.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.78,
+   "description": "Cleartext, unauthenticated SMTP submission (CWE-319): connects on the STARTTLS submission port 587 but never calls starttls() or login(), so message bodies are transmitted in plaintext and exposed to interception/MITM.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "smtplib.SMTP() is constructed outside the try/finally, so a connection failure propagates out of flush, leaves _pending uncleared, and aborts sending all remaining queued messages (availability/connection-leak, CWE-404).",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "Dedup key is msg.to alone (ignores subject/body), so a benign pre-enqueued message to an address silently suppresses a later distinct message (e.g. a security/reset notification) to the same recipient (denial-of-notification, CWE-697).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "_seen grows unbounded for the lifetime of the queue (only cleared via clear_dedup_cache), allowing slow memory growth under sustained enqueueing.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 46,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Every get() (and active_count() at line 61) runs _purge_expired(), a full O(n) scan plus list allocation over the entire store, turning the hottest O(1) lookup path into O(n) per request (~5-10ms CPU per lookup at 100k sessions, a full core burned at moderate rps); fix: lazily check only the fetched session's expires_at (O(1)) and amortize bulk purging on a time/op-count interval or an expiry-ordered heap.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Store has no max size and purging happens only on the read path (get/active_count) while create()/touch() never purge, so write-heavy or create-only workloads grow _sessions without bound for the full TTL window or forever if reads never happen; add amortized purge on create plus a size cap (deliberate session-flood DoS angle deferred to critic-security).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "user_sessions() linearly scans every session in the store to collect one user's sessions, O(n) per call; if used on a request path (per-user session caps, device listings) maintain a secondary user_id->set[token] index updated in create/destroy/purge instead.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.5,
+   "description": "No synchronization on _sessions: a concurrent create() while the _purge_expired() comprehension iterates raises RuntimeError (dict changed size during iteration) and touch/purge interleavings race (checklist 3.4, thread safety) -- wrap mutations in a threading.Lock if any multi-threaded use is possible; correctness detail shared with critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 51,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "touch() renews without checking expires_at, so an already-expired-but-unpurged session gets resurrected with a fresh TTL window, effectively bypassing expiry; noted briefly, full analysis deferred to critic-logic/critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Session tokens are generated with random.choice (Mersenne Twister, predictable/seedable) instead of the secrets module, enabling token prediction; noted briefly, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "user_sessions() neither purges nor filters on expires_at, so it returns expired sessions that get() would reject -- inconsistent liveness semantics across the API; deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "Micro-optimization: 32 separate random.choice() calls per token where random.choices(alphabet, k=32) -- or secrets.token_urlsafe(24), which also fixes the PRNG security issue -- is several times faster; only matters if create() is hot.",
+   "bikeshedding": true
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Session is a plain @dataclass carrying a per-instance __dict__ (~3x the memory of a slotted class); for a store intended to hold many thousands of live sessions, @dataclass(slots=True) is a near-free memory reduction.",
+   "bikeshedding": true
+  }
+ ],
+ "convergence": "issues-found"
+}

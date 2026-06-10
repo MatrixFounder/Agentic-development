@@ -1,0 +1,21 @@
+{
+ "findings": [
+  {
+   "line": 58,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "flush() opens and tears down a brand-new SMTP (and likely TLS, on port 587) connection for every single message inside the loop instead of reusing one connection, turning a single batched send into N full connection setup/teardown round-trips (10-100x slower at scale).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "flush() sends fully serially and blocks on each sendmail with no pipelining/batching/concurrency, capping throughput at 1/per-message-latency.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

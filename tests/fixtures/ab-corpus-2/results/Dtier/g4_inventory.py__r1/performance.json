@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 82,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "N+1 query: per-product COUNT(*) on movements inside the loop turns one report into K+1 queries (each a likely full scan of movements) for K low-stock SKUs \u2014 replace with a single LEFT JOIN ... GROUP BY aggregate.",
+   "bikeshedding": false
+  },
+  {
+   "line": 76,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Unbounded SELECT + fetchall() materializes the entire products table only to filter stock <= reorder_level in Python at line 81 \u2014 push the predicate into the SQL WHERE clause so only low-stock rows are fetched.",
+   "bikeshedding": false
+  },
+  {
+   "line": 83,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.4,
+   "description": "The 30-day COUNT predicate on (sku, created_at) almost certainly lacks a covering index (schema not in scope), making each aggregate a movements table scan \u2014 add a composite index on movements(sku, created_at).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.75,
+   "description": "search_by_name uses leading-wildcard LIKE '%...%' (unindexable, full table scan per search) with no LIMIT, so a short fragment materializes essentially the whole catalog into Product objects \u2014 add LIMIT/pagination and consider FTS5 for substring search.",
+   "bikeshedding": false
+  },
+  {
+   "line": 24,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.6,
+   "description": "Every method opens and closes a fresh sqlite3 connection with default journal mode (no reuse/pooling, no WAL, no pragmas), paying connection setup plus a journal fsync per operation in a pipeline hot path \u2014 reuse a long-lived connection or pool and enable WAL for write-heavy use.",
+   "bikeshedding": false
+  },
+  {
+   "line": 95,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Single-item-only API forces pipeline callers into one connection + one transaction + one fsync per record, capping write throughput \u2014 add batch variants (executemany within a single transaction).",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "SQL injection: user-supplied fragment is f-string-interpolated into the LIKE clause instead of parameterized \u2014 noted for handoff, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Non-atomic check-then-update (TOCTOU) in reserve(): concurrent calls can both read the same stock, pass the check, and oversell \u2014 deferred to critic-logic; the atomic fix (UPDATE ... WHERE sku = ? AND stock >= ? with rowcount check) also halves the query count.",
+   "bikeshedding": false
+  },
+  {
+   "line": 48,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "Off-by-one: stock > quantity rejects reserving exactly the remaining stock (should be >=) \u2014 deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

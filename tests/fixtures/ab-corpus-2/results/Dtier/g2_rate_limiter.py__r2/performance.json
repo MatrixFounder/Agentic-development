@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 26,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "_hits is an unbounded defaultdict keyed by client identity with no max size, TTL, or internal scheduling \u2014 cleanup depends entirely on an external caller invoking sweep(), so memory grows linearly with unique client keys (~3 KB per full bucket) between sweeps, and sweep itself is a stop-the-world O(all buckets x bucket size) scan.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Window pruning uses list.pop(0) in a while loop on the per-request hot path \u2014 each pop is an O(n) memmove making pruning O(k*limit) per check and O(limit^2) as the configured limit grows; use collections.deque.popleft() (O(1)) or bisect_left plus a single del hits[:i].",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "current_usage reads via self._hits[key] on a defaultdict, so every probe of an unknown client permanently inserts an empty list \u2014 a read-only monitoring method that leaks memory on every miss until the next sweep; use self._hits.get(key, ()).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "No synchronization: in a threaded gateway, concurrent check() calls can race the hits-nonempty test against pop(0) (IndexError) and sweep() can delete a bucket while check() appends to the orphaned list (silent counter reset), while the naive fix of one global lock would serialize all requests \u2014 use sharded/per-key locks.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "A synchronous WARNING is logged for every rejected request, so the over-limit path \u2014 by definition the highest-volume path under abuse \u2014 amplifies into log flooding and disk I/O pressure; sample or rate-limit the log line itself.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "sweep()'s any(t >= cutoff for t in hits) scans the ascending timestamp list oldest-first and walks every expired entry before short-circuiting; since the list is append-sorted, hits[-1] >= cutoff answers in O(1), reducing sweep from O(total timestamps) to O(buckets).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Client key trusts the first attacker-controlled X-Forwarded-For hop, enabling rate-limit bypass and key-cardinality memory exhaustion via spoofed headers \u2014 noted briefly here, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Off-by-one: len(hits) <= self.limit admits limit+1 requests per window and yields Decision.remaining = -1 at the boundary \u2014 noted briefly, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "time.time() wall clock is used for interval arithmetic, so an NTP step shifts the window (entries expiring early or never); time.monotonic() is correct for durations \u2014 deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

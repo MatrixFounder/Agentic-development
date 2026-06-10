@@ -1,0 +1,85 @@
+{
+ "findings": [
+  {
+   "line": 26,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "_hits grows one bucket per unique client key with no size cap, no TTL, and nothing in the class ever invoking sweep(), so a public gateway facing unbounded unique IPs (freely mintable via the spoofable XFF key, line 30) leaks memory monotonically toward OOM; fix: schedule sweep() internally, or replace with an LRU/TTL-capped store.",
+   "bikeshedding": false
+  },
+  {
+   "line": 42,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "hits.pop(0) on a list shifts all remaining elements (O(n) per pop, O(limit^2) when a full window expires) in the per-request hot path; use collections.deque with popleft() for O(1) amortized pruning.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "current_usage indexes the defaultdict (self._hits[key]), so this nominally read-only method permanently inserts an empty bucket for every unknown key probed (e.g., by a monitoring/status endpoint), an unbounded-growth vector that bypasses check() entirely; use self._hits.get(key, ()).",
+   "bikeshedding": false
+  },
+  {
+   "line": 64,
+   "class": "performance",
+   "severity": "MEDIUM",
+   "confidence": 0.65,
+   "description": "No synchronization on shared mutable state: in a threaded gateway, sweep() iterating self._hits.items() while a concurrent check() inserts a key raises RuntimeError (dict changed size during iteration), and check()'s non-atomic prune/len/append sequence over-admits under concurrency; guard with a threading.Lock or iterate a snapshot via list(self._hits.items()).",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "logger.warning fires once per rejected request, so under sustained rejection the limiter becomes its own log-I/O amplifier exactly when it should be shedding load (N rejected RPS = N warning lines/sec); sample or rate-limit this log line.",
+   "bikeshedding": false
+  },
+  {
+   "line": 65,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.7,
+   "description": "sweep() scans every timestamp in every bucket via any(); since hits are appended in time order, 'not hits or hits[-1] < cutoff' is an O(1)-per-bucket equivalent, cutting sweep from O(total timestamps) to O(buckets) - micro-optimization.",
+   "bikeshedding": true
+  },
+  {
+   "line": 43,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "Off-by-one: 'len(hits) <= self.limit' admits limit+1 requests per window and yields remaining=-1 at the boundary (should be '<') - noted briefly, detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "Client-controllable X-Forwarded-For is trusted verbatim as the bucket key, allowing limit bypass via header rotation and free minting of unlimited buckets (amplifies the line-26 memory growth into a cheap DoS) - noted briefly, detail deferred to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "time.time() is wall-clock: a backward NTP step strands 'future' timestamps beyond the prune cutoff (client lockout up to the step size) and a forward step resets all windows; time.monotonic() is the correct clock - deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 26,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "Purely in-process state means each worker process enforces an independent limit (effective global limit = limit x workers) and all state vanishes on restart - architectural note, deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

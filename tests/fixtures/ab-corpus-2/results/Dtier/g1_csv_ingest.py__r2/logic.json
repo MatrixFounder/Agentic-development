@@ -1,0 +1,77 @@
+{
+ "findings": [
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.97,
+   "description": "parse() builds an 'index' dict from the header (line 36) but never uses it \u2014 all fields are accessed by hard-coded positional indices (row[0]..row[3]); if the CSV columns appear in any order other than id/name/amount/email, wrong values are silently assigned to wrong fields or a ValueError is raised on the wrong column.",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "parse() accesses row[0] through row[3] with no guard on row length; a short row (e.g., a trailing blank line or a row with fewer than 4 fields) raises an uncaught IndexError, crashing the entire parse instead of skipping or reporting the bad row.",
+   "bikeshedding": false
+  },
+  {
+   "line": 46,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.88,
+   "description": "float(row[2]) will raise ValueError if an 'amount' cell contains a float-formatted integer string such as '1.0' passed after int() coercion elsewhere, or whitespace-padded values that survive CSV parsing; no per-row exception handling means a single malformed cell aborts ingest of all subsequent rows.",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.98,
+   "description": "count_rows() opens the file without a 'with' statement, leaking the file handle on every call; on systems with low file-descriptor limits this will eventually cause 'Too many open files' failures in long-running pipelines.",
+   "bikeshedding": false
+  },
+  {
+   "line": 55,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.93,
+   "description": "count_rows() returns len(lines) - 1, so an empty file (zero lines) returns -1 \u2014 a nonsensical negative count that callers cannot distinguish from an error; the correct result for an empty file is 0 (or an explicit error).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.91,
+   "description": "count_rows() counts raw text lines via readlines(), not CSV records; a CSV with quoted multiline fields (RFC 4180 compliant) will report an inflated count equal to the number of newline characters, not the number of actual data rows.",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "export() uses os.path.basename(filename) for path safety, but if filename is an empty string, os.path.basename('') returns '' and os.path.join(export_dir, '') resolves to the directory path itself, causing open() to raise IsADirectoryError with no caller-visible explanation.",
+   "bikeshedding": false
+  },
+  {
+   "line": 60,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.8,
+   "description": "export() opens the destination file for writing before iterating records; if a write fails mid-loop the destination is left as a partially written, structurally invalid CSV file with no rollback or cleanup.",
+   "bikeshedding": false
+  },
+  {
+   "line": 36,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.97,
+   "description": "The 'index' variable built from the header on line 36 is assigned but never referenced anywhere in parse(); it is dead code that misleads readers into thinking column lookup is position-independent when it is not.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

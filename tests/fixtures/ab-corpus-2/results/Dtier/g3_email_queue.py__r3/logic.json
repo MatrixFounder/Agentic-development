@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "Dedup key is recipient address only (`msg.to`), so any second message to the same address \u2014 regardless of subject or body \u2014 is silently dropped and counted as skipped; the docstring claims to deduplicate 'a duplicate', implying content-identity, but the implementation enforces address-uniqueness for the lifetime of the object.",
+   "bikeshedding": false
+  },
+  {
+   "line": 57,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 0.97,
+   "description": "On any `sendmail` exception the loop aborts mid-flight: `self._pending.clear()` (line 65) is never reached, so the queue retains all original messages including those already successfully sent; a subsequent `flush()` call re-sends the already-delivered messages, producing duplicate delivery for every message that preceded the failure.",
+   "bikeshedding": false
+  },
+  {
+   "line": 58,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.92,
+   "description": "`smtplib.SMTP(SMTP_HOST, SMTP_PORT)` is constructed outside the `try` block; if the constructor raises (server unreachable), no `finally` cleanup runs for that iteration, and the exception propagates immediately, again leaving `_pending` uncleared and producing duplicate sends on retry.",
+   "bikeshedding": false
+  },
+  {
+   "line": 63,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "`server.quit()` in `finally` can itself raise (e.g. `SMTPServerDisconnected`) if the server already closed the socket after a `sendmail` error, which would replace the original exception with an unrelated transport error and obscure the true failure cause.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.93,
+   "description": "`_seen` is never cleared by `flush()`, so after a successful flush any re-enqueue attempt for a previously-sent recipient address is permanently silently rejected for the lifetime of the `EmailQueue` instance, even though the prior message has already been delivered.",
+   "bikeshedding": false
+  },
+  {
+   "line": 74,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.88,
+   "description": "`clear_dedup_cache()` clears `_seen` but not `_pending`; if pending messages exist at call time, re-enqueuing the same addresses succeeds, resulting in duplicate `Message` objects in `_pending` that will both be sent on the next `flush()`.",
+   "bikeshedding": false
+  },
+  {
+   "line": 46,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.8,
+   "description": "`_render` hand-rolls RFC 2822 wire format without validating or encoding `msg.to` or `msg.subject`; an address containing a newline (e.g. injected via untrusted input) breaks the header structure \u2014 note `MIMEText` is imported but unused. Flagging for completeness; defer header-injection angle to critic-security.",
+   "bikeshedding": false
+  },
+  {
+   "line": 35,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.75,
+   "description": "`enqueue` performs no input validation on `msg.to`; an empty string or whitespace-only address is accepted into the queue and will cause `sendmail` to raise at flush time, triggering the partial-failure / duplicate-send defect described at line 57.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

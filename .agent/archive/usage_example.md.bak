@@ -42,8 +42,8 @@ All three execute concurrently; results return as three tool results in the same
 ### Step 3: Merge
 Collect the three structured reports. Apply merge rules (see `.agent/workflows/vdd-multi.md` Phase 2):
 - Deduplicate issues at the same `(file, line ± 3)` across critics.
-- Escalate severity by one level when two critics independently flag the same location.
-- Produce a single `VDD Multi-Adversarial Report` with sections per category plus an "Overlaps" section.
+- Tag same-mechanism agreement `corroborated` (severity = max of the duplicates — same-model critics are corroboration, not independent confirmation; no auto-escalation). Escalate severity by one level only when two critics flag the same location with **different failure mechanisms**.
+- Produce a single `VDD Multi-Adversarial Report` with sections per category plus an "Overlaps" section (corroborated findings + different-mechanism escalations).
 
 ### Step 4: Iterative fix (per category)
 For any category that returned issues, apply fixes and re-spawn **only that critic** until clean-pass or bikeshedding-only (no legitimate findings left — not a full parallel triple, single-critic re-spawn is cheaper).

@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 64,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.8,
+   "description": "CSV formula/injection: untrusted 'name' and 'email' fields are written to the exported CSV without neutralizing leading formula triggers (=, +, -, @, tab, CR), so opening the 'cleaned' file in Excel/LibreOffice/Sheets can execute formulas like =HYPERLINK/=WEBSERVICE/DDE (CWE-1236).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.55,
+   "description": "parse() does list(reader) on attacker-controlled 'raw', loading the entire CSV into memory at once, enabling memory-exhaustion DoS if input size is unbounded upstream (CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 44,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "Data rows are parsed by fixed positional indices (row[0..3]) with int()/float() coercion and never use the computed header index map, so a short or malformed row raises an uncaught IndexError/ValueError on untrusted input (input-validation / availability gap).",
+   "bikeshedding": false
+  },
+  {
+   "line": 54,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "count_rows() opens a caller-supplied path with no restriction; if exposed to untrusted input it reads any file the process can access (weak info-disclosure oracle leaking line counts) and the file handle is never closed (resource leak).",
+   "bikeshedding": false
+  },
+  {
+   "line": 59,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.35,
+   "description": "export() uses os.path.basename(filename) which neutralizes classic ../ traversal and absolute paths on POSIX, but an attacker can still overwrite/clobber arbitrary files within export_dir via a chosen basename; residual low-impact rather than directory escape.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

@@ -1,0 +1,69 @@
+{
+ "findings": [
+  {
+   "line": 31,
+   "class": "performance",
+   "severity": "CRITICAL",
+   "confidence": 0.98,
+   "description": "BFS enqueues neighbors unconditionally (`seen` is written but never checked), so on cyclic graphs \u2014 which the docstring explicitly claims to support \u2014 the loop never terminates and the deque grows until OOM, and even on diamond-shaped DAGs work is exponential in path count; fix with `if neighbor not in seen: seen.add(neighbor); queue.append(neighbor)` for O(V+E).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "performance",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "count_paths recursively recomputes the count of every shared descendant with no memoization \u2014 O(2^n) on diamond-chain DAGs versus O(V+E) with a per-call {node: count} memo or a topological-order DP.",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.7,
+   "description": "Unbounded recursion raises RecursionError on any cycle (the class accepts cyclic edges) or any path deeper than ~1000 frames, which long pipeline chains can hit \u2014 an iterative topo-order DP fixes this and the memoization issue together; detail deferred to critic-logic.",
+   "bikeshedding": false
+  },
+  {
+   "line": 12,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.85,
+   "description": "Reads of missing keys on the defaultdict (lines 30/40/54/61) silently insert empty lists, so nominally read-only methods mutate state \u2014 wasting up to O(V) dict entries on sink-node queries and breaking concurrent-reader safety; use `self._edges.get(node, ())` on read paths.",
+   "bikeshedding": false
+  },
+  {
+   "line": 16,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.4,
+   "description": "add_edge appends without dedup, so idempotent re-registration (common in pipeline reload loops) grows edge lists without bound and inflates memory plus every traversal \u2014 dedupe or document parallel-edge semantics.",
+   "bikeshedding": false
+  },
+  {
+   "line": 22,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "logger.info per registered node makes bulk graph loads (millions of nodes) emit millions of log records on a hot ingestion path \u2014 drop to DEBUG or log aggregate counts.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "performance",
+   "severity": "LOW",
+   "confidence": 0.3,
+   "description": "neighbors() allocates a fresh O(degree) list copy per call \u2014 defensively correct, only worth changing if profiling shows it hot; micro-optimization nit.",
+   "bikeshedding": true
+  },
+  {
+   "line": 33,
+   "class": "logic",
+   "severity": "LOW",
+   "confidence": 0.5,
+   "description": "reachable's result includes `start` only when it lies on a cycle and excludes it otherwise \u2014 inconsistent semantic contract; deferred to critic-logic.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

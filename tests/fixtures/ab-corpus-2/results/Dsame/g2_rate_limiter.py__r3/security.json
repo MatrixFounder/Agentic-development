@@ -1,0 +1,45 @@
+{
+ "findings": [
+  {
+   "line": 30,
+   "class": "security",
+   "severity": "CRITICAL",
+   "confidence": 0.92,
+   "description": "_client_key trusts the client-supplied left-most X-Forwarded-For value as the identity key, so an attacker rotating a spoofed XFF header per request gets a fresh bucket each time and fully bypasses the rate limiter (CWE-348/CWE-290); only the right-most hop appended by your own trusted proxy is reliable.",
+   "bikeshedding": false
+  },
+  {
+   "line": 43,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.9,
+   "description": "Off-by-one: the gate uses `len(hits) <= self.limit` and appends after the comparison, so when the bucket already holds `limit` accepted requests the condition is still true and one extra request is allowed, permitting limit+1 requests per window (rate-limit threshold bypass, CWE-697).",
+   "bikeshedding": false
+  },
+  {
+   "line": 39,
+   "class": "security",
+   "severity": "HIGH",
+   "confidence": 0.85,
+   "description": "Unbounded memory growth / DoS: `_hits` is a defaultdict keyed by the attacker-controlled (spoofable) XFF value, and `check` (line 39) and `current_usage` (line 57) read `self._hits[key]`, creating a permanent bucket even on the rejected/read path; nothing calls sweep() automatically, so XFF rotation exhausts memory (CWE-770/CWE-400).",
+   "bikeshedding": false
+  },
+  {
+   "line": 41,
+   "class": "security",
+   "severity": "MEDIUM",
+   "confidence": 0.78,
+   "description": "Race-condition / TOCTOU bypass: the prune-compare-append sequence on the shared list plus dict access is not atomic under the GIL, so concurrent requests for the same client (the normal gateway case) can both pass the limit check before appending, exceeding the limit; sweep()'s `del` concurrent with check() can also corrupt state or raise (CWE-362).",
+   "bikeshedding": false
+  },
+  {
+   "line": 32,
+   "class": "security",
+   "severity": "LOW",
+   "confidence": 0.6,
+   "description": "No normalization/validation of the parsed forwarded value: `split(\",\")[0].strip()` yields an empty-string key for inputs like `X-Forwarded-For: ,` or leading-comma chains, letting requests share/poison a single empty-key bucket (input-validation gap compounding the XFF trust issue, CWE-20).",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

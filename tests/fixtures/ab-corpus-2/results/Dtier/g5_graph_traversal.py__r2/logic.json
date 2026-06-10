@@ -1,0 +1,53 @@
+{
+ "findings": [
+  {
+   "line": 27,
+   "class": "logic",
+   "severity": "CRITICAL",
+   "confidence": 1,
+   "description": "reachable() has no visited-check before enqueuing: neighbors are appended unconditionally and the start node is never marked seen, so any cycle (A->B->A) causes the BFS queue to grow without bound and the function never terminates \u2014 directly contradicting the docstring claim 'possibly cyclic graph'.",
+   "bikeshedding": false
+  },
+  {
+   "line": 33,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 0.95,
+   "description": "reachable() never adds the start node to `seen`, so the returned set excludes the origin node itself; callers checking whether a node is reachable from itself (or composing reachability sets) receive silently wrong results.",
+   "bikeshedding": false
+  },
+  {
+   "line": 40,
+   "class": "logic",
+   "severity": "HIGH",
+   "confidence": 1,
+   "description": "count_paths() recurses without any cycle guard or visited set; on a graph with a cycle it overflows the call stack with RecursionError, and on legal deep DAGs it is exponential without memoization \u2014 the 'DAG assumed' docstring is unverified and unenforced.",
+   "bikeshedding": false
+  },
+  {
+   "line": 37,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.9,
+   "description": "count_paths() returns 1 unconditionally when src == dst regardless of whether that node exists in the graph, so count_paths('ghost', 'ghost') returns 1 instead of 0 or an error.",
+   "bikeshedding": false
+  },
+  {
+   "line": 61,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.95,
+   "description": "neighbors() accesses self._edges[node] on a defaultdict, auto-vivifying a ghost entry for any unknown node; this silently mutates the graph and corrupts subsequent topological_order() indegree accounting by introducing phantom edge-list keys into _edges that are absent from _nodes.",
+   "bikeshedding": false
+  },
+  {
+   "line": 47,
+   "class": "logic",
+   "severity": "MEDIUM",
+   "confidence": 0.85,
+   "description": "topological_order() builds indegree only from self._nodes, but iterates self._edges (a defaultdict) which can contain keys absent from _nodes (e.g. from neighbors() ghost-vivification); accessing indegree[dst] for such a dst raises KeyError and crashes the method.",
+   "bikeshedding": false
+  }
+ ],
+ "convergence": "issues-found"
+}

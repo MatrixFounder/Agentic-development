@@ -67,21 +67,33 @@ The teaching below uses the chat idiom for readability; translate to SDK calls m
 ```
 ## Sequential fallback for a 3-critic VDD run
 
+0. Orchestrator gathers execution evidence ONCE, before any persona pass
+   (vdd-multi Phase 1 contract, audit-067 C-13): run the test suite +
+   run_audit.py, capture summaries — or honest `tests/scan: NOT RUN
+   (<reason>)` lines. The identical evidence block goes into every
+   persona message below (ground truth, not critic output — sharing it
+   is not cross-pollination). Absent block → persona emits the finding
+   "exit-bar condition unverifiable", never clean-pass.
+
 1. Orchestrator message: "You are now critic-logic. Read
    .agent/skills/vdd-adversarial/SKILL.md. Review <target> for logic
-   issues. Emit structured report. Do NOT fix."
+   issues. Execution evidence — Tests: <summary | NOT RUN (<reason>)>.
+   Emit structured report. Do NOT fix."
 
 2. Orchestrator captures report #1 to scratch.
 
 3. Orchestrator message: "Forget the critic-logic persona. You are now
    critic-security. Read .agent/skills/skill-adversarial-security/SKILL.md.
-   Review <target> for security issues. Emit structured report. Do NOT fix."
+   Review <target> for security issues. Execution evidence — Tests:
+   <summary | NOT RUN>; Scan (run_audit.py): <summary | NOT RUN (<reason>)>.
+   Emit structured report. Do NOT fix."
 
 4. Orchestrator captures report #2.
 
 5. Orchestrator message: "Forget the critic-security persona. You are
    now critic-performance. Read .agent/skills/skill-adversarial-performance/SKILL.md.
-   Review <target> for performance issues. Emit structured report. Do NOT fix."
+   Review <target> for performance issues. Execution evidence — Tests:
+   <summary | NOT RUN (<reason>)>. Emit structured report. Do NOT fix."
 
 6. Orchestrator captures report #3.
 
@@ -92,7 +104,7 @@ The teaching below uses the chat idiom for readability; translate to SDK calls m
 
 ## Anti-patterns specific to sequential fallback
 
-- **"Since it's all one session, let the second critic look at the first one's output."** → **WRONG**. That's cross-pollination (parent §3 Red Flags). Each persona must start fresh with only the target as input.
+- **"Since it's all one session, let the second critic look at the first one's output."** → **WRONG**. That's cross-pollination (parent §3 Red Flags). Each persona must start fresh with only the target + the shared execution-evidence block (step 0 — ground truth, not critic output) as input.
 - **"Keep accumulated context between personas; it's cheaper."** → **WRONG**. Persona bleed = each next critic inherits the prior's biases. Explicit context reset is non-negotiable.
 - **"Skip the persona swap if two roles share the same checklist area."** → **WRONG**. The separation is methodological, not just content. Two personas finding the same issue is corroboration that it survived persona variation — a signal you lose entirely by collapsing roles (though it never escalates severity in sequential mode; see merge step 3).
 

@@ -107,7 +107,10 @@
 
 ---
 
-### 7. ⏳(R3a/R3b/R3d ✅ · R3c tier-diverse ✅ · R3c cross-vendor ⏳ item 6) [C-08] Severity-escalation redesign — *detailed*
+### 7. ⏳(R3a/R3b/R3d ✅ · R3c tier-diverse ✅ resolved · R3c cross-vendor ⏳ item 6) [C-08] Severity-escalation redesign — *detailed*
+
+- **R3c tier-diverse RESOLVED in:** Task 079 / v3.20.8 (2026-06-10), gate artifact `docs/reviews/framework-audit-079.md`. The tier-diverse `+1` escalation (shipped as a pilot in 077) was **demoted to a `tier-diverse` provenance tag with no escalation** after mini-exp 078 refuted its premise (cross-tier agreement precision 0.66 < 0.73 same-tier — escalating would manufacture FPs). The `--models` config is **retained** (validated by 078 as a recall/coverage tool). Lockstep gradation row + 3rd bullet + Phase-0 resolution + cross-refs; `skill-parallel-orchestration` 3.4→3.5. Only mechanism-difference (R3b) escalates now.
+- **Verified:** no positive `+1` attached to tier-diverse anywhere (only the demotion text + immutable v3.4 History record); rule-3 normalized diff identical mod noun; R3a/R3b/R3d/dedup/evidence/flags byte-unchanged; gate 43/43; pytest 30/30.
 
 - **R3c tier-diverse done in:** Task 077 / v3.20.7 (2026-06-10), gate artifact `docs/reviews/framework-audit-077.md`. Merge rule 3 gained the model-independence gradation table + a third bullet: same-mechanism agreement under a tier-diverse `--models` config earns +1 for CRITICAL/HIGH only (tag `tier-diverse`). `/vdd-multi --models=logic:<t>,security:<t>,performance:<t>` (Phase 0 parse + escalation-tier resolution, Phase 1 per-critic spawn); `CLAUDE_CODE_SUBAGENT_MODEL` flatten-guard downgrades to R3a. Lockstep across 5 surfaces (vdd-multi/SKILL byte-identical mod noun); sequential declared tier-diverse-impossible. `skill-parallel-orchestration` 3.3→3.4. Ships as **pilot** — empirical validation = task 078 mini-experiment. **Cross-vendor row still ⏳ BLOCKED BY item 6.**
 - **Verified:** tier-diverse grep = 5 surfaces + env-guard; gradation normalized-diff identical mod noun; R3a/R3b/R3d bullets byte-unchanged; gate 43/43; pytest 30/30.
@@ -200,8 +203,8 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); K2 final form resolved by 13: KEEP as opt-in skin (rule 1)
 6 (vendor adapters)       — independent; per-vendor validation needs operator machines
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
-7 R3c (tier-diverse)      — config ✅ (Task 077 / v3.20.7); escalation premise ✗ refuted by Task 078 (T3) → demote-to-corroborated recommended
-7 R3c (cross-vendor)      — ⏳ BLOCKED BY 6 (needs vendor adapters; the still-open independence bet)
+7 R3c (tier-diverse)      — ✅ RESOLVED: config kept (Task 077), escalation demoted to tag-only (Task 079 / v3.20.8, per Task 078 T3)
+7 R3c (cross-vendor)      — ⏳ BLOCKED BY 6 (needs vendor adapters; the still-open independence bet — 078 tested tiers, not vendors)
 8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
 11                        — ✅ DONE (Task 074 / v3.20.5; un-handicaps experiment 13 arm D)
 13 (experiment)           — ✅ DONE (Task 075, ab-experiment-075.md): R1 sarcasm survives (K2 kept) · R2 multi fails cost bar · R3 adversarial framing = −6.9pp recall

@@ -12,7 +12,7 @@ Parallel execution of three specialized adversarial critics (logic, security, pe
 
 - **Use `/vdd-multi`** for CI `--fail-on` gates, pre-release/coverage-critical passes (class-complete: a dedicated critic per domain), and when missing a single bug costs more than 3× review tokens.
 - **Default for routine recall-oriented review:** a single strong reviewer with the plain exhaustive prompt ("report every issue incl. low-confidence ones, with confidence + severity; filter downstream") — 93% recall at ~1/3 of the cost.
-- The remaining lever that could re-earn the committee's cost is **model-heterogeneous critics** (roadmap item 7/R3c tier-diverse pilot) — same-model critics share failure modes (corroboration ≠ confirmation, see Phase 2 rule 3).
+- **Model heterogeneity was the candidate lever** to re-earn the committee's cost (same-model critics share failure modes — corroboration ≠ confirmation, see Phase 2 rule 3). The *tier-diverse* form was tested (mini-exp 078) and **did not earn the escalation** — recall rose but cross-tier agreement was *less* precise (0.66 vs 0.73), so its `+1` was demoted to a tag (`--models` stays useful for recall). The still-open lever is **true cross-vendor** critics (quasi-independent), ⏳ blocked on vendor adapters (item 6).
 
 ## Invocation
 
@@ -32,7 +32,7 @@ Parallel execution of three specialized adversarial critics (logic, security, pe
 | `--fail-on=<sev>` | `critical`, `high`, `medium`, `low`, `none` | `none` | Mark the run as **FAIL** (and surface in termination line) if any finding has severity ≥ threshold. Workflow still completes; the flag controls the terminal verdict only. |
 | `--output=<path>` | relative or absolute file path | none | Write the merged Phase 2 report to the given path instead of inline. Orchestrator creates the file and returns a short pointer instead of the full markdown. Typical: `--output=docs/reviews/pr-42.md`. |
 | `--diff-only` | (boolean) | auto-on if `target` is omitted | Bound the review to files present in `git diff` vs `main` branch. Implied when no target given. Critics receive the changed file paths + per-file diff context, not the entire files. |
-| `--models=<map>` | `logic:<t>,security:<t>,performance:<t>` where `<t>` ∈ `{haiku,sonnet,opus,fable}`; partial maps OK | none → all critics on wrapper default (`opus`) | **Tier-diverse critics (R3c).** Spawn each critic on a different model tier so same-mechanism agreement earns partial independence (Phase 2 rule 3 gradation). Unset critics fall back to the wrapper default. Silently neutralized by `CLAUDE_CODE_SUBAGENT_MODEL` — see Phase 0. |
+| `--models=<map>` | `logic:<t>,security:<t>,performance:<t>` where `<t>` ∈ `{haiku,sonnet,opus,fable}`; partial maps OK | none → all critics on wrapper default (`opus`) | **Tier-diverse critics (R3c).** Spawn each critic on a different model tier for recall/coverage (mini-exp 078: highest recall, 100% pooled). Overlaps get a `tier-diverse` provenance tag but **no severity escalation** (078 refuted that — see Phase 2 rule 3). Unset critics fall back to the wrapper default. Silently neutralized by `CLAUDE_CODE_SUBAGENT_MODEL` — see Phase 0. |
 
 ### Parameter examples
 
@@ -84,10 +84,10 @@ vdd-multi
    - `--output` parent directory must exist or be creatable (`mkdir -p`).
    - `--models` (if present): each value ∈ `{haiku, sonnet, opus, fable}`; partial maps allowed; critics not named fall back to the wrapper default (`opus`). Record the resolved per-critic model map.
 4. If `--diff-only` active, derive file list via `git diff --name-only main...HEAD` (or `git diff --name-only` for uncommitted). Report the list to the user before spawning.
-5. **Escalation-tier resolution (R3c).** Set the run's `escalation_tier` from the resolved model map:
-   - all critics on the same model (no `--models`, or all values equal) → `R3a` (same-model; corroboration only).
-   - critics span ≥2 distinct tiers → `tier-diverse` (Phase 2 rule 3 awards +1 to CRITICAL/HIGH overlaps).
-   - **Env-flatten guard:** if `CLAUDE_CODE_SUBAGENT_MODEL` is set, it silently overrides every per-critic pin → the heterogeneity is erased. **Warn the user** ("`--models` ignored: CLAUDE_CODE_SUBAGENT_MODEL=<v> overrides per-critic pins; escalation downgraded to R3a") and force `escalation_tier=R3a`.
+5. **Provenance-tag resolution (R3c).** Set the run's overlap tag from the resolved model map (the tag is provenance only — Phase 2 rule 3 escalates on *mechanism difference*, never on model heterogeneity):
+   - all critics on the same model (no `--models`, or all values equal) → `corroborated` (R3a).
+   - critics span ≥2 distinct tiers → `tier-diverse` (records heterogeneous-model provenance; mini-exp 078 refuted escalating on it).
+   - **Env-flatten note:** if `CLAUDE_CODE_SUBAGENT_MODEL` is set, it silently overrides every per-critic pin → the heterogeneity is erased. **Warn the user** ("`--models` ignored: CLAUDE_CODE_SUBAGENT_MODEL=<v> overrides per-critic pins") and use the `corroborated` tag — the run is effectively same-model.
 
 ## Phase 1 — Parallel critic spawn (Layer A)
 
@@ -103,7 +103,7 @@ Evidence is gathered **once per iteration** and given to critics verbatim and id
 - `subagent_type: critic-security` (if `security` in scope)
 - `subagent_type: critic-performance` (if `performance` in scope)
 
-If a `--models` map resolved in Phase 0, pass each critic its assigned `model` on the `Agent` call (overriding the wrapper's frontmatter pin); critics with no entry keep the default. This is what makes the run `tier-diverse` for Phase 2 rule 3 — but only if the env-flatten guard (Phase 0 step 5) did not downgrade it.
+If a `--models` map resolved in Phase 0, pass each critic its assigned `model` on the `Agent` call (overriding the wrapper's frontmatter pin); critics with no entry keep the default. This spreads the committee across model tiers for recall/coverage (validated by mini-exp 078); the resulting overlaps carry the `tier-diverse` provenance tag but — per 078 — earn no severity escalation.
 
 **Prompt skeleton** for each (substitute `{target}` and bounding context):
 
@@ -137,14 +137,14 @@ Merge the reports from critics that ran. Apply:
    | Critic pair | Independence | Same-mechanism agreement earns |
    |---|---|---|
    | Same model, different persona (default) | none (~60% shared-error) | no escalation — `corroborated` tag only (R3a) |
-   | Same vendor, different tier via `--models` (haiku/sonnet/opus/fable) | partial (correlated within family) | +1 **for CRITICAL/HIGH only**, tag `tier-diverse` (R3c — pilot) |
-   | Different vendors (needs item 6 adapters) | quasi-independent | full +1 — ⏳ deferred (item 6) |
+   | Same vendor, different tier via `--models` (haiku/sonnet/opus/fable) | partial (correlated within family) | **no escalation — `tier-diverse` tag only** (R3c escalation refuted by mini-exp 078: cross-tier agreement precision 0.66 < 0.73 same-tier; `--models` kept for recall) |
+   | Different vendors (needs item 6 adapters) | quasi-independent | open question — ⏳ deferred (item 6); 078 tested tiers, not true cross-vendor independence |
 
    - **Same failure mechanism, same-model (default)** → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N critics — weak positive signal"). [R3a]
-   - **Same failure mechanism, tier-diverse `--models` config** (and the env did not flatten it — see guard below) → escalate **one level for CRITICAL/HIGH candidates only**, tag `tier-diverse`; MEDIUM/LOW stay `corroborated`. [R3c — **pilot**: independence is theory-grounded (partial within a model family); empirical payoff under validation, ab-experiment-075 follow-up]
+   - **Same failure mechanism, tier-diverse `--models` config** → do **NOT** escalate either. Severity = max (rule 1); tag `tier-diverse` (records heterogeneous-model provenance, no severity consequence). [R3c — escalation **demoted to tag-only**: mini-exp 078 found cross-tier agreement *less* precise than same-tier (0.66 vs 0.73), so a +1 would manufacture false positives; the `--models` config is retained as a recall/coverage tool]
    - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses regardless of model config: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report. [R3b]
 
-   > **Env-flatten guard:** `CLAUDE_CODE_SUBAGENT_MODEL`, when set, silently overrides every per-critic model pin and collapses a tier-diverse config back to one model. When that env var is present, treat the run as same-model (R3a) — never award the `tier-diverse` +1 on a heterogeneity the env secretly erased.
+   > **Env-flatten note:** `CLAUDE_CODE_SUBAGENT_MODEL`, when set, silently overrides every per-critic model pin and collapses a tier-diverse config back to one model. When that env var is present, the `tier-diverse` tag is inaccurate — downgrade it to plain `corroborated` (the run is effectively same-model). No escalation is affected (tier-diverse no longer escalates), but the provenance tag should tell the truth.
 4. **Bikeshedding filter**: any critic reporting `convergence: bikeshedding-only` (no legitimate findings left — only style nits) → drop its low-severity items from this iteration.
 5. **`--severity` filter** (if present): drop items below the threshold from the merged report (but still count for `--fail-on`).
 

@@ -16,6 +16,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.8 — Tier-Diverse Escalation Demoted to Tag-Only (mini-exp 078 refuted the premise)**
+
+The R3c tier-diverse `+1` escalation shipped in v3.20.7 was an explicit **pilot**. Mini-experiment 078 (`docs/reviews/tier-diverse-experiment-078.md`, fresh sealed corpus, 3 arms, 18 bugs) **refuted its sole premise**: cross-tier critic agreement was *less* precise than same-tier (overlap precision **0.66 vs 0.73**), so escalating severity on it would manufacture false positives. This release translates that finding into the rule — the escalation is **demoted to a `tier-diverse` provenance tag with no `+1`**. The `--models` config is **retained** (078 validated it as a recall/coverage tool: D-tier hit the highest recall, 100% pooled). Task 079, gate artifact `docs/reviews/framework-audit-079.md`. **Zero mechanics regression** beyond the intended demotion; gates 43/43, pytest 30/30, doc-only.
+
+#### **Changed**
+* **Merge rule 3 gradation, middle row + third bullet** (lockstep, byte-identical mod critics↔teammates across `vdd-multi.md` Phase 2 + `skill-parallel-orchestration` §6): "Same vendor, different tier → +1 for CRITICAL/HIGH" → "**no escalation — `tier-diverse` tag only**", with an inline 078 citation. The bullet now tags provenance without a severity bump.
+* **`--models` config kept; Phase 0 resolution simplified:** the flag, parse, and per-critic spawn are unchanged (recall tool); Phase 0 step 5 now resolves a *provenance tag* (`corroborated` / `tier-diverse`) instead of an escalation tier. Env-flatten note reworded: when `CLAUDE_CODE_SUBAGENT_MODEL` collapses the config, downgrade the tag to `corroborated` (no escalation to withhold — the tag just tells the truth).
+* **Cross-refs synced** (`usage_example.md`, `claude-code.md` Model-pin hygiene §, `vdd-multi` Positioning block): tier-diverse = recall tool + provenance tag, escalation demoted; the still-open lever is **true cross-vendor** critics (⏳ item 6 — 078 tested tiers, not vendor independence). `skill-parallel-orchestration` 3.4→3.5.
+* **Untouched:** R3a (`corroborated`), R3b (different-mechanism `+1` — the only surviving escalation), R3d (sequential never-escalate), dedup rule 1, rules 2/4/5, the evidence contract (074), and all flags.
+
+> This closes the loop on the VDD discipline: R3c shipped as a pilot (077), was validated on a sealed corpus (078), and is corrected by data here (079) — only mechanism-difference escalates now.
+
+---
+
 ### **v3.20.7 — R3c Tier-Diverse Escalation: Model Heterogeneity Re-earns a Guarded +1 (audit-067 C-08, roadmap item 7 — last open slice)**
 
 Closes the final slice of claim **C-08**: severity-escalation merge rule 3 gains a **model-independence axis**. Same-model critic agreement stays corroboration-only (R3a, task 072); under a **tier-diverse** `--models` config (critics on different model tiers within one vendor) same-mechanism agreement now earns +1 **for CRITICAL/HIGH only** (tag `tier-diverse`). The cross-vendor row stays ⏳ blocked by vendor adapters (item 6). Motivated by experiment 075 rule 2 (same-model committee fails its cost bar → heterogeneity is the remaining lever). Task 077, gate artifact `docs/reviews/framework-audit-077.md`. **Zero mechanics regression** — additive config (absent `--models` → unchanged R3a behavior); gates 43/43, pytest 30/30, doc-only.

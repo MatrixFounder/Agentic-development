@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.3
+version: 3.4
 ---
 
 # Parallel Orchestration Skill
@@ -104,9 +104,19 @@ After all teammates return, apply these in order:
 
 1. **Location dedup**: issues at the same `(file, line ± 3)` with overlapping category → merge, keep highest severity, union descriptions and recommendations.
 2. **Cross-category re-attribution**: if a teammate flagged something belonging to a sibling's domain, re-section under the correct owner's block.
-3. **Severity escalation (mechanism-aware)**: all teammates share one base model, so same-location agreement is **corroboration** (the finding survived persona/prompt variation), **not independent confirmation** — same-model pairs pick the same wrong answer ~60% of the time when erring (arXiv:2506.07962):
-   - **Same failure mechanism** (the duplicates' exploit/failure scenarios are paraphrases of each other) → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N teammates — weak positive signal").
-   - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses, not duplicate detection: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report.
+3. **Severity escalation (mechanism- and model-aware)**: same-location agreement between same-base-model teammates is **corroboration** (the finding survived persona/prompt variation), **not independent confirmation** — same-model pairs pick the same wrong answer ~60% of the time when erring (arXiv:2506.07962). How much escalation an overlap earns depends on two axes — whether the failure *mechanisms* differ, and how *independent* the teammates' models are:
+
+   | Critic pair | Independence | Same-mechanism agreement earns |
+   |---|---|---|
+   | Same model, different persona (default) | none (~60% shared-error) | no escalation — `corroborated` tag only (R3a) |
+   | Same vendor, different tier via `--models` (haiku/sonnet/opus/fable) | partial (correlated within family) | +1 **for CRITICAL/HIGH only**, tag `tier-diverse` (R3c — pilot) |
+   | Different vendors (needs item 6 adapters) | quasi-independent | full +1 — ⏳ deferred (item 6) |
+
+   - **Same failure mechanism, same-model (default)** → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N teammates — weak positive signal"). [R3a]
+   - **Same failure mechanism, tier-diverse `--models` config** (and the env did not flatten it — see guard below) → escalate **one level for CRITICAL/HIGH candidates only**, tag `tier-diverse`; MEDIUM/LOW stay `corroborated`. [R3c — **pilot**: independence is theory-grounded (partial within a model family); empirical payoff under validation, ab-experiment-075 follow-up]
+   - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses regardless of model config: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report. [R3b]
+
+   > **Env-flatten guard:** `CLAUDE_CODE_SUBAGENT_MODEL`, when set, silently overrides every per-critic model pin and collapses a tier-diverse config back to one model. When that env var is present, treat the run as same-model (R3a) — never award the `tier-diverse` +1 on a heterogeneity the env secretly erased.
 4. **Bikeshedding filter**: any teammate signaling `convergence: bikeshedding-only` (no legitimate findings left — only style nits) → drop its low-severity items from this iteration.
 5. **Optional severity filter**: drop items below a user-specified minimum severity (e.g. `--severity=high`).
 
@@ -137,6 +147,7 @@ All universal concepts (§2–§6) still apply; only the spawn mechanism changes
 
 ## 9. History
 
+- **v3.4 (2026-06-10)**: R3c tier-diverse escalation (audit-067 C-08, roadmap item 7 R3c — last open slice). Merge rule 3 gains the model-independence gradation table + a third bullet: same-mechanism agreement under a tier-diverse `--models` config (critics on different model tiers, env not flattening) earns +1 for CRITICAL/HIGH only, tag `tier-diverse`. `/vdd-multi` gains `--models=logic:<t>,security:<t>,performance:<t>` (Phase 0 parse + escalation-tier resolution, Phase 1 per-critic spawn) with a `CLAUDE_CODE_SUBAGENT_MODEL` flatten-guard that downgrades to R3a. Cross-vendor row stays ⏳ (item 6). Ships as **pilot** — empirical payoff under validation (ab-experiment-075 follow-up). v3.2→3.3 were doc-only (item 9 model-pin hygiene §, item 11 evidence-contract reference bumps).
 - **v3.1 (2026-06-10)**: severity-escalation redesign (audit-067 C-08, roadmap item 7 R3a/R3b/R3d). Same-model agreement no longer auto-escalates (+1 → `corroborated` tag, severity = max); escalation survives only for different-failure-mechanism overlap at the same location; sequential fallback explicitly never escalates. Rationale: persona-differentiated same-model ensembles share error priors (arXiv:2506.07962, arXiv:2601.12307). R3c (model-heterogeneity gradation) deferred — cross-vendor form blocked by vendor adapters (roadmap item 6).
 - **v3.0 (2026-04-18)**: vendor-agnostic rewrite. Universal concepts (§2–§6) stay in `SKILL.md`; Claude-specific primitives (`Agent` tool, `.claude/agents/`, `subagent_type`, `TeamCreate`/`SendMessage`) extracted to `references/claude-code.md`. Added `references/sequential-fallback.md` as universal fallback and stubs for Gemini CLI, Cursor, Antigravity. Extraction point established for Wave 5 (multi-vendor generator).
 - **v2.0 (Wave 1, 2026-04-17)**: replaced mock-spawn with native Claude Code `Agent` tool (Layer A); added Layer B stub. Single-vendor assumption.

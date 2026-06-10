@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T16:46:35.830195"
-mode: "Experiment"
+last_updated: "2026-06-10T17:02:18.584791"
+mode: "Framework Upgrade"
 
 current_task:
-  name: "tier-diverse-mini-experiment"
-  status: "completed-documented-pending-operator-review"
+  name: "demote-tier-diverse-escalation"
+  status: "completed-v3.20.8-pending-operator-commit"
   predicted_steps: 0
 
 context_summary: |
-  Task 078 mini-exp fully documented: bilingual README pair (README.md EN + README.ru.md RU, 10 sections each, cross-linked, TOC, mermaid, infographics, token accounting incl. in/out split from transcripts) + .AGENTS.md for tests/fixtures/ab-corpus-2/. Verdicts unchanged: T1 fails conjunct (FP doubled), T2 trivial +1.9pp, T3 DECISIVE negative (tier-diverse overlap precision 0.66<0.73) refutes R3c escalation premise. Recommendation stands: demote tier-diverse +1 to corroborated (operator decision), keep --models config. token_split.json saved. Roadmap remaining open: 6 (vendor adapters), 7-R3c-cross-vendor (item6), 7-R3c-escalation-demote (operator follow-up). Uncommitted: v3.20.7 R3c cycle + both experiment corpora docs.
+  Task 079 DONE (v3.20.8): tier-diverse +1 escalation demoted to tag-only per exp-078 (T3 precision 0.66<0.73). Lockstep rule-3 (gradation row + 3rd bullet, vdd-multi/SKILL byte-identical mod noun); --models config KEPT (recall tool); Phase 0 now resolves provenance tag not escalation tier; env-flatten note reworded; cross-refs (usage_example, claude-code, Positioning block line 15) synced; skill 3.4->3.5. Only R3b mechanism-difference escalates now. Gates: no positive +1 on tier-diverse (only v3.4 History + demotion text), normalized diff identical, 43/43, pytest 30/30, R3a/R3b/R3d/dedup/evidence/flags byte-unchanged. CHANGELOG EN+RU, README, roadmap item 7 (R3c tier-diverse RESOLVED, cross-vendor still item 6), framework-audit-079.md. Item 7 effectively closed except cross-vendor row. Roadmap remaining: 6 (vendor adapters), 7-R3c-cross-vendor (blocked by 6). 075->077->078->079 VDD arc self-consistent. Uncommitted - operator to commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "070: A03/A08 split: CI/CD tampering + code signing + deps-audit -> A03 Supply Chain; deserialization + artifact-signature + unsigned auto-update stay A08; CWE-209 stack-trace check moves old-A05 -> new A10"
   - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
   - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
   - "071: kept Sarcasmotron persona mandate in opt-in /vdd-* workflows (no rationale claims there; K2 repositioning makes the whole workflow the opt-in container); only non-opt-in mandates removed"
@@ -24,6 +23,7 @@ recent_decisions:
   - "075: experiment artifacts are evidence, not framework edits - rules 2/3 implications recorded as recommendations pending operator review"
   - "076: corpus README in Russian per operator request; EN technical report remains SOT for citations"
   - "078: T3 overlap-precision is the key metric - same-vendor tier diversity produces MORE but LOWER-quality agreement, refuting the +1 escalation rationale; cross-vendor independence remains untested (item 6)"
+  - "079: cross-vendor row kept as live open question, explicitly separated from refuted tier bet (078 tested tiers not vendors)"
 
 completed_tasks:
   - "Task A"
@@ -57,3 +57,4 @@ completed_tasks:
   - "post-experiment-repositioning"
   - "r3c-tier-diverse-escalation"
   - "tier-diverse-mini-experiment"
+  - "demote-tier-diverse-escalation"

@@ -1,56 +1,69 @@
-# Development Plan: Task 071 — Retire the Politeness-Filter Rationale; Reposition vdd-sarcastic (C-01, C-03, K2)
+# Development Plan: Severity-Escalation Redesign — R3a/R3b/R3d (Task 072)
 
-**Source spec:** `docs/TASK.md` (Task 071) · **Gate:** `skill-self-improvement-verificator` (Mode B)
-**Architecture impact:** none — rationale/wording changes inside existing Tier-2 skills, one `.claude/agents/` wrapper, one example, registry/release docs. **No ARCHITECTURE.md edit** (precedent: 069/070).
-**Behavior contract:** zero functional change — no script, pattern, test, CLI, or exit-bar semantics touched. Objective Convergence bars stay byte-identical. Proof: pytest 30/30 unchanged; `validate_skill.py` 43/43; G1/G2 greps.
+**Source spec:** `docs/TASK.md` (Task 072, slug `severity-escalation-redesign`).
+**Architecture impact:** none — merge-rule wording in workflow/skill documentation; `docs/ARCHITECTURE.md` untouched (living document, no structural change).
+**Change class:** pure documentation (no scripts, no code) → no new tests; existing suites run as regression evidence (G4).
 
-**Canonical replacement wording (reused on every edited line, adapted only grammatically):**
-> Report **every** issue, including low-confidence ones; attach **confidence + severity** to each finding; filtering happens **downstream** — never in the reviewer's head.
+## Canonical wording (single source for all 4 locations)
 
-**Wording constraint (lesson 070 / TASK G1):** no new text may contain the token "politeness" (retirement notes phrase the old theory as "tone bypasses the model's default agreeableness").
+**Rule 3 replacement (vdd-multi.md Phase 2 / SKILL.md §6 — identical modulo "critics"↔"teammates"):**
 
-## Phase T0 — Backup (Rollback safety) — workflow §3.1
-1. `mkdir -p .agent/archive`
-2. Bootstrap files (none edited; backed up per workflow §3.1): `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done`
-3. Edit targets → `.agent/archive/` (flat `<basename>.bak`, disambiguated where names collide):
-   `vdd-adversarial-SKILL.md.bak`, `vdd-methodology.md.bak`, `vdd-sarcastic-SKILL.md.bak`, `vdd-sarcastic-usage_example.md.bak`, `skill-adversarial-security-SKILL.md.bak`, `skill-adversarial-performance-SKILL.md.bak`, `critic-security.md.bak`, `SKILLS.md.bak`, `verification_roadmap.md.bak`, `CHANGELOG.md.bak`, `CHANGELOG.ru.md.bak`, `README.md.bak`, `README.ru.md.bak`
-4. Capture pre-edit baselines: `python3 -m pytest .agent/skills/security-audit/tests/ -q` (expect 30 passed); `validate_skill.py` full sweep (expect 43/43).
+> 3. **Severity escalation (mechanism-aware)**: all critics share one base model, so same-location agreement is **corroboration** (the finding survived persona/prompt variation), **not independent confirmation** — same-model pairs pick the same wrong answer ~60% of the time when erring (arXiv:2506.07962):
+>    - **Same failure mechanism** (the duplicates' exploit/failure scenarios are paraphrases of each other) → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N critics — weak positive signal").
+>    - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses, not duplicate detection: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report.
 
-## Phase T1 — R1+R2: K1 rationale swap (`vdd-adversarial`)
-1. `SKILL.md` §2 bullet (line 24): `**Forced Negativity**: Zero tolerance…` → `**Exhaustive Reporting** (supersedes "Forced Negativity"): report every issue, including low-confidence ones, with confidence + severity attached — filtering happens downstream. Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).`
-2. `SKILL.md` §7 row (line 59): counter-argument → exhaustive-reporting wording; drop `VDD requires Forced Negativity. Politeness hides bugs.`
-3. `SKILL.md` frontmatter `version: 1.1` → `1.2`.
-4. `references/vdd-methodology.md` §V.2 (line 44) → `Exhaustive Reporting (supersedes "Forced Negativity"): …canonical wording… (The pre-2026 rationale — adversarial tone to bypass the model's default agreeableness — is retired per audit-067 C-01: vendors now train sycophancy out, and the documented recall lever is the reporting-threshold instruction, not tone.)`
-5. **Phase check:** `grep -in "politeness\|Forced Negativity" .agent/skills/vdd-adversarial/SKILL.md .agent/skills/vdd-adversarial/references/vdd-methodology.md` → only the two `supersedes` notes. §V.2 stays principle №2 (numbering unchanged); lines 23/46 (C-02 wording) byte-untouched.
+## Steps
 
-## Phase T2 — R3+R7: K2 repositioning (`vdd-sarcastic`)
-1. `SKILL.md` frontmatter: `version: 1.2`; `description:` → opt-in delivery-style wording ("stylistic skin over vdd-adversarial mechanics").
-2. §2 head: add positioning disclaimer blockquote — tone = stylistic choice, **no evidence base** as a recall lever (audit-067 C-01/C-03); mechanism = **exhaustive reporting + objective bar (§4)**, not meanness; keep-vs-deprecate awaits item 13's A/B.
-3. §1 red flag (line 12): "tone it down" → style optional / withholding findings prohibited (canonical wording).
-4. §5 row "I don't want to be mean" (line 38, C-03): → meanness is NOT the mechanism; style ≠ success criterion; never soften by withholding findings.
-5. §5 row "Sarcasm is unprofessional" (line 40, C-01): → opt-in stylistic choice, no evidence base (see §2 disclaimer); process = exhaustive reporting + Objective Convergence (§4); "if the style gets in the way, drop the style, never the findings."
-6. §3 line 24 ("relationship drift") — **DO NOT TOUCH** (C-02, item 8).
-7. `examples/usage_example.md`: Roast table gains **Severity + Confidence** columns; add finding #6 with `LOW / Low confidence` (cache may store `None`/error sentinel from `fetch_from_api` — reported anyway per exhaustive-reporting rule); Exit Signal line updated: findings carry confidence + severity, filtering happens downstream, NOT Zero-Slop.
-8. **Phase check:** file reads; no "politeness"/"Meanness is the mechanism" tokens; §4 byte-untouched.
+### Step 0 — Backup (rollback provision)
+```bash
+mkdir -p .agent/archive
+for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
+cp .agent/workflows/vdd-multi.md .agent/archive/vdd-multi.md.bak
+cp .agent/skills/skill-parallel-orchestration/SKILL.md .agent/archive/skill-parallel-orchestration-SKILL.md.bak
+cp .agent/skills/skill-parallel-orchestration/references/sequential-fallback.md .agent/archive/sequential-fallback.md.bak
+cp .agent/skills/skill-parallel-orchestration/examples/usage_example.md .agent/archive/usage_example.md.bak
+```
+**Rollback:** restore each file from its `.agent/archive/*.bak`; bootstrap files via the workflow §5 loop. (Repo is also clean at start — `git checkout -- <file>` is the secondary rollback.)
 
-## Phase T3 — R4+R5+R6: critics de-mandate (security SKILL + wrapper + performance SKILL)
-1. `skill-adversarial-security/SKILL.md`: frontmatter `version: 1.3`, `description:` → "adversarial style (optional sarcastic skin)"; §1 red flag (line 16) `Sarcasm breaks complacency. Use it.` → severity-threshold red flag with canonical wording ("I'll only report the high-severity stuff" -> WRONG…); §2 `**MANDATORY:**` → `**Optional style:**` (MAY adopt persona; no evidence base as recall lever) + `**NOT optional:**` exhaustive reporting + objective bar (§7); §5 step 4 → report per canonical wording, persona optional; §7 `The persona (§2)` → `The optional persona (§2)`.
-2. `.claude/agents/critic-security.md` (R5, wrapper sync): `(paranoid sarcastic OWASP auditor)` → `(paranoid OWASP auditor; optional sarcastic skin)`; `Adopt the persona … (mandatory per SKILL §2)` → persona optional per SKILL §2; mandatory = exhaustive reporting (canonical wording) + objective bar (SKILL §7).
-3. `skill-adversarial-performance/SKILL.md` (R6): frontmatter `version: 1.1`, `description:` → "(optional sarcastic skin)"; under `## Tone` add style-note line (opt-in delivery style, not the mechanism; canonical wording); Process step 2 `State the problem sarcastically` → `State the problem (sarcastic framing optional — style, never the success criterion)`. Checklists/examples/termination untouched (termination = item 12).
-4. **Phase check:** G2 grep tokens (`mandatory per SKILL §2`, `Sarcasm breaks complacency`, `State the problem sarcastically`) → empty across `.agent/ .claude/ System/`.
+### Step 1 — `.agent/workflows/vdd-multi.md` (R1: R3a + R3b)
+1. Replace Phase-2 rule 3 (line 106) with the canonical wording (actor noun: **critics**).
+2. Overlaps placeholder (line 131): `<cross-category items with escalated severity>` → `<corroborated findings (tag, severity = max — no escalation) + different-mechanism items (escalated +1)>`.
 
-## Phase T4 — Global gates (TASK §3)
-1. **G1:** `grep -ri "politeness filter" .agent/ System/` → empty; hardened: `grep -rin "politeness" .agent/ System/ .claude/` → empty.
-2. **G2:** `grep -rinE 'mandatory per SKILL §2|Sarcasm breaks complacency|Meanness is the mechanism|frame ALL feedback sarcastically|State the problem sarcastically' .agent/ .claude/ System/` → empty; `grep -rin "Forced Negativity" .agent/ .claude/ System/` → exactly 2 supersedes-notes.
-3. **G3:** `validate_skill.py` × 4 edited skills, then full sweep `.agent/skills/*/` → 43/43.
-4. **G4:** `python3 -m pytest .agent/skills/security-audit/tests/ -q` → 30 passed (regression evidence; no scripts touched).
+### Step 2 — `.agent/skills/skill-parallel-orchestration/SKILL.md` (R2: R3a + R3b)
+1. Replace §6 rule 3 (line 107) with the canonical wording (actor noun: **teammates**; example critic names kept verbatim).
+2. §2.3 step 3 (line 60): `escalate severity on cross-category overlap` → `tag same-mechanism agreement corroborated, escalate only different-mechanism overlap (§6 rule 3)`.
+3. Frontmatter `version: 3.0` → `3.1`; History entry for v3.1.
 
-## Phase T5 — R8+R9: registry, release, roadmap, session-state
-1. `System/Docs/SKILLS.md` rows 106–108: vdd-sarcastic → opt-in stylistic skin wording; both critics → "(optional sarcastic skin)".
-2. `CHANGELOG.md` + `CHANGELOG.ru.md`: new top entry **v3.20.2** (EN primary + RU mirror) — closes C-01/C-03/K2, lists per-file changes, notes zero behavior change + the supersedes-traceability.
-3. `README.md` + `README.ru.md`: version header → v3.20.2 (release convention per `3df62a2`/`c348928`).
-4. `docs/verification_roadmap.md` item 5: 🔜 → ✅ DONE block (commit/task/gate artifact references, verified-date), mirroring items 3/4 format; Dependencies note "final form (deprecate K2?) waits on 13" stays.
-5. Session-state boundary update (`update_state.py`), status `completed-pending-operator-commit`.
+### Step 3 — `references/sequential-fallback.md` (R3: R3d)
+1. Merge step 3 (line 47) → explicit no-escalation sentence: sequential personas never escalate (weakest independence — same session window, same model instance); tag `corroborated` only; different-mechanism findings get at most a `priority` flag, never +1.
+2. Anti-patterns line 97: reword "stronger signal" so it claims corroboration-by-persona-variation, not independent confirmation; cross-ref merge step 3.
 
-## Rollback
-Workflow §5: restore every `.agent/archive/*.bak` over its source path. No bootstrap file is edited, so instability risk is confined to the 13 backed-up targets; git (clean tree at start) provides the second-layer rollback.
+### Step 4 — `examples/usage_example.md` (R4: walkthrough sync)
+Replace the Step-3 escalation bullet with: corroborated tag for same-mechanism agreement (severity = max, no auto-escalation) + escalate only on different-mechanism overlap.
+
+### Step 5 — Verification gates (TASK §3)
+```bash
+# G1 migration greps
+grep -rn "escalate severity by one level" .agent/ .claude/ System/        # only new R3b wording (3 hits expected)
+grep -rnE "independently flagging the same location|independently flag the same location|escalation on independent overlap|escalate severity on cross-category overlap" .agent/ .claude/ System/   # empty
+# G2 byte-consistency: extract rule-3 block from both files, normalize teammates→critics, diff → empty
+# G3 skill gate
+python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/skill-parallel-orchestration
+# full sweep = 43/43
+# G4 regression
+python3 -m pytest .agent/skills/security-audit/tests/ -q                  # 30/30
+python3 -m pytest .agent/skills/skill-parallel-orchestration/tests/ -q    # green
+```
+
+### Step 6 — Documentation & release (R5)
+1. `CHANGELOG.md` + `CHANGELOG.ru.md`: **v3.20.3** entry (Changed: severity-escalation redesign R3a/R3b/R3d, C-08).
+2. `README.md` + `README.ru.md`: version header bump → v3.20.3 (convention per `3df62a2`).
+3. `docs/verification_roadmap.md` item 7: mark R3a/R3b/R3d ✅ done-in Task 072 / v3.20.3; R3c remains pending (tier-diverse 🔜 now, cross-vendor ⏳ item 6); update Dependencies block line "7 R3a/R3b/R3d".
+4. Audit artifact `docs/reviews/framework-audit-072.md` (Modes A + B verdicts + gate outputs).
+5. Session-state update (phase boundaries: post-plan, post-execution, completion).
+
+## Mode B self-check mapping
+- **Verification step:** Step 5 (greps + validate_skill + 2 pytest suites). ✓
+- **Rollback:** Step 0 backups + git-clean fallback. ✓
+- **Atomicity:** Steps 1–4 are one-file chunks, each independently revertible. ✓
+- **Test coverage:** no new framework feature/scripts → no new tests; justification recorded in audit artifact. ✓

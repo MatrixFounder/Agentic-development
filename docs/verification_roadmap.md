@@ -107,7 +107,11 @@
 
 ---
 
-### 7. ⏳(partially) [C-08] Severity-escalation redesign — *detailed*
+### 7. ⏳(R3a/R3b/R3d ✅ · R3c pending) [C-08] Severity-escalation redesign — *detailed*
+
+- **R3a/R3b/R3d done in:** Task 072 / v3.20.3 (2026-06-10), gate artifact `docs/reviews/framework-audit-072.md`. Merge rule 3 redesigned in lockstep across all 4 locations (byte-identical modulo the pre-existing critics↔teammates noun split, normalized-diff-verified): same-mechanism agreement → `corroborated` tag + severity = max, no +1 (R3a); different-failure-mechanism overlap at the same location keeps +1 with a documented mechanism-difference test (R3b); sequential fallback explicitly never escalates — tag only, `priority` flag at most for cross-mechanism (R3d). Do-not-touch list respected (rules 1/2/4/5, iteration caps). `skill-parallel-orchestration` 3.0→3.1.
+- **Verified:** old-wording greps empty (scope excludes `.agent/archive/` + `.agent/sessions/`); `escalate severity by one level` survives only inside the new R3b bullets; skill gate 43/43; pytest 30/30 (security-audit; parallel-orchestration has no test suite — its SKILL §8 reference to `tests/test_mock_agent.py` is pre-existing drift, flagged not fixed).
+- **Remaining:** R3c only (gradation table + per-critic model config + env-override warning) — tier-diverse form available now in Claude Code, cross-vendor form ⏳ BLOCKED BY item 6. Item 11 still pairs naturally with the R3c/vdd-multi edit.
 
 **Why:** the rule "two critics independently flagging the same location → escalate severity by one level" assumes critic independence. All critics are the same base model with different personas; Correlated Errors (ICML 2025, arXiv:2506.07962): same-model pairs pick the *same wrong answer* ~60% of the time when erring; persona-differentiated same-model ensembles share priors and failure modes (arXiv:2601.12307). Same-model agreement therefore **double-counts one model's prior** — it is corroboration (survived prompt variation), not confirmation.
 
@@ -177,7 +181,7 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 4 (OWASP remap)           — independent, small, fixes compliance mappings
 5 (retire politeness)     — independent; final form (deprecate K2?) waits on 13
 6 (vendor adapters)       — independent; per-vendor validation needs operator machines
-7 R3a/R3b/R3d             — independent, shippable now
+7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
 7 R3c (cross-vendor)      — BLOCKED BY 6 (tier-diverse form available now in Claude Code)
 8, 9, 10, 12              — independent, small
 11                        — pairs naturally with 7 (both edit vdd-multi Phase 1/2) → one cycle

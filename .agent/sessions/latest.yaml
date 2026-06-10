@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T12:27:40.294800"
+last_updated: "2026-06-10T12:55:49.256213"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "retire-politeness-filter-rationale"
-  status: "completed-v3.20.2-pending-operator-commit"
+  name: "severity-escalation-redesign"
+  status: "completed-v3.20.3-pending-operator-commit"
   predicted_steps: 0
 
 context_summary: |
-  Task 071 (roadmap item 5, C-01/C-03/K2) DONE: politeness-filter rationale retired everywhere (Exhaustive Reporting supersedes Forced Negativity in K1+methodology); vdd-sarcastic repositioned as opt-in stylistic skin with no-evidence-base disclaimer (deprecate decision waits on item 13 A/B); skill-adversarial-security persona MANDATORY->optional + severity-literalism red flag; critic-security wrapper synced; perf-critic sarcasm de-mandated. Gates: G1/G2 greps empty (scope excludes .agent/archive + sessions), Forced Negativity only in 2 supersedes-notes, skill gate 43/43, pytest 30/30. v3.20.2 in CHANGELOG EN+RU + README headers; roadmap item 5 = DONE. Known drift: Universal-skills/skills/vdd-* are stale independent copies (symlinked from ~/.claude/skills) - operator manual sync recommended. Uncommitted - operator to review/commit.
+  Task 072 (roadmap item 7 partial: R3a/R3b/R3d, claim C-08) DONE: merge rule 3 redesigned in lockstep across 4 locations - same-mechanism agreement = corroborated tag + severity=max, no +1 (R3a); different-failure-mechanism overlap keeps +1 with documented mechanism-difference test (R3b); sequential fallback never escalates, tag only / priority flag at most (R3d). skill-parallel-orchestration 3.0->3.1. Gates: G1 greps clean, G2 normalized diff empty, skill gate 43/43, pytest 30/30. v3.20.3 in CHANGELOG EN+RU + README headers; roadmap item 7 = R3a/b/d done, R3c pending (cross-vendor blocked by item 6, pair with item 11). Audit artifact framework-audit-072.md. Flagged not fixed: SKILL par-orch §8 stale test ref; SKILLS.md:53 stale Mock-Runner row. Uncommitted - operator to review/commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "067 scope (user, 2026-06-10): full audit in-session; A/B experiment design-only; cross-vendor verdict capped at Unvalidated"
   - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
   - "068: C-15 fix wording avoids 'snarky' token entirely so future tone-residual greps stay clean; §7 doctrine note phrases the guard as 'never invent a flaw — or a sarcastic remark'"
   - "Roadmap discipline: 7-R3a/b/d shippable now; 7-R3c cross-vendor blocked by item 6; item 11 pairs with 7 in one vdd-multi cycle; adapter validation (6a-6c) requires operator machines with real CLIs"
@@ -24,6 +23,7 @@ recent_decisions:
   - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
   - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
   - "071: kept Sarcasmotron persona mandate in opt-in /vdd-* workflows (no rationale claims there; K2 repositioning makes the whole workflow the opt-in container); only non-opt-in mandates removed"
+  - "072: sequential cross-mechanism findings get priority flag, never +1 (R3b minimum form, consistent with R3d literal 'never escalates'); critics<->teammates noun split preserved as the only rule-3 divergence, normalized-diff-verified"
 
 completed_tasks:
   - "Task A"
@@ -49,3 +49,4 @@ completed_tasks:
   - "task-068-adversarial-security-p0-fixes"
   - "task-069-mcp-agentic-security-upgrade"
   - "owasp-top10-2025-remap"
+  - "retire-politeness-filter-rationale"

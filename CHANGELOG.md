@@ -16,6 +16,24 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.3 — Severity-Escalation Redesign: Same-Model Agreement No Longer Auto-Escalates (audit-067 P1 item 7 partial, C-08 / R3a+R3b+R3d)**
+
+Closes the shippable-now slice of claim **C-08**: the merge rule "two critics independently flagging the same location → escalate severity by one level" assumed critic independence, but all critics are the same base model under different personas — same-model pairs pick the *same wrong answer* ~60% of the time when erring (Correlated Errors, ICML 2025, arXiv:2506.07962; persona ensembles share priors, arXiv:2601.12307). Same-model agreement is **corroboration** (survived persona/prompt variation), not independent **confirmation**. Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-072.md`, Task 072). **Zero functional change to scripts/tests** — pure rule-text redesign; pytest 30/30, skill gate 43/43.
+
+#### **Changed**
+
+* **Merge rule 3 redesigned in lockstep across all 4 locations** (byte-identical modulo the pre-existing "critics"↔"teammates" noun split, verified by normalized diff):
+  - **R3a — no auto-escalation on same-model agreement:** duplicates with the same failure mechanism merge at severity = max (rule 1) and carry a `corroborated` tag ("flagged by N critics — weak positive signal"), instead of +1.
+  - **R3b — different-mechanism exception:** two critics flagging the same location with **different failure mechanisms** (e.g., unhandled edge case + exploitable injection at the same line) = two distinct analyses → +1 escalation survives. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report.
+  - Locations: `.agent/workflows/vdd-multi.md` Phase 2 (+ Overlaps placeholder), **`skill-parallel-orchestration` 3.0 → 3.1** §6 (+ §2.3 merge-summary echo), `references/sequential-fallback.md` merge step, `examples/usage_example.md` walkthrough.
+* **R3d — sequential fallback explicitly never escalates:** role-switching mode has the weakest independence (same session window, same model instance) — agreement between sequential personas tags `corroborated` only; different-mechanism findings get at most a `priority` flag, never +1. The §Anti-patterns "stronger signal" line aligned to claim corroboration, not independent confirmation.
+* Untouched per roadmap discipline: dedup rule 1 (±3 lines), cross-category re-attribution rule 2, bikeshedding filter rule 4, `--severity` filter rule 5, iteration caps.
+* **Deferred:** R3c (re-earning escalation via model heterogeneity — per-critic model config, signal-strength gradation table) stays open: its tier-diverse form is available in Claude Code today, its cross-vendor form is blocked by vendor adapters (roadmap item 6). Item 11 (orchestrator-supplies-evidence) also deferred — user scoped this cycle to R3a/R3b/R3d.
+
+> **Acceptance evidence (scope: framework sources, excluding `.agent/archive/` rollback copies and `.agent/sessions/` runtime state):** old-wording greps (`independently flagging/flag the same location`, `escalation on independent overlap`, `escalate severity on cross-category overlap`) → empty; `escalate severity by one level` survives only inside the new R3b different-mechanism bullets; rule-3 normalized diff between `vdd-multi.md` and `SKILL.md §6` → empty. Known pre-existing drift flagged, not fixed: `SKILL.md` §8 references `tests/test_mock_agent.py` which no longer exists.
+
+---
+
 ### **v3.20.2 — Politeness-Filter Rationale Retired; vdd-sarcastic Repositioned as Opt-in Skin (audit-067 P1 item 5, C-01/C-03/K2)**
 
 Closes claims **C-01** ("Forced Negativity bypasses LLM politeness filters" — GPT-4-era theory: vendors now train sycophancy out per the GPT-5 and Opus 4.5/4.6 system cards; harsh judge prompts inflate false positives, arXiv:2603.00539 / 2604.16790; the vendor-documented recall lever is the *reporting-threshold instruction*, not tone) and **C-03** ("Meanness is the mechanism" — unsubstantiated as causal), and implements the **K2 repositioning**: `vdd-sarcastic` is now an explicitly **opt-in stylistic skin** over `vdd-adversarial` mechanics, with a disclaimer that tone has **no evidence base** as a recall lever (keep-vs-deprecate awaits the pre-registered A/B, roadmap item 13). Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-071.md`, Task 071). **Zero functional change** — no script, pattern, test, or exit-bar semantics touched; Objective Convergence bars stay byte-identical: pytest 30/30, skill gate 43/43.
@@ -33,7 +51,6 @@ The replacement rationale everywhere is the **exhaustive-reporting instruction**
 
 > **Acceptance evidence (scope: framework sources, excluding `.agent/archive/` rollback copies and `.agent/sessions/` runtime state):** `grep -ri "politeness filter" .agent/ System/` → empty (hardened bare-token grep over `.agent/ System/ .claude/` also empty); mandate-token grep (`mandatory per SKILL §2`, `Sarcasm breaks complacency`, `Meanness is the mechanism`, `frame ALL feedback sarcastically`, `State the problem sarcastically`) → empty; "Forced Negativity" survives only in the two `(supersedes …)` traceability notes. `docs/verification_roadmap.md` and `docs/reviews/audit-067` keep quoting the retired claim by design (backlog/immutable history).
 
-> **Known drift (out of repo scope):** `~/.claude/skills/vdd-{sarcastic,adversarial}` symlink into the separate `Universal-skills` repo (`skills/…` are independent copies, stale vs this repo since ≤v3.18). Canonical source is this repository — manual sync of Universal-skills recommended.
 
 ---
 

@@ -103,9 +103,7 @@ Merge the reports from critics that ran. Apply:
 
 1. **Location dedup**: issues at the same `(file, line ± 3)` with overlapping category → merge, keep highest severity, union descriptions and recommendations.
 2. **Cross-category re-attribution**: if a critic flagged something belonging to a sibling's domain, re-section into the correct critic's block.
-3. **Severity escalation (mechanism-aware)**: all critics share one base model, so same-location agreement is **corroboration** (the finding survived persona/prompt variation), **not independent confirmation** — same-model pairs pick the same wrong answer ~60% of the time when erring (arXiv:2506.07962):
-   - **Same failure mechanism** (the duplicates' exploit/failure scenarios are paraphrases of each other) → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N critics — weak positive signal").
-   - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses, not duplicate detection: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report.
+3. **Severity escalation**: two critics independently flagging the same location → escalate severity by one level.
 4. **Bikeshedding filter**: any critic reporting `convergence: bikeshedding-only` (no legitimate findings left — only style nits) → drop its low-severity items from this iteration.
 5. **`--severity` filter** (if present): drop items below the threshold from the merged report (but still count for `--fail-on`).
 
@@ -130,7 +128,7 @@ Merge the reports from critics that ran. Apply:
 <items, post-dedup>
 
 ## Overlaps (same location, multiple critics)
-<corroborated findings (tag, severity = max — no escalation) + different-mechanism items (escalated +1)>
+<cross-category items with escalated severity>
 ```
 
 **Output routing**:

@@ -16,6 +16,17 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.11 — Vendor-Currency: Tool-Layer Reword + GEMINI.md Symlink Re-sync**
+
+Follow-up to the `System/Agents` cross-vendor audit (items 1, 2, 4; item 3 — version-header re-stamp — intentionally skipped). **Framing-only, zero pipeline-behavior change.** Task 082, gate artifact `docs/reviews/framework-audit-082.md`. Scope: "reword prompts only" — `schemas.py` / `tool_runner.py` / `ORCHESTRATOR.md` left in place. Gates 43/43, pytest 30/30.
+
+#### **Changed**
+* **Dead tool-dispatch framing retired** in the two core role-prompts and two bootstrap files. `00_agent_development.md`, `01_orchestrator.md`, `AGENTS.md`, `GEMINI.md` no longer instruct the orchestrator to call a standalone-Python `run_tests` / `git_status` / `git_ops` / `file_ops` / `execute_tool` dispatcher (imported only by its own tests; used by **no** current vendor harness). They now say: use your harness's **built-in** file/shell/search tools, and run repo Python helpers via the shell. `CLAUDE.md` was already correct and is **unchanged** (it is the donor template). `System/Docs/ORCHESTRATOR.md` is now referenced as **legacy**.
+* **`task_boundary` fiction removed.** `00_agent_development.md` (General Concept, §2, anti-patterns) and `GEMINI.md` (workflow dispatch) no longer describe a `task_boundary` tool/protocol for state tracking; state is persisted via `skill-session-state` (`update_state.py`) at phase boundaries.
+
+#### **Fixed**
+* **GEMINI.md symlink-resolution gap.** Gemini CLI's bootstrap file was a stale fork (~v3.15) missing the **SYMLINK RESOLUTION** + **SYMLINK-AWARE COMMAND DEFAULTS** protocol that `AGENTS.md` received in v3.19.1. Ported both sections — closes a silent skill-load failure when the framework is deployed via symlinks (Gemini's `find`/`rg` skip symlinks by default).
+
 ### **v3.20.10 — Item 6 In-Repo Complete: Antigravity Adapter + Vendor Dispatch (6d) + Wave-5 Generator (6e)**
 
 Finishes the **in-repo** half of roadmap item 6 (C-07). After this, item 6's only remaining piece is **operator e2e validation on real CLIs**. Task 081, gate artifact `docs/reviews/framework-audit-081.md`. Doc/script-only, gates 43/43, pytest 30/30; the only severity escalation in the merge logic remains R3b.

@@ -35,12 +35,11 @@ These symlink-aware variants are registered as auto-runnable read-only commands 
 3. **IF NEW**: Proceed with normal analysis.
 4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
 
-## TOOL EXECUTION PROTOCOL (v3.2.5+)
-The Orchestrator natively supports structured tool calling (Function Calling).
-1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
-2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
-3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_status`, `git_add`, `git_commit`, `read_file`, `write_file`) instead of asking the user to run shell commands.
-4.  **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for details.
+## TOOL EXECUTION PROTOCOL
+Act directly on the repo with your environment's **built-in tools** — file read/write/edit, shell/terminal (for git and tests), and search/grep. Tool *names* differ per vendor (e.g. Read/Write/Edit/Bash/Grep/Glob in Claude Code; the equivalent file/terminal/search tools in Cursor and Codex CLI) — use whatever your harness exposes.
+1.  **Priority**: ALWAYS run commands yourself with these built-in tools instead of asking the user to run shell commands.
+2.  **Repo helper scripts**: invoke the framework's Python helpers through your shell tool, e.g. `python3 .agent/tools/task_id_tool.py <slug>` (archive filename) and `python3 .agent/skills/skill-session-state/scripts/update_state.py …` (session state).
+3.  **Reference**: `System/Docs/ORCHESTRATOR.md` documents a **legacy** standalone `execute_tool`/`schemas.py` dispatcher — that layer is **not** used when running inside a vendor harness (Claude Code / Cursor / Codex / Gemini); rely on your native tools above.
 
 ### TIER 0 Skills (Boot at Session Start) — MANDATORY
 > **ALWAYS LOAD at session bootstrap — see `skill-phase-context` for full protocol.**

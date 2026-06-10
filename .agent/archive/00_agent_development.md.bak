@@ -2,7 +2,7 @@
 
 ## General Concept
 
-This system orchestrates a team of specialized agents coordinated by an Orchestrator. The system operates in **Agentic Mode**, using explicit session-state persistence (`skill-session-state`) for state management and an authoritative **Skill System** for capabilities.
+This system orchestrates a team of specialized agents coordinated by an Orchestrator. The system operates in **Agentic Mode**, utilizing a structured `task_boundary` protocol for state management and an authoritative **Skill System** for capabilities.
 
 **Source of Truth:**
 - **Roles & Prompts:** `System/Agents/`
@@ -15,7 +15,7 @@ This system orchestrates a team of specialized agents coordinated by an Orchestr
 **Function:** Coordination of the entire development process
 - Assigns tasks to other agents
 - Manages strict Stage Cycles (Init → Review → Revision)
-- **Tooling:** Tracks high-level progress via the harness's own task/todo state, persisted with `skill-session-state` (`update_state.py`).
+- **Tooling:** Uses `task_boundary` to track high-level progress.
 
 ### 2. Analyst
 **Function:** Creating the Technical Specification (TASK)
@@ -69,10 +69,10 @@ The system uses a **Phase-Specific Loading Protocol** (Optimization O1) to minim
 - **TIER 1 (Phase-Triggered):** Loaded only when entering a specific phase (e.g., Analysis, Architecture).
 - **TIER 2 (Extended):** Loaded on demand (e.g., `reverse-engineering`).
 
-### 2. Agentic Mode & Session State
-The system tracks progress through explicit, persisted state — no special `task_boundary` tool is required; use whatever task/todo mechanism your harness provides:
-- **State Tracking:** Every major step records `TaskName`, `TaskStatus`, and `Mode`.
-- **Session Persistence:** (Optimization O7) Context is saved to `.agent/sessions/latest.yaml` via `skill-session-state` (`update_state.py`, run through your shell tool) to survive session clears.
+### 2. Agentic Mode & Task Boundaries
+The system operates within strict boundaries defined by the **`task_boundary`** tool:
+- **State Tracking:** Every major step updates `TaskName`, `TaskStatus`, and `Mode`.
+- **Session Persistence:** (Optimization O7) Context is saved to `.agent/sessions/latest.yaml` to survive session clears.
 
 ### 3. Core Methodologies
 - **Stub-First Development:** Structure → Stubs → Tests → Implementation.
@@ -118,5 +118,5 @@ Standard flows can be overridden by Workflows (`.agent/workflows/`):
 ❌ **NO** writing code without tests (Stub-First violation).
 ❌ **NO** refactoring without a task (Scope creep).
 ❌ **NO** ignoring TIER 0 skills (breaking automation).
-✅ **ALWAYS** persist status via `skill-session-state` at phase boundaries.
+✅ **ALWAYS** use `task_boundary` to report status.
 ✅ **ALWAYS** update `.AGENTS.md` when structure changes (Memory update).

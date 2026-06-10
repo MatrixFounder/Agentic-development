@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T17:46:20.898409"
+last_updated: "2026-06-10T18:15:29.211985"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "verification-roadmap-archived"
-  status: "roadmap-shelved-actionable-backlog-empty"
+  name: "082-reword-tool-framing-vendor-sync"
+  status: "COMPLETE (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  docs/verification_roadmap.md ARCHIVED -> docs/archives/verification_roadmap.md (2026-06-10). Remaining open items marked DEFERRED (operator/hardware-gated, no in-repo work): item 6 e2e validation of 4 vendor adapter scaffolds on real CLIs; item 7 R3c cross-vendor (downstream of validated adapters). All other roadmap items (1-5, 7 except cross-vendor, 8-13) DONE. Actionable in-repo backlog is EMPTY. ARCHIVED banner + DEFERRED legend added before move; clean move (no tombstone, per repo archive convention - same as TASK/PLAN rotation). Execution history: Tasks 067-081 + docs/reviews/framework-audit-0XX.md. To re-open: move back to docs/ when operator picks up validation. Uncommitted releases in tree: v3.20.9 (6a-6c scaffolds), v3.20.10 (Antigravity+6d+6e), + this archive move.
+  Audit items 1/2/4 of System/Agents cross-vendor review. Retired dead run_tests/git_status/git_ops/execute_tool/task_boundary framing in 00,01,AGENTS.md,GEMINI.md; ported AGENTS symlink protocol into GEMINI.md. CLAUDE.md + schemas.py/tool_runner.py/ORCHESTRATOR.md untouched (reword-only scope). Item 3 (version re-stamp) skipped. v3.20.11, gates 43/43 + 30/30, audit framework-audit-082.md. Operator: restart session + commit.
 
 active_blockers:
   []

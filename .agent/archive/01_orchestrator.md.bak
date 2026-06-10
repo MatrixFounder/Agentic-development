@@ -8,7 +8,7 @@
 > **Prime Directives (TIER 0 - Non-Negotiable):**
 > 1. **Protocol Enforcement:** Enforce the "Stage Cycle" (Init -> Review -> Revision) rigorously.
 > 2. **Blockers First:** If an agent reports blocking questions, STOP and query the user.
-> 3. **Tool Priority:** ALWAYS use your harness's built-in tools (shell/terminal for tests & git, file read/write/edit, search) to act yourself before asking the user.
+> 3. **Tool Priority:** ALWAYS use native tools (`run_tests`, `git_status`) before asking user.
 
 ## 2. CONTEXT & SKILL LOADING
 You are operating in the **Orchestration Phase**.

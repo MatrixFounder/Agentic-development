@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.5
+version: 3.7
 ---
 
 # Parallel Orchestration Skill
@@ -22,10 +22,13 @@ Walk upward from the current working directory toward the filesystem root (or st
 | Runtime indicator (first match wins) | `Read` | Status |
 |---|---|---|
 | `CLAUDE.md` + `.claude/agents/` present | [`references/claude-code.md`](references/claude-code.md) | Reference implementation (complete, smoke-tested) |
-| `GEMINI.md` present, no `.claude/agents/` | [`references/gemini-cli.md`](references/gemini-cli.md) | **Stub** — not yet validated on real runtime |
-| `.cursor/` directory present | [`references/cursor.md`](references/cursor.md) | **Stub** — not yet validated on real runtime |
-| Antigravity runtime marker present | [`references/antigravity.md`](references/antigravity.md) | **Stub** — not yet validated on real runtime |
+| `.codex/agents/` directory present | [`references/codex-cli.md`](references/codex-cli.md) | **Scaffold** — primitives documented from primary docs (parallel ✅ confirmed); not yet e2e-validated |
+| `GEMINI.md` present, no `.claude/agents/` | [`references/gemini-cli.md`](references/gemini-cli.md) | **Scaffold** — subagent format documented; ⚠️ Layer-A (parallel) unconfirmed in primary docs |
+| `.cursor/` directory present | [`references/cursor.md`](references/cursor.md) | **Scaffold** — primitives documented from primary docs (parallel ✅ max-10); not yet e2e-validated |
+| `.antigravity/` directory present (provisional — ⚠️ ambiguous: Antigravity shares `AGENTS.md` w/ Codex + `~/.gemini/` w/ Gemini) | [`references/antigravity.md`](references/antigravity.md) | **Scaffold** — primitives documented (parallel ✅ async); dynamic-first (static custom-agent wrappers scaffolded); not e2e-validated |
 | None of the above, or vendor has no parallel-spawn primitive | [`references/sequential-fallback.md`](references/sequential-fallback.md) | Universal-by-design; unvalidated on non-Claude runtimes (see file for caveats) |
+
+> **Scaffold status (Tasks 080–081, 2026-06-10):** the Codex / Cursor / Antigravity / Gemini references + critic wrappers were authored from vendor docs but **not yet validated on real runtimes** — each carries a ⚠️ banner and graduates to ✅ only after one operator-run `/vdd-multi --no-fix` on the actual CLI. Scaffold critic wrappers are **generated** from one manifest by [`scripts/generate_wrappers.py`](scripts/generate_wrappers.py) (item 6e) — edit `scripts/wrappers_manifest.json`, never the generated wrappers; Claude Code stays the hand-maintained reference. `AGENTS.md` alone is **not** a Codex/Antigravity marker (cross-vendor) — Codex keys on `.codex/agents/`, Antigravity on a provisional `.antigravity/` (ambiguous); tie-break via §1.2. First-match-wins keeps Claude Code precedence in this (Claude) repo.
 
 If `cwd` is not the project root, walk up looking for the first marker; stop at `.git/` or filesystem root. If no marker found, the skill is being invoked outside a framework-managed project — emit a warning to the caller rather than silently falling back, then load `sequential-fallback.md`.
 
@@ -122,16 +125,17 @@ After all teammates return, apply these in order:
 
 ---
 
-## 7. When a runtime has no parallel primitive
+## 7. Vendor dispatch & the sequential last resort
 
-If the active runtime is stub-only (no `Agent` tool, no multi-tool-call, no spawn mechanism), fall back to [`references/sequential-fallback.md`](references/sequential-fallback.md):
+**First**, resolve the runtime (§1.1) and use its **native parallel adapter**: Claude Code (`claude-code.md`, complete), Codex / Cursor / Antigravity (scaffolds — parallel documented), Gemini (scaffold — Layer-A unconfirmed). The premise that "non-Claude vendors have no parallel primitives" is **obsolete** (C-07): Codex spawns-and-consolidates, Cursor runs up to 10 concurrent, Antigravity dispatches async subagents.
+
+**Only if** the runtime is genuinely primitive-less (no spawn mechanism), or you need a *proven* path on an unvalidated-adapter runtime, or it's deterministic single-session debugging / 1-slot CI → fall back to [`references/sequential-fallback.md`](references/sequential-fallback.md):
 
 - Role-switching through a single session (persona-swap per teammate role).
-- Slower by ~N× wall-clock.
-- Loses per-teammate context isolation (everything lands in the same session window).
-- Functionally equivalent for merge-at-end patterns; **cannot** do Layer B.
+- Slower by ~N× wall-clock; loses per-teammate context isolation (everything lands in the same session window).
+- A **degraded last resort, NOT "functionally equivalent"** to parallel (C-07); **cannot** do Layer B.
 
-All universal concepts (§2–§6) still apply; only the spawn mechanism changes.
+All universal concepts (§2–§6) — including merge rules and the evidence contract — apply on every path; only the spawn mechanism changes.
 
 > **Caveat**: the fallback protocol is documented as universal-by-design but has only been validated on Claude Code itself (roleplay as a no-`Agent`-tool runtime). Until a real non-Claude runtime runs an end-to-end task through it, treat the fallback as a *proposed pattern* rather than a certified code path. File issues / PRs against `references/sequential-fallback.md` after your first real run.
 
@@ -147,6 +151,8 @@ All universal concepts (§2–§6) still apply; only the spawn mechanism changes
 
 ## 9. History
 
+- **v3.7 (2026-06-10)**: finished item 6 in-repo (Task 081). **Google Antigravity** 4th adapter (`agent.json`, dynamic-first + static custom-agent form, async parallel ✅, detection ambiguity documented). **6d**: `vdd-multi` "Fallback (Sequential)" → "**Vendor dispatch**" (resolve runtime → native adapter; sequential = documented last resort); "functionally equivalent" claim removed from `vdd-multi` + §7 (C-07). **6e**: Wave-5 **wrapper generator** (`scripts/generate_wrappers.py` + `wrappers_manifest.json` → 12 wrappers across 4 vendors, Claude excluded as donor; `--check` drift mode) + KNOWN_ISSUES drift-grep extended to all 5 wrapper dirs. Remaining for item 6: **operator e2e validation only**.
+- **v3.6 (2026-06-10)**: vendor adapter **scaffolds** for Codex CLI / Gemini CLI / Cursor (roadmap item 6, sub-tasks 6a–6c, in-repo portion). Three references (stub→full for Gemini/Cursor, NEW `codex-cli.md`) + 9 thin critic wrappers (3 vendors × logic/security/performance) at real runtime paths (`.gemini/agents/`, `.codex/agents/`, `.cursor/agents/`), all pointing at the same SOT skills + same convergence enum. Primitives **verified against primary docs** (geminicli.com, developers.openai.com/codex, cursor.com): Codex + Cursor confirm parallel Layer A (Cursor max-10; Codex consolidates); **Gemini's parallel multi-spawn is NOT documented** — the scaffold records that gap honestly rather than claiming it. §1.1 gains a Codex row (`.codex/agents/`). **Everything ships ⚠️ SCAFFOLD — not e2e-validated**; graduation to ✅ + sub-tasks 6d (sequential demotion) / 6e (drift-grep, Wave-5 generator) remain. Read-only critic guarantee mapped per vendor (`sandbox_mode="read-only"` / `readonly:true` / `tools` whitelist).
 - **v3.5 (2026-06-10)**: R3c tier-diverse escalation **demoted to tag-only** (mini-exp 078, `docs/reviews/tier-diverse-experiment-078.md`). The pilot's premise — cross-tier agreement is stronger evidence — was refuted: tier-diverse critics produced *more* same-location overlaps but a *smaller* fraction were real (precision 0.66 vs 0.73 same-tier). Merge rule 3 gradation middle row + third bullet now tag `tier-diverse` without `+1`. The `--models` config is **retained** (078 validated it as a recall/coverage tool: highest recall, 100% pooled). Cross-vendor row stays ⏳ (item 6) — 078 tested tiers, not true vendor independence. Only mechanism-difference (R3b) escalates now.
 - **v3.4 (2026-06-10)**: R3c tier-diverse escalation (audit-067 C-08, roadmap item 7 R3c — last open slice). Merge rule 3 gains the model-independence gradation table + a third bullet: same-mechanism agreement under a tier-diverse `--models` config (critics on different model tiers, env not flattening) earns +1 for CRITICAL/HIGH only, tag `tier-diverse`. `/vdd-multi` gains `--models=logic:<t>,security:<t>,performance:<t>` (Phase 0 parse + escalation-tier resolution, Phase 1 per-critic spawn) with a `CLAUDE_CODE_SUBAGENT_MODEL` flatten-guard that downgrades to R3a. Cross-vendor row stays ⏳ (item 6). Ships as **pilot** — empirical payoff under validation (ab-experiment-075 follow-up). v3.2→3.3 were doc-only (item 9 model-pin hygiene §, item 11 evidence-contract reference bumps).
 - **v3.1 (2026-06-10)**: severity-escalation redesign (audit-067 C-08, roadmap item 7 R3a/R3b/R3d). Same-model agreement no longer auto-escalates (+1 → `corroborated` tag, severity = max); escalation survives only for different-failure-mechanism overlap at the same location; sequential fallback explicitly never escalates. Rationale: persona-differentiated same-model ensembles share error priors (arXiv:2506.07962, arXiv:2601.12307). R3c (model-heterogeneity gradation) deferred — cross-vendor form blocked by vendor adapters (roadmap item 6).

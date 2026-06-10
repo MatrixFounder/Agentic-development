@@ -16,6 +16,43 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.10 — Item 6 In-Repo Complete: Antigravity Adapter + Vendor Dispatch (6d) + Wave-5 Generator (6e)**
+
+Finishes the **in-repo** half of roadmap item 6 (C-07). After this, item 6's only remaining piece is **operator e2e validation on real CLIs**. Task 081, gate artifact `docs/reviews/framework-audit-081.md`. Doc/script-only, gates 43/43, pytest 30/30; the only severity escalation in the merge logic remains R3b.
+
+#### **Added**
+* **Google Antigravity adapter** (4th vendor) — `references/antigravity.md` stub→full, verified via web (primary docs render client-side; corroborated from antigravity.google/docs/agent-manager + Google-Cloud/Medium + DataCamp + gemini-cli discussion #27305). **Dynamic-first** architecture documented (orchestrator spawns subagents on the fly, no config files) alongside the static **custom-agent** form (`agent.json` at `~/.gemini/antigravity-cli/agents/<name>/`). Async parallel ✅. **Detection ambiguity recorded honestly** — Antigravity shares `AGENTS.md` (Codex) and `~/.gemini/` (Gemini); a provisional `.antigravity/` marker is used pending validation.
+* **Wave-5 wrapper generator (6e)** — `scripts/generate_wrappers.py` + `scripts/wrappers_manifest.json`: one manifest → **12 critic wrappers** across 4 scaffold vendors (Gemini MD+YAML, Codex TOML, Cursor MD+YAML, Antigravity JSON) in their native formats, all pointing at the same SOT skills + enum. Claude Code **excluded** (validated reference/donor, hand-maintained). `--check` mode exits non-zero on drift (CI-gateable). Hand-sync of scaffold wrappers is eliminated.
+
+#### **Changed**
+* **6d — sequential-fallback demoted** (C-07 "functionally equivalent" claim **removed** from `vdd-multi.md` + `SKILL.md §7`): `vdd-multi`'s "Fallback (Sequential)" section is now "**Vendor dispatch**" — resolve the runtime (skill §1) → use its native parallel adapter (Codex/Cursor/Antigravity ✅, Gemini Layer-A pending); sequential role-switching is the **documented last resort** (primitive-less runtime / single-session debug / 1-slot CI), explicitly **not** functionally equivalent to parallel. All flags + the evidence contract honored on every path.
+* **6e — drift-grep extended** (`KNOWN_ISSUES.md`) to all 5 wrapper dirs (`.claude/.gemini/.codex/.cursor/.antigravity/agents/`); documents that scaffold wrappers are generated (edit the manifest, run the generator, never hand-edit).
+* Detection table (`SKILL.md §1.1`) Antigravity row updated (provisional marker + ambiguity). `skill-parallel-orchestration` 3.6→3.7.
+
+#### **Still open under item 6**
+* **Operator e2e validation** on real Codex / Cursor / Antigravity / Gemini installs — graduates each ⚠️ SCAFFOLD → ✅. Until then the banners stay and sequential remains the proven path. **Roadmap item 6 stays 🔜 (6a–6e in-repo ✅ · validation ⏳).**
+
+---
+
+### **v3.20.9 — Vendor Adapter Scaffolds: Codex / Gemini / Cursor (roadmap item 6, sub-tasks 6a–6c, in-repo portion)**
+
+In-repo scaffolds for parallel-critic dispatch on three non-Claude runtimes, authored from **primary-source docs** (geminicli.com, developers.openai.com/codex, cursor.com — verified in-session 2026-06-10). **Everything ships ⚠️ SCAFFOLD — not yet validated on real runtimes**; graduation to ✅ requires one operator-run `/vdd-multi --no-fix` per CLI (hardware/accounts the operator does not have right now — explicitly deferred). Task 080, gate artifact `docs/reviews/framework-audit-080.md`. Doc-only diff, gates 43/43, pytest 30/30.
+
+#### **Added**
+* **Three vendor references** (`skill-parallel-orchestration/references/`): `codex-cli.md` (NEW), `gemini-cli.md` + `cursor.md` (stub→full), each at `claude-code.md` depth — concept→primitive mapping, Layer A pattern, read-only critic enforcement, wrapper catalog, validation gate.
+* **Nine thin critic wrappers** at real runtime paths, all pointing at the same SOT skills (`vdd-adversarial`, `skill-adversarial-security`, `skill-adversarial-performance`) with the same `clean-pass | issues-found | bikeshedding-only` enum: `.codex/agents/critic-*.toml` (×3, `sandbox_mode="read-only"`), `.gemini/agents/critic-*.md` (×3, read-only `tools`), `.cursor/agents/critic-*.md` (×3, `readonly: true`).
+* **Detection table** (`SKILL.md §1.1`) gains a Codex row (`.codex/agents/`); Gemini/Cursor statuses restated as "Scaffold — documented, not validated". First-match-wins keeps Claude Code precedence in this repo.
+
+#### **Verified against primary docs**
+* **Codex CLI** — TOML in `.codex/agents/`; **parallel confirmed** ("spawns in parallel, waits for all, consolidates"); `sandbox_mode="read-only"` maps to the read-only critic guarantee.
+* **Cursor 2.4** — Markdown+YAML in `.cursor/agents/`; **parallel confirmed (max 10)**; `readonly: true` is purpose-built for reviewer subagents; `is_background` = async (Layer B, deferred).
+* **Gemini CLI** — Markdown+YAML in `.gemini/agents/`; **⚠️ parallel multi-spawn NOT documented** (only auto-delegation + `@subagent`). The scaffold records this gap honestly and corrects the roadmap's earlier optimistic "concurrent subagents" note; the multi-critic flow on Gemini stays sequential-delegation until a real run proves Layer A.
+
+#### **Deferred (still open under item 6)**
+* e2e validation on real CLIs (operator action), 6d (sequential-fallback demotion + `vdd-multi` "Vendor dispatch" rewrite), 6e (drift-grep extension + Wave-5 wrapper generator). `skill-parallel-orchestration` 3.5→3.6. **Roadmap item 6 stays 🔜 — scaffolds authored, not validated.**
+
+---
+
 ### **v3.20.8 — Tier-Diverse Escalation Demoted to Tag-Only (mini-exp 078 refuted the premise)**
 
 The R3c tier-diverse `+1` escalation shipped in v3.20.7 was an explicit **pilot**. Mini-experiment 078 (`docs/reviews/tier-diverse-experiment-078.md`, fresh sealed corpus, 3 arms, 18 bugs) **refuted its sole premise**: cross-tier critic agreement was *less* precise than same-tier (overlap precision **0.66 vs 0.73**), so escalating severity on it would manufacture false positives. This release translates that finding into the rule — the escalation is **demoted to a `tier-diverse` provenance tag with no `+1`**. The `--models` config is **retained** (078 validated it as a recall/coverage tool: D-tier hit the highest recall, 100% pooled). Task 079, gate artifact `docs/reviews/framework-audit-079.md`. **Zero mechanics regression** beyond the intended demotion; gates 43/43, pytest 30/30, doc-only.

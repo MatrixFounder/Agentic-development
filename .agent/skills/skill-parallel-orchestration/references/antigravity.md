@@ -1,20 +1,68 @@
-# Parallel Orchestration — Antigravity reference (STUB)
+# Parallel Orchestration — Google Antigravity reference (SCAFFOLD)
 
-> ⚠️ **DEGRADED MODE**: this vendor's reference is a **stub** — not yet validated on a real runtime. If you're here because `SKILL.md §1.1` matched this vendor, the skill will fall back to [`sequential-fallback.md`](sequential-fallback.md) for concrete invocation patterns. **The fallback is slower (~N× wall-clock) and loses per-teammate context isolation.** If you wanted parallel execution on this vendor, the reference is not yet implemented — contribute a PR after validating one end-to-end run.
+> ⚠️ **SCAFFOLD — documented from web sources (antigravity.google/docs/agent-manager + Google-Cloud/Medium + DataCamp + github.com/google-gemini/gemini-cli discussion #27305, fetched 2026-06-10; the primary docs render client-side and returned no extractable text, so this is corroborated from secondary sources), NOT yet validated on a real runtime.** Ready-to-validate: run one `/vdd-multi --no-fix` on a real Antigravity install, then graduate the banner.
 
-**Loads with**: parent `SKILL.md` when an Antigravity runtime marker is detected and no other vendor markers are active (parent `SKILL.md §1.1`).
+**Loads with**: parent `SKILL.md` when an Antigravity marker is detected and no Claude Code markers are active (parent `SKILL.md §1.1`). ⚠️ Detection is **ambiguous** — see below.
 
-## Vendor-specific notes
+---
 
-- **Runtime detection marker**: TBD — contributor must identify which file/env var/directory reliably signals Antigravity so parent `SKILL.md §1.1` detection can match.
-- **Known parallel primitive**: unknown — contribute after verifying.
-- **Known teammate definition convention**: unknown — contribute after verifying.
-- **Layer B support**: unknown — contribute after verifying.
+## Antigravity is dynamic-first (the key architectural difference)
 
-## What this file should become
+Unlike Claude Code / Codex / Cursor (which read **static** teammate-definition files), Antigravity's headline model is **dynamic subagents**: the orchestrator reads your goal, decides the decomposition, and **spawns specialized subagents on the fly with isolated context windows — no upfront config files**. The framework's predefined critic trio maps onto Antigravity's *secondary* mode — **custom agents** — but a native Antigravity run might instead let the orchestrator spawn equivalents dynamically.
 
-See the shared checklist and contribution guidance in [`_stub-template.md`](_stub-template.md). A complete reference matches the depth of [`claude-code.md`](claude-code.md).
+## Runtime primitives
 
-## Until then
+| Concept (from parent §2) | Antigravity primitive |
+|---|---|
+| Parallel-spawn primitive | **✅ asynchronous subagents run concurrently** — the main agent delegates parallel background tasks; the Agent Manager ("Mission Control") spawns/monitors several at once. `/agent <task>` dispatches background agents, several in parallel |
+| Teammate definition (static) | **`agent.json`** at `~/.gemini/antigravity-cli/agents/<name>/agent.json` (custom agent) — fields `name`, `description`, `hidden`, custom system-prompt sections |
+| Teammate definition (dynamic) | none — orchestrator-defined at runtime (no file) |
+| Tool / permission scoping | per-project folder boundaries + scoped permission grants; `AGENTS.md` declares which parts of the codebase an agent may modify (read-only critics = grant no write) |
+| Inter-teammate communication (Layer B) | async background agents are Mission-Control-managed; treat peer messaging as **deferred** like Claude's Layer B |
+| Config / skills | priority `AGENTS.md → GEMINI.md → built-in`; skills at `<root>/.agent/skills/` (workspace) + `~/.gemini/antigravity/skills/` (global) |
 
-Use [`sequential-fallback.md`](sequential-fallback.md) — universal concepts from parent `SKILL.md §2–§6` apply unchanged; only the spawn mechanism degrades to sequential persona-swap.
+---
+
+## ⚠️ Detection ambiguity (honest record)
+
+Antigravity does **not** expose a clean unique project-root marker:
+- it reads `AGENTS.md` — **shared with Codex** (cross-vendor; not a unique signal);
+- it uses `~/.gemini/...` paths — **overlapping Gemini CLI**;
+- the IDE's Agent Manager is a runtime UI, not a repo file.
+
+The scaffold uses a **provisional** `.antigravity/` directory marker (where the generated custom-agent wrappers live). Tie-break per parent `§1.2`: prefer the tool-list/`runtime:` caller hint over file markers; if Antigravity and Gemini both plausibly match, the caller hint decides. Resolve the real, reliable marker during validation and record it here.
+
+---
+
+## Layer A (parallel) — documented, unvalidated
+
+Antigravity supports concurrent subagents (✅), so Layer A is achievable. Two paths for the critic trio:
+1. **Static custom agents** — install the three `agent.json` wrappers, delegate all three at once, merge after (the closest analogue to the Claude pattern).
+2. **Dynamic** — let the orchestrator spawn logic/security/performance specialists on the fly, seeded with the same SOT skills. Document the exact dispatch during validation.
+
+**Read-only critic guarantee**: Antigravity scopes write access via project permission grants / `AGENTS.md` — grant the critic agents **no write permission** (the analogue of withholding `Bash`/`Write` from a Claude critic). The `agent.json` system prompt also states review-only.
+
+---
+
+## Critic wrapper catalog (scaffold — generated)
+
+Generated by [`scripts/generate_wrappers.py`](../scripts/generate_wrappers.py) from [`scripts/wrappers_manifest.json`](../scripts/wrappers_manifest.json) — **do not hand-edit**; edit the manifest and regenerate.
+
+| Wrapper | File | SOT skill | Scope |
+|---|---|---|---|
+| `critic-logic` | `.antigravity/agents/critic-logic/agent.json` | `.agent/skills/vdd-adversarial/SKILL.md` | logic only |
+| `critic-security` | `.antigravity/agents/critic-security/agent.json` | `.agent/skills/skill-adversarial-security/SKILL.md` | security only |
+| `critic-performance` | `.antigravity/agents/critic-performance/agent.json` | `.agent/skills/skill-adversarial-performance/SKILL.md` | performance only |
+
+Same convergence enum `clean-pass | issues-found | bikeshedding-only`. ⚠️ The canonical install path is **user-level** `~/.gemini/antigravity-cli/agents/<name>/agent.json` — copy the generated `.antigravity/agents/<name>/agent.json` there during validation (confirm the exact project-vs-user precedence then).
+
+---
+
+## Validation gate (graduate SCAFFOLD → ✅)
+
+Graduates **only after one end-to-end `/vdd-multi --no-fix` run on a real Antigravity install** that also: (i) resolves the reliable detection marker, (ii) confirms static custom-agent vs dynamic-spawn dispatch, (iii) confirms the `agent.json` field schema against the live runtime. Operator action — not in-repo work.
+
+## See also
+- Parent [`SKILL.md §1.1`](../SKILL.md) detection table (Antigravity row).
+- [`claude-code.md`](claude-code.md) — the complete, smoke-tested reference this scaffold mirrors.
+- [`gemini-cli.md`](gemini-cli.md) — sibling Google runtime; mind the `~/.gemini/` path overlap.

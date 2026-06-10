@@ -1,7 +1,14 @@
-# Verification Stack Modernization Roadmap
+# Verification Stack Modernization Roadmap — ARCHIVED 2026-06-10
 
-- **Source:** `docs/reviews/verification-stack-currency-audit-067.md` (Task 067, 2026-06-10) — claims register C-01…C-16, evidence, bibliography live there. This file is the **working backlog**; the audit report stays immutable.
-- **Status legend:** ✅ DONE · 🔜 READY (no blockers) · ⏳ BLOCKED-BY (see Dependencies) · 🧪 EXPERIMENT
+> [!NOTE]
+> **ARCHIVED / BACKLOG-SHELVED (2026-06-10).** All **in-repo** work on this roadmap is complete — 11 of 13 items fully ✅, item 7 resolved except its cross-vendor slice, item 6 done through 6a–6e. The **only** remaining work is **⛔ DEFERRED — operator/hardware-gated**, with no in-repo action possible:
+> - **Item 6 — operator e2e validation** of the 4 vendor adapter scaffolds (Codex / Cursor / Antigravity / Gemini) on real CLIs. Graduates each ⚠️ SCAFFOLD → ✅.
+> - **Item 7 R3c (cross-vendor)** — the true-independence escalation question; downstream of validated adapters (a cross-vendor mini-experiment like Task 078).
+>
+> Moved to `docs/archives/` because the actionable backlog is empty. Re-open here (move back to `docs/`) when an operator picks up the validation work. Tasks 067–081 + `docs/reviews/framework-audit-0XX.md` are the execution history.
+
+- **Source:** `docs/reviews/verification-stack-currency-audit-067.md` (Task 067, 2026-06-10) — claims register C-01…C-16, evidence, bibliography live there. This file was the **working backlog**; the audit report stays immutable.
+- **Status legend:** ✅ DONE · 🔜 READY (no blockers) · ⏳ BLOCKED-BY (see Dependencies) · 🧪 EXPERIMENT · ⛔ DEFERRED (operator/hardware-gated, no in-repo work remaining)
 - **Item numbering** matches the audit's Modernization backlog (items 1–13) for traceability.
 
 ## How to execute any item (cold-session protocol)
@@ -65,7 +72,12 @@
 
 ---
 
-### 6. 🔜 [C-07] Parallel-dispatch adapters for non-Claude vendors — *detailed*
+### 6. ⛔ DEFERRED(6a–6e in-repo ✅ · operator validation deferred) [C-07] Parallel-dispatch adapters for non-Claude vendors — *detailed*
+
+- **6a–6c scaffolds (Task 080 / v3.20.9):** three references (`codex-cli.md` NEW + `gemini-cli.md`/`cursor.md` stub→full) + critic wrappers + Codex detection row. Primitives primary-source-verified: Codex parallel ✅, Cursor parallel ✅ (max-10), **Gemini parallel ⚠️ NOT documented** (gap recorded honestly). Gate `docs/reviews/framework-audit-080.md`.
+- **Antigravity + 6d + 6e (Task 081 / v3.20.10):** gate `docs/reviews/framework-audit-081.md`. **Antigravity** 4th adapter (`agent.json`, dynamic-first + static custom-agent form, async parallel ✅, detection ambiguity documented — shares `AGENTS.md`/`~/.gemini/`). **6d:** `vdd-multi` "Fallback (Sequential)" → "**Vendor dispatch**" (resolve runtime → native adapter; sequential = documented last resort); the C-07 "functionally equivalent" claim **removed** from `vdd-multi` + SKILL §7. **6e:** Wave-5 **wrapper generator** (`scripts/generate_wrappers.py` + `wrappers_manifest.json` → 12 wrappers / 4 vendors, Claude excluded as donor, `--check` drift mode) + KNOWN_ISSUES drift-grep extended to all 5 wrapper dirs. `skill-parallel-orchestration` 3.6→3.7.
+- **Verified (081):** `functionally equivalent` positive claim grep-clean; generator `--check` idempotent + 12/12 wrappers SOT+enum; Codex TOML + Antigravity JSON parse; gate 43/43; pytest 30/30.
+- **Still open — operator only:** ⏳ **e2e validation on real CLIs** (Codex / Cursor / Antigravity / Gemini) graduates each ⚠️ SCAFFOLD → ✅, resolves Gemini's Layer-A question + Antigravity's detection marker. **All in-repo work (6a–6e) is done; item 6 stays 🔜 until validation — not in-repo work.**
 
 **Why:** the sequential-fallback premise ("other vendors have no parallel primitives") is factually obsolete: **Gemini CLI** shipped native subagents (Google Developers Blog, Apr 2026), **OpenAI Codex CLI** shipped custom agents with parallel spawn (developers.openai.com/codex/subagents, Mar 2026), **Cursor** shipped subagents (2.4, ~Jan 2026) + background agents (up to 8 parallel). Current state: `references/gemini-cli.md` and `references/cursor.md` are stubs that redirect to `sequential-fallback.md`; **Codex CLI has no reference and is not even in the §1.1 detection table**.
 
@@ -107,7 +119,7 @@
 
 ---
 
-### 7. ⏳(R3a/R3b/R3d ✅ · R3c tier-diverse ✅ resolved · R3c cross-vendor ⏳ item 6) [C-08] Severity-escalation redesign — *detailed*
+### 7. ⛔ DEFERRED(R3a/R3b/R3d ✅ · R3c tier-diverse ✅ resolved · R3c cross-vendor DEFERRED — needs item 6 validation) [C-08] Severity-escalation redesign — *detailed*
 
 - **R3c tier-diverse RESOLVED in:** Task 079 / v3.20.8 (2026-06-10), gate artifact `docs/reviews/framework-audit-079.md`. The tier-diverse `+1` escalation (shipped as a pilot in 077) was **demoted to a `tier-diverse` provenance tag with no escalation** after mini-exp 078 refuted its premise (cross-tier agreement precision 0.66 < 0.73 same-tier — escalating would manufacture FPs). The `--models` config is **retained** (validated by 078 as a recall/coverage tool). Lockstep gradation row + 3rd bullet + Phase-0 resolution + cross-refs; `skill-parallel-orchestration` 3.4→3.5. Only mechanism-difference (R3b) escalates now.
 - **Verified:** no positive `+1` attached to tier-diverse anywhere (only the demotion text + immutable v3.4 History record); rule-3 normalized diff identical mod noun; R3a/R3b/R3d/dedup/evidence/flags byte-unchanged; gate 43/43; pytest 30/30.
@@ -201,10 +213,10 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 3 (MCP/agentic security)  — ✅ DONE (Task 069 / v3.20.0)
 4 (OWASP remap)           — ✅ DONE (Task 070 / v3.20.1)
 5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); K2 final form resolved by 13: KEEP as opt-in skin (rule 1)
-6 (vendor adapters)       — independent; per-vendor validation needs operator machines
+6 (vendor adapters)       — ⛔ DEFERRED: 6a–6e in-repo ✅ (Tasks 080/081, 4 vendors + Wave-5 generator); operator e2e validation deferred (hardware)
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
 7 R3c (tier-diverse)      — ✅ RESOLVED: config kept (Task 077), escalation demoted to tag-only (Task 079 / v3.20.8, per Task 078 T3)
-7 R3c (cross-vendor)      — ⏳ BLOCKED BY 6 (needs vendor adapters; the still-open independence bet — 078 tested tiers, not vendors)
+7 R3c (cross-vendor)      — ⛔ DEFERRED (needs item 6 validated adapters; the still-open independence bet — 078 tested tiers, not vendors)
 8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
 11                        — ✅ DONE (Task 074 / v3.20.5; un-handicaps experiment 13 arm D)
 13 (experiment)           — ✅ DONE (Task 075, ab-experiment-075.md): R1 sarcasm survives (K2 kept) · R2 multi fails cost bar · R3 adversarial framing = −6.9pp recall

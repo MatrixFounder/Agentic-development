@@ -4,7 +4,7 @@ description: VDD Multi-Adversarial — parallel critics via Layer-A teammate spa
 
 # Workflow: VDD Multi-Adversarial
 
-Parallel execution of three specialized adversarial critics (logic, security, performance) via Claude Code native subagent-spawn (Layer A). On vendors without `Agent` tool + `.claude/agents/`, falls back to sequential role-switching.
+Parallel execution of three specialized adversarial critics (logic, security, performance) via Claude Code native subagent-spawn (Layer A). On other vendors, resolve the runtime (parent `skill-parallel-orchestration §1`) and use its **native parallel adapter** (Codex / Cursor / Antigravity ✅; Gemini Layer-A pending — see refs); sequential role-switching is the **last resort** for primitive-less runtimes. See **Vendor dispatch** below.
 
 ## Positioning (evidence: ab-experiment-075, pre-registered rule 2)
 
@@ -70,7 +70,7 @@ vdd-multi
 
 - Code must be implemented and functional before running this workflow.
 - Claude Code runtime with `.claude/agents/critic-{logic,security,performance}.md` present.
-- If subagents unavailable → execute **Fallback (Sequential)** section below.
+- If Claude Code subagents unavailable → resolve the runtime and use its native adapter, else sequential — see **Vendor dispatch** below.
 
 ---
 
@@ -201,16 +201,27 @@ If `--output` was set, mention the path in the termination line as well.
 
 ---
 
-## Fallback (Sequential) — non-Claude-Code vendors
+## Vendor dispatch — non-Claude-Code runtimes
 
-If `Agent` tool or `.claude/agents/` is unavailable, fall back to sequential role-switching:
+If the `Agent` tool + `.claude/agents/` are unavailable, **resolve the runtime** per parent `skill-parallel-orchestration §1.1` and use its **native parallel adapter** — do NOT default to sequential:
+
+| Runtime | Adapter | Parallel (Layer A) | Critic wrappers |
+|---|---|---|---|
+| Codex CLI | [`references/codex-cli.md`](../skills/skill-parallel-orchestration/references/codex-cli.md) | ✅ documented | `.codex/agents/critic-*.toml` |
+| Cursor 2.4 | [`references/cursor.md`](../skills/skill-parallel-orchestration/references/cursor.md) | ✅ documented (max 10) | `.cursor/agents/critic-*.md` |
+| Antigravity | [`references/antigravity.md`](../skills/skill-parallel-orchestration/references/antigravity.md) | ✅ documented (async) | `.antigravity/agents/critic-*/agent.json` |
+| Gemini CLI | [`references/gemini-cli.md`](../skills/skill-parallel-orchestration/references/gemini-cli.md) | ⚠️ unconfirmed → sequential delegation | `.gemini/agents/critic-*.md` |
+
+> ⚠️ The non-Claude adapters are **SCAFFOLD status** (documented from vendor docs, not yet e2e-validated — each ref carries a banner). Until an adapter graduates, prefer the **sequential last resort** below if you need a *proven* path on that runtime.
+
+**Sequential role-switching — last resort** (primitive-less runtime, deterministic single-session debugging, or 1-slot CI):
 
 0. **Gather execution evidence first** (same contract as Phase 1 Step 1.0): run the test suite and `run_audit.py` once, capture summaries (or honest `tests/scan: NOT RUN (<reason>)` lines), and include the evidence block in **every** persona pass below. Absence of the block → the persona emits "exit-bar condition unverifiable", never clean-pass.
 1. Apply `skill-vdd-adversarial` (role-switch) → fix loop (unless `--no-fix`).
 2. Apply `skill-adversarial-security` (role-switch) → fix loop.
 3. Apply `skill-adversarial-performance` (role-switch) → fix loop.
 
-Functionally equivalent to Phase 1–3 above but slower (3× wall-clock) and without parallel-context-isolation benefits. All flags (`--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`) **and the execution-evidence contract** honored by the role-switching path.
+The sequential path is **slower (3× wall-clock) and loses per-teammate context isolation** — it is a degraded last resort, **not** "functionally equivalent" to parallel (C-07). All flags (`--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`) **and the execution-evidence contract** are honored on **every** path (native adapter and sequential).
 
 ---
 

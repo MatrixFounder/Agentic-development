@@ -89,7 +89,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 ### Executable Skills (Tools)
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
-| **`tools/*`** | Core system tools defined in `.agent/tools/schemas.py`. These are natively executed by the Orchestrator. | `01-start-feature`, `03-develop-single-task` | All Agents |
+| **`tools/*`** | Framework tools defined in `.agent/tools/schemas.py` — **additional to** your harness's built-ins (`generate_task_archive_filename` is unique; the rest are fallback). Run via the `execute_tool` dispatcher (fallback) or your harness's native tools/MCP. | `01-start-feature`, `03-develop-single-task` | All Agents |
 | - `run_tests` | Runs test commands under the allowed command policy. | `03-develop-single-task` | Developer |
 | - `read_file` | Reads file content from project root (with path safety checks). | All | All Agents |
 | - `write_file` | Creates or overwrites a file within project root. | All | All Agents |

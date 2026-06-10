@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T18:15:29.211985"
+last_updated: "2026-06-10T20:56:45.907584"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "082-reword-tool-framing-vendor-sync"
+  name: "083-reposition-dispatcher-fallback"
   status: "COMPLETE (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  Audit items 1/2/4 of System/Agents cross-vendor review. Retired dead run_tests/git_status/git_ops/execute_tool/task_boundary framing in 00,01,AGENTS.md,GEMINI.md; ported AGENTS symlink protocol into GEMINI.md. CLAUDE.md + schemas.py/tool_runner.py/ORCHESTRATOR.md untouched (reword-only scope). Item 3 (version re-stamp) skipped. v3.20.11, gates 43/43 + 30/30, audit framework-audit-082.md. Operator: restart session + commit.
+  Corrected 082's 'legacy' overstatement: schemas.py/tool_runner dispatcher repositioned as ADDITIONAL tools + FALLBACK (not legacy). Two classes: generate_task_archive_filename = framework-unique/live (task_id_tool.py CLI); run_tests/git_*/file ops = overlap fallback. execute_tool primitive tested (63 tests) but LLM loop NOT yet wired. Re-established framework tools in AGENTS.md (Cursor/Codex MCP) + GEMINI.md (Gemini discoveryCommand/MCP + Antigravity), grounded in official docs. CLAUDE.md UNTOUCHED. System/Docs reframed; SESSION_CONTEXT task_boundary->phase. Nothing archived; dispatcher code untouched. v3.20.12, gates 43/43+30/30+63/63, audit framework-audit-083.md. Operator: restart session + commit + manual-sync Universal-skills copy. Out of scope: wiring the fallback loop (future feature).
 
 active_blockers:
   []

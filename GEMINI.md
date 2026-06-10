@@ -37,10 +37,13 @@ These symlink-aware variants are registered as auto-runnable read-only commands 
 
 
 ## TOOL EXECUTION PROTOCOL
-Act directly on the repo with your environment's **built-in tools** — file read/write/edit, shell/terminal (for git and tests), and search/grep. Tool *names* differ per vendor (use whatever the Gemini CLI harness exposes for files, terminal, and search).
+> This file also serves **Antigravity** (it shares `~/.gemini/`). Where they differ, both are noted.
+
+Use your harness's **built-in tools** — **Gemini CLI**: `run_shell_command` (shell), file read/write/edit tools, `read_many_files`; **Antigravity**: its built-in file/shell tools.
 1.  **Priority**: ALWAYS run commands yourself with these built-in tools instead of asking the user to run shell commands.
-2.  **Repo helper scripts**: invoke the framework's Python helpers through your shell tool, e.g. `python3 .agent/tools/task_id_tool.py <slug>` (archive filename) and `python3 .agent/skills/skill-session-state/scripts/update_state.py …` (session state).
-3.  **Reference**: `System/Docs/ORCHESTRATOR.md` documents a **legacy** standalone `execute_tool`/`schemas.py` dispatcher — that layer is **not** used when running inside a vendor harness (Claude Code / Cursor / Codex / Gemini); rely on your native tools above.
+2.  **Repo helper scripts** (run via `run_shell_command` / your shell tool): `python3 .agent/tools/task_id_tool.py <slug>` → **`generate_task_archive_filename`** (framework-specific, **no native equivalent** — always use it for archive IDs); `python3 .agent/skills/skill-session-state/scripts/update_state.py …` (session state).
+3.  **Additional / fallback tools**: the framework also defines a tool set in `.agent/tools/schemas.py` — `generate_task_archive_filename` (unique, above) plus **overlap tools** (`run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory`) that mirror your built-ins → **prefer native**; the `tool_runner.execute_tool` dispatcher is the **fallback** execution surface **(if available)**. To register framework tools natively: Gemini CLI **`tools.discoveryCommand`** or MCP (`mcpServers`); Antigravity via MCP / `agent.json`.
+4.  **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for the full tool catalog + fallback status.
 
 ### TIER 0 Skills (Boot at Session Start) — MANDATORY
 > **ALWAYS LOAD at session bootstrap — see `skill-phase-context` for full protocol.**

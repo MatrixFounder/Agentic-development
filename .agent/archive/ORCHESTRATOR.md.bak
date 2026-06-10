@@ -1,17 +1,10 @@
 # Orchestrator: Tool Execution Subsystem
 
 **Version:** 3.3.2
-**Status:** Fallback / additional-tools subsystem — dispatch primitive implemented & tested; orchestrator loop not yet wired.
-
-> [!NOTE]
-> **This is the framework's tool subsystem — *additional to*, and a *fallback for*, your harness's built-in tools.** Two classes of tool live here:
-> - **Framework-unique** — `generate_task_archive_filename` has **no native-harness equivalent**; always use it (run `python3 .agent/tools/task_id_tool.py <slug>`, or via the dispatcher). It backs `skill-archive-task` Step 3 (Option A).
-> - **Overlap / fallback** — `run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory` mirror native harness capabilities; **prefer your native tools** — these are the fallback for harnesses that lack them.
->
-> **Status:** the dispatch primitive (`tool_runner.execute_tool`) is implemented and tested, but no LLM loop currently drives it (nothing loads `TOOLS_SCHEMAS`; there is no standalone entrypoint). Native wiring paths exist per vendor — **MCP** (Claude Code / Cursor / Codex / Gemini / Antigravity) and **Gemini CLI `tools.discoveryCommand`**. Inside a full vendor harness, agents use native tools + the repo CLIs directly; this dispatcher is the fallback execution surface.
+**Status:** Active
 
 ## Overview
-The **Structured Tool Calling** subsystem lets a tool-less runtime perform deterministic actions on the file system and git repository through the `execute_tool` dispatcher (`schemas.py` definitions + `tool_runner.py`). It is the **fallback** for harnesses without native tool execution, and the home of the framework-unique `generate_task_archive_filename` tool.
+The Orchestrator v3.2 introduces **Structured Tool Calling**, allowing agents to perform deterministic actions on the file system and git repository. This replaces the legacy regex-based command parsing with native LLM Function Calling.
 
 ## Table of Contents
 - [Components](#components)

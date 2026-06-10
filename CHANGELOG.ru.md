@@ -16,6 +16,15 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.20.12 — Диспетчер репозиционирован: fallback + дополнительные инструменты (исправляет «legacy» из 082)**
+
+Исправляет преувеличение задачи 082: диспетчер `schemas.py`/`tool_runner.execute_tool` — **не** заброшенный legacy, а подсистема **дополнительных инструментов + fallback** фреймворка. Только документация, без архивации, без изменения кода. Задача 083, гейт `docs/reviews/framework-audit-083.md`. Гейты 43/43, pytest 30/30.
+
+#### **Изменено**
+* **Явно выделены два класса инструментов.** `generate_task_archive_filename` — **уникальный для фреймворка** (нет native-аналога — всегда доступен через `python3 .agent/tools/task_id_tool.py`, лежит в основе `skill-archive-task` Шаг 3 Вариант A). Остальные (`run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory`) **дублируют native-инструменты** → **fallback**. Dispatch-примитив (`execute_tool`) реализован и покрыт тестами; LLM-луп, который бы его запускал, **ещё не подключён** (честный статус в `ORCHESTRATOR.md`).
+* **Дополнительные инструменты фреймворка восстановлены в bootstrap-файлах** (были удалены в 082), **на основе официальной документации вендоров**: `AGENTS.md` (Cursor/Codex — built-in + MCP `mcp.json`/`config.toml`); `GEMINI.md` (Gemini CLI `run_shell_command` + `tools.discoveryCommand`/MCP `mcpServers`, **и Antigravity** — файл обслуживает оба). `CLAUDE.md` **не менялся** (уже корректен).
+* **System/Docs переформулированы** legacy→additional/fallback: `ORCHESTRATOR.md` (Status Active→Fallback + баннер `[!NOTE]`), `SOURCE_OF_TRUTH.md`, `SKILLS.md`, `RELEASE_CHECKLIST.md`. `SESSION_CONTEXT_GUIDE.md` `task_boundary`→«граница фазы» (фиктивный инструмент). **Ничего не заархивировано; код диспетчера не тронут.**
+
 ### **v3.20.11 — Актуализация под вендоры: переформулировка tool-слоя + симлинк-синхронизация GEMINI.md**
 
 Продолжение кросс-вендорного аудита `System/Agents` (пункты 1, 2, 4; пункт 3 — перештамповка version-заголовков — намеренно пропущен). **Только формулировки, поведение конвейера не меняется.** Задача 082, гейт-артефакт `docs/reviews/framework-audit-082.md`. Объём: «только переформулировка промптов» — `schemas.py` / `tool_runner.py` / `ORCHESTRATOR.md` оставлены как есть. Гейты 43/43, pytest 30/30.

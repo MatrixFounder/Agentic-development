@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.20.11
+# Multi-Agent Software Development System v3.20.12
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -90,7 +90,7 @@ cp /path/to/framework/GEMINI.md ./ # (For Antigravity)
 
 > [!NOTE]
 > The Tool Execution Subsystem is included in `System/scripts/`:
-> - `System/scripts/tool_runner.py` — Dispatcher (entry point)
+> - `System/scripts/tool_runner.py` — fallback tool dispatcher (`execute_tool`; loop not yet wired)
 > - `.agent/tools/` — Tool logic and schemas
 
 ### 2. Choose Your AI Assistant
@@ -315,7 +315,7 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 **Capabilities**: Run tests, Git operations, File I/O, Archiving.
 
 **[>> View Full Skills Catalog <<](System/Docs/SKILLS.md)**
-**[>> Orchestrator & Tools Guide <<](System/Docs/ORCHESTRATOR.md)**
+**[>> Orchestrator Tools — Fallback / Additional-Tools Guide <<](System/Docs/ORCHESTRATOR.md)**
 **[>> Source of Truth Map <<](System/Docs/SOURCE_OF_TRUTH.md)**
 **[>> Release Checklist <<](System/Docs/RELEASE_CHECKLIST.md)**
 

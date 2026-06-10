@@ -16,7 +16,7 @@ Use this checklist for every framework release.
 
 1. Verify prompt file names match real files in `System/Agents/`.
 2. Verify workflow docs match `.agent/workflows/` names and command forms.
-3. Verify skill docs match `.agent/skills/` and the framework tool names in `.agent/tools/schemas.py` (additional/fallback tool set).
+3. Verify skill docs match `.agent/skills/` and tool names in `.agent/tools/schemas.py`.
 4. Update source map if needed: `System/Docs/SOURCE_OF_TRUTH.md`.
 
 ## 3. Mandatory Validation

@@ -11,6 +11,23 @@ The system relies on a modular **Skills System**:
 1.  **Definitions**: Located in `.agent/skills/[skill-name]/SKILL.md`. These are the source of truth.
 2.  **Usage**: Agents declare "Active Skills" in their prompts. You **MUST** read these skill files when assuming an agent role.
 
+## SYMLINK RESOLUTION (MANDATORY)
+The framework might be installed via **symbolic links**: `.agent/skills/`, `.agent/workflows/`, `.agent/tools/`, `.agent/rules/`, `.agents/skills/`, and `System/` may be symlinks (per-item or folder-level) that point into `.agentic-development/`. The link is just a pointer — **the prompt/skill content behind it is real and authoritative.**
+- **ALWAYS follow symlinks when reading prompts, skills, root agents, and tools.** Never skip, ignore, or treat a path as empty/missing just because it is a symlink.
+- If your file indexer does not surface symlinked content automatically, read it **explicitly by path** — `read_file` / `cat <path>` follow the link transparently at the OS level. When in doubt, enumerate first (`ls -L .agent/skills/`) and then read each `SKILL.md` by its full path.
+- To inspect a link's real destination use `readlink -f <path>`. The target resolves inside `.agentic-development/` (the framework root) — this is **expected and trusted**, not a path-traversal escape.
+
+## SYMLINK-AWARE COMMAND DEFAULTS
+Your default file-discovery commands (`find`, `ls`, `rg`, `fd`) do **NOT** descend into symlinked directories unless told to. Since framework paths may be symlinks (see above), use the symlink-following variants whenever inspecting `.agent/`, `.agents/`, `System/`, or `.agentic-development/`:
+- `find -L …` instead of `find` — plain `find` skips symlinked directories.
+- `ls -L` when listing symlinked folders.
+- `rg --follow` (or `rg -L`) when searching contents through symlinks.
+- `fd -L` if you use `fd`.
+- Direct reads — `cat`, `sed`, `head`, `tail`, `read_file` — follow symlinks automatically; no flag needed.
+- **Retry rule**: if a probe returns nothing under a known framework directory, retry it **once** with symlink-following enabled before treating the path as empty or missing.
+
+These symlink-aware variants are registered as auto-runnable read-only commands — see `skill-safe-commands`.
+
 ## SESSION RESTORATION (BOOTSTRAP)
 **ON SESSION START**:
 1. Check if `.agent/sessions/latest.yaml` exists.
@@ -19,12 +36,11 @@ The system relies on a modular **Skills System**:
 4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
 
 
-## TOOL EXECUTION PROTOCOL (v3.2.5+)
-The Orchestrator natively supports structured tool calling (Function Calling).
-1.  **Sources**: Definitions in `.agent/tools/schemas.py`.
-2.  **Execution**: If the model provides a valid tool call, the Orchestrator MUST execute it using the `execute_tool` dispatcher and return the result.
-3.  **Priority**: ALWAYS use native tools (`run_tests`, `git_ops`, `file_ops`, `generate_task_archive_filename`) instead of asking the user to run shell commands.
-4.  **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for details.
+## TOOL EXECUTION PROTOCOL
+Act directly on the repo with your environment's **built-in tools** — file read/write/edit, shell/terminal (for git and tests), and search/grep. Tool *names* differ per vendor (use whatever the Gemini CLI harness exposes for files, terminal, and search).
+1.  **Priority**: ALWAYS run commands yourself with these built-in tools instead of asking the user to run shell commands.
+2.  **Repo helper scripts**: invoke the framework's Python helpers through your shell tool, e.g. `python3 .agent/tools/task_id_tool.py <slug>` (archive filename) and `python3 .agent/skills/skill-session-state/scripts/update_state.py …` (session state).
+3.  **Reference**: `System/Docs/ORCHESTRATOR.md` documents a **legacy** standalone `execute_tool`/`schemas.py` dispatcher — that layer is **not** used when running inside a vendor harness (Claude Code / Cursor / Codex / Gemini); rely on your native tools above.
 
 ### TIER 0 Skills (Boot at Session Start) — MANDATORY
 > **ALWAYS LOAD at session bootstrap — see `skill-phase-context` for full protocol.**
@@ -58,7 +74,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - If no variant specified, default to standard `01-04`.
 3. **Execution**: If a matching workflow is found, execute its steps strictly.
    - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
-   - **MANDATORY**: After every `task_boundary` call, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
+   - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
    - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)

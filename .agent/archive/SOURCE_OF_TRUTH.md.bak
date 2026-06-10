@@ -13,9 +13,9 @@ This document defines authoritative files for prompts, skills, workflows, and to
 | Skills taxonomy & guidance | `System/Docs/SKILLS.md` and `System/Docs/SKILL_TIERS.md` | Catalog + loading policy. |
 | Workflow definitions | `.agent/workflows/*.md` | Executable workflow steps and nested calls. |
 | Workflow manual | `System/Docs/WORKFLOWS.md` | Human-readable workflow guide. |
-| Tool schemas (additional/fallback) | `.agent/tools/schemas.py` | Framework tool definitions — additional to harness built-ins; the dispatcher is the fallback surface. |
-| Tool execution engine (fallback) | `System/scripts/tool_runner.py` | `execute_tool` dispatch primitive + runtime guardrails (LLM loop not yet wired). |
-| Orchestrator tooling guide | `System/Docs/ORCHESTRATOR.md` | Reference for the fallback / additional-tools subsystem. |
+| Tool schemas | `.agent/tools/schemas.py` | Native tool/function definitions and parameters. |
+| Tool execution engine | `System/scripts/tool_runner.py` | Dispatcher and runtime guardrails. |
+| Orchestrator tooling guide | `System/Docs/ORCHESTRATOR.md` | Operational reference for tools and dispatcher. |
 
 ## Memory Artifacts Contract (BI-006)
 
@@ -47,7 +47,7 @@ This document defines authoritative files for prompts, skills, workflows, and to
 3. Tier and version metadata are required in frontmatter (`tier`, `version`).
 
 ### Tools (`.agent/tools`)
-1. Tool names in `.agent/tools/schemas.py` are the canonical names for the framework's **additional/fallback** tool set (`generate_task_archive_filename` is framework-unique; the rest mirror harness built-ins).
+1. Tool names in `.agent/tools/schemas.py` are canonical API names.
 2. Documentation must reference real tool names (for example: `git_status`, not `git_ops`).
 
 ## Governance Rule
@@ -55,5 +55,5 @@ This document defines authoritative files for prompts, skills, workflows, and to
 If documentation conflicts with runtime files, runtime files are authoritative:
 1. `AGENTS.md` / `GEMINI.md`
 2. `System/Agents/*.md`
-3. `.agent/tools/schemas.py` (fallback / additional tool set)
+3. `.agent/tools/schemas.py`
 4. `.agent/workflows/*.md`

@@ -9,7 +9,7 @@ This document explains the mechanism, rationale, and configuration of the Sessio
 ## 1. How It Works
 
 1.  **Boot Protocol**: On session start, agents check `.agent/sessions/latest.yaml`. If found, they restore the last known state (`Mode`, `Task`, `Summary`).
-2.  **Tracking**: At every phase boundary, the agent executes `update_state.py` to persist the new state atomically.
+2.  **Tracking**: Every time the `task_boundary` tool is called, the agent executes `update_state.py` to persist the new state atomically.
 3.  **Conflict Resolution**: If the user's new prompt conflicts with the file (e.g., "Start task X"), the **User takes precedence**.
 4.  **Multi-Task**: Completed tasks are tracked in the `completed_tasks` list to preserve history within a single session.
 
@@ -72,7 +72,7 @@ I have adversarialy analyzed potential downsides:
 **Verdict:** Low Risk.
 
 ### Risk C: Performance Overhead
-**Cost:** Running `update_state.py` adds ~200ms per phase-boundary persist.
+**Cost:** Running `update_state.py` adds ~200ms to every `task_boundary` call.
 **Verdict:** Negligible compared to LLM generation time (seconds).
 
 ## 5. Platform Memory Integration

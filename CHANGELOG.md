@@ -16,6 +16,15 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.12 — Dispatcher Repositioned: Fallback + Additional Tools (corrects 082's "legacy")**
+
+Corrects task 082's overstatement: the `schemas.py`/`tool_runner.execute_tool` dispatcher is **not** abandoned legacy — it is the framework's **additional-tools + fallback** subsystem. Docs-only, no archiving, no code change. Task 083, gate `docs/reviews/framework-audit-083.md`. Gates 43/43, pytest 30/30.
+
+#### **Changed**
+* **Two tool classes made explicit.** `generate_task_archive_filename` is **framework-unique** (no native-harness equivalent — always usable via `python3 .agent/tools/task_id_tool.py`, backing `skill-archive-task` Step 3 Option A). The rest (`run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory`) **mirror native tools** → **fallback**. The dispatch primitive (`execute_tool`) is implemented + tested; the LLM loop that would drive it is **not yet wired** (honest status now in `ORCHESTRATOR.md`).
+* **Framework additional tools re-established in bootstrap files** (deleted in 082), **grounded in official vendor docs**: `AGENTS.md` (Cursor/Codex — built-in tools + MCP `mcp.json`/`config.toml`); `GEMINI.md` (Gemini CLI `run_shell_command` + `tools.discoveryCommand`/MCP `mcpServers`, **and Antigravity** — this file serves both). `CLAUDE.md` **unchanged** (already correct).
+* **System/Docs reframed** legacy→additional/fallback: `ORCHESTRATOR.md` (Status Active→Fallback subsystem + `[!NOTE]` banner), `SOURCE_OF_TRUTH.md`, `SKILLS.md`, `RELEASE_CHECKLIST.md`. `SESSION_CONTEXT_GUIDE.md` `task_boundary`→"phase boundary" (genuinely fictional tool). **Nothing archived; dispatcher code untouched.**
+
 ### **v3.20.11 — Vendor-Currency: Tool-Layer Reword + GEMINI.md Symlink Re-sync**
 
 Follow-up to the `System/Agents` cross-vendor audit (items 1, 2, 4; item 3 — version-header re-stamp — intentionally skipped). **Framing-only, zero pipeline-behavior change.** Task 082, gate artifact `docs/reviews/framework-audit-082.md`. Scope: "reword prompts only" — `schemas.py` / `tool_runner.py` / `ORCHESTRATOR.md` left in place. Gates 43/43, pytest 30/30.

@@ -4,7 +4,7 @@ Single source of truth for package version. SKILL.md frontmatter and
 run_audit.py CLI header must match `__version__` on each release.
 """
 
-__version__ = "3.5"
+__version__ = "3.4"
 
 from .config import SEVERITY_ORDER
 from .scanners import (

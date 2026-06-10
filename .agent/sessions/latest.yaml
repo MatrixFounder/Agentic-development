@@ -1,22 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T11:36:03.518531"
+last_updated: "2026-06-10T12:08:35.984685"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "mcp-agentic-security-upgrade"
-  status: "completed-v3.20.0-dogfooded"
+  name: "owasp-top10-2025-remap"
+  status: "completed-v3.20.1-adversarial-converged"
   predicted_steps: 0
 
 context_summary: |
-  Task 069 (v3.20.0) DONE + dogfooded. Built 17-file multi-domain corpus in /tmp/sec-audit-dogfood (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP); run_audit caught 100 findings (23C/45H/29M+3low) across ALL scanners incl. new MCP feature (all 10 patterns + .vscode descent + provenance + code-scope poisoning). Dogfood surfaced + fixed a phantom ReDoS-warning bug in scan_secrets (count(\n)+1 off-by-one on newline-terminated files); +1 regression test. pytest 30/30, repo baseline still (22,10,0,12), gate 43/43. Observations flagged (not fixed): .pem not in scanned extensions; cross-language send() FP (Solidity pattern on JS) = documented regex-not-file-type-aware limitation.
+  Task 070 (C-09) DONE + adversarial pass (adversarial-review-070.md): re-map itself confirmed correct (item-level conservation, repo-wide stale grep clean, Universal-skills = symlinks no drift, CWE spot-checks pass). Roast caught 1 MED: 'repo audit summary byte-identical' overclaim — run_audit.py:99 embeds AUDIT_VERSION in summary header, bumped 3.4->3.5 in same change, so full summary necessarily differs by 1 line. Fixed in CHANGELOG EN+RU, roadmap, PLAN, audit artifact (now claim: counts/findings identical, header diff intentional). +2 LOW fixed: A10 Partial Failure tagged CWE-460 (count still 66); READMEs backed up to .agent/archive. Verdict PASS via Objective Convergence: tests executed 30/30, 0 CRITICAL, bikeshedding-only residue. Uncommitted - operator to review/commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "Live install test caught a genuine copy-mode bug: shutil.copytree(symlinks=False) skipped the framework's .claude/skills symlink (valid but relative -> CWD-resolved as dangling). Fix: copy_tree uses symlinks=True, preserving framework-internal relative symlinks self-consistently inside the copy. +1 regression test (test_copy_mode_populates_symlink_sourced_component)."
-  - "antigravity: bootstrap_file GEMINI.md, bootstrap_aliases [] (no AGENTS.md). cursor: bootstrap_strategy none->marker_block, bootstrap_file AGENTS.md. FR-15 reframed from 'Antigravity dual bootstrap' to 'per-vendor bootstrap-file mapping'."
-  - "065 APPROVED via Objective Convergence (the new bar, dogfooded on its own diff): 0 CRITICAL, 0 MAJOR, contract converged 4/4, DECISION TABLE byte-identical, skill gate 43/43. VDD loop caught residuals in VDD.md/TDD_VS_VDD.md/vdd-adversarial.md -> fixed."
   - "066 APPROVED via Objective Convergence (dogfood): 0 CRITICAL/MAJOR/MINOR; INV byte-diff confirms only the 2 consumer lines + enum changed; gate 43/43; no orphaned consumer of old token."
   - "067 scope (user, 2026-06-10): full audit in-session; A/B experiment design-only; cross-vendor verdict capped at Unvalidated"
   - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
@@ -24,6 +21,9 @@ recent_decisions:
   - "Roadmap discipline: 7-R3a/b/d shippable now; 7-R3c cross-vendor blocked by item 6; item 11 pairs with 7 in one vdd-multi cycle; adapter validation (6a-6c) requires operator machines with real CLIs"
   - "069: MCP patterns carry scope field (mcp-config/any-config/code) - file targeting in data not code; .md never scanned (LLM-review class); severity ceiling HIGH so MCP findings cannot trip --fail-on critical alone"
   - "Dogfood fix folded into uncommitted v3.20.0 (CHANGELOG Fixed subsection EN+RU); .pem coverage + Solidity-pattern file-gating left as flagged recommendations, not in-scope edits"
+  - "070: A03/A08 split: CI/CD tampering + code signing + deps-audit -> A03 Supply Chain; deserialization + artifact-signature + unsigned auto-update stay A08; CWE-209 stack-trace check moves old-A05 -> new A10"
+  - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
+  - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
 
 completed_tasks:
   - "Task A"
@@ -47,3 +47,4 @@ completed_tasks:
   - "task-066-multi-critic-objective-convergence"
   - "task-067-verification-stack-currency-audit"
   - "task-068-adversarial-security-p0-fixes"
+  - "task-069-mcp-agentic-security-upgrade"

@@ -1,74 +1,53 @@
-# Technical Specification: Agentic/MCP Security Upgrade (C-11 / C-14)
+# Technical Specification: OWASP Top 10 Checklist Re-map to 2025 Final (C-09)
 
 ### 0. Meta Information
-- **Task ID:** 069
-- **Slug:** `mcp-agentic-security-upgrade`
-- **Mode:** Framework Upgrade (meta-operation — modifies the security-audit skill, its scanner scripts, and a System/Agents prompt)
-- **Type:** P1 modernization, roadmap item 3 (highest real-world risk). Closes audit-067 claims C-11 (zero MCP/agentic detection coverage) and C-14 (Security Auditor role has no agentic threat model).
+- **Task ID:** 070
+- **Slug:** `owasp-top10-2025-remap`
+- **Mode:** Framework Upgrade (meta-operation — modifies the security-audit skill checklist, SKILL.md, and scanner docstrings)
+- **Type:** P1 modernization, roadmap item 4. Closes audit-067 claim C-09 (checklist titled "2025" but laid out on the 2021 taxonomy → compliance mappings exported to Jira/Snyk are wrong).
 - **Workflow:** `/framework-upgrade` (with `skill-self-improvement-verificator` gate, Modes A + B).
-- **Source:** User request (2026-06-10): "выполни 3. 🔜 [C-11, C-14] Agentic/MCP security upgrade" + `docs/verification_roadmap.md` item 3 + `docs/reviews/verification-stack-currency-audit-067.md` (claims register C-11, C-14; bibliography).
+- **Source:** User request (2026-06-10): "выполни ### 4. 🔜 [C-09]" + `docs/verification_roadmap.md` item 4 + `docs/reviews/verification-stack-currency-audit-067.md` (claim C-09).
 
 ## 1. General Description
 
-Audit 067 graded the framework's agentic/MCP security coverage **Outdated**: the entire topic is covered by one-liners in `llm_security.md:35,70–75`, `patterns.py` has **zero** MCP/agentic detection patterns, and `10_security_auditor.md` has no agentic threat model — while the framework's own domain **is** agentic development. Since those checklists were written the external bar moved:
+`references/checklists/owasp_top_10.md` claims "OWASP Top 10:2025 (Final Release)" in its header but its ten sections follow the **2021 taxonomy** (A03 = Injection, A10 = SSRF, A05 = Misconfiguration…). The actual 2025 final — **verified 2026-06-10 directly against owasp.org/Top10/2025/** — is:
 
-- **OWASP Top 10 for Agentic Applications 2026** (ASI01–ASI10, released 2025-12-09) — verified 2026-06-10 against genai.owasp.org + 5 independent secondary sources. Categories: ASI01 Agent Goal Hijack · ASI02 Tool Misuse & Exploitation · ASI03 Identity & Privilege Abuse · ASI04 Agentic Supply Chain Vulnerabilities · ASI05 Unexpected Code Execution (RCE) · ASI06 Memory & Context Poisoning · ASI07 Insecure Inter-Agent Communication · ASI08 Cascading Failures · ASI09 Human-Agent Trust Exploitation · ASI10 Rogue Agents.
-- **NSA AISC CSI "Model Context Protocol: Security Design Considerations for AI-Driven Automation"** (U/OO/6030316-26, 2026-05-20, v1.0) — verified 2026-06-10 via nsa.gov press release + PDF listing. Controls: least-privilege tokens per tool/action, context labeling, cryptographic isolation, audit logging, filtering outgoing proxy / enterprise DLP for external MCP connections, signed provenance for dynamic discovery, registry hardening + rate limits, sandboxing.
-- **Real-world incidents:** CVE-2025-6514 (mcp-remote, CVSS 9.6), CVE-2025-49596 (MCP Inspector, 9.4), MCP-STDIO design flaw → 11-CVE cluster (Apr 2026), postmark-mcp rug pull (first in-the-wild malicious MCP server, Sep 2025), s1ngularity (AI-CLI-weaponizing malware), Shai-Hulud npm worm (CISA alert).
-- **Shipping scanners:** Invariant `mcp-scan` → **Snyk `agent-scan`** (`snyk-agent-scan` CLI, github.com/snyk/agent-scan — verified 2026-06-10; detects tool poisoning, tool shadowing, toxic flows; consent-gated server startup).
+| # | 2025 Category (official name) | Relation to 2021 |
+|---|---|---|
+| A01 | Broken Access Control | unchanged #1; **absorbs 2021-A10 SSRF** |
+| A02 | Security Misconfiguration | ↑ from #5 |
+| A03 | Software Supply Chain Failures | **NEW** (broadens 2021-A06; absorbs supply-chain items of 2021-A08) |
+| A04 | Cryptographic Failures | ↓ from #2 |
+| A05 | Injection | ↓ from #3 |
+| A06 | Insecure Design | ↓ from #4 |
+| A07 | Authentication Failures | renamed (was "Identification and Authentication Failures") |
+| A08 | Software or Data Integrity Failures | renamed ("and"→"or"); supply-chain items re-homed to A03 |
+| A09 | Security Logging and Alerting Failures | renamed (was "…Logging and Monitoring Failures") |
+| A10 | Mishandling of Exceptional Conditions | **NEW** (CWE-209/390/754/636; error handling, fail-open) |
 
-This task adds a dedicated MCP/agentic checklist (1:1 ASI mapping + NSA CSI controls + concrete attack patterns), a regex-detectable floor in the scanner (new `mcp` scan type, ≥8 patterns with CWE/ASI mapping), external-tool roster entries (`snyk-agent-scan`/`mcp-scan`), and an Agentic Threat Model subsection in the Security Auditor role prompt.
+Blast radius (established by repo-wide grep, 2026-06-10): the checklist itself, 6 lines in `security-audit/SKILL.md` (§2 scope tags ×4, §3 Top Checks ×2), and 4 docstrings in `scripts/audit/scanners.py`. **Evidence-based correction of the roadmap assumption:** `patterns.py` carries **no** OWASP A-number category tags (findings are tagged with `category` strings + CWE only); the A-number tags live in `scanners.py` docstrings. `10_security_auditor.md`, `.claude/agents/`, and the other checklists contain no 2021-numbered references. CHANGELOG history entries describing past states stay untouched (immutable history).
 
 ## Requirements Traceability Matrix (RTM)
 
 | ID | Requirement | MVP? | Sub-features |
 |----|-------------|------|--------------|
-| R1 | **[C-11] New checklist** `.agent/skills/security-audit/references/checklists/mcp_agentic_security.md` (~80–100 lines) | Yes | (a) ten sections mapped **1:1** to ASI01–ASI10 (verified names above), each with concrete checkbox items; (b) NSA CSI controls section (least-privilege tokens, context labeling, isolation, audit logging, outgoing filtering proxy/DLP, signed provenance, registry hardening, sandboxing, local MCP scans); (c) concrete attack patterns named and checkable: tool poisoning (hidden instructions in tool descriptions), rug pull (post-approval definition mutation), tool shadowing, full-schema poisoning, confused deputy, token passthrough, session hijacking (per modelcontextprotocol.io Security Best Practices); (d) incident/CVE calibration block (CVE-2025-6514, CVE-2025-49596, MCP-STDIO cluster, postmark-mcp, s1ngularity, Shai-Hulud) |
-| R2 | **[C-11] Regex floor** in `scripts/audit/patterns.py` + new scanner | Yes | (a) new `MCP_AGENTIC_PATTERNS` list, **≥8 patterns**, each tagged with a real CWE **and** an ASI ID (ASI ID carried in the `category` field, e.g. `"Tool Poisoning (ASI01/ASI06)"`); minimum set: auto-approve flags (`chat.tools.autoApprove`, `"autoApprove": [...]`, `"alwaysAllow": [...]`), permission-bypass flags (`--dangerously-skip-permissions`-style), unpinned `npx -y`/`uvx` server commands (incl. `@latest`), `mcp-remote` usage, plain-`http://` MCP server URLs, inline secrets in MCP `env` blocks, shell-spawning `command` values, imperative-language heuristic in tool-description strings (incl. `<IMPORTANT>`-marker PoC pattern); (b) new `scan_mcp_agentic()` in `scanners.py`: targets well-known MCP config artifacts by filename (`mcp.json`, `.mcp.json`, `claude_desktop_config.json`) during the walk **plus explicit probes** for configs inside pruned dirs (`.vscode/mcp.json`, `.cursor/mcp.json` — `.vscode` is in `SKIP_DIRS`); emits a low-severity provenance finding for every MCP config found (presence ⇒ review provenance); applies the tool-description heuristic to agent/tool definition files; (c) registered in `run_audit.py` as `--scan-type mcp`, included in `--scan-type all`; exported from `audit/__init__.py`; (d) `detect_project_types()` gains `"mcp"` type (same artifact set) |
-| R3 | **[C-11] External tool roster** `scripts/audit/external.py` | Yes | (a) when `"mcp"` in detected types: run `snyk-agent-scan` with fallback to legacy `mcp-scan`; (b) **never** pass `--dangerously-run-mcp-servers` (no consent-bypassing server startup from an audit script) — comment in code; (c) SKILL §2 external-tools line updated to mention them with the MCP-artifact trigger |
-| R4 | **[C-11] SKILL.md integration** (`security-audit/SKILL.md`) | Yes | (a) §2 scope list gains the MCP/Agentic line + usage string gains `mcp` scan type; (b) §3 gains subsection "Agentic / MCP (OWASP ASI Top 10 2026)" with **MANDATORY** read of the new checklist + Top Checks (goal hijack, tool poisoning/rug pull, least-privilege/auto-approve, supply-chain pinning); (c) **honest limitation note**: semantic tool-description poisoning requires LLM review — regex is only the deterministic floor (full two-layer methodology is roadmap item 10, out of scope here); (d) version bump 3.3 → 3.4 (frontmatter + header + run_audit docstring + `__init__.__version__` stay in sync); (e) frontmatter `description:` gains MCP/agentic in its scope list (triggering accuracy) |
-| R5 | **[C-14] Security Auditor prompt** `System/Agents/10_security_auditor.md` | Yes | (a) new "Agentic Threat Model" subsection in §4 execution loop: can the agent be goal-hijacked (ASI01)? can tool calls be tampered/poisoned (ASI02)? are agent identities/privileges scoped (ASI03)? is memory/context poisonable (ASI06)? are inter-agent messages trusted blindly (ASI07)? are MCP servers provenance-verified and pinned (ASI04)?; (b) §2 TIER 1 loading references the new checklist for agentic/MCP targets; (c) prompt version header bump v3.6.0 → v3.7.0; (d) prompt explicitly mentions ASI/MCP (acceptance criterion from roadmap) |
-| R6 | **Tests** `tests/test_smoke.py` | Yes | (a) new test class/section for `scan_mcp_agentic`: ≥8 assertions covering — autoApprove flagged; permission-bypass flag flagged; unpinned `npx -y` flagged; version-pinned `npx -y pkg@1.2.3` NOT flagged; `.vscode/mcp.json` found despite SKIP_DIRS prune; provenance finding emitted for `mcp.json`; plain-http URL flagged; inline env secret flagged; shell `command` flagged; tool-description imperative heuristic flagged; clean project → zero MCP findings; (b) existing self-exclusion regression must stay green |
-| R7 | **Verification gate & docs** | Yes | (a) `python3 -m pytest .agent/skills/security-audit/tests/` green; (b) `run_audit.py` on this repo runs green (exit 0, no critical/high MCP findings); (c) `validate_skill.py` green for `security-audit` (and baseline 43/43 across `.agent/skills/*/` unchanged); (d) wrapper-drift grep: no stale references to removed/renamed content in `.claude/agents/`, `.agent/`; (e) CHANGELOG entry EN + RU (v3.20.0) tracing to C-11/C-14; (f) `docs/verification_roadmap.md` item 3 flipped to ✅ DONE with commit ref; (g) backups of every edited file in `.agent/archive/` before edits; (h) session state persisted at phase boundaries; (i) registry refresh: `System/Docs/SKILLS.md:87` security-audit line is **stale-specific** (says "v3.2", "121 automated regex patterns") — update version, pattern count, and add MCP/agentic to the capability list |
+| R1 | **Re-section `references/checklists/owasp_top_10.md` to the 2025 final** | Yes | (a) ten sections renumbered/renamed per the verified table above, source line updated (no false "Q4 2025" claim; cite owasp.org/Top10/2025, verified 2026-06-10); (b) content moves: old-A10 SSRF checks → A01; old-A05 → A02; old-A02 → A04; old-A03 → A05; old-A04 → A06; old-A06 + supply-chain items of old-A08 (CI/CD tampering, code signing, unsigned updates, `npm audit` class) → **A03 Software Supply Chain Failures**; deserialization + integrity verification stay in A08; (c) **new A10 section** (Mishandling of Exceptional Conditions): fail-closed on error, no stack-trace leakage (CWE-209 — moves here from old-A05), unhandled-exception paths (CWE-754/390), resource cleanup on error paths, fail-open security controls (CWE-636); (d) per-section CWE header lines stay consistent with the moved content (A01 gains CWE-918) |
+| R2 | **`security-audit/SKILL.md` re-tag + version bump** | Yes | (a) §2 scope list: Secrets `A02`→`A04`, Dependencies `A06/A08`→`A03` (supply chain), Code Patterns/Injection `A03`→`A05`, Config/Misconfiguration `A05`→`A02`; (b) §3 Web/API Top Checks: "Injection (A03)"→"(A05)"; "SSRF (A10)" → folded into A01 check; freed slot → "Supply Chain (A03)" check; add "(A10) Mishandling of Exceptional Conditions" check; (c) version 3.4 → 3.5 (frontmatter + H1 header + any synced version strings in `run_audit.py` / `audit/__init__.py`) |
+| R3 | **`scripts/audit/scanners.py` docstring re-tag** (comment-only, zero behavior change) | Yes | 4 docstrings: supply chain `A06/A08`→`A03:2025`; secrets `A02`→`A04:2025`; dangerous patterns `A03`→`A05:2025`; configuration `A05`→`A02:2025` |
+| R4 | **No stale 2021-numbered references** (acceptance gate) | Yes | `grep -rn "A0[0-9]\|A10"` over `.agent/skills/security-audit/`, `System/Agents/`, `.claude/agents/` → every hit is 2025-correct (ASI hits and API Top 10:2023 `API1…` hits are out of scope and remain) |
+| R5 | **Docs & registry sync** | Yes | (a) `System/Docs/SKILLS.md` security-audit row: v3.4→v3.5, mention 2025-final alignment; (b) CHANGELOG.md + CHANGELOG.ru.md entry; (c) `docs/verification_roadmap.md` item 4 → ✅ DONE with verification note |
 
-## 2. Use Cases
+## 2. Constraints & Out of Scope
+- **No behavior change:** scanner logic, pattern lists, finding `category`/`cwe` fields, severities, and tests' assertions are untouched — this is a taxonomy/documentation re-map. If any test asserts an A-number string, the test updates with it (same commit).
+- **Out of scope:** API Top 10:2023 and LLM Top 10 v2.0 checklists (audited Current); item 10's two-layer methodology; historical CHANGELOG entries.
+- **Lockstep rule:** none of the edited lines exist in multiple synced copies (verified by grep) — no lockstep edits required beyond SKILL/registry version sync.
 
-### 2.1 UC-1: Auditor scans a project that ships MCP servers/configs (main)
-**Actors:** Security Auditor agent (or developer running the script).
-**Preconditions:** Target project contains `mcp.json` / `.mcp.json` / `claude_desktop_config.json` / `.vscode/mcp.json` / `.cursor/mcp.json`, or agent/tool definition files.
-**Main scenario:**
-1. Agent runs `run_audit.py <path>` (or `--scan-type mcp`).
-2. Scanner emits provenance findings for each MCP config + pattern findings (auto-approve, unpinned servers, http URLs, inline secrets, poisoning heuristics), each with CWE + ASI tags.
-3. `detect_project_types` includes `mcp` → external phase attempts `snyk-agent-scan` (fallback `mcp-scan`); missing tools are non-fatal.
-4. Auditor reads `mcp_agentic_security.md` and manually verifies the semantic classes regex cannot catch (tool-description poisoning, rug-pull dynamics), guided by the Agentic Threat Model subsection of the role prompt.
-**Acceptance criteria:**
-- ✅ Each MCP config artifact produces at least a provenance finding (including `.vscode/mcp.json` despite dir pruning).
-- ✅ All findings carry a real CWE and an ASI ID in `category`.
-- ✅ External MCP scanners attempted only when MCP artifacts detected; never auto-start servers.
+## 3. Acceptance Criteria (from roadmap item 4)
+1. Checklist header ↔ taxonomy consistent (2025 label on 2025 layout, primary-source citation).
+2. SKILL §3 and scanner A-number tags consistent with the checklist.
+3. Stale-reference grep (R4) clean.
+4. Skill quality gate: `validate_skill.py` 43/43 across `.agent/skills/*/`.
+5. `python3 -m pytest` for the audit scripts green (proves zero behavior change).
 
-### 2.2 UC-2: Auditor scans a project with no MCP/agentic surface (regression)
-**Main scenario:** `run_audit.py` on a project with no MCP artifacts (e.g., this repo).
-**Acceptance criteria:**
-- ✅ `mcp` scan reports zero findings, status `[OK]`; overall exit code 0; no external MCP scanner invoked (no `mcp` type detected).
-- ✅ All pre-existing scans behave exactly as before (no regression in deps/secrets/patterns/config/iac/sbom).
-
-### 2.3 UC-3: Security Auditor role audits an agentic feature (C-14)
-**Main scenario:** Orchestrator dispatches `10_security_auditor.md`; auditor loads TIER 1 skills, reaches Agentic Threat Model step, answers the ASI-mapped questions, reads the checklist for any MCP/agent surface in scope.
-**Acceptance criteria:**
-- ✅ Prompt contains the agentic threat-model questions with ASI references and points to `mcp_agentic_security.md`.
-
-## 3. Non-functional Requirements
-- **Minimal-diff invariant:** no edits outside — new checklist file, `patterns.py`, `scanners.py`, `helpers.py` (`detect_project_types`), `external.py`, `run_audit.py`, `audit/__init__.py`, `tests/test_smoke.py`, `security-audit/SKILL.md`, `System/Agents/10_security_auditor.md`, CHANGELOGs, roadmap, session/archive bookkeeping.
-- **No scope creep:** roadmap item 4 (OWASP 2025 remap — `owasp_top_10.md` untouched), item 10 (two-layer methodology — only the one-line limitation note ships now), item 11 (orchestrator-supplies-evidence) stay separate cycles.
-- **Scanner philosophy preserved:** regex-only line-level floor, ReDoS guard honored (line-local patterns; multi-line only with the IaC-style whole-file guard), self-exclusion intact, missing external tools non-fatal.
-- **Severity discipline:** provenance/presence = low; heuristics (tool-description language) = medium (FP-tolerant by design, manual verify); auto-approve / unpinned / cleartext / inline secrets / shell commands = high; nothing critical by default (regex cannot prove exploitability of a config — avoids false CI blocks via `--fail-on critical`).
-- **Rollback:** backups in `.agent/archive/`; restore per workflow §5 Fallback.
-
-## 4. Constraints & Assumptions
-- ASI01–ASI10 names and NSA CSI control list were **web-verified 2026-06-10** (genai.owasp.org announcement 2025-12-09; nsa.gov CSI U/OO/6030316-26; snyk/agent-scan GitHub). The audit-067 bibliography is the in-repo citation anchor.
-- `snyk-agent-scan` availability on operator machines is not assumed — `run_command` already degrades gracefully (`[!] Tool not found`).
-- The checklist is a reference document (not a skill) — `init_skill.py` gate does **not** apply; it follows the existing `references/checklists/*.md` format.
-- Baseline before edits: skill gate 43/43; `run_audit.py` exit 0 on this repo.
-
-## 5. Open Questions
-- None. Scope, file set, and acceptance criteria are fixed by roadmap item 3; all external facts verified this session.
+## 4. Open Questions
+None — taxonomy verified against primary source in-session; blast radius established by grep.

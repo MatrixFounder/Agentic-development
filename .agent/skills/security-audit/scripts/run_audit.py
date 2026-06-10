@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Skill: security-audit
-Script: run_audit.py v3.4
+Script: run_audit.py v3.5
 Purpose: CLI entry point for security audit scanner.
 Usage: python run_audit.py [project_path] [--scan-type all|deps|secrets|patterns|config|iac|mcp|external|sbom]
        [--fail-on critical|high|medium] [--output json|summary] [--no-limit]

@@ -14,6 +14,8 @@ from .config import (
     CONFIG_EXTENSIONS,
     IAC_EXTENSIONS,
     IAC_FILENAMES,
+    MCP_CONFIG_FILENAMES,
+    MCP_SCAN_PRUNE,
     SEVERITY_ORDER,
     SKIP_DIRS,
 )
@@ -22,6 +24,7 @@ from .patterns import (
     CONFIG_PATTERNS,
     DANGEROUS_PATTERNS,
     IAC_PATTERNS,
+    MCP_AGENTIC_PATTERNS,
     SECRET_PATTERNS,
 )
 
@@ -169,12 +172,16 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
                     # ReDoS guard: filter out pathologically long lines before regex.
                     # All SECRET_PATTERNS are line-local (no multi-line matches in the
                     # current pattern set, including BEGIN...KEY which is one-line marker).
+                    all_lines = content.splitlines()
                     safe_lines = [
-                        ln for ln in content.splitlines()
+                        ln for ln in all_lines
                         if len(ln) <= _config.MAX_LINE_LENGTH
                     ]
                     safe_content = "\n".join(safe_lines)
-                    skipped_lines = content.count("\n") + 1 - len(safe_lines)
+                    # Count only genuinely over-long lines. (A prior `count("\n") + 1`
+                    # over-counted by 1 on newline-terminated files — splitlines() yields
+                    # no trailing empty element — emitting a phantom "skipped 1 line" WARN.)
+                    skipped_lines = len(all_lines) - len(safe_lines)
                     if skipped_lines > 0:
                         print(f"[WARN] {filepath}: skipped {skipped_lines} line(s) > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
                     for pattern, secret_type, severity, cwe in SECRET_PATTERNS:
@@ -470,5 +477,108 @@ def scan_sbom(project_path: str) -> Dict[str, Any]:
         results["status"] = "[?] SBOM missing"
     else:
         results["status"] = f"[OK] SBOM found: {', '.join(f.name for f in sbom_files[:3])}"
+
+    return results
+
+
+def scan_mcp_agentic(project_path: str) -> Dict[str, Any]:
+    """Scan MCP/agentic surfaces (OWASP ASI Top 10 2026, NSA MCP CSI).
+
+    Targets: well-known MCP config artifacts (MCP_CONFIG_FILENAMES) with full
+    pattern set + provenance finding; other config files (auto-approve keys,
+    bypass flags, unpinned runners); code files (tool-description poisoning
+    heuristics). Walks with MCP_SCAN_PRUNE (descends into .vscode, unlike
+    other scanners). Markdown is deliberately NOT scanned — semantic prose
+    poisoning is the LLM-review class (see references/checklists/
+    mcp_agentic_security.md "Scanner floor").
+    """
+    results = {
+        "tool": "mcp_agentic_scanner",
+        "findings": [],
+        "status": "[OK] No MCP/agentic risks detected",
+        "scanned_files": 0,
+        "skipped_files": 0,
+    }
+
+    for root, dirs, files in os.walk(project_path, followlinks=False):
+        # Custom prune: unlike other scanners, descend into .vscode (canonical
+        # home of mcp.json / chat.tools.autoApprove). Filename-targeted, so cheap.
+        dirs[:] = [d for d in dirs if d not in MCP_SCAN_PRUNE]
+
+        for file in files:
+            filepath = Path(root) / file
+            ext = Path(file).suffix.lower()
+            is_mcp_config = file in MCP_CONFIG_FILENAMES
+
+            if is_mcp_config:
+                applicable = MCP_AGENTIC_PATTERNS
+            elif ext in CONFIG_EXTENSIONS:
+                applicable = [p for p in MCP_AGENTIC_PATTERNS if p[5] == "any-config"]
+            elif ext in CODE_EXTENSIONS:
+                applicable = [p for p in MCP_AGENTIC_PATTERNS if p[5] == "code"]
+            else:
+                continue  # .md and everything else: LLM-review class, not regex floor
+
+            if is_self_path(str(filepath)):
+                continue
+
+            try:
+                if filepath.stat().st_size > _config.MAX_FILE_SIZE:
+                    results["skipped_files"] += 1
+                    continue
+            except OSError:
+                continue
+
+            results["scanned_files"] += 1
+
+            try:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+
+                rel = str(filepath.relative_to(project_path))
+
+                if is_mcp_config:
+                    results["findings"].append({
+                        "file": rel,
+                        "type": "MCP Config Present",
+                        "severity": "low",
+                        "category": "Agentic Supply Chain (ASI04)",
+                        "cwe": "CWE-829",
+                        "message": "MCP config detected — verify provenance, version pinning, and "
+                                   "registry trust of each server (see checklists/mcp_agentic_security.md).",
+                    })
+
+                # ReDoS guard: whole-file matching uses newline-crossing character
+                # classes, so (IaC-style) skip the entire file on pathological lines.
+                if any(len(ln) > _config.MAX_LINE_LENGTH for ln in content.splitlines()):
+                    results["skipped_files"] += 1
+                    print(f"[WARN] Skipped MCP scan of {filepath}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
+                    continue
+
+                lines = content.splitlines()
+                for pattern, name, severity, category, cwe, _scope in applicable:
+                    for match in re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE):
+                        line_num = content[:match.start()].count('\n') + 1
+                        snippet = lines[line_num - 1].strip()[:100] if line_num <= len(lines) else ""
+                        results["findings"].append({
+                            "file": rel,
+                            "line": line_num,
+                            "pattern": name,
+                            "severity": severity,
+                            "category": category,
+                            "cwe": cwe,
+                            "snippet": snippet,
+                        })
+            except Exception as e:
+                results["skipped_files"] += 1
+                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+
+    results["findings"] = sort_findings_by_severity(results["findings"])
+
+    high = sum(1 for f in results["findings"] if f["severity"] == "high")
+    if high > 0:
+        results["status"] = f"[!] HIGH: {high} MCP/agentic risks"
+    elif results["findings"]:
+        results["status"] = "[?] MCP/agentic surface present (review)"
 
     return results

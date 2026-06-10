@@ -30,7 +30,7 @@ from .patterns import (
 
 
 def scan_dependencies(project_path: str) -> Dict[str, Any]:
-    """Validate supply chain security (OWASP A06/A08, CWE-1104)."""
+    """Validate supply chain security (OWASP A03:2025 Software Supply Chain Failures, CWE-1104)."""
     results = {"tool": "dependency_scanner", "findings": [], "status": "[OK] Secure"}
 
     # Ecosystem -> (type markers, accepted lock files).
@@ -133,7 +133,7 @@ def scan_dependencies(project_path: str) -> Dict[str, Any]:
 
 
 def scan_secrets(project_path: str) -> Dict[str, Any]:
-    """Validate no hardcoded secrets (OWASP A02, CWE-798)."""
+    """Validate no hardcoded secrets (OWASP A04:2025 Cryptographic Failures, CWE-798)."""
     results = {
         "tool": "secret_scanner",
         "findings": [],
@@ -227,7 +227,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
 
 
 def scan_code_patterns(project_path: str) -> Dict[str, Any]:
-    """Validate dangerous code patterns (OWASP A03 Injection, CWE-79/89/78)."""
+    """Validate dangerous code patterns (OWASP A05:2025 Injection, CWE-79/89/78)."""
     results = {
         "tool": "pattern_scanner",
         "findings": [],
@@ -296,7 +296,7 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
 
 
 def scan_configuration(project_path: str) -> Dict[str, Any]:
-    """Validate security configuration (OWASP A05 Misconfiguration, CWE-16)."""
+    """Validate security configuration (OWASP A02:2025 Security Misconfiguration, CWE-16)."""
     results = {"tool": "config_scanner", "findings": [], "status": "[OK] Config secure", "skipped_files": 0}
 
     for root, dirs, files in os.walk(project_path, followlinks=False):

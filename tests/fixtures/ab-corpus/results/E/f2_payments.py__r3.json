@@ -1,0 +1,184 @@
+{
+  "arm": "E",
+  "file": "f2_payments.py",
+  "run": 3,
+  "findings": [
+    {
+      "line": 75,
+      "class": "security",
+      "severity": "CRITICAL",
+      "confidence": 0.97,
+      "description": "Full card number and CVV are written to application logs at INFO level, a PCI DSS violation since CVV must never be persisted anywhere after authorization.",
+      "bikeshedding": false
+    },
+    {
+      "line": 68,
+      "class": "logic",
+      "severity": "HIGH",
+      "confidence": 0.85,
+      "description": "charge_order only checks that the order exists, never its status, so an already-paid order can be charged again, and concurrent calls can race to double-charge before either commits.",
+      "bikeshedding": false
+    },
+    {
+      "line": 81,
+      "class": "logic",
+      "severity": "HIGH",
+      "confidence": 0.75,
+      "description": "The UPDATE marks the order paid but never sets paid_at, yet monthly_revenue_report filters on strftime of paid_at, so charged orders silently never appear in revenue reports.",
+      "bikeshedding": false
+    },
+    {
+      "line": 134,
+      "class": "logic",
+      "severity": "HIGH",
+      "confidence": 0.7,
+      "description": "refund() only flips the DB status to 'refunded' and never calls the payment gateway (which exposes no refund API at all), so the customer's money is never actually returned.",
+      "bikeshedding": false
+    },
+    {
+      "line": 119,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.7,
+      "description": "Revenue is computed as raw unit_price*quantity, ignoring the discount_pct (and tax) that determined the actual charged amount, so reported revenue diverges from money collected.",
+      "bikeshedding": false
+    },
+    {
+      "line": 38,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.6,
+      "description": "Transaction IDs derive from the salted built-in hash(), so they are not deterministic across processes despite the comment and they collide for repeat charges with the same last-4 and amount.",
+      "bikeshedding": false
+    },
+    {
+      "line": 17,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.8,
+      "description": "Monetary values flow through binary floats (unit_price, TAX_RATE, subtotals), inviting cumulative rounding errors where integer cents or Decimal should be used.",
+      "bikeshedding": false
+    },
+    {
+      "line": 57,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.6,
+      "description": "discount_pct is never validated, so negative values silently inflate the price and values over 100 produce negative order totals.",
+      "bikeshedding": false
+    },
+    {
+      "line": 132,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.65,
+      "description": "refund's status check and UPDATE are not atomic (no AND status='paid' guard in the UPDATE and no transaction), so concurrent calls can both pass the check and double-refund.",
+      "bikeshedding": false
+    },
+    {
+      "line": 78,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.6,
+      "description": "If the gateway charge succeeds but the subsequent UPDATE/commit fails or the process crashes, the customer is charged with no 'paid' record, and no idempotency key exists for safe retry.",
+      "bikeshedding": false
+    },
+    {
+      "line": 112,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "confidence": 0.85,
+      "description": "monthly_revenue_report issues one order_items query per order inside a loop (N+1) instead of a single JOIN/GROUP BY aggregate.",
+      "bikeshedding": false
+    },
+    {
+      "line": 106,
+      "class": "performance",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "Wrapping paid_at in strftime() makes the date predicate non-sargable, forcing a full table scan and defeating any index on paid_at.",
+      "bikeshedding": false
+    },
+    {
+      "line": 120,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "The report rounds each line item to cents independently while the charge path rounds once at the order total, so the two can disagree by pennies per order.",
+      "bikeshedding": false
+    },
+    {
+      "line": 73,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "Python round() uses banker's rounding (half-to-even) for the cents conversion, which can differ by one cent from the half-up rounding conventionally expected in billing.",
+      "bikeshedding": false
+    },
+    {
+      "line": 35,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.45,
+      "description": "Orders whose total is zero (e.g., 100% discount or free items) can never be marked paid because the gateway rejects non-positive amounts.",
+      "bikeshedding": false
+    },
+    {
+      "line": 106,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "Filtering on current status='paid' means a later refund retroactively removes the order from historical monthly revenue, making past reports unstable.",
+      "bikeshedding": false
+    },
+    {
+      "line": 62,
+      "class": "security",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "Raw PAN and CVV are passed through application code with no tokenization, placing this entire layer inside PCI DSS scope.",
+      "bikeshedding": false
+    },
+    {
+      "line": 100,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "year/month inputs are unvalidated, so impossible values like month=13 silently return an all-zero report instead of raising an error.",
+      "bikeshedding": false
+    },
+    {
+      "line": 66,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "SELECT * fetches all order columns when only discount_pct is actually used, over-fetching and staying fragile against schema changes.",
+      "bikeshedding": true
+    },
+    {
+      "line": 34,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "The cvv parameter is accepted but completely unused by the stub charge implementation.",
+      "bikeshedding": true
+    },
+    {
+      "line": 126,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "refund() returns a bare False for both 'order not found' and 'order not in paid state', leaving callers unable to distinguish the cases.",
+      "bikeshedding": true
+    },
+    {
+      "line": 10,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "TAX_RATE is a hard-coded single-jurisdiction constant baked into the module rather than being configurable.",
+      "bikeshedding": true
+    }
+  ],
+  "convergence": "issues-found"
+}

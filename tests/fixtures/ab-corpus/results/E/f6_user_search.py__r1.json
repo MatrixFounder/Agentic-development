@@ -1,0 +1,152 @@
+{
+  "arm": "E",
+  "file": "f6_user_search.py",
+  "run": 1,
+  "findings": [
+    {
+      "line": 64,
+      "class": "logic",
+      "severity": "HIGH",
+      "confidence": 0.95,
+      "description": "Pagination offset is computed as page*page_size instead of (page-1)*page_size, so under the documented 1-based page contract the first page_size users can never be returned and every page is shifted by one.",
+      "bikeshedding": false
+    },
+    {
+      "line": 59,
+      "class": "security",
+      "severity": "HIGH",
+      "confidence": 0.8,
+      "description": "User-supplied name_pattern is compiled and executed as an unbounded regex, enabling ReDoS via catastrophic backtracking (e.g. '(a+)+$') that can pin CPU for the whole service.",
+      "bikeshedding": false
+    },
+    {
+      "line": 59,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.9,
+      "description": "An invalid name_pattern makes re.compile raise re.error, which propagates unhandled to the caller instead of being rejected as invalid input.",
+      "bikeshedding": false
+    },
+    {
+      "line": 39,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.85,
+      "description": "page_size is only capped at MAX_PAGE_SIZE with no lower bound, so zero or negative values produce empty or nonsensical slice windows instead of a validation error.",
+      "bikeshedding": false
+    },
+    {
+      "line": 35,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.8,
+      "description": "page is never validated to be >= 1, and zero or negative pages yield negative slice offsets whose Python wrap-around semantics silently return wrong result windows.",
+      "bikeshedding": false
+    },
+    {
+      "line": 43,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "confidence": 0.85,
+      "description": "search() fetches the entire (department-filtered) user table into memory and filters, sorts, and paginates in Python with no SQL ORDER BY/LIMIT/OFFSET, costing O(total users) memory and CPU on every request.",
+      "bikeshedding": false
+    },
+    {
+      "line": 62,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.45,
+      "description": "If display_name is NULL in the database, the sort key calls None.lower() (AttributeError) and line 60's matcher.search(None) raises TypeError, crashing the request.",
+      "bikeshedding": false
+    },
+    {
+      "line": 96,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.55,
+      "description": "deactivate omits 'AND deleted = 0', so deactivating an already-deleted user still yields rowcount 1 and returns True, making 'already deactivated' indistinguishable from a fresh deactivation.",
+      "bikeshedding": false
+    },
+    {
+      "line": 74,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "by_email compares emails case-sensitively with no normalization, so lookups miss users whose stored email differs only in case.",
+      "bikeshedding": false
+    },
+    {
+      "line": 88,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "departments() is typed list[str] but will include None if any user row has a NULL department.",
+      "bikeshedding": false
+    },
+    {
+      "line": 59,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "re.IGNORECASE is hardcoded but undocumented in the docstring's 'name_pattern is a regex' contract, so callers needing case-sensitive matching silently get broader results than requested.",
+      "bikeshedding": false
+    },
+    {
+      "line": 92,
+      "class": "security",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "deactivate is a destructive mutation exposed on the search class with no authorization hook or audit logging, so any code path with search access can soft-delete arbitrary user ids.",
+      "bikeshedding": false
+    },
+    {
+      "line": 27,
+      "class": "performance",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "A new sqlite3 connection is opened per operation with no timeout/busy handler, so concurrent writes (deactivate) can surface 'database is locked' errors and connection churn adds avoidable per-call overhead.",
+      "bikeshedding": false
+    },
+    {
+      "line": 44,
+      "class": "security",
+      "severity": "LOW",
+      "confidence": 0.25,
+      "description": "search returns every matching user's email with no field-level access control, a PII-exposure surface if the API is reachable by less-privileged callers.",
+      "bikeshedding": false
+    },
+    {
+      "line": 69,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "Public methods by_email, departments, and deactivate lack docstrings while search has one.",
+      "bikeshedding": true
+    },
+    {
+      "line": 66,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "Logging every search at INFO level is noisy for a hot read path; DEBUG would be more appropriate.",
+      "bikeshedding": true
+    },
+    {
+      "line": 7,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "The file mixes typing.Optional with PEP 585 builtin generics (list[dict]); 'X | None' would be consistent on the Python versions this code targets.",
+      "bikeshedding": true
+    },
+    {
+      "line": 16,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "SearchResult omits page_size/has_more metadata, forcing clients to recompute paging state themselves.",
+      "bikeshedding": true
+    }
+  ],
+  "convergence": "issues-found"
+}

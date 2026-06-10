@@ -2,7 +2,7 @@
 name: vdd-sarcastic
 description: "Use when performing VDD adversarial review with an opt-in sarcastic, provocative delivery style — a stylistic skin over vdd-adversarial mechanics (exhaustive reporting + objective bar)."
 tier: 2
-version: 1.4
+version: 1.5
 ---
 # VDD Sarcastic (The Sarcasmotron)
 
@@ -16,7 +16,7 @@ version: 1.4
 ## 2. Tone & Style
 
 > [!NOTE]
-> **Positioning disclaimer (audit-067, C-01/C-03):** the sarcastic tone is an **opt-in stylistic choice with no evidence base** as a recall lever — modern vendors train sycophancy out, and harsh judge prompts are documented to inflate false positives. The working mechanism is **exhaustive reporting + the objective bar (§4)** — not meanness. If the style ever conflicts with reporting, drop the style, never the findings. (Keep-vs-deprecate decision for this skin awaits the pre-registered A/B — roadmap item 13.)
+> **Positioning disclaimer (audit-067, C-01/C-03):** the sarcastic tone is an **opt-in stylistic choice with no evidence base** as a recall lever — modern vendors train sycophancy out, and harsh judge prompts are documented to inflate false positives. The working mechanism is **exhaustive reporting + the objective bar (§4)** — not meanness. If the style ever conflicts with reporting, drop the style, never the findings. (Keep-vs-deprecate **resolved by the pre-registered A/B** — roadmap item 13, `docs/reviews/ab-experiment-075.md`: **KEPT** — rule 1 passed, recall(sarcastic)−recall(neutral-adversarial) = +4.2pp at lower FP; note the full recall ordering still puts the plain exhaustive baseline above both adversarial skins.)
 
 - **Be Provocative**: "Oh, so you *think* this will work?"
 - **Use Sarcasm**: "Great job handling the error by... ignoring it entirely."

@@ -1,0 +1,152 @@
+{
+  "arm": "E",
+  "file": "f5_report_generator.py",
+  "run": 2,
+  "findings": [
+    {
+      "line": 11,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "Generated HTML declares no <meta charset=\"utf-8\"> even though save_report writes UTF-8, so non-ASCII display names can render garbled in browsers that default to another encoding.",
+      "bikeshedding": false
+    },
+    {
+      "line": 14,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "The border=\"1\" attribute is obsolete HTML; styling belongs in CSS.",
+      "bikeshedding": true
+    },
+    {
+      "line": 22,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.5,
+      "description": "ReportGenerator and most of its public methods lack docstrings (only fetch_events documents its contract).",
+      "bikeshedding": true
+    },
+    {
+      "line": 26,
+      "class": "performance",
+      "severity": "LOW",
+      "confidence": 0.25,
+      "description": "A new SQLite connection is opened and torn down on every method call with no reuse, adding per-call overhead under frequent invocation.",
+      "bikeshedding": true
+    },
+    {
+      "line": 31,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "No validation that start <= end, so an inverted range silently produces an empty report instead of raising an error.",
+      "bikeshedding": false
+    },
+    {
+      "line": 31,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "fetch_events returns raw sqlite3.Row objects while top_users returns plain dicts, leaking the persistence type and making the public API inconsistent.",
+      "bikeshedding": true
+    },
+    {
+      "line": 38,
+      "class": "logic",
+      "severity": "HIGH",
+      "confidence": 0.85,
+      "description": "The predicate created_at < end.isoformat() excludes every event on the end day, contradicting the docstring's promise that both boundary days of [start, end] are included (needs end + 1 day or <=-style bound).",
+      "bikeshedding": false
+    },
+    {
+      "line": 40,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.3,
+      "description": "Date filtering relies on lexicographic string comparison and assumes created_at is stored as ISO-8601 text; epoch integers or other formats would silently match nothing or match incorrectly under SQLite's cross-type ordering.",
+      "bikeshedding": false
+    },
+    {
+      "line": 41,
+      "class": "performance",
+      "severity": "LOW",
+      "confidence": 0.3,
+      "description": "fetchall() materializes the entire date range in memory with no LIMIT or streaming, so a wide range over a large events table can exhaust memory.",
+      "bikeshedding": false
+    },
+    {
+      "line": 49,
+      "class": "performance",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "Building rows via repeated string += in a loop is potentially quadratic; ''.join over a list (or a generator) is the idiomatic linear approach.",
+      "bikeshedding": true
+    },
+    {
+      "line": 50,
+      "class": "security",
+      "severity": "HIGH",
+      "confidence": 0.9,
+      "description": "display_name, action, and created_at are interpolated into HTML without html.escape, enabling stored XSS against admins viewing the report via a malicious user display name or action string.",
+      "bikeshedding": false
+    },
+    {
+      "line": 54,
+      "class": "security",
+      "severity": "MEDIUM",
+      "confidence": 0.6,
+      "description": "The caller-supplied title is substituted into <title> and <h1> unescaped, allowing HTML/script injection whenever the title derives from user input.",
+      "bikeshedding": false
+    },
+    {
+      "line": 55,
+      "class": "security",
+      "severity": "LOW",
+      "confidence": 0.2,
+      "description": "The unsanitized title is written to the log, so embedded newlines could forge or split log entries (log injection).",
+      "bikeshedding": false
+    },
+    {
+      "line": 59,
+      "class": "security",
+      "severity": "MEDIUM",
+      "confidence": 0.3,
+      "description": "save_report writes to an unvalidated out_path, permitting arbitrary file overwrite or path traversal if the path is ever attacker-influenced.",
+      "bikeshedding": false
+    },
+    {
+      "line": 68,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.55,
+      "description": "top_users uses the same created_at < end bound, so activity on the end day is excluded from the ranking, inconsistent with the inclusive-range contract documented for fetch_events.",
+      "bikeshedding": false
+    },
+    {
+      "line": 69,
+      "class": "logic",
+      "severity": "LOW",
+      "confidence": 0.35,
+      "description": "limit is not validated; in SQLite a negative LIMIT means unlimited, so limit=-1 would return every user and limit=0 returns nothing without error.",
+      "bikeshedding": false
+    },
+    {
+      "line": 80,
+      "class": "other",
+      "severity": "LOW",
+      "confidence": 0.4,
+      "description": "The two event_count branches duplicate the base query text and parameter tuple, which could be shared to avoid drift between branches.",
+      "bikeshedding": true
+    },
+    {
+      "line": 82,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "confidence": 0.55,
+      "description": "event_count (both branches, lines 82 and 88) also uses created_at < end, undercounting by excluding all events on the end day relative to the documented inclusive-range intent.",
+      "bikeshedding": false
+    }
+  ],
+  "convergence": "issues-found"
+}

@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "total_bugs": 24,
+  "by_class": {
+    "logic": 8,
+    "security": 8,
+    "performance": 8
+  },
+  "by_severity": {
+    "CRITICAL": 8,
+    "HIGH": 8,
+    "MEDIUM": 8
+  },
+  "controls": [
+    "c1_text_utils.py",
+    "c2_date_utils.py"
+  ],
+  "bugs": [
+    {
+      "id": "f1-LOG",
+      "file": "f1_auth_service.py",
+      "line": 105,
+      "class": "logic",
+      "severity": "CRITICAL",
+      "description": "Session expiry comparison inverted: live sessions are deleted as 'expired', truly expired ones validate"
+    },
+    {
+      "id": "f1-SEC",
+      "file": "f1_auth_service.py",
+      "line": 57,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "SQL injection: email interpolated into query via f-string (login bypass / data exfiltration)"
+    },
+    {
+      "id": "f1-PER",
+      "file": "f1_auth_service.py",
+      "line": 118,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "find_user_by_email loads the entire users table into memory and scans in Python instead of WHERE email = ?"
+    },
+    {
+      "id": "f2-LOG",
+      "file": "f2_payments.py",
+      "line": 57,
+      "class": "logic",
+      "severity": "HIGH",
+      "description": "Money math in binary floats with per-line rounding then float accumulation; final total never rounded before *100 \u2014 cent drift"
+    },
+    {
+      "id": "f2-SEC",
+      "file": "f2_payments.py",
+      "line": 75,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "Full PAN and CVV written to logs (PCI-DSS violation; CVV must never be persisted)"
+    },
+    {
+      "id": "f2-PER",
+      "file": "f2_payments.py",
+      "line": 113,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "N+1 query: one order_items query per order inside monthly report loop instead of a JOIN/aggregate"
+    },
+    {
+      "id": "f3-LOG",
+      "file": "f3_upload_handler.py",
+      "line": 65,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "Off-by-one in reassembly: last chunk never appended (range excludes total_chunks-1 index)"
+    },
+    {
+      "id": "f3-SEC",
+      "file": "f3_upload_handler.py",
+      "line": 63,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "Path traversal: client-controlled filename joined into UPLOAD_DIR without sanitization (../ escapes)"
+    },
+    {
+      "id": "f3-PER",
+      "file": "f3_upload_handler.py",
+      "line": 83,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "verify_checksum reads the whole file (up to 200MB) into memory instead of streaming chunks into the hash"
+    },
+    {
+      "id": "f4-LOG",
+      "file": "f4_cache_layer.py",
+      "line": 47,
+      "class": "logic",
+      "severity": "HIGH",
+      "description": "_is_expired inverted: fresh entries report expired (evicted), stale entries report fresh (served)"
+    },
+    {
+      "id": "f4-SEC",
+      "file": "f4_cache_layer.py",
+      "line": 60,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "Untrusted deserialization: pickle.loads on bytes from shared Redis \u2014 RCE if any writer is compromised"
+    },
+    {
+      "id": "f4-PER",
+      "file": "f4_cache_layer.py",
+      "line": 69,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "L1 dict is unbounded: set() always inserts, no max-size/eviction \u2014 memory grows without limit"
+    },
+    {
+      "id": "f5-LOG",
+      "file": "f5_report_generator.py",
+      "line": 38,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "Docstring promises [start, end] inclusive but query uses < end with date-typed bound \u2014 boundary day excluded"
+    },
+    {
+      "id": "f5-SEC",
+      "file": "f5_report_generator.py",
+      "line": 50,
+      "class": "security",
+      "severity": "HIGH",
+      "description": "Stored XSS: user display_name interpolated into HTML report without escaping"
+    },
+    {
+      "id": "f5-PER",
+      "file": "f5_report_generator.py",
+      "line": 49,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "O(n^2) string concatenation building report rows in a loop instead of join()"
+    },
+    {
+      "id": "f6-LOG",
+      "file": "f6_user_search.py",
+      "line": 64,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "Pagination: page is 1-based per docstring, offset must be (page-1)*size \u2014 first page is skipped"
+    },
+    {
+      "id": "f6-SEC",
+      "file": "f6_user_search.py",
+      "line": 59,
+      "class": "security",
+      "severity": "HIGH",
+      "description": "ReDoS: user-supplied regex compiled and executed against rows (catastrophic backtracking DoS)"
+    },
+    {
+      "id": "f6-PER",
+      "file": "f6_user_search.py",
+      "line": 62,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "Fetches all rows, filters/sorts/slices in Python \u2014 pagination belongs in SQL (LIMIT/OFFSET, indexed ORDER BY)"
+    },
+    {
+      "id": "f7-LOG",
+      "file": "f7_task_worker.py",
+      "line": 69,
+      "class": "logic",
+      "severity": "CRITICAL",
+      "description": "Retry counter reset inside the while body \u2014 attempt never reaches MAX_RETRIES, failing job retries forever"
+    },
+    {
+      "id": "f7-SEC",
+      "file": "f7_task_worker.py",
+      "line": 52,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "Command injection: payload-derived source/dest interpolated into shell=True command line"
+    },
+    {
+      "id": "f7-PER",
+      "file": "f7_task_worker.py",
+      "line": 79,
+      "class": "performance",
+      "severity": "HIGH",
+      "description": "Blocking time.sleep inside async poll_loop stalls the entire event loop (should be await asyncio.sleep)"
+    },
+    {
+      "id": "f8-LOG",
+      "file": "f8_config_loader.py",
+      "line": 68,
+      "class": "logic",
+      "severity": "MEDIUM",
+      "description": "Precedence inverted vs docstring: file applied after env overlay, so file values override environment"
+    },
+    {
+      "id": "f8-SEC",
+      "file": "f8_config_loader.py",
+      "line": 34,
+      "class": "security",
+      "severity": "CRITICAL",
+      "description": "yaml.load without SafeLoader: arbitrary object construction from config file (use yaml.safe_load)"
+    },
+    {
+      "id": "f8-PER",
+      "file": "f8_config_loader.py",
+      "line": 74,
+      "class": "performance",
+      "severity": "MEDIUM",
+      "description": "get() re-reads and re-parses the YAML file (plus env scan) on every single key access \u2014 no caching"
+    }
+  ]
+}

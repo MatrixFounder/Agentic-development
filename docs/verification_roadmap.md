@@ -179,7 +179,11 @@ Critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their exi
 
 ## P2-experiment
 
-### 13. 🧪 [C-12] Run the pre-registered A/B (sarcasm & multi-critic effectiveness)
+### 13. ✅ [C-12] Run the pre-registered A/B (sarcasm & multi-critic effectiveness)
+- **Done in:** Task 075 (2026-06-10), report `docs/reviews/ab-experiment-075.md`, corpus+seal+scorer in `tests/fixtures/ab-corpus/` (240 agents, 5.49M tokens, ~37 min; seal 10:50Z before first run; scorer frozen pre-data).
+- **Verdicts (pre-registered rules, mechanical):** R1 sarcasm **SURVIVES** (C−B = +4.2pp > pooled var, FP(C) ≤ FP(B)) → **K2 kept** as opt-in skin (item 5 final form resolved). R2 multi **FAILS** (D−A = +5.6pp < +10pp; FP(D) > FP(A); 3.25× tokens) → default single strong reviewer, `/vdd-multi` for CI/coverage-critical (D was the only arm at 100% pooled recall and the only one catching f4-PER). R3 forced negativity **FAILS** (B−A = **−6.9pp**; but FP −16%, bikeshedding 3.9% vs 13.0%) → K1 is a precision tool, not a recall lever (confirms C-01 empirically).
+- **Recall ordering:** D .986 > A .931 > E .917 > C .903 > B .861 (security class saturated 8/8 across all arms; differentiation entirely in performance class).
+- **Follow-ups:** vdd-multi/K1/K2 repositioning per rules 1/2/3 — ✅ DONE (Task 076 / v3.20.6: vdd-multi Positioning block, K1 1.5 precision-note, K2 1.5 resolved-KEPT disclaimer; corpus README+.AGENTS.md added). Remaining lever: **R3c tier-diverse pilot** (could re-earn multi-critic cost).
 Protocol fully specified in the audit report, **Appendix A** (do not redesign — it is pre-registered): 24 seeded bugs / 8 files + 2 clean controls; arms A (plain exhaustive), B (adversarial), C (sarcastic), D (`/vdd-multi --no-fix`), E (single fable reviewer, cost-matched); N=3; metrics recall/FP/bikeshedding-ratio/tokens/wall-clock; decision rules fixed (sarcasm survives only if recall(C)−recall(B) > variance with FP(C) ≤ FP(B); multi survives only if recall(D)−recall(max(A,E)) ≥ +10pp). Outcome feeds item 5 (keep-vs-deprecate vdd-sarcastic) and item 7/R3c (single-strong-reviewer vs 3 critics). ~1–2 days. Publishable: no such study exists as of 2026-06-10.
 
 ---
@@ -189,13 +193,13 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 ```
 3 (MCP/agentic security)  — ✅ DONE (Task 069 / v3.20.0)
 4 (OWASP remap)           — ✅ DONE (Task 070 / v3.20.1)
-5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); final form (deprecate K2?) still waits on 13
+5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); K2 final form resolved by 13: KEEP as opt-in skin (rule 1)
 6 (vendor adapters)       — independent; per-vendor validation needs operator machines
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
 7 R3c (cross-vendor)      — BLOCKED BY 6 (tier-diverse form available now in Claude Code)
 8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
 11                        — ✅ DONE (Task 074 / v3.20.5; un-handicaps experiment 13 arm D)
-13 (experiment)           — anytime; informs 5 and 7/R3c final decisions
+13 (experiment)           — ✅ DONE (Task 075, ab-experiment-075.md): R1 sarcasm survives (K2 kept) · R2 multi fails cost bar · R3 adversarial framing = −6.9pp recall
 ```
 
 Suggested cycles: **(1)** item 3 → **(2)** item 4 → **(3)** items 7-R3a/b/d + 11 together (one vdd-multi/skill-parallel-orchestration cycle) → **(4)** item 5 → **(5)** item 6 (sub-cycles 6a–6c, then 6d–6e) → **(6)** items 8/9/10/12 batched → **(7)** experiment 13 → revisit 5 and 7-R3c with data.

@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.4
+version: 1.5
 ---
 # VDD Adversarial
 
@@ -24,6 +24,8 @@ This skill implements the **Iterative Adversarial Refinement** phase ("The Roast
 - **Exhaustive Reporting** (supersedes "Forced Negativity"): report every issue, including low-confidence ones, with confidence + severity attached — filtering happens downstream, never in the reviewer's head. Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).
 - **Context Resetting**: Each adversarial review MUST use a fresh context window. Why (documented mechanisms, audit-067 C-02): **multi-turn assumption lock-in** — models lock onto early assumptions and degrade ~39% vs single-turn on the same tasks (arXiv:2505.06120); **context rot** — accumulated history dilutes attention as context grows (Chroma 2025); **pushback-driven sycophantic belief updates** within a session (TRUTH DECAY / SYCON-Bench). A fresh window restores single-turn rigor.
 - **Linear Accountability**: Every line of code MUST trace to a corresponding issue and verification step.
+
+> **Empirical positioning (ab-experiment-075, pre-registered rule 3):** this skill is a **precision tool, not a recall lever**. Against a plain exhaustive baseline ("report everything with confidence + severity") the adversarial scaffolding scored **−6.9pp recall** but **−16% false positives** and a 3.9% vs 13.0% bikeshedding ratio (N=3, 24 sealed seeded bugs — `docs/reviews/ab-experiment-075.md`). Load it when noise/FP cost dominates (triage queues, high-volume review); for recall-critical passes prefer the plain exhaustive prompt, or `/vdd-multi` when class-complete coverage justifies 3× cost.
 
 ### Convergence Signal (Exit Strategy) — Objective Convergence
 The review cycle STOPS only when an **objective bar** is met: (1) the full test run has actually been executed (by you, or — in critic/subagent mode — via execution evidence supplied by the orchestrator; if neither exists, the condition is unverifiable: report the finding 'exit-bar condition unverifiable', never approve), (2) zero CRITICAL findings, (3) zero legitimate findings in logic / security / slop, and (4) only bikeshedding/style remains. That — not "I was forced to invent a flaw" — is the signal of "Maximum Viable Refinement" (Zero-Slop). Approval is bound to the objective bar; fabricating a nitpick is never the trigger to approve. Until the bar is met, keep rejecting.

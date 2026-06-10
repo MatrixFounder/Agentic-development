@@ -1,51 +1,36 @@
-# Technical Specification: Orchestrator-Supplies-Evidence Contract (C-13, roadmap item 11)
+# Technical Specification: Post-Experiment Repositioning + Corpus Documentation (rules 2/3 of ab-experiment-075)
 
 ### 0. Meta Information
-- **Task ID:** 074
-- **Slug:** `orchestrator-supplies-evidence`
-- **Mode:** Framework Upgrade (meta-operation — 1 workflow, 4 Tier-2 skill files, 1 reference; zero script/code changes)
-- **Type:** P2 modernization, roadmap item **11**. Closes audit-067 claim **C-13** (critic capability asymmetry) and the **P0 item 2 residual** ("until item 11 lands, critic-security legitimately reports `scan: NOT RUN` on every `/vdd-multi` run"). Pre-requisite hardening for experiment 13 (removes arm D's known handicap).
-- **Workflow:** `/framework-upgrade` (with `skill-self-improvement-verificator` gate, Modes A + B).
-- **Source:** User request (2026-06-10): "выполни item 11 из docs/verification_roadmap.md" + roadmap item 11 + audit-067 claim C-13.
+- **Task ID:** 076
+- **Slug:** `post-experiment-repositioning`
+- **Mode:** Framework Upgrade (meta-operation — 1 workflow file, 2 Tier-2 skills, roadmap; plus 2 new documentation artifacts in `tests/fixtures/ab-corpus/`)
+- **Type:** Follow-up cycle mandated by experiment 075's pre-registered decision rules 2/3 (`docs/reviews/ab-experiment-075.md`) + corpus documentation (README with infographics + `.AGENTS.md`).
+- **Workflow:** `/framework-upgrade` (verificator Modes A+B).
+- **Source:** User request (2026-06-10): (1) README с инфографикой в tests/fixtures/ab-corpus — методология, принципы, расшифровка результатов, вердикт, доступным языком; (1b, добавлено сообщением пользователя) `.AGENTS.md` рядом — описание всех python-модулей и артефактов; (2) репозиционирование vdd-multi + K1 по правилам 2/3; (3) обновить roadmap.
 
 ## 1. General Description
 
-Critics (`tools: Read, Grep, Glob`) physically cannot execute tests or scanners, yet their shared exit bar requires "the full test run has actually been executed". Chosen direction (pre-specified in roadmap, consistent with P0 item 2): **the orchestrator supplies execution evidence** — it has Bash, runs the evidence commands *before* Phase-1 spawn, and injects results into every critic prompt. Critics treat supplied evidence as **input**; total absence of an evidence block → finding **"exit-bar condition unverifiable"**, never approval. Rejected alternative (per roadmap): granting critics Bash — widens attack/cost surface, breaks the read-only critic guarantee.
+Experiment 075 produced three mechanical verdicts. Rule 1 (sarcasm survives → K2 kept) needs only a disclaimer refresh — the old text still says the decision "awaits" the A/B. Rules 2/3 mandate repositioning text: **vdd-multi** is не дефолт, а инструмент покрытия/CI (D: +5.6pp < +10pp bar, FP хуже, 3.25× токенов — но единственный 100% pooled recall); **K1 (vdd-adversarial)** — инструмент точности, не полноты (B−A = −6.9pp recall, FP −16%, bikeshedding 3.9% vs 13.0%). Никакие механики не меняются — только позиционирующий текст с цитатой на отчёт. Плюс два документационных артефакта в корпусе эксперимента.
 
-**Blast radius (greps, 2026-06-10):**
-- Phase-1 prompt skeleton exists **only** in `vdd-multi.md:85-93` — no lockstep duplicates.
-- Exit-bar condition "(1) the full test run has actually been executed" is a **3-location lockstep family** (065/066 discipline): `vdd-adversarial/SKILL.md:29`, `vdd-sarcastic/SKILL.md:32`, `vdd-methodology.md:38` — the critic-side parenthetical must land byte-identically in all three.
-- Critic-side groundwork already present: `skill-adversarial-security` §3/§5/§7 (NOT RUN honesty + "orchestrator is responsible…", from 068) and `skill-adversarial-performance` Termination cond 1 (from 073). Each needs only the **absence-rule** clause.
-- `sequential-fallback.md` "Concrete pattern" (3-critic VDD run, lines 67-89) has no evidence step — sequential path must stay flag/contract-equivalent.
-
-## 2. Requirements Traceability Matrix (RTM)
+## 2. RTM
 
 | ID | Requirement | Target file(s) | Verification |
 |----|-------------|----------------|--------------|
-| R1 | Phase 1 gains an **evidence-gathering step before spawn**: orchestrator runs the test suite (capture command + pass/fail summary; else `tests: NOT RUN (<reason>)`) and `run_audit.py` (JSON/summary; else `scan: NOT RUN (<reason>)`). Prompt skeleton extended with an `Execution evidence` block — tests evidence for **all** critics, scan evidence additionally for critic-security — plus the critic-side instruction: evidence is input, never re-run/fabricate; absent block → finding "exit-bar condition unverifiable", not approval | `.agent/workflows/vdd-multi.md` Phase 1 | File read; G1 |
-| R2 | Phase 2 merged-report Summary records evidence state (`Evidence: tests=<…> · scan=<…>`); merge rules 1–5 untouched | `.agent/workflows/vdd-multi.md` Phase 2 | File read; diff |
-| R3 | Fallback (Sequential) section: evidence gathered **once** before role-switching, injected into every persona pass; same absence rule. Flag-parity statement extended to the evidence contract | `.agent/workflows/vdd-multi.md` Fallback | File read; G1 |
-| R4 | Exit-bar condition (1) extended with one **byte-identical** parenthetical in all 3 lockstep locations: executed by you, or via orchestrator-supplied execution evidence (critic/subagent mode); if neither — condition unverifiable → report as finding, never approve. Versions: vdd-adversarial 1.3→1.4, vdd-sarcastic 1.3→1.4 | `vdd-adversarial/SKILL.md:29`, `vdd-sarcastic/SKILL.md:32`, `references/vdd-methodology.md:38` | G2 normalized diff; `validate_skill.py` |
-| R5 | Absence-rule clause added to existing critic-side groundwork: `skill-adversarial-security` §3 (one sentence; 1.3→1.4) and `skill-adversarial-performance` Termination cond 1 (one clause; 1.2→1.3) | both SKILL.md | File reads; G1 |
-| R6 | Sequential-fallback concrete pattern gains evidence step 0 (orchestrator runs evidence commands first; injects into steps 1/3/5). Parent `skill-parallel-orchestration` 3.2→3.3 | `references/sequential-fallback.md`, parent SKILL.md frontmatter | File read; `validate_skill.py` |
-| R7 | Bookkeeping: CHANGELOG EN+RU **v3.20.5**; README EN+RU header bump; roadmap item 11 → ✅ + P0 item 2 residual marked resolved + Dependencies line; audit artifact `docs/reviews/framework-audit-074.md`; session-state at boundaries | CHANGELOG×2, README×2, `docs/verification_roadmap.md`, audit artifact | File reads |
+| R1 | README (RU, доступный язык) в корпусе: зачем эксперимент, методология (seal-before-run, 5 армов, N=3, frozen scorer), инфографика (mermaid-пайплайн + unicode-бар-чарты recall/FP/токены), детальная расшифровка таблиц, три вердикта + честные нюансы, ссылки на EN-отчёт/analysis.json | NEW `tests/fixtures/ab-corpus/README.md` | file read; renders in VSCode preview |
+| R2 | `.AGENTS.md` в корпусе: назначение каталога; каждый python-модуль (build_ground_truth.py, analyze.py, files/f1–f8 с ролью посеянных багов, files/c1–c2 контроли) и каждый артефакт (ground_truth.json, seal.json, scan_floor.json, scan_summary.txt, analysis.json, results/-layout, wallclock.log) с однострочным описанием + предупреждение «корпус запечатан — не редактировать без re-seal» | NEW `tests/fixtures/ab-corpus/.AGENTS.md` | file read |
+| R3 | vdd-multi repositioning (rule 2): новый блок "Positioning (evidence: ab-experiment-075)" после интро — когда vdd-multi (CI `--fail-on`, coverage-critical: единственный арм 100% pooled, единственный f4-PER catch), когда single strong reviewer (дефолт для recall-задач: A=0.931 при 1/3.25 цены); существующие механики/флаги не тронуты | `.agent/workflows/vdd-multi.md` | file read; G2 |
+| R4 | K1 repositioning (rule 3): evidence-note в §2 — precision tool, not recall lever (−6.9pp recall vs plain exhaustive; FP −16%; bikeshedding 3.9% vs 13.0%; N=3); для recall-critical pass — plain exhaustive baseline. Version 1.4→1.5 | `.agent/skills/vdd-adversarial/SKILL.md` | file read; validate_skill |
+| R5 | K2 disclaimer refresh (rule 1): "awaits the pre-registered A/B" → resolved KEPT (rule 1: C−B=+4.2pp at lower FP; полный порядок recall всё же ставит plain baseline выше обоих скинов). Version 1.4→1.5 | `.agent/skills/vdd-sarcastic/SKILL.md:19` | G1 stale-grep empty |
+| R6 | Roadmap: item 13 Follow-ups строка → repositioning DONE (Task 076); item 5/13 строки согласованы | `docs/verification_roadmap.md` | file read |
+| R7 | Bookkeeping: CHANGELOG EN+RU v3.20.6, README EN+RU header, audit artifact `framework-audit-076.md`, session-state | стандартный набор | file reads |
 
 ## 3. Acceptance Criteria (Gates)
-
-- **G1 (contract grep):** `grep -rn "exit-bar condition unverifiable" .agent/` → present in exactly the contract surface (vdd-multi.md, 3 exit-bar locations, skill-adversarial-security, skill-adversarial-performance, sequential-fallback.md); `grep -n "Execution evidence" .agent/workflows/vdd-multi.md` → Phase 1 block present.
-- **G2 (lockstep byte-consistency):** the new parenthetical in the 3 exit-bar locations is byte-identical (normalized diff in audit artifact).
-- **G3 (skill gate):** `validate_skill.py` pass on the 4 touched skills; full sweep **43/43**.
-- **G4 (regression):** pytest security-audit **30/30** (doc-only change).
-- **G5 (doc-only):** `git diff --stat` — `.md` only, no `scripts/` paths.
-- **G6 (do-not-touch):** merge rules 1–5, iteration caps, convergence enum, flags table — byte-unchanged (diff inspection).
+- **G1:** `grep -rn "awaits the pre-registered" .agent/ .claude/ System/` (excl. archive/sessions) → empty.
+- **G2:** vdd-multi.md: merge rules 1–5, enum, флаги, Phase 1.0 evidence contract — byte-неизменны (diff inspection); добавлен только Positioning-блок.
+- **G3:** skill gate 43/43; **G4:** pytest security-audit 30/30; **G5:** doc-only diff (.md only).
 
 ## 4. Out of Scope
-
-1. **Granting critics Bash** — rejected by roadmap (attack/cost surface, read-only guarantee).
-2. **Critic wrappers `.claude/agents/critic-*.md`** — stay thin; the critic-side rule lives in SOT skills + the Phase-1 prompt the orchestrator composes (Wave-1/2 anti-drift discipline).
-3. **R3c / per-critic model config** — separate item (blocked by 6).
-4. **"Functionally equivalent" claim in the Fallback section** — item 6 (C-07) territory; not touched beyond the evidence sentence.
-5. **`security-audit` workflow / `10_security_auditor.md`** — the full-audit path runs its own automation (auditor has Bash); contract unchanged there.
+WORKFLOWS.md:148/422 quick-pick rows («Maximum code quality (3 parallel critics)») — проверены: описывают coverage-механику, не recall-claim; не редактируются (флаг в аудит-артефакте). R3c pilot, vendor adapters (6) — отдельные циклы. Механики vdd-multi/K1 — не тронуты.
 
 ## 5. Open Questions
-None. Direction, evidence items, and absence semantics are pre-specified in roadmap item 11. Judgment calls: (a) exit-bar parenthetical applied to all 3 lockstep copies (065/066 discipline), not just the critic SOT; (b) Phase-2 Summary evidence line added for report traceability (minimal, merge rules untouched); (c) sequential path gets the same contract to preserve path parity.
+None. Формулировки позиционирования предписаны отчётом 075 (§Consequences); README/.AGENTS.md — документация без влияния на пайплайны.

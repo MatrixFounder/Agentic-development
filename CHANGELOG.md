@@ -16,6 +16,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.6 — Evidence-Based Repositioning of vdd-multi / K1 / K2 (ab-experiment-075 rules 1–3) + Corpus Documentation**
+
+Applies the pre-registered verdicts of A/B experiment 075 (`docs/reviews/ab-experiment-075.md`, Task 075: 240 runs, 24 sealed seeded bugs, frozen scorer) to the framework's positioning text — **zero mechanics changed** (merge rules, flags, evidence contract, exit bars all byte-identical; gates 43/43, pytest 30/30). Task 076, gate artifact `docs/reviews/framework-audit-076.md`.
+
+#### **Changed**
+* **`/vdd-multi` repositioned (rule 2 FAILED its cost bar):** new "Positioning" block — coverage & CI-gating tool, not the default review path (+5.6pp < +10pp over best single reviewer at 3.25× tokens and higher FP; but the only arm at 100% pooled recall). Default for routine recall-oriented review = single strong reviewer with the plain exhaustive prompt. Remaining lever: R3c model-heterogeneous critics.
+* **`vdd-adversarial` 1.4→1.5 (rule 3 FAILED):** empirical-positioning note — **precision tool, not recall lever** (−6.9pp recall vs plain baseline; −16% FP; bikeshedding 3.9% vs 13.0%). Load when noise cost dominates; plain exhaustive prompt for recall-critical passes.
+* **`vdd-sarcastic` 1.4→1.5 (rule 1 SURVIVED):** stale "awaits the A/B" disclaimer → resolved **KEPT** (+4.2pp vs neutral-adversarial at lower FP; full ordering still puts the plain baseline above both skins).
+* **Corpus documentation:** `tests/fixtures/ab-corpus/README.md` (RU, accessible methodology + infographics + verdicts) and `tests/fixtures/ab-corpus/.AGENTS.md` (all python modules incl. per-file seeded-bug roles, all data artifacts, seal invariants).
+* Roadmap: item 13 follow-ups marked done; R3c pilot remains the open lever.
+
+---
+
 ### **v3.20.5 — Orchestrator-Supplies-Evidence Contract (audit-067 item 11, C-13 + P0 item 2 residual)**
 
 Closes the critic capability asymmetry: critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their shared exit bar requires "the full test run has actually been executed". Chosen direction per roadmap (Bash for critics rejected — attack/cost surface, read-only guarantee): **the orchestrator runs the evidence commands and injects results into every critic prompt**. Also closes the P0 item 2 residual — critic-security no longer legitimately reports `scan: NOT RUN` on every `/vdd-multi` run — and removes experiment 13's known arm-D handicap. Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-074.md`, Task 074). **Zero functional change**: doc-only diff, pytest 30/30, skill gate 43/43.

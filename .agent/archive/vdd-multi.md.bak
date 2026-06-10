@@ -77,7 +77,14 @@ vdd-multi
 
 ## Phase 1 — Parallel critic spawn (Layer A)
 
-In a **single assistant message**, invoke `Agent` N times in parallel (N = critics in `--scope`):
+**Step 1.0 — Gather execution evidence (orchestrator side; audit-067 C-13).** Critics have no `Bash` (read-only guarantee) — the orchestrator runs the evidence commands **before** spawning and injects results into every critic prompt:
+
+1. **Tests**: if a test suite exists for the target scope, run it and capture `command + pass/fail summary (+ failure list)`. If not run, record the honest line `tests: NOT RUN (<reason>)`.
+2. **Security scan**: run `python3 .agent/skills/security-audit/scripts/run_audit.py <scope> --output summary` (or `json`) and capture the summary. If not run, record `scan: NOT RUN (<reason>)`.
+
+Evidence is gathered **once per iteration** and given to critics verbatim and identically — it is ground truth, not critic output, so sharing it is NOT cross-pollination.
+
+**Step 1.1 — Spawn.** In a **single assistant message**, invoke `Agent` N times in parallel (N = critics in `--scope`):
 - `subagent_type: critic-logic` (if `logic` in scope)
 - `subagent_type: critic-security` (if `security` in scope)
 - `subagent_type: critic-performance` (if `performance` in scope)
@@ -90,11 +97,17 @@ Review the following code for <your-domain> issues and return a structured repor
 Target: {target}  (plus diff context if --diff-only)
 Context: {short description — what this code does, entry points, dependencies}
 Focus areas: {optional — narrow the scope}
+
+Execution evidence (supplied by the orchestrator — treat as INPUT; do not re-run or fabricate):
+- Tests: {command + pass/fail summary | NOT RUN (<reason>)}
+- Scan (run_audit.py): {summary | NOT RUN (<reason>)}   ← critic-security only
+If this evidence block is missing entirely, emit the finding "exit-bar condition
+unverifiable — no execution evidence supplied" and do not signal clean-pass.
 ```
 
 **Constraints**:
 - ONE message with N parallel Agent tool-uses, not N sequential messages (Layer A invariant).
-- Each critic receives **independent context**; no pre-filter or cross-pollination.
+- Each critic receives **independent context**; no pre-filter or cross-pollination (the shared evidence block is exempt — see Step 1.0).
 - Do NOT pass critic outputs between critics during Phase 1 — merge happens in Phase 2.
 
 ## Phase 2 — Merge & deduplicate
@@ -116,6 +129,7 @@ Merge the reports from critics that ran. Apply:
 
 ## Summary
 - Critics run: <list, per --scope>
+- Evidence: tests=<run: summary | NOT RUN (<reason>)> · scan=<run: summary | NOT RUN (<reason>)>
 - Total issues (post-dedup): <N>  (critical: <C>, high: <H>, medium: <M>, low: <L>)
 - Convergence: <logic=state> · <security=state> · <performance=state>
 - Verdict (per --fail-on): PASS | FAIL at <severity>
@@ -165,11 +179,12 @@ If `--output` was set, mention the path in the termination line as well.
 
 If `Agent` tool or `.claude/agents/` is unavailable, fall back to sequential role-switching:
 
+0. **Gather execution evidence first** (same contract as Phase 1 Step 1.0): run the test suite and `run_audit.py` once, capture summaries (or honest `tests/scan: NOT RUN (<reason>)` lines), and include the evidence block in **every** persona pass below. Absence of the block → the persona emits "exit-bar condition unverifiable", never clean-pass.
 1. Apply `skill-vdd-adversarial` (role-switch) → fix loop (unless `--no-fix`).
 2. Apply `skill-adversarial-security` (role-switch) → fix loop.
 3. Apply `skill-adversarial-performance` (role-switch) → fix loop.
 
-Functionally equivalent to Phase 1–3 above but slower (3× wall-clock) and without parallel-context-isolation benefits. All flags (`--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`) honored by the role-switching path.
+Functionally equivalent to Phase 1–3 above but slower (3× wall-clock) and without parallel-context-isolation benefits. All flags (`--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`) **and the execution-evidence contract** honored by the role-switching path.
 
 ---
 

@@ -1,0 +1,28 @@
+{
+  "arm": "E",
+  "file": "f5_report_generator.py",
+  "run": 1,
+  "findings": [
+    {"line": 38, "class": "logic", "severity": "HIGH", "confidence": 0.9, "description": "fetch_events filters with created_at < end using a date-only ISO string, which excludes the entire end boundary day and violates the docstring contract that both boundary days are included.", "bikeshedding": false},
+    {"line": 50, "class": "security", "severity": "HIGH", "confidence": 0.85, "description": "DB-sourced display_name and action values are interpolated into HTML table rows without escaping, enabling stored XSS against admins who view the generated report.", "bikeshedding": false},
+    {"line": 54, "class": "security", "severity": "MEDIUM", "confidence": 0.6, "description": "title is substituted into the template's <title> and <h1> without HTML escaping, allowing XSS or markup breakage if the title is ever user-influenced.", "bikeshedding": false},
+    {"line": 68, "class": "logic", "severity": "MEDIUM", "confidence": 0.65, "description": "top_users uses the same exclusive created_at < end bound, silently omitting the end day's activity from rankings, inconsistent with the inclusive-range semantics documented for fetch_events.", "bikeshedding": false},
+    {"line": 82, "class": "logic", "severity": "MEDIUM", "confidence": 0.65, "description": "event_count excludes events on the end boundary day in both branches due to the created_at < end predicate with a date-only string.", "bikeshedding": false},
+    {"line": 70, "class": "logic", "severity": "LOW", "confidence": 0.5, "description": "limit is not validated; SQLite treats a negative LIMIT as no limit, so limit=-1 returns every user, and limit=0 silently returns none.", "bikeshedding": false},
+    {"line": 49, "class": "performance", "severity": "LOW", "confidence": 0.5, "description": "Building rows via string += in a loop is O(n^2) in the worst case; ''.join over a list is the linear pattern for large reports.", "bikeshedding": false},
+    {"line": 40, "class": "logic", "severity": "MEDIUM", "confidence": 0.25, "description": "Date filtering assumes created_at is stored as ISO-8601 text; if it is stored as epoch numbers, SQLite's cross-type comparison (INTEGER < TEXT always) makes the predicates silently match nothing.", "bikeshedding": false},
+    {"line": 59, "class": "security", "severity": "LOW", "confidence": 0.3, "description": "save_report writes to any caller-supplied out_path with no validation, enabling path traversal or arbitrary file overwrite if the path derives from untrusted input.", "bikeshedding": false},
+    {"line": 55, "class": "security", "severity": "LOW", "confidence": 0.25, "description": "The caller-supplied title is logged verbatim, so embedded newlines could forge log entries (log injection).", "bikeshedding": false},
+    {"line": 11, "class": "logic", "severity": "LOW", "confidence": 0.45, "description": "The HTML template declares no <meta charset>, so the UTF-8 file written by save_report may render non-ASCII display names garbled when the browser guesses the encoding.", "bikeshedding": false},
+    {"line": 41, "class": "performance", "severity": "LOW", "confidence": 0.3, "description": "fetchall materializes the full event range in memory; very large date ranges could be expensive compared to iterating the cursor.", "bikeshedding": false},
+    {"line": 27, "class": "logic", "severity": "LOW", "confidence": 0.4, "description": "sqlite3.connect silently creates an empty database file when db_path does not exist, masking misconfiguration behind a later 'no such table' error and leaving a stray file.", "bikeshedding": false},
+    {"line": 26, "class": "performance", "severity": "LOW", "confidence": 0.25, "description": "Every public method opens and closes a fresh SQLite connection, adding overhead when one report flow calls several methods back to back.", "bikeshedding": false},
+    {"line": 69, "class": "logic", "severity": "LOW", "confidence": 0.3, "description": "ORDER BY events DESC has no tie-breaker, so users with equal counts are returned in nondeterministic order across runs.", "bikeshedding": false},
+    {"line": 31, "class": "logic", "severity": "LOW", "confidence": 0.2, "description": "No validation that start <= end; reversed arguments silently yield an empty result instead of an error.", "bikeshedding": false},
+    {"line": 66, "class": "other", "severity": "LOW", "confidence": 0.4, "description": "The column alias 'events' shadows the table name 'events' in the same query, which is confusing to read.", "bikeshedding": true},
+    {"line": 80, "class": "other", "severity": "LOW", "confidence": 0.5, "description": "The two event_count branches duplicate a nearly identical query differing only by one predicate; the SQL could be built conditionally to avoid drift.", "bikeshedding": true},
+    {"line": 14, "class": "other", "severity": "LOW", "confidence": 0.7, "description": "border=\"1\" is an obsolete HTML presentational attribute; styling belongs in CSS.", "bikeshedding": true},
+    {"line": 22, "class": "other", "severity": "LOW", "confidence": 0.5, "description": "The class and most public methods lack docstrings; only fetch_events documents its contract.", "bikeshedding": true}
+  ],
+  "convergence": "issues-found"
+}

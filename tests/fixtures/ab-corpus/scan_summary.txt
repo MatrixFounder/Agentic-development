@@ -1,0 +1,9 @@
+run_audit.py on corpus (8 findings):
+f1_auth_service.py:57 [critical] SQL Injection: 
+f4_cache_layer.py:60 [high] Deserialization: 
+f7_task_worker.py:52 [high] Command Injection: 
+f8_config_loader.py:34 [high] Deserialization: 
+f1_auth_service.py:71 [medium] Log Injection: 
+f1_auth_service.py:107 [medium] Log Injection: 
+f6_user_search.py:66 [medium] Log Injection: 
+?:? [medium] Missing SBOM: No SBOM (Software Bill of Materials) found. Required by EU CRA & EO 14

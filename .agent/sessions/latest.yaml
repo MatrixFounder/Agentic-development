@@ -1,21 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T13:37:10.917114"
+last_updated: "2026-06-10T15:33:10.842656"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "orchestrator-supplies-evidence"
-  status: "completed-v3.20.5-pending-operator-commit"
+  name: "post-experiment-repositioning"
+  status: "completed-v3.20.6-token-split-toc-pending-commit"
   predicted_steps: 0
 
 context_summary: |
-  Task 074 (roadmap item 11, C-13 + P0-2 residual) DONE: vdd-multi Phase 1 Step 1.0 evidence gathering + Execution evidence prompt block + absence rule; Phase 2 Summary evidence line; sequential fallback step 0 (contract parity, anti-pattern line aligned); exit-bar lockstep x3 byte-identical parenthetical; absence clauses in adversarial-security S3 + adversarial-performance Termination. Versions: vdd-adversarial 1.4, vdd-sarcastic 1.4, adversarial-security 1.4, adversarial-performance 1.3, parallel-orchestration 3.3, framework v3.20.5. Gates: contract grep = exactly 7 files, lockstep 1 md5, 43/43, pytest 30/30, doc-only, rules/enum/flags untouched. Artifact framework-audit-074.md. Roadmap: item 11 done; P0-2 residual closed; experiment 13 arm-D handicap removed - 13 is now unblocked at design intent. Remaining open: 6, 7-R3c, 13. Uncommitted: v3.20.4 + v3.20.5 both in working tree - operator to review/commit.
+  Task 076 addendum 2: input/output token split recovered from agent jsonl transcripts (1924 API calls): in 4.50M / out 1.15M / cache-write 10.16M / cache-read 21.26M (full footprint 37.1M; harness aggregate differs ~2.8% - transcripts primary). Notable: fable arm E out=515k (8.5x arm A) - verbosity is its cost driver. Split tables + 3 observations added to both READMEs; TOC (10 chapters) added to both; results/token_split.json saved + artifact maps and .AGENTS.md synced.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "Roadmap discipline: 7-R3a/b/d shippable now; 7-R3c cross-vendor blocked by item 6; item 11 pairs with 7 in one vdd-multi cycle; adapter validation (6a-6c) requires operator machines with real CLIs"
-  - "069: MCP patterns carry scope field (mcp-config/any-config/code) - file targeting in data not code; .md never scanned (LLM-review class); severity ceiling HIGH so MCP findings cannot trip --fail-on critical alone"
   - "Dogfood fix folded into uncommitted v3.20.0 (CHANGELOG Fixed subsection EN+RU); .pem coverage + Solidity-pattern file-gating left as flagged recommendations, not in-scope edits"
   - "070: A03/A08 split: CI/CD tampering + code signing + deps-audit -> A03 Supply Chain; deserialization + artifact-signature + unsigned auto-update stay A08; CWE-209 stack-trace check moves old-A05 -> new A10"
   - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
@@ -24,6 +22,8 @@ recent_decisions:
   - "072: sequential cross-mechanism findings get priority flag, never +1 (R3b minimum form, consistent with R3d literal 'never escalates'); critics<->teammates noun split preserved as the only rule-3 divergence, normalized-diff-verified"
   - "073: security-audit two-layer section inserted as SS0 specifically to keep SS1-SS7 anchors stable for external references"
   - "074: critic wrappers untouched - critic-side rule lives in SOT skills + Phase-1 prompt (thin-wrapper anti-drift)"
+  - "075: experiment artifacts are evidence, not framework edits - rules 2/3 implications recorded as recommendations pending operator review"
+  - "076: corpus README in Russian per operator request; EN technical report remains SOT for citations"
 
 completed_tasks:
   - "Task A"
@@ -52,3 +52,5 @@ completed_tasks:
   - "retire-politeness-filter-rationale"
   - "severity-escalation-redesign"
   - "verification-p2-aging-batch"
+  - "orchestrator-supplies-evidence"
+  - "ab-experiment-sarcasm-multicritic"

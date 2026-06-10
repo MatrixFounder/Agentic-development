@@ -1,0 +1,133 @@
+{
+  "project": "tests/fixtures/ab-corpus/files",
+  "timestamp": "2026-06-10T13:50:22.093303",
+  "scan_type": "all",
+  "scans": {
+    "dependencies": {
+      "tool": "dependency_scanner",
+      "findings": [],
+      "status": "[OK] Secure"
+    },
+    "secrets": {
+      "tool": "secret_scanner",
+      "findings": [],
+      "status": "[OK] No secrets detected",
+      "scanned_files": 10,
+      "skipped_files": 0,
+      "by_severity": {
+        "critical": 0,
+        "high": 0
+      }
+    },
+    "code_patterns": {
+      "tool": "pattern_scanner",
+      "findings": [
+        {
+          "file": "f1_auth_service.py",
+          "line": 57,
+          "pattern": "SQL f-string",
+          "severity": "critical",
+          "category": "SQL Injection",
+          "cwe": "CWE-89",
+          "snippet": "query = f\"SELECT * FROM users WHERE email = '{email}' AND is_active = 1\""
+        },
+        {
+          "file": "f4_cache_layer.py",
+          "line": 60,
+          "pattern": "pickle usage",
+          "severity": "high",
+          "category": "Deserialization",
+          "cwe": "CWE-502",
+          "snippet": "value = pickle.loads(raw)"
+        },
+        {
+          "file": "f7_task_worker.py",
+          "line": 52,
+          "pattern": "subprocess.run shell=True",
+          "severity": "high",
+          "category": "Command Injection",
+          "cwe": "CWE-78",
+          "snippet": "result = subprocess.run(cmd, shell=True, capture_output=True)"
+        },
+        {
+          "file": "f8_config_loader.py",
+          "line": 34,
+          "pattern": "Unsafe YAML load",
+          "severity": "high",
+          "category": "Deserialization",
+          "cwe": "CWE-502",
+          "snippet": "data = yaml.load(f)"
+        },
+        {
+          "file": "f1_auth_service.py",
+          "line": 71,
+          "pattern": "Logging user input (log injection)",
+          "severity": "medium",
+          "category": "Log Injection",
+          "cwe": "CWE-117",
+          "snippet": "logger.warning(\"account locked: %s\", user.id)"
+        },
+        {
+          "file": "f1_auth_service.py",
+          "line": 107,
+          "pattern": "Logging user input (log injection)",
+          "severity": "medium",
+          "category": "Log Injection",
+          "cwe": "CWE-117",
+          "snippet": "logger.info(\"session expired for user %s\", session.user_id)"
+        },
+        {
+          "file": "f6_user_search.py",
+          "line": 66,
+          "pattern": "Logging user input (log injection)",
+          "severity": "medium",
+          "category": "Log Injection",
+          "cwe": "CWE-117",
+          "snippet": "logger.info(\"search returned %d/%d users (page %d)\", len(window), total, page)"
+        }
+      ],
+      "status": "[!!] CRITICAL: 1 dangerous patterns",
+      "scanned_files": 10,
+      "skipped_files": 0
+    },
+    "configuration": {
+      "tool": "config_scanner",
+      "findings": [],
+      "status": "[OK] Config secure",
+      "skipped_files": 0
+    },
+    "iac": {
+      "tool": "iac_scanner",
+      "findings": [],
+      "status": "[OK] IaC secure",
+      "scanned_files": 0,
+      "skipped_files": 0
+    },
+    "mcp_agentic": {
+      "tool": "mcp_agentic_scanner",
+      "findings": [],
+      "status": "[OK] No MCP/agentic risks detected",
+      "scanned_files": 10,
+      "skipped_files": 0
+    },
+    "sbom": {
+      "tool": "sbom_scanner",
+      "findings": [
+        {
+          "type": "Missing SBOM",
+          "severity": "medium",
+          "cwe": "CWE-1104",
+          "message": "No SBOM (Software Bill of Materials) found. Required by EU CRA & EO 14028. Generate with: npx @cyclonedx/cdxgen -o sbom.json (or syft . -o cyclonedx-json > sbom.json)"
+        }
+      ],
+      "status": "[?] SBOM missing"
+    }
+  },
+  "summary": {
+    "total_findings": 8,
+    "critical": 1,
+    "high": 3,
+    "medium": 4,
+    "overall_status": "[!!] CRITICAL ISSUES FOUND"
+  }
+}

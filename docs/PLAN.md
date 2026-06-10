@@ -1,60 +1,56 @@
-# Development Plan: Task 070 — OWASP Top 10 Checklist Re-map to 2025 Final (C-09)
+# Development Plan: Task 071 — Retire the Politeness-Filter Rationale; Reposition vdd-sarcastic (C-01, C-03, K2)
 
-**Source spec:** `docs/TASK.md` (Task 070) · **Gate:** `skill-self-improvement-verificator` (Mode B)
-**Architecture impact:** none — content re-map inside the existing Tier-2 `security-audit` skill + comment-only docstring edits. **No ARCHITECTURE.md edit.**
-**Behavior contract:** zero functional change — pattern lists, finding fields, severities, CLI untouched. Proof: pytest 30/30 identical, `run_audit.py` repo finding counts identical to pre-edit baseline (note: full summary output legitimately differs by the v3.4→v3.5 header line — `run_audit.py:99` embeds `AUDIT_VERSION`).
+**Source spec:** `docs/TASK.md` (Task 071) · **Gate:** `skill-self-improvement-verificator` (Mode B)
+**Architecture impact:** none — rationale/wording changes inside existing Tier-2 skills, one `.claude/agents/` wrapper, one example, registry/release docs. **No ARCHITECTURE.md edit** (precedent: 069/070).
+**Behavior contract:** zero functional change — no script, pattern, test, CLI, or exit-bar semantics touched. Objective Convergence bars stay byte-identical. Proof: pytest 30/30 unchanged; `validate_skill.py` 43/43; G1/G2 greps.
+
+**Canonical replacement wording (reused on every edited line, adapted only grammatically):**
+> Report **every** issue, including low-confidence ones; attach **confidence + severity** to each finding; filtering happens **downstream** — never in the reviewer's head.
+
+**Wording constraint (lesson 070 / TASK G1):** no new text may contain the token "politeness" (retirement notes phrase the old theory as "tone bypasses the model's default agreeableness").
 
 ## Phase T0 — Backup (Rollback safety) — workflow §3.1
 1. `mkdir -p .agent/archive`
-2. Bootstrap files (none edited; backed up per workflow): `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done`
-3. Edit targets → `.agent/archive/`: `owasp_top_10.md`, `security-audit/SKILL.md`, `audit/scanners.py`, `run_audit.py`, `audit/__init__.py`, `System/Docs/SKILLS.md`, `docs/verification_roadmap.md`, `CHANGELOG.md`, `CHANGELOG.ru.md`.
-4. Capture pre-edit baselines: `python3 -m pytest .agent/skills/security-audit/tests/ -q` (expect 30 passed) and `run_audit.py . --output summary` counts.
+2. Bootstrap files (none edited; backed up per workflow §3.1): `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done`
+3. Edit targets → `.agent/archive/` (flat `<basename>.bak`, disambiguated where names collide):
+   `vdd-adversarial-SKILL.md.bak`, `vdd-methodology.md.bak`, `vdd-sarcastic-SKILL.md.bak`, `vdd-sarcastic-usage_example.md.bak`, `skill-adversarial-security-SKILL.md.bak`, `skill-adversarial-performance-SKILL.md.bak`, `critic-security.md.bak`, `SKILLS.md.bak`, `verification_roadmap.md.bak`, `CHANGELOG.md.bak`, `CHANGELOG.ru.md.bak`, `README.md.bak`, `README.ru.md.bak`
+4. Capture pre-edit baselines: `python3 -m pytest .agent/skills/security-audit/tests/ -q` (expect 30 passed); `validate_skill.py` full sweep (expect 43/43).
 
-## Phase T1 — R1: Re-section `references/checklists/owasp_top_10.md`
+## Phase T1 — R1+R2: K1 rationale swap (`vdd-adversarial`)
+1. `SKILL.md` §2 bullet (line 24): `**Forced Negativity**: Zero tolerance…` → `**Exhaustive Reporting** (supersedes "Forced Negativity"): report every issue, including low-confidence ones, with confidence + severity attached — filtering happens downstream. Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).`
+2. `SKILL.md` §7 row (line 59): counter-argument → exhaustive-reporting wording; drop `VDD requires Forced Negativity. Politeness hides bugs.`
+3. `SKILL.md` frontmatter `version: 1.1` → `1.2`.
+4. `references/vdd-methodology.md` §V.2 (line 44) → `Exhaustive Reporting (supersedes "Forced Negativity"): …canonical wording… (The pre-2026 rationale — adversarial tone to bypass the model's default agreeableness — is retired per audit-067 C-01: vendors now train sycophancy out, and the documented recall lever is the reporting-threshold instruction, not tone.)`
+5. **Phase check:** `grep -in "politeness\|Forced Negativity" .agent/skills/vdd-adversarial/SKILL.md .agent/skills/vdd-adversarial/references/vdd-methodology.md` → only the two `supersedes` notes. §V.2 stays principle №2 (numbering unchanged); lines 23/46 (C-02 wording) byte-untouched.
 
-**Content-move map (every 2021 item accounted — carry-forward #1):**
+## Phase T2 — R3+R7: K2 repositioning (`vdd-sarcastic`)
+1. `SKILL.md` frontmatter: `version: 1.2`; `description:` → opt-in delivery-style wording ("stylistic skin over vdd-adversarial mechanics").
+2. §2 head: add positioning disclaimer blockquote — tone = stylistic choice, **no evidence base** as a recall lever (audit-067 C-01/C-03); mechanism = **exhaustive reporting + objective bar (§4)**, not meanness; keep-vs-deprecate awaits item 13's A/B.
+3. §1 red flag (line 12): "tone it down" → style optional / withholding findings prohibited (canonical wording).
+4. §5 row "I don't want to be mean" (line 38, C-03): → meanness is NOT the mechanism; style ≠ success criterion; never soften by withholding findings.
+5. §5 row "Sarcasm is unprofessional" (line 40, C-01): → opt-in stylistic choice, no evidence base (see §2 disclaimer); process = exhaustive reporting + Objective Convergence (§4); "if the style gets in the way, drop the style, never the findings."
+6. §3 line 24 ("relationship drift") — **DO NOT TOUCH** (C-02, item 8).
+7. `examples/usage_example.md`: Roast table gains **Severity + Confidence** columns; add finding #6 with `LOW / Low confidence` (cache may store `None`/error sentinel from `fetch_from_api` — reported anyway per exhaustive-reporting rule); Exit Signal line updated: findings carry confidence + severity, filtering happens downstream, NOT Zero-Slop.
+8. **Phase check:** file reads; no "politeness"/"Meanness is the mechanism" tokens; §4 byte-untouched.
 
-| 2025 section | Content source | Notes |
-|---|---|---|
-| A01 Broken Access Control | old-A01 (7) + old-A10 SSRF (6) | old-A01's single SSRF line merges with old-A10's "URL Allowlist" (dedup −1) → net +5. Header: CWE-284, 639, 918 |
-| A02 Security Misconfiguration | old-A05 minus stack-trace check | CWE-209 item **moves to new A10**. Header: CWE-16, 611 |
-| A03 Software Supply Chain Failures | old-A06 (all 6) + from old-A08: deps-audit, CI/CD tampering, code signing | Header: CWE-1104, 829, 494 |
-| A04 Cryptographic Failures | old-A02 (all 6) | Header: CWE-259, 327, 331 |
-| A05 Injection | old-A03 (all 6) | Header: CWE-79, 89, 78 |
-| A06 Insecure Design | old-A04 (all 5) | Header: CWE-256, 501, 657 (drop 209 — now canonical in A10) |
-| A07 Authentication Failures | old-A07 (all 6), section renamed | Header: CWE-287, 384 |
-| A08 Software or Data Integrity Failures | old-A08 minus 3 supply-chain items; renamed "and"→"or" | Keeps: deserialization (CWE-502), artifact-signature verification, unsigned auto-update. +1 new: untrusted plugin/model load (CWE-829→cross-ref A03). Header: CWE-502, 345 |
-| A09 Security Logging and Alerting Failures | old-A09 (all 6), section renamed | Header: CWE-778 |
-| A10 Mishandling of Exceptional Conditions | **NEW** | Checks: stack-trace leakage (CWE-209, moved from old-A05), fail-open controls (CWE-636), unchecked return values/unusual conditions (CWE-754/252), swallowed exceptions/empty catch (CWE-390), resource cleanup on error paths (CWE-404/772), partial-failure rollback consistency |
+## Phase T3 — R4+R5+R6: critics de-mandate (security SKILL + wrapper + performance SKILL)
+1. `skill-adversarial-security/SKILL.md`: frontmatter `version: 1.3`, `description:` → "adversarial style (optional sarcastic skin)"; §1 red flag (line 16) `Sarcasm breaks complacency. Use it.` → severity-threshold red flag with canonical wording ("I'll only report the high-severity stuff" -> WRONG…); §2 `**MANDATORY:**` → `**Optional style:**` (MAY adopt persona; no evidence base as recall lever) + `**NOT optional:**` exhaustive reporting + objective bar (§7); §5 step 4 → report per canonical wording, persona optional; §7 `The persona (§2)` → `The optional persona (§2)`.
+2. `.claude/agents/critic-security.md` (R5, wrapper sync): `(paranoid sarcastic OWASP auditor)` → `(paranoid OWASP auditor; optional sarcastic skin)`; `Adopt the persona … (mandatory per SKILL §2)` → persona optional per SKILL §2; mandatory = exhaustive reporting (canonical wording) + objective bar (SKILL §7).
+3. `skill-adversarial-performance/SKILL.md` (R6): frontmatter `version: 1.1`, `description:` → "(optional sarcastic skin)"; under `## Tone` add style-note line (opt-in delivery style, not the mechanism; canonical wording); Process step 2 `State the problem sarcastically` → `State the problem (sarcastic framing optional — style, never the success criterion)`. Checklists/examples/termination untouched (termination = item 12).
+4. **Phase check:** G2 grep tokens (`mandatory per SKILL §2`, `Sarcasm breaks complacency`, `State the problem sarcastically`) → empty across `.agent/ .claude/ System/`.
 
-Also:
-- Header/source line: cite `owasp.org/Top10/2025/`, **verified 2026-06-10**; drop the false "(Final Release, Q4 2025)" framing.
-- Append a compact **2021→2025 mapping table** at file end (compliance-remap aid for stale Jira/Snyk exports — the C-09 driver).
-- **Conservation check:** old file = 61 checkboxes; new file = 61 − 1 (SSRF dedup) + 5 new-A10 + 1 new-A08 = **66**; verify with `grep -c '^- \[ \]'`.
+## Phase T4 — Global gates (TASK §3)
+1. **G1:** `grep -ri "politeness filter" .agent/ System/` → empty; hardened: `grep -rin "politeness" .agent/ System/ .claude/` → empty.
+2. **G2:** `grep -rinE 'mandatory per SKILL §2|Sarcasm breaks complacency|Meanness is the mechanism|frame ALL feedback sarcastically|State the problem sarcastically' .agent/ .claude/ System/` → empty; `grep -rin "Forced Negativity" .agent/ .claude/ System/` → exactly 2 supersedes-notes.
+3. **G3:** `validate_skill.py` × 4 edited skills, then full sweep `.agent/skills/*/` → 43/43.
+4. **G4:** `python3 -m pytest .agent/skills/security-audit/tests/ -q` → 30 passed (regression evidence; no scripts touched).
 
-## Phase T2 — R2: `security-audit/SKILL.md` re-tag + version 3.4 → 3.5
-1. §2 scope list: Secrets `(OWASP A02, …)` → `(OWASP A04:2025 Cryptographic Failures, …)`; Dependencies `(A06/A08, …)` → `(A03:2025 Software Supply Chain Failures, …)`; Code Patterns/Injection `(A03, …)` → `(A05:2025, …)`; Config/Misconfiguration `(A05, …)` → `(A02:2025, …)`.
-2. §3 Web/API Top Checks → 4 checks: A01 (IDOR + SSRF-absorbed note), A03 supply chain (pinning/lockfiles/SCA), A05 injection, A10 exceptional conditions (fail-closed, no stack traces).
-3. Version sync (carry-forward #3): frontmatter `version: 3.5`, H1 `v3.5`, `run_audit.py` docstring `v3.5`, `audit/__init__.py __version__ = "3.5"`. Verify: `grep -rn "3\.4" SKILL.md scripts/run_audit.py scripts/audit/__init__.py` → empty.
-
-## Phase T3 — R3: `scripts/audit/scanners.py` docstrings (comment-only)
-- `:33` `(OWASP A06/A08, CWE-1104)` → `(OWASP A03:2025 Software Supply Chain Failures, CWE-1104)`
-- `:136` `(OWASP A02, CWE-798)` → `(OWASP A04:2025 Cryptographic Failures, CWE-798)`
-- `:230` `(OWASP A03 Injection, …)` → `(OWASP A05:2025 Injection, …)`
-- `:299` `(OWASP A05 Misconfiguration, …)` → `(OWASP A02:2025 Security Misconfiguration, …)`
-- Pre-checked (carry-forward #4): test suite contains **no** A-number literals → docstring edits cannot break tests.
-
-## Phase T4 — R5: Docs & registry
-1. `System/Docs/SKILLS.md:87`: `v3.4` → `v3.5`, "OWASP Top 10" → "OWASP Top 10:2025 (final taxonomy)".
-2. `CHANGELOG.md` + `CHANGELOG.ru.md`: v3.20.1 entry — checklist re-mapped to verified 2025 final; renumbering flagged for downstream compliance exports; historical entries untouched.
-3. `docs/verification_roadmap.md` item 4: 🔜 → ✅ DONE (commit ref, verification note, patterns.py-assumption correction).
-
-## Phase T5 — Verification gates (all must pass; failure → fix or rollback via T0 backups)
-1. **Conservation:** checkbox count 66; every old item findable in new layout (diff review).
-2. **Stale-reference grep (objective gate, carry-forward #5):** `grep -rn "A0[0-9]\|A10" .agent/skills/security-audit/ System/Agents/ .claude/agents/ --include="*.md" --include="*.py"` → every hit is 2025-correct. Named exclusions: ASI/API/LLM identifiers don't match the pattern; CHANGELOG + `docs/reviews/` + archived tasks are outside grep scope by design.
-3. **Skill gate:** `validate_skill.py .agent/skills/security-audit` pass + full 43/43 baseline loop.
-4. **Behavior proof:** pytest 30/30; `run_audit.py . --output summary` counts byte-identical to T0 baseline.
-5. **Diff scope:** `git status` touches only the 9 declared files + `docs/TASK.md`/`PLAN.md`/audit artifact/session state.
+## Phase T5 — R8+R9: registry, release, roadmap, session-state
+1. `System/Docs/SKILLS.md` rows 106–108: vdd-sarcastic → opt-in stylistic skin wording; both critics → "(optional sarcastic skin)".
+2. `CHANGELOG.md` + `CHANGELOG.ru.md`: new top entry **v3.20.2** (EN primary + RU mirror) — closes C-01/C-03/K2, lists per-file changes, notes zero behavior change + the supersedes-traceability.
+3. `README.md` + `README.ru.md`: version header → v3.20.2 (release convention per `3df62a2`/`c348928`).
+4. `docs/verification_roadmap.md` item 5: 🔜 → ✅ DONE block (commit/task/gate artifact references, verified-date), mirroring items 3/4 format; Dependencies note "final form (deprecate K2?) waits on 13" stays.
+5. Session-state boundary update (`update_state.py`), status `completed-pending-operator-commit`.
 
 ## Rollback
-Restore any file from `.agent/archive/<name>.bak` (workflow §5). New content is confined to existing files — no file creations/deletions to reverse (checklist edited in place).
+Workflow §5: restore every `.agent/archive/*.bak` over its source path. No bootstrap file is edited, so instability risk is confined to the 13 backed-up targets; git (clean tree at start) provides the second-layer rollback.

@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T12:08:35.984685"
+last_updated: "2026-06-10T12:27:40.294800"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "owasp-top10-2025-remap"
-  status: "completed-v3.20.1-adversarial-converged"
+  name: "retire-politeness-filter-rationale"
+  status: "completed-v3.20.2-pending-operator-commit"
   predicted_steps: 0
 
 context_summary: |
-  Task 070 (C-09) DONE + adversarial pass (adversarial-review-070.md): re-map itself confirmed correct (item-level conservation, repo-wide stale grep clean, Universal-skills = symlinks no drift, CWE spot-checks pass). Roast caught 1 MED: 'repo audit summary byte-identical' overclaim — run_audit.py:99 embeds AUDIT_VERSION in summary header, bumped 3.4->3.5 in same change, so full summary necessarily differs by 1 line. Fixed in CHANGELOG EN+RU, roadmap, PLAN, audit artifact (now claim: counts/findings identical, header diff intentional). +2 LOW fixed: A10 Partial Failure tagged CWE-460 (count still 66); READMEs backed up to .agent/archive. Verdict PASS via Objective Convergence: tests executed 30/30, 0 CRITICAL, bikeshedding-only residue. Uncommitted - operator to review/commit.
+  Task 071 (roadmap item 5, C-01/C-03/K2) DONE: politeness-filter rationale retired everywhere (Exhaustive Reporting supersedes Forced Negativity in K1+methodology); vdd-sarcastic repositioned as opt-in stylistic skin with no-evidence-base disclaimer (deprecate decision waits on item 13 A/B); skill-adversarial-security persona MANDATORY->optional + severity-literalism red flag; critic-security wrapper synced; perf-critic sarcasm de-mandated. Gates: G1/G2 greps empty (scope excludes .agent/archive + sessions), Forced Negativity only in 2 supersedes-notes, skill gate 43/43, pytest 30/30. v3.20.2 in CHANGELOG EN+RU + README headers; roadmap item 5 = DONE. Known drift: Universal-skills/skills/vdd-* are stale independent copies (symlinked from ~/.claude/skills) - operator manual sync recommended. Uncommitted - operator to review/commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "066 APPROVED via Objective Convergence (dogfood): 0 CRITICAL/MAJOR/MINOR; INV byte-diff confirms only the 2 consumer lines + enum changed; gate 43/43; no orphaned consumer of old token."
   - "067 scope (user, 2026-06-10): full audit in-session; A/B experiment design-only; cross-vendor verdict capped at Unvalidated"
   - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
   - "068: C-15 fix wording avoids 'snarky' token entirely so future tone-residual greps stay clean; §7 doctrine note phrases the guard as 'never invent a flaw — or a sarcastic remark'"
@@ -24,6 +23,7 @@ recent_decisions:
   - "070: A03/A08 split: CI/CD tampering + code signing + deps-audit -> A03 Supply Chain; deserialization + artifact-signature + unsigned auto-update stay A08; CWE-209 stack-trace check moves old-A05 -> new A10"
   - "070: README header bump added beyond PLAN file list (release convention per 3df62a2); rollback via git, not .agent/archive"
   - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
+  - "071: kept Sarcasmotron persona mandate in opt-in /vdd-* workflows (no rationale claims there; K2 repositioning makes the whole workflow the opt-in container); only non-opt-in mandates removed"
 
 completed_tasks:
   - "Task A"
@@ -48,3 +48,4 @@ completed_tasks:
   - "task-067-verification-stack-currency-audit"
   - "task-068-adversarial-security-p0-fixes"
   - "task-069-mcp-agentic-security-upgrade"
+  - "owasp-top10-2025-remap"

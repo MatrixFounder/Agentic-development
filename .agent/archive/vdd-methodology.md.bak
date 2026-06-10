@@ -41,7 +41,7 @@ VDD terminates on an **objective bar** ("Objective Convergence"), not on a subje
 
 ### V. Core Principles of VDD
 1. Anti-Slop Bias: Assumes that the first "correct" version of code is likely the most dangerous due to hidden technical debt.
-2. Exhaustive Reporting (supersedes "Forced Negativity"): the reviewer must report every issue, including low-confidence ones, attaching confidence + severity to each finding; filtering happens downstream. (The pre-2026 rationale — adversarial tone to bypass the model's default agreeableness — is retired per audit-067 C-01: vendors now train sycophancy out, and the documented recall lever is the reporting-threshold instruction, not tone.)
+2. Forced Negativity: Uses adversarial pressure to bypass the "politeness" filters inherent in standard LLM interactions.
 3. Linear Accountability: The Chainlink "beads" ensure that every line of code has a corresponding issue and verification step.
 4. Entropy Resistance: By cycling context windows, VDD resists the natural tendency for long-running AI conversations to lose focus or quality.
 

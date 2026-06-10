@@ -103,9 +103,9 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
 | **`vdd-adversarial`** | Adversarial verification: challenging assumptions and finding weak spots. <br> **[Read Full Role Description](VDD.md#core-philosophy)** | `vdd-03-develop`, `vdd-adversarial`, `vdd-multi` | **Virtual Persona** <br> (Adversarial Agent) |
-| **`vdd-sarcastic`** | Adversarial verification with a sarcastic/provocative tone. (Variant of `vdd-adversarial`) | `vdd-sarcastic` | **Virtual Persona** <br> (Adversarial Agent) |
-| **`skill-adversarial-security`** | OWASP security critic in adversarial/sarcastic style. Checks injections, auth, secrets. | `vdd-multi` | **Virtual Persona** <br> (Security Critic) |
-| **`skill-adversarial-performance`** | Performance critic in adversarial/sarcastic style. Checks N+1, memory, async issues. | `vdd-multi` | **Virtual Persona** <br> (Performance Critic) |
+| **`vdd-sarcastic`** | Adversarial verification with an opt-in sarcastic/provocative delivery style — stylistic skin over `vdd-adversarial` mechanics (exhaustive reporting + objective bar; tone has no evidence base as a recall lever). | `vdd-sarcastic` | **Virtual Persona** <br> (Adversarial Agent) |
+| **`skill-adversarial-security`** | OWASP security critic in adversarial style (optional sarcastic skin). Checks injections, auth, secrets. | `vdd-multi` | **Virtual Persona** <br> (Security Critic) |
+| **`skill-adversarial-performance`** | Performance critic in adversarial style (optional sarcastic skin). Checks N+1, memory, async issues. | `vdd-multi` | **Virtual Persona** <br> (Performance Critic) |
 
 ## 🚀 Dynamic Loading
 

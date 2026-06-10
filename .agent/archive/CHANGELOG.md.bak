@@ -16,6 +16,21 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.1 — OWASP Top 10 Checklist Re-mapped to the 2025 Final (audit-067 P1 item 4, C-09)**
+
+Closes claim **C-09**: `references/checklists/owasp_top_10.md` was titled "2025" but laid out on the **2021 taxonomy** — every A-number exported to compliance systems (Jira/Snyk) was wrong. The ten 2025 category names were **verified directly against owasp.org/Top10/2025/ in-session** (the verification also caught audit-067's own paraphrase of A09 — official name is "Security Logging and **Alerting** Failures"). Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-070.md`, Task 070). **Zero behavior change**: pattern lists, finding fields, severities, and CLI untouched — pytest 30/30; repo audit findings and counts unchanged vs the pre-edit baseline (the only output diff is the intentional v3.4 → v3.5 summary-header line).
+
+#### **Changed**
+
+* **`owasp_top_10.md` re-sectioned to the 2025 final** — A01 Broken Access Control (absorbs 2021-A10 **SSRF** as a subsection); A02 Security Misconfiguration (was #5); **A03 Software Supply Chain Failures (new)** — re-homes all of 2021-A06 plus the CI/CD-tampering, code-signing, and dependency-audit items from 2021-A08; A04 Cryptographic Failures; A05 Injection; A06 Insecure Design; A07 Authentication Failures (renamed); A08 Software **or** Data Integrity Failures (renamed, keeps deserialization/signature checks); A09 Security Logging and Alerting Failures (renamed); **A10 Mishandling of Exceptional Conditions (new)** — fail-closed controls (CWE-636), unchecked returns (CWE-252/754), swallowed exceptions (CWE-390), resource cleanup on error paths (CWE-404/772), partial-failure rollback, plus the stack-trace-leak check (CWE-209) re-homed from old-A05. Checkbox conservation verified: 61 → 66 (−1 SSRF dedup, +5 new-A10, +1 new-A08). A **2021 → 2025 mapping table** is appended for previously exported compliance references.
+* **`security-audit` skill 3.4 → 3.5** — §2 scanner-scope tags re-mapped (Secrets → A04:2025, Dependencies/Supply Chain → A03:2025, Injection patterns → A05:2025, Config → A02:2025); §3 Web/API Top Checks now four 2025-correct checks (A01 incl. SSRF, A03 supply chain, A05 injection, A10 exceptional conditions); version lockstep across frontmatter/header/`run_audit.py` docstring/`audit.__version__`.
+* **`scanners.py` docstrings** — four scanner A-number tags re-mapped to 2025 (comment-only, zero functional diff).
+* **`System/Docs/SKILLS.md` registry** — security-audit row → v3.5, "OWASP Top 10:2025 (final taxonomy)".
+
+> **Note for downstream compliance exports:** A-numbers recorded before this release follow the 2021 layout. Use the mapping table at the end of `owasp_top_10.md` to migrate (e.g., old "Injection (A03)" → A05; old "SSRF (A10)" → A01).
+
+---
+
 ### **v3.20.0 — Agentic/MCP Security Upgrade (audit-067 P1 item 3 — highest real-world risk)**
 
 Closes claims **C-11** (agentic/MCP threats covered by one-liners, zero detection patterns) and **C-14** (Security Auditor role has no agentic threat model) from the verification-stack currency audit (Task 067). The external bar moved while the checklists stood still: **OWASP Top 10 for Agentic Applications 2026** (ASI01–ASI10, 2025-12-09), **NSA AISC CSI "MCP: Security Design Considerations"** (U/OO/6030316-26, May 2026), CVE-2025-6514 (9.6) / CVE-2025-49596 (9.4) / the MCP-STDIO 11-CVE cluster, and in-the-wild incidents (postmark-mcp rug pull, s1ngularity, Shai-Hulud) — in the framework's own home domain. Executed as a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-069.md`, Task 069); ASI names, NSA controls, and scanner CLIs **verified against primary sources** (genai.owasp.org, nsa.gov, github.com/snyk/agent-scan) instead of model memory.

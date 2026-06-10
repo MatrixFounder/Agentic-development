@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.2
+version: 1.3
 ---
 # VDD Adversarial
 
@@ -22,7 +22,7 @@ This skill implements the **Iterative Adversarial Refinement** phase ("The Roast
 **Key Principles** (see `references/vdd-methodology.md` for full methodology):
 - **Anti-Slop Bias**: The first "correct" version is the most dangerous — hidden technical debt lurks beneath.
 - **Exhaustive Reporting** (supersedes "Forced Negativity"): report every issue, including low-confidence ones, with confidence + severity attached — filtering happens downstream, never in the reviewer's head. Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).
-- **Context Resetting**: Each adversarial review MUST use a fresh context to prevent "relationship drift."
+- **Context Resetting**: Each adversarial review MUST use a fresh context window. Why (documented mechanisms, audit-067 C-02): **multi-turn assumption lock-in** — models lock onto early assumptions and degrade ~39% vs single-turn on the same tasks (arXiv:2505.06120); **context rot** — accumulated history dilutes attention as context grows (Chroma 2025); **pushback-driven sycophantic belief updates** within a session (TRUTH DECAY / SYCON-Bench). A fresh window restores single-turn rigor.
 - **Linear Accountability**: Every line of code MUST trace to a corresponding issue and verification step.
 
 ### Convergence Signal (Exit Strategy) — Objective Convergence

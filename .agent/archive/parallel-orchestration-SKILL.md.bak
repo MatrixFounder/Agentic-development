@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.2
+version: 3.1
 ---
 
 # Parallel Orchestration Skill

@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.4
+version: 3.5
 ---
 
-# Security Audit v3.4
+# Security Audit v3.5
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
@@ -25,14 +25,14 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 ```
 - **Analysis**: Review the output. If tools fail or report Critical/High issues, they are **BLOCKERS**.
 - **Scope**: The script checks:
-  - Secrets (OWASP A02, CWE-798) — 30+ patterns including cloud, AI, SaaS keys + entropy detection
-  - Dependencies (A06/A08, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum), npm audit
-  - Code Patterns / Injection (A03, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
+  - Secrets (OWASP A04:2025 Cryptographic Failures, CWE-798) — 30+ patterns including cloud, AI, SaaS keys + entropy detection
+  - Dependencies / Supply Chain (OWASP A03:2025, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum), npm audit
+  - Code Patterns / Injection (OWASP A05:2025, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
   - **Smart Contract / Solidity** — reentrancy, delegatecall, selfdestruct (EIP-6780), tx.origin, oracle manipulation, unchecked returns, unprotected initializers
   - **Rust** — `unsafe{}`, `transmute`, `mem::forget`, `unwrap_unchecked`, weak RNG
   - **Go** — `math/rand` for security, SQL concat, missing TLS, command injection
   - **GraphQL** — introspection/playground enabled in prod, missing depth limits
-  - Config / Misconfiguration (A05, CWE-16) — debug mode, CORS, headers
+  - Config / Misconfiguration (OWASP A02:2025, CWE-16) — debug mode, CORS, headers
   - IaC / Containers — Docker, Kubernetes, Terraform, CloudFormation patterns
   - **MCP / Agentic (OWASP ASI Top 10 2026)** — MCP config provenance (`mcp.json`, `.mcp.json`, `claude_desktop_config.json`, incl. `.vscode/`), auto-approve keys, permission-bypass flags, unpinned `npx -y`/`uvx` servers, `mcp-remote`, cleartext MCP URLs, inline env secrets, shell-spawning servers, tool-description poisoning heuristics — all findings CWE+ASI tagged
   - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
@@ -69,11 +69,12 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 5. **CPI Guard**: Is CPI Guard used where appropriate?
 
 ### Web/API (OWASP Top 10:2025)
-**MANDATORY:** Read `references/checklists/owasp_top_10.md`.
+**MANDATORY:** Read `references/checklists/owasp_top_10.md` (2025 final taxonomy — A-numbers changed vs 2021; mapping table at file end).
 **Top Checks:**
-1. **Broken Access Control (A01)**: Can user A access user B's data? (IDOR, SSRF).
-2. **Injection (A03)**: Are queries parameterized? Is output escaped?
-3. **SSRF (A10)**: Are user-supplied URLs validated against allowlist?
+1. **Broken Access Control (A01)**: Can user A access user B's data? (IDOR; SSRF — absorbed into A01 in 2025: validate user-supplied URLs against an allowlist).
+2. **Software Supply Chain (A03)**: Lock files committed? Versions pinned? SCA + dependency audit clean?
+3. **Injection (A05)**: Are queries parameterized? Is output escaped?
+4. **Exceptional Conditions (A10)**: Do security controls fail closed? No stack traces to users?
 
 ### API Security (OWASP API Top 10:2023)
 **MANDATORY:** Read `references/checklists/api_security.md`.

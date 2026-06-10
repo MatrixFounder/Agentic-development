@@ -16,7 +16,7 @@ Post-implementation adversarial cycle for zero-slop robustness.
    a. Activate Adversary (Sarcasmotron)
       - Apply the `vdd-adversarial` skill: Red Flags, Challenge Assumptions, Failure Simulation.
       - Use critique template from `.agent/skills/vdd-adversarial/assets/template_critique.md`.
-      - Review all code + tests with fresh context (avoids multi-turn assumption lock-in and context rot — audit-067 C-02).
+      - Review all code + tests with fresh context (no relationship drift).
    b. If real issues found:
       - Call workflow `03-develop-single-task` to fix issues.
       - Repeat this workflow (recursive call if needed).

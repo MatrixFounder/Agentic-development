@@ -2,8 +2,6 @@
 name: critic-logic
 description: Review code for logic bugs, unhandled edge cases, happy-path assumptions, input-validation gaps, and error-handling holes. Spawn in parallel with critic-security and critic-performance during /vdd-multi.
 tools: Read, Grep, Glob
-# model pin: opus = cost/latency choice for routine critic passes (fable exists above opus — see skill-parallel-orchestration/
-# references/claude-code.md §Model-pin hygiene); CLAUDE_CODE_SUBAGENT_MODEL env, if set, silently overrides this pin.
 model: opus
 ---
 

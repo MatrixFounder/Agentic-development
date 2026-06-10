@@ -150,19 +150,27 @@ Note `CLAUDE_CODE_SUBAGENT_MODEL` env override (silently overrides frontmatter p
 
 ## P2 — Aging
 
-### 8. 🔜 [C-02] Re-ground the fresh-context rationale
+### 8. ✅ [C-02] Re-ground the fresh-context rationale
+- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. All 4 locations re-grounded (blast-radius grep found a 4th beyond this item's file list: `.agent/workflows/vdd-adversarial.md:19`; `vdd-sarcastic` line had drifted :24→:28 after 071). §V.4 renamed "Context-Interference Resistance (formerly \"Entropy Resistance\")". `vdd-adversarial` 1.2→1.3, `vdd-sarcastic` 1.2→1.3.
+- **Verified:** `relationship drift` + `too agreeable` greps → empty (scope excludes `.agent/archive/` + `.agent/sessions/`); skill gate 43/43.
 Replace "relationship drift / AI becoming too agreeable over time" with the documented mechanisms: multi-turn context interference + assumption lock-in (−39%, arXiv:2505.06120), context rot (Chroma 2025), pushback-driven sycophantic belief updates (TRUTH DECAY/SYCON). **Practice unchanged** (fresh context per review stays mandatory — it scored Current). Files: `vdd-adversarial/SKILL.md:25`, `vdd-sarcastic/SKILL.md:24`, `vdd-methodology.md:23,46` ("Entropy Resistance" wording).
 
-### 9. 🔜 [C-06] Model-pin hygiene for critic agents
+### 9. ✅ [C-06] Model-pin hygiene for critic agents
+- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. New §"Model-pin hygiene (audit-067 C-06)" in `references/claude-code.md` (tier ladder incl. fable-above-opus, silent env override, `effort` field, literalism hazard + canonical pattern); 2-line pin-rationale comment in all 3 critic wrapper frontmatters (chose comment form; tier-diverse config deferred to R3c as designed). `skill-parallel-orchestration` 3.1→3.2.
+- **Verified:** literalism grep over `.claude/agents/` + 4 critic SOT skills → empty (071 fixed the only offender); wrapper diffs = comments only; skill gate 43/43.
 Document in `references/claude-code.md` + critic wrappers: `fable` tier exists above `opus`; `CLAUDE_CODE_SUBAGENT_MODEL` env silently overrides frontmatter; `effort` field available. Audit critic prompts for severity-threshold literalism (Opus 4.7+ follows "only report high-severity" literally → recall drops; correct pattern: "report everything with confidence+severity, filter downstream" — same wording as item 5.1). Consider `model: opus` → explicit comment why not fable (cost) or adopt tier-diverse config from R3c.
 
-### 10. 🔜 [C-10] Position regex layer as deterministic floor; add LLM semantic-review pass
+### 10. ✅ [C-10] Position regex layer as deterministic floor; add LLM semantic-review pass
+- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. New §0 "Methodology — Two Layers" in `security-audit/SKILL.md` (inserted as §0 so existing §1–§7 references stay valid); semgrep CE / Opengrep footnote; frontier-evidence rationale line pointing to audit-067 §Bibliography. `security-audit` 3.5→3.6 + title + `SKILLS.md` registry row.
+- **Verified:** §1–§7 headings unshifted (diff); pytest 30/30 (no script change); skill gate 43/43.
 `security-audit/SKILL.md`: methodology section gets an explicit two-layer model — (1) deterministic floor: regex + external tools (reproducible, cheap, CI-gateable); (2) LLM semantic pass: long-context taint/logic review + tool-description poisoning check (the class regex categorically cannot catch). Add semgrep licensing footnote (CE since Dec 2024; Opengrep fork as drop-in alternative). Reference frontier evidence (AIxCC, Big Sleep, Codex Security / Claude Code Security) as rationale.
 
 ### 11. 🔜 [C-13] Resolve critic capability asymmetry (orchestrator-supplies-evidence contract)
 Critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their exit bar requires "full test run executed". Chosen direction (consistent with P0 item 2 residual): **orchestrator supplies execution evidence** — `vdd-multi.md` Phase 1 prompt template includes: test-run output (or `tests: NOT RUN`), `run_audit.py` JSON for critic-security. Critics treat supplied evidence as input; absence → finding "exit-bar condition unverifiable", not approval. Alternative (rejected for now): granting critics Bash — widens attack/cost surface, breaks read-only critic guarantee.
 
-### 12. 🔜 [C-16] Align skill-adversarial-performance termination with the objective bar
+### 12. ✅ [C-16] Align skill-adversarial-performance termination with the objective bar
+- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. Termination section → "Objective Convergence": evidence condition (orchestrator-supplied or honest `tests: NOT RUN` — critic has no Bash, never fabricates) + the 3-state enum, byte-aligned with wrapper `critic-performance.md:13`. `skill-adversarial-performance` 1.1→1.2. Orchestrator-side evidence injection remains item 11.
+- **Verified:** enum parenthetical byte-identical wrapper↔SKILL (grep diff); skill gate 43/43.
 `.agent/skills/skill-adversarial-performance/SKILL.md:73–79`: add test-execution/evidence condition + the 3-state convergence enum (`clean-pass | issues-found | bikeshedding-only`) so the SKILL matches its own wrapper `critic-performance.md:13`. Bump version, gate.
 
 ---
@@ -177,13 +185,13 @@ Protocol fully specified in the audit report, **Appendix A** (do not redesign �
 ## Dependencies & recommended order
 
 ```
-3 (MCP/agentic security)  — independent, highest risk → FIRST
-4 (OWASP remap)           — independent, small, fixes compliance mappings
-5 (retire politeness)     — independent; final form (deprecate K2?) waits on 13
+3 (MCP/agentic security)  — ✅ DONE (Task 069 / v3.20.0)
+4 (OWASP remap)           — ✅ DONE (Task 070 / v3.20.1)
+5 (retire politeness)     — ✅ DONE (Task 071 / v3.20.2); final form (deprecate K2?) still waits on 13
 6 (vendor adapters)       — independent; per-vendor validation needs operator machines
 7 R3a/R3b/R3d             — ✅ DONE (Task 072 / v3.20.3)
 7 R3c (cross-vendor)      — BLOCKED BY 6 (tier-diverse form available now in Claude Code)
-8, 9, 10, 12              — independent, small
+8, 9, 10, 12              — ✅ DONE (Task 073 / v3.20.4, batched per suggested cycle 6)
 11                        — pairs naturally with 7 (both edit vdd-multi Phase 1/2) → one cycle
 13 (experiment)           — anytime; informs 5 and 7/R3c final decisions
 ```

@@ -2,7 +2,7 @@
 name: skill-adversarial-performance
 description: "Performance critic in adversarial style (optional sarcastic skin). Part of VDD Multi-Adversarial pipeline."
 tier: 2
-version: 1.2
+version: 1.1
 ---
 # Adversarial Performance Critic
 
@@ -72,15 +72,12 @@ You are a **grumpy performance engineer** who has seen too many slow apps and OO
    - Provide specific fix with complexity analysis
 3. **If code is performant:** "Shockingly efficient. I'll find something next time."
 
-## Termination Condition — Objective Convergence
+## Termination Condition
 
-Stop ONLY when the objective bar is met (audit-067 C-16; synced with wrapper `.claude/agents/critic-performance.md`):
-1. **Evidence**: test/benchmark execution evidence reviewed — supplied by the orchestrator or honestly reported as `tests: NOT RUN` (this critic has no Bash; **never fabricate** execution results).
-2. All 6 performance categories reviewed.
-3. Zero legitimate Critical/High performance findings remain.
-4. Remaining issues are micro-optimizations / style only.
-
-Emit the 3-state convergence signal: `clean-pass | issues-found | bikeshedding-only` (bikeshedding-only = no legitimate performance findings remain — only style/nits; the objective bar, NOT "forced to invent problems").
+Stop when:
+- All performance categories reviewed
+- Remaining issues are micro-optimizations
+- Developer has addressed all real issues
 
 ## Example Output
 

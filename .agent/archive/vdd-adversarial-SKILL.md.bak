@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # VDD Adversarial
 
@@ -21,7 +21,7 @@ This skill implements the **Iterative Adversarial Refinement** phase ("The Roast
 
 **Key Principles** (see `references/vdd-methodology.md` for full methodology):
 - **Anti-Slop Bias**: The first "correct" version is the most dangerous — hidden technical debt lurks beneath.
-- **Forced Negativity**: Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).
+- **Exhaustive Reporting** (supersedes "Forced Negativity"): report every issue, including low-confidence ones, with confidence + severity attached — filtering happens downstream, never in the reviewer's head. Zero tolerance for "lazy" AI patterns (placeholder comments, generic error handling, inefficient loops).
 - **Context Resetting**: Each adversarial review MUST use a fresh context to prevent "relationship drift."
 - **Linear Accountability**: Every line of code MUST trace to a corresponding issue and verification step.
 
@@ -56,7 +56,7 @@ Read this file using `view_file` before generating the report.
 | :--- | :--- |
 | "The code passes existing tests" | Tests only cover known scenarios. Adversarial review targets unknown unknowns. |
 | "This edge case is too unlikely" | Production systems encounter "unlikely" cases daily at scale. |
-| "I don't want to be too harsh" | VDD requires Forced Negativity. Politeness hides bugs. |
+| "I don't want to be too harsh" | Harshness is not the requirement — exhaustive reporting is. Report every issue, including low-confidence ones, with confidence + severity; filtering happens downstream. Withholding a finding to be nice is the only real failure. |
 
 ## 8. Examples
 > [!TIP]

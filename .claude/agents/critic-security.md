@@ -2,6 +2,8 @@
 name: critic-security
 description: Review code for OWASP-style security issues (injection, authn/authz, secrets, supply chain, LLM-specific) in parallel with other critics during /vdd-multi. For full audits producing a formal docs/audit/ report, use `security-auditor` instead.
 tools: Read, Grep, Glob
+# model pin: opus = cost/latency choice for routine critic passes (fable exists above opus — see skill-parallel-orchestration/
+# references/claude-code.md §Model-pin hygiene); CLAUDE_CODE_SUBAGENT_MODEL env, if set, silently overrides this pin.
 model: opus
 ---
 

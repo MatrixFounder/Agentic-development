@@ -1,69 +1,96 @@
-# Development Plan: Severity-Escalation Redesign — R3a/R3b/R3d (Task 072)
+# Development Plan: Task 073 — Verification Stack P2 "Aging" Batch (Items 8/9/10/12)
 
-**Source spec:** `docs/TASK.md` (Task 072, slug `severity-escalation-redesign`).
-**Architecture impact:** none — merge-rule wording in workflow/skill documentation; `docs/ARCHITECTURE.md` untouched (living document, no structural change).
-**Change class:** pure documentation (no scripts, no code) → no new tests; existing suites run as regression evidence (G4).
+> **TASK:** `docs/TASK.md` (Task 073, slug `verification-p2-aging-batch`)
+> **Workflow:** `/framework-upgrade` — Mode B PLAN AUDIT gates this plan before execution.
+> **Architecture impact:** none — rationale/contract text inside existing skills, wrappers, one workflow line; no component/interface/data-model change → `docs/ARCHITECTURE.md` untouched (living document).
+> **Release:** v3.20.4 (doc-level patch, follows v3.20.3 convention).
 
-## Canonical wording (single source for all 4 locations)
+## Step 0 — Backup (rollback layer 1)
 
-**Rule 3 replacement (vdd-multi.md Phase 2 / SKILL.md §6 — identical modulo "critics"↔"teammates"):**
-
-> 3. **Severity escalation (mechanism-aware)**: all critics share one base model, so same-location agreement is **corroboration** (the finding survived persona/prompt variation), **not independent confirmation** — same-model pairs pick the same wrong answer ~60% of the time when erring (arXiv:2506.07962):
->    - **Same failure mechanism** (the duplicates' exploit/failure scenarios are paraphrases of each other) → do **NOT** escalate. Severity = max of the duplicates (rule 1); tag the merged finding `corroborated` ("flagged by N critics — weak positive signal").
->    - **Different failure mechanisms at the same location** (e.g., critic-logic: unhandled edge case; critic-security: exploitable injection at the same line) → two distinct analyses, not duplicate detection: escalate severity by one level. Mechanism-difference test: the scenarios are not paraphrases of each other — orchestrator judgment, documented in the merged report.
-
-## Steps
-
-### Step 0 — Backup (rollback provision)
 ```bash
 mkdir -p .agent/archive
-for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
-cp .agent/workflows/vdd-multi.md .agent/archive/vdd-multi.md.bak
-cp .agent/skills/skill-parallel-orchestration/SKILL.md .agent/archive/skill-parallel-orchestration-SKILL.md.bak
-cp .agent/skills/skill-parallel-orchestration/references/sequential-fallback.md .agent/archive/sequential-fallback.md.bak
-cp .agent/skills/skill-parallel-orchestration/examples/usage_example.md .agent/archive/usage_example.md.bak
+for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done   # bootstrap files (workflow mandate; none are edited this cycle)
+cp .agent/skills/vdd-adversarial/SKILL.md                                  .agent/archive/vdd-adversarial-SKILL.md.bak
+cp .agent/skills/vdd-sarcastic/SKILL.md                                    .agent/archive/vdd-sarcastic-SKILL.md.bak
+cp .agent/skills/vdd-adversarial/references/vdd-methodology.md             .agent/archive/vdd-methodology.md.bak
+cp .agent/workflows/vdd-adversarial.md                                     .agent/archive/workflow-vdd-adversarial.md.bak
+cp .agent/skills/skill-parallel-orchestration/references/claude-code.md    .agent/archive/claude-code.md.bak
+cp .agent/skills/skill-parallel-orchestration/SKILL.md                     .agent/archive/parallel-orchestration-SKILL.md.bak
+cp .claude/agents/critic-logic.md                                          .agent/archive/critic-logic.md.bak
+cp .claude/agents/critic-security.md                                       .agent/archive/critic-security.md.bak
+cp .claude/agents/critic-performance.md                                    .agent/archive/critic-performance.md.bak
+cp .agent/skills/security-audit/SKILL.md                                   .agent/archive/security-audit-SKILL.md.bak
+cp .agent/skills/skill-adversarial-performance/SKILL.md                    .agent/archive/adversarial-performance-SKILL.md.bak
 ```
-**Rollback:** restore each file from its `.agent/archive/*.bak`; bootstrap files via the workflow §5 loop. (Repo is also clean at start — `git checkout -- <file>` is the secondary rollback.)
 
-### Step 1 — `.agent/workflows/vdd-multi.md` (R1: R3a + R3b)
-1. Replace Phase-2 rule 3 (line 106) with the canonical wording (actor noun: **critics**).
-2. Overlaps placeholder (line 131): `<cross-category items with escalated severity>` → `<corroborated findings (tag, severity = max — no escalation) + different-mechanism items (escalated +1)>`.
+Rollback layer 2: working tree was **git-clean** at cycle start (072 committed as `8296b04`) → `git checkout -- <file>` restores any file. Rollback procedure: restore `.bak` copies (workflow §5 Fallback) or `git checkout`; no session migration to undo.
 
-### Step 2 — `.agent/skills/skill-parallel-orchestration/SKILL.md` (R2: R3a + R3b)
-1. Replace §6 rule 3 (line 107) with the canonical wording (actor noun: **teammates**; example critic names kept verbatim).
-2. §2.3 step 3 (line 60): `escalate severity on cross-category overlap` → `tag same-mechanism agreement corroborated, escalate only different-mechanism overlap (§6 rule 3)`.
-3. Frontmatter `version: 3.0` → `3.1`; History entry for v3.1.
+## Step 1 — Item 8: re-ground fresh-context rationale (R1–R4)
 
-### Step 3 — `references/sequential-fallback.md` (R3: R3d)
-1. Merge step 3 (line 47) → explicit no-escalation sentence: sequential personas never escalate (weakest independence — same session window, same model instance); tag `corroborated` only; different-mechanism findings get at most a `priority` flag, never +1.
-2. Anti-patterns line 97: reword "stronger signal" so it claims corroboration-by-persona-variation, not independent confirmation; cross-ref merge step 3.
+Atomic edits, one file at a time; new wording cites the three documented mechanisms (assumption lock-in −39% arXiv:2505.06120 · context rot Chroma 2025 · pushback-driven sycophantic updates TRUTH DECAY/SYCON-Bench); the **mandate itself is byte-preserved in spirit: fresh context stays MUST**.
 
-### Step 4 — `examples/usage_example.md` (R4: walkthrough sync)
-Replace the Step-3 escalation bullet with: corroborated tag for same-mechanism agreement (severity = max, no auto-escalation) + escalate only on different-mechanism overlap.
+1.1 `vdd-adversarial/SKILL.md:25` — replace the Context Resetting bullet's "to prevent \"relationship drift.\"" tail with the mechanism list; frontmatter `version: 1.2` → `1.3`.
+1.2 `vdd-sarcastic/SKILL.md:28` — same replacement, compact form + pointer to vdd-adversarial references; `version: 1.2` → `1.3`.
+1.3 `vdd-methodology.md:23` (§II.3) — re-grounded long form + explicit retirement note ("pre-2026 anthropomorphic framing", **without** the literal old token — G1 must stay clean); `:46` (§V.4) — "Entropy Resistance" → "Context-Interference Resistance (formerly \"Entropy Resistance\")" + mechanism list.
+1.4 `.agent/workflows/vdd-adversarial.md:19` — "(no relationship drift)" → "(avoids multi-turn assumption lock-in & context rot — audit-067 C-02)".
 
-### Step 5 — Verification gates (TASK §3)
+**Verify:** G1 greps (`relationship drift`, `too agreeable`) → empty in scope.
+
+## Step 2 — Item 9: model-pin hygiene (R5–R7)
+
+2.1 `references/claude-code.md` — insert section **"Model-pin hygiene (audit-067 C-06)"** (after "Tools whitelist note"): tier ladder (`haiku < sonnet < opus < fable` — fable **above** opus); why wrappers pin opus (cost/latency; recall lever = exhaustive-reporting instruction, not tier; revisit at R3c); `CLAUDE_CODE_SUBAGENT_MODEL` **silent override** warning (flattens tier-diverse configs); `effort` frontmatter field (audit-067); severity-threshold literalism hazard + the canonical pattern wording from item 5.1: *"report everything with confidence + severity attached; filter downstream"*.
+2.2 `skill-parallel-orchestration/SKILL.md` — frontmatter `version: 3.1` → `3.2` (reference-file edit; no body change).
+2.3 Each of `.claude/agents/critic-{logic,security,performance}.md` — add 2 comment lines above `model: opus` in frontmatter (pin rationale + env-override caveat + pointer); **no other wrapper change**.
+2.4 Literalism audit re-run (G5 grep) — output recorded in audit artifact; any hit → fix immediately (expected: none).
+
+**Verify:** file reads; G4 wrapper diff = comments only; G5 output captured.
+
+## Step 3 — Item 10: two-layer methodology section (R8)
+
+3.1 `security-audit/SKILL.md` — insert **"## 0. Methodology — Two Layers (audit-067 C-10)"** between the H1 title and §1 (keeps §1–§7 numbering stable): deterministic floor (regex+external: reproducible, cheap, CI-gateable, categorically blind to semantic classes — clean scan ≠ clearance) vs LLM semantic pass (long-context taint/logic review, business-logic authz, semantic tool-description poisoning per §3 limitation note); frontier evidence line (AIxCC finals 2025, Big Sleep, Codex Security / Claude Code Security — citations live in audit-067 bibliography); semgrep licensing footnote (Semgrep CE since Dec 2024; Opengrep fork = drop-in alternative).
+3.2 Same file — title `# Security Audit v3.5` → `v3.6`; frontmatter `version: 3.5` → `3.6`.
+
+**Verify:** §1–§7 headings byte-unchanged (diff); G3 pytest 30/30.
+
+## Step 4 — Item 12: perf-critic termination alignment (R9)
+
+4.1 `skill-adversarial-performance/SKILL.md:75–80` — replace "## Termination Condition" body with **Objective Convergence** form: (1) evidence condition — execution evidence supplied by orchestrator or honest `tests: NOT RUN` (critic has no Bash; never fabricate); (2) all 6 categories reviewed; (3) zero legitimate Critical/High findings; (4) only micro-optimizations/style remain. Append the 3-state signal line with enum `clean-pass | issues-found | bikeshedding-only` matching `critic-performance.md:13` semantics (incl. "NOT \"forced to invent problems\"" clause).
+4.2 Frontmatter `version: 1.1` → `1.2`.
+
+**Verify:** G4 — enum string identical to wrapper's; SKILL still passes `validate_skill.py`.
+
+## Step 5 — Verification gates (all)
+
 ```bash
-# G1 migration greps
-grep -rn "escalate severity by one level" .agent/ .claude/ System/        # only new R3b wording (3 hits expected)
-grep -rnE "independently flagging the same location|independently flag the same location|escalation on independent overlap|escalate severity on cross-category overlap" .agent/ .claude/ System/   # empty
-# G2 byte-consistency: extract rule-3 block from both files, normalize teammates→critics, diff → empty
-# G3 skill gate
-python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/skill-parallel-orchestration
-# full sweep = 43/43
-# G4 regression
-python3 -m pytest .agent/skills/security-audit/tests/ -q                  # 30/30
-python3 -m pytest .agent/skills/skill-parallel-orchestration/tests/ -q    # green
+# G1 stale-rationale greps (expect empty)
+grep -rn "relationship drift" .agent/ .claude/ System/ | grep -v ".agent/archive/" | grep -v ".agent/sessions/"
+grep -rni "too agreeable"     .agent/ .claude/ System/ | grep -v ".agent/archive/" | grep -v ".agent/sessions/"
+# G2 skill gate — 5 touched skills + full 43/43 sweep
+python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/{vdd-adversarial,vdd-sarcastic,skill-parallel-orchestration,security-audit,skill-adversarial-performance}
+for d in .agent/skills/*/; do python3 .agent/skills/skill-creator/scripts/validate_skill.py "$d"; done  # count PASS = 43
+# G3 regression
+python3 -m pytest .agent/skills/security-audit/tests/ -q   # 30/30
+# G5 literalism grep (expect empty; paste into audit artifact)
+grep -rniE "only (report|flag) (high|critical)|report only|skip (low|minor|medium)|ignore (low|minor)" .claude/agents/ .agent/skills/vdd-adversarial/ .agent/skills/vdd-sarcastic/ .agent/skills/skill-adversarial-performance/ .agent/skills/skill-adversarial-security/
+# G6 doc-only proof
+git diff --stat   # only .md files
 ```
 
-### Step 6 — Documentation & release (R5)
-1. `CHANGELOG.md` + `CHANGELOG.ru.md`: **v3.20.3** entry (Changed: severity-escalation redesign R3a/R3b/R3d, C-08).
-2. `README.md` + `README.ru.md`: version header bump → v3.20.3 (convention per `3df62a2`).
-3. `docs/verification_roadmap.md` item 7: mark R3a/R3b/R3d ✅ done-in Task 072 / v3.20.3; R3c remains pending (tier-diverse 🔜 now, cross-vendor ⏳ item 6); update Dependencies block line "7 R3a/R3b/R3d".
-4. Audit artifact `docs/reviews/framework-audit-072.md` (Modes A + B verdicts + gate outputs).
-5. Session-state update (phase boundaries: post-plan, post-execution, completion).
+No new tests: zero script changes (G6 enforces); existing suites run as regression evidence — same justification accepted in 070/071/072 (doc-only cycles).
 
-## Mode B self-check mapping
-- **Verification step:** Step 5 (greps + validate_skill + 2 pytest suites). ✓
-- **Rollback:** Step 0 backups + git-clean fallback. ✓
-- **Atomicity:** Steps 1–4 are one-file chunks, each independently revertible. ✓
-- **Test coverage:** no new framework feature/scripts → no new tests; justification recorded in audit artifact. ✓
+## Step 6 — Documentation & finalization (R10)
+
+6.1 `CHANGELOG.md` + `CHANGELOG.ru.md` — v3.20.4 entry (4 items, claims closed, versions bumped).
+6.2 `README.md` + `README.ru.md` — version header bump (release convention per `3df62a2`).
+6.3 `System/Docs/SKILLS.md:87` — security-audit row "v3.5:" → "v3.6:" (re-flag, not fix, the stale `:53` Mock-Runner row).
+6.4 `docs/verification_roadmap.md` — items 8/9/10/12 → ✅ DONE with task/version/artifact refs; Dependencies block updated.
+6.5 `docs/reviews/framework-audit-073.md` — audit artifact: Mode A + Mode B results, G1–G6 outputs, literalism-audit record, flagged-not-fixed list.
+6.6 Session state update (phase boundary) — task completed status.
+
+## Rollback plan
+
+| Failure | Action |
+|---|---|
+| Any gate fails mid-execution | Fix forward if trivial (wording); else restore the affected file from `.agent/archive/*.bak` and re-run gates |
+| Systemic instability | Workflow §5 Fallback: restore all `.bak` files; `git checkout -- .` as final layer (tree was clean at start) |
+| validate_skill.py regression on a touched skill | Restore that skill's `.bak`, re-apply edit in smaller chunks |

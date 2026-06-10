@@ -1,20 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T12:55:49.256213"
+last_updated: "2026-06-10T13:15:14.717230"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "severity-escalation-redesign"
-  status: "completed-v3.20.3-pending-operator-commit"
+  name: "verification-p2-aging-batch"
+  status: "completed-v3.20.4-pending-operator-commit"
   predicted_steps: 0
 
 context_summary: |
-  Task 072 (roadmap item 7 partial: R3a/R3b/R3d, claim C-08) DONE: merge rule 3 redesigned in lockstep across 4 locations - same-mechanism agreement = corroborated tag + severity=max, no +1 (R3a); different-failure-mechanism overlap keeps +1 with documented mechanism-difference test (R3b); sequential fallback never escalates, tag only / priority flag at most (R3d). skill-parallel-orchestration 3.0->3.1. Gates: G1 greps clean, G2 normalized diff empty, skill gate 43/43, pytest 30/30. v3.20.3 in CHANGELOG EN+RU + README headers; roadmap item 7 = R3a/b/d done, R3c pending (cross-vendor blocked by item 6, pair with item 11). Audit artifact framework-audit-072.md. Flagged not fixed: SKILL par-orch §8 stale test ref; SKILLS.md:53 stale Mock-Runner row. Uncommitted - operator to review/commit.
+  Task 073 (roadmap items 8/9/10/12, claims C-02/C-06/C-10/C-16) DONE in one /framework-upgrade cycle: item 8 fresh-context rationale re-grounded in 4 locations (incl. workflows/vdd-adversarial.md:19 beyond roadmap list; Entropy Resistance renamed w/ traceability parens); item 9 model-pin hygiene section in claude-code.md + pin comments in 3 critic wrappers + literalism grep clean; item 10 security-audit two-layer SS0 (SS1-SS7 unshifted) + semgrep CE/Opengrep footnote, SKILLS.md row synced; item 12 perf-critic Objective Convergence + enum byte-aligned with wrapper. Versions: vdd-adversarial 1.3, vdd-sarcastic 1.3, parallel-orchestration 3.2, security-audit 3.6, adversarial-performance 1.2. Gates: G1/G5 greps empty, 43/43, pytest 30/30, doc-only diff. Artifact framework-audit-073.md. CHANGELOG EN+RU v3.20.4 + README headers. Roadmap: P2 done except 11; remaining open: 6, 7-R3c, 11, 13. Flagged not fixed: SKILLS.md:53 Mock-Runner row, par-orch SS8 stale test ref, Universal-skills stale copies. Uncommitted - operator to review/commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
   - "068: C-15 fix wording avoids 'snarky' token entirely so future tone-residual greps stay clean; §7 doctrine note phrases the guard as 'never invent a flaw — or a sarcastic remark'"
   - "Roadmap discipline: 7-R3a/b/d shippable now; 7-R3c cross-vendor blocked by item 6; item 11 pairs with 7 in one vdd-multi cycle; adapter validation (6a-6c) requires operator machines with real CLIs"
   - "069: MCP patterns carry scope field (mcp-config/any-config/code) - file targeting in data not code; .md never scanned (LLM-review class); severity ceiling HIGH so MCP findings cannot trip --fail-on critical alone"
@@ -24,6 +23,7 @@ recent_decisions:
   - "070 adversarial lesson: never write 'byte-identical' about output that embeds a version string you bumped in the same change; claim exactly what was compared (counts/findings)"
   - "071: kept Sarcasmotron persona mandate in opt-in /vdd-* workflows (no rationale claims there; K2 repositioning makes the whole workflow the opt-in container); only non-opt-in mandates removed"
   - "072: sequential cross-mechanism findings get priority flag, never +1 (R3b minimum form, consistent with R3d literal 'never escalates'); critics<->teammates noun split preserved as the only rule-3 divergence, normalized-diff-verified"
+  - "073: security-audit two-layer section inserted as SS0 specifically to keep SS1-SS7 anchors stable for external references"
 
 completed_tasks:
   - "Task A"
@@ -50,3 +50,4 @@ completed_tasks:
   - "task-069-mcp-agentic-security-upgrade"
   - "owasp-top10-2025-remap"
   - "retire-politeness-filter-rationale"
+  - "severity-escalation-redesign"

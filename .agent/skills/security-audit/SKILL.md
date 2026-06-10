@@ -2,10 +2,19 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.5
+version: 3.6
 ---
 
-# Security Audit v3.5
+# Security Audit v3.6
+
+## 0. Methodology — Two Layers (audit-067 C-10)
+
+This skill runs **two complementary layers**; neither substitutes for the other:
+
+1. **Deterministic floor (§2)** — regex patterns + external scanners. Reproducible, cheap, CI-gateable (`--fail-on`), zero judgment. It is a *floor*, not the audit: a clean scan is **not** clearance, because regex is categorically blind to semantic classes — business-logic authz, cross-file taint flows, semantic MCP tool-description poisoning (§3 Agentic limitation note).
+2. **LLM semantic pass (§3–§4)** — long-context taint/logic review against the checklists plus threat modeling: the layer that catches what regex cannot. Frontier evidence that LLM-driven semantic review finds real vulnerabilities beyond pattern matching: DARPA AIxCC finals (2025), Google Big Sleep, Codex Security / Claude Code Security review agents (full citations: audit-067 §Bibliography).
+
+> **Licensing footnote (semgrep):** the open-source offering is **Semgrep CE** since the Dec 2024 licensing change; **Opengrep** (community fork, Jan 2025) is a drop-in alternative where CE constraints matter. The external-tool roster treats either as the same scanner slot.
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**

@@ -1,58 +1,66 @@
-# Technical Specification: Multi-Critic Objective Convergence (parallel adversarial pipeline)
+# Technical Specification: Adversarial-Security Skill P0 Fixes (C-05 / C-15 Harmful-claim remediation)
 
 ### 0. Meta Information
-- **Task ID:** 066
-- **Slug:** `multi-critic-objective-convergence`
-- **Mode:** Framework Upgrade (meta-operation — modifies the parallel multi-critic convergence contract)
-- **Type:** Hardening / consistency — extend Task 065's "Objective Convergence" philosophy to the `/vdd-multi` parallel-critic subsystem.
-- **Workflow:** `/framework-upgrade`
-- **Source:** Follow-up flagged at the end of Task 065. The parallel critics (`critic-logic`/`security`/`performance`) still self-certify convergence via a subjective `hallucinating` state — the exact gameable pattern Task 065 removed from Sarcasmotron.
+- **Task ID:** 068
+- **Slug:** `adversarial-security-p0-fixes`
+- **Mode:** Framework Upgrade (meta-operation — modifies a framework skill)
+- **Type:** P0 remediation of 2 HARMFUL claims found by audit 067. One skill file edited; satellites verified, not edited (pre-checked clean).
+- **Workflow:** `/framework-upgrade` (with `skill-self-improvement-verificator` gate, Modes A + B).
+- **Source:** User request (2026-06-10) + `docs/reviews/verification-stack-currency-audit-067.md` backlog items P0-1 [C-05] and P0-2 [C-15]; pre-authorized by session decision "067: P0 fixes (C-05, C-15) … require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate".
 
 ## 1. General Description
 
-Each parallel critic emits `Convergence signal: clean-pass | issues-found | hallucinating` (`.claude/agents/critic-*.md:13`). That `hallucinating` state feeds two consumers:
-1. **Termination gate** (`vdd-multi.md` Phase 3): *"Hallucinating: critic inventing problems → category ✓"* — an **approval gate** driven by the critic self-reporting fabrication. Same subjective, gameable flaw Task 065 fixed in Sarcasmotron.
-2. **Merge noise-filter** (`vdd-multi.md` rule 4, `skill-parallel-orchestration` rule 4): a critic reporting `hallucinating` → drop its low-severity items this iteration. A defensible filter, but keyed on the same subjective self-report.
+Audit 067 graded two claims in `.agent/skills/skill-adversarial-security/SKILL.md` (v1.1) **HARMFUL** — both are residuals that contradict the framework's own v3.18/v3.19 Objective Convergence doctrine and `core-principles` §3 (anti-hallucination):
 
-This task replaces the subjective `hallucinating` state with an **objective** `bikeshedding-only` state — "no legitimate findings remain in this category; only style/nits" — so both the termination gate and the noise-filter become objective, mirroring Task 065's Objective Convergence. **Merge mechanics are not otherwise touched.**
+- **C-05** (`SKILL.md:68`, §7 Termination): termination requires "at least one snarky comment" — tone-as-success-criterion forces noise on clean code and directly contradicts `vdd-sarcastic/SKILL.md` §4 ("Approval is bound to the objective bar — NOT to 'I was forced to invent a flaw'").
+- **C-15** (`SKILL.md:29`, §3 Reconnaissance): "Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit)" — instructs a security critic to **fabricate scanner evidence**. Compounding: the `critic-security` subagent has no Bash tool (C-13), so in every `/vdd-multi` run the fabrication branch is the *default* path, not the exception.
 
-### Invariants (MUST hold)
-- Parallel-critique merge mechanics — location dedup (±3 lines), cross-category re-attribution, severity escalation on independent overlap, optional `--severity` filter, iteration cap — are **unchanged**.
-- The Layer A / Layer B decision rule and the single-atomic-spawn invariant are **untouched**.
-- The critic enum stays a 3-state contract (only the third state is renamed + redefined); `clean-pass` and `issues-found` are unchanged.
+This task deletes both harmful instructions and replaces C-15's with an honest no-fabrication protocol (`scan: NOT RUN` + manual-review-only + orchestrator-supplied scan results).
 
-## 2. Epic & Issues
+## Requirements Traceability Matrix (RTM)
 
-### Epic E — Objective convergence for parallel critics
-**Issue E-1.** In the 3 critic agents (`.claude/agents/critic-logic.md`, `critic-security.md`, `critic-performance.md`, line 13), rename the emitted state `hallucinating` → **`bikeshedding-only`**, defined objectively ("no legitimate findings remain — only style/nits; NOT 'I was forced to invent problems'").
-**Issue E-2.** In `vdd-multi.md` Phase 3 termination, change *"Hallucinating: critic inventing problems → category ✓"* to the objective state ("Bikeshedding-only: no legitimate findings remain, only style/nits → category ✓").
-**Issue E-3.** Re-key the merge noise-filter (`vdd-multi.md` rule 4, `skill-parallel-orchestration/SKILL.md` rule 4) off `bikeshedding-only`; keep the mechanic (drop low-severity items this iteration).
-**Issue E-4.** Refresh satellite references — `skill-parallel-orchestration/SKILL.md` §2.3 step-3 "filter hallucinations", `examples/usage_example.md` step 4, `references/sequential-fallback.md` merge step 4 — to the objective terminology. No live "hallucinat\*"-as-exit wording remains in this subsystem.
+| ID | Requirement | MVP? | Sub-features |
+|----|-------------|------|--------------|
+| R1 | **[C-05] §7 Termination fix**: delete the condition "You have made at least one snarky comment about a questionable design choice" | Yes | (a) termination binds to the objective bar **only**: automation executed + no Critical/High findings + bikeshedding-only remains; (b) wording aligned with `vdd-sarcastic/SKILL.md` §4 Objective Convergence doctrine and `critic-security.md` convergence-signal contract (`clean-pass \| issues-found \| bikeshedding-only`); (c) no other §7 semantics changed |
+| R2 | **[C-15] §3 Reconnaissance fix**: delete "Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit)" | Yes | (a) replace with: if the script cannot be executed in your context, report `scan: NOT RUN` and proceed with manual review only — **never fabricate scanner output**; (b) note that the orchestrator runs `run_audit.py` and passes results into the critic prompt (the `critic-security` agent has no Bash tool); (c) §5 Process step 1 ("Run Automation") checked for consistency with the new §3 wording |
+| R3 | **Verification gate** | Yes | (a) `python3 .agent/skills/skill-creator/scripts/validate_skill.py` green on the edited skill; (b) grep `.claude/agents/` for stale references to the deleted instructions (expected: none — pre-checked); (c) satellite consistency check: `critic-security.md`, `.agent/workflows/vdd-multi.md`, `skill-adversarial-performance/SKILL.md` contain no copy of either harmful claim; (d) diff review confirms only §3 + §7 (+ version header) changed |
+| R4 | **Documentation & hygiene** | Yes | (a) skill version bump 1.1 → 1.2; (b) CHANGELOG entry (EN + RU) tracing to C-05/C-15; (c) registry check: `System/Docs/SKILLS.md` + `SKILL_TIERS.md` entries are generic — verified no update needed; (d) backup of every edited file to `.agent/archive/` before edits (workflow §3.1) |
+
+## 2. Use Cases
+
+### 2.1 UC-1: Maintainer remediates the two HARMFUL audit findings (main)
+**Actors:** Framework maintainer (user); Orchestrator agent.
+**Preconditions:** Audit 067 report exists; framework at v3.19.1; `skill-adversarial-security` v1.1.
+**Main scenario:**
+1. Agent backs up target files to `.agent/archive/`.
+2. Agent applies R1 and R2 edits to `.agent/skills/skill-adversarial-security/SKILL.md`.
+3. Agent runs the verification gate (R3): skill validator + stale-reference greps + satellite checks.
+4. Agent updates CHANGELOG (R4) and persists session state.
+**Postconditions:** Both HARMFUL claims gone; termination is objective-bar-only; no fabrication instruction anywhere in the verification stack; skill gate green; satellites consistent.
+**Acceptance criteria:**
+- ✅ `grep -n "snarky" .agent/skills/skill-adversarial-security/SKILL.md` → no termination-condition hit.
+- ✅ `grep -rn "Mock the results" .agent/` → zero hits outside historical archives/reviews.
+- ✅ §3 contains `scan: NOT RUN` protocol + orchestrator-supplies-results note.
+- ✅ §7 termination = automation executed + no Critical/High + bikeshedding-only (objective bar verbatim-compatible with `vdd-sarcastic` §4).
+- ✅ `validate_skill.py` passes for the edited skill.
+- ✅ Only `skill-adversarial-security/SKILL.md` modified among framework components (CHANGELOG/docs/session-state aside).
 
 ## 3. Non-functional Requirements
-- **Cross-vendor.** Convergence *semantics* live in shared `.agent/` (`vdd-multi.md`, `skill-parallel-orchestration`); the Claude-Code critic wrappers (`.claude/agents/critic-*.md`) are updated in lockstep so their emitted enum matches. No vendor-specific behavior branch.
-- **Safety (meta-operation).** Back up edited files to `.agent/archive/`; `skill-self-improvement-verificator` gates TASK and PLAN.
-- **Gate.** Edited skill (`skill-parallel-orchestration`) must still pass `validate_skills.py` (43/43). Critic agents are wrappers (not skills) — verified by grep.
-- **Scope discipline.** Only the convergence state and its two consumers change. No change to dedup/escalation/severity-filter/iteration-cap logic, or to the Sarcasmotron (single-roast) path already fixed in Task 065.
+- **Minimal-diff invariant:** no edits outside §3, §5 (only if needed for consistency), §7, and the version header of the one skill file.
+- **Doctrine consistency:** post-edit wording must not contradict `vdd-sarcastic` §4, `critic-security.md`, or `vdd-multi.md` convergence semantics.
+- **Rollback:** backups in `.agent/archive/`; restore per workflow §5 Fallback.
+- **Conventions:** session state persisted at each phase boundary; TASK/PLAN archived per `skill-archive-task` at next task rotation.
 
 ## 4. Constraints & Assumptions
-- The `convergence` state is defined in the `.claude/agents/critic-*.md` wrappers (line 13) and consumed in `vdd-multi.md` + `skill-parallel-orchestration`. There is no separate System/ SOT for the enum; shared semantics live in the workflow/skill.
-- Historical artifacts (`security-audit/docs/vdd-round*-critique.md`) and unrelated "anti-hallucination" mentions are out of scope.
-- Builds on Task 065's "Objective Convergence" terminology (this branch is stacked on `feat/reviewers-hardening`).
+- Audit 067's claim anchors (lines 29, 68) and its P0 fix wording are trusted inputs (verified against the working tree this session).
+- Out of scope: all P1/P2 backlog items from audit 067 — including C-13 capability-asymmetry restructuring (item 11) — except that R2(b)'s orchestrator note is the C-15-side half explicitly required by P0 item 2 ("Pairs with item 11").
+- Out of scope: changes to `references/prompts/sarcastic.md`, checklists, or any other K1–K5 component.
 
-## 5. Acceptance Criteria (RTM)
+## 5. Open Questions
+- None. Scope is fixed by the audit backlog P0 items and the user's request.
 
-| ID | Requirement | Source file(s) | Issue |
-|----|-------------|----------------|-------|
-| **E1** | All 3 critic agents emit `clean-pass \| issues-found \| bikeshedding-only`; `hallucinating` removed; `bikeshedding-only` defined objectively. | `critic-logic.md`, `critic-security.md`, `critic-performance.md` | E-1 |
-| **E2** | Phase-3 termination marks a category ✓ on the objective state (no legitimate findings, only style), not on "critic inventing problems". | `vdd-multi.md` | E-2 |
-| **E3** | Merge noise-filter keys off `bikeshedding-only`; the drop-low-severity-this-iteration mechanic is unchanged. | `vdd-multi.md`, `skill-parallel-orchestration/SKILL.md` | E-3 |
-| **E4** | No live "hallucinat\*"-as-exit wording remains in the parallel-critic subsystem; satellites use objective terms. | `skill-parallel-orchestration/SKILL.md`, `examples/usage_example.md`, `references/sequential-fallback.md` | E-4 |
-| **INV** | Dedup / cross-category / severity escalation / `--severity` filter / iteration cap / Layer A·B rule unchanged. | all | invariant |
-| **GATE** | `validate_skills.py --root . --quiet` green; no stale convergence terminology in the subsystem. | — | NFR |
-
-## 6. Validation (prompt-level)
-- A critic that finds only style nits reports `bikeshedding-only`; the category terminates ✓ on that objective state, and its low-severity items are dropped from the iteration.
-- A critic that finds a real CRITICAL still reports `issues-found` and the loop continues — no early exit via self-certified fabrication.
-- `grep` confirms `hallucinating` survives only in historical artifacts; the 3 critic enums + the 2 consumers + 3 satellites all use the objective term.
-- `validate_skills.py` green; Layer A/B rule and the other merge rules are byte-unchanged.
+## 6. Status
+- [x] Phase 1: TASK drafted + Meta-Audit Mode A APPROVED (`docs/reviews/framework-audit-068.md`)
+- [x] Phase 2: PLAN drafted + Meta-Audit Mode B APPROVED
+- [x] Phase 3: Backup → Edits (§7 C-05, §3+§5 C-15, v1.1→1.2) → Verification gate green (validator pass; stale-grep zero hits repo-wide; minimal-diff confirmed; skill gate 43/43)
+- [x] Phase 4: CHANGELOG v3.19.2 (EN+RU) + README headers bumped; full review pipeline green (Code Reviewer APPROVED · Security Auditor PASS, 0 findings)

@@ -16,6 +16,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.19.2 — Adversarial-Security Critic: Objective Termination + No-Fabrication Recon (audit-067 P0)**
+
+The verification-stack currency audit (`docs/reviews/verification-stack-currency-audit-067.md`, Task 067) graded two claims in `skill-adversarial-security` **HARMFUL** — the residuals the v3.18/v3.19 Objective-Convergence hardening missed. Both fixed in a `/framework-upgrade` cycle gated by `skill-self-improvement-verificator` Modes A+B (`docs/reviews/framework-audit-068.md`); nothing else in the verification stack touched.
+
+#### **Changed**
+
+* **`skill-adversarial-security` v1.1 → v1.2 — §7 Termination [C-05]**: deleted the termination condition "You have made at least one snarky comment about a questionable design choice" (tone-as-success-criterion forced noise on clean code — the pattern v3.18.0 removed from Sarcasmotron). Termination now binds to the objective bar **only**: automation executed (or honestly reported `scan: NOT RUN`) + no Critical/High findings + bikeshedding-only remains — matching `vdd-sarcastic` §4 (Objective Convergence) and the critic `Convergence signal` contract.
+* **§3 Reconnaissance [C-15]**: deleted "Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit)" — an instruction for a *security critic* to fabricate scanner evidence (and, since `critic-security` has no Bash tool, the **default path** in every `/vdd-multi` run, not the exception). Replaced with the no-fabrication protocol: report `scan: NOT RUN` and proceed with manual review only — never fabricate scanner output; the orchestrator runs `run_audit.py` and passes its results into the critic prompt. §5 Process step 1 aligned with the same rule.
+
+#### **Unchanged (invariants)**
+
+* Sarcastic persona (§2), checklists (§4), rationalization table (§6) byte-identical — tone remains the delivery style, it just stopped being a success criterion. Satellites (`critic-security.md`, `vdd-multi.md`, `skill-adversarial-performance`) verified clean — neither harmful claim existed outside the one skill file. Skill gate 43/43. Remaining audit-067 backlog (5×P1, 5×P2, 1×P2-experiment) deferred to follow-up cycles.
+
 ### **v3.19.1 — Symlink-Aware Prompt Discovery (Codex / `AGENTS.md` hardening)**
 
 In the default `--mode symlink` install, framework prompts/skills land as symlinks into `.agentic-development/`. Agents whose default file-discovery does not descend into symlinked directories saw those paths as empty on the first probe. Verified live on dummy projects: **Antigravity follows symlinks natively** (no change needed), but **Codex** recognized the content only on a *second* attempt — its first read-only probe was a plain `find` (which silently skips symlinked dirs); the next step used `find -L` and everything resolved. Fixed at the instruction + safe-command-policy layer; the installer (`vendors.yaml`, Python) is untouched.

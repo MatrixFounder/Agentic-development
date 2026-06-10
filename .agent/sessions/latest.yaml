@@ -1,22 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-05-29T00:37:25.426894"
+last_updated: "2026-06-10T10:22:07.529467"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "multi-critic-objective-convergence"
-  status: "DONE — Task 066 implemented; 7 files; gate 43/43; VDD APPROVED (0 findings)"
+  name: "adversarial-security-p0-fixes"
+  status: "done"
   predicted_steps: 0
 
 context_summary: |
-  Task 066 multi-critic-objective-convergence (v3.19.0) complete, stacked on feat/reviewers-hardening as branch feat/multi-critic-objective-convergence. Extended 065's Objective Convergence to the /vdd-multi parallel critics: renamed Convergence-signal enum hallucinating -> bikeshedding-only ('no legitimate findings, only style nits') across critic-logic/security/performance agents; vdd-multi Phase-3 termination now keys on the objective state (not 'critic inventing problems'); merge noise-filter re-keyed off bikeshedding-only (mechanic unchanged) in vdd-multi + skill-parallel-orchestration + 2 satellites. Other merge rules (dedup/cross-category/escalation/severity/iteration-cap) + Layer A/B rule byte-identical. Not committed yet at time of state-write.
+  Task 068 DONE (v3.19.2): both HARMFUL claims from audit 067 fixed in skill-adversarial-security v1.2. C-05: §7 termination rebound to objective bar only (snarky-comment condition deleted). C-15: §3 'Mock the results' deleted -> scan: NOT RUN no-fabrication protocol + orchestrator-runs-run_audit.py note; §5 step 1 aligned. Gates: verificator Modes A+B APPROVED (framework-audit-068.md); validator PASS; stale-grep zero hits; skill gate 43/43; Code Reviewer APPROVED; Security Auditor PASS (0 findings). CHANGELOG v3.19.2 EN+RU + README headers. Remaining audit-067 backlog (5xP1, 5xP2, 1xP2-experiment) still open for future cycles.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "063-09 APPROVED via Hallucination Convergence. Real bug caught by test+fixed: dry-run was creating .agentic-development before the dry-run gate (moved ensure_agentic_dev after preflight). Refinement: +2 tests for FR-14 codex git-root check. Signature deviations documented: classify_path drops unused state param; preflight_scan drops profile/state, adds force_system_link."
-  - "063-10 APPROVED via Hallucination Convergence. 2 real bugs caught by tests+fixed: create_snapshot crashed on overlapping dir+children paths (now sorts shallowest-first, skips captured descendants); stale TestStubDispatch removed. Refinement: +1 test (update leaves settings.json untouched)."
-  - "063-11 APPROVED via Hallucination Convergence. Real bug caught by integration suite + fixed: copy_tree relied on shutil ignore_dangling_symlinks which resolves relative symlink targets against process CWD — framework's broken .cursor/skills crashed copy mode when CWD=repo root. Fixed with a CWD-independent ignore callback. Refinement: test_wrapper.sh now truly simulates missing PyYAML via a stub python3 (was a structural grep)."
   - "Step 5 finalization: full regression green for all Task 063 scope. Pre-existing unrelated failure noted: tests/test_product_scripts.py fails under bare 'unittest discover -s tests' (import init_product) — untouched by Task 063, out of scope. 3 real bugs caught+fixed by the Verify->Roast loop during the chain: dry-run FS-mutation ordering (063-09), create_snapshot overlapping-paths crash (063-10), copy_tree CWD-dependent dangling-symlink resolution (063-11)."
   - "/vdd-multi fixed: _remove_install ownership-preserving (no wholesale rmtree of user vendor dirs); switch writes fresh state (no stale-hash inheritance, crash-safe); managed_block rejects marker-line injection; doctor validates state schema; update handles cross-FS IntegrityError; _atomic_symlink random temp; apply_retention floors at 1; System added to _SCAN_DIRS (was leaking on uninstall); install.sh English; ARCHITECTURE 9.6 TOCTOU wording corrected. Completeness: all 11 tasks confirmed fully implemented, no stubs."
   - "/update-docs: did NOT archive docs/TASK.md (Task 063) — the installer work is still uncommitted; task rotation is premature. TASK.md/ARCHITECTURE.md verified current; no reverse-engineering needed."
@@ -24,6 +21,9 @@ recent_decisions:
   - "antigravity: bootstrap_file GEMINI.md, bootstrap_aliases [] (no AGENTS.md). cursor: bootstrap_strategy none->marker_block, bootstrap_file AGENTS.md. FR-15 reframed from 'Antigravity dual bootstrap' to 'per-vendor bootstrap-file mapping'."
   - "065 APPROVED via Objective Convergence (the new bar, dogfooded on its own diff): 0 CRITICAL, 0 MAJOR, contract converged 4/4, DECISION TABLE byte-identical, skill gate 43/43. VDD loop caught residuals in VDD.md/TDD_VS_VDD.md/vdd-adversarial.md -> fixed."
   - "066 APPROVED via Objective Convergence (dogfood): 0 CRITICAL/MAJOR/MINOR; INV byte-diff confirms only the 2 consumer lines + enum changed; gate 43/43; no orphaned consumer of old token."
+  - "067 scope (user, 2026-06-10): full audit in-session; A/B experiment design-only; cross-vendor verdict capped at Unvalidated"
+  - "067: P0 fixes (C-05, C-15) + P1 backlog require follow-up /framework-upgrade cycle with skill-self-improvement-verificator gate — NOT applied in this read-only cycle"
+  - "068: C-15 fix wording avoids 'snarky' token entirely so future tone-residual greps stay clean; §7 doctrine note phrases the guard as 'never invent a flaw — or a sarcastic remark'"
 
 completed_tasks:
   - "Task A"
@@ -45,3 +45,4 @@ completed_tasks:
   - "task-063-11-integration-tests"
   - "task-065-reviewers-hardening"
   - "task-066-multi-critic-objective-convergence"
+  - "task-067-verification-stack-currency-audit"

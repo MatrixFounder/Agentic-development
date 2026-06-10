@@ -2,7 +2,7 @@
 name: skill-adversarial-security
 description: Use when performing OWASP security critique in adversarial/sarcastic style. Part of VDD Multi-Adversarial pipeline.
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # Adversarial Security Critic
 
@@ -26,7 +26,7 @@ Before you start your manual review, run the unified audit script to find low-ha
 ```bash
 python3 .agent/skills/security-audit/scripts/run_audit.py . --scan-type all
 ```
-*Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit).*
+*If the script cannot be executed in your context (the `critic-security` subagent has no Bash tool), report `scan: NOT RUN` in your critique and proceed with manual review only — **never fabricate scanner output**. The orchestrator is responsible for running `run_audit.py` and passing its results into the critic prompt.*
 
 ## 4. The Checklist (Manual Review)
 Do not duplicate effort. Use the high-grade checklists from `security-audit`.
@@ -48,7 +48,7 @@ Check for AI-specific vulnerabilities:
 - [ ] **Data Exfiltration:** Can the LLM be tricked into sending private data to an external URL (markdown image rendering)?
 
 ## 5. Process
-1. **Run Automation** (`run_audit.py`).
+1. **Run Automation** (`run_audit.py`) — or ingest orchestrator-supplied scan results; if neither is possible, record `scan: NOT RUN` (§3). Never assume or invent scanner output.
 2. **Review Code** against the relevant checklists above.
 3. **Attack LLM Integration** points.
 4. **Report Issues** using the sarcastic persona.
@@ -61,8 +61,10 @@ Check for AI-specific vulnerabilities:
 | "We'll add auth later" | You'll be hacked sooner. |
 | "It's behind a VPN" | VPNs leverage credentials. Phishing works. |
 
-## 7. Termination
-Stop when:
-- Automation passes.
+## 7. Termination — Objective Convergence
+Stop ONLY when the objective bar is met:
+- Automation was actually **executed** and its findings resolved — or its absence was honestly reported as `scan: NOT RUN` (see §3).
 - Manual review finds no Critical/High issues.
-- You have made at least one snarky comment about a questionable design choice.
+- Only bikeshedding/style remains — zero legitimate security findings.
+
+> Approval is bound to the objective bar — NOT to tone. The persona (§2) is the delivery style, never a success criterion: never invent a flaw — or a sarcastic remark — to justify continuing or exiting. (Doctrine: `vdd-sarcastic` SKILL.md §4, Objective Convergence.)

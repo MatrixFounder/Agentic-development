@@ -177,6 +177,14 @@ The replacement rationale everywhere is the **exhaustive-reporting instruction**
 
 > **Acceptance evidence (scope: framework sources, excluding `.agent/archive/` rollback copies and `.agent/sessions/` runtime state):** `grep -ri "politeness filter" .agent/ System/` → empty (hardened bare-token grep over `.agent/ System/ .claude/` also empty); mandate-token grep (`mandatory per SKILL §2`, `Sarcasm breaks complacency`, `Meanness is the mechanism`, `frame ALL feedback sarcastically`, `State the problem sarcastically`) → empty; "Forced Negativity" survives only in the two `(supersedes …)` traceability notes. `docs/verification_roadmap.md` and `docs/reviews/audit-067` keep quoting the retired claim by design (backlog/immutable history).
 
+**Sources (primary references for this change):**
+- Anthropic, *Towards Understanding Sycophancy in Language Models* (Sharma et al., 2023) — [anthropic.com/research](https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models) · [arXiv:2310.13548](https://arxiv.org/abs/2310.13548). Sycophancy is a real RLHF artifact (the original motivation for "forced negativity").
+- OpenAI, *GPT-5 System Card* — sycophancy −69% (free) / −75% (paid) vs GPT-4o; targeted evals 14.5% → <6% — [openai.com](https://openai.com/index/gpt-5-system-card/) · [PDF](https://cdn.openai.com/gpt-5-system-card.pdf). Vendors now train sycophancy out → the "bypass politeness" premise is outdated.
+- *Are LLMs Reliable Code Reviewers? Systematic Overcorrection in Requirement Conformance Judgement* — [arXiv:2603.00539](https://arxiv.org/abs/2603.00539). Detailed/harsh prompts make models flag non-existent errors (false positives).
+- *Bias in the Loop: Auditing LLM-as-a-Judge for Software Engineering* — [arXiv:2604.16790](https://arxiv.org/abs/2604.16790).
+- *LLMs-as-Judges: A Comprehensive Survey* — [arXiv:2412.05579](https://arxiv.org/abs/2412.05579) (position / verbosity / self-preference biases).
+- OpenAI, *LLM Critics Help Catch LLM Bugs* (CriticGPT; seeded-bug method later used by the item-13 A/B) — [arXiv:2407.00215](https://arxiv.org/abs/2407.00215) · [openai.com](https://openai.com/index/finding-gpt4s-mistakes-with-gpt-4/). The recall lever is exhaustive reporting, not tone.
+
 
 ---
 
@@ -218,6 +226,12 @@ Closes claims **C-11** (agentic/MCP threats covered by one-liners, zero detectio
 #### **Verification**
 
 * pytest **30/30**; `run_audit.py` on this repo: finding counts byte-identical to pre-change baseline (22: 10 critical / 12 medium — pre-existing regex-floor FPs in framework scripts) + **0 MCP findings**; skill gate **43/43**; drift greps clean; dogfood corpus (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP) → 100 findings across all scanners, every planted bug class detected; remaining audit-067 backlog (items 4–13) unchanged.
+
+**Sources (primary references for this change):**
+- OWASP, *Top 10 for Agentic Applications (2026)* — [genai.owasp.org](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) (ASI01 Goal Hijack, ASI06 Memory/Context Poisoning).
+- OWASP, *LLM01: Prompt Injection (2025)* — [genai.owasp.org](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) (direct vs indirect prompt injection).
+- NSA AISC, *CSI: MCP — Security Design Considerations for AI-Driven Automation* (U/OO/6030316-26, May 2026) — [press release](https://www.nsa.gov/Press-Room/Press-Releases-Statements/Press-Release-View/Article/4496698/nsa-releases-security-design-considerations-for-ai-driven-automation-leveraging/) · [PDF](https://www.nsa.gov/Portals/75/documents/Cybersecurity/CSI_MCP_SECURITY.pdf).
+- *Model Context Protocol — Security Best Practices* — [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices) (tool poisoning, shadowing, rug pull).
 
 ### **v3.19.2 — Adversarial-Security Critic: Objective Termination + No-Fabrication Recon (audit-067 P0)**
 

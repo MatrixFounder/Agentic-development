@@ -177,6 +177,14 @@ In-repo заготовки для параллельного диспатча к
 
 > **Доказательства приёмки (скоуп: исходники фреймворка, исключая rollback-копии `.agent/archive/` и runtime-состояние `.agent/sessions/`):** `grep -ri "politeness filter" .agent/ System/` → пусто (усиленный grep по голому токену в `.agent/ System/ .claude/` тоже пуст); grep токенов-мандатов (`mandatory per SKILL §2`, `Sarcasm breaks complacency`, `Meanness is the mechanism`, `frame ALL feedback sarcastically`, `State the problem sarcastically`) → пусто; «Forced Negativity» осталось только в двух трассировочных пометках `(supersedes …)`. `docs/verification_roadmap.md` и `docs/reviews/audit-067` цитируют отставленное утверждение по дизайну (бэклог/неизменяемая история).
 
+**Источники (первичные, на которых основана правка):**
+- Anthropic, *Towards Understanding Sycophancy in Language Models* (Sharma et al., 2023) — [anthropic.com/research](https://www.anthropic.com/research/towards-understanding-sycophancy-in-language-models) · [arXiv:2310.13548](https://arxiv.org/abs/2310.13548). Сикофантия — реальный артефакт RLHF (исходная мотивация «forced negativity»).
+- OpenAI, *GPT-5 System Card* — сикофантия −69% (free) / −75% (paid) против GPT-4o; целевые тесты 14.5% → <6% — [openai.com](https://openai.com/index/gpt-5-system-card/) · [PDF](https://cdn.openai.com/gpt-5-system-card.pdf). Вендоры теперь вытренировывают сикофантию → предпосылка «обойти вежливость» устарела.
+- *Are LLMs Reliable Code Reviewers? Systematic Overcorrection in Requirement Conformance Judgement* — [arXiv:2603.00539](https://arxiv.org/abs/2603.00539). Жёсткие/подробные промпты заставляют модель находить несуществующие ошибки.
+- *Bias in the Loop: Auditing LLM-as-a-Judge for Software Engineering* — [arXiv:2604.16790](https://arxiv.org/abs/2604.16790).
+- *LLMs-as-Judges: A Comprehensive Survey* — [arXiv:2412.05579](https://arxiv.org/abs/2412.05579) (искажения position / verbosity / self-preference).
+- OpenAI, *LLM Critics Help Catch LLM Bugs* (CriticGPT; метод посева багов из A/B пункта 13) — [arXiv:2407.00215](https://arxiv.org/abs/2407.00215) · [openai.com](https://openai.com/index/finding-gpt4s-mistakes-with-gpt-4/). Рычаг полноты — исчерпывающий репортинг, а не тон.
+
 
 ---
 
@@ -218,6 +226,12 @@ In-repo заготовки для параллельного диспатча к
 #### **Верификация**
 
 * pytest **30/30**; `run_audit.py` на этом репозитории: счётчики находок байт-в-байт равны базовой линии до изменений (22: 10 critical / 12 medium — давние FP regex-floor в скриптах фреймворка) + **0 MCP-находок**; skill gate **43/43**; drift-grep чистые; dogfood-корпус (Python/JS/Go/Rust/Solidity/GraphQL/Docker/K8s/Terraform/config/secrets/MCP) → 100 находок по всем сканерам, каждый заложенный класс багов задетектирован; остальной бэклог аудита 067 (пункты 4–13) не тронут.
+
+**Источники (первичные, на которых основана правка):**
+- OWASP, *Top 10 for Agentic Applications (2026)* — [genai.owasp.org](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) (ASI01 Goal Hijack, ASI06 Memory/Context Poisoning).
+- OWASP, *LLM01: Prompt Injection (2025)* — [genai.owasp.org](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) (direct vs indirect prompt injection).
+- NSA AISC, *CSI: MCP — Security Design Considerations for AI-Driven Automation* (U/OO/6030316-26, май 2026) — [пресс-релиз](https://www.nsa.gov/Press-Room/Press-Releases-Statements/Press-Release-View/Article/4496698/nsa-releases-security-design-considerations-for-ai-driven-automation-leveraging/) · [PDF](https://www.nsa.gov/Portals/75/documents/Cybersecurity/CSI_MCP_SECURITY.pdf).
+- *Model Context Protocol — Security Best Practices* — [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices) (tool poisoning, shadowing, rug pull).
 
 ### **v3.19.2 — Security-критик: объективное завершение + запрет фабрикации скана (P0 аудита 067)**
 

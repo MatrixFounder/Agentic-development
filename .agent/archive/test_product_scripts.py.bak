@@ -2,27 +2,13 @@ import pytest
 import os
 import sys
 import shutil
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-# Scripts live inside skills (moved out of System/scripts/); import them by path,
-# same pattern as tests/test_product_skills.py.
-import importlib.util
+# Add scripts/ to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../System/scripts'))
 
-def load_module_from_path(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
-
-init_product = load_module_from_path("init_product",
-    PROJECT_ROOT / ".agent/skills/skill-product-analysis/scripts/init_product.py")
-
-calculate_wsjf = load_module_from_path("calculate_wsjf",
-    PROJECT_ROOT / ".agent/skills/skill-product-backlog-prioritization/scripts/calculate_wsjf.py")
+import init_product
+import calculate_wsjf
 
 TEST_OUTPUT_DIR = "tests/tmp_output"
 

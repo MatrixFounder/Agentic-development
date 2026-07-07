@@ -105,8 +105,7 @@ def test_wsjf_line_parsing():
     assert cells[4] == "M"
 
 def test_wsjf_calculation_logic():
-    # calculate_wsjf takes (line, cells) pairs — see main(): [(r[1], r[2]) for r in table_rows]
-    rows = [("| A | 3 | 3 | 2 | S | |", ["A", "3", "3", "2", "S", ""])]
+    rows = [(0, "| A | 3 | 3 | 2 | S | |", ["A", "3", "3", "2", "S", ""])]
     indices = {"User Value": 1, "Time Criticality": 2, "Risk Reduction": 3, "Job Size": 4, "WSJF": 5}
     
     # S maps to 2

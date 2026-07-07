@@ -21,8 +21,4 @@ Iterates through all defined tasks in `docs/PLAN.md` and executes them using the
 
 3. **Finalization**:
    - Run Full Regression Suite (`pytest`).
-   - **Gate**:
-     - **If Pass**: Commit changes.
-     - **If Fail**: re-enter `.agent/workflows/03-develop-single-task.md` (alias: `/develop`)
-       for the failing task(s) — **max 2 attempts** — then re-run the suite.
-       Still failing → **STOP** and ask the user. **Never commit on a red suite.**
+   - If Pass: Commit changes.

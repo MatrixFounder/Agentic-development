@@ -6,46 +6,55 @@ under concurrent writes. The mock agent it exercises is itself DEPRECATED — se
 
 Do not add new test coverage here; write new concurrent-state tests directly
 against `update_state.py`.
-
-Output goes to a temporary directory (pytest `tmp_path` / `TemporaryDirectory`),
-NOT into `docs/tasks/` — a previous version wrote `docs/tasks/mock_results/` and
-dirtied the working tree on every run (task 084 R9).
 """
 
 import subprocess
 import time
 import os
 import sys
-import tempfile
 
+# Paths
 SPAWN_SCRIPT = ".agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py"
+OUTPUT_DIR = "docs/tasks/mock_results"
 
+def cleanup():
+    if os.path.exists(OUTPUT_DIR):
+        import shutil
+        shutil.rmtree(OUTPUT_DIR)
 
-def _run_spawn(output_dir):
+def test_spawn():
+    print("Spawning Mock Agent...")
+    
     cmd = [
         "python3", SPAWN_SCRIPT,
         "--task_name", "test-task-123",
         "--goal", "Verify infrastructure",
-        "--output_dir", output_dir,
+        "--output_dir", OUTPUT_DIR
     ]
-
+    
     start_time = time.time()
     subprocess.run(cmd, check=True)
     duration = time.time() - start_time
+    
     print(f"Agent finished in {duration:.2f}s")
-
-    result_file = os.path.join(output_dir, "test-task-123.result.md")
-    assert os.path.exists(result_file), f"Result file missing: {result_file}"
-
-    with open(result_file, "r") as f:
-        assert "Execution Log" in f.read(), "Content invalid"
-
-
-def test_spawn(tmp_path):
-    _run_spawn(str(tmp_path / "mock_results"))
-
+    
+    # Verify Result File
+    result_file = os.path.join(OUTPUT_DIR, "test-task-123.result.md")
+    if os.path.exists(result_file):
+        print(f"SUCCESS: Result file created at {result_file}")
+    else:
+        print(f"FAILURE: Result file missing.")
+        sys.exit(1)
+        
+    # Verify Content
+    with open(result_file, 'r') as f:
+        content = f.read()
+        if "Execution Log" in content:
+            print("SUCCESS: Content valid.")
+        else:
+            print("FAILURE: Content invalid.")
+            sys.exit(1)
 
 if __name__ == "__main__":
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        _run_spawn(os.path.join(tmp_dir, "mock_results"))
-        print("SUCCESS")
+    cleanup()
+    test_spawn()

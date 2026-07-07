@@ -20,8 +20,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 2. Load skill: `.agent/skills/light-mode/SKILL.md` (if not already loaded).
 3. Implement the fix directly. **Do not overengineer.**
 4. Run tests: `pytest` / `npm test` / relevant test command.
-5. If tests fail: fix and re-run — **max 3 fix-and-rerun attempts**. Still red after the
-   3rd attempt → **STOP**: the task is not trivial; follow the **Escalation** section below.
+5. If tests fail: Fix and re-run (loop).
 6. **Memory Update**: Update `.AGENTS.md` to reflect changes.
 
 ### 2. Code Review (Code Reviewer)
@@ -29,8 +28,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 1. Read `System/Agents/09_code_reviewer_prompt.md`.
 2. Load skill: `.agent/skills/code-review-checklist/SKILL.md`.
 3. **Security Sanity Check**: Verify no credentials leaked, no new dependencies added without approval.
-4. If issues found: Return to Step 1 (Developer) — **max 2 review cycles**. Issues still
-   open after the 2nd cycle → **STOP** and follow the **Escalation** section below.
+4. If issues found: Return to Step 1 (Developer).
 5. If approved: Proceed to Commit.
 
 ### 3. Commit & Archive (Orchestrator)
@@ -41,8 +39,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 4. Inform user: "Light Mode task complete."
 
 ## Escalation
-If the Developer or Reviewer discovers complexity (e.g., needs architecture change), **or a
-loop bound above is exhausted** (repeated failures = the task is not trivial):
+If the Developer or Reviewer discovers complexity (e.g., needs architecture change):
 1. **STOP** development.
 2. Inform user: "Escalating to standard pipeline."
-3. Switch to the `.agent/workflows/01-start-feature.md` workflow (alias: `/start-feature`).
+3. Switch to `/01-start-feature` workflow.

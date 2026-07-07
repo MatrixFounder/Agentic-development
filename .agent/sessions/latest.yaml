@@ -1,22 +1,19 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-06-10T20:56:45.907584"
+last_updated: "2026-07-08T01:04:49.867543"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "083-reposition-dispatcher-fallback"
-  status: "COMPLETE (uncommitted)"
+  name: "084-workflow-loops-portability"
+  status: "COMPLETE incl. R8+R9+R10 (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  Corrected 082's 'legacy' overstatement: schemas.py/tool_runner dispatcher repositioned as ADDITIONAL tools + FALLBACK (not legacy). Two classes: generate_task_archive_filename = framework-unique/live (task_id_tool.py CLI); run_tests/git_*/file ops = overlap fallback. execute_tool primitive tested (63 tests) but LLM loop NOT yet wired. Re-established framework tools in AGENTS.md (Cursor/Codex MCP) + GEMINI.md (Gemini discoveryCommand/MCP + Antigravity), grounded in official docs. CLAUDE.md UNTOUCHED. System/Docs reframed; SESSION_CONTEXT task_boundary->phase. Nothing archived; dispatcher code untouched. v3.20.12, gates 43/43+30/30+63/63, audit framework-audit-083.md. Operator: restart session + commit + manual-sync Universal-skills copy. Out of scope: wiring the fallback loop (future feature).
+  084 final: full-robust.md + vdd-enhanced.md hardened (bounded gated loops, portable refs, vendor dispatch, honest gate taxonomy; 12 review findings fixed). R8: 2 root tests + 05-run-full-task If-Fail gate. R9: phantom commands purged (base-stub-first, light-01/02), test_mock_agent -> tmp_path + mock_results git-rm'ed, calculate_wsjf docstring. R10: light-02 loops bounded (max 3 test-fix / max 2 review cycles, escalation on exhaustion) + WORKFLOWS.md Light Mode row. Gates: 43/43 skills, pytest 227+52+30, zero phantom commands, zero unbounded loops in touched workflows, tree clean after test runs. v3.20.13, audit framework-audit-084.md (R8-R10 recorded). Ready to commit.
 
 active_blockers:
   []
 
 recent_decisions:
-  - "071: kept Sarcasmotron persona mandate in opt-in /vdd-* workflows (no rationale claims there; K2 repositioning makes the whole workflow the opt-in container); only non-opt-in mandates removed"
-  - "072: sequential cross-mechanism findings get priority flag, never +1 (R3b minimum form, consistent with R3d literal 'never escalates'); critics<->teammates noun split preserved as the only rule-3 divergence, normalized-diff-verified"
-  - "073: security-audit two-layer section inserted as SS0 specifically to keep SS1-SS7 anchors stable for external references"
   - "074: critic wrappers untouched - critic-side rule lives in SOT skills + Phase-1 prompt (thin-wrapper anti-drift)"
   - "075: experiment artifacts are evidence, not framework edits - rules 2/3 implications recorded as recommendations pending operator review"
   - "076: corpus README in Russian per operator request; EN technical report remains SOT for citations"
@@ -24,6 +21,9 @@ recent_decisions:
   - "079: cross-vendor row kept as live open question, explicitly separated from refuted tier bet (078 tested tiers not vendors)"
   - "080: wrappers at real runtime paths (ready to validate) with scaffold banners; first-match-wins keeps Claude precedence in this repo"
   - "081: 6d demotion shipped despite scaffold-status adapters - Vendor dispatch flags them documented-not-validated, sequential stays proven path; no false promise"
+  - "084: caller-side bounds override sub-workflow open-ended loops (exit bar re-scoped at caller, never edited in sub-workflow); gate taxonomy split: script gates deterministic vs review gates structured-verdict-vs-written-bar"
+  - "R9: tracked test artifact docs/tasks/mock_results removed from git - test outputs never belong in docs/tasks (skill-archive-task territory)"
+  - "R10: light-mode bound exhaustion routes to the existing Escalation path (repeated failures = task not trivial -> standard pipeline), not a bare ask-user"
 
 completed_tasks:
   - "Task A"
@@ -60,3 +60,4 @@ completed_tasks:
   - "demote-tier-diverse-escalation"
   - "vendor-adapter-scaffolds"
   - "vendor-adapters-6d-6e-antigravity"
+  - "083-reposition-dispatcher-fallback"

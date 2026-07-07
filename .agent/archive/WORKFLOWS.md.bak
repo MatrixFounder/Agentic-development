@@ -92,8 +92,7 @@ graph TD
 
     %% Relationships
     Robust -->|1. calls| VDDE
-    Robust -->|2. opt-in coverage gate| VDDMulti
-    Robust -->|3. calls| SecAudit
+    Robust -->|2. calls| SecAudit
 
     VDDE -->|1. calls| Base
     VDDE -->|2. adversarial refine| VDDMulti
@@ -144,12 +143,12 @@ The workflows are organized into three categories:
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
 | **Standard Feature** | **Default Choice.** Runs the full "Stub-First" pipeline: Analysis, Architecture, Planning, and then Auto-Execution loop. | `run base-stub-first` |
-| **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) with **Strict TDD** (High Assurance), an opt-in `vdd-multi` coverage gate, and a Security Audit. Every step is a gate (script exit codes, test runs, structured review verdicts) with bounded retries + explicit escalation; vendor-dispatch section documents non-Claude harnesses. | `run full-robust` or `/full` |
-| **VDD Enhanced** | **Hardened Pipeline.** Stub-First Plan + **RTM Validation** + VDD Adversarial execution. All four phases use bounded self-correction loops (max 3 validator retries, max 2 regression fix-and-rerun rounds, max 3 adversarial cycles) with escalation on exhaustion; gates are objective checks — `validate.py` exit codes, the regression suite, and the adversarial objective-convergence bar (model-agnostic). | `run vdd-enhanced` or `/vdd` |
+| **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) with **Strict TDD** (High Assurance) followed by a Security Audit. | `run full-robust` |
+| **VDD Enhanced** | **Hardened Pipeline.** Stub-First Plan + **RTM Validation** + VDD Adversarial execution. | `run vdd-enhanced` |
 | **VDD Multi-Adversarial** | **Parallel** execution of 3 specialized critics (logic, security, performance) via Layer A — single `Agent` tool-use spawning `.claude/agents/critic-*` subagents in one message. Supports 5 inline flags: `--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`. See §6 for wrapper details and `.agent/workflows/vdd-multi.md` for full parameter reference. | `run vdd-multi [target] [flags]` or `/vdd-multi ...` |
 | **Framework Upgrade** | **Meta-Workflow.** Safely upgrades the Agentic System itself (Prompts/Skills) with Audit Gates. | `run framework-upgrade` |
 | **Iterative Design** | **Concept Refinement Loop.** Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine. | `run iterative-design` |
-| **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop — bounded (max 3 test-fix attempts, max 2 review cycles); bound exhaustion escalates to the standard pipeline. | `run light` or `/light` |
+| **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop. | `run light` or `/light` |
 
 ---
 
@@ -158,7 +157,7 @@ The workflows are organized into three categories:
 
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
-| **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. **Auto-commits only on a green regression suite**; on failure, bounded fix loop (max 2 re-entries into `03-develop-single-task`), then escalates to the user. | `run 05-run-full-task` or `/develop-all` |
+| **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. **Auto-commits at end.** Stops on error. | `run 05-run-full-task` |
 | **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task. | `run vdd-03-develop` |
 | **VDD Run Full Task** | **VDD Chain Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, applies adversarial Sarcasmotron review per task. Mandatory inter-task HITL gate (`yes / pause / abort`). Max 3 REJECTED iterations before escalation. **No auto-commit.** Resumable from `.agent/sessions/latest.yaml` after `pause`. Supports `--dry-run` and `--auto-continue=<sec>` flags. | `run vdd-05-run-full-task` or `/vdd-develop-all` |
 

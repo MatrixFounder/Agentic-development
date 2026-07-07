@@ -9,18 +9,18 @@ Core pipeline with Stub-First and TDD. Used as foundation for others.
 **Steps:**
 
 1. **Analysis & Architecture Phase**:
-    - Execute `.agent/workflows/01-start-feature.md` (Claude Code alias: `/start-feature`).
+    - Call `/01-start-feature`.
     - This handles:
         - Archiving old TASK.md
         - Creating new TASK.md (Analysis)
         - Updating ARCHITECTURE.md (Architecture)
 
 2. **Planning Phase**:
-    - Execute `.agent/workflows/02-plan-implementation.md` (alias: `/plan`).
+    - Call `/02-plan-implementation`.
     - Creates PLAN.md and tasks/*.md using Stub-First strategy.
 
 3. **Development Loop** (Automated):
-    - Execute `.agent/workflows/05-run-full-task.md` (alias: `/develop-all`).
+    - Call `/05-run-full-task`.
     - Executes tasks, creating stubs first, then implementing logic.
 
 4. Final validation and commit preparation.

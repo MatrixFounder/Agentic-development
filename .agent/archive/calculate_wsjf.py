@@ -103,15 +103,8 @@ def map_size_to_fib(value_str):
 def calculate_wsjf(rows, indices):
     """
     Calculate WSJF for rows.
-
-    Args:
-        rows: list of (line_content, cells) pairs — see main():
-              [(r[1], r[2]) for r in table_rows].
-        indices: column-name → cell-index mapping from get_column_indices().
-
-    Returns:
-        list of dicts: {'score': float, 'cells': list, 'line_idx': int}.
-        Exits with code 1 on a non-numeric critical column (UV, TC, RR).
+    Returns: (processed_rows, errors)
+    processed_rows is a list of (score, line_content)
     """
     processed = [] 
     

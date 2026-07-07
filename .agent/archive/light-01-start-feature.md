@@ -24,9 +24,8 @@ description: Start a feature using Light Mode (fast-track for trivial tasks)
 
 ### 2. Transition to Development
 // turbo
-1. Inform user: "Analysis complete. Transitioning to the Light development loop."
-2. Execute `.agent/workflows/light-02-develop-task.md` (no standalone slash command — it is
-   the second half of `/light`).
+1. Inform user: "Analysis complete. Transitioning to `/light-02-develop-task`."
+2. Call `/light-02-develop-task`.
 
 ## Escalation
 If the Analyst discovers that the task requires:
@@ -38,4 +37,4 @@ If the Analyst discovers that the task requires:
 **STOP** and inform the user:
 > "This task is more complex than expected. Switching to standard pipeline."
 
-Then proceed with the standard `.agent/workflows/01-start-feature.md` workflow (alias: `/start-feature`).
+Then proceed with the standard `/01-start-feature` workflow.

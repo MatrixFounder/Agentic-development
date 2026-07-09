@@ -28,11 +28,11 @@ Hypothetical qualifying scenarios (speculative):
 - `critic-security` finds a ReDoS and wants to check with `critic-performance` whether the algorithmic complexity is exploitable DoS vs. just slow, **before** finalizing severity.
 - Two `developer` teammates implementing frontend and backend of the same feature, negotiating API schema mid-flight.
 
-**Blocking gotchas** to address before shipping (issues **AT-6..AT-9** in [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md)):
-- `TeamDelete` does not clean up `config.json` members array after `shutdown_approved` protocol round-trip — currently requires manual `rm -rf`. This is a hard blocker for any idempotent workflow. ([AT-6](issues/at-6-teamdelete-does-not-clean-up-after-protocol-shutdown.md))
-- Async spawn contract (no sync return) differs from Layer A — requires workflow-level inbox polling or wait-for-idle semantics. ([AT-7](issues/at-7-async-spawn-not-sync-return.md))
-- Model inheritance is inconsistent across subagent types — must override explicitly when Opus required. ([AT-8](issues/at-8-model-inheritance-inconsistent-across-agent-types.md))
-- Runtime sends structured JSON status messages despite docs saying otherwise — workflow parsers must handle both plain text and JSON. ([AT-9](issues/at-9-runtime-sends-structured-json-despite-docs.md))
+**Blocking gotchas** to address before shipping (documented in [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md)):
+- `TeamDelete` does not clean up `config.json` members array after `shutdown_approved` protocol round-trip — currently requires manual `rm -rf`. This is a hard blocker for any idempotent workflow.
+- Async spawn contract (no sync return) differs from Layer A — requires workflow-level inbox polling or wait-for-idle semantics.
+- Model inheritance is inconsistent across subagent types — must override explicitly when Opus required.
+- Runtime sends structured JSON status messages despite docs saying otherwise — workflow parsers must handle both plain text and JSON.
 
 **Estimated scope** if reopened: 4–8 hours. Includes workflow design, lifecycle management, error recovery, observability of inter-teammate messages, smoke test.
 

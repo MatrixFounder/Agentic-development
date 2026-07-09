@@ -2,7 +2,7 @@
 name: skill-reverse-engineering
 description: "Regenerate architecture documentation from codebase analysis."
 tier: 2
-version: 1.2
+version: 1.1
 ---
 # Reverse Engineering Skill
 
@@ -56,19 +56,6 @@ Generate diffs for:
 Identify:
 - `TODO`/`HACK` comments indicating tech debt.
 - Discrepancies between implementation and docs.
-
-**Filing format (thin index).** `docs/KNOWN_ISSUES.md` is a hand-maintained **thin index**, not a
-flat checklist — do **NOT** append `- [ ]` lines to it. For each finding, follow the
-**"Adding a new issue"** recipe in that file's *Rules / Conventions* section:
-1. Create a per-issue file `docs/issues/<slug>.md` with YAML frontmatter (`id`, `type: known-issue`,
-   `status`, `opened_at`, `category`, optional `severity`, `slug`) + an H1 title + body.
-2. Add exactly **one** index line under the matching `## <category>` heading in `docs/KNOWN_ISSUES.md`.
-   Edit the per-issue file and the index line **in lockstep**.
-3. Reverse-engineering findings rarely fit the existing `AT` (agent-teams) / `WR` (wrappers)
-   prefixes — add a new **prefix → category** row to the Rules table before filing.
-
-(The "Append new findings, do not delete existing rationale" protection in **Human Knowledge
-Preservation** below still applies to the per-issue bodies.)
 
 ## Human Knowledge Preservation
 

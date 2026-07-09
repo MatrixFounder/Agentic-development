@@ -1,125 +1,84 @@
-# Technical Specification: Harden loop semantics & cross-harness/LLM portability of `full-robust` and `vdd-enhanced`
+# Technical Specification: Restructure `docs/KNOWN_ISSUES.md` into a thin index + per-issue files
 
 ### 0. Meta Information
-- **Task ID:** 084
-- **Slug:** `workflow-loops-portability`
-- **Mode:** Framework Upgrade (workflow-file edits only; no code, no skill changes)
-- **Type:** Hardening / consistency. Scope = exactly two files named by the operator:
-  `.agent/workflows/full-robust.md`, `.agent/workflows/vdd-enhanced.md` (+ registry/docs sync).
-- **Workflow:** `/framework-upgrade` (verificator Modes A+B).
+- **Task ID:** 085
+- **Slug:** `known-issues-thin-index`
+- **Mode:** Framework Upgrade (docs-only; no code, no skills, no prompt/workflow changes)
+- **Type:** Documentation restructure / maintainability.
+- **Workflow:** `/framework-upgrade` (verificator Modes A + B).
+- **Operator request (verbatim):** "Переведи файл `docs/KNOWN_ISSUES.md` как в проекте
+  `/Users/sergey/dev-projects/obsidian-llm-wiki/docs/KNOWN_ISSUES.md` (тонкий индекс с
+  правилами и все issues в отдельных файлах в подпапке `issues`)."
 
 ### 1. Problem Description
-Operator request: verify that `full-robust.md` and `vdd-enhanced.md` use **highly effective
-loops** and can run on **different harnesses** (Claude Code / Codex / Cursor / Gemini CLI /
-Antigravity) with **different LLMs**.
+Today `docs/KNOWN_ISSUES.md` is a single 22-line flat file holding 10 known-issue entries
+as `- [ ]` checkboxes under two prose sections. This does not scale, has no per-issue
+identity (no IDs, no status/severity/date frontmatter), and cannot be linked to, filtered,
+or cited individually.
 
-The framework already has a canonical "effective loop" pattern (established by
-`skill-orchestrator-patterns` Stage Cycle, workflows `01/02/03`, `vdd-multi`, and
-`vdd-adversarial` objective convergence):
+The operator wants it restructured to mirror the `obsidian-llm-wiki` layout:
+1. **A thin index** at `docs/KNOWN_ISSUES.md` — a short ledger grouping issues by category,
+   one line per issue (ID · title link · severity · status · opened date).
+2. **Per-issue files** under `docs/issues/<slug>.md`, each with YAML frontmatter
+   (`id`, `type: known-issue`, `status`, `opened_at`, `category`, optional `severity`, `slug`)
+   and the issue body preserved verbatim (**no content loss** — NFR-1).
+3. **Rules section** ("правила") at the top of the thin index documenting the ID scheme,
+   category/status/severity vocabularies, the index line format, and the "how to add an
+   issue" procedure — because this repo has **no** `wiki-index-render` tooling (unlike the
+   source vault), so the index is **hand-maintained** and its conventions must be written down.
 
-1. **Deterministic gate** — a script exit code / structured verdict, not model self-assessment
-   → the loop works with any LLM.
-2. **Error feedback** — the gate's error output is fed verbatim into the retry prompt.
-3. **Bounded iterations** — explicit max-retry count.
-4. **Explicit escalation** — on exhaustion: STOP and ask the user; never silently proceed.
-5. **Objective convergence bar** for adversarial loops — terminate on "0 critical, only
-   bikeshedding remains", never because the critic was forced to invent nitpicks.
-6. **Checkpoint at phase boundaries** — `update_state.py` persists state so a loop survives
-   context resets (critical for smaller-context models and harness restarts).
-7. **Vendor dispatch** — invocation via workflow *file paths* (portable), slash commands as
-   Claude-Code-only aliases; role calls via native subagent spawn OR sequential role-switch
-   fallback (`skill-parallel-orchestration` §1, §7).
+### 2. Constraints & Non-Goals
+- **NFR-1 (No data loss):** every sentence of the 10 current entries survives into a
+  per-issue file. The wrapper-drift entry's sub-bullet ("Scaffold wrappers are generated")
+  is preserved in full.
+- **Path stability:** the thin index stays at `docs/KNOWN_ISSUES.md`. The ~30 references to
+  that path across the repo (README, CLAUDE/AGENTS/GEMINI, ARCHITECTURE, pipeline steps)
+  must keep resolving — **do not rename or move the index file**.
+- **No tooling import:** do NOT copy the wiki's Python migration/render scripts, SQLite
+  index, or Obsidian dependency into this repo. This is a one-time hand restructure.
+- **Link syntax:** standard Markdown links (`[title](issues/slug.md)`), NOT Obsidian
+  `[[wikilinks]]` — this repo is not an Obsidian vault; links must be clickable in
+  GitHub/VSCode. (Operator decision, 2026-07-10.)
+- **No behavior/logic change:** docs only. No agent, skill, workflow, or prompt edits.
 
-**Audit findings (evidence, per file):**
+### 3. Requirements Traceability Matrix (RTM)
 
-`full-robust.md` — fails the pattern almost entirely:
-- **F1 (loops):** three linear steps; no gates, no verdict propagation, no failure branches.
-  If `/vdd-enhanced` escalates or the security audit finds CRITICAL blockers, behavior is
-  undefined.
-- **F2 (stale):** description says "(future) Security audit" while Step 2 already calls the
-  existing `/security-audit` workflow.
-- **F3 (invocation drift):** "Call /vdd-enhanced" — no such command exists; the Claude Code
-  command is `/vdd` (`.claude/commands/vdd.md`), and `/full` maps to this very file. On
-  non-Claude harnesses slash commands don't exist at all — steps must reference
-  `.agent/workflows/*.md` file paths.
-- **F4 (portability):** no vendor-dispatch/fallback section, no statement of how steps run on
-  harnesses without subagent primitives.
-- **F5 (resilience):** no phase-boundary checkpoint reminder.
-- **F6 (cross-link drift):** `vdd-multi.md` §Integration says it "can be called from
-  `/full-robust` — after base implementation", but `full-robust.md` never mentions it (the
-  ab-experiment-075 positioning makes it the coverage/CI-gating tool for exactly this
-  "maximum reliability" pipeline — as an opt-in step, not a default).
+| ID | Requirement | Source | Acceptance |
+|----|-------------|--------|------------|
+| R1 | Create `docs/issues/` with one file per current known issue (10 files). | Operator | `ls docs/issues/*.md` = 10 files. |
+| R2 | Each per-issue file has valid frontmatter (`id`, `type`, `status`, `opened_at`, `category`, `slug`; `severity` when applicable) mirroring the wiki schema. | obsidian-llm-wiki | Frontmatter keys present & well-formed on every file. |
+| R3 | Full original text of each entry preserved (no dropped sentence). | NFR-1 | Manual diff: every clause of the 10 entries appears in some issue file. |
+| R4 | `docs/KNOWN_ISSUES.md` becomes a thin index: rules header + category-grouped one-line entries. | Operator | Index ≤ ~1 screen of ledger + rules; no full issue bodies inline. |
+| R5 | Rules section documents ID scheme, category/status/severity vocab, line format, add-procedure. | "с правилами" | Rules section present and self-consistent with the emitted files. |
+| R6 | All index links resolve to existing files; opened dates match git history. | Integrity | `grep`-based link check passes; dates = 2026-04-17 (AT-*), 2026-06-10 (WR-1). |
+| R7 | Path `docs/KNOWN_ISSUES.md` unchanged; existing references unbroken. | Path stability | File still at same path; no other doc edited to chase a rename. |
 
-`vdd-enhanced.md` — Phases 1–2 already implement the pattern well (mechanical
-`skill-spec-validator` gates + bounded retries); gaps:
-- **F7 (incomplete loop):** Phase 2 loop lacks the escalation clause (Phase 1 has
-  "Escalation: … stop and ask User"; Phase 2 ends at "Max 3 retries" with no terminal action).
-- **F8 (missing gate):** Phase 3 delegates to `/05-run-full-task` with no stated exit
-  criteria. (The sub-workflow's own regression step also lacks an If-Fail branch — out of
-  scope here, compensated by a caller-side gate; see Non-Goals.)
-- **F9 (unbounded loop):** Phase 4 calls `/vdd-adversarial`, which may recurse indefinitely;
-  no outer iteration cap and no reference to the objective-convergence termination bar.
-- **F10 (invocation drift):** references `/01-start-feature`, `/02-plan-implementation`,
-  `/05-run-full-task` — these are workflow file basenames, not commands (actual commands:
-  `/start-feature`, `/plan`, `/develop-all`); role calls ("Call `02_analyst` again") don't
-  state the mechanism (subagent spawn vs role-switch).
-- **F11 (portability):** no vendor-dispatch section; the workflow's strongest cross-LLM
-  property — gates are deterministic scripts, so any model can drive the loop — is
-  undocumented.
-- **F12 (resilience):** no phase-boundary checkpoint reminder.
+### 4. ID / Category Scheme (this repo)
+Two prefixes cover the current content; documented in the index rules for future issues:
 
-### 2. Requirements Traceability Matrix (RTM)
+| Prefix | Category   | Meaning |
+|--------|------------|---------|
+| `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
+| `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` etc.). |
 
-| ID | Requirement | MVP? | Sub-features / mapping |
-|----|-------------|------|------------------------|
-| R1 | `full-robust.md`: explicit gated pipeline | Yes | (a) per-step gate + failure branch (vdd-enhanced escalation → STOP; security CRITICAL/HIGH → bounded remediation loop, max 3, then escalate) [F1]; (b) remove "(future)" staleness, name `/04-update-docs` for the docs step [F2] |
-| R2 | `full-robust.md`: cross-harness & cross-LLM portability | Yes | (a) portable invocation (file path + Claude Code alias in parentheses) [F3]; (b) `## Vendor dispatch & model portability` section referencing `skill-parallel-orchestration` §1/§7 — no duplication of its tables [F4]; (c) phase-boundary checkpoint note (`update_state.py`) [F5] |
-| R3 | `full-robust.md`: optional `/vdd-multi` coverage gate | Yes | one opt-in step (e.g. `--no-fix --fail-on=high`) restoring the cross-link that `vdd-multi.md` §Integration already declares; marked optional per 075 positioning [F6] |
-| R4 | `vdd-enhanced.md`: complete the loops | Yes | (a) Phase 2 escalation clause, parity with Phase 1 [F7]; (b) Phase 3 caller-side gate: full regression must pass; on fail re-enter dev loop (max 2) then escalate [F8]; (c) Phase 4 outer cap (max 3 adversarial cycles) + objective-convergence bar reference [F9] |
-| R5 | `vdd-enhanced.md`: cross-harness & cross-LLM portability | Yes | (a) portable invocation names (file paths + real command aliases) [F10]; (b) `## Vendor dispatch & model portability` section + explicit "gates are mechanical ⇒ model-agnostic" statement [F11]; (c) phase-boundary checkpoint note [F12] |
-| R6 | Registry & docs sync | Yes | (a) `System/Docs/WORKFLOWS.md` rows for Full Robust / VDD Enhanced updated if wording changes; (b) CHANGELOG (EN+RU) entry; (c) audit artifact `docs/reviews/framework-audit-084.md` |
-| R7 | Safety invariants | Yes | (a) backups of both workflow files to `.agent/archive/` before edit; (b) no changes to any other workflow/skill/prompt/bootstrap file **except the R8 scope expansion**; (c) gates green: `validate_skill.py` suite, `pytest`; (d) no archiving of living docs |
-| R8 | **Scope expansion (operator, mid-execution: "fix follow ups that you've marked")** — fix the three follow-ups recorded during verification | Yes | (a) `tests/test_product_scripts.py`: stale `System/scripts` import path → `load_module_from_path` from the skills' script paths (repo pattern from `test_product_skills.py`); (b) `tests/test_product_skills.py::test_wsjf_calculation_logic`: old 3-tuple row shape → the script's actual `(line, cells)` contract; (c) `.agent/workflows/05-run-full-task.md` Finalization: add the missing If-Fail branch (bounded fix loop max 2 → escalate; never commit on red) + WORKFLOWS.md row sync |
-| R9 | **Scope expansion 2 (operator: "почини их")** — fix the second-round follow-ups recorded in the execution-verify audit | Yes | (a) phantom slash-commands → portable file-path + real-alias form in `base-stub-first.md`, `light-01-start-feature.md` (incl. the nonexistent `/light-02-develop-task`), `light-02-develop-task.md`; (b) `tests/test_mock_agent.py` → pytest `tmp_path` output (no more writes into `docs/tasks/`), tracked test artifact `docs/tasks/mock_results/` removed from git; (c) `calculate_wsjf` docstring aligned with the actual signature/return (list of dicts, exit-1 behavior) |
-| R10 | **Scope expansion 3 (operator: "это тоже исправь")** — bound the light-mode loops (audit §5 observation) | Yes | `light-02-develop-task.md`: (a) dev test-fix loop → **max 3 fix-and-rerun attempts** (validator-retry convention); (b) review loop → **max 2 review cycles** (reviewer convention); (c) Escalation trigger extended to cover bound exhaustion (repeated failures ⇒ task not trivial ⇒ standard pipeline); (d) WORKFLOWS.md Light Mode row sync |
+Mapping of the 10 current entries:
 
-### 3. Use Cases
-- **UC1 (Claude Code user):** runs `/full` → each step states its gate, failure branch, and
-  bound; a failed security remediation loop escalates instead of looping forever or silently
-  finishing.
-- **UC2 (Codex/Cursor/Gemini/Antigravity orchestrator):** reads the workflow file (no slash
-  commands available) → every "Call X" resolves to a readable `.agent/workflows/*.md` path,
-  and the vendor-dispatch section says how role calls map on that runtime.
-- **UC3 (any LLM, incl. smaller-context models):** the loops' pass/fail decisions come from
-  script exit codes and structured verdicts, not model self-grading; phase-boundary
-  checkpoints let a fresh session resume mid-pipeline.
+| ID | Title (short) | Category | Status | Severity | Opened |
+|----|---------------|----------|--------|----------|--------|
+| AT-1 | No session resumption | agent-teams | documented | — | 2026-04-17 |
+| AT-2 | Task status lag | agent-teams | documented | SEV-3 | 2026-04-17 |
+| AT-3 | One team per session | agent-teams | documented | — | 2026-04-17 |
+| AT-4 | No leadership transfer | agent-teams | documented | — | 2026-04-17 |
+| AT-5 | Higher token costs | agent-teams | by-design | — | 2026-04-17 |
+| AT-6 | `TeamDelete` does not clean up after protocol shutdown | agent-teams | open | SEV-2 | 2026-04-17 |
+| AT-7 | Async spawn ≠ sync return | agent-teams | documented | — | 2026-04-17 |
+| AT-8 | Model inheritance inconsistent across agent types | agent-teams | documented | — | 2026-04-17 |
+| AT-9 | Runtime sends structured JSON despite docs | agent-teams | documented | — | 2026-04-17 |
+| WR-1 | Wrapper/SOT drift risk | wrappers | documented | SEV-3 | 2026-06-10 |
 
-### 4. Acceptance Criteria
-- [ ] AC1: Every step in both workflows has: gate condition, bounded retry (where a loop
-  exists), and explicit escalation path. No loop is unbounded; no failure path is undefined.
-- [ ] AC2: No references to non-existent slash commands remain; every sub-workflow reference
-  includes its `.agent/workflows/*.md` path; Claude Code aliases shown as parenthetical.
-- [ ] AC3: Both files contain a vendor-dispatch/model-portability section that references
-  `skill-parallel-orchestration` (no duplicated vendor tables — SOT preserved).
-- [ ] AC4: `full-robust.md` no longer says "(future)"; optional `/vdd-multi` gate present and
-  marked opt-in with 075 rationale.
-- [ ] AC5: `vdd-enhanced.md` Phase 2 has an escalation clause; Phase 3 has an explicit gate;
-  Phase 4 has an outer cap + objective-convergence reference.
-- [ ] AC6: `System/Docs/WORKFLOWS.md` + CHANGELOG updated; audit artifact exists;
-  `validate_skill.py` and `pytest` suites green; `git diff --stat` touches only the declared
-  files.
-
-### 5. Non-Goals / Out of Scope
-- Editing sub-workflows (`01/02/03`, `vdd-adversarial`, `security-audit`, `vdd-multi`).
-  ~~The missing If-Fail branch in `05-run-full-task.md` Finalization is recorded as a
-  follow-up recommendation, compensated by the caller-side gate (R4b).~~ **Superseded by
-  R8c**: the operator requested the marked follow-ups be fixed in this task.
-- Any change to `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `System/Agents/*`, skills, or code.
-- Parallel-execution redesign (`/vdd-multi` internals) — only the opt-in cross-link (R3).
-
-### 6. Open Questions
-- None blocking. (Scope was explicitly fixed by the operator to the two named files.)
-
-### 7. Migration
-- None required: workflows are read fresh at each invocation; no session state format
-  changes; no wrapper regeneration (no SOT paths renamed).
+### 5. Acceptance Criteria (Definition of Done)
+- [ ] R1–R7 satisfied.
+- [ ] `.agent/archive/KNOWN_ISSUES.md.bak` backup exists (rollback safety).
+- [ ] Meta-audit (`skill-self-improvement-verificator`, Modes A+B) recorded in
+      `docs/reviews/framework-audit-085.md`.
+- [ ] Session state persisted at the phase boundary.

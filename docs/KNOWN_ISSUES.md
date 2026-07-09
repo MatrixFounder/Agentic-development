@@ -1,22 +1,77 @@
 # Known Issues & Tech Debt
 
-**Purpose:** Track recurring bugs, architectural limitations, and sensitive areas to avoid repeating mistakes.
+**Purpose:** Track recurring bugs, architectural limitations, and sensitive areas to avoid
+repeating mistakes.
 
-## Native Claude Code Agent Teams — known limitations (Layer B)
+This file is a **thin index**. Each issue lives in its own file under
+[`docs/issues/`](issues/); the lines below are one-per-issue pointers grouped by category.
+Read the linked file for the full symptom, workaround, and cross-links.
 
-These apply to **Layer B** (`TeamCreate`/`SendMessage`). Layer A (parallel `Agent` tool-uses in one message) is not affected.
+---
 
-- [ ] **No session resumption**: `/resume` does not restore in-process teammates. After a session restart you must respawn the team from scratch. Do not design workflows that assume teammate persistence across `/resume`.
-- [ ] **Task status lag**: teammates sometimes fail to mark tasks complete in the shared task list, blocking dependent tasks. Include a timeout + lead-side status audit when designing long-running teams.
-- [ ] **One team per session**: a lead session can manage only one team at a time. Do not nest teams (e.g., a teammate spawning its own sub-team is not supported).
-- [ ] **No leadership transfer**: cannot promote a teammate to lead or hand off the team. The lead session that created the team must orchestrate cleanup via `TeamDelete`.
-- [ ] **Higher token costs**: each teammate is an independent Claude session — costs scale ~linearly with team size. Prefer Layer A for orthogonal critique where a peer mailbox is not required (see `skill-parallel-orchestration` §4 decision rule).
-- [ ] **`TeamDelete` does NOT clean up after protocol shutdown** (verified Wave-4 probe, 2026-04-17): the shutdown round-trip works (`SendMessage({type: "shutdown_request"})` → teammate replies `shutdown_approved`), but `config.json` members array is NOT updated. `TeamDelete` then fails with `Cannot cleanup team with N active member(s)`. The error references `requestShutdown` which is not an available tool. **Workaround**: manual `rm -rf ~/.claude/teams/<name>/ ~/.claude/tasks/<name>/`. This blocks any workflow that expects idempotent team lifecycle via `TeamDelete`.
-- [ ] **Async spawn ≠ sync return**: `Agent(team_name, name, ...)` returns `"Spawned successfully. agent_id: ..."` immediately; teammate runs in background. Lead must poll the inbox file (`~/.claude/teams/<name>/inboxes/<recipient>.json`) or await an auto-delivered message turn. Different contract from Layer A where `Agent` returns the subagent's result synchronously.
-- [ ] **Model inheritance inconsistent across agent types**: spawning `subagent_type: "Explore"` as a teammate defaults to `model: "haiku"` regardless of lead's model. If Opus is required for a teammate, pass `model` explicitly at spawn time.
-- [ ] **Runtime sends structured JSON despite docs**: docs say "Do NOT send structured JSON status messages like `{type: idle,...}`"; the runtime itself auto-delivers `{"type":"idle_notification", ...}` and `{"type":"shutdown_approved", ...}` into the lead's inbox. Parsers must handle both plain text and structured JSON.
+## Rules / Conventions
 
-## Wave-1/2 specific
+> Unlike the `obsidian-llm-wiki` vault this layout is borrowed from, **this repo has no
+> `wiki-index-render` tooling** — the index below is **hand-maintained**. When you add,
+> resolve, or re-categorize an issue you MUST edit both the per-issue file *and* the matching
+> line here. These rules keep that hand-editing consistent.
 
-- [ ] **Wrapper/SOT drift risk** (reduced after v3.11.1 thin refactor): each of the 12 `.claude/agents/*.md` wrappers references exactly one SOT path (its primary `System/Agents/XX_*.md` or `.agent/skills/*/SKILL.md`). Two critic wrappers also reference the `template_critique.md` / `sarcastic.md` asset paths. If an SOT file is renamed or moved, wrappers must be updated manually — no automatic sync. **Verification after any rename** in `System/Agents/` or `.agent/skills/{vdd-adversarial,skill-adversarial-*}/`, across **all wrapper dirs** (v3.20.10, item 6e): `grep -rl '<old-path>' .claude/agents/ .gemini/agents/ .codex/agents/ .cursor/agents/ .antigravity/agents/` → should return no stale references.
-  - **Scaffold wrappers are generated**: the non-Claude critic wrappers (`.gemini/`, `.codex/`, `.cursor/`, `.antigravity/`) are emitted from `.agent/skills/skill-parallel-orchestration/scripts/wrappers_manifest.json` by `generate_wrappers.py`. Fix an SOT path drift in the **manifest**, then `python3 .agent/skills/skill-parallel-orchestration/scripts/generate_wrappers.py` — never hand-edit the generated files. `generate_wrappers.py --check` exits non-zero if any on-disk wrapper drifts from the manifest (CI-gateable). Claude Code wrappers stay hand-maintained (they are the validated reference/donor).
+**Per-issue file** — `docs/issues/<slug>.md`, YAML frontmatter then an H1 title and body:
+
+```yaml
+---
+id: AT-6                 # <PREFIX>-<n>, unique
+type: known-issue        # always this literal
+status: open             # see vocab below
+opened_at: 2026-04-17    # ISO date the issue was first recorded (git-truthful)
+category: agent-teams    # see prefix→category table
+severity: SEV-2          # OPTIONAL — omit when not meaningfully rankable
+slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename stem
+---
+```
+
+**ID prefix → category** (add a row here when introducing a new prefix):
+
+| Prefix | Category      | Scope |
+|--------|---------------|-------|
+| `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
+| `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
+
+**Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
+`by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
+A `fixed` issue keeps its file and adds a `resolved_at` / `resolved_by` line + a resolution
+blockquote; it is not deleted.
+
+**Severity vocabulary (optional):** `SEV-2` (blocks a workflow / real impact) ·
+`SEV-3` (degraded / annoying) · `SEV-4` (minor) · `LOW`. Omit for pure documented constraints.
+
+**Index line format** (severity clause omitted when the file has no `severity`):
+
+```
+- **<ID>** [<title>](issues/<slug>.md) — severity `<SEV>`, status `<status>`, opened <YYYY-MM-DD>
+```
+
+**Adding a new issue:** ① pick the next `<PREFIX>-<n>`; ② create `docs/issues/<slug>.md` with
+the frontmatter above (body preserved verbatim — never drop a clause); ③ add one line under
+the matching `## <category>` heading here, in ID order.
+
+---
+
+## agent-teams
+
+> These apply to **Layer B** (`TeamCreate`/`SendMessage`). Layer A (parallel `Agent`
+> tool-uses in one message) is **not** affected.
+
+- **AT-1** [No session resumption](issues/at-1-no-session-resumption.md) — status `documented`, opened 2026-04-17
+- **AT-2** [Task status lag](issues/at-2-task-status-lag.md) — severity `SEV-3`, status `documented`, opened 2026-04-17
+- **AT-3** [One team per session](issues/at-3-one-team-per-session.md) — status `documented`, opened 2026-04-17
+- **AT-4** [No leadership transfer](issues/at-4-no-leadership-transfer.md) — status `documented`, opened 2026-04-17
+- **AT-5** [Higher token costs](issues/at-5-higher-token-costs.md) — status `by-design`, opened 2026-04-17
+- **AT-6** [`TeamDelete` does NOT clean up after protocol shutdown](issues/at-6-teamdelete-does-not-clean-up-after-protocol-shutdown.md) — severity `SEV-2`, status `open`, opened 2026-04-17
+- **AT-7** [Async spawn ≠ sync return](issues/at-7-async-spawn-not-sync-return.md) — status `documented`, opened 2026-04-17
+- **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `documented`, opened 2026-04-17
+- **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `documented`, opened 2026-04-17
+
+## wrappers
+
+- **WR-1** [Wrapper/SOT drift risk](issues/wr-1-wrapper-sot-drift-risk.md) — severity `SEV-3`, status `documented`, opened 2026-06-10

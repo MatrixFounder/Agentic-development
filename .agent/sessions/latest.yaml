@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-07-08T01:04:49.867543"
+last_updated: "2026-07-10T01:22:13.320708"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "084-workflow-loops-portability"
-  status: "COMPLETE incl. R8+R9+R10 (uncommitted)"
+  name: "085-known-issues-thin-index"
+  status: "COMPLETE + drift-audit follow-up (2 Should fixes applied; uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  084 final: full-robust.md + vdd-enhanced.md hardened (bounded gated loops, portable refs, vendor dispatch, honest gate taxonomy; 12 review findings fixed). R8: 2 root tests + 05-run-full-task If-Fail gate. R9: phantom commands purged (base-stub-first, light-01/02), test_mock_agent -> tmp_path + mock_results git-rm'ed, calculate_wsjf docstring. R10: light-02 loops bounded (max 3 test-fix / max 2 review cycles, escalation on exhaustion) + WORKFLOWS.md Light Mode row. Gates: 43/43 skills, pytest 227+52+30, zero phantom commands, zero unbounded loops in touched workflows, tree clean after test runs. v3.20.13, audit framework-audit-084.md (R8-R10 recorded). Ready to commit.
+  Restructure done (thin index + docs/issues/*.md). Repo-wide drift audit: 26 refs, nothing broken (path unchanged); 6 real candidates (2 Should/4 Optional). Operator chose the 2 Should: (1) skill-reverse-engineering SKILL.md §2 now points at the per-file recipe (v1.1->1.2), (2) ROADMAP.md Wave-4 gotchas deep-linked to AT-6..AT-9. Optional items (claude-code.md ID-tags, _stub-template wording, README EN/RU RE-prompt) deferred+documented in framework-audit-085.md addendum. Backups in .agent/archive. Verified: deep-links resolve, skill intact.
 
 active_blockers:
   []

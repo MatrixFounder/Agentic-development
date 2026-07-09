@@ -16,6 +16,21 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.14 — `KNOWN_ISSUES.md` restructured into a thin index + per-issue files (obsidian-llm-wiki layout)**
+
+`docs/KNOWN_ISSUES.md` was a flat 22-line checklist; it is now a **hand-maintained thin index** (Rules/Conventions + category groups, one line per issue) with every issue split into its own file under `docs/issues/<slug>.md` — mirroring the `obsidian-llm-wiki` schema, adapted to a non-vault repo (standard Markdown links, not Obsidian wikilinks). A repo-wide drift audit followed; **nothing broke** — the file path is unchanged. Task 085, gate artifact `docs/reviews/framework-audit-085.md`.
+
+#### **Added**
+* **10 per-issue files under `docs/issues/`** — one file per known issue with YAML frontmatter (`id`, `type: known-issue`, `status`, `opened_at`, `category`, optional `severity`, `slug`) + body; the full original text is preserved verbatim (**0 dropped clauses**). IDs: `AT-1..AT-9` (agent-teams / Layer-B limitations) and `WR-1` (wrapper↔SOT drift). Opened dates are git-truthful (2026-04-17 / 2026-06-10).
+* **"Rules / Conventions" section in `docs/KNOWN_ISSUES.md`** — the hand-maintenance rules: the ID prefix→category table, status/severity vocabularies, the index-line format, and an explicit **"Adding a new issue"** recipe. This repo has no `wiki-index-render` tooling (unlike the source vault), so the index is maintained by hand and its coupling is documented for agents.
+
+#### **Changed**
+* **`docs/KNOWN_ISSUES.md` is now a thin index** — Purpose + Rules + `## agent-teams` / `## wrappers` groups with one link-line per issue. Same path, so all existing references (README, `CLAUDE/AGENTS/GEMINI.md`, `ARCHITECTURE.md`, the pipeline context-read steps) still resolve.
+* **`skill-reverse-engineering` §2 "KNOWN_ISSUES.md Updates" (v1.1 → 1.2)** — now directs the agent to file each finding as its own `docs/issues/<slug>.md` + one index line per the Rules recipe (**not** a flat `- [ ]` append), and to add a new prefix→category row for reverse-engineering findings. This was the one live automation write-path that populates KNOWN_ISSUES.
+* **`docs/ROADMAP.md` Wave-4 blocking gotchas deep-linked** — the four inline gotchas now link to their canonical `issues/at-6..at-9.md` (summary text kept), removing a content-duplicate that would drift once `AT-6` (currently `open`, SEV-2) is resolved.
+
+Drift audit: **26** live/coupled references classified and adversarially verified → **6 real** (2 `Should` applied above, 4 `Optional` documented and deferred: `references/claude-code.md` inline gotchas, `references/_stub-template.md` wording, `README.md`/`README.ru.md` RE starter prompt). No historical records (docs/tasks · plans · reviews · CHANGELOG · archive) were touched. Backups in `.agent/archive/`.
+
 ### **v3.20.13 — Bounded gated loops + cross-harness portability for the `full-robust` and `vdd-enhanced` pipelines**
 
 The two composite pipelines now spell out their loop semantics (gate → bounded retry → explicit escalation) and how to run them on any supported harness (Claude Code, Codex, Cursor, Gemini CLI, Antigravity) with any LLM. Workflow prose only — no other workflow, skill, prompt, bootstrap file, or code changed. Task 084, gate artifact `docs/reviews/framework-audit-084.md`.

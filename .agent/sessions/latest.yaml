@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-07-10T01:22:13.320708"
+last_updated: "2026-07-10T01:26:16.259415"
 mode: "Framework Upgrade"
 
 current_task:
   name: "085-known-issues-thin-index"
-  status: "COMPLETE + drift-audit follow-up (2 Should fixes applied; uncommitted)"
+  status: "COMPLETE + released as v3.20.14 (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  Restructure done (thin index + docs/issues/*.md). Repo-wide drift audit: 26 refs, nothing broken (path unchanged); 6 real candidates (2 Should/4 Optional). Operator chose the 2 Should: (1) skill-reverse-engineering SKILL.md §2 now points at the per-file recipe (v1.1->1.2), (2) ROADMAP.md Wave-4 gotchas deep-linked to AT-6..AT-9. Optional items (claude-code.md ID-tags, _stub-template wording, README EN/RU RE-prompt) deferred+documented in framework-audit-085.md addendum. Backups in .agent/archive. Verified: deep-links resolve, skill intact.
+  KNOWN_ISSUES thin-index restructure + drift audit + 2 Should fixes, now stamped v3.20.14. CHANGELOG.md + CHANGELOG.ru.md got a new v3.20.14 entry (Added: 10 docs/issues/*.md + Rules section; Changed: thin index, skill-reverse-engineering §2 v1.1->1.2, ROADMAP deep-links AT-6..AT-9). README.md + README.ru.md title bumped v3.20.13->v3.20.14 in lockstep. Optional drift items deferred/documented. All uncommitted on main.
 
 active_blockers:
   []

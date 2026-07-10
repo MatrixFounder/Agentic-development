@@ -2,7 +2,7 @@
 name: skill-reverse-engineering
 description: "Regenerate architecture documentation from codebase analysis."
 tier: 2
-version: 1.4
+version: 1.3
 ---
 # Reverse Engineering Skill
 
@@ -59,9 +59,9 @@ Identify:
 
 **Filing format (thin index).** `docs/KNOWN_ISSUES.md` is a hand-maintained **thin index**, not a
 flat checklist — do **NOT** append `- [ ]` lines to it. The authoritative format contract lives in the
-**`known-issues-format`** skill (`artifact-management`, TIER 0, delegates to it) — follow it:
+TIER-0 **`artifact-management`** skill (§"Known Issues (thin index)") — follow it:
 1. If `docs/KNOWN_ISSUES.md` does not exist yet, materialize it from
-   `known-issues-format`'s `assets/templates/known_issues_md_template.md` first (create-if-absent).
+   `artifact-management`'s `assets/KNOWN_ISSUES.template.md` first (create-if-absent).
 2. File each finding as its own `docs/issues/<slug>.md` (frontmatter + H1 + body) **plus** one index
    line under the matching `## <category>` heading — edit both **in lockstep**.
 3. If a finding needs a category/prefix the project's ledger doesn't have yet, add a new

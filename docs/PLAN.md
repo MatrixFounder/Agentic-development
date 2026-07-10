@@ -1,64 +1,50 @@
-# Development Plan: Task 085 — KNOWN_ISSUES thin-index restructure
+# Development Plan: Task 087 — dedicated `known-issues-format` skill
 
-> Mode: Framework Upgrade, **docs-only**. No code / skills / prompts / workflows touched.
-> Living docs untouched (ARCHITECTURE.md not affected — no system-structure change).
-> Scope fixed by operator: `docs/KNOWN_ISSUES.md` → thin index + `docs/issues/*.md`.
+> Mode A/B gates. Architecture untouched. Release **v3.20.16**. No code/installer/test change.
+> SKILL CREATION GATE: `init_skill.py` (manual skill-file creation is prohibited).
 
-## Step 0 — Backup (rollback safety)
+## Step 0 — Backup
 ```
 mkdir -p .agent/archive
-cp docs/KNOWN_ISSUES.md .agent/archive/KNOWN_ISSUES.md.bak
+for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
+cp .agent/skills/artifact-management/SKILL.md       .agent/archive/artifact-management.SKILL.md.bak2
+cp .agent/skills/skill-reverse-engineering/SKILL.md .agent/archive/skill-reverse-engineering.SKILL.md.bak3
+cp System/Docs/SKILLS.md CHANGELOG.md CHANGELOG.ru.md README.md README.ru.md .agent/archive/
 ```
-Rollback = `cp .agent/archive/KNOWN_ISSUES.md.bak docs/KNOWN_ISSUES.md && rm -rf docs/issues`.
-(No bootstrap file — CLAUDE/AGENTS/GEMINI — is edited, so per framework-upgrade §3.1 they
-need no backup here; only the one file being restructured is backed up.)
 
-## Step 1 — Create per-issue files (R1, R2, R3)
-`mkdir -p docs/issues`, then write 10 files `docs/issues/<slug>.md`. Each file:
-- Frontmatter: `id`, `type: known-issue`, `status`, `opened_at`, `category`,
-  `severity` (only AT-2/AT-6/WR-1), `slug`.
-- `# <Title>` (H1).
-- Body structured as `- **Constraint / Symptom**`, `- **Guidance / Workaround**`,
-  `- **Affected components**` (where known), `- **Related**` (MD cross-links) —
-  **carrying the full original sentence(s) verbatim** so no clause is lost (R3/NFR-1).
-- WR-1 additionally carries the "Scaffold wrappers are generated" sub-bullet in full.
+## Step 1 — Scaffold the skill (R1, gate)
+`python3 .agent/skills/skill-creator/scripts/init_skill.py known-issues-format --tier 2`
+Tier 2 (Extended, on-demand): referenced by `artifact-management` (TIER 0) + `skill-reverse-engineering`;
+not gated to one pipeline phase.
 
-Slugs (`<id-slug>-<title-slug>`), matching the wiki convention:
-`at-1-no-session-resumption`, `at-2-task-status-lag`, `at-3-one-team-per-session`,
-`at-4-no-leadership-transfer`, `at-5-higher-token-costs`,
-`at-6-teamdelete-does-not-clean-up-after-protocol-shutdown`,
-`at-7-async-spawn-not-sync-return`,
-`at-8-model-inheritance-inconsistent-across-agent-types`,
-`at-9-runtime-sends-structured-json-despite-docs`, `wr-1-wrapper-sot-drift-risk`.
+## Step 2 — Author the contract (R2)
+Populate `known-issues-format/SKILL.md` with the full format authority: thin-index model, per-issue file
+frontmatter schema, prefix→category table, status/severity vocab, index-line format, "Adding a new issue"
+recipe, and the create-if-absent note pointing at its own template.
 
-## Step 2 — Rewrite the thin index (R4, R5)
-Overwrite `docs/KNOWN_ISSUES.md` **in place** (same path — R7) with:
-1. Title + Purpose line (kept from the original).
-2. **## Rules / Conventions** — the "правила": what the file is (hand-maintained, no
-   render tooling), ID scheme table (AT/WR → category), status vocab
-   (`open`/`fixed`/`documented`/`by-design`/`mitigated`/`wontfix`), severity vocab
-   (`SEV-2..4`/`LOW`), the one-line index format, and the "adding a new issue" recipe.
-3. **## <category>** groups (`agent-teams`, `wrappers`) with one line per issue:
-   `- **ID** [title](issues/slug.md) — severity \`X\`, status \`Y\`, opened YYYY-MM-DD`
-   (severity omitted when none). Preserve the "Layer A not affected" scoping note.
+## Step 3 — Own the template (R2, R3)
+`git mv .agent/skills/artifact-management/assets/KNOWN_ISSUES.template.md \
+        .agent/skills/known-issues-format/assets/templates/known_issues_md_template.md`
+Remove the now-empty `artifact-management/assets/`. Template body unchanged (schema already verified in 086).
 
-## Step 3 — Verify (R6, R7)
-```
-ls docs/issues/*.md | wc -l          # expect 10
-grep -oE 'issues/[a-z0-9-]+\.md' docs/KNOWN_ISSUES.md | sort -u   # every target exists
-for f in $(grep -oE 'issues/[a-z0-9-]+\.md' docs/KNOWN_ISSUES.md | sort -u); do \
-  test -f "docs/$f" || echo "BROKEN: $f"; done
-grep -c 'type: known-issue' docs/issues/*.md   # frontmatter present
-head -1 docs/KNOWN_ISSUES.md                    # still at same path
-```
-- Manual content-preservation check: each of the 10 original clauses appears in a file.
-- Confirm no other file references were broken (path unchanged → none expected).
+## Step 4 — Slim the hub (R4)
+In `artifact-management` (v1.2 → 1.3): keep the KNOWN_ISSUES.md Global-Artifact line + create-if-absent, but
+replace the detailed inline contract (frontmatter block, index-line format) with a **one-line delegation** to
+`known-issues-format` — mirroring the existing ARCHITECTURE → `architecture-format-core` delegation.
 
-## Step 4 — Finalize
-- Record meta-audit (Modes A+B) in `docs/reviews/framework-audit-085.md`.
-- Persist session state (`update_state.py`) at the phase boundary.
-- No version bump / CHANGELOG entry required unless operator asks (pure docs restructure);
-  note the option in the completion summary.
+## Step 5 — Repoint reverse-engineering (R5)
+`skill-reverse-engineering §2` (v1.3 → 1.4): point the filing pointer at `known-issues-format`.
+
+## Step 6 — Verify (R6)
+- `python3 System/scripts/validate_skills.py` → 44/44.
+- Template frontmatter keys == live `docs/KNOWN_ISSUES.md`; index-line format string identical.
+- `artifact-management/assets/` gone (no orphan); refs in hub + reverse-eng resolve to the new skill.
+- `core-principles`/`skill-safe-commands` untouched.
+
+## Step 7 — Docs, registry, release
+- `System/Docs/SKILLS.md`: add a `known-issues-format` row; revert the artifact-management row's asset mention to a delegation note.
+- `CHANGELOG.md` + `.ru.md`: **v3.20.16** entry. README EN/RU stamp v3.20.15 → v3.20.16.
+- `update_state.py`.
 
 ## Rollback
-`cp .agent/archive/KNOWN_ISSUES.md.bak docs/KNOWN_ISSUES.md && rm -rf docs/issues`.
+Restore edited skills from `.agent/archive/*.bak`; `git mv` the template back; `rm -rf` the new skill dir. No data migration.

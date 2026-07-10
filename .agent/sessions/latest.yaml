@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-07-10T01:26:16.259415"
+last_updated: "2026-07-10T12:01:43.812493"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "085-known-issues-thin-index"
-  status: "COMPLETE + released as v3.20.14 (uncommitted)"
+  name: "087-known-issues-format-skill"
+  status: "COMPLETE, released v3.20.16 (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  KNOWN_ISSUES thin-index restructure + drift audit + 2 Should fixes, now stamped v3.20.14. CHANGELOG.md + CHANGELOG.ru.md got a new v3.20.14 entry (Added: 10 docs/issues/*.md + Rules section; Changed: thin index, skill-reverse-engineering §2 v1.1->1.2, ROADMAP deep-links AT-6..AT-9). README.md + README.ru.md title bumped v3.20.13->v3.20.14 in lockstep. Optional drift items deferred/documented. All uncommitted on main.
+  Extracted KNOWN_ISSUES format from artifact-management hub into a dedicated known-issues-format skill (operator: 'new skill like other artifacts, cleaner'). Created via init_skill.py gate (tier 2); owns contract + template moved to assets/templates/known_issues_md_template.md (convention rename). artifact-management v1.2->1.3 slimmed to lifecycle + create-if-absent + DELEGATE format (parallel to ARCHITECTURE->architecture-format-core); hub holds no assets again. skill-reverse-engineering §2 v1.3->1.4 repointed to known-issues-format. SKILLS.md: new row + hub row reworded. CHANGELOG EN+RU v3.20.16, README stamp. Gates: validate_skills 44/44, template schema==live, core+installer untouched, no live dangling refs. Backups .agent/archive. Audit framework-audit-087.md (Mode A+B PASS).
 
 active_blockers:
   []

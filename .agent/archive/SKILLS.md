@@ -35,7 +35,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | Skill | Description | Used By in Workflows | Used By Agents |
 |-------|-------------|----------------------|----------------|
 | **`core-principles`** | Fundamental principles: Atomicity, Traceability, Stub-First, Minimizing Hallucinations. | All (`01-03`, `vdd-*`) | All Agents |
-| **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `PLAN.md`, `ARCHITECTURE.md`, `KNOWN_ISSUES.md`). Owns lifecycle/ownership; delegates each artifact's format to a per-artifact skill (`known-issues-format`, `architecture-format-core`). | All Workflows | All Agents |
+| **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `PLAN.md`, `ARCHITECTURE.md`, `KNOWN_ISSUES.md` — thin-index ledger contract + `assets/KNOWN_ISSUES.template.md` seed for new projects). | All Workflows | All Agents |
 | **`skill-archive-task`** | Complete protocol for archiving TASK.md **and PLAN.md (lockstep)** with ID generation. Single source of truth for archiving. | `01-start-feature`, All | Analyst, Orchestrator |
 | **`skill-safe-commands`** | Centralized list of commands safe for auto-execution without user approval. | All | All Agents |
 | **`skill-session-state`** | Persist and restore session state (Mode, Task, Summary) to recovery from checks/resets. <br> **[Guide: Session Context Management](SESSION_CONTEXT_GUIDE.md)** | All | All Agents |
@@ -59,7 +59,6 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`skill-planning-format`** | Standard templates for `PLAN.md` and Task Descriptions. | `02-plan-implementation` | Planner |
 | **`architecture-format-core`** | Core template for Architecture documents, incl. Living Document & Index-Mode (>1500-line split). For quick updates. (TIER 1) | `01-start-feature`, Most updates | Architect |
 | **`architecture-format-extended`** | Full templates with examples, diagrams, JSON samples. For new systems. (~400 lines, TIER 2) | New systems, Major refactors | Architect |
-| **`known-issues-format`** | Format authority for `docs/KNOWN_ISSUES.md` (thin-index ledger): frontmatter schema, prefix→category table, status/severity vocab, index-line format, per-issue recipe + `assets/templates/known_issues_md_template.md` seed for new projects. (TIER 2) | Filing/reading known issues, `04-update-docs` | All Agents |
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-single-task`, `vdd-enhanced` | Planner, Developer |
 | **`tdd-strict`** | **[High Assurance]** Strict TDD with mechanical verification (Fail Reason, Minimalism). Tier 3. | `full-robust` | Developer (Strict Mode) |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol. | `03-develop-single-task`, `base-stub-first` | Developer |

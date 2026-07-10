@@ -16,6 +16,37 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.16 — KNOWN_ISSUES format extracted into a dedicated `known-issues-format` skill**
+
+Architectural-consistency follow-up to v3.20.15. v3.20.15 had put the format contract **and** the seed template inside the TIER-0 `artifact-management` hub — but that hub is a **management** skill that everywhere else *delegates* format (archiving → `skill-archive-task`; `ARCHITECTURE.md` structure → `architecture-format-core`) and had held **zero** templates. This release restores that invariant: KNOWN_ISSUES gets its **own** format skill, mirroring how `ARCHITECTURE.md` (also a living, non-planning artifact) has `architecture-format-core`. Task 087, gate artifact `docs/reviews/framework-audit-087.md`. No code/installer change.
+
+#### **Added**
+* **`known-issues-format`** skill (TIER 2, created via the mandatory `init_skill.py` gate) — the single **format authority** for `docs/KNOWN_ISSUES.md`: frontmatter schema, prefix→category table, status/severity vocab, index-line format, per-issue recipe, and create-if-absent. It **owns the seed template**, now at `assets/templates/known_issues_md_template.md` (moved out of the hub, renamed to the `<artifact>_md_template.md` convention used by `skill-planning-format` / `documentation-standards`). Skill count 43 → **44**.
+
+#### **Changed**
+* **`artifact-management` (TIER 0, v1.2 → 1.3)** slimmed back to its role: it lists `KNOWN_ISSUES.md` as a living Global Artifact and keeps the **create-if-absent** rule, but the detailed format contract is gone — replaced by a one-line **delegation** to `known-issues-format` (parallel to its existing ARCHITECTURE → `architecture-format-core` delegation). The hub once again holds **no** template assets.
+* **`skill-reverse-engineering` §2 (v1.3 → 1.4)** repointed at `known-issues-format` (and its `assets/templates/…` seed) instead of the hub.
+* **`System/Docs/SKILLS.md`** — new `known-issues-format` row; the `artifact-management` row reworded to "owns lifecycle, delegates format".
+
+#### **Fixed**
+* **Placement inconsistency from v3.20.15.** The template was the first-ever asset in the management hub, and the format contract was duplicated there rather than owned by a format skill. Both are corrected; there is now a single source for the KNOWN_ISSUES format that the hub and reverse-engineering both delegate to.
+
+### **v3.20.15 — KNOWN_ISSUES thin-index format is now framework-resident (portable to new projects)**
+
+Follow-up to v3.20.14. The thin-index format rules were trapped in **this repo's** `docs/KNOWN_ISSUES.md` — a project artifact never shipped to new projects — so an agent bootstrapping a **clean** project would not know the layout and would reinvent a flat list. This release moves the format contract into the framework layer (a TIER-0 skill + a shipped template), with **no code and no installer change**. Task 086, gate artifact `docs/reviews/framework-audit-086.md`. Seed mechanism **B (skill-driven)** — operator-selected.
+
+#### **Added**
+* **`assets/KNOWN_ISSUES.template.md`** under `artifact-management` — a **project-agnostic, rules-only** seed (Purpose + Rules/Conventions: frontmatter schema, a generic prefix→category starter table, status/severity vocab, index-line format, "Adding a new issue" recipe) with an empty `_No issues recorded yet._` state. It ships to every new project automatically via the existing `.agent/skills` link — **no `vendors.yaml`/installer change**.
+
+#### **Changed**
+* **`artifact-management` (TIER 0, v1.1 → 1.2)** now lists **`KNOWN_ISSUES.md`** as a living Global Artifact and carries a compact **"Known Issues (thin index)"** contract: one file per issue under `docs/issues/`, the index-line format, the hand-maintained/no-generator rule, and a **create-if-absent** step (materialize `docs/KNOWN_ISSUES.md` from the template on first issue). Because this skill is loaded at every session start, an agent learns the format **before any file exists**.
+* **`skill-reverse-engineering` §2 (v1.2 → 1.3)** — its "record findings in KNOWN_ISSUES" pointer now defers to the framework-resident `artifact-management` contract (and its template) instead of *"that file's Rules/Conventions section"*, which **dangled in a fresh project** where the file/section doesn't exist yet. Repo-specific `AT`/`WR` prefix wording was generalized.
+
+#### **Fixed**
+* **Portability gap identified in v3.20.14.** New projects had no framework-level source for the KNOWN_ISSUES format; the reverse-engineering write-path pointed at a project artifact that may not exist. Both are now resolved at the framework layer.
+
+**Rejected (safety):** seeding `docs/KNOWN_ISSUES.md` via the installer's `copy` action — `_remove_install` (`cli.py:289-294`) deletes every `copy` component on `uninstall`/`switch`, which would **destroy a project's accumulated issue history**. Mechanism B keeps the file project-owned (the installer never references it), uninstall-safe by construction.
+
 ### **v3.20.14 — `KNOWN_ISSUES.md` restructured into a thin index + per-issue files (obsidian-llm-wiki layout)**
 
 `docs/KNOWN_ISSUES.md` was a flat 22-line checklist; it is now a **hand-maintained thin index** (Rules/Conventions + category groups, one line per issue) with every issue split into its own file under `docs/issues/<slug>.md` — mirroring the `obsidian-llm-wiki` schema, adapted to a non-vault repo (standard Markdown links, not Obsidian wikilinks). A repo-wide drift audit followed; **nothing broke** — the file path is unchanged. Task 085, gate artifact `docs/reviews/framework-audit-085.md`.

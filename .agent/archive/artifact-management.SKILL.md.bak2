@@ -2,7 +2,7 @@
 name: artifact-management
 description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, PLAN.md, ARCHITECTURE.md, KNOWN_ISSUES.md)."
 tier: 0
-version: 1.3
+version: 1.2
 ---
 # Artifact Management
 
@@ -29,7 +29,29 @@ version: 1.3
 - **TASK.md:** Technical Specification. Managed by Analyst. Archived to `docs/tasks/task-NNN-slug.md`.
 - **PLAN.md:** Development Plan. Managed by Planner. Rotated **in lockstep with TASK.md** to `docs/plans/plan-NNN-slug.md` (reuses the same ID/slug).
 - **ARCHITECTURE.md:** System Architecture. Managed by Architect. A **LIVING document** — updated in place, **never per-task archived**. Only restructured (split into `docs/architectures/` section chunks + a short index) when it exceeds 1500 lines.
-- **KNOWN_ISSUES.md:** Known-issues ledger. A **LIVING, hand-maintained thin index** (one file per issue under `docs/issues/`) — updated in place, **never per-task archived**. Its **format is defined in `known-issues-format`, not here** (the frontmatter schema, prefix→category table, status/severity vocab, index-line format, and per-issue recipe live there — parallel to how `ARCHITECTURE.md`'s structure lives in `architecture-format-core`). **Create-if-absent:** if the ledger is missing when you record an issue, first materialize it from `known-issues-format`'s `assets/templates/known_issues_md_template.md`, then file the issue.
+- **KNOWN_ISSUES.md:** Known-issues ledger. A **LIVING, hand-maintained thin index** — never per-task archived. See **Known Issues (thin index)** below.
+
+## Known Issues (thin index)
+
+`docs/KNOWN_ISSUES.md` is a **thin index**, not a flat checklist. Each issue is its own file
+`docs/issues/<slug>.md` (YAML frontmatter: `id`, `type: known-issue`, `status`, `opened_at`,
+`category`, optional `severity`, `slug` — then an H1 title + body); the ledger holds **one pointer
+line per issue** grouped under `## <category>` headings:
+
+```
+- **<ID>** [<title>](issues/<slug>.md) — severity `<SEV>`, status `<status>`, opened <YYYY-MM-DD>
+```
+
+This framework ships **no `wiki-index-render` tooling**, so the index is maintained **by hand**: when
+you add / resolve / re-categorize an issue, edit **both** the per-issue file *and* its index line, in
+lockstep. Do **NOT** append flat `- [ ]` items to the ledger.
+
+> **Create-if-absent (new projects).** If `docs/KNOWN_ISSUES.md` does not exist when you need to
+> record an issue, first materialize it from the shipped template
+> [`assets/KNOWN_ISSUES.template.md`](assets/KNOWN_ISSUES.template.md) (copy it to `docs/KNOWN_ISSUES.md`,
+> keep the *Rules / Conventions* header, drop the seed comment), then file the issue. The template
+> carries the full frontmatter schema, the prefix→category table, and the status/severity vocab — it is
+> the single source of the format so nothing here duplicates it.
 
 ## Dual State Tracking (CRITICAL)
 

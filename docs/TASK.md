@@ -1,48 +1,34 @@
-# Technical Specification: Extract KNOWN_ISSUES format into a dedicated `known-issues-format` skill
+# Technical Specification: Clear the VDD-adversarial findings on the KNOWN_ISSUES system (enterprise-ready)
 
 ### 0. Meta Information
-- **Task ID:** 087
-- **Slug:** `known-issues-format-skill`
-- **Mode:** Framework Upgrade (skill creation + refactor; **no code, no installer change**)
-- **Type:** Architectural consistency. Follow-up to Task 086.
-- **Workflow:** `/framework-upgrade` (verificator Modes A + B). **SKILL CREATION GATE:** new skill via `init_skill.py`.
+- **Task ID:** 088
+- **Slug:** `known-issues-vdd-fixes`
+- **Mode:** Framework Upgrade (skill/docs/workflow edits + one gate script; **no product code**)
+- **Type:** Consistency / hardening. Clears the WARNING from `docs/reviews/vdd-adversarial-known-issues-format.md`.
+- **Workflow:** `/framework-upgrade` (verificator Modes A + B).
 
 ### 1. Problem Description
-Task 086 placed `KNOWN_ISSUES.template.md` **and** the full format contract inside the TIER-0
-`artifact-management` skill. That violates the framework's established artifact pattern:
-
-- `artifact-management` is a **management hub** — it owns lifecycle/ownership/dual-state and **delegates
-  format**: archiving → `skill-archive-task`; ARCHITECTURE format/split → `architecture-format-core`
-  (*"defined in architecture-format-core, not here"*).
-- **Reusable templates live in per-artifact format skills**, never in the hub:
-  `skill-planning-format/assets/templates/{task,plan}_md_template.md`,
-  `documentation-standards/assets/templates/agents_md_template.md`.
-- Until Task 086, `artifact-management` held **zero** assets. `KNOWN_ISSUES.template.md` was the first —
-  an anomaly.
-
-KNOWN_ISSUES is a **living, non-planning artifact** — the direct analog of `ARCHITECTURE.md`, which has its
-**own** format skill (`architecture-format-core`) rather than being folded into planning-format. So it
-warrants its own format skill.
+The adversarial review returned **WARNING** (1 MED, 5 LOW, 2 NIT — all verified). To reach the objective
+exit bar (Zero-Slop), every finding must be cleared. "Enterprise-ready" means the MED (contract drift) is
+closed with an **automated gate**, not just a one-time reconcile.
 
 ### 2. Requirements (RTM)
 
-| ID | Requirement | Verification |
-|----|-------------|--------------|
-| R1 | Create a dedicated **`known-issues-format`** skill (tier 2) via `init_skill.py` (gate-compliant). | Skill dir exists; `validate_skills` passes (44/44). |
-| R2 | The new skill **owns the format contract** (frontmatter schema, prefix→category table, status/severity vocab, index-line format, "Adding a new issue" recipe) + the **template** at `assets/templates/known_issues_md_template.md`. | Contract + template present; template schema == live `docs/KNOWN_ISSUES.md`. |
-| R3 | **Move** the template out of `artifact-management/assets/`; remove the now-empty dir. | `artifact-management/assets/` gone; no orphan. |
-| R4 | **Slim `artifact-management`** to lifecycle only: list KNOWN_ISSUES.md as a living Global Artifact + create-if-absent + **delegate format** to `known-issues-format` (mirrors the ARCHITECTURE delegation). | Detailed format contract removed from the hub; one-line delegation added. |
-| R5 | Repoint `skill-reverse-engineering §2` to the format authority (`known-issues-format`). | §2 references `known-issues-format`. |
-| R6 | No `core-principles`/`skill-safe-commands` change; docs + registry synced. | Meta-audit; SKILLS.md + CHANGELOG + README updated. |
+| ID | Finding | Fix | Verify |
+|----|---------|-----|--------|
+| R1 | **MED** contract duplicated across skill/template/ledger; glosses already drifted. | Reconcile all copies **and** add `scripts/check_contract_sync.py` (a CI-gateable drift check comparing status/severity vocab + frontmatter keys + index-line format across SKILL.md ↔ template); wire it into the skill's Script Contract + Validation Evidence. | Script exits 0; drift → exit 1. |
+| R2 | **LOW** seed comment credits `artifact-management` as owner. | Fix attribution → `known-issues-format`. | grep. |
+| R3 | **LOW** slug rule asserts machine equality the repo's AT-7 violates. | Soften to human-readable-stem phrasing (SKILL + template). | Re-read. |
+| R4 | **LOW** "keep down to the second `---`" ambiguous; 3 phrasings disagree. | Unify to one unambiguous instruction across template/SKILL/example. | Re-read. |
+| R5 | **LOW** CHANGELOG v3.20.15 describes a never-committed path. | Add a squash/descriptive note (EN+RU). | Re-read. |
+| R6 | **LOW** read-path has no if-absent guard. | Add "(skip if absent — created on first filed issue)" to the 5 read sites (CLAUDE/AGENTS/GEMINI + 2 workflows). | grep. |
+| R7 | **NIT** `resolved_at`/`resolved_by` prescribed but absent from schema example. | Add commented keys to SKILL + template frontmatter examples. | Re-read. |
+| R8 | **NIT** TIER-2 discoverability. | Add a one-line load hint at the read/format site (accept-by-design otherwise). | Re-read. |
 
 ### 3. Non-Goals
-- No change to the committed `docs/KNOWN_ISSUES.md` ledger or the per-issue files.
-- No installer/vendors.yaml/Python/test change (the template still auto-ships via the `.agent/skills` link).
-- Not folding KNOWN_ISSUES into planning-format/documentation-standards (a living non-planning artifact
-  gets its own format skill, per the ARCHITECTURE precedent).
+- No change to the 10 committed per-issue files or their content.
+- No installer/vendors.yaml change; the new script ships via the `.agent/skills` link (auto-deployed).
 
 ### 4. Acceptance Criteria
-- `known-issues-format` is the single source of the KNOWN_ISSUES format + template; `artifact-management`
-  and `skill-reverse-engineering` both **delegate** to it (no duplicated contract).
-- Fresh-project trace still holds (create-if-absent references the new skill's template).
-- `validate_skills` 44/44; template schema consistent; no orphan assets.
+- Adversarial exit bar re-evaluated: 0 CRITICAL, 0 legitimate logic/consistency findings, only accept-by-design remains → **PASS**.
+- `validate_skills` 44/44; `check_contract_sync.py` exits 0; all links resolve.

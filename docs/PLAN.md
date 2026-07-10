@@ -1,50 +1,35 @@
-# Development Plan: Task 087 — dedicated `known-issues-format` skill
+# Development Plan: Task 088 — clear VDD-adversarial findings (enterprise hardening)
 
-> Mode A/B gates. Architecture untouched. Release **v3.20.16**. No code/installer/test change.
-> SKILL CREATION GATE: `init_skill.py` (manual skill-file creation is prohibited).
+> Mode A/B gates via `skill-self-improvement-verificator` (both PASS — `docs/reviews/framework-audit-088.md`).
+> Architecture untouched. Release **v3.20.17**. No product code; one maintenance gate script added.
+> Each step clears a verified finding from `docs/reviews/vdd-adversarial-known-issues-format.md`.
 
-## Step 0 — Backup
-```
-mkdir -p .agent/archive
-for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
-cp .agent/skills/artifact-management/SKILL.md       .agent/archive/artifact-management.SKILL.md.bak2
-cp .agent/skills/skill-reverse-engineering/SKILL.md .agent/archive/skill-reverse-engineering.SKILL.md.bak3
-cp System/Docs/SKILLS.md CHANGELOG.md CHANGELOG.ru.md README.md README.ru.md .agent/archive/
-```
+## Step 0 — Backup (done)
+Bootstrap files + `known-issues-format/SKILL.md` + template + `docs/KNOWN_ISSUES.md` + CHANGELOG/README → `.agent/archive/`.
 
-## Step 1 — Scaffold the skill (R1, gate)
-`python3 .agent/skills/skill-creator/scripts/init_skill.py known-issues-format --tier 2`
-Tier 2 (Extended, on-demand): referenced by `artifact-management` (TIER 0) + `skill-reverse-engineering`;
-not gated to one pipeline phase.
+## Step 1 — F1 (MED): close contract drift with an automated gate
+- Add `known-issues-format/scripts/check_contract_sync.py` — compares status/severity vocab + frontmatter keys + index-line format between `SKILL.md` (authority) and the seed template; exit `0`/`1`/`2`.
+- Reconcile the drifted glosses across `SKILL.md`, template, and the live ledger.
+- Wire the gate into the skill's **Script Contract** + **Validation Evidence** (skill → `hybrid`).
+- **Verify:** gate exits 0 in sync; negative test (inject drift) exits 1.
 
-## Step 2 — Author the contract (R2)
-Populate `known-issues-format/SKILL.md` with the full format authority: thin-index model, per-issue file
-frontmatter schema, prefix→category table, status/severity vocab, index-line format, "Adding a new issue"
-recipe, and the create-if-absent note pointing at its own template.
+## Step 2 — F2/F3/F4/F7 (skill + template + example)
+- F2: seed comment owner `artifact-management` → `known-issues-format`.
+- F3: soften the slug machine-equality (AT-7 `≠` counterexample) to a human-readable-stem rule.
+- F4: unify the seed "keep/delete" instruction across skill / template / example.
+- F7: add commented `resolved_at` / `resolved_by` keys to both frontmatter examples.
 
-## Step 3 — Own the template (R2, R3)
-`git mv .agent/skills/artifact-management/assets/KNOWN_ISSUES.template.md \
-        .agent/skills/known-issues-format/assets/templates/known_issues_md_template.md`
-Remove the now-empty `artifact-management/assets/`. Template body unchanged (schema already verified in 086).
+## Step 3 — F5/F6/F8 (docs + read-path)
+- F5: CHANGELOG squash note on the v3.20.15 entry (EN+RU) — 086→087 landed in one commit.
+- F6: "skip if absent — created on the first filed issue" on all 5 read sites (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `01-start-feature.md`, `vdd-01-start-feature.md`).
+- F8: name `known-issues-format` at those read sites (TIER-2 discoverability).
 
-## Step 4 — Slim the hub (R4)
-In `artifact-management` (v1.2 → 1.3): keep the KNOWN_ISSUES.md Global-Artifact line + create-if-absent, but
-replace the detailed inline contract (frontmatter block, index-line format) with a **one-line delegation** to
-`known-issues-format` — mirroring the existing ARCHITECTURE → `architecture-format-core` delegation.
+## Step 4 — Verify + re-run exit bar
+- `validate_skills` 44/44; `check_contract_sync` exit 0 + negative test; version 3.20.17 ×4; 5 read sites guarded.
+- Re-evaluate the adversarial Objective-Convergence bar → **PASS**; record §5 in the critique artifact.
 
-## Step 5 — Repoint reverse-engineering (R5)
-`skill-reverse-engineering §2` (v1.3 → 1.4): point the filing pointer at `known-issues-format`.
-
-## Step 6 — Verify (R6)
-- `python3 System/scripts/validate_skills.py` → 44/44.
-- Template frontmatter keys == live `docs/KNOWN_ISSUES.md`; index-line format string identical.
-- `artifact-management/assets/` gone (no orphan); refs in hub + reverse-eng resolve to the new skill.
-- `core-principles`/`skill-safe-commands` untouched.
-
-## Step 7 — Docs, registry, release
-- `System/Docs/SKILLS.md`: add a `known-issues-format` row; revert the artifact-management row's asset mention to a delegation note.
-- `CHANGELOG.md` + `.ru.md`: **v3.20.16** entry. README EN/RU stamp v3.20.15 → v3.20.16.
-- `update_state.py`.
+## Step 5 — Release
+- CHANGELOG v3.20.17 (EN+RU), README stamp, SKILLS.md row (+ gate script). `update_state.py`.
 
 ## Rollback
-Restore edited skills from `.agent/archive/*.bak`; `git mv` the template back; `rm -rf` the new skill dir. No data migration.
+Restore edited files from `.agent/archive/*.bak`; `rm` the gate script; revert version headers. No data migration.

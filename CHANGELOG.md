@@ -16,6 +16,22 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.20.17 — Cleared the VDD-adversarial findings on the KNOWN_ISSUES system (enterprise hardening)**
+
+A fresh-context adversarial review (`docs/reviews/vdd-adversarial-known-issues-format.md`) returned WARNING on the v3.20.14–16 work: 1 MED (the format contract lived in 3 self-contained copies and 2 glosses had already drifted) + 5 LOW + 2 NIT, all verified. This release clears every finding and — for the MED — adds an **automated drift gate** rather than a one-time reconcile. Task 088, gate artifact `docs/reviews/framework-audit-088.md`. Exit bar re-run → **PASS**.
+
+#### **Added**
+* **`known-issues-format/scripts/check_contract_sync.py`** — a CI-gateable gate (exit `0`/`1`/`2`) that fails if the format contract (status/severity vocab, frontmatter key set, index-line format) drifts between the skill authority (`SKILL.md`) and the seed template. Wired into the skill's **Script Contract** + **Validation Evidence**; the skill is now `hybrid`, not prompt-only. This is the enterprise upgrade over the manual reconcile the finding literally caught mid-drift.
+
+#### **Fixed** (each maps to a verified review finding)
+* **MED** — reconciled the drifted glosses across `SKILL.md`, the template, and the live ledger (`SEV-3 (degraded)` → `(degraded / annoying)`; `by-design (intended trade-off)` → `(…, not a defect)`) and guarded them with the gate above.
+* **LOW** — the seed template comment credited the wrong owner (`artifact-management` → **`known-issues-format`**).
+* **LOW** — the slug rule asserted a machine equality (`slug == slugify(id)-slugify(title)`) that the repo's own `AT-7` (`Async spawn ≠ sync return`) violates; softened to "a slugified, human-readable id+title (normalize symbols, e.g. `≠`→`not`)".
+* **LOW** — the ambiguous seed instruction ("keep everything down to the second `---`") is unified across template / skill / example to "keep Purpose + Rules/Conventions (above the first `## <category>`); delete the seed comment and the `_No issues recorded yet._` block".
+* **LOW** — read-path steps ("Read `docs/KNOWN_ISSUES.md`") in `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` + `01-start-feature.md` / `vdd-01-start-feature.md` now say **"skip if absent — created on the first filed issue"** (create-if-absent is write-path only) and name `known-issues-format` (TIER-2 discoverability).
+* **NIT** — commented `resolved_at` / `resolved_by` keys added to the frontmatter schema examples (skill + template).
+* **LOW (history-honesty)** — see the v3.20.15 note below: 086→087 were squashed into one commit.
+
 ### **v3.20.16 — KNOWN_ISSUES format extracted into a dedicated `known-issues-format` skill**
 
 Architectural-consistency follow-up to v3.20.15. v3.20.15 had put the format contract **and** the seed template inside the TIER-0 `artifact-management` hub — but that hub is a **management** skill that everywhere else *delegates* format (archiving → `skill-archive-task`; `ARCHITECTURE.md` structure → `architecture-format-core`) and had held **zero** templates. This release restores that invariant: KNOWN_ISSUES gets its **own** format skill, mirroring how `ARCHITECTURE.md` (also a living, non-planning artifact) has `architecture-format-core`. Task 087, gate artifact `docs/reviews/framework-audit-087.md`. No code/installer change.
@@ -32,6 +48,8 @@ Architectural-consistency follow-up to v3.20.15. v3.20.15 had put the format con
 * **Placement inconsistency from v3.20.15.** The template was the first-ever asset in the management hub, and the format contract was duplicated there rather than owned by a format skill. Both are corrected; there is now a single source for the KNOWN_ISSUES format that the hub and reverse-engineering both delegate to.
 
 ### **v3.20.15 — KNOWN_ISSUES thin-index format is now framework-resident (portable to new projects)**
+
+> **History note:** v3.20.15 and v3.20.16 landed in a **single commit** (`1ca49cf`); 086 was refactored by 087 before either was committed. This entry is **descriptive** — the intermediate state it describes (the template under `artifact-management/assets/`) never existed as a checkoutable path in git history.
 
 Follow-up to v3.20.14. The thin-index format rules were trapped in **this repo's** `docs/KNOWN_ISSUES.md` — a project artifact never shipped to new projects — so an agent bootstrapping a **clean** project would not know the layout and would reinvent a flat list. This release moves the format contract into the framework layer (a TIER-0 skill + a shipped template), with **no code and no installer change**. Task 086, gate artifact `docs/reviews/framework-audit-086.md`. Seed mechanism **B (skill-driven)** — operator-selected.
 

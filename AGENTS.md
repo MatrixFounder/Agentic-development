@@ -62,7 +62,7 @@ Use your harness's **built-in tools** — Cursor and Codex CLI both provide file
 1. **Analysis Phase**:
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Load Skills**: `skill-requirements-analysis`, `skill-archive-task`.
-   - Read `docs/KNOWN_ISSUES.md`.
+   - Read `docs/KNOWN_ISSUES.md` (skip if absent — created on the first filed issue; format owned by `known-issues-format`).
    - If `docs/TASK.md` exists: Apply `skill-archive-task` for archiving protocol.
    - (Self-Correction): Check against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 

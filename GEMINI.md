@@ -85,7 +85,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
 1. **Analysis Phase**:
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Apply Skill**: `skill-requirements-analysis`.
-   - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs).
+   - Read `docs/KNOWN_ISSUES.md` (Crucial to avoid repeating bugs; **skip if absent** — it is created on the first filed issue, format owned by `known-issues-format`).
    - If `docs/TASK.md` exists and this is a new task:
      - **Apply Skill**: `skill-archive-task` (handles archiving protocol).
    - Create/Update `docs/TASK.md` based on user task.

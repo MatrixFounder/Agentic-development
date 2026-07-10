@@ -33,8 +33,9 @@ Under `## logic` in `docs/KNOWN_ISSUES.md`:
 
 ## Fresh project?
 If `docs/KNOWN_ISSUES.md` did not exist, first copy
-`assets/templates/known_issues_md_template.md` → `docs/KNOWN_ISSUES.md` (keep the Rules/Conventions
-header, drop the seed comment), then do Steps 1-3.
+`assets/templates/known_issues_md_template.md` → `docs/KNOWN_ISSUES.md` — keep the Purpose +
+Rules/Conventions sections (everything above the first `## <category>` group), and delete the seed
+comment and the `_No issues recorded yet._` block — then do Steps 1-3.
 
 ## Later — when it's fixed
 Keep the file. Add `resolved_at` / `resolved_by`, flip `status: fixed`, prepend a resolution

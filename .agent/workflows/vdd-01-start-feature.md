@@ -5,7 +5,7 @@ description: Start a new feature development cycle (VDD Mode - High Integrity)
 > **VDD MODE ACTIVE**: You are now operating under Verification-Driven Development. Precision and decomposition are paramount.
 
 1. **Standard Analysis**: Read `System/Agents/02_analyst_prompt.md`.
-2. **Context Check**: Read `docs/KNOWN_ISSUES.md`.
+2. **Context Check**: Read `docs/KNOWN_ISSUES.md` (skip if absent — created on the first filed issue).
 3. **Chainlink Decomposition (Part 1 - The Epics)**:
     - **Archiving**: Apply `skill-archive-task` protocol if `docs/TASK.md` exists. This rotates **both** `docs/TASK.md` → `docs/tasks/` and `docs/PLAN.md` → `docs/plans/` in lockstep (same ID/slug).
 4. **Update `docs/TASK.md`**:

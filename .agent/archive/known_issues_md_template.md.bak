@@ -8,11 +8,10 @@ the lines below are one-per-issue pointers grouped by category. Read the linked 
 symptom, workaround, and cross-links.
 
 <!--
-  SEED TEMPLATE (shipped by the `known-issues-format` skill). On first use, copy this file to
-  `docs/KNOWN_ISSUES.md`, KEEP the Purpose + Rules/Conventions sections (everything above the first
-  `## <category>` group), and DELETE this comment plus the `_No issues recorded yet._` block at the
-  bottom. Then start filing issues. This layout mirrors the `obsidian-llm-wiki` schema; this framework
-  ships NO `wiki-index-render` tooling, so the index is HAND-MAINTAINED.
+  SEED TEMPLATE (shipped by the `artifact-management` skill). On first use, copy this file to
+  `docs/KNOWN_ISSUES.md`, keep everything down to the second `---`, then start filing issues.
+  Delete this comment. This layout mirrors the `obsidian-llm-wiki` schema; this framework ships
+  NO `wiki-index-render` tooling, so the index is HAND-MAINTAINED.
 -->
 
 ---
@@ -33,9 +32,7 @@ status: open             # see status vocab below
 opened_at: 2026-01-01    # ISO date first recorded (git-truthful)
 category: logic          # see prefix→category table
 severity: SEV-2          # OPTIONAL — omit when not meaningfully rankable
-slug: l-1-short-kebab-title   # filename stem: a slugified, human-readable id+title (normalize symbols, e.g. ≠ → "not")
-# resolved_at: 2026-02-01   # add ONLY when status: fixed
-# resolved_by: TASK 042     # add ONLY when status: fixed
+slug: l-1-short-kebab-title   # == filename stem, == slugify(id)-slugify(title)
 ---
 ```
 
@@ -52,7 +49,6 @@ introduce a new prefix. A common starter set (extend/replace freely):
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
-
 A `fixed` issue **keeps its file** and adds `resolved_at` / `resolved_by` + a resolution
 blockquote; it is never deleted.
 

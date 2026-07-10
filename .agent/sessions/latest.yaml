@@ -1,14 +1,14 @@
 session_id: "d0f62a95-fb1e-45cc-9fb7-6e04df3e5df1"
-last_updated: "2026-07-10T12:01:43.812493"
+last_updated: "2026-07-10T12:48:51.525186"
 mode: "Framework Upgrade"
 
 current_task:
-  name: "087-known-issues-format-skill"
-  status: "COMPLETE, released v3.20.16 (uncommitted)"
+  name: "088-known-issues-vdd-fixes"
+  status: "COMPLETE, cleared VDD WARNING, released v3.20.17 (uncommitted)"
   predicted_steps: 0
 
 context_summary: |
-  Extracted KNOWN_ISSUES format from artifact-management hub into a dedicated known-issues-format skill (operator: 'new skill like other artifacts, cleaner'). Created via init_skill.py gate (tier 2); owns contract + template moved to assets/templates/known_issues_md_template.md (convention rename). artifact-management v1.2->1.3 slimmed to lifecycle + create-if-absent + DELEGATE format (parallel to ARCHITECTURE->architecture-format-core); hub holds no assets again. skill-reverse-engineering §2 v1.3->1.4 repointed to known-issues-format. SKILLS.md: new row + hub row reworded. CHANGELOG EN+RU v3.20.16, README stamp. Gates: validate_skills 44/44, template schema==live, core+installer untouched, no live dangling refs. Backups .agent/archive. Audit framework-audit-087.md (Mode A+B PASS).
+  Cleared all 8 VDD-adversarial findings on the KNOWN_ISSUES system (enterprise). MED closed with an AUTOMATED gate: known-issues-format/scripts/check_contract_sync.py (exit 0/1/2; negative-tested: catches injected drift) comparing status/severity vocab + frontmatter keys + index-line format between SKILL (authority) and seed template; wired into Script Contract + Validation Evidence (skill now hybrid). Reconciled glosses across skill/template/ledger. F2 seed owner->known-issues-format; F3 slug machine-equality softened (AT-7 counterexample); F4 seed instruction unified; F5 CHANGELOG squash note; F6 read-path 'skip if absent' guard + F8 known-issues-format hint across CLAUDE/AGENTS/GEMINI + 01/vdd-01-start-feature; F7 commented resolved_at/by. Gates: validate_skills 44/44, contract-sync exit 0, version 3.20.17 x4, all 5 read sites guarded. Backups .agent/archive. Audit framework-audit-088.md (Mode A+B PASS).
 
 active_blockers:
   []

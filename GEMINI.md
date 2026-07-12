@@ -69,14 +69,14 @@ When the pipeline requires reading a specific file (e.g., `02_analyst_prompt.md`
 ## WORKSPACE WORKFLOWS (Dynamic Dispatch)
 Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.
 1. **Discovery**: Look for files matching the pattern `[variant]-[stage]-[action].md` in `.agent/workflows/`.
-    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`.
+    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`, `heal-issues` (+ ad-hoc feedback collection via the `run-feedback` skill).
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.
    - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
    - If no variant specified, default to standard `01-04`.
 3. **Execution**: If a matching workflow is found, execute its steps strictly.
-   - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
+   - **CRITICAL**: Global Protocols (like `skill-archive-task`, `skill-update-memory`, and the end-of-run Retro from `run-feedback` SKILL.md §7) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
    - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
    - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.
 

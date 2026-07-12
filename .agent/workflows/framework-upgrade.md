@@ -8,6 +8,8 @@ description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skill
 > **META-OPERATION**: This workflow modifies the Agent's own operating logic.
 > **Strict Adherence Required**: No skipping validation steps.
 
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "framework-upgrade-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+
 ## 1. Analysis & Meta-Audit
 1. **Analyze**: Read User Request.
 2. **Draft**: Create `docs/TASK.md` (Type: Framework Upgrade).
@@ -45,3 +47,11 @@ If the system becomes unstable during upgrade:
 - **Restore every backed-up bootstrap file** (covers Claude Code / Codex·Cursor / Gemini CLI):
   `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f ".agent/archive/$f.bak" ] && cp ".agent/archive/$f.bak" "$f"; done`
 - Restore any other edited file from its `.agent/archive/<file>.bak` backup the same way.
+
+## 6. Retro (Global Protocol)
+Apply `run-feedback` SKILL.md §7 "Retro protocol":
+`claim --run-id "framework-upgrade-<task-slug>"` → exit 6 = nested, SKIP this step;
+exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
+from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
+collect → triage → file per the skill, and `release`. **Non-blocking**: failures
+here are reported in one line and never change this workflow's outcome.

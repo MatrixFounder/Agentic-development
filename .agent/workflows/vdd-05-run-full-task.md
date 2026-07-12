@@ -6,6 +6,8 @@ description: Execute all tasks in PLAN.md with adversarial Sarcasmotron review (
 
 This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sarcasmotron adversarial loop). Load-bearing differences from `/develop-all`: per-task adversarial review, mandatory inter-task HITL gate, **no auto-commit ever**, hard escalation after 3 consecutive REJECTED iterations, and resumability from `.agent/sessions/latest.yaml`.
 
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-05-run-full-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+
 1. **Plan parsing**: Read `docs/PLAN.md`. Extract the ordered task list (`Task X.Y`) with paths to `docs/tasks/task-{ID}-{SubID}-{slug}.md`. Respect Stage 1 / Stage 2 sectioning and dependency order. Apply `skill-spec-validator` for PLAN ↔ TASK conformance before iteration. **Flag `--dry-run`**: if present, print the planned chain (task IDs in dependency order) and exit; no execution, no state writes.
 2. **Per-task VDD cycle** (apply for each task in dependency order):
    - Step A — Builder: implement per `System/Agents/08_developer_prompt.md` + `tdd-stub-first` (Stub → Logic). Strict adherence to the task file; no creative reinterpretation.
@@ -36,6 +38,12 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    - Current `git status` snapshot.
 
    **Auto-commit is forbidden.** Commit/PR decision belongs to the user. This is the load-bearing difference from `/develop-all`.
+6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+   `claim --run-id "vdd-05-run-full-task-<task-slug>"` → exit 6 = nested, SKIP this step;
+   exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
+   from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
+   collect → triage → file per the skill, and `release`. **Non-blocking**: failures
+   here are reported in one line and never change this workflow's outcome.
 
 ## Resumability
 Re-invoking `/vdd-develop-all` after `pause` reads `.agent/sessions/latest.yaml` (see `.agent/skills/skill-session-state/SKILL.md` §2 Boot Protocol), identifies the first non-merged task in `docs/PLAN.md` by checking `completed_tasks`, and resumes from Step 2 (Step A) for that task.

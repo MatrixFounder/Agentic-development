@@ -18,6 +18,8 @@ explicit escalation path — never loop silently, never proceed past an undefine
 >    `python3 .agent/skills/skill-session-state/scripts/update_state.py ...` — a fresh
 >    session resumes mid-pipeline from `.agent/sessions/latest.yaml`.
 
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "full-robust-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+
 **Steps:**
 
 1. **Hardened VDD pipeline** — execute `.agent/workflows/vdd-enhanced.md` (Claude Code alias: `/vdd`).
@@ -55,6 +57,13 @@ explicit escalation path — never loop silently, never proceed past an undefine
      mismatch (task rotation, architecture check, `.AGENTS.md` scopes current).
    - **Bounded retry:** on failure, feed the error output verbatim into **one** retry of the
      failed sub-step; still failing → STOP and escalate — do not announce `Docs ✓`.
+
+5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+   `claim --run-id "full-robust-<task-slug>"` → exit 6 = nested, SKIP this step;
+   exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
+   from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
+   collect → triage → file per the skill, and `release`. **Non-blocking**: failures
+   here are reported in one line and never change this workflow's outcome.
 
 **Completion:** announce
 `Full Robust pipeline complete: VDD ✓ · Coverage ✓|skipped · Security ✓ · Docs ✓`

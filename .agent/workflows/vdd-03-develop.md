@@ -4,6 +4,8 @@ description: Develop a task using the Adversarial Loop
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: Prepare for the **Adversarial Roast**.
 
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-03-develop-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+
 1. **Developer Prompt**: Read `System/Agents/08_developer_prompt.md`.
 2. **Implementation Loop**:
     - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation).
@@ -21,5 +23,12 @@ description: Develop a task using the Adversarial Loop
 4. **Refinement Strategy**:
     - **REJECTED**: If Sarcasmotron finds legitimate logical flaws, security risks, or slop — OR the full test run has not actually been executed -> **Go to Step 2.1**.
     - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> **Merge and Proceed**.
+
+5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+   `claim --run-id "vdd-03-develop-<task-slug>"` → exit 6 = nested, SKIP this step;
+   exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
+   from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
+   collect → triage → file per the skill, and `release`. **Non-blocking**: failures
+   here are reported in one line and never change this workflow's outcome.
 
 > **Для прогона всей цепочки задач — см. `/vdd-develop-all` (`.agent/workflows/vdd-05-run-full-task.md`).**

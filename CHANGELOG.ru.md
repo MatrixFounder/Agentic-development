@@ -16,6 +16,20 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.21.0 — Цикл качества: движок `run-feedback` + Retro Global Protocol + харнесс `/heal-issues`**
+
+Закрывает разрыв «ошибки прогонов испаряются» насквозь: детерминированный **захват** (Retro-шаг в конце прогона, opt-in хуки Claude Code, майнер транскриптов) → LLM-**триаж** → детерминированный **филинг** в леджер `known-issues-format` / бэклог проекта → ограниченное **самовосстановление**. Задача 089; план упрочнён 3-критиковым VDD-adversarial (учтено 40+ находок). Гейты: 105 юнит-тестов + скриптовый E2E зелёные, `check_contract_sync.py` зелёный, 45/45 валидация скиллов, workflow smoke, security lint.
+
+#### **Добавлено**
+* Скилл **`run-feedback`** (TIER 2, hybrid; счётчик скиллов 45 → **46**) — stdlib-only CLI `scripts/run_feedback.py` (`collect / triage / file / journal / issues / mine / claim / release / doctor`): fingerprint-дедуп БЕЗ источника захвата в préimage (hook- и transcript-захваты одного фейла схлопываются; union `sources[]`), машинное состояние в gitignored `.agent/feedback/` (inbox + месячный журнал flock/fsync), create-only lockstep-записи в леджер с rollback и секционной маршрутизацией индекса, толерантная аллокация ID (`TF-X-7`, `XLSX-10B-DEFER`), вставка в бэклог по якорю (нет якоря → exit 4), redaction + капы выдержек, per-repo `docs/feedback/config.json`. Собственный Apache-чистый конверт ошибок — совместим по схеме, но НЕ байт-копия проприетарного офисного `_errors.py` (лицензионный файрвол).
+* **Поверхности захвата**: opt-in fail-silent хуки (`RUN_FEEDBACK_HOOKS=1`; PostToolUse(Bash) + SessionEnd; worktree-safe через `git rev-parse --git-common-dir`; экспериментальны до подтверждения shape дампом `RUN_FEEDBACK_HOOK_DEBUG=1`) и майнер транскриптов (`mine`): перечисляет ВСЕ per-cwd шарды `~/.claude/projects/` под корнем репо, инкрементальные byte-offset'ы, агрегация повторов, сначала `--dry-run`.
+* Воркфлоу + команда **`/heal-issues`** — потребляет `issues --status open --json`: строгий opt-in `auto_fixable: true`, run-lock, прекондиции clean-tree + базовая ветка, репро ТОЛЬКО из fenced `sh`-блоков (никогда из прозы), ≤3 итераций / ≤2 попыток на issue, рельсы replication-протокола + protected-paths + diff-guard, таймауты гейтов, вывод только в ветку (НИКОГДА push/merge/PR), без тихих исходов. Расписание — только на стороне оператора (без cron в репо — honest scope).
+* Команда **`/run-feedback`** (ad-hoc сбор в любой сессии; хинт `mine` поддержан).
+
+#### **Изменено**
+* **Retro Global Protocol** прошит во все **17 терминальных воркфлоу** (claim-blockquote в начале + non-blocking Retro-шаг перед вердиктом); детерминированная вложенность через flock `claim`/`release` (exit 6 = вложен → skip). Реестры CLAUDE.md / GEMINI.md обновлены lockstep; добавлена строка в `System/Docs/SKILLS.md`.
+* Контракт **`known-issues-format`** расширен lockstep (SKILL.md + seed-шаблон; sync-гейт зелёный): опциональные automation-ключи после `slug` (`component`, `fingerprint`, `evidence_paths`, `auto_fixable`, `finding_ref`), толерантность чтения к локальным расширениям (`status: handled`, `severity: MED`), токены `resolved_by` вида `heal-issues (…)`.
+
 ### **v3.20.17 — Закрыты замечания VDD-adversarial по системе KNOWN_ISSUES (enterprise-упрочнение)**
 
 Состязательное ревью со свежим контекстом (`docs/reviews/vdd-adversarial-known-issues-format.md`) вернуло WARNING по работе v3.20.14–16: 1 MED (контракт формата жил в 3 самодостаточных копиях, 2 глоссы уже разошлись) + 5 LOW + 2 NIT, все подтверждены. Этот релиз закрывает все замечания, а для MED добавляет **автоматический gate дрейфа** вместо разовой сверки. Задача 088, гейт-артефакт `docs/reviews/framework-audit-088.md`. Exit bar перепройден → **PASS**.

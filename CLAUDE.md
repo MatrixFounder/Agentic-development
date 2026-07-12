@@ -72,15 +72,16 @@ Read these skills only when their functionality is required:
 Before starting the standard pipeline, check if the user's request matches a workflow.
 Workflows are available as slash commands via `.claude/commands/` and as files in `.agent/workflows/`.
 1. **Discovery**: Check `.agent/workflows/` for matching workflow files.
-    - **Available Commands**: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`, `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-develop-all`, `/vdd-adversarial`, `/vdd-multi`, `/full`, `/security-audit`, `/base-stub-first`, `/update-docs`, `/framework-upgrade`, `/iterative-design`, `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`.
+    - **Available Commands**: `/start-feature`, `/plan`, `/develop`, `/develop-all`, `/light`, `/vdd`, `/vdd-start-feature`, `/vdd-plan`, `/vdd-develop`, `/vdd-develop-all`, `/vdd-adversarial`, `/vdd-multi`, `/full`, `/security-audit`, `/base-stub-first`, `/update-docs`, `/framework-upgrade`, `/iterative-design`, `/product-full-discovery`, `/product-market-only`, `/product-quick-vision`, `/run-feedback`, `/heal-issues`.
 2. **Dispatch**:
    - If user asks for "VDD", prioritize `vdd-*` workflows.
    - If user asks for "TDD", prioritize `tdd-*` workflows.
    - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
+   - If user asks to collect run feedback / "собери фидбек по прогону", use `/run-feedback`; to burn down the known-issues ledger, use `/heal-issues`.
    - If no variant specified, default to standard `01-04`.
 3. **Teams Dispatch (Wave 1)**: `/vdd-multi` runs **parallel** in Claude Code — spawns `critic-logic`, `critic-security`, `critic-performance` via `Agent` tool in one message. On other vendors it falls back to sequential role-switching (each workflow documents its `## Fallback` section). Decision rule between Layer A (Agent tool) and Layer B (native `TeamCreate`, Wave 4 stub) lives in `.agent/skills/skill-parallel-orchestration/SKILL.md` §4 and `System/Agents/01_orchestrator.md` §5.1.
 3. **Execution**: If a matching workflow is found, read it from `.agent/workflows/` and execute its steps strictly.
-   - **CRITICAL**: Global Protocols (like `skill-archive-task` and `skill-update-memory`) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
+   - **CRITICAL**: Global Protocols (like `skill-archive-task`, `skill-update-memory`, and the end-of-run Retro from `run-feedback` SKILL.md §7) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
    - **MANDATORY**: After every phase boundary, you **MUST** immediately run `python3 .agent/skills/skill-session-state/scripts/update_state.py` to persist context.
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)

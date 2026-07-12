@@ -34,6 +34,12 @@ opened_at: 2026-01-01    # ISO date first recorded (git-truthful)
 category: logic          # see prefix→category table
 severity: SEV-2          # OPTIONAL — omit when not meaningfully rankable
 slug: l-1-short-kebab-title   # filename stem: a slugified, human-readable id+title (normalize symbols, e.g. ≠ → "not")
+# component: transcript-fetcher   # OPTIONAL automation keys, appended AFTER slug —
+# fingerprint: 614ee37f7fb28554   # see "Automation extension keys" below
+# evidence_paths:
+#   - path/to/artifact
+# auto_fixable: true
+# finding_ref: fnd-20260713-081500-614ee37f
 # resolved_at: 2026-02-01   # add ONLY when status: fixed
 # resolved_by: TASK 042     # add ONLY when status: fixed
 ---
@@ -64,6 +70,15 @@ blockquote; it is never deleted.
 ```
 - **<ID>** [<title>](issues/<slug>.md) — severity `<SEV>`, status `<status>`, opened <YYYY-MM-DD>
 ```
+
+**Automation extension keys (optional).** Automated tools append machine-oriented keys AFTER
+`slug` — `component`, `fingerprint`, `evidence_paths`, `auto_fixable`, `finding_ref` (written by
+the `run-feedback` skill's filing step; consumed by the `/heal-issues` harness, which selects
+ONLY issues carrying an explicit `auto_fixable: true`). Automation STATE (attempt counters,
+journals) lives outside the ledger under `.agent/feedback/`. Per-project ledgers may carry local
+read-side extensions (e.g. `status: handled`, `severity: MED`); readers MUST tolerate them, while
+new writes stick to the vocabularies above. Automated `resolved_by` values use the token
+`heal-issues (verified-gone <ts>)` / `heal-issues run <ts>`.
 
 **Adding a new issue:** ① pick the next `<PREFIX>-<n>`; ② create `docs/issues/<slug>.md` with the
 frontmatter above (body preserved verbatim — never drop a clause); ③ add one line under the matching

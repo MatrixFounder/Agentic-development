@@ -16,6 +16,20 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.0 — Quality feedback loop: `run-feedback` engine + Retro Global Protocol + `/heal-issues` harness**
+
+Closes the "run errors evaporate" gap end-to-end: deterministic **capture** (end-of-run Retro step, opt-in Claude Code hooks, transcript miner) → LLM **triage** → deterministic **filing** into the `known-issues-format` ledger / project backlog → bounded **self-healing**. Task 089; plan hardened by a 3-critic VDD-adversarial pass (40+ findings folded in). Gates: 105 unit tests + scripted E2E green, `check_contract_sync.py` green, 45/45 skill validation, workflow smoke, security lint.
+
+#### **Added**
+* **`run-feedback`** skill (TIER 2, hybrid; skill count 45 → **46**) — stdlib-only CLI `scripts/run_feedback.py` (`collect / triage / file / journal / issues / mine / claim / release / doctor`): fingerprint dedup that EXCLUDES the capture source (hook- and transcript-captures of one failure collapse; `sources[]` union), machine state under gitignored `.agent/feedback/` (inbox + flock/fsync monthly journal), create-only lockstep ledger writes with rollback + category-section routing, messy-ID-tolerant allocation (`TF-X-7`, `XLSX-10B-DEFER`), anchored backlog appends (missing anchor → exit 4, never blind EOF), redaction + excerpt caps, per-repo `docs/feedback/config.json`. Own Apache-clean error envelope — schema-compatible with, NOT a byte copy of, the proprietary office `_errors.py` (license firewall).
+* **Capture surfaces**: opt-in fail-silent hooks (`RUN_FEEDBACK_HOOKS=1`; PostToolUse(Bash) + SessionEnd; worktree-safe via `git rev-parse --git-common-dir`; experimental until a `RUN_FEEDBACK_HOOK_DEBUG=1` payload dump confirms the shape) and the transcript miner (`mine`): enumerates ALL per-cwd `~/.claude/projects/` shards under the repo root, incremental byte offsets, retry aggregation, `--dry-run` first.
+* **`/heal-issues`** workflow + command — consumes `issues --status open --json`: strict `auto_fixable: true` opt-in, run-lock, clean-tree + base-branch preconditions, repro ONLY from fenced `sh` blocks (never synthesized from prose), ≤3 iterations / ≤2 lifetime attempts, replication-protocol + protected-paths + diff-size rails, gate timeouts, branch-only output (NEVER push/merge/PR), no silent outcomes. Scheduling is operator-side opt-in only (no repo cron — honest-scope).
+* **`/run-feedback`** command (ad-hoc collection, any session; `mine` hint supported).
+
+#### **Changed**
+* **Retro Global Protocol** wired into all **17 terminal workflows** (claim blockquote at start + non-blocking Retro step before the verdict); deterministic nesting via `claim`/`release` flock (exit 6 = nested → skip). CLAUDE.md / GEMINI.md registries updated in lockstep; `System/Docs/SKILLS.md` row added.
+* **`known-issues-format`** contract extended in lockstep (SKILL.md + seed template; sync gate green): optional automation keys after `slug` (`component`, `fingerprint`, `evidence_paths`, `auto_fixable`, `finding_ref`), read-tolerance for per-project extensions (`status: handled`, `severity: MED`), `heal-issues (…)` `resolved_by` tokens.
+
 ### **v3.20.17 — Cleared the VDD-adversarial findings on the KNOWN_ISSUES system (enterprise hardening)**
 
 A fresh-context adversarial review (`docs/reviews/vdd-adversarial-known-issues-format.md`) returned WARNING on the v3.20.14–16 work: 1 MED (the format contract lived in 3 self-contained copies and 2 glosses had already drifted) + 5 LOW + 2 NIT, all verified. This release clears every finding and — for the MED — adds an **automated drift gate** rather than a one-time reconcile. Task 088, gate artifact `docs/reviews/framework-audit-088.md`. Exit bar re-run → **PASS**.

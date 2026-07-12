@@ -6,6 +6,8 @@ description: VDD Multi-Adversarial — parallel critics via Layer-A teammate spa
 
 Parallel execution of three specialized adversarial critics (logic, security, performance) via Claude Code native subagent-spawn (Layer A). On other vendors, resolve the runtime (parent `skill-parallel-orchestration §1`) and use its **native parallel adapter** (Codex / Cursor / Antigravity ✅; Gemini Layer-A pending — see refs); sequential role-switching is the **last resort** for primitive-less runtimes. See **Vendor dispatch** below.
 
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-multi-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+
 ## Positioning (evidence: ab-experiment-075, pre-registered rule 2)
 
 `/vdd-multi` is a **coverage and CI-gating tool, not the default review path**. In the pre-registered A/B (`docs/reviews/ab-experiment-075.md`, N=3, 24 sealed seeded bugs): the 3-critic pipeline scored the highest recall (0.986 mean, **100% pooled — the only arm to find every bug**, including the only catch of the unbounded-cache perf bug) but missed its pre-registered cost bar — +5.6pp over the best single reviewer (< +10pp required) at 3.25× tokens and higher FP/file (9.63 vs 7.37).
@@ -188,6 +190,15 @@ Otherwise, for each non-clean category, apply fixes and re-spawn **only that cri
 4. **Iteration cap** (`--max-iterations` if provided, default unbounded): force-stop and flag in termination.
 
 Re-spawns are single-critic, not full parallel triples.
+
+## Retro (Global Protocol)
+
+Apply `run-feedback` SKILL.md §7 "Retro protocol":
+`claim --run-id "vdd-multi-<task-slug>"` → exit 6 = nested, SKIP this step;
+exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
+from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
+collect → triage → file per the skill, and `release`. **Non-blocking**: failures
+here are reported in one line and never change this workflow's outcome.
 
 ## Termination
 

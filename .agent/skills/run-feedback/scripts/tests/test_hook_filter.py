@@ -114,3 +114,74 @@ class TestHookFilter(HookFilterTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+SESSION_END = Path(__file__).resolve().parents[1] / "hooks" / "session_end_marker.py"
+
+
+@unittest.skipUnless(SESSION_END.is_file(),
+                     "session_end_marker not shipped yet: %s" % SESSION_END)
+class TestSessionEndMineOnEnd(unittest.TestCase):
+    """PostToolUse cannot see failing tool calls (verified live 2026-07-13),
+    so mine-on-session-end is the primary automatic capture path."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = fx.make_repo(self._tmp.name)
+        self.inbox = self.root / ".agent" / "feedback" / "inbox"
+
+    def _write_transcript(self, path):
+        pair = [
+            {"type": "assistant", "message": {"content": [
+                {"type": "tool_use", "id": "t1", "name": "Bash",
+                 "input": {"command": "python3 skills/html/scripts/x.py"}}]}},
+            {"type": "user", "timestamp": "2026-07-13T02:00:00Z",
+             "message": {"content": [
+                {"type": "tool_result", "tool_use_id": "t1",
+                 "is_error": True, "content": "boom\nExit code 2"}]}},
+        ]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(json.dumps(o) for o in pair) + "\n",
+                        encoding="utf-8")
+
+    def _run(self, env_extra):
+        transcript = Path(self._tmp.name) / "shard" / "sess-9.jsonl"
+        self._write_transcript(transcript)
+        payload = {"session_id": "sess-9", "cwd": str(self.root),
+                   "reason": "other", "transcript_path": str(transcript)}
+        env = dict(os.environ)
+        env.pop("RUN_FEEDBACK_CONFIG", None)
+        env["CLAUDE_PROJECT_DIR"] = str(self.root)
+        env.update(env_extra)
+        return subprocess.run([sys.executable, str(SESSION_END)],
+                              input=json.dumps(payload), text=True,
+                              capture_output=True, env=env,
+                              cwd=str(self.root), timeout=120)
+
+    def _journal_text(self):
+        jdir = self.root / ".agent" / "feedback" / "journal"
+        return "".join(p.read_text(encoding="utf-8")
+                       for p in sorted(jdir.glob("*.md"))) \
+            if jdir.is_dir() else ""
+
+    def test_marker_only_without_mine_flag(self):
+        proc = self._run({})
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("session_end | sess-9", self._journal_text())
+        self.assertNotIn("mine_run", self._journal_text())
+        self.assertFalse(self.inbox.is_dir() and any(self.inbox.iterdir()))
+
+    def test_mine_on_end_collects_the_failure(self):
+        proc = self._run({"RUN_FEEDBACK_MINE_ON_END": "1"})
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(proc.stdout, "")
+        text = self._journal_text()
+        self.assertIn("session_end | sess-9", text)
+        self.assertIn("mine_run | session-end sess-9", text)
+        findings = sorted(self.inbox.glob("fnd-*.json"))
+        self.assertEqual(len(findings), 1)
+        record = json.loads(findings[0].read_text(encoding="utf-8"))
+        self.assertEqual(record["subject"]["component"], "html")
+        self.assertEqual(record["subject"]["exit_code"], 2)
+        self.assertEqual(record["sources"], ["transcript"])

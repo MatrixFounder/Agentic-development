@@ -8,3 +8,6 @@ __pycache__/
 .agent/sessions/latest.yaml.lock
 .agent/rules/localization-sync.md
 
+
+# run-feedback machine state (inbox/journal/locks) — never tracked
+.agent/feedback/

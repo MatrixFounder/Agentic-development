@@ -165,9 +165,11 @@ python3 .agent/skills/run-feedback/scripts/run_feedback.py collect \
 
 ## 11. Resources
 - `scripts/run_feedback.py` — the CLI (see §4); `scripts/feedback_lib/` — the engine modules.
-- `scripts/hooks/` — opt-in Claude Code PostToolUse/SessionEnd capture (see
-  [`references/capture_surfaces.md`](references/capture_surfaces.md) for the layering: retro step =
-  portable, hooks/miner = Claude-Code-only accelerators).
+- `scripts/hooks/` — opt-in Claude Code SessionEnd capture: session-end marker +
+  auto-mine of the ended session (`RUN_FEEDBACK_HOOKS=1` + `RUN_FEEDBACK_MINE_ON_END=1`). See
+  [`references/capture_surfaces.md`](references/capture_surfaces.md) for the layering (retro step =
+  portable; hooks/miner = Claude-Code-only accelerators) and the verified PostToolUse limitation
+  (fires only on SUCCESSFUL tool calls — cannot capture failures; do not wire it).
 - `assets/templates/issue_body_template.md` — defect body skeleton.
 - `references/finding_schema.md` — Finding v1 field-by-field spec.
 - `references/cli_reference.md` — full flag reference per subcommand.

@@ -36,6 +36,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 |--------|---------------|-------|
 | `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
 | `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
+| `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
@@ -71,6 +72,11 @@ the matching `## <category>` heading here, in ID order.
 - **AT-7** [Async spawn ≠ sync return](issues/at-7-async-spawn-not-sync-return.md) — status `documented`, opened 2026-04-17
 - **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `documented`, opened 2026-04-17
 - **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `documented`, opened 2026-04-17
+
+## hooks
+
+- **HK-1** [PostToolUse fires only on successful tool calls — cannot capture Bash failures](issues/hk-1-posttooluse-fires-only-on-successful-tool-calls-cannot-capture-bash-failures.md) — status `documented`, opened 2026-07-13
+
 
 ## wrappers
 

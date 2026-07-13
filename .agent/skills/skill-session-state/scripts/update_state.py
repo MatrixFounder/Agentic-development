@@ -11,15 +11,41 @@ import fcntl
 SESSION_DIR = ".agent/sessions"
 SESSION_FILE = "latest.yaml"
 
+def find_repo_root():
+    """Anchor for SESSION_DIR (SS-1): the state file must land at the repo
+    root no matter which subdirectory the protocol is invoked from.
+
+    Resolution order:
+    1. Walk up from CWD to the first directory containing `.git`
+       (a directory, or a file — linked worktrees).
+    2. `CLAUDE_PROJECT_DIR` when set and valid (harness-provided hint).
+    3. CWD — legacy behavior for non-git scratch dirs, zero-setup.
+    """
+    cur = os.path.abspath(os.getcwd())
+    while True:
+        if os.path.exists(os.path.join(cur, ".git")):
+            return cur
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            break
+        cur = parent
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir and os.path.isdir(project_dir):
+        return os.path.abspath(project_dir)
+    return os.path.abspath(os.getcwd())
+
+def get_session_dir():
+    """Absolute session dir anchored at the repo root, not CWD."""
+    return os.path.join(find_repo_root(), SESSION_DIR)
+
 def get_session_path():
     """Get absolute path to session file."""
-    # Assumes script is run from project root or we find root
-    # We will just use the relative path from CWD as per standard agent execution
-    return os.path.join(SESSION_DIR, SESSION_FILE)
+    return os.path.join(get_session_dir(), SESSION_FILE)
 
 def ensure_session_dir():
-    if not os.path.exists(SESSION_DIR):
-        os.makedirs(SESSION_DIR)
+    session_dir = get_session_dir()
+    if not os.path.exists(session_dir):
+        os.makedirs(session_dir)
 
 # --- Minimal YAML Parser (Read-Only specific to our schema) ---
 # We ONLY need to preserve: session_id, active_blockers, recent_decisions.

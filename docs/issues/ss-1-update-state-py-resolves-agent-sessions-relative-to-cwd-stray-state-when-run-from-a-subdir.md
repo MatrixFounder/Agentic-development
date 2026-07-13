@@ -1,8 +1,10 @@
 ---
 id: SS-1
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-07-13
+resolved_at: 2026-07-13
+resolved_by: direct fix 2026-07-13 (run-feedback dogfood, SS-1)
 category: session-state
 severity: SEV-3
 slug: ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir
@@ -13,6 +15,13 @@ finding_ref: fnd-20260713-101821-441bc711
 ---
 
 # SS-1 — update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir
+
+> **Resolved 2026-07-13.** `update_state.py` now anchors `SESSION_DIR` at the repo root:
+> walk-up from CWD to the first directory containing `.git` (dir or worktree file), then
+> `CLAUDE_PROJECT_DIR` fallback, then legacy CWD for non-git scratch dirs. Regression suite:
+> `scripts/tests/test_update_state.py` (6 tests — subdir, worktree marker, root, env fallback,
+> legacy, no-fork merge). Original red repro re-run green; live subdir invocation verified
+> against the Universal-skills checkout.
 
 > Mined from Universal-skills session transcripts (2026-07): the orchestrator, working with
 > CWD inside `skills/transcript-fetcher/`, invoked the phase-boundary protocol and got

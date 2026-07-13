@@ -80,9 +80,7 @@ the matching `## <category>` heading here, in ID order.
 
 ## session-state
 
-- **SS-1** [update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir](issues/ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir.md) — severity `SEV-3`, status `open`, opened 2026-07-13
-
-
+- **SS-1** [update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir](issues/ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13
 
 ## wrappers
 

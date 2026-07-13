@@ -38,6 +38,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 | `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
 | `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
 | `SS-N` | `session-state` | `skill-session-state` protocol/script defects (state resolution, locking, schema). |
+| `VAL-N` | `validation` | `skill-creator` validation-gate blind spots (validate_skill.py, structural checks). |
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
@@ -82,6 +83,11 @@ the matching `## <category>` heading here, in ID order.
 
 - **SS-1** [update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir](issues/ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13
 - **SS-2** [Session state latest.yaml is git-tracked — every protocol run dirties the tree](issues/ss-2-session-state-latest-yaml-is-git-tracked-every-protocol-run-dirties-the-tree.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13
+
+## validation
+
+- **VAL-1** [validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)](issues/val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description.md) — severity `SEV-4`, status `open`, opened 2026-07-13
+
 
 ## wrappers
 

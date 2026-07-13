@@ -171,5 +171,8 @@ python3 .agent/skills/run-feedback/scripts/run_feedback.py collect \
   portable; hooks/miner = Claude-Code-only accelerators) and the verified PostToolUse limitation
   (fires only on SUCCESSFUL tool calls — cannot capture failures; do not wire it).
 - `assets/templates/issue_body_template.md` — defect body skeleton.
+- `assets/templates/feedback_config_template.json` + `heal_config_template.json` — per-repo
+  config starters for new consumer projects (copy into `docs/feedback/`, then fill the
+  prefix map and gates; recipe: `System/Docs/QUALITY_FEEDBACK_LOOP.md` §Setup).
 - `references/finding_schema.md` — Finding v1 field-by-field spec.
 - `references/cli_reference.md` — full flag reference per subcommand.

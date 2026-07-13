@@ -112,14 +112,27 @@ optionally re-run gates → merge (the ledger flip lands with the merge) → del
 
 ## Setting up a consumer project
 
+Start from the shipped templates — do not write the configs from scratch:
+
+```sh
+mkdir -p docs/feedback
+cp .agent/skills/run-feedback/assets/templates/feedback_config_template.json docs/feedback/config.json
+cp .agent/skills/run-feedback/assets/templates/heal_config_template.json     docs/feedback/heal-config.json
+```
+
 1. Install/update the framework (the installer symlinks the skill, workflow, and commands).
-2. Create `docs/feedback/config.json` — ledger paths, `component→prefix` map, backlog anchor
+2. Fill `docs/feedback/config.json` — ledger paths, the `component→prefix` map (`_default`
+   plus one row per component; every new prefix also gets a row in the ledger's
+   prefix→category table — the engine warns), and the backlog anchor: either a heading from
+   `backlog_section` or the explicit `<!-- feedback:discovered-issues -->` comment inside it
    (missing anchor → `file --as work-item` exits 4, never appends blindly).
-3. Create `docs/feedback/heal-config.json` — per-component gates map (`venv`, `e2e`,
-   `validator`, replication class), `human_only_categories`, `protected_paths`, limits,
-   `scheduling: {enabled: false}` (stays `false` in git).
-4. Ensure the ledger exists per `known-issues-format` (create-if-absent from its template);
-   add prefix-table rows as new prefixes appear (the engine warns).
+3. Fill `docs/feedback/heal-config.json` — per-component **gates** map: only components with
+   REAL checks (each command must exit 0 for `status: fixed`); declare `venv` only where one
+   exists (a declared-but-missing venv makes the component ineligible); `replication` only
+   where a master/replica protocol applies. Adjust `human_only_categories` and
+   `protected_paths` to the repo; `scheduling: {enabled: false}` stays `false` in git.
+   **No gate → not auto-fixable** — that is honest scope, not a gap.
+4. Ensure the ledger exists per `known-issues-format` (create-if-absent from its template).
 5. Optional Claude Code auto-capture: add the SessionEnd hook block to `.claude/settings.json`
    (see `run-feedback/references/capture_surfaces.md`) and set `RUN_FEEDBACK_HOOKS=1` +
    `RUN_FEEDBACK_MINE_ON_END=1` in personal `settings.local.json` `env`.

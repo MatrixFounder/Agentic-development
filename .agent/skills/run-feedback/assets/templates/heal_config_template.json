@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "base_branch": "main",
+  "scheduling": { "enabled": false },
+  "max_issues_per_run": 1,
+  "max_attempts_per_issue": 2,
+  "max_changed_lines": 300,
+  "max_changed_files": 10,
+  "gate_timeout_sec": 600,
+  "human_only_categories": ["honest-scope", "tech-debt"],
+  "protected_paths": [
+    "LICENSE",
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    "docs/feedback/config.json",
+    "docs/feedback/heal-config.json"
+  ],
+  "gates": {
+    "example-component": {
+      "unit": "python3 -m unittest discover -s path/to/tests",
+      "e2e": "bash path/to/tests/test_e2e.sh",
+      "validator": "python3 path/to/validator.py path/to/component"
+    }
+  }
+}

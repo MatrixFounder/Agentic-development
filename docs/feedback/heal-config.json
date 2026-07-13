@@ -1,0 +1,33 @@
+{
+  "v": 1,
+  "base_branch": "main",
+  "scheduling": { "enabled": false },
+  "max_issues_per_run": 1,
+  "max_attempts_per_issue": 2,
+  "max_changed_lines": 300,
+  "max_changed_files": 10,
+  "gate_timeout_sec": 600,
+  "human_only_categories": ["agent-teams", "hooks", "wrappers"],
+  "protected_paths": [
+    "LICENSE", "CHANGELOG.md", "CHANGELOG.ru.md",
+    ".claude/settings.json", ".claude/settings.local.json",
+    "docs/feedback/config.json", "docs/feedback/heal-config.json"
+  ],
+  "gates": {
+    "skill-creator": {
+      "unit": "python3 -m unittest discover -s .agent/skills/skill-creator/scripts/tests",
+      "validator": "python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/run-feedback"
+    },
+    "run-feedback": {
+      "unit": "cd .agent/skills/run-feedback/scripts && python3 -m unittest discover -s tests",
+      "e2e": "bash .agent/skills/run-feedback/scripts/tests/test_e2e.sh",
+      "validator": "python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/run-feedback"
+    },
+    "skill-session-state": {
+      "unit": "python3 -m unittest discover -s .agent/skills/skill-session-state/scripts/tests"
+    },
+    "known-issues-format": {
+      "unit": "python3 .agent/skills/known-issues-format/scripts/check_contract_sync.py"
+    }
+  }
+}

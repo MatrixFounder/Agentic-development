@@ -37,6 +37,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 | `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
 | `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
 | `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
+| `SS-N` | `session-state` | `skill-session-state` protocol/script defects (state resolution, locking, schema). |
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
@@ -76,6 +77,11 @@ the matching `## <category>` heading here, in ID order.
 ## hooks
 
 - **HK-1** [PostToolUse fires only on successful tool calls — cannot capture Bash failures](issues/hk-1-posttooluse-fires-only-on-successful-tool-calls-cannot-capture-bash-failures.md) — status `documented`, opened 2026-07-13
+
+## session-state
+
+- **SS-1** [update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir](issues/ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir.md) — severity `SEV-3`, status `open`, opened 2026-07-13
+
 
 
 ## wrappers

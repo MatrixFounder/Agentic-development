@@ -37,9 +37,96 @@ The script supports two directory layouts:
 import argparse
 import json
 import math
+import random
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# Recognized arm names so the delta is "treatment − baseline" (improvement is positive)
+# regardless of how config dirs happen to sort alphabetically. Unrecognized names keep
+# their incoming order, so this never silently re-signs an unknown pair.
+_TREATMENT_CONFIGS = {"with_skill", "new_skill", "candidate", "enriched", "after"}
+_BASELINE_CONFIGS = {"without_skill", "old_skill", "baseline", "control", "before"}
+
+
+def order_configs(configs: list[str]) -> list[str]:
+    """Stable-reorder configs so a recognized treatment arm comes first and a recognized
+    baseline arm comes second; everything else keeps its incoming order. This fixes the
+    sign of the pass_rate delta for the documented workflows (e.g. old_skill/with_skill),
+    where plain alphabetical order would otherwise compute baseline − treatment."""
+    def rank(name: str) -> int:
+        if name in _TREATMENT_CONFIGS:
+            return 0  # treatment first
+        if name in _BASELINE_CONFIGS:
+            return 1  # baseline second (must outrank unknown configs)
+        return 2      # unknown configs last
+    return sorted(configs, key=rank)
+
+
+def _percentile(sorted_vals: list[float], q: float) -> float:
+    """Linear-interpolation percentile (numpy-style) on an already-sorted list.
+    q in [0, 1]. Symmetric and not biased by int() truncation."""
+    if not sorted_vals:
+        return 0.0
+    if len(sorted_vals) == 1:
+        return sorted_vals[0]
+    idx = max(0.0, min(1.0, q)) * (len(sorted_vals) - 1)
+    lo = int(idx)
+    hi = min(lo + 1, len(sorted_vals) - 1)
+    frac = idx - lo
+    return sorted_vals[lo] * (1 - frac) + sorted_vals[hi] * frac
+
+
+def bootstrap_delta_ci(
+    results: dict,
+    config_a: str,
+    config_b: str,
+    metric: str = "pass_rate",
+    n: int = 5000,
+    seed: int = 0,
+    level: float = 0.95,
+) -> dict | None:
+    """Bootstrap confidence interval on (mean(config_a) − mean(config_b)) for a per-run
+    metric — the multi-rep + interval pattern (advanced-eval-patterns.md §8).
+
+    Use when a metric jitters run-to-run and a single before/after draw can't resolve the
+    effect: collect N runs per arm, then resample to estimate the CI of the delta. Pure
+    stdlib and SEEDED, so the result is deterministic (and therefore pinnable). Returns
+    None if either arm has no runs.
+    """
+    def _vals(config):
+        # An explicit `None` metric (e.g. a grader that failed to compute) is coerced to
+        # 0.0, matching load_run_results' default — `.get(metric, 0.0)` alone would let a
+        # present-but-None value through and crash the sum.
+        out = []
+        for r in results.get(config, []):
+            v = r.get(metric)
+            out.append(float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else 0.0)
+        return out
+
+    a, b = _vals(config_a), _vals(config_b)
+    if not a or not b:
+        return None
+    rng = random.Random(seed)
+    deltas = []
+    for _ in range(n):
+        mean_a = sum(rng.choice(a) for _ in a) / len(a)
+        mean_b = sum(rng.choice(b) for _ in b) / len(b)
+        deltas.append(mean_a - mean_b)
+    deltas.sort()
+    return {
+        "metric": metric,
+        "config_a": config_a,
+        "config_b": config_b,
+        "delta_mean": round(sum(deltas) / n, 4),
+        "ci_low": round(_percentile(deltas, (1 - level) / 2), 4),
+        "ci_high": round(_percentile(deltas, (1 + level) / 2), 4),
+        "level": level,
+        "n_resamples": n,
+        "seed": seed,
+        "runs_a": len(a),
+        "runs_b": len(b),
+    }
 
 
 def calculate_stats(values: list[float]) -> dict:
@@ -108,8 +195,15 @@ def load_run_results(benchmark_dir: Path) -> dict:
             if config not in results:
                 results[config] = []
 
-            for run_dir in sorted(config_dir.glob("run-*")):
-                run_number = int(run_dir.name.split("-")[1])
+            for run_idx, run_dir in enumerate(sorted(config_dir.glob("run-*"))):
+                # Mirror the eval_id guard: a stray dir like `run-final` must not crash
+                # the whole aggregation (and therefore verify_pin). Fall back to position.
+                parts = run_dir.name.split("-")
+                try:
+                    run_number = int(parts[1]) if len(parts) > 1 else run_idx
+                except ValueError:
+                    print(f"Warning: non-numeric run dir {run_dir.name}; using position {run_idx}")
+                    run_number = run_idx
                 grading_file = run_dir / "grading.json"
 
                 if not grading_file.exists():
@@ -181,7 +275,9 @@ def aggregate_results(results: dict) -> dict:
     Returns run_summary with stats for each configuration and delta.
     """
     run_summary = {}
-    configs = list(results.keys())
+    # Reorder so a recognized treatment arm is first → delta = treatment − baseline
+    # (improvement positive). Unknown names keep their order, so this is a no-op for them.
+    configs = order_configs(list(results.keys()))
 
     for config in configs:
         runs = results.get(config, [])
@@ -225,12 +321,37 @@ def aggregate_results(results: dict) -> dict:
     return run_summary
 
 
-def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: str = "") -> dict:
+def generate_benchmark(
+    benchmark_dir: Path,
+    skill_name: str = "",
+    skill_path: str = "",
+    bootstrap: bool = False,
+    bootstrap_n: int = 5000,
+    bootstrap_seed: int = 0,
+) -> dict:
     """
     Generate complete benchmark.json from run results.
+
+    With bootstrap=False (the default) the output is a pure function of the committed
+    grading.json files — which is what `verify_pin.py` relies on. Pass bootstrap=True to
+    attach a seeded (deterministic) CI on the first-two-configs pass_rate delta.
     """
     results = load_run_results(benchmark_dir)
     run_summary = aggregate_results(results)
+
+    if bootstrap:
+        # run_summary is already treatment-first (aggregate_results applied order_configs),
+        # so configs[0]/configs[1] match the sign of delta.pass_rate.
+        configs = [k for k in run_summary if k != "delta"]
+        if len(configs) > 2:
+            print(f"Warning: {len(configs)} configs present; bootstrap CI compares only "
+                  f"'{configs[0]}' vs '{configs[1]}' (the rest are ignored).", file=sys.stderr)
+        if len(configs) >= 2:
+            ci = bootstrap_delta_ci(
+                results, configs[0], configs[1], "pass_rate", bootstrap_n, bootstrap_seed
+            )
+            if ci:
+                run_summary.setdefault("delta", {})["pass_rate_ci"] = ci
 
     # Build runs array for benchmark.json
     runs = []
@@ -360,6 +481,14 @@ def main():
         type=Path,
         help="Output path for benchmark.json (default: <benchmark_dir>/benchmark.json)"
     )
+    parser.add_argument(
+        "--bootstrap",
+        action="store_true",
+        help="Attach a seeded bootstrap CI on the first-two-configs pass_rate delta "
+             "(multi-rep + interval; use when the metric jitters across runs)."
+    )
+    parser.add_argument("--bootstrap-n", type=int, default=5000, help="Bootstrap resamples (default 5000)")
+    parser.add_argument("--bootstrap-seed", type=int, default=0, help="Bootstrap seed (default 0; keeps it deterministic/pinnable)")
 
     args = parser.parse_args()
 
@@ -368,7 +497,10 @@ def main():
         sys.exit(1)
 
     # Generate benchmark
-    benchmark = generate_benchmark(args.benchmark_dir, args.skill_name, args.skill_path)
+    benchmark = generate_benchmark(
+        args.benchmark_dir, args.skill_name, args.skill_path,
+        bootstrap=args.bootstrap, bootstrap_n=args.bootstrap_n, bootstrap_seed=args.bootstrap_seed,
+    )
 
     # Determine output paths
     output_json = args.output or (args.benchmark_dir / "benchmark.json")
@@ -396,6 +528,10 @@ def main():
         label = config.replace("_", " ").title()
         print(f"  {label}: {pr*100:.1f}% pass rate")
     print(f"  Delta:         {delta.get('pass_rate', '—')}")
+    ci = delta.get("pass_rate_ci")
+    if ci:
+        print(f"  95% CI (Δ pass_rate): [{ci['ci_low']:+.3f}, {ci['ci_high']:+.3f}] "
+              f"(mean {ci['delta_mean']:+.3f}, {ci['runs_a']}v{ci['runs_b']} runs, n={ci['n_resamples']})")
 
 
 if __name__ == "__main__":

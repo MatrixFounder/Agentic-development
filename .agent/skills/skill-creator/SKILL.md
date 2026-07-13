@@ -200,7 +200,7 @@ When each subagent completes, save `total_tokens` and `duration_ms` to `timing.j
 
 ### Step 4: Grade, aggregate, and launch the viewer
 
-1. **Grade each run** — spawn a grader subagent reading `agents/grader.md`. Save `grading.json` with fields `text`, `passed`, `evidence`. For programmatic assertions, write and run a script.
+1. **Grade each run** — spawn a grader subagent reading `agents/grader.md`. Save `grading.json` with fields `text`, `passed`, `evidence`. For programmatic assertions, write and run a script. **When the skill's output is structured (JSON/numbers/files) or it shares a PASS/FAIL gate with production, prefer a deterministic script-grader that imports the production gate** — see `references/advanced-eval-patterns.md`.
 
 2. **Aggregate into benchmark**:
    ```bash
@@ -344,7 +344,8 @@ Direct the user to the resulting `.skill` file.
 - **`init_skill.py`**: Generate compliant skill skeleton
 - **`validate_skill.py`**: Enforce structure, frontmatter, CSO, execution-policy
 - **`skill_utils.py`**: Config loader (defaults + project overlay) + `parse_skill_md()`
-- **`aggregate_benchmark.py`**: Compute benchmark summary from `grading.json` files
+- **`aggregate_benchmark.py`**: Compute benchmark summary from `grading.json` files. `--bootstrap` adds a seeded confidence interval on the pass-rate delta (multi-rep + interval).
+- **`verify_pin.py`**: Re-aggregate committed run results and assert they match a committed `benchmark.json` — the generic "no silent metric drift" pin for CI (see `references/advanced-eval-patterns.md` §3; full tutorial in-repo at `docs/Manuals/skill-evals_guide.md`, not bundled in the standalone skill).
 - **`generate_report.py`**: Build static HTML report from `benchmark.json`
 - **`run_eval.py`**: Run trigger evaluation queries via CLI
 - **`run_loop.py`**: Main eval + improvement loop for description optimization
@@ -366,6 +367,7 @@ Direct the user to the resulting `.skill` file.
 - `references/workflows.md` — Designing skill-internal workflows
 - `references/persuasion-principles.md` — Psychological principles for instructions
 - `references/testing-skills-with-subagents.md` — TDD methodology for skills
+- `references/advanced-eval-patterns.md` — Production-grade eval patterns: deterministic script-grader, pinning, set diversification ("mirage"), A/B isolation, multi-rep. Full tutorial: `docs/Manuals/skill-evals_guide.md`
 - `agents/grader.md` — Evaluate assertions against outputs
 - `agents/comparator.md` — Blind A/B comparison
 - `agents/analyzer.md` — Post-hoc analysis of results

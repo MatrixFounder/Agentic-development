@@ -103,6 +103,51 @@ def extract_frontmatter(file_path):
     except Exception as e:
         return None, f"File Error: {str(e)}"
 
+_PLAIN_SCALAR_RE = re.compile(r'^(?P<key>[A-Za-z0-9_.-]+):[ \t]+(?P<value>[^\s"\'#|>&*!\[{].*)$')
+
+
+def _heuristic_unquoted_colon_warnings(frontmatter):
+    """Stdlib-only floor for the strict-YAML check: flag plain scalars holding ': '."""
+    warnings = []
+    # +2: line 1 of the file is the opening '---', so frontmatter line 1 is file line 2.
+    for offset, line in enumerate(frontmatter.splitlines(), start=2):
+        match = _PLAIN_SCALAR_RE.match(line)
+        if match and ": " in match.group("value"):
+            warnings.append(
+                f"Frontmatter line {offset}: '{match.group('key')}' is an unquoted scalar "
+                "containing ': ' — strict YAML parsers reject it. Quote the value. "
+                "(Install PyYAML for an exact check instead of this heuristic.)"
+            )
+    return warnings
+
+
+def check_frontmatter_strict(frontmatter):
+    """Second-opinion strict-YAML check on the frontmatter block. Returns (errors, warnings).
+
+    VanillaYamlParser is lenient — it splits on the first ':' and keeps the remainder as a
+    plain scalar — so `description: Use when X: "Y"` validates green here while strict YAML
+    1.1/1.2 parsers (Obsidian, VSCode preview, js-yaml, PyYAML) reject the whole block and
+    render the skill card as a parse error. PyYAML stays soft-optional: without it the
+    heuristic above can only warn, never fail.
+    """
+    try:
+        import yaml
+    except ImportError:
+        return [], _heuristic_unquoted_colon_warnings(frontmatter)
+
+    try:
+        yaml.safe_load(frontmatter)
+    except yaml.YAMLError as e:
+        detail = " ".join(str(e).split())
+        return [
+            "Strict YAML Parse Error: frontmatter is rejected by strict YAML parsers, so "
+            f"previews (Obsidian/VSCode/js-yaml) render the skill card as an error: {detail}. "
+            "Quote any value containing ': ' — e.g. description: \"Use when X: Y\"."
+        ], []
+
+    return [], []
+
+
 def extract_body_content(file_path: str) -> str:
     """
     Returns markdown body (without YAML frontmatter when present).
@@ -275,6 +320,10 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
         if err:
             errors.append(err)
         else:
+            strict_errors, strict_warnings = check_frontmatter_strict(fm_content)
+            errors.extend(strict_errors)
+            warnings.extend(strict_warnings)
+
             parser = skill_utils.VanillaYamlParser()
             try:
                 meta = parser.parse(fm_content)

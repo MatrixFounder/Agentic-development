@@ -84,6 +84,18 @@ Key structure:
 **FAIL**: No evidence, contradicts expectation, or superficial evidence
 **When uncertain**: Burden of proof is on the expectation — lean toward FAIL.
 
+## Negative checks (`forbidden_expectations`)
+
+If the eval defines `forbidden_expectations` (statements that must be **FALSE**), grade
+each one too: `passed: true` means the forbidden outcome did **NOT** happen. Emit them in
+`grading.json` under a `forbidden_expectations` array of `{text, passed, evidence}`.
+These catch **over-firing / false positives** — behavior a positive-only `expectations`
+list is blind to (e.g. "the skill deleted a file without asking" must stay false).
+
+**They count toward `summary`**: include forbidden checks in `summary.passed/failed/total`
+(a false positive must lower `pass_rate`, otherwise over-firing is free). So `total` =
+`len(expectations) + len(forbidden_expectations)`, matching the `eval_schemas.md` example.
+
 ## Guidelines
 
 - **Be objective**: Base verdicts on evidence, not assumptions
@@ -91,3 +103,22 @@ Key structure:
 - **Be thorough**: Check both transcript and output files
 - **Be consistent**: Apply the same standard to each expectation
 - **No partial credit**: Each expectation is pass or fail
+
+## Deterministic (script) grader
+
+The role above is the **LLM judge** — flexible, but itself non-deterministic. When the
+skill's output is **structured** (JSON / numbers / a file shape) **or** the eval shares a
+PASS/FAIL gate with production, prefer a **script grader** instead of (or alongside) this
+agent:
+
+- **Pure function, no LLM**: a script that reads the skill's raw output + the eval's
+  `expectations`/`forbidden_expectations` and emits the same `grading.json` schema. No
+  LLM, network, DB, or `eval`/`exec`/shell → fully **reproducible**, **zero grader tokens**.
+- **Call the gate, don't copy it**: if the eval reproduces production's PASS/FAIL rule, the
+  script must **import and call the production function**, never re-implement it — otherwise
+  the eval *drifts* from production and silently lies green.
+- **Pin it**: commit the raw outputs and assert `grade(raw) == committed grading.json` in
+  CI, so the numbers can't move unnoticed (`scripts/verify_pin.py`).
+
+Full patterns and worked examples: `references/advanced-eval-patterns.md` (bundled) and the
+tutorial `docs/Manuals/skill-evals_guide.md` (in-repo; not part of the packaged skill).

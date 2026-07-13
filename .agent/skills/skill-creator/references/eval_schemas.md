@@ -12,15 +12,21 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 ```json
 {
   "skill_name": "example-skill",
+  "version": 1,
+  "grader": "llm",
   "evals": [
     {
       "id": 1,
       "prompt": "User's example prompt",
       "expected_output": "Description of expected result",
       "files": ["evals/files/sample1.pdf"],
+      "construction": "natural",
       "expectations": [
         "The output includes X",
         "The skill used script Y"
+      ],
+      "forbidden_expectations": [
+        "The skill deleted a file without confirmation"
       ]
     }
   ]
@@ -29,11 +35,23 @@ Defines the evals for a skill. Located at `evals/evals.json` within the skill di
 
 **Fields:**
 - `skill_name`: Name matching the skill's frontmatter
+- `version`: *(optional)* Version of this eval set. **Convention**: when the skill's
+  contract changes, add a NEW file (`evals-v2.json`) rather than mutating this one — old
+  files keep guarding old behavior with their pinned baselines (`references/advanced-eval-patterns.md` §4).
+- `grader`: *(optional)* `"llm"` (default) or `"script"`. Hints which grading style this
+  set expects; use `"script"` when the skill's output is structured (JSON / numbers /
+  files). See `agents/grader.md` → *Deterministic (script) grader*.
 - `evals[].id`: Unique integer identifier
 - `evals[].prompt`: The task to execute
 - `evals[].expected_output`: Human-readable description of success
 - `evals[].files`: Optional list of input file paths (relative to skill root)
-- `evals[].expectations`: List of verifiable statements
+- `evals[].construction`: *(optional)* `"seeded"` (a defect mechanically planted →
+  objective ground-truth, zero author bias) or `"natural"` (a realistic case; ground-truth
+  by independent labeling). Mixing both fights author bias (`advanced-eval-patterns.md` §6).
+- `evals[].expectations`: List of verifiable statements that must be TRUE
+- `evals[].forbidden_expectations`: *(optional)* Negative checks — statements that must be
+  FALSE. The grader marks each `passed: true` iff the forbidden outcome did NOT happen.
+  Catches over-firing / false positives that positive-only `expectations` are blind to.
 
 ---
 
@@ -53,6 +71,13 @@ Output from the grader agent. Located at `<run-dir>/grading.json`.
       "text": "The spreadsheet has a SUM formula in cell B10",
       "passed": false,
       "evidence": "No spreadsheet was created. The output was a text file."
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "The skill deleted a file without confirmation",
+      "passed": true,
+      "evidence": "No destructive call in the transcript; the skill asked before deleting."
     }
   ],
   "summary": {
@@ -105,6 +130,9 @@ Output from the grader agent. Located at `<run-dir>/grading.json`.
 
 **Fields:**
 - `expectations[]`: Graded expectations with evidence
+- `forbidden_expectations[]`: *(optional)* Graded negative checks — `passed: true` means
+  the forbidden outcome did NOT occur. Present only when the eval defined `forbidden_expectations`.
+  They count toward `summary` (so `total` = positive `expectations` + `forbidden_expectations`).
 - `summary`: Aggregate pass/fail counts
 - `execution_metrics`: Tool usage and output size (from executor's metrics.json)
 - `timing`: Wall clock timing (from timing.json)

@@ -1,8 +1,10 @@
 ---
 id: VAL-1
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-07-13
+resolved_at: 2026-07-13
+resolved_by: heal-issues run 2026-07-13 (branch fix/val-1-validator-strict-yaml)
 category: validation
 severity: SEV-4
 slug: val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description
@@ -53,3 +55,16 @@ contain `: `) as a WARNING. Add a regression test with a colon-bearing descripti
 
 **Do-not.** Do not make PyYAML a hard dependency — the validator must stay runnable in a bare
 stdlib environment (strict check is soft-optional, heuristic is the floor).
+
+> **Resolution — 2026-07-13, `heal-issues` run (branch `fix/val-1-validator-strict-yaml`).**
+> `validate_skill.py` gained `check_frontmatter_strict()`, wired into the frontmatter step
+> ahead of `VanillaYamlParser`: with PyYAML importable it `safe_load`s the block and FAILS with
+> the parser's own message; without PyYAML it falls back to `_heuristic_unquoted_colon_warnings()`,
+> which only WARNS on plain scalars holding `': '` — PyYAML stays soft-optional per the Do-not.
+> Regression test `scripts/tests/test_frontmatter_strict.py` (5 cases, incl. the reproduction at
+> unit scope) also materializes the `scripts/tests/` directory the configured `skill-creator`
+> unit gate had been pointing at while it did not exist.
+> **Gates:** reproduction now green (validator exits 1 on the broken frontmatter, with the
+> `mapping values are not allowed here` detail); `unittest discover` 5/5 OK; validator on
+> `run-feedback` PASSED; strict sweep of all 45 framework `SKILL.md` frontmatters — 0 failures,
+> so no existing skill regresses.

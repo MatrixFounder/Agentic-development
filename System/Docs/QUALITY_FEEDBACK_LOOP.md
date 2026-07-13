@@ -90,7 +90,7 @@ surfaces only raise recall.
 `/heal-issues [issue-id] [--max-issues=K] [--dry-run] [--scheduled]` — full spec in
 [`.agent/workflows/heal-issues.md`](../../.agent/workflows/heal-issues.md).
 
-**Phases:** SELECT (run-lock, clean tree, base branch; eligibility = `status: open` AND explicit
+**Phases:** SELECT (orphaned-run detection — a journal `heal_run start` without an `end` names an aborted previous run and demands finish-or-reset before anything else; run-lock, clean tree, base branch; eligibility = `status: open` AND explicit
 `auto_fixable: true` AND attempts < 2 AND a configured gate exists) → REPRODUCE (fenced `sh`
 blocks ONLY — never synthesized from prose; no runnable repro → `repro-blocked`, attempt NOT
 consumed) → FIX (branch `fix/<id>-<slug>`, ≤3 iterations, gates re-run each iteration) →

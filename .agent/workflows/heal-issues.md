@@ -30,6 +30,16 @@ opens PRs, and never commits to the base branch.
 **Steps:**
 
 0. **SELECT** — preconditions and ranking.
+   - **Orphaned-run detection (FIRST, before anything else):** grep the feedback journal for
+     the LAST `heal_run` event
+     (`grep -h "heal_run" .agent/feedback/journal/*.md | tail -1`). If it is a `start` with no
+     later `end`, a previous run died mid-flight — its debris may include an uncommitted fix in
+     the working tree, an unflipped ledger, a missing report, and a stale `fix/*` branch.
+     **Do NOT proceed to selection.** Surface the orphan to the operator with its recovery
+     checklist: finish the tail (commit fix+tests+ledger flip+report on the branch → journal
+     `heal_run end` → update heal-state) or reset it (`git switch <base>` + discard/stash), then
+     re-invoke. A dirty tree alone (without an orphaned start) still fails the normal
+     precondition below — this check exists to name the CAUSE instead of a bare "dirty tree".
    - **Run-lock:** `python3 .agent/skills/run-feedback/scripts/run_feedback.py journal
      --event-type heal_run --subject "start"` then take the lock: if
      `.agent/feedback/heal.lock` is flock-held by a live run (attempt a non-blocking flock via
@@ -109,6 +119,11 @@ opens PRs, and never commits to the base branch.
    - **NEVER `git push`, NEVER merge, NEVER `gh pr create`.**
 
 4. **REPORT** — no silent outcomes.
+   - **Tombstone first:** journal `heal_run end` (with the outcome) BEFORE composing the final
+     line, on EVERY exit path — fixed, verified-gone, no-op, repro-blocked, needs-human,
+     precondition stop. A `start` without an `end` is how the next run detects an aborted one
+     (Phase 0 orphan check); update heal-state in the same breath. The later the tombstone is
+     written, the wider the abort window that orphans the run.
    - Final line, always (also on no-op/blocked):
      `heal-issues <ts>: <ID> fixed on fix/<id>-<slug> (N iterations, gates ✓) — review: git diff <base>..fix/<id>-<slug>`
      or `heal-issues <ts>: NO-OP (<reason>)` or `heal-issues <ts>: <ID> BLOCKED needs-human (<reason>)`.

@@ -29,6 +29,7 @@ Closes the "run errors evaporate" gap end-to-end: deterministic **capture** (end
 #### **Changed**
 * **Retro Global Protocol** wired into all **17 terminal workflows** (claim blockquote at start + non-blocking Retro step before the verdict); deterministic nesting via `claim`/`release` flock (exit 6 = nested → skip). CLAUDE.md / GEMINI.md registries updated in lockstep; `System/Docs/SKILLS.md` row added.
 * **`known-issues-format`** contract extended in lockstep (SKILL.md + seed template; sync gate green): optional automation keys after `slug` (`component`, `fingerprint`, `evidence_paths`, `auto_fixable`, `finding_ref`), read-tolerance for per-project extensions (`status: handled`, `severity: MED`), `heal-issues (…)` `resolved_by` tokens.
+* **Docs**: new operator guide [`System/Docs/QUALITY_FEEDBACK_LOOP.md`](System/Docs/QUALITY_FEEDBACK_LOOP.md) — architecture, capture surfaces (incl. the verified HK-1 PostToolUse limitation and the mine-on-SessionEnd pivot), heal rails, consumer-project setup, Stage 0→1 operations, dogfood evidence; `heal-issues` row added to `System/Docs/WORKFLOWS.md` (Automation Loops); cross-links from `SKILLS.md`/`CLAUDE.md`/`GEMINI.md`/`README.md`.
 
 ### **v3.20.17 — Cleared the VDD-adversarial findings on the KNOWN_ISSUES system (enterprise hardening)**
 

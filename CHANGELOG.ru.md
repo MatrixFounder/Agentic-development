@@ -29,6 +29,7 @@
 #### **Изменено**
 * **Retro Global Protocol** прошит во все **17 терминальных воркфлоу** (claim-blockquote в начале + non-blocking Retro-шаг перед вердиктом); детерминированная вложенность через flock `claim`/`release` (exit 6 = вложен → skip). Реестры CLAUDE.md / GEMINI.md обновлены lockstep; добавлена строка в `System/Docs/SKILLS.md`.
 * Контракт **`known-issues-format`** расширен lockstep (SKILL.md + seed-шаблон; sync-гейт зелёный): опциональные automation-ключи после `slug` (`component`, `fingerprint`, `evidence_paths`, `auto_fixable`, `finding_ref`), толерантность чтения к локальным расширениям (`status: handled`, `severity: MED`), токены `resolved_by` вида `heal-issues (…)`.
+* **Документация**: новый операторский гайд [`System/Docs/QUALITY_FEEDBACK_LOOP.md`](System/Docs/QUALITY_FEEDBACK_LOOP.md) — архитектура, поверхности захвата (вкл. верифицированное ограничение HK-1 PostToolUse и pivot на mine-on-SessionEnd), рельсы heal, настройка проекта-потребителя, операции Stage 0→1, dogfood-свидетельства; строка `heal-issues` в `System/Docs/WORKFLOWS.md` (Automation Loops); перекрёстные ссылки из `SKILLS.md`/`CLAUDE.md`/`GEMINI.md`/`README.md`.
 
 ### **v3.20.17 — Закрыты замечания VDD-adversarial по системе KNOWN_ISSUES (enterprise-упрочнение)**
 

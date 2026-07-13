@@ -316,6 +316,7 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 
 **[>> View Full Skills Catalog <<](System/Docs/SKILLS.md)**
 **[>> Orchestrator Tools — Fallback / Additional-Tools Guide <<](System/Docs/ORCHESTRATOR.md)**
+**[>> Quality Feedback Loop (run-feedback + /heal-issues) <<](System/Docs/QUALITY_FEEDBACK_LOOP.md)**
 **[>> Source of Truth Map <<](System/Docs/SOURCE_OF_TRUTH.md)**
 **[>> Release Checklist <<](System/Docs/RELEASE_CHECKLIST.md)**
 

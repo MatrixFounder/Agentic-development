@@ -5,7 +5,8 @@ __pycache__/
 .env
 *.log
 *.lock
-.agent/sessions/latest.yaml.lock
+# session state is per-machine runtime data (SS-2) — never tracked
+.agent/sessions/
 .agent/rules/localization-sync.md
 
 

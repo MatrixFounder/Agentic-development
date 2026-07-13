@@ -10,9 +10,12 @@ version: 1.0
 This skill provides the mechanism to persist your current working state to a file. This allows you to "reboot" from a seamless context state if the session window is reset.
 
 ## 1. The Session File
-*   **Path**: `.agent/sessions/latest.yaml`
+*   **Path**: `.agent/sessions/latest.yaml` — resolved from the **repo root** regardless of the
+    invocation CWD (walk-up to `.git`, `CLAUDE_PROJECT_DIR` fallback; SS-1).
 *   **Purpose**: Stores the exact arguments from your last `task_boundary` call, plus session metadata.
 *   **Persistence**: surviving session clears, allowing you to pick up exactly where you left off.
+*   **Never committed**: this is per-machine runtime data — `.agent/sessions/` is gitignored (SS-2).
+    Do not `git add` it and do not ship a committed "seed" state.
 
 ## 2. Boot Protocol (Start of Session)
 **IF** `.agent/sessions/latest.yaml` exists **AND** you are starting a new session (blank context):

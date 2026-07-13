@@ -73,8 +73,24 @@ dir). Incremental via byte offsets in `.agent/feedback/mine_state.json`; active 
 collapse into a single `repeated-failure` candidate. `--dry-run` prints candidates, writes
 nothing (no state, no inbox). First run on a repo: ALWAYS `--dry-run` and eyeball the yield.
 
+## init — bootstrap configs from templates (create-only)
+
+```
+init [--json]
+```
+
+Copies `assets/templates/feedback_config_template.json` → `docs/feedback/config.json` and
+`heal_config_template.json` → `docs/feedback/heal-config.json`. **Never overwrites** — existing
+files are reported as `skipped`. Seeds `id_prefixes` from the existing ledger: for every
+`docs/issues/*.md` with both `id:` and `component:`, the prefix is the id up to the first
+`-<digit>` (`TF-X-7` → `TF-X`, `XLSX-10B-DEFER` → `XLSX`); a component with conflicting
+prefixes is reported in `conflicts` and left unseeded. Output `{v, created, skipped,
+seeded_prefixes, conflicts, todo}` — the `todo` list is the judgement the agent must finish
+(backlog anchor, heal gates, prefix-table rows; SKILL.md §7 Bootstrap protocol). Exit 0; 3 when
+the shipped templates are unreachable.
+
 ## doctor
 
 `doctor [--json]` — `{v, ready, checks, remediation}`; exit 0 ready / 3 not. Checks: repo/data
-roots, config source, ledger paths, backlog anchor presence, seed template reachability,
-feedback-dir writability.
+roots, config source (built-in defaults → remediation suggests `init`), ledger paths, backlog
+anchor presence, seed template reachability, feedback-dir writability.

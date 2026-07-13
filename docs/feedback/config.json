@@ -3,9 +3,7 @@
   "issues_dir": "docs/issues",
   "index_path": "docs/KNOWN_ISSUES.md",
   "backlog_path": "docs/BACKLOG.md",
-  "backlog_section": "## Discovered Issues",
-  "journal_dir": ".agent/feedback/journal",
-  "inbox_dir": ".agent/feedback/inbox",
+  "backlog_anchor": "<!-- feedback:discovered-issues -->",
   "id_prefixes": {
     "_default": "FW",
     "agent-teams": "AT",
@@ -14,5 +12,6 @@
     "skill-session-state": "SS",
     "skill-creator": "VAL"
   },
-  "excerpt_max_chars": 2000
+  "excerpt_max_chars": 2000,
+  "feedback_dir": ".agent/feedback"
 }

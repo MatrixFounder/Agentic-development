@@ -12,6 +12,7 @@ Stdlib-only CLI (no venv). Subcommands:
   issues    machine-readable feed of the docs/issues/ ledger
   mine      extract failure signals from Claude Code session transcripts
   claim     claim retro ownership for this run (release with `release`)
+  init      bootstrap docs/feedback/ configs from templates (create-only)
   doctor    readiness report
 
 Exit codes: 0 ok · 1 unexpected · 2 usage · 3 config/env · 4 filing
@@ -22,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import fcntl
@@ -30,9 +32,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from feedback_lib import (claims, filters, finding, ids as ids_mod, inbox,
-                          journal, ledger_backlog, ledger_issues,
-                          mine as mine_mod)
+from feedback_lib import (claims, filters, finding, frontmatter,
+                          ids as ids_mod, inbox, journal, ledger_backlog,
+                          ledger_issues, mine as mine_mod)
 from feedback_lib.config import load_config
 from feedback_lib.envelope import (EXIT_CONFIG, EXIT_OK, EXIT_UNEXPECTED,
                                    EXIT_USAGE, CliError, emit_json_error,
@@ -388,12 +390,104 @@ def cmd_mine(args, cfg):
     return EXIT_OK
 
 
+_ID_PREFIX_RE = re.compile(r"^(.+?)-\d")
+
+
+def cmd_init(args, cfg):
+    """Bootstrap docs/feedback/ configs from the shipped templates (create-only).
+
+    Deterministic part of the Bootstrap protocol (SKILL.md §7): copy the two
+    config templates into the target repo — never overwriting anything — and
+    seed the `id_prefixes` map from the EXISTING ledger (component→prefix pairs
+    derived from `docs/issues/*.md` frontmatter). Judgement (backlog anchor,
+    heal gates) stays with the agent; the emitted `todo` list names it."""
+    templates = Path(__file__).resolve().parents[1] / "assets" / "templates"
+    fb_dir = Path(cfg.repo_root) / "docs" / "feedback"
+    targets = {
+        "config": (fb_dir / "config.json",
+                   templates / "feedback_config_template.json"),
+        "heal-config": (fb_dir / "heal-config.json",
+                        templates / "heal_config_template.json"),
+    }
+    for _, template in targets.values():
+        if not template.is_file():
+            raise CliError("config template missing: %s" % template,
+                           code=EXIT_CONFIG, err_type="TemplateMissing")
+
+    # Seed component→prefix from the ledger that already exists (if any).
+    seeded, conflicts = {}, {}
+    issues_dir = Path(cfg.issues_dir)
+    if issues_dir.is_dir():
+        for path in sorted(issues_dir.glob("*.md")):
+            try:
+                meta, _ = frontmatter.parse_file(path)
+            except Exception:  # noqa: BLE001 - unparseable file is not init's problem
+                continue
+            issue_id = str(meta.get("id") or "")
+            component = str(meta.get("component") or "").strip()
+            match = _ID_PREFIX_RE.match(issue_id)
+            if not (component and match):
+                continue
+            prefix = match.group(1)
+            if component in seeded and seeded[component] != prefix:
+                conflicts.setdefault(component, set()).update(
+                    {seeded[component], prefix})
+                continue
+            seeded[component] = prefix
+    for component in conflicts:
+        seeded.pop(component, None)
+
+    created, skipped = [], []
+    fb_dir.mkdir(parents=True, exist_ok=True)
+    for name, (target, template) in targets.items():
+        if target.exists():
+            skipped.append(str(target))
+            continue
+        data = json.loads(template.read_text(encoding="utf-8"))
+        if name == "config" and seeded:
+            data["id_prefixes"].update(seeded)
+        tmp = target.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+                       encoding="utf-8")
+        os.replace(tmp, target)
+        created.append(str(target))
+
+    todo = []
+    if created:
+        todo.append("verify docs/feedback/config.json: backlog_path/"
+                    "backlog_section must point at a REAL section (or seed "
+                    "'<!-- feedback:discovered-issues -->' inside it)")
+        todo.append("fill docs/feedback/heal-config.json gates: only "
+                    "components with REAL checks; replace 'example-component'")
+        todo.append("every prefix in id_prefixes needs a row in the ledger's "
+                    "prefix→category table")
+    if conflicts:
+        todo.append("resolve conflicting prefixes for: %s" % ", ".join(
+            "%s (%s)" % (c, "/".join(sorted(v)))
+            for c, v in sorted(conflicts.items())))
+    payload = {"v": 1, "created": created, "skipped": skipped,
+               "seeded_prefixes": seeded,
+               "conflicts": {c: sorted(v) for c, v in conflicts.items()},
+               "todo": todo}
+    _emit(args, payload, "\n".join(
+        ["created: %s" % (", ".join(created) or "-"),
+         "skipped (already exist): %s" % (", ".join(skipped) or "-"),
+         "seeded prefixes: %s" % (json.dumps(seeded, ensure_ascii=False)
+                                  if seeded else "-")]
+        + (["TODO:"] + ["  - " + t for t in todo] if todo else [])))
+    return EXIT_OK
+
+
 def cmd_doctor(args, cfg):
     checks = {}
     remediation = []
     checks["repo_root"] = str(cfg.repo_root)
     checks["data_root"] = str(cfg.data_root)
     checks["config_source"] = cfg.source or "built-in defaults"
+    if not cfg.source:
+        remediation.append("no docs/feedback/config.json — run "
+                           "`run_feedback.py init` to bootstrap from the "
+                           "shipped templates (create-only)")
     checks["issues_dir_exists"] = Path(cfg.issues_dir).is_dir()
     checks["index_exists"] = Path(cfg.index_path).is_file()
     template_ok = ledger_issues._seed_template_path().is_file()
@@ -525,6 +619,12 @@ def build_parser(argv=None):
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_mine)
+
+    p = sub.add_parser(
+        "init",
+        help="bootstrap docs/feedback/ configs from templates (create-only)")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("doctor", help="readiness report")
     p.add_argument("--json", action="store_true")

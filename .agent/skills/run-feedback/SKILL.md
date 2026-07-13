@@ -2,7 +2,7 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.0
+version: 1.1
 ---
 # Run Feedback
 
@@ -50,7 +50,7 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 ## 4. Script Contract
 - **Command**: `python3 .agent/skills/run-feedback/scripts/run_feedback.py <subcommand> …`
   (stdlib-only; no venv; run from anywhere inside the target repo, or pass `--repo-root`).
-- **Subcommands**: `collect · triage · file · journal · issues · mine · claim · release · doctor`
+- **Subcommands**: `collect · triage · file · journal · issues · mine · claim · release · init · doctor`
   — full flag reference in [`references/cli_reference.md`](references/cli_reference.md).
 - **Config**: `docs/feedback/config.json` per repo (ledger paths, `component→prefix` map, backlog
   anchor). Resolution: `--config` → `RUN_FEEDBACK_CONFIG` env → repo default → built-ins.
@@ -124,6 +124,27 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 Same as the retro protocol without claim/release: gather friction from the CURRENT session (failed
 commands, retries, blockers), scoped by the user's hint; `mine` first when the hint says so.
 
+### Bootstrap protocol (unconfigured repo — self-serve, no operator needed)
+Trigger: you have findings to process but the repo is not set up — `collect`/`file` exits 3,
+`doctor` reports `config_source: built-in defaults`, or `docs/feedback/` is missing.
+1. Run `run_feedback.py init` — deterministic part: copies both config templates into
+   `docs/feedback/` (**create-only**, existing files are never overwritten) and seeds the
+   `id_prefixes` map from the EXISTING ledger (component→prefix pairs derived from
+   `docs/issues/*.md` frontmatter; conflicts are reported, never guessed).
+2. Finish the `todo` list init prints — this is YOUR judgement, not the script's:
+   - **backlog anchor**: point `backlog_path` at the repo's real backlog and make sure
+     `backlog_anchor` (`<!-- feedback:discovered-issues -->`) sits inside its Discovered-Issues
+     section — or create a thin `docs/BACKLOG.md` with that section if the repo has none;
+   - **heal gates**: replace `example-component` with ONLY components that have real checks
+     (unit/e2e/validator commands that exit 0); no gate = honestly not auto-fixable — do NOT
+     invent gates;
+   - **prefix rows**: every prefix in `id_prefixes` needs a row in the ledger's
+     prefix→category table.
+3. Re-run `doctor` — `ready: true` with an empty remediation list — then resume the original
+   operation (the filing that hit exit 3, the retro, the heal run).
+4. Config files are repo-visible: mention their creation in your run report/commit. Inside a
+   retro this protocol is still non-blocking — bootstrap failure → one report line, move on.
+
 ## 8. Workflows
 ```markdown
 - [ ] claim (workflow start, terminal workflows only)
@@ -172,7 +193,7 @@ python3 .agent/skills/run-feedback/scripts/run_feedback.py collect \
   (fires only on SUCCESSFUL tool calls — cannot capture failures; do not wire it).
 - `assets/templates/issue_body_template.md` — defect body skeleton.
 - `assets/templates/feedback_config_template.json` + `heal_config_template.json` — per-repo
-  config starters for new consumer projects (copy into `docs/feedback/`, then fill the
-  prefix map and gates; recipe: `System/Docs/QUALITY_FEEDBACK_LOOP.md` §Setup).
+  config starters; `run_feedback.py init` copies them create-only and seeds the prefix map
+  (§7 Bootstrap protocol; recipe: `System/Docs/QUALITY_FEEDBACK_LOOP.md` §Setup).
 - `references/finding_schema.md` — Finding v1 field-by-field spec.
 - `references/cli_reference.md` — full flag reference per subcommand.

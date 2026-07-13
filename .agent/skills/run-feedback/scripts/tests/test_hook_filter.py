@@ -29,6 +29,7 @@ class HookFilterTestCase(unittest.TestCase):
         env = dict(os.environ)
         env.pop("RUN_FEEDBACK_CONFIG", None)
         env.pop("RUN_FEEDBACK_HOOK_DEBUG", None)
+        env.pop("RUN_FEEDBACK_MINE_ON_END", None)
         env["RUN_FEEDBACK_HOOKS"] = "1"
         env["CLAUDE_PROJECT_DIR"] = str(self.root)
         data = raw if raw is not None else json.dumps(payload)
@@ -151,7 +152,12 @@ class TestSessionEndMineOnEnd(unittest.TestCase):
         payload = {"session_id": "sess-9", "cwd": str(self.root),
                    "reason": "other", "transcript_path": str(transcript)}
         env = dict(os.environ)
+        # Hermetic against the operator's session env (settings.local.json may
+        # export the opt-in capture flags globally — they must not leak in).
         env.pop("RUN_FEEDBACK_CONFIG", None)
+        env.pop("RUN_FEEDBACK_HOOK_DEBUG", None)
+        env.pop("RUN_FEEDBACK_MINE_ON_END", None)
+        env.pop("RUN_FEEDBACK_HOOKS", None)
         env["CLAUDE_PROJECT_DIR"] = str(self.root)
         env.update(env_extra)
         return subprocess.run([sys.executable, str(SESSION_END)],

@@ -4,6 +4,10 @@
 # run that executes zero tests is a FAILURE, not a green gate.
 set -uo pipefail
 
+# Hermetic against the operator's session env: the opt-in capture flags may be
+# exported globally via settings.local.json and MUST NOT leak into the suite.
+unset RUN_FEEDBACK_HOOKS RUN_FEEDBACK_MINE_ON_END RUN_FEEDBACK_HOOK_DEBUG RUN_FEEDBACK_CONFIG
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS="$(dirname "$HERE")"
 PY=python3

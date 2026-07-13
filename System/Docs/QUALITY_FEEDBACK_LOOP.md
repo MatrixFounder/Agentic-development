@@ -59,7 +59,8 @@ no venv, runs from anywhere inside the repo (walks up to the root).
 | `issues` | Ledger feed for the harness (`--status open --auto-fixable --json`) | — (read-only) |
 | `mine` | Deterministic transcript extractor (tool errors, exit codes, envelopes, retry aggregation; redaction + excerpt caps; incremental byte offsets) | inbox |
 | `claim` / `release` | Retro ownership for nested workflows (exit 6 = you are nested → skip retro) | `.agent/feedback/` |
-| `doctor` | Readiness report `{v, ready, components, remediation}` | — (read-only) |
+| `init` | Bootstrap `docs/feedback/` configs from the shipped templates — create-only, seeds `id_prefixes` from the existing ledger, prints the judgement `todo` list | configs (create-only) |
+| `doctor` | Readiness report `{v, ready, checks, remediation}`; unconfigured repo → remediation suggests `init` | — (read-only) |
 
 **Finding model:** the dedup `fingerprint` deliberately EXCLUDES the capture source, so a hook
 capture and a transcript capture of the same failure collapse into one finding. Machine state
@@ -112,20 +113,25 @@ optionally re-run gates → merge (the ledger flip lands with the merge) → del
 
 ## Setting up a consumer project
 
-Start from the shipped templates — do not write the configs from scratch:
+Bootstrap from the shipped templates — do not write the configs from scratch:
 
 ```sh
-mkdir -p docs/feedback
-cp .agent/skills/run-feedback/assets/templates/feedback_config_template.json docs/feedback/config.json
-cp .agent/skills/run-feedback/assets/templates/heal_config_template.json     docs/feedback/heal-config.json
+python3 .agent/skills/run-feedback/scripts/run_feedback.py init
 ```
+
+`init` is create-only (existing configs are never touched) and seeds the `component→prefix`
+map from the repo's existing ledger; it prints the `todo` list of what only a human/agent can
+decide. An agent that hits an unconfigured repo with findings to process runs this itself —
+SKILL.md §7 "Bootstrap protocol" is the self-serve path; the steps below are the same
+judgement spelled out.
 
 1. Install/update the framework (the installer symlinks the skill, workflow, and commands).
 2. Fill `docs/feedback/config.json` — ledger paths, the `component→prefix` map (`_default`
    plus one row per component; every new prefix also gets a row in the ledger's
-   prefix→category table — the engine warns), and the backlog anchor: either a heading from
-   `backlog_section` or the explicit `<!-- feedback:discovered-issues -->` comment inside it
-   (missing anchor → `file --as work-item` exits 4, never appends blindly).
+   prefix→category table — the engine warns), and the backlog anchor: `backlog_path` must
+   point at the real backlog with the `<!-- feedback:discovered-issues -->` comment inside its
+   Discovered-Issues section (missing anchor → `file --as work-item` exits 4, never appends
+   blindly).
 3. Fill `docs/feedback/heal-config.json` — per-component **gates** map: only components with
    REAL checks (each command must exit 0 for `status: fixed`); declare `venv` only where one
    exists (a declared-but-missing venv makes the component ineligible); `replication` only

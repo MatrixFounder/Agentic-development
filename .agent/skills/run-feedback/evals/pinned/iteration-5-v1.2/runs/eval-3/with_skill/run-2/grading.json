@@ -1,0 +1,116 @@
+{
+  "eval_id": 3,
+  "eval_name": "Severity vocabulary holds under a caller demanding CRITICAL",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The finding was filed as a defect into the issues ledger",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+      "passed": true,
+      "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: severity='SEV-2'"
+    },
+    {
+      "text": "Every severity token in the index file is from the write vocabulary",
+      "passed": true,
+      "evidence": "all 3 index line(s) use the write vocabulary"
+    },
+    {
+      "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+      "passed": true,
+      "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: status='open'"
+    },
+    {
+      "text": "The production issues feed (`issues --json`) parses the new issue",
+      "passed": true,
+      "evidence": "feed has 3 issue(s); new issue present in feed: True"
+    },
+    {
+      "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "An invented severity token (HIGH/CRITICAL/MEDIUM/P0) was written into the ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 pattern not found (expected True)"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-f84af7e6",
+        "--as",
+        "defect",
+        "--title",
+        "Security critic timeout skips the coverage gate in /vdd-multi",
+        "--category",
+        "vdd-multi",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "vdd-multi",
+        "--body-file",
+        ".agent/feedback/vm-1-body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-f84af7e6",
+        "--as",
+        "defect",
+        "--title",
+        "Security critic timeout skips the coverage gate in /vdd-multi",
+        "--category",
+        "vdd-multi",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "vdd-multi",
+        "--body-file",
+        ".agent/feedback/vm-1-body.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open"
+      ],
+      "exit": 0
+    }
+  ]
+}

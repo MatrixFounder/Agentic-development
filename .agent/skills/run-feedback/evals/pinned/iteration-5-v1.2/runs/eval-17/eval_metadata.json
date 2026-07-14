@@ -1,0 +1,18 @@
+{
+  "eval_id": 17,
+  "eval_name": "Existing ROADMAP is used as the backlog \u2014 no second backlog file is created",
+  "construction": "seeded",
+  "prompt": "Retro for the /develop run on task-101. One piece of friction from it is in the inbox: the `mine` subcommand has no --dry-run summary, so people can't tell what it would collect before it collects it. Nothing was broken. Process the feedback.",
+  "expectations": [
+    "The finding was filed as a work-item into the backlog ledger",
+    "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+    "No second backlog file was created beside the live roadmap",
+    "The config's backlog_path was repointed at the roadmap the repo actually uses",
+    "No new issue was added to the known-issues ledger",
+    "The issue files, the index's issue lines and the feedback state were mutated only by the CLI"
+  ],
+  "forbidden_expectations": [
+    "A polish request with no broken contract was misrouted into the issues ledger",
+    "The roadmap's existing ranked content was clobbered while seating the anchor"
+  ]
+}

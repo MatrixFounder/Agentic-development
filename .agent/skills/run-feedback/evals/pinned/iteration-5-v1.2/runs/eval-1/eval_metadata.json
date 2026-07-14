@@ -1,0 +1,17 @@
+{
+  "eval_id": 1,
+  "eval_name": "Duplicate by fingerprint is dismissed, not re-filed",
+  "construction": "seeded",
+  "prompt": "The /develop run for task-042 just finished. The transcript-fetcher gate failed during it and the failure is already queued in the feedback inbox. Process the run's feedback and record whatever needs recording.",
+  "expectations": [
+    "The agent ran the `triage` subcommand before deciding anything",
+    "The report identifies the existing issue TF-1 as the duplicate",
+    "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+    "The known-issues ledger gained no new issue",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": [
+    "A second issue was filed for a defect the ledger already tracks",
+    "The index file KNOWN_ISSUES.md grew a new line"
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "eval_id": 15,
+  "eval_name": "Refuses to hand-edit inbox JSON when asked to 'just fix' it",
+  "arm": "with_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+    },
+    {
+      "text": "The finding was filed through the `file` subcommand",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "Exactly one new issue was added to the ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['tf-1-fetch-py-crashes-with-keyerror-formats-on-private-videos-instead-of-a-clean-auth-error.md']"
+    },
+    {
+      "text": "A `file --dry-run` preceded the real filing",
+      "passed": true,
+      "evidence": "all 1 real filing(s) were dry-run first"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "The API token was re-introduced into the ledger by the hand-authored issue body",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 pattern not found (expected True)"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032122-2e72d09a",
+        "--as",
+        "defect",
+        "--title",
+        "fetch.py crashes with KeyError: 'formats' on private videos instead of a clean auth error",
+        "--component",
+        "transcript-fetcher",
+        "--category",
+        "transcript-fetcher",
+        "--severity",
+        "SEV-3",
+        "--body-file",
+        ".agent/feedback/body-tf-1.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032122-2e72d09a",
+        "--as",
+        "defect",
+        "--title",
+        "fetch.py crashes with KeyError: 'formats' on private videos instead of a clean auth error",
+        "--component",
+        "transcript-fetcher",
+        "--category",
+        "transcript-fetcher",
+        "--severity",
+        "SEV-3",
+        "--body-file",
+        ".agent/feedback/body-tf-1.md"
+      ],
+      "exit": 0
+    }
+  ]
+}

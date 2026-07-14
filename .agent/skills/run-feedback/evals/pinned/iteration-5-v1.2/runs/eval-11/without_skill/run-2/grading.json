@@ -1,0 +1,211 @@
+{
+  "eval_id": 11,
+  "eval_name": "Transient environment failure is dismissed as noise, not filed",
+  "arm": "without_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "The finding was dismissed as noise with a reason",
+      "passed": true,
+      "evidence": "dismissed, reason=\"Transient network/DNS flake: 'curl: (6) could not resolve host example.com'. The immediate retry succeeded and the develop run on task-081 finished green. Environmental, not a defect in any repo component \u2014 no reproducible failure and nothing actionable to fix in-repo.\""
+    },
+    {
+      "text": "No new issue was added to the known-issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+    },
+    {
+      "text": "No work-item was appended to the backlog",
+      "passed": true,
+      "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (23 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A transient DNS blip was filed as a durable defect, polluting the ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 2 (delta 0); new: []"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "task-081-develop-retro"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "Transient network/DNS flake: 'curl: (6) could not resolve host example.com'. The immediate retry succeeded and the develop run on task-081 finished green. Environmental, not a defect in any repo component \u2014 no reproducible failure and nothing actionable to fix in-repo.",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "Transient network/DNS flake: 'curl: (6) could not resolve host example.com'. The immediate retry succeeded and the develop run on task-081 finished green. Environmental, not a defect in any repo component \u2014 no reproducible failure and nothing actionable to fix in-repo.",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "task-081-develop-retro"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

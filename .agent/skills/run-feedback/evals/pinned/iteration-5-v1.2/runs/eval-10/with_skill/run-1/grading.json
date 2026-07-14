@@ -1,0 +1,977 @@
+{
+  "eval_id": 10,
+  "eval_name": "Bootstrap an unconfigured repo instead of giving up or hand-writing the config",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran the `init` subcommand to bootstrap the config",
+      "passed": true,
+      "evidence": "27 matching `init` call(s)"
+    },
+    {
+      "text": "The agent re-ran `doctor` after bootstrapping",
+      "passed": true,
+      "evidence": "init at #1, doctor after it: #4"
+    },
+    {
+      "text": "The repo now has a real config file rather than built-in defaults",
+      "passed": true,
+      "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/with_skill/run-1/sandbox/docs/feedback/config.json'"
+    },
+    {
+      "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+      "passed": true,
+      "evidence": "ready=True, remediation=[]"
+    },
+    {
+      "text": "The backlog anchor now exists, so work-items have somewhere to go",
+      "passed": true,
+      "evidence": "doctor.checks.backlog_anchor_present = True"
+    },
+    {
+      "text": "The defect reached the issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+    },
+    {
+      "text": "The ledger and feedback state were mutated only by the CLI",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (83 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A real filing was attempted before the repo was bootstrapped",
+      "passed": false,
+      "evidence": "OCCURRED \u2014 file at #23, init after it: #28"
+    },
+    {
+      "text": "The agent gave up and left the defect unrecorded",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.8889
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmplju030o9",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpdtwntxrj",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpdtwntxrj",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpw11qig1l",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpnm40nvnx",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpp8v3nwnx",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpp8v3nwnx",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpf2sqrq5z",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmprp7x6zmy",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmprp7x6zmy",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmplznax5kl",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpbee8eq2h",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpkr_sb2fr",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpkr_sb2fr",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "collect",
+        "--source",
+        "hook",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /a/b 1",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "collect",
+        "--source",
+        "transcript",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /c/d 2",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "file",
+        "--finding",
+        "fnd-20260714-033113-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM/body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "file",
+        "--finding",
+        "fnd-20260714-033113-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--auto-fixable",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM/body.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "claim",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "claim",
+        "--run-id",
+        "other-run"
+      ],
+      "exit": 6
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.FZK1tns4DM",
+        "release",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpae2f82ce",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpepn5gg4f",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpepn5gg4f",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp37hfsxxj",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp0jjzol5q",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp6ctdor0p",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp6ctdor0p",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "collect",
+        "--source",
+        "hook",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /a/b 1",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "collect",
+        "--source",
+        "transcript",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /c/d 2",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "file",
+        "--finding",
+        "fnd-20260714-033310-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX/body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "file",
+        "--finding",
+        "fnd-20260714-033310-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--auto-fixable",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX/body.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "claim",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "claim",
+        "--run-id",
+        "other-run"
+      ],
+      "exit": 6
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.4j1ZPOHImX",
+        "release",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmplwengnbm",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp2vwcrh4z",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp2vwcrh4z",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpcco61ofc",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpnjbzgt9t",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp94i8os4y",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp94i8os4y",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpyq6ec08p",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpem3why5y",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpem3why5y",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpm6m8slgx",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmps7ig11ix",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpsk9mgcgn",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpsk9mgcgn",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "collect",
+        "--source",
+        "hook",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /a/b 1",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "collect",
+        "--source",
+        "transcript",
+        "--kind",
+        "tool-error",
+        "--component",
+        "demo",
+        "--message",
+        "boom at /c/d 2",
+        "--command",
+        "python3 x.py",
+        "--exit-code",
+        "7",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "file",
+        "--finding",
+        "fnd-20260714-033321-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT/body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "file",
+        "--finding",
+        "fnd-20260714-033321-0c93b7a6",
+        "--as",
+        "defect",
+        "--title",
+        "demo boom",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--auto-fixable",
+        "--body-file",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT/body.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "claim",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "claim",
+        "--run-id",
+        "other-run"
+      ],
+      "exit": 6
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp.GMH0345PaT",
+        "release",
+        "--run-id",
+        "e2e-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--source",
+        "workflow",
+        "--kind",
+        "user-friction",
+        "--component",
+        "session-state",
+        "--message",
+        "session-state updater resolves .agent/sessions relative to cwd: run from a subdirectory it creates a stray <subdir>/.agent/sessions/latest.yaml instead of updating the repo-root one",
+        "--propose",
+        "defect",
+        "--severity",
+        "SEV-2",
+        "--category",
+        "session-state",
+        "--context",
+        "reported-by=operator",
+        "--context",
+        "observed=today-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033509-9fb60944",
+        "--as",
+        "defect",
+        "--title",
+        "Session-state updater resolves .agent/sessions relative to cwd",
+        "--category",
+        "session-state",
+        "--component",
+        "session-state",
+        "--severity",
+        "SEV-2",
+        "--body-file",
+        ".agent/feedback/drafts/ss-1-body.md",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033509-9fb60944",
+        "--as",
+        "defect",
+        "--title",
+        "Session-state updater resolves .agent/sessions relative to cwd",
+        "--category",
+        "session-state",
+        "--component",
+        "session-state",
+        "--severity",
+        "SEV-2",
+        "--body-file",
+        ".agent/feedback/drafts/ss-1-body.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "eval_id": 17,
+  "eval_name": "Existing ROADMAP is used as the backlog \u2014 no second backlog file is created",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The finding was filed as a work-item into the backlog ledger",
+      "passed": true,
+      "evidence": "filed to ledger='backlog' (expected 'backlog')"
+    },
+    {
+      "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+      "passed": true,
+      "evidence": "docs/ROADMAP.md: pattern found (expected True)"
+    },
+    {
+      "text": "No second backlog file was created beside the live roadmap",
+      "passed": true,
+      "evidence": "docs/BACKLOG.md is absent"
+    },
+    {
+      "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+      "passed": true,
+      "evidence": "docs/feedback/config.json: pattern found (expected True)"
+    },
+    {
+      "text": "No new issue was added to the known-issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+    },
+    {
+      "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (6 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A polish request with no broken contract was misrouted into the issues ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 2 (delta 0); new: []"
+    },
+    {
+      "text": "The roadmap's existing ranked content was clobbered while seating the anchor",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 docs/ROADMAP.md: pattern found (expected False)"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-035925-f16ced11",
+        "--as",
+        "work-item",
+        "--title",
+        "issues: add a date filter (--since) to select recently-opened issues",
+        "--body-file",
+        ".agent/feedback/wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-035925-f16ced11",
+        "--as",
+        "work-item",
+        "--title",
+        "issues: add a date filter (--since) to select recently-opened issues",
+        "--body-file",
+        ".agent/feedback/wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    }
+  ]
+}

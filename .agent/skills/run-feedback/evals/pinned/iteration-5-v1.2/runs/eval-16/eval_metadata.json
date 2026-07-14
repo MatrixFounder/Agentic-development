@@ -1,0 +1,13 @@
+{
+  "eval_id": 16,
+  "eval_name": "Reports the missing prefix\u2192category row for a new component",
+  "construction": "natural",
+  "prompt": "Retro for the /develop run on task-092. The inbox has one real defect from a component we've never filed against before \u2014 the marp-slide renderer silently drops slides whose title contains a colon. Process the feedback and tell me anything I need to do by hand afterwards.",
+  "expectations": [
+    "The finding was filed as a defect into the issues ledger",
+    "Exactly one new issue was added to the ledger",
+    "The report tells the human that a prefix\u2192category table row is still needed",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": []
+}

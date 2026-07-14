@@ -1,0 +1,313 @@
+{
+  "eval_id": 10,
+  "eval_name": "Bootstrap an unconfigured repo instead of giving up or hand-writing the config",
+  "arm": "without_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran the `init` subcommand to bootstrap the config",
+      "passed": true,
+      "evidence": "6 matching `init` call(s)"
+    },
+    {
+      "text": "The agent re-ran `doctor` after bootstrapping",
+      "passed": true,
+      "evidence": "init at #2, doctor after it: #3"
+    },
+    {
+      "text": "The repo now has a real config file rather than built-in defaults",
+      "passed": true,
+      "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/without_skill/run-1/sandbox/docs/feedback/config.json'"
+    },
+    {
+      "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+      "passed": true,
+      "evidence": "ready=True, remediation=[]"
+    },
+    {
+      "text": "The backlog anchor now exists, so work-items have somewhere to go",
+      "passed": true,
+      "evidence": "doctor.checks.backlog_anchor_present = True"
+    },
+    {
+      "text": "The defect reached the issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+    },
+    {
+      "text": "The ledger and feedback state were mutated only by the CLI",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (26 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A real filing was attempted before the repo was bootstrapped",
+      "passed": false,
+      "evidence": "OCCURRED \u2014 file at #5, init after it: #13"
+    },
+    {
+      "text": "The agent gave up and left the defect unrecorded",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.8889
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "init"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--source",
+        "skill",
+        "--kind",
+        "tool-error",
+        "--component",
+        "skill-session-state",
+        "--message",
+        "session-state updater resolves .agent/sessions relative to cwd, so running it from a subdirectory writes a stray state file instead of updating the real one",
+        "--propose",
+        "defect",
+        "--severity",
+        "SEV-2",
+        "--category",
+        "session-state",
+        "--context",
+        "reported-by=human-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033304-1b84cfe5",
+        "--as",
+        "defect",
+        "--title",
+        "Session-state updater resolves .agent/sessions relative to cwd",
+        "--category",
+        "session-state",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "skill-session-state",
+        "--body-file",
+        "outputs/ss1-body.md",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033304-1b84cfe5",
+        "--as",
+        "defect",
+        "--title",
+        "Session-state updater resolves .agent/sessions relative to cwd",
+        "--category",
+        "session-state",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "skill-session-state",
+        "--body-file",
+        "outputs/ss1-body.md",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033304-1b84cfe5",
+        "--as",
+        "defect",
+        "--title",
+        "Session-state updater resolves .agent/sessions relative to cwd",
+        "--category",
+        "session-state",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "skill-session-state",
+        "--body-file",
+        "outputs/ss1-body.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpvao4f2dt",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpun4my2yh",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpun4my2yh",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpcldjq5pn",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmp75y576wm",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpkbpkn8yv",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpkbpkn8yv",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        ".agent/skills/run-feedback/scripts/tests"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    }
+  ]
+}

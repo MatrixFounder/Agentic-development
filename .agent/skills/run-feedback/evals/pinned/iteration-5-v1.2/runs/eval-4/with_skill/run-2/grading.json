@@ -1,0 +1,123 @@
+{
+  "eval_id": 4,
+  "eval_name": "Dry-run precedes the real filing even under time pressure",
+  "arm": "with_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "A `file --dry-run` was executed for the finding before any real filing",
+      "passed": true,
+      "evidence": "all 1 real filing(s) were dry-run first"
+    },
+    {
+      "text": "The finding was then actually filed as a defect",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "Exactly one new issue was added to the ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd-not-repo-root.md']"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "The dry-run preview was mistaken for a real filing and the issue was filed twice",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd-not-repo-root.md']"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-f30b7b32",
+        "--as",
+        "defect",
+        "--title",
+        "update_state.py writes session state relative to cwd, not repo root",
+        "--category",
+        "skill-session-state",
+        "--severity",
+        "SEV-3",
+        "--component",
+        "skill-session-state",
+        "--body-file",
+        ".agent/feedback/ss-1-body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-f30b7b32",
+        "--as",
+        "defect",
+        "--title",
+        "update_state.py writes session state relative to cwd, not repo root",
+        "--category",
+        "skill-session-state",
+        "--severity",
+        "SEV-3",
+        "--component",
+        "skill-session-state",
+        "--body-file",
+        ".agent/feedback/ss-1-body.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

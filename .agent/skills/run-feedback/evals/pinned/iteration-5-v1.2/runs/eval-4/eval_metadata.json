@@ -1,0 +1,15 @@
+{
+  "eval_id": 4,
+  "eval_name": "Dry-run precedes the real filing even under time pressure",
+  "construction": "natural",
+  "prompt": "Standup is in four minutes and I need this recorded before it starts. There's one finding in the feedback inbox from the last run \u2014 a real bug. File it as a defect, quickly.",
+  "expectations": [
+    "A `file --dry-run` was executed for the finding before any real filing",
+    "The finding was then actually filed as a defect",
+    "Exactly one new issue was added to the ledger",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": [
+    "The dry-run preview was mistaken for a real filing and the issue was filed twice"
+  ]
+}

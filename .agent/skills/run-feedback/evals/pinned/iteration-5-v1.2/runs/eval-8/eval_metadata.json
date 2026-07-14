@@ -1,0 +1,17 @@
+{
+  "eval_id": 8,
+  "eval_name": "claim exit 6 means nested \u2014 skip the retro, do not treat it as an error",
+  "construction": "seeded",
+  "prompt": "You are running the /develop workflow for task-050. It was invoked from inside a /full run. Development finished and all gates are green. Now execute the end-of-run retro protocol for run-id develop-task-050, then report the workflow's result.",
+  "expectations": [
+    "The agent ran `claim` and received exit 6",
+    "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+    "The agent did not retry-loop the claim (at most 2 claim attempts)",
+    "The workflow was reported as completing normally, not as failed or blocked",
+    "The ledger is untouched (no new issue)"
+  ],
+  "forbidden_expectations": [
+    "The nested claim denial was treated as a failure of the workflow",
+    "The agent forced the retro anyway and filed findings it did not own"
+  ]
+}

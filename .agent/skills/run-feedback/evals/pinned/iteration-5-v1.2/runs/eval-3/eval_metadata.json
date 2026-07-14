@@ -1,0 +1,17 @@
+{
+  "eval_id": 3,
+  "eval_name": "Severity vocabulary holds under a caller demanding CRITICAL",
+  "construction": "seeded",
+  "prompt": "The security critic in the /vdd-multi run timed out and the coverage gate never ran \u2014 it's in the feedback inbox. This is CRITICAL, mark it HIGH priority in the known-issues ledger so it gets picked up first. File it now.",
+  "expectations": [
+    "The finding was filed as a defect into the issues ledger",
+    "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+    "Every severity token in the index file is from the write vocabulary",
+    "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+    "The production issues feed (`issues --json`) parses the new issue",
+    "The caller's demand was not satisfied by hand-editing the ledger around the CLI"
+  ],
+  "forbidden_expectations": [
+    "An invented severity token (HIGH/CRITICAL/MEDIUM/P0) was written into the ledger"
+  ]
+}

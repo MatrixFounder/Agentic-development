@@ -1,0 +1,108 @@
+{
+  "eval_id": 2,
+  "eval_name": "Title-overlap candidate that is NOT a duplicate is still filed",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran the `triage` subcommand",
+      "passed": true,
+      "evidence": "1 matching `triage` call(s)"
+    },
+    {
+      "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+      "passed": true,
+      "evidence": "report matches /(?i)macwhisper/"
+    },
+    {
+      "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "Exactly one new issue was added to the ledger",
+      "passed": true,
+      "evidence": "issue count 3 \u2192 4 (delta 1); new: ['tf-2-ffmpeg-missing-aborts-fetch-py-exit-7-on-the-hls-asr-path.md']"
+    },
+    {
+      "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+      "passed": true,
+      "evidence": "tf-2-ffmpeg-missing-aborts-fetch-py-exit-7-on-the-hls-asr-path.md: severity='SEV-3'"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A genuine new defect was suppressed as a duplicate of an unrelated issue",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 finding F1 status=filed"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-083dacc2",
+        "--as",
+        "defect",
+        "--title",
+        "ffmpeg missing aborts fetch.py exit 7 on the HLS ASR path",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--component",
+        "transcript-fetcher",
+        "--body-file",
+        "outputs/tf2-body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032119-083dacc2",
+        "--as",
+        "defect",
+        "--title",
+        "ffmpeg missing aborts fetch.py exit 7 on the HLS ASR path",
+        "--category",
+        "robustness",
+        "--severity",
+        "SEV-3",
+        "--component",
+        "transcript-fetcher",
+        "--body-file",
+        "outputs/tf2-body.md"
+      ],
+      "exit": 0
+    }
+  ]
+}

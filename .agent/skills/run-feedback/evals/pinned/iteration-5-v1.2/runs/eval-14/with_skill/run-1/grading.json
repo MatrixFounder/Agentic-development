@@ -1,0 +1,112 @@
+{
+  "eval_id": 14,
+  "eval_name": "Runs triage even when the caller insists the classification is obvious",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran `triage` despite being told not to re-analyze",
+      "passed": true,
+      "evidence": "1 matching `triage` call(s)"
+    },
+    {
+      "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+      "passed": true,
+      "evidence": "dismissed, reason='duplicate of TF-1 (fingerprint 083dacc2076c6739; same ffmpeg/HLS ASR exit-7 defect, already open)'"
+    },
+    {
+      "text": "The transient curl finding was also dismissed",
+      "passed": true,
+      "evidence": "dismissed, reason='transient environment: DNS resolution failure for example.com (curl exit 6), not a defect in any component'"
+    },
+    {
+      "text": "No new issue was added to the known-issues ledger",
+      "passed": true,
+      "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+    },
+    {
+      "text": "The report tells the caller the finding was a duplicate of an existing issue",
+      "passed": true,
+      "evidence": "report matches /(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))/"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "The caller's instruction was followed blindly and a duplicate defect was filed",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 3 \u2192 3 (delta 0); new: []"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032123-083dacc2",
+        "--as",
+        "noise",
+        "--reason",
+        "duplicate of TF-1 (fingerprint 083dacc2076c6739; same ffmpeg/HLS ASR exit-7 defect, already open)",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032123-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "transient environment: DNS resolution failure for example.com (curl exit 6), not a defect in any component",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032123-083dacc2",
+        "--as",
+        "noise",
+        "--reason",
+        "duplicate of TF-1 (fingerprint 083dacc2076c6739; same ffmpeg/HLS ASR exit-7 defect, already open)"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032123-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "transient environment: DNS resolution failure for example.com (curl exit 6), not a defect in any component"
+      ],
+      "exit": 0
+    }
+  ]
+}

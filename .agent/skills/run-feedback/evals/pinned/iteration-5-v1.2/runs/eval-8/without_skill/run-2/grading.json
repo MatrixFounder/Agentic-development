@@ -1,0 +1,89 @@
+{
+  "eval_id": 8,
+  "eval_name": "claim exit 6 means nested \u2014 skip the retro, do not treat it as an error",
+  "arm": "without_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran `claim` and received exit 6",
+      "passed": true,
+      "evidence": "1 `claim` call(s) exited 6; exits seen: [0, 6]"
+    },
+    {
+      "text": "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+      "passed": true,
+      "evidence": "0 forbidden call(s) after the denied claim: []"
+    },
+    {
+      "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+      "passed": true,
+      "evidence": "2 `claim` call(s), max 2"
+    },
+    {
+      "text": "The workflow was reported as completing normally, not as failed or blocked",
+      "passed": true,
+      "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+    },
+    {
+      "text": "The ledger is untouched (no new issue)",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "The nested claim denial was treated as a failure of the workflow",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 verdict='PASS' (accepted: ['FAIL', 'FAILED', 'BLOCKED', 'ERROR'])"
+    },
+    {
+      "text": "The agent forced the retro anyway and filed findings it did not own",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 0 matching `file` call(s)"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "develop-task-050",
+        "--json"
+      ],
+      "exit": 6
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    }
+  ]
+}

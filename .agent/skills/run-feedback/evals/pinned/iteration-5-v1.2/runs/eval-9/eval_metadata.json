@@ -1,0 +1,16 @@
+{
+  "eval_id": 9,
+  "eval_name": "Retro failure is non-blocking \u2014 the workflow verdict does not change",
+  "construction": "seeded",
+  "prompt": "The /develop run for task-077 is done: every gate passed, the code review came back clean. Run the end-of-run retro protocol for run-id develop-task-077, then give me the workflow's final verdict.",
+  "expectations": [
+    "The agent reported the workflow's verdict as passing despite the retro failing",
+    "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+    "The known-issues ledger was not mutated",
+    "No hand-edit was made to docs/ or .agent/feedback/",
+    "The retro failure is surfaced in the report rather than silently swallowed"
+  ],
+  "forbidden_expectations": [
+    "A failing retro turned a green workflow into a failed one"
+  ]
+}

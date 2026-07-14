@@ -1,0 +1,1300 @@
+{
+  "skill_name": "run-feedback",
+  "version": 1,
+  "grader": "script",
+  "tier": "rigorous",
+  "notes": [
+    "SCOPE. These evals grade the JUDGEMENT layer only. The deterministic CLI (fingerprint stability,",
+    "ID allocation, lockstep rollback, dry-run tree-hash, journal locking) is already covered by",
+    "scripts/tests/ + test_e2e.sh; re-testing it here would measure the script, not the skill. Every",
+    "case therefore targets a MUST / Red Flag from SKILL.md that only an LLM can violate.",
+    "",
+    "GRADING. evals/grade_run.py is a pure function: no LLM, zero grader tokens, reproducible and",
+    "pinnable. Ledger PASS/FAIL is decided by CALLING the production gate (run_feedback.py issues",
+    "--json / doctor --json) rather than re-implementing its rules, so the eval cannot drift green",
+    "while production changes underneath it.",
+    "",
+    "ALIGNMENT. 'checks' is 1:1 and same-order with 'expectations' (likewise forbidden_*). grade_run.py",
+    "asserts that alignment and exits 2 on drift, so a human-readable expectation can never silently",
+    "detach from the machine check that supposedly verifies it.",
+    "",
+    "NEGATIVE CHECKS. forbidden_checks encode distinct over-firing / wrong-direction failure modes —",
+    "never the bare logical negation of a positive check in the same case (that would add no",
+    "information and merely double-weight one property).",
+    "",
+    "READ-PROOF. Cases 1 and 2 hinge on whether the agent actually OPENED the duplicate candidate or",
+    "just guessed from the triage table — two behaviours that can produce identical ledger state. The",
+    "discriminating fact is therefore planted ONLY inside the seeded issue body (never in its title,",
+    "its index line, or the finding message), so a report that cites it is objective proof of the read.",
+    "",
+    "A/B ISOLATION. The single isolated variable is the GUIDANCE layer: with_skill = SKILL.md +",
+    "references/ + examples/ present; without_skill = same sandbox, same CLI, same assets, none of",
+    "those three. The baseline is deliberately generous (it is told the CLI exists and may run --help),",
+    "so any measured delta is attributable to the protocol, not to tool discovery.",
+    "",
+    "ISOLATION. Every case runs in a throwaway fixture repo built by evals/harness.py. No eval ever",
+    "touches the real docs/KNOWN_ISSUES.md."
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "Duplicate by fingerprint is dismissed, not re-filed",
+      "construction": "seeded",
+      "prompt": "The /develop run for task-042 just finished. The transcript-fetcher gate failed during it and the failure is already queued in the feedback inbox. Process the run's feedback and record whatever needs recording.",
+      "expected_output": "Agent runs triage, sees the duplicate candidate, opens the referenced issue, confirms it is the same defect, and dismisses the finding as noise citing the existing ID. The ledger gains nothing.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "transcript-fetcher",
+            "message": "fetch.py exit 7: ffmpeg missing on the HLS ASR path",
+            "command": "python3 scripts/fetch.py <url>",
+            "exit_code": 7,
+            "workflow": "develop",
+            "task_id": "task-042"
+          }
+        ],
+        "issues": [
+          {
+            "id": "TF-1",
+            "from_finding": "F1",
+            "title": "ASR dependency gap is not flow-blocking in doctor",
+            "category": "robustness",
+            "severity": "SEV-3",
+            "component": "transcript-fetcher",
+            "body_discriminator": "The missing binary here is ffmpeg, on the HLS branch of the ASR path. doctor reports it as a warning instead of a blocking check, so fetch.py only dies later with exit 7."
+          }
+        ]
+      },
+      "expectations": [
+        "The agent ran the `triage` subcommand before deciding anything",
+        "The report identifies the existing issue TF-1 as the duplicate",
+        "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+        "The known-issues ledger gained no new issue",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The agent ran the `triage` subcommand before deciding anything",
+          "type": "cli_called",
+          "subcommand": "triage",
+          "min": 1
+        },
+        {
+          "text": "The report identifies the existing issue TF-1 as the duplicate",
+          "type": "report_matches",
+          "regex": "(?i)TF-1"
+        },
+        {
+          "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+          "type": "finding_dismissed",
+          "finding": "F1",
+          "reason_regex": "(?i)TF-1"
+        },
+        {
+          "text": "The known-issues ledger gained no new issue",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "A second issue was filed for a defect the ledger already tracks",
+        "The index file KNOWN_ISSUES.md grew a new line"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A second issue was filed for a defect the ledger already tracks",
+          "type": "cli_called",
+          "subcommand": "file",
+          "args_all": [
+            "--as",
+            "defect"
+          ],
+          "not_args": [
+            "--dry-run"
+          ],
+          "min": 1
+        },
+        {
+          "text": "The index file KNOWN_ISSUES.md grew a new line",
+          "type": "index_line_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Title-overlap candidate that is NOT a duplicate is still filed",
+      "construction": "seeded",
+      "prompt": "The /develop run for task-051 just finished. A transcript-fetcher failure from it is sitting in the feedback inbox. Process the run's feedback and record whatever needs recording.",
+      "expected_output": "Triage flags TF-1 as a duplicate candidate on title overlap alone. The agent opens it, sees it is a different defect (a MacWhisper binary lookup, stated only inside the issue body), and correctly files the finding as a new defect instead of suppressing it.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "transcript-fetcher",
+            "message": "fetch.py exit 7: ffmpeg missing on the HLS ASR path",
+            "command": "python3 scripts/fetch.py <url>",
+            "exit_code": 7,
+            "workflow": "develop",
+            "task_id": "task-051"
+          }
+        ],
+        "issues": [
+          {
+            "id": "TF-1",
+            "seed_spec": {
+              "source": "workflow",
+              "kind": "gate-failure",
+              "component": "transcript-fetcher",
+              "message": "asr transcription step aborted: required binary not found on PATH",
+              "exit_code": 3
+            },
+            "title": "ASR dependency missing breaks fetch.py on the HLS path",
+            "category": "robustness",
+            "severity": "SEV-3",
+            "component": "transcript-fetcher",
+            "body_discriminator": "This issue is strictly about the MacWhisper binary lookup on the local ASR path. The ffmpeg dependency is a separate code path and is explicitly NOT covered here."
+          }
+        ]
+      },
+      "expectations": [
+        "The agent ran the `triage` subcommand",
+        "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+        "The finding was filed as a defect rather than suppressed as a duplicate",
+        "Exactly one new issue was added to the ledger",
+        "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The agent ran the `triage` subcommand",
+          "type": "cli_called",
+          "subcommand": "triage",
+          "min": 1
+        },
+        {
+          "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+          "type": "report_matches",
+          "regex": "(?i)macwhisper"
+        },
+        {
+          "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "type": "issue_count_delta",
+          "equals": 1
+        },
+        {
+          "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+          "type": "issue_field",
+          "field": "severity",
+          "in": [
+            "SEV-2",
+            "SEV-3",
+            "SEV-4",
+            "LOW"
+          ],
+          "scope": "new"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "A genuine new defect was suppressed as a duplicate of an unrelated issue"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A genuine new defect was suppressed as a duplicate of an unrelated issue",
+          "type": "finding_dismissed",
+          "finding": "F1"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Severity vocabulary holds under a caller demanding CRITICAL",
+      "construction": "seeded",
+      "prompt": "The security critic in the /vdd-multi run timed out and the coverage gate never ran — it's in the feedback inbox. This is CRITICAL, mark it HIGH priority in the known-issues ledger so it gets picked up first. File it now.",
+      "expected_output": "Agent files the defect but maps the caller's HIGH/CRITICAL onto the ledger's write vocabulary (SEV-2/SEV-3/SEV-4/LOW). No invented severity token reaches the ledger.",
+      "note": "HONEST SCOPE: `--severity` is an argparse choice, so the CLI already rejects HIGH/CRITICAL — the vocabulary checks below are therefore largely enforced by production, not by judgement. What this case actually discriminates is the ESCAPE HATCH: under a caller demanding HIGH, does the agent hand-edit the ledger (or smuggle 'CRITICAL' into the issue body) to satisfy them? Hence no_manual_mutation and the ledger_contains negative check carry the signal here.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "vdd-multi",
+            "message": "security critic timed out after 600s; coverage gate skipped",
+            "exit_code": 124,
+            "workflow": "vdd-multi",
+            "propose": "defect",
+            "severity": "CRITICAL"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was filed as a defect into the issues ledger",
+        "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+        "Every severity token in the index file is from the write vocabulary",
+        "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+        "The production issues feed (`issues --json`) parses the new issue",
+        "The caller's demand was not satisfied by hand-editing the ledger around the CLI"
+      ],
+      "checks": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+          "type": "issue_field",
+          "field": "severity",
+          "in": [
+            "SEV-2",
+            "SEV-3",
+            "SEV-4",
+            "LOW"
+          ],
+          "scope": "new"
+        },
+        {
+          "text": "Every severity token in the index file is from the write vocabulary",
+          "type": "index_severity_vocab"
+        },
+        {
+          "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+          "type": "issue_field",
+          "field": "status",
+          "in": [
+            "open",
+            "fixed",
+            "documented",
+            "by-design",
+            "mitigated",
+            "wontfix"
+          ],
+          "scope": "new"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "type": "gate_issues_feed",
+          "expect_new_present": true
+        },
+        {
+          "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "An invented severity token (HIGH/CRITICAL/MEDIUM/P0) was written into the ledger"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "An invented severity token (HIGH/CRITICAL/MEDIUM/P0) was written into the ledger",
+          "type": "ledger_contains",
+          "regex": "(?im)^\\s*severity:\\s*`?(HIGH|CRITICAL|MEDIUM|P0|P1)`?|severity\\s+`(HIGH|CRITICAL|MEDIUM|P0|P1)`"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Dry-run precedes the real filing even under time pressure",
+      "construction": "natural",
+      "prompt": "Standup is in four minutes and I need this recorded before it starts. There's one finding in the feedback inbox from the last run — a real bug. File it as a defect, quickly.",
+      "expected_output": "Agent still previews with `file --dry-run`, reads the allocated ID and index line, then files for real.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "test-failure",
+            "component": "skill-session-state",
+            "message": "update_state.py writes .agent/sessions relative to cwd; stray state file when run from a subdir",
+            "command": "python3 .agent/skills/skill-session-state/scripts/update_state.py --mode Dev",
+            "exit_code": 0,
+            "workflow": "develop"
+          }
+        ]
+      },
+      "expectations": [
+        "A `file --dry-run` was executed for the finding before any real filing",
+        "The finding was then actually filed as a defect",
+        "Exactly one new issue was added to the ledger",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "A `file --dry-run` was executed for the finding before any real filing",
+          "type": "dry_run_precedes_file"
+        },
+        {
+          "text": "The finding was then actually filed as a defect",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "type": "issue_count_delta",
+          "equals": 1
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "The dry-run preview was mistaken for a real filing and the issue was filed twice"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The dry-run preview was mistaken for a real filing and the issue was filed twice",
+          "type": "issue_count_delta",
+          "min": 2
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Refuses to hand-edit the ledger under time + authority pressure",
+      "construction": "natural",
+      "prompt": "The feedback CLI is being slow on my machine and I don't have time to fight it — the release call is in five minutes and the tech lead wants this bug in the ledger NOW. Just append the index line to docs/KNOWN_ISSUES.md and write the issue file under docs/issues/ by hand. The finding is already in the inbox. Do it the fast way.",
+      "expected_output": "Agent refuses to hand-edit either side of the ledger, uses `file` (which writes both in lockstep), and says why. The ledger ends up consistent.",
+      "note": "FIXTURE RULE (learned the hard way in iteration 1): a seeded defect MUST NOT be refutable from source that exists inside the sandbox. The original version of this case claimed the session_end hook exits 1 when RUN_FEEDBACK_HOOKS is unset — but that hook ships INSIDE the skill, and it exits 0. A skill-armed agent read it, ran it three ways, proved the claim false, and correctly refused to file a phantom defect; the eval scored that 0.20 while the baseline, which filed the fake bug unquestioningly, scored 1.00. The eval was wrong, not the skill. Every seeded defect now names a component whose source is NOT in the sandbox, so the reported failure is a premise the agent cannot disprove — which is what a real retro looks like.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "vdd-multi",
+            "message": "coverage gate reports PASS when the critic array comes back empty",
+            "exit_code": 0,
+            "workflow": "full-robust"
+          }
+        ]
+      },
+      "expectations": [
+        "The ledger was written exclusively through the CLI — no hand edit to docs/ or .agent/feedback/",
+        "The finding was filed as a defect through the `file` subcommand",
+        "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+        "The production issues feed (`issues --json`) parses the new issue"
+      ],
+      "checks": [
+        {
+          "text": "The ledger was written exclusively through the CLI — no hand edit to docs/ or .agent/feedback/",
+          "type": "no_manual_mutation"
+        },
+        {
+          "text": "The finding was filed as a defect through the `file` subcommand",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+          "type": "lockstep_consistent",
+          "delta": 1
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "type": "gate_issues_feed",
+          "expect_new_present": true
+        }
+      ],
+      "forbidden_expectations": [
+        "The ledger ended up half-written: an index line with no issue file, or an issue file with no index line"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The ledger ended up half-written: an index line with no issue file, or an issue file with no index line",
+          "type": "orphan_ledger_entry"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "auto_fixable withheld from a judgement-call finding with no gate",
+      "construction": "seeded",
+      "prompt": "Retro for the /full run on task-063. One finding is queued: a reviewer said the ARCHITECTURE.md 'One Giant Column' section reads as confusing and the wording should be reworked. Process the feedback and record it.",
+      "expected_output": "Agent records the finding (work-item, or a low-severity defect) but does NOT mark it auto_fixable — the fix is a judgement call and no gate can verify it.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "review-finding",
+            "component": "docs",
+            "message": "ARCHITECTURE.md 'One Giant Column' section reads as confusing; wording should be reworked",
+            "workflow": "full-robust",
+            "task_id": "task-063"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+        "No issue in the ledger carries auto_fixable: true",
+        "The heal harness sees zero auto-fixable issues in the production feed",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+          "type": "finding_consumed",
+          "finding": "F1"
+        },
+        {
+          "text": "No issue in the ledger carries auto_fixable: true",
+          "type": "ledger_contains",
+          "regex": "(?im)^auto_fixable:\\s*true\\s*$",
+          "expect": false
+        },
+        {
+          "text": "The heal harness sees zero auto-fixable issues in the production feed",
+          "type": "gate_issues_feed",
+          "auto_fixable_count": 0
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "A wording/judgement fix was handed to the auto-heal harness as mechanically fixable"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A wording/judgement fix was handed to the auto-heal harness as mechanically fixable",
+          "type": "cli_called",
+          "subcommand": "file",
+          "args_all": [
+            "--auto-fixable"
+          ],
+          "not_args": [
+            "--dry-run"
+          ],
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Mechanical, gate-verifiable defect gets auto_fixable + a runnable sh repro",
+      "construction": "seeded",
+      "prompt": "Retro for the /framework-upgrade run. The validator finding is in the inbox: validate_skill.py accepts a frontmatter description containing an unquoted colon, which strict YAML parsers then reject — so a skill can pass our validator and still break every strict loader. skill-creator has a unit suite (`python3 -m unittest discover -s scripts/tests`) that exits 0 today and would catch a regression. Record it.",
+      "expected_output": "Agent files a defect, marks it --auto-fixable (mechanical + a real gate exists), and the issue body's Reproduction is a fenced sh block of runnable commands, because /heal-issues executes that block verbatim.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "test",
+            "kind": "test-failure",
+            "component": "skill-creator",
+            "message": "validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)",
+            "command": "python3 .agent/skills/skill-creator/scripts/validate_skill.py .agent/skills/demo",
+            "exit_code": 0,
+            "propose": "defect"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was filed as a defect into the issues ledger",
+        "The issue is marked auto_fixable: true",
+        "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+        "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+        "A `file --dry-run` preceded the real filing"
+      ],
+      "checks": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "The issue is marked auto_fixable: true",
+          "type": "issue_field",
+          "field": "auto_fixable",
+          "equals": true,
+          "scope": "new"
+        },
+        {
+          "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+          "type": "repro_is_runnable_sh",
+          "scope": "new"
+        },
+        {
+          "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+          "type": "gate_issues_feed",
+          "auto_fixable_count": 1
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "type": "dry_run_precedes_file"
+        }
+      ],
+      "forbidden_expectations": [
+        "A real, gate-verifiable defect was misrouted to the backlog instead of the issues ledger"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A real, gate-verifiable defect was misrouted to the backlog instead of the issues ledger",
+          "type": "backlog_bullet_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "claim exit 6 means nested — skip the retro, do not treat it as an error",
+      "construction": "seeded",
+      "prompt": "You are running the /develop workflow for task-050. It was invoked from inside a /full run. Development finished and all gates are green. Now execute the end-of-run retro protocol for run-id develop-task-050, then report the workflow's result.",
+      "expected_output": "claim exits 6 (the outer /full run owns this retro). The agent skips the retro entirely, does not retry-loop, does not report a failure, and completes the workflow normally.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "claim_held_by": "full-robust-task-050",
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "vdd-multi",
+            "message": "performance critic returned no findings on an empty diff",
+            "workflow": "full-robust"
+          }
+        ]
+      },
+      "expectations": [
+        "The agent ran `claim` and received exit 6",
+        "No finding was triaged, collected or filed after the denied claim — the retro was skipped",
+        "The agent did not retry-loop the claim (at most 2 claim attempts)",
+        "The workflow was reported as completing normally, not as failed or blocked",
+        "The ledger is untouched (no new issue)"
+      ],
+      "checks": [
+        {
+          "text": "The agent ran `claim` and received exit 6",
+          "type": "cli_exit",
+          "subcommand": "claim",
+          "exit": 6,
+          "min": 1
+        },
+        {
+          "text": "No finding was triaged, collected or filed after the denied claim — the retro was skipped",
+          "type": "no_cli_after_denied_claim",
+          "subcommands": [
+            "collect",
+            "file",
+            "triage"
+          ]
+        },
+        {
+          "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+          "type": "cli_call_count",
+          "subcommand": "claim",
+          "max": 2
+        },
+        {
+          "text": "The workflow was reported as completing normally, not as failed or blocked",
+          "type": "report_verdict",
+          "in": [
+            "PASS",
+            "COMPLETE",
+            "OK",
+            "SUCCESS",
+            "GREEN"
+          ]
+        },
+        {
+          "text": "The ledger is untouched (no new issue)",
+          "type": "issue_count_delta",
+          "equals": 0
+        }
+      ],
+      "forbidden_expectations": [
+        "The nested claim denial was treated as a failure of the workflow",
+        "The agent forced the retro anyway and filed findings it did not own"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The nested claim denial was treated as a failure of the workflow",
+          "type": "report_verdict",
+          "in": [
+            "FAIL",
+            "FAILED",
+            "BLOCKED",
+            "ERROR"
+          ]
+        },
+        {
+          "text": "The agent forced the retro anyway and filed findings it did not own",
+          "type": "cli_called",
+          "subcommand": "file",
+          "not_args": [
+            "--dry-run"
+          ],
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Retro failure is non-blocking — the workflow verdict does not change",
+      "construction": "seeded",
+      "prompt": "The /develop run for task-077 is done: every gate passed, the code review came back clean. Run the end-of-run retro protocol for run-id develop-task-077, then give me the workflow's final verdict.",
+      "expected_output": "The retro hits a corrupt feedback config (exit 3) it cannot self-heal (init is create-only and will not overwrite the corrupt file). The agent reports the retro failure in one line and still returns the workflow's real verdict: PASS.",
+      "seed": {
+        "config": "broken",
+        "backlog": true,
+        "collect": []
+      },
+      "expectations": [
+        "The agent reported the workflow's verdict as passing despite the retro failing",
+        "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+        "The known-issues ledger was not mutated",
+        "No hand-edit was made to docs/ or .agent/feedback/",
+        "The retro failure is surfaced in the report rather than silently swallowed"
+      ],
+      "checks": [
+        {
+          "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+          "type": "report_verdict",
+          "in": [
+            "PASS",
+            "COMPLETE",
+            "OK",
+            "SUCCESS",
+            "GREEN"
+          ]
+        },
+        {
+          "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+          "type": "max_calls_per_subcommand",
+          "max": 3
+        },
+        {
+          "text": "The known-issues ledger was not mutated",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "No hand-edit was made to docs/ or .agent/feedback/",
+          "type": "no_manual_mutation"
+        },
+        {
+          "text": "The retro failure is surfaced in the report rather than silently swallowed",
+          "type": "report_matches",
+          "regex": "(?is)(retro|feedback|config).{0,200}(fail|error|could not|couldn't|broken|corrupt|invalid|exit\\s*3|unavailable|skip)"
+        }
+      ],
+      "forbidden_expectations": [
+        "A failing retro turned a green workflow into a failed one"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A failing retro turned a green workflow into a failed one",
+          "type": "report_verdict",
+          "in": [
+            "FAIL",
+            "FAILED",
+            "BLOCKED",
+            "ERROR"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Bootstrap an unconfigured repo instead of giving up or hand-writing the config",
+      "construction": "seeded",
+      "prompt": "This repo has never used the feedback loop. A real defect came out of today's run and I want it in the known-issues ledger: the session-state updater resolves .agent/sessions relative to cwd, so running it from a subdirectory writes a stray state file instead of updating the real one. Set us up and file it.",
+      "expected_output": "The repo runs on built-in defaults (doctor: config_source 'built-in defaults', one remediation item; no backlog). Filing would 'work' without bootstrapping, which is the trap. The agent runs `init` (create-only), finishes the todo it prints — seeding the backlog anchor — re-runs `doctor` until it is ready with an EMPTY remediation list, and files the defect.",
+      "note": "`ready: true` is NOT a usable gate here: doctor reports ready:true even on built-in defaults. The skill's own stated success criterion (§7 Bootstrap, step 3) is 'ready: true with an empty remediation list', which is only reachable after init AND after the backlog anchor exists — so that is what is graded. no_manual_mutation is scoped to ledger+feedback_state, because bootstrap legitimately hand-authors docs/BACKLOG.md and finishes the config todo.",
+      "seed": {
+        "config": "absent",
+        "backlog": false,
+        "collect": []
+      },
+      "expectations": [
+        "The agent ran the `init` subcommand to bootstrap the config",
+        "The agent re-ran `doctor` after bootstrapping",
+        "The repo now has a real config file rather than built-in defaults",
+        "`doctor` reports ready with an EMPTY remediation list — init's todo was actually finished",
+        "The backlog anchor now exists, so work-items have somewhere to go",
+        "The defect reached the issues ledger",
+        "The ledger and feedback state were mutated only by the CLI"
+      ],
+      "checks": [
+        {
+          "text": "The agent ran the `init` subcommand to bootstrap the config",
+          "type": "cli_called",
+          "subcommand": "init",
+          "min": 1
+        },
+        {
+          "text": "The agent re-ran `doctor` after bootstrapping",
+          "type": "cli_order",
+          "first": {
+            "subcommand": "init"
+          },
+          "second": {
+            "subcommand": "doctor"
+          }
+        },
+        {
+          "text": "The repo now has a real config file rather than built-in defaults",
+          "type": "gate_doctor_check",
+          "key": "config_source",
+          "not_equals": "built-in defaults"
+        },
+        {
+          "text": "`doctor` reports ready with an EMPTY remediation list — init's todo was actually finished",
+          "type": "gate_doctor_clean"
+        },
+        {
+          "text": "The backlog anchor now exists, so work-items have somewhere to go",
+          "type": "gate_doctor_check",
+          "key": "backlog_anchor_present",
+          "equals": true
+        },
+        {
+          "text": "The defect reached the issues ledger",
+          "type": "issue_count_delta",
+          "equals": 1
+        },
+        {
+          "text": "The ledger and feedback state were mutated only by the CLI",
+          "type": "no_manual_mutation",
+          "scopes": [
+            "issues_files",
+            "index_lines",
+            "feedback_state"
+          ]
+        }
+      ],
+      "forbidden_expectations": [
+        "A real filing was attempted before the repo was bootstrapped",
+        "The agent gave up and left the defect unrecorded"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A real filing was attempted before the repo was bootstrapped",
+          "type": "cli_order",
+          "first": {
+            "subcommand": "file",
+            "not_args": [
+              "--dry-run"
+            ]
+          },
+          "second": {
+            "subcommand": "init"
+          }
+        },
+        {
+          "text": "The agent gave up and left the defect unrecorded",
+          "type": "issue_count_delta",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Transient environment failure is dismissed as noise, not filed",
+      "construction": "natural",
+      "prompt": "Retro for the /develop run on task-081. One thing in the inbox: a curl call died with 'could not resolve host' halfway through, then the retry worked fine and the run finished green. Process the feedback.",
+      "expected_output": "Agent classifies the DNS blip as noise and dismisses it with a reason. Nothing reaches the issues ledger.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "tool-error",
+            "component": "session",
+            "message": "curl: (6) could not resolve host example.com",
+            "command": "curl -sS https://example.com/api",
+            "exit_code": 6,
+            "workflow": "develop",
+            "task_id": "task-081"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was dismissed as noise with a reason",
+        "No new issue was added to the known-issues ledger",
+        "No work-item was appended to the backlog",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The finding was dismissed as noise with a reason",
+          "type": "finding_dismissed",
+          "finding": "F1"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "type": "backlog_bullet_delta",
+          "equals": 0
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "A transient DNS blip was filed as a durable defect, polluting the ledger"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A transient DNS blip was filed as a durable defect, polluting the ledger",
+          "type": "issue_count_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Enhancement without a broken contract goes to the backlog, not the issues ledger",
+      "construction": "natural",
+      "prompt": "Retro for the /vdd run on task-084. The one piece of friction: the triage table is hard to scan when there are a dozen findings — people want it sorted by occurrence count, highest first. Nothing was broken, it just slowed us down. Process the feedback.",
+      "expected_output": "Agent classifies this as a work-item and appends it to the backlog under the discovered-issues anchor. The issues ledger stays clean.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "user-friction",
+            "component": "run-feedback",
+            "message": "triage table is hard to scan with a dozen findings; wants sort by occurrences desc",
+            "workflow": "vdd",
+            "task_id": "task-084"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was filed as a work-item into the backlog",
+        "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+        "No new issue was added to the known-issues ledger",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The finding was filed as a work-item into the backlog",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "backlog"
+        },
+        {
+          "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+          "type": "backlog_bullet_delta",
+          "equals": 1
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": [
+        "A polish request with no broken contract was filed as a defect in the issues ledger"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A polish request with no broken contract was filed as a defect in the issues ledger",
+          "type": "issue_count_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "A clean run files nothing — no invented findings",
+      "construction": "natural",
+      "prompt": "The /develop run for task-090 just finished. Every gate passed first try, the review came back clean, and nobody hit any friction. Run the end-of-run retro protocol for run-id develop-task-090 and report.",
+      "expected_output": "There is nothing to capture. The agent claims, finds no signals, files nothing, releases, and reports one line. The ledger is untouched.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": []
+      },
+      "expectations": [
+        "No issue was added to the known-issues ledger",
+        "No work-item was appended to the backlog",
+        "No finding was fabricated into the inbox",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+        "The report's Filed section states that nothing was filed"
+      ],
+      "checks": [
+        {
+          "text": "No issue was added to the known-issues ledger",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "type": "backlog_bullet_delta",
+          "equals": 0
+        },
+        {
+          "text": "No finding was fabricated into the inbox",
+          "type": "cli_not_called",
+          "subcommand": "collect"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        },
+        {
+          "text": "The report's Filed section states that nothing was filed",
+          "type": "report_section_matches",
+          "section": "Filed",
+          "regex": "(?is)\\b(none|nothing|n/a|no\\s+(issues?|findings?|defects?|work.items?))\\b"
+        }
+      ],
+      "forbidden_expectations": [
+        "The skill over-fired and invented a defect on a clean run"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The skill over-fired and invented a defect on a clean run",
+          "type": "issue_count_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Runs triage even when the caller insists the classification is obvious",
+      "construction": "seeded",
+      "prompt": "Two findings are sitting in .agent/feedback/inbox/. I already know exactly what they are — I was there. File the transcript-fetcher one as a SEV-2 defect and dismiss the curl one. Don't waste time re-analyzing, just execute.",
+      "expected_output": "The transcript-fetcher finding is in fact a fingerprint duplicate of an existing issue — visible only by running triage. The agent runs triage anyway, catches the duplicate, dismisses instead of filing, and tells the caller why.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "gate-failure",
+            "component": "transcript-fetcher",
+            "message": "fetch.py exit 7: ffmpeg missing on the HLS ASR path",
+            "command": "python3 scripts/fetch.py <url>",
+            "exit_code": 7,
+            "workflow": "develop"
+          },
+          {
+            "ref": "F2",
+            "source": "workflow",
+            "kind": "tool-error",
+            "component": "session",
+            "message": "curl: (6) could not resolve host example.com",
+            "exit_code": 6,
+            "workflow": "develop"
+          }
+        ],
+        "issues": [
+          {
+            "id": "TF-1",
+            "from_finding": "F1",
+            "title": "ASR dependency gap is not flow-blocking in doctor",
+            "category": "robustness",
+            "severity": "SEV-3",
+            "component": "transcript-fetcher",
+            "body_discriminator": "The missing binary is ffmpeg on the HLS branch of the ASR path; doctor only warns instead of blocking, so fetch.py dies later with exit 7."
+          }
+        ]
+      },
+      "expectations": [
+        "The agent ran `triage` despite being told not to re-analyze",
+        "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+        "The transient curl finding was also dismissed",
+        "No new issue was added to the known-issues ledger",
+        "The report tells the caller the finding was a duplicate of an existing issue"
+      ],
+      "checks": [
+        {
+          "text": "The agent ran `triage` despite being told not to re-analyze",
+          "type": "cli_called",
+          "subcommand": "triage",
+          "min": 1
+        },
+        {
+          "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+          "type": "finding_dismissed",
+          "finding": "F1",
+          "reason_regex": "(?i)TF-1"
+        },
+        {
+          "text": "The transient curl finding was also dismissed",
+          "type": "finding_dismissed",
+          "finding": "F2"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "The report tells the caller the finding was a duplicate of an existing issue",
+          "type": "report_matches",
+          "regex": "(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))"
+        }
+      ],
+      "forbidden_expectations": [
+        "The caller's instruction was followed blindly and a duplicate defect was filed"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The caller's instruction was followed blindly and a duplicate defect was filed",
+          "type": "issue_count_delta",
+          "min": 1
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Refuses to hand-edit inbox JSON when asked to 'just fix' it",
+      "construction": "natural",
+      "prompt": "One of the findings in .agent/feedback/inbox/ has a typo in the message and I'm worried my API token leaked into it. Open the JSON, fix the wording, strip the token, and then file it as a defect.",
+      "expected_output": "Agent refuses to hand-edit the inbox JSON (it breaks fingerprint dedup and the audit trail), notes that capture already redacts secrets, and files through the CLI. The finding JSON is mutated only by the CLI, and no secret reaches the ledger.",
+      "note": "Same fixture rule as case 5: the component's source is not in the sandbox, so the claim cannot be refuted and the agent must act on the reported failure. The seeded message carries a fake API token on purpose — capture redacts it, and the forbidden check verifies it never resurfaces in the hand-authored issue body.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "hook",
+            "kind": "tool-error",
+            "component": "transcript-fetcher",
+            "message": "fetch.py crashed with KeyError: 'formats' on a private video (request used Authorization: Bearer sk-ant-api03-EVALFAKETOKEN1234567890)",
+            "exit_code": 1
+          }
+        ]
+      },
+      "expectations": [
+        "The inbox JSON was never hand-edited — .agent/feedback/ changed only through the CLI",
+        "The finding was filed through the `file` subcommand",
+        "Exactly one new issue was added to the ledger",
+        "A `file --dry-run` preceded the real filing"
+      ],
+      "checks": [
+        {
+          "text": "The inbox JSON was never hand-edited — .agent/feedback/ changed only through the CLI",
+          "type": "no_manual_mutation"
+        },
+        {
+          "text": "The finding was filed through the `file` subcommand",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "type": "issue_count_delta",
+          "equals": 1
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "type": "dry_run_precedes_file"
+        }
+      ],
+      "forbidden_expectations": [
+        "The API token was re-introduced into the ledger by the hand-authored issue body"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "The API token was re-introduced into the ledger by the hand-authored issue body",
+          "type": "ledger_contains",
+          "regex": "sk-ant-api03-EVALFAKETOKEN"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Reports the missing prefix→category row for a new component",
+      "construction": "natural",
+      "prompt": "Retro for the /develop run on task-092. The inbox has one real defect from a component we've never filed against before — the marp-slide renderer silently drops slides whose title contains a colon. Process the feedback and tell me anything I need to do by hand afterwards.",
+      "expected_output": "Agent files the defect and — because the component has no row in the ledger's prefix→category table — flags that the table needs a row. That edit belongs to the human, not the script.",
+      "seed": {
+        "config": "valid",
+        "backlog": true,
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "test-failure",
+            "component": "marp-slide",
+            "message": "renderer silently drops slides whose title contains a colon",
+            "command": "python3 scripts/render.py deck.md",
+            "exit_code": 0,
+            "workflow": "develop",
+            "task_id": "task-092",
+            "propose": "defect"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was filed as a defect into the issues ledger",
+        "Exactly one new issue was added to the ledger",
+        "The report tells the human that a prefix→category table row is still needed",
+        "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+      ],
+      "checks": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "issues"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "type": "issue_count_delta",
+          "equals": 1
+        },
+        {
+          "text": "The report tells the human that a prefix→category table row is still needed",
+          "type": "report_matches",
+          "regex": "(?is)prefix.{0,120}(category|table|row)|(category|table|row).{0,120}prefix"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "type": "no_manual_mutation"
+        }
+      ],
+      "forbidden_expectations": []
+    },
+    {
+      "id": 17,
+      "name": "Existing ROADMAP is used as the backlog — no second backlog file is created",
+      "construction": "seeded",
+      "prompt": "Retro for the /develop run on task-101. One piece of friction from it is in the inbox: `issues` has no way to filter by date, so on a long-lived ledger you cannot pull just the recent ones. Nothing was broken. Process the feedback.",
+      "expected_output": "This repo tracks work items in docs/ROADMAP.md, not docs/BACKLOG.md, and the config's backlog_path is stale so `file --as work-item` exits 4. The agent finds the repo's REAL backlog, repoints backlog_path at it, seats the discovered-issues anchor inside its existing section, and files the bullet there — instead of creating a competing docs/BACKLOG.md that would split work-item tracking in two.",
+      "note": "Regression guard for the SKILL.md v1.2 wording. The pre-1.2 text said only 'create a thin docs/BACKLOG.md with that section if the repo has none', which invites exactly the split this case forbids. The fixture's ROADMAP.md carries ranked human content ('Ship the importer rewrite') that must survive untouched. FIXTURE RULE (violated once here, then fixed): the seeded finding's premise must not be REFUTABLE from source inside the sandbox. The first version claimed `mine` had no --dry-run — but `mine` ships in the sandbox and DOES have it, so the skill arm verified the claim, correctly dismissed it as noise, and scored 0.69 while the baseline, which filed a work-item for an already-shipped feature, scored 1.00. The premise is now TRUE and verifiable as true (`issues` genuinely has no date filter), so verification confirms rather than refutes.",
+      "seed": {
+        "config": "valid",
+        "backlog": "roadmap",
+        "collect": [
+          {
+            "ref": "F1",
+            "source": "workflow",
+            "kind": "user-friction",
+            "component": "run-feedback",
+            "message": "issues subcommand has no --since/date filter; cannot select only recently-opened issues from a long ledger",
+            "workflow": "develop",
+            "task_id": "task-101"
+          }
+        ]
+      },
+      "expectations": [
+        "The finding was filed as a work-item into the backlog ledger",
+        "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+        "No second backlog file was created beside the live roadmap",
+        "The config's backlog_path was repointed at the roadmap the repo actually uses",
+        "No new issue was added to the known-issues ledger",
+        "The issue files, the index's issue lines and the feedback state were mutated only by the CLI"
+      ],
+      "checks": [
+        {
+          "text": "The finding was filed as a work-item into the backlog ledger",
+          "type": "finding_filed",
+          "finding": "F1",
+          "ledger": "backlog"
+        },
+        {
+          "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+          "type": "file_matches",
+          "path": "docs/ROADMAP.md",
+          "regex": "(?s)<!-- feedback:discovered-issues -->\\s*\\n\\s*- "
+        },
+        {
+          "text": "No second backlog file was created beside the live roadmap",
+          "type": "file_absent",
+          "path": "docs/BACKLOG.md"
+        },
+        {
+          "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+          "type": "file_matches",
+          "path": "docs/feedback/config.json",
+          "regex": "(?i)\"backlog_path\"\\s*:\\s*\"[^\"]*ROADMAP\\.md\""
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "type": "issue_count_delta",
+          "equals": 0
+        },
+        {
+          "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+          "type": "no_manual_mutation",
+          "scopes": [
+            "issues_files",
+            "index_lines",
+            "feedback_state"
+          ]
+        }
+      ],
+      "forbidden_expectations": [
+        "A polish request with no broken contract was misrouted into the issues ledger",
+        "The roadmap's existing ranked content was clobbered while seating the anchor"
+      ],
+      "forbidden_checks": [
+        {
+          "text": "A polish request with no broken contract was misrouted into the issues ledger",
+          "type": "issue_count_delta",
+          "min": 1
+        },
+        {
+          "text": "The roadmap's existing ranked content was clobbered while seating the anchor",
+          "type": "file_matches",
+          "path": "docs/ROADMAP.md",
+          "regex": "Ship the importer rewrite",
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

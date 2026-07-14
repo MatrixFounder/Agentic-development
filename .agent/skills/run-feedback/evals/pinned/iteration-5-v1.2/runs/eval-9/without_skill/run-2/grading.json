@@ -1,0 +1,430 @@
+{
+  "eval_id": 9,
+  "eval_name": "Retro failure is non-blocking \u2014 the workflow verdict does not change",
+  "arm": "without_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+      "passed": true,
+      "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+    },
+    {
+      "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+      "passed": false,
+      "evidence": "max calls of any one subcommand: 8 ({'doctor': 7, 'init': 8, 'claim': 3, 'collect': 2, 'triage': 6, 'file': 4, 'journal': 3, 'mine': 3, 'release': 2, 'issues': 2})"
+    },
+    {
+      "text": "The known-issues ledger was not mutated",
+      "passed": false,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['rf-1-corrupt-config-bricks-feedback-pipeline.md']"
+    },
+    {
+      "text": "No hand-edit was made to docs/ or .agent/feedback/",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (43 CLI calls)"
+    },
+    {
+      "text": "The retro failure is surfaced in the report rather than silently swallowed",
+      "passed": true,
+      "evidence": "report matches /(?is)(retro|feedback|config).{0,200}(fail|error|could not|co/"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A failing retro turned a green workflow into a failed one",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 verdict='PASS' (accepted: ['FAIL', 'FAILED', 'BLOCKED', 'ERROR'])"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.6667
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 3
+    },
+    {
+      "argv": [
+        "init",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "mine",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpjhidxjr2",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpke6m1_07",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpke6m1_07",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpgyugvc05",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpds8rmyn2",
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpa5o9dw_a",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--repo-root",
+        "/private/var/folders/5h/40wjgcbs6pddj934zcr6dq3r0000gn/T/tmpa5o9dw_a",
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "develop-task-077"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "mine",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "collect",
+        "--source",
+        "skill",
+        "--kind",
+        "blocker",
+        "--component",
+        "run-feedback",
+        "--message",
+        "Corrupt docs/feedback/config.json bricks the entire feedback pipeline with no self-serve recovery path: every run_feedback subcommand aborts with exit 3 'config file unreadable', 'init' is create-only so it refuses to repair an existing file, and 'doctor' can only diagnose. The end-of-run retro for develop-task-077 was fully blocked until the config was hand-repaired from the shipped template.",
+        "--command",
+        "python3 .agent/skills/run-feedback/scripts/run_feedback.py doctor",
+        "--exit-code",
+        "3",
+        "--task-id",
+        "task-077",
+        "--workflow",
+        "develop",
+        "--phase",
+        "retro",
+        "--evidence-path",
+        "docs/feedback/config.json",
+        "--propose",
+        "defect",
+        "--severity",
+        "SEV-2",
+        "--category",
+        "run-feedback"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "mine",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "init",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "--config",
+        "/tmp/rf_corrupt_config.json",
+        "doctor"
+      ],
+      "exit": 3
+    },
+    {
+      "argv": [
+        "--config",
+        "/tmp/rf_corrupt_config.json",
+        "init"
+      ],
+      "exit": 3
+    },
+    {
+      "argv": [
+        "--config",
+        "/tmp/rf_corrupt_config.json",
+        "triage"
+      ],
+      "exit": 3
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033600-cdf2cdaf",
+        "--as",
+        "defect",
+        "--title",
+        "Corrupt docs/feedback/config.json bricks the feedback pipeline with no self-serve repair path",
+        "--category",
+        "run-feedback",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "run-feedback",
+        "--dry-run",
+        "--body-file",
+        "-"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-033600-cdf2cdaf",
+        "--as",
+        "defect",
+        "--title",
+        "Corrupt docs/feedback/config.json bricks the feedback pipeline with no self-serve repair path",
+        "--category",
+        "run-feedback",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "run-feedback",
+        "--slug",
+        "rf-1-corrupt-config-bricks-feedback-pipeline",
+        "--body-file",
+        "-"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--event-type",
+        "retro_completed",
+        "--subject",
+        "develop-task-077",
+        "--detail",
+        "verdict=PASS",
+        "--detail",
+        "gates=all-passed",
+        "--detail",
+        "code_review=clean",
+        "--detail",
+        "filed=RF-1",
+        "--detail",
+        "dismissed=0",
+        "--detail",
+        "inbox=empty"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "develop-task-077"
+      ],
+      "exit": 0
+    }
+  ]
+}

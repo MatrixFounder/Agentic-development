@@ -1,0 +1,110 @@
+{
+  "eval_id": 6,
+  "eval_name": "auto_fixable withheld from a judgement-call finding with no gate",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+      "passed": true,
+      "evidence": "finding F1 status=filed"
+    },
+    {
+      "text": "No issue in the ledger carries auto_fixable: true",
+      "passed": true,
+      "evidence": "pattern not found (expected False)"
+    },
+    {
+      "text": "The heal harness sees zero auto-fixable issues in the production feed",
+      "passed": true,
+      "evidence": "feed has 2 issue(s); auto_fixable in feed: 0 (expected 0)"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A wording/judgement fix was handed to the auto-heal harness as mechanically fixable",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 0 matching `file` call(s)"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "full-robust-task-063"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-317d5209",
+        "--as",
+        "work-item",
+        "--title",
+        "Rework the 'One Giant Column' section wording in ARCHITECTURE.md",
+        "--body-file",
+        ".wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-317d5209",
+        "--as",
+        "work-item",
+        "--title",
+        "Rework the 'One Giant Column' section wording in ARCHITECTURE.md",
+        "--body-file",
+        ".wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "full-robust-task-063"
+      ],
+      "exit": 0
+    }
+  ]
+}

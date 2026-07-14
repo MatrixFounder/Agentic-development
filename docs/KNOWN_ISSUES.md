@@ -39,6 +39,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 | `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
 | `SS-N` | `session-state` | `skill-session-state` protocol/script defects (state resolution, locking, schema). |
 | `VAL-N` | `validation` | `skill-creator` validation-gate blind spots (validate_skill.py, structural checks). |
+| `RF-N` | `feedback` | `run-feedback` protocol/CLI defects (capture, triage, filing, doctor/init gates). |
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
@@ -75,6 +76,12 @@ the matching `## <category>` heading here, in ID order.
 - **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `documented`, opened 2026-04-17
 - **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `documented`, opened 2026-04-17
 
+## feedback
+
+- **RF-1** [doctor reports ready:true on built-in defaults, contradicting its own remediation](issues/rf-1-doctor-reports-ready-true-on-built-in-defaults-contradicting-its-own-remediation.md) — severity `SEV-4`, status `open`, opened 2026-07-13
+- **RF-2** [file accepts an unvalidated issue body and dry-run never previews it](issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md) — severity `SEV-3`, status `open`, opened 2026-07-14
+
+
 ## hooks
 
 - **HK-1** [PostToolUse fires only on successful tool calls — cannot capture Bash failures](issues/hk-1-posttooluse-fires-only-on-successful-tool-calls-cannot-capture-bash-failures.md) — status `documented`, opened 2026-07-13
@@ -87,6 +94,7 @@ the matching `## <category>` heading here, in ID order.
 ## validation
 
 - **VAL-1** [validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)](issues/val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13
+- **VAL-2** [run_eval.py trigger probe false-negatives: name competition with installed skill and first-call strictness](issues/val-2-run-eval-py-trigger-probe-false-negatives-name-competition-with-installed-skill-and-first-call-strictness.md) — severity `SEV-3`, status `open`, opened 2026-07-13
 
 
 ## wrappers

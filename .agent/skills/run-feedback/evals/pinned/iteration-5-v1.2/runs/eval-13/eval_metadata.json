@@ -1,0 +1,16 @@
+{
+  "eval_id": 13,
+  "eval_name": "A clean run files nothing \u2014 no invented findings",
+  "construction": "natural",
+  "prompt": "The /develop run for task-090 just finished. Every gate passed first try, the review came back clean, and nobody hit any friction. Run the end-of-run retro protocol for run-id develop-task-090 and report.",
+  "expectations": [
+    "No issue was added to the known-issues ledger",
+    "No work-item was appended to the backlog",
+    "No finding was fabricated into the inbox",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+    "The report's Filed section states that nothing was filed"
+  ],
+  "forbidden_expectations": [
+    "The skill over-fired and invented a defect on a clean run"
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "eval_id": 16,
+  "eval_name": "Reports the missing prefix\u2192category row for a new component",
+  "arm": "without_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "The finding was filed as a defect into the issues ledger",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "Exactly one new issue was added to the ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ms-1-renderer-silently-drops-slides-whose-title-contains-a-colon.md']"
+    },
+    {
+      "text": "The report tells the human that a prefix\u2192category table row is still needed",
+      "passed": true,
+      "evidence": "report matches /(?is)prefix.{0,120}(category|table|row)|(category|table|row)/"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (14 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "task-092-develop",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032122-76dfc533",
+        "--as",
+        "defect",
+        "--title",
+        "Renderer silently drops slides whose title contains a colon",
+        "--category",
+        "marp-slide",
+        "--component",
+        "marp-slide",
+        "--severity",
+        "SEV-2",
+        "--body-file",
+        "outputs/.ms1-body.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032122-76dfc533",
+        "--as",
+        "defect",
+        "--title",
+        "Renderer silently drops slides whose title contains a colon",
+        "--category",
+        "marp-slide",
+        "--component",
+        "marp-slide",
+        "--severity",
+        "SEV-2",
+        "--body-file",
+        "outputs/.ms1-body.md",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--event-type",
+        "prefix_registered",
+        "--subject",
+        "marp-slide MS",
+        "--detail",
+        "reason=first issue filed against marp-slide; component had no id_prefixes entry and would have fallen back to _default FW",
+        "--detail",
+        "config=docs/feedback/config.json",
+        "--detail",
+        "issue=MS-1",
+        "--detail",
+        "run=task-092-develop"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "task-092-develop",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues"
+      ],
+      "exit": 0
+    }
+  ]
+}

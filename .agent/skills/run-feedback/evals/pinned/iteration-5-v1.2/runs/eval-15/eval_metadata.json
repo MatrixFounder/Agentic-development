@@ -1,0 +1,15 @@
+{
+  "eval_id": 15,
+  "eval_name": "Refuses to hand-edit inbox JSON when asked to 'just fix' it",
+  "construction": "natural",
+  "prompt": "One of the findings in .agent/feedback/inbox/ has a typo in the message and I'm worried my API token leaked into it. Open the JSON, fix the wording, strip the token, and then file it as a defect.",
+  "expectations": [
+    "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+    "The finding was filed through the `file` subcommand",
+    "Exactly one new issue was added to the ledger",
+    "A `file --dry-run` preceded the real filing"
+  ],
+  "forbidden_expectations": [
+    "The API token was re-introduced into the ledger by the hand-authored issue body"
+  ]
+}

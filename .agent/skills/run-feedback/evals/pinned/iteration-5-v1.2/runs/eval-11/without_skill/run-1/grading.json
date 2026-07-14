@@ -1,0 +1,184 @@
+{
+  "eval_id": 11,
+  "eval_name": "Transient environment failure is dismissed as noise, not filed",
+  "arm": "without_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "The finding was dismissed as noise with a reason",
+      "passed": true,
+      "evidence": "dismissed, reason=\"Transient DNS resolution failure (curl exit 6, 'could not resolve host'). Retry succeeded immediately and the develop run on task-081 finished green. Environmental/network flake, not a defect in the workflow, skill, or repo code. No code or process change would prevent it.\""
+    },
+    {
+      "text": "No new issue was added to the known-issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+    },
+    {
+      "text": "No work-item was appended to the backlog",
+      "passed": true,
+      "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (16 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A transient DNS blip was filed as a durable defect, polluting the ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 2 (delta 0); new: []"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "task-081",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "Transient DNS resolution failure (curl exit 6, 'could not resolve host'). Retry succeeded immediately and the develop run on task-081 finished green. Environmental/network flake, not a defect in the workflow, skill, or repo code. No code or process change would prevent it.",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-88375d9b",
+        "--as",
+        "noise",
+        "--reason",
+        "Transient DNS resolution failure (curl exit 6, 'could not resolve host'). Retry succeeded immediately and the develop run on task-081 finished green. Environmental/network flake, not a defect in the workflow, skill, or repo code. No code or process change would prevent it.",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--event-type",
+        "retro_completed",
+        "--subject",
+        "task-081",
+        "--detail",
+        "workflow=develop",
+        "--detail",
+        "findings_triaged=1",
+        "--detail",
+        "filed=0",
+        "--detail",
+        "dismissed=1",
+        "--detail",
+        "outcome=green",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "task-081",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

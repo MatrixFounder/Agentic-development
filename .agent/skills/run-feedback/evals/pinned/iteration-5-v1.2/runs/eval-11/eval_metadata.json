@@ -1,0 +1,15 @@
+{
+  "eval_id": 11,
+  "eval_name": "Transient environment failure is dismissed as noise, not filed",
+  "construction": "natural",
+  "prompt": "Retro for the /develop run on task-081. One thing in the inbox: a curl call died with 'could not resolve host' halfway through, then the retry worked fine and the run finished green. Process the feedback.",
+  "expectations": [
+    "The finding was dismissed as noise with a reason",
+    "No new issue was added to the known-issues ledger",
+    "No work-item was appended to the backlog",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": [
+    "A transient DNS blip was filed as a durable defect, polluting the ledger"
+  ]
+}

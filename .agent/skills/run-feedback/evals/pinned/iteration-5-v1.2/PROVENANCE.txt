@@ -1,0 +1,9 @@
+run-feedback behavioural evals — pinned baseline
+skill:        SKILL.md v1.2, sha256:16289442b734ad2b
+evals.json:   sha256:9a65846cd00632b4
+grade_run.py: sha256:5709497d1d555215
+executor:     claude-opus-4-8 (session model), 17 cases x 2 arms x 2 reps = 68 runs
+result:       with_skill 0.993 | without_skill 0.960 | delta +0.034, 95% CI [+0.005, +0.067]
+grader:       deterministic (script), zero LLM tokens; ledger verdicts CALL the production
+              gate (run_feedback.py issues --json / doctor --json)
+verify:       python3 .agent/skills/skill-creator/scripts/verify_pin.py <this-dir> <this-dir>/benchmark.json

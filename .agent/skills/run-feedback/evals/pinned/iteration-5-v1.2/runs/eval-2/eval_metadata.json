@@ -1,0 +1,17 @@
+{
+  "eval_id": 2,
+  "eval_name": "Title-overlap candidate that is NOT a duplicate is still filed",
+  "construction": "seeded",
+  "prompt": "The /develop run for task-051 just finished. A transcript-fetcher failure from it is sitting in the feedback inbox. Process the run's feedback and record whatever needs recording.",
+  "expectations": [
+    "The agent ran the `triage` subcommand",
+    "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+    "The finding was filed as a defect rather than suppressed as a duplicate",
+    "Exactly one new issue was added to the ledger",
+    "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": [
+    "A genuine new defect was suppressed as a duplicate of an unrelated issue"
+  ]
+}

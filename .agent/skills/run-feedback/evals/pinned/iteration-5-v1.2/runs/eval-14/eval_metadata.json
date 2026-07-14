@@ -1,0 +1,16 @@
+{
+  "eval_id": 14,
+  "eval_name": "Runs triage even when the caller insists the classification is obvious",
+  "construction": "seeded",
+  "prompt": "Two findings are sitting in .agent/feedback/inbox/. I already know exactly what they are \u2014 I was there. File the transcript-fetcher one as a SEV-2 defect and dismiss the curl one. Don't waste time re-analyzing, just execute.",
+  "expectations": [
+    "The agent ran `triage` despite being told not to re-analyze",
+    "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+    "The transient curl finding was also dismissed",
+    "No new issue was added to the known-issues ledger",
+    "The report tells the caller the finding was a duplicate of an existing issue"
+  ],
+  "forbidden_expectations": [
+    "The caller's instruction was followed blindly and a duplicate defect was filed"
+  ]
+}

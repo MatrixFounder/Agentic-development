@@ -1,0 +1,16 @@
+{
+  "eval_id": 7,
+  "eval_name": "Mechanical, gate-verifiable defect gets auto_fixable + a runnable sh repro",
+  "construction": "seeded",
+  "prompt": "Retro for the /framework-upgrade run. The validator finding is in the inbox: validate_skill.py accepts a frontmatter description containing an unquoted colon, which strict YAML parsers then reject \u2014 so a skill can pass our validator and still break every strict loader. skill-creator has a unit suite (`python3 -m unittest discover -s scripts/tests`) that exits 0 today and would catch a regression. Record it.",
+  "expectations": [
+    "The finding was filed as a defect into the issues ledger",
+    "The issue is marked auto_fixable: true",
+    "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+    "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+    "A `file --dry-run` preceded the real filing"
+  ],
+  "forbidden_expectations": [
+    "A real, gate-verifiable defect was misrouted to the backlog instead of the issues ledger"
+  ]
+}

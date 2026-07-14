@@ -1,0 +1,125 @@
+{
+  "eval_id": 12,
+  "eval_name": "Enhancement without a broken contract goes to the backlog, not the issues ledger",
+  "arm": "with_skill",
+  "construction": "natural",
+  "expectations": [
+    {
+      "text": "The finding was filed as a work-item into the backlog",
+      "passed": true,
+      "evidence": "filed to ledger='backlog' (expected 'backlog')"
+    },
+    {
+      "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+      "passed": true,
+      "evidence": "backlog bullets 0 \u2192 1 (delta 1)"
+    },
+    {
+      "text": "No new issue was added to the known-issues ledger",
+      "passed": true,
+      "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (8 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A polish request with no broken contract was filed as a defect in the issues ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 issue count 2 \u2192 2 (delta 0); new: []"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-5ca823a9",
+        "--as",
+        "work-item",
+        "--title",
+        "Sort triage table by occurrence count (highest first)",
+        "--body-file",
+        "outputs/wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M",
+        "--dry-run",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032121-5ca823a9",
+        "--as",
+        "work-item",
+        "--title",
+        "Sort triage table by occurrence count (highest first)",
+        "--body-file",
+        "outputs/wi-body.md",
+        "--effort",
+        "S",
+        "--value",
+        "M",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open",
+        "--json"
+      ],
+      "exit": 0
+    }
+  ]
+}

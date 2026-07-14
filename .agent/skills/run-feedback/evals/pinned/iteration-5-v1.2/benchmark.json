@@ -1,0 +1,2976 @@
+{
+  "metadata": {
+    "skill_name": "run-feedback",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-07-14T01:02:50Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand before deciding anything",
+          "passed": true,
+          "evidence": "2 matching `triage` call(s)"
+        },
+        {
+          "text": "The report identifies the existing issue TF-1 as the duplicate",
+          "passed": true,
+          "evidence": "report matches /(?i)TF-1/"
+        },
+        {
+          "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of TF-1 (same fingerprint 083dacc2076c6739: fetch.py exit 7, ffmpeg missing on the HLS ASR path)'"
+        },
+        {
+          "text": "The known-issues ledger gained no new issue",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand before deciding anything",
+          "passed": true,
+          "evidence": "2 matching `triage` call(s)"
+        },
+        {
+          "text": "The report identifies the existing issue TF-1 as the duplicate",
+          "passed": true,
+          "evidence": "report matches /(?i)TF-1/"
+        },
+        {
+          "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of TF-1'"
+        },
+        {
+          "text": "The known-issues ledger gained no new issue",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8889,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `init` subcommand to bootstrap the config",
+          "passed": true,
+          "evidence": "27 matching `init` call(s)"
+        },
+        {
+          "text": "The agent re-ran `doctor` after bootstrapping",
+          "passed": true,
+          "evidence": "init at #1, doctor after it: #4"
+        },
+        {
+          "text": "The repo now has a real config file rather than built-in defaults",
+          "passed": true,
+          "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/with_skill/run-1/sandbox/docs/feedback/config.json'"
+        },
+        {
+          "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+          "passed": true,
+          "evidence": "ready=True, remediation=[]"
+        },
+        {
+          "text": "The backlog anchor now exists, so work-items have somewhere to go",
+          "passed": true,
+          "evidence": "doctor.checks.backlog_anchor_present = True"
+        },
+        {
+          "text": "The defect reached the issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+        },
+        {
+          "text": "The ledger and feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (83 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 0.8889,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `init` subcommand to bootstrap the config",
+          "passed": true,
+          "evidence": "26 matching `init` call(s)"
+        },
+        {
+          "text": "The agent re-ran `doctor` after bootstrapping",
+          "passed": true,
+          "evidence": "init at #1, doctor after it: #4"
+        },
+        {
+          "text": "The repo now has a real config file rather than built-in defaults",
+          "passed": true,
+          "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/with_skill/run-2/sandbox/docs/feedback/config.json'"
+        },
+        {
+          "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+          "passed": true,
+          "evidence": "ready=True, remediation=[]"
+        },
+        {
+          "text": "The backlog anchor now exists, so work-items have somewhere to go",
+          "passed": true,
+          "evidence": "doctor.checks.backlog_anchor_present = True"
+        },
+        {
+          "text": "The defect reached the issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+        },
+        {
+          "text": "The ledger and feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (73 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was dismissed as noise with a reason",
+          "passed": true,
+          "evidence": "dismissed, reason='transient DNS failure (curl exit 6, could not resolve host) during /develop on task-081; immediate retry succeeded and the run finished green - environment flake, not a defect'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was dismissed as noise with a reason",
+          "passed": true,
+          "evidence": "dismissed, reason='transient environment: DNS resolution failure (curl exit 6) on a single call; the immediate retry succeeded and the /develop run on task-081 finished green. No broken contract, not reproducible, occurrences=1.'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 1 (delta 1)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (14 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 1 (delta 1)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (8 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 13,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "No issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "No finding was fabricated into the inbox",
+          "passed": true,
+          "evidence": "0 `collect` call(s) (expected none)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        },
+        {
+          "text": "The report's Filed section states that nothing was filed",
+          "passed": true,
+          "evidence": "Filed section = 'none'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 13,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "No issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "No finding was fabricated into the inbox",
+          "passed": true,
+          "evidence": "0 `collect` call(s) (expected none)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        },
+        {
+          "text": "The report's Filed section states that nothing was filed",
+          "passed": true,
+          "evidence": "Filed section = 'none'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 14,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `triage` despite being told not to re-analyze",
+          "passed": true,
+          "evidence": "1 matching `triage` call(s)"
+        },
+        {
+          "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of TF-1 (fingerprint 083dacc2076c6739; same ffmpeg/HLS ASR exit-7 defect, already open)'"
+        },
+        {
+          "text": "The transient curl finding was also dismissed",
+          "passed": true,
+          "evidence": "dismissed, reason='transient environment: DNS resolution failure for example.com (curl exit 6), not a defect in any component'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "The report tells the caller the finding was a duplicate of an existing issue",
+          "passed": true,
+          "evidence": "report matches /(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 14,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `triage` despite being told not to re-analyze",
+          "passed": true,
+          "evidence": "1 matching `triage` call(s)"
+        },
+        {
+          "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of TF-1 (same fingerprint 083dacc2076c6739; recurrence merged)'"
+        },
+        {
+          "text": "The transient curl finding was also dismissed",
+          "passed": true,
+          "evidence": "dismissed, reason='transient environment: DNS resolution failure for example.com in sandboxed network; not a product defect'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "The report tells the caller the finding was a duplicate of an existing issue",
+          "passed": true,
+          "evidence": "report matches /(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        },
+        {
+          "text": "The finding was filed through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['tf-1-fetch-py-crashes-with-keyerror-formats-on-private-videos-instead-of-a-clean-auth-error.md']"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+        },
+        {
+          "text": "The finding was filed through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['tf-1-fetch-py-crashes-with-keyerror-formats-on-private-videos.md']"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 16,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ms-1-renderer-silently-drops-slides-whose-title-contains-a-colon.md']"
+        },
+        {
+          "text": "The report tells the human that a prefix\u2192category table row is still needed",
+          "passed": true,
+          "evidence": "report matches /(?is)prefix.{0,120}(category|table|row)|(category|table|row)/"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 16,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ms-1-marp-slide-renderer-silently-drops-slides-whose-title-contains-a-colon.md']"
+        },
+        {
+          "text": "The report tells the human that a prefix\u2192category table row is still needed",
+          "passed": true,
+          "evidence": "report matches /(?is)prefix.{0,120}(category|table|row)|(category|table|row)/"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog ledger",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "docs/ROADMAP.md: pattern found (expected True)"
+        },
+        {
+          "text": "No second backlog file was created beside the live roadmap",
+          "passed": true,
+          "evidence": "docs/BACKLOG.md is absent"
+        },
+        {
+          "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+          "passed": true,
+          "evidence": "docs/feedback/config.json: pattern found (expected True)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog ledger",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "docs/ROADMAP.md: pattern found (expected True)"
+        },
+        {
+          "text": "No second backlog file was created beside the live roadmap",
+          "passed": true,
+          "evidence": "docs/BACKLOG.md is absent"
+        },
+        {
+          "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+          "passed": true,
+          "evidence": "docs/feedback/config.json: pattern found (expected True)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand",
+          "passed": true,
+          "evidence": "1 matching `triage` call(s)"
+        },
+        {
+          "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+          "passed": true,
+          "evidence": "report matches /(?i)macwhisper/"
+        },
+        {
+          "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 4 (delta 1); new: ['tf-2-ffmpeg-missing-aborts-fetch-py-exit-7-on-the-hls-asr-path.md']"
+        },
+        {
+          "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "tf-2-ffmpeg-missing-aborts-fetch-py-exit-7-on-the-hls-asr-path.md: severity='SEV-3'"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand",
+          "passed": true,
+          "evidence": "2 matching `triage` call(s)"
+        },
+        {
+          "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+          "passed": true,
+          "evidence": "report matches /(?i)macwhisper/"
+        },
+        {
+          "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 4 (delta 1); new: ['tf-2-ffmpeg-missing-breaks-fetch-py-on-the-hls-asr-path.md']"
+        },
+        {
+          "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "tf-2-ffmpeg-missing-breaks-fetch-py-on-the-hls-asr-path.md: severity='SEV-3'"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "vm-1-vdd-multi-security-critic-timeout-skips-the-coverage-gate-silently.md: severity='SEV-2'"
+        },
+        {
+          "text": "Every severity token in the index file is from the write vocabulary",
+          "passed": true,
+          "evidence": "all 3 index line(s) use the write vocabulary"
+        },
+        {
+          "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+          "passed": true,
+          "evidence": "vm-1-vdd-multi-security-critic-timeout-skips-the-coverage-gate-silently.md: status='open'"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        },
+        {
+          "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: severity='SEV-2'"
+        },
+        {
+          "text": "Every severity token in the index file is from the write vocabulary",
+          "passed": true,
+          "evidence": "all 3 index line(s) use the write vocabulary"
+        },
+        {
+          "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+          "passed": true,
+          "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: status='open'"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        },
+        {
+          "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A `file --dry-run` was executed for the finding before any real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        },
+        {
+          "text": "The finding was then actually filed as a defect",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd.md']"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A `file --dry-run` was executed for the finding before any real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        },
+        {
+          "text": "The finding was then actually filed as a defect",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd-not-repo-root.md']"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The ledger was written exclusively through the CLI \u2014 no hand edit to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        },
+        {
+          "text": "The finding was filed as a defect through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+          "passed": true,
+          "evidence": "1 new issue file(s), 1 new index line(s), expected 1"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The ledger was written exclusively through the CLI \u2014 no hand edit to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+        },
+        {
+          "text": "The finding was filed as a defect through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+          "passed": true,
+          "evidence": "1 new issue file(s), 1 new index line(s), expected 1"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+          "passed": true,
+          "evidence": "finding F1 status=filed"
+        },
+        {
+          "text": "No issue in the ledger carries auto_fixable: true",
+          "passed": true,
+          "evidence": "pattern not found (expected False)"
+        },
+        {
+          "text": "The heal harness sees zero auto-fixable issues in the production feed",
+          "passed": true,
+          "evidence": "feed has 2 issue(s); auto_fixable in feed: 0 (expected 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+          "passed": true,
+          "evidence": "finding F1 status=filed"
+        },
+        {
+          "text": "No issue in the ledger carries auto_fixable: true",
+          "passed": true,
+          "evidence": "pattern not found (expected False)"
+        },
+        {
+          "text": "The heal harness sees zero auto-fixable issues in the production feed",
+          "passed": true,
+          "evidence": "feed has 2 issue(s); auto_fixable in feed: 0 (expected 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The issue is marked auto_fixable: true",
+          "passed": true,
+          "evidence": "val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-rejects-unquoted-colon-in-description.md: auto_fixable='true'"
+        },
+        {
+          "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+          "passed": true,
+          "evidence": "runnable sh repro present in ['val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-rejects-unquoted-colon-in-description.md']"
+        },
+        {
+          "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); auto_fixable in feed: 1 (expected 1)"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The issue is marked auto_fixable: true",
+          "passed": true,
+          "evidence": "val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-parsers-reject.md: auto_fixable='true'"
+        },
+        {
+          "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+          "passed": true,
+          "evidence": "runnable sh repro present in ['val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-parsers-reject.md']"
+        },
+        {
+          "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); auto_fixable in feed: 1 (expected 1)"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `claim` and received exit 6",
+          "passed": true,
+          "evidence": "1 `claim` call(s) exited 6; exits seen: [2, 6]"
+        },
+        {
+          "text": "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+          "passed": true,
+          "evidence": "0 forbidden call(s) after the denied claim: []"
+        },
+        {
+          "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+          "passed": true,
+          "evidence": "2 `claim` call(s), max 2"
+        },
+        {
+          "text": "The workflow was reported as completing normally, not as failed or blocked",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The ledger is untouched (no new issue)",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `claim` and received exit 6",
+          "passed": true,
+          "evidence": "1 `claim` call(s) exited 6; exits seen: [2, 6]"
+        },
+        {
+          "text": "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+          "passed": true,
+          "evidence": "0 forbidden call(s) after the denied claim: []"
+        },
+        {
+          "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+          "passed": true,
+          "evidence": "2 `claim` call(s), max 2"
+        },
+        {
+          "text": "The workflow was reported as completing normally, not as failed or blocked",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The ledger is untouched (no new issue)",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+          "passed": true,
+          "evidence": "max calls of any one subcommand: 1 ({'doctor': 1, 'claim': 1, 'triage': 1})"
+        },
+        {
+          "text": "The known-issues ledger was not mutated",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No hand-edit was made to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (3 CLI calls)"
+        },
+        {
+          "text": "The retro failure is surfaced in the report rather than silently swallowed",
+          "passed": true,
+          "evidence": "report matches /(?is)(retro|feedback|config).{0,200}(fail|error|could not|co/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+          "passed": true,
+          "evidence": "max calls of any one subcommand: 2 ({'doctor': 2, 'claim': 2})"
+        },
+        {
+          "text": "The known-issues ledger was not mutated",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No hand-edit was made to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (4 CLI calls)"
+        },
+        {
+          "text": "The retro failure is surfaced in the report rather than silently swallowed",
+          "passed": true,
+          "evidence": "report matches /(?is)(retro|feedback|config).{0,200}(fail|error|could not|co/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand before deciding anything",
+          "passed": true,
+          "evidence": "4 matching `triage` call(s)"
+        },
+        {
+          "text": "The report identifies the existing issue TF-1 as the duplicate",
+          "passed": true,
+          "evidence": "report matches /(?i)TF-1/"
+        },
+        {
+          "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+          "passed": true,
+          "evidence": "dismissed, reason='Duplicate of TF-1 (exact fingerprint 083dacc2076c6739): same transcript-fetcher gate failure \u2014 fetch.py exit 7, ffmpeg missing on the HLS ASR path. Already tracked as open issue TF-1; no new ledger entry needed.'"
+        },
+        {
+          "text": "The known-issues ledger gained no new issue",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (15 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand before deciding anything",
+          "passed": true,
+          "evidence": "3 matching `triage` call(s)"
+        },
+        {
+          "text": "The report identifies the existing issue TF-1 as the duplicate",
+          "passed": true,
+          "evidence": "report matches /(?i)TF-1/"
+        },
+        {
+          "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of TF-1 (same fingerprint 083dacc2076c6739; TF-1 already open in docs/issues)'"
+        },
+        {
+          "text": "The known-issues ledger gained no new issue",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8889,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `init` subcommand to bootstrap the config",
+          "passed": true,
+          "evidence": "6 matching `init` call(s)"
+        },
+        {
+          "text": "The agent re-ran `doctor` after bootstrapping",
+          "passed": true,
+          "evidence": "init at #2, doctor after it: #3"
+        },
+        {
+          "text": "The repo now has a real config file rather than built-in defaults",
+          "passed": true,
+          "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/without_skill/run-1/sandbox/docs/feedback/config.json'"
+        },
+        {
+          "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+          "passed": true,
+          "evidence": "ready=True, remediation=[]"
+        },
+        {
+          "text": "The backlog anchor now exists, so work-items have somewhere to go",
+          "passed": true,
+          "evidence": "doctor.checks.backlog_anchor_present = True"
+        },
+        {
+          "text": "The defect reached the issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+        },
+        {
+          "text": "The ledger and feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (26 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 0.8889,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `init` subcommand to bootstrap the config",
+          "passed": true,
+          "evidence": "2 matching `init` call(s)"
+        },
+        {
+          "text": "The agent re-ran `doctor` after bootstrapping",
+          "passed": true,
+          "evidence": "init at #2, doctor after it: #14"
+        },
+        {
+          "text": "The repo now has a real config file rather than built-in defaults",
+          "passed": true,
+          "evidence": "doctor.checks.config_source = '/private/tmp/claude-501/-Users-sergey-dev-projects-agentic-development/4bffdf87-97a0-49ec-bcdf-87765c0c17aa/scratchpad/rf-evals/iteration-5/runs/eval-10/without_skill/run-2/sandbox/docs/feedback/config.json'"
+        },
+        {
+          "text": "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+          "passed": true,
+          "evidence": "ready=True, remediation=[]"
+        },
+        {
+          "text": "The backlog anchor now exists, so work-items have somewhere to go",
+          "passed": true,
+          "evidence": "doctor.checks.backlog_anchor_present = True"
+        },
+        {
+          "text": "The defect reached the issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-session-state-updater-resolves-agent-sessions-relative-to-cwd.md']"
+        },
+        {
+          "text": "The ledger and feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (19 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was dismissed as noise with a reason",
+          "passed": true,
+          "evidence": "dismissed, reason=\"Transient DNS resolution failure (curl exit 6, 'could not resolve host'). Retry succeeded immediately and the develop run on task-081 finished green. Environmental/network flake, not a defect in the workflow, skill, or repo code. No code or process change would prevent it.\""
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (16 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was dismissed as noise with a reason",
+          "passed": true,
+          "evidence": "dismissed, reason=\"Transient network/DNS flake: 'curl: (6) could not resolve host example.com'. The immediate retry succeeded and the develop run on task-081 finished green. Environmental, not a defect in any repo component \u2014 no reproducible failure and nothing actionable to fix in-repo.\""
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (23 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 1 (delta 1)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "Exactly one bullet was appended to the backlog under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 1 (delta 1)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (24 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 13,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "No issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "No finding was fabricated into the inbox",
+          "passed": false,
+          "evidence": "1 `collect` call(s) (expected none)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+        },
+        {
+          "text": "The report's Filed section states that nothing was filed",
+          "passed": true,
+          "evidence": "Filed section = 'none'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 13,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "No issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No work-item was appended to the backlog",
+          "passed": true,
+          "evidence": "backlog bullets 0 \u2192 0 (delta 0)"
+        },
+        {
+          "text": "No finding was fabricated into the inbox",
+          "passed": false,
+          "evidence": "1 `collect` call(s) (expected none)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (18 CLI calls)"
+        },
+        {
+          "text": "The report's Filed section states that nothing was filed",
+          "passed": true,
+          "evidence": "Filed section = 'none'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 14,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `triage` despite being told not to re-analyze",
+          "passed": true,
+          "evidence": "3 matching `triage` call(s)"
+        },
+        {
+          "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of open issue TF-1 (identical fingerprint 083dacc2076c6739) \u2014 NOT re-filed as a new issue; recurrence recorded on TF-1 and its severity raised to SEV-2 per operator'"
+        },
+        {
+          "text": "The transient curl finding was also dismissed",
+          "passed": true,
+          "evidence": "dismissed, reason='transient DNS/network failure (curl exit 6, could not resolve example.com) in the session environment \u2014 not a repo defect; per operator, dismiss'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "The report tells the caller the finding was a duplicate of an existing issue",
+          "passed": true,
+          "evidence": "report matches /(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 14,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `triage` despite being told not to re-analyze",
+          "passed": true,
+          "evidence": "3 matching `triage` call(s)"
+        },
+        {
+          "text": "The duplicate finding was dismissed as noise citing TF-1, not filed as the caller instructed",
+          "passed": true,
+          "evidence": "dismissed, reason='duplicate of open issue TF-1 (identical fingerprint 083dacc2076c6739) \u2014 NOT dropped: re-filed against TF-1, whose severity was raised SEV-3 -> SEV-2 for this recurrence, instead of minting a duplicate TF-2'"
+        },
+        {
+          "text": "The transient curl finding was also dismissed",
+          "passed": true,
+          "evidence": "dismissed, reason='transient DNS/network failure (curl exit 6, could not resolve host example.com) \u2014 environmental, not a repo defect'"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+        },
+        {
+          "text": "The report tells the caller the finding was a duplicate of an existing issue",
+          "passed": true,
+          "evidence": "report matches /(?is)(duplicate|dup\\b|already (tracked|filed|exists|known))/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (8 CLI calls)"
+        },
+        {
+          "text": "The finding was filed through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['tf-1-fetch-py-crashes-with-keyerror-formats-on-private-videos.md']"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The inbox JSON was never hand-edited \u2014 .agent/feedback/ changed only through the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        },
+        {
+          "text": "The finding was filed through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['tf-1-fetch-py-crashes-with-keyerror-formats-on-private-videos.md']"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 16,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ms-1-renderer-silently-drops-slides-whose-title-contains-a-colon.md']"
+        },
+        {
+          "text": "The report tells the human that a prefix\u2192category table row is still needed",
+          "passed": true,
+          "evidence": "report matches /(?is)prefix.{0,120}(category|table|row)|(category|table|row)/"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (14 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 16,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ms-1-renderer-silently-drops-slides-whose-title-contains-a-colon.md']"
+        },
+        {
+          "text": "The report tells the human that a prefix\u2192category table row is still needed",
+          "passed": true,
+          "evidence": "report matches /(?is)prefix.{0,120}(category|table|row)|(category|table|row)/"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (11 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog ledger",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "docs/ROADMAP.md: pattern found (expected True)"
+        },
+        {
+          "text": "No second backlog file was created beside the live roadmap",
+          "passed": true,
+          "evidence": "docs/BACKLOG.md is absent"
+        },
+        {
+          "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+          "passed": true,
+          "evidence": "docs/feedback/config.json: pattern found (expected True)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a work-item into the backlog ledger",
+          "passed": true,
+          "evidence": "filed to ledger='backlog' (expected 'backlog')"
+        },
+        {
+          "text": "The bullet landed in the repo's existing ROADMAP, under the discovered-issues anchor",
+          "passed": true,
+          "evidence": "docs/ROADMAP.md: pattern found (expected True)"
+        },
+        {
+          "text": "No second backlog file was created beside the live roadmap",
+          "passed": true,
+          "evidence": "docs/BACKLOG.md is absent"
+        },
+        {
+          "text": "The config's backlog_path was repointed at the roadmap the repo actually uses",
+          "passed": true,
+          "evidence": "docs/feedback/config.json: pattern found (expected True)"
+        },
+        {
+          "text": "No new issue was added to the known-issues ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "The issue files, the index's issue lines and the feedback state were mutated only by the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand",
+          "passed": true,
+          "evidence": "3 matching `triage` call(s)"
+        },
+        {
+          "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+          "passed": true,
+          "evidence": "report matches /(?i)macwhisper/"
+        },
+        {
+          "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 4 (delta 1); new: ['tf-2-ffmpeg-missing-breaks-fetch-py-on-the-hls-asr-path.md']"
+        },
+        {
+          "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "tf-2-ffmpeg-missing-breaks-fetch-py-on-the-hls-asr-path.md: severity='SEV-3'"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran the `triage` subcommand",
+          "passed": true,
+          "evidence": "3 matching `triage` call(s)"
+        },
+        {
+          "text": "The report explains TF-1 is a different defect, citing the MacWhisper detail that appears only inside the issue body",
+          "passed": true,
+          "evidence": "report matches /(?i)macwhisper/"
+        },
+        {
+          "text": "The finding was filed as a defect rather than suppressed as a duplicate",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 3 \u2192 4 (delta 1); new: ['tf-2-ffmpeg-missing-aborts-fetch-py-with-exit-7-on-the-hls-asr-path.md']"
+        },
+        {
+          "text": "The new issue's severity is drawn from the write vocabulary SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "tf-2-ffmpeg-missing-aborts-fetch-py-with-exit-7-on-the-hls-asr-path.md: severity='SEV-3'"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: severity='SEV-2'"
+        },
+        {
+          "text": "Every severity token in the index file is from the write vocabulary",
+          "passed": true,
+          "evidence": "all 3 index line(s) use the write vocabulary"
+        },
+        {
+          "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+          "passed": true,
+          "evidence": "vm-1-security-critic-timeout-skips-the-coverage-gate-in-vdd-multi.md: status='open'"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        },
+        {
+          "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (6 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The filed issue's severity is one of SEV-2/SEV-3/SEV-4/LOW",
+          "passed": true,
+          "evidence": "vm-1-security-critic-times-out-and-coverage-gate-is-silently-skipped-in-vdd-multi.md: severity='SEV-2'"
+        },
+        {
+          "text": "Every severity token in the index file is from the write vocabulary",
+          "passed": true,
+          "evidence": "all 3 index line(s) use the write vocabulary"
+        },
+        {
+          "text": "The filed issue's status is from the write vocabulary (open/fixed/documented/by-design/mitigated/wontfix)",
+          "passed": true,
+          "evidence": "vm-1-security-critic-times-out-and-coverage-gate-is-silently-skipped-in-vdd-multi.md: status='open'"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        },
+        {
+          "text": "The caller's demand was not satisfied by hand-editing the ledger around the CLI",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (9 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A `file --dry-run` was executed for the finding before any real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        },
+        {
+          "text": "The finding was then actually filed as a defect",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd.md']"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (9 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A `file --dry-run` was executed for the finding before any real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        },
+        {
+          "text": "The finding was then actually filed as a defect",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Exactly one new issue was added to the ledger",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['ss-1-update-state-py-writes-session-state-relative-to-cwd-not-repo-root.md']"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The ledger was written exclusively through the CLI \u2014 no hand edit to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (7 CLI calls)"
+        },
+        {
+          "text": "The finding was filed as a defect through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+          "passed": true,
+          "evidence": "1 new issue file(s), 1 new index line(s), expected 1"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The ledger was written exclusively through the CLI \u2014 no hand edit to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (5 CLI calls)"
+        },
+        {
+          "text": "The finding was filed as a defect through the `file` subcommand",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "Both sides of the ledger moved in lockstep: one new issue file and one new index line",
+          "passed": true,
+          "evidence": "1 new issue file(s), 1 new index line(s), expected 1"
+        },
+        {
+          "text": "The production issues feed (`issues --json`) parses the new issue",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); new issue present in feed: True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+          "passed": true,
+          "evidence": "finding F1 status=filed"
+        },
+        {
+          "text": "No issue in the ledger carries auto_fixable: true",
+          "passed": true,
+          "evidence": "pattern not found (expected False)"
+        },
+        {
+          "text": "The heal harness sees zero auto-fixable issues in the production feed",
+          "passed": true,
+          "evidence": "feed has 2 issue(s); auto_fixable in feed: 0 (expected 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+          "passed": true,
+          "evidence": "finding F1 status=filed"
+        },
+        {
+          "text": "No issue in the ledger carries auto_fixable: true",
+          "passed": true,
+          "evidence": "pattern not found (expected False)"
+        },
+        {
+          "text": "The heal harness sees zero auto-fixable issues in the production feed",
+          "passed": true,
+          "evidence": "feed has 2 issue(s); auto_fixable in feed: 0 (expected 0)"
+        },
+        {
+          "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (11 CLI calls)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The issue is marked auto_fixable: true",
+          "passed": true,
+          "evidence": "val-1-validator-accepts-strict-yaml-invalid-frontmatter.md: auto_fixable='true'"
+        },
+        {
+          "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+          "passed": true,
+          "evidence": "runnable sh repro present in ['val-1-validator-accepts-strict-yaml-invalid-frontmatter.md']"
+        },
+        {
+          "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); auto_fixable in feed: 1 (expected 1)"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The finding was filed as a defect into the issues ledger",
+          "passed": true,
+          "evidence": "filed to ledger='issues' (expected 'issues')"
+        },
+        {
+          "text": "The issue is marked auto_fixable: true",
+          "passed": true,
+          "evidence": "val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-parsers-reject.md: auto_fixable='true'"
+        },
+        {
+          "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+          "passed": true,
+          "evidence": "runnable sh repro present in ['val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-parsers-reject.md']"
+        },
+        {
+          "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+          "passed": true,
+          "evidence": "feed has 3 issue(s); auto_fixable in feed: 1 (expected 1)"
+        },
+        {
+          "text": "A `file --dry-run` preceded the real filing",
+          "passed": true,
+          "evidence": "all 1 real filing(s) were dry-run first"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8571,
+        "passed": 6,
+        "failed": 1,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `claim` and received exit 6",
+          "passed": true,
+          "evidence": "1 `claim` call(s) exited 6; exits seen: [0, 6]"
+        },
+        {
+          "text": "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+          "passed": false,
+          "evidence": "1 forbidden call(s) after the denied claim: [['triage']]"
+        },
+        {
+          "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+          "passed": true,
+          "evidence": "2 `claim` call(s), max 2"
+        },
+        {
+          "text": "The workflow was reported as completing normally, not as failed or blocked",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The ledger is untouched (no new issue)",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent ran `claim` and received exit 6",
+          "passed": true,
+          "evidence": "1 `claim` call(s) exited 6; exits seen: [0, 6]"
+        },
+        {
+          "text": "No finding was triaged, collected or filed after the denied claim \u2014 the retro was skipped",
+          "passed": true,
+          "evidence": "0 forbidden call(s) after the denied claim: []"
+        },
+        {
+          "text": "The agent did not retry-loop the claim (at most 2 claim attempts)",
+          "passed": true,
+          "evidence": "2 `claim` call(s), max 2"
+        },
+        {
+          "text": "The workflow was reported as completing normally, not as failed or blocked",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The ledger is untouched (no new issue)",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+          "passed": false,
+          "evidence": "verdict='BLOCKED' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+          "passed": true,
+          "evidence": "max calls of any one subcommand: 2 ({'doctor': 1, 'triage': 1, 'issues': 1, 'mine': 1, 'init': 2, 'claim': 1, 'journal': 1})"
+        },
+        {
+          "text": "The known-issues ledger was not mutated",
+          "passed": true,
+          "evidence": "issue count 2 \u2192 2 (delta 0); new: []"
+        },
+        {
+          "text": "No hand-edit was made to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (11 CLI calls)"
+        },
+        {
+          "text": "The retro failure is surfaced in the report rather than silently swallowed",
+          "passed": true,
+          "evidence": "report matches /(?is)(retro|feedback|config).{0,200}(fail|error|could not|co/"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The agent reported the workflow's verdict as passing despite the retro failing",
+          "passed": true,
+          "evidence": "verdict='PASS' (accepted: ['PASS', 'COMPLETE', 'OK', 'SUCCESS', 'GREEN'])"
+        },
+        {
+          "text": "The agent did not retry-loop the failing feedback command (no subcommand attempted more than 3 times)",
+          "passed": false,
+          "evidence": "max calls of any one subcommand: 8 ({'doctor': 7, 'init': 8, 'claim': 3, 'collect': 2, 'triage': 6, 'file': 4, 'journal': 3, 'mine': 3, 'release': 2, 'issues': 2})"
+        },
+        {
+          "text": "The known-issues ledger was not mutated",
+          "passed": false,
+          "evidence": "issue count 2 \u2192 3 (delta 1); new: ['rf-1-corrupt-config-bricks-feedback-pipeline.md']"
+        },
+        {
+          "text": "No hand-edit was made to docs/ or .agent/feedback/",
+          "passed": true,
+          "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (43 CLI calls)"
+        },
+        {
+          "text": "The retro failure is surfaced in the report rather than silently swallowed",
+          "passed": true,
+          "evidence": "report matches /(?is)(retro|feedback|config).{0,200}(fail|error|could not|co/"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.9935,
+        "stddev": 0.0265,
+        "min": 0.8889,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9599,
+        "stddev": 0.0901,
+        "min": 0.6667,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.03",
+      "time_seconds": "+0.0",
+      "tokens": "+0",
+      "pass_rate_ci": {
+        "metric": "pass_rate",
+        "config_a": "with_skill",
+        "config_b": "without_skill",
+        "delta_mean": 0.0336,
+        "ci_low": 0.0049,
+        "ci_high": 0.0665,
+        "level": 0.95,
+        "n_resamples": 5000,
+        "seed": 0,
+        "runs_a": 34,
+        "runs_b": 34
+      }
+    }
+  },
+  "notes": []
+}

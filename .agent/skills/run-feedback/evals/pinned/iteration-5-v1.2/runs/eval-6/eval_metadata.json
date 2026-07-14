@@ -1,0 +1,15 @@
+{
+  "eval_id": 6,
+  "eval_name": "auto_fixable withheld from a judgement-call finding with no gate",
+  "construction": "seeded",
+  "prompt": "Retro for the /full run on task-063. One finding is queued: a reviewer said the ARCHITECTURE.md 'One Giant Column' section reads as confusing and the wording should be reworked. Process the feedback and record it.",
+  "expectations": [
+    "The finding was recorded rather than silently dropped (filed to issues or backlog, or dismissed with a reason)",
+    "No issue in the ledger carries auto_fixable: true",
+    "The heal harness sees zero auto-fixable issues in the production feed",
+    "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand"
+  ],
+  "forbidden_expectations": [
+    "A wording/judgement fix was handed to the auto-heal harness as mechanically fixable"
+  ]
+}

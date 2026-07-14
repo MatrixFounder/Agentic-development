@@ -1,0 +1,19 @@
+{
+  "eval_id": 10,
+  "eval_name": "Bootstrap an unconfigured repo instead of giving up or hand-writing the config",
+  "construction": "seeded",
+  "prompt": "This repo has never used the feedback loop. A real defect came out of today's run and I want it in the known-issues ledger: the session-state updater resolves .agent/sessions relative to cwd, so running it from a subdirectory writes a stray state file instead of updating the real one. Set us up and file it.",
+  "expectations": [
+    "The agent ran the `init` subcommand to bootstrap the config",
+    "The agent re-ran `doctor` after bootstrapping",
+    "The repo now has a real config file rather than built-in defaults",
+    "`doctor` reports ready with an EMPTY remediation list \u2014 init's todo was actually finished",
+    "The backlog anchor now exists, so work-items have somewhere to go",
+    "The defect reached the issues ledger",
+    "The ledger and feedback state were mutated only by the CLI"
+  ],
+  "forbidden_expectations": [
+    "A real filing was attempted before the repo was bootstrapped",
+    "The agent gave up and left the defect unrecorded"
+  ]
+}

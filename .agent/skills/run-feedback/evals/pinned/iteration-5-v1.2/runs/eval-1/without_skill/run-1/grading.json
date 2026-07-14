@@ -1,0 +1,182 @@
+{
+  "eval_id": 1,
+  "eval_name": "Duplicate by fingerprint is dismissed, not re-filed",
+  "arm": "without_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran the `triage` subcommand before deciding anything",
+      "passed": true,
+      "evidence": "4 matching `triage` call(s)"
+    },
+    {
+      "text": "The report identifies the existing issue TF-1 as the duplicate",
+      "passed": true,
+      "evidence": "report matches /(?i)TF-1/"
+    },
+    {
+      "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+      "passed": true,
+      "evidence": "dismissed, reason='Duplicate of TF-1 (exact fingerprint 083dacc2076c6739): same transcript-fetcher gate failure \u2014 fetch.py exit 7, ffmpeg missing on the HLS ASR path. Already tracked as open issue TF-1; no new ledger entry needed.'"
+    },
+    {
+      "text": "The known-issues ledger gained no new issue",
+      "passed": true,
+      "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (15 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A second issue was filed for a defect the ledger already tracks",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 0 matching `file` call(s)"
+    },
+    {
+      "text": "The index file KNOWN_ISSUES.md grew a new line",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 index lines 3 \u2192 3 (delta 0)"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-083dacc2",
+        "--as",
+        "noise",
+        "--reason",
+        "Duplicate of TF-1 (exact fingerprint 083dacc2076c6739): same transcript-fetcher gate failure, fetch.py exit 7 / ffmpeg missing on the HLS ASR path. Already tracked as open issue TF-1.",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "task-042"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-083dacc2",
+        "--as",
+        "noise",
+        "--reason",
+        "Duplicate of TF-1 (exact fingerprint 083dacc2076c6739): same transcript-fetcher gate failure \u2014 fetch.py exit 7, ffmpeg missing on the HLS ASR path. Already tracked as open issue TF-1; no new ledger entry needed.",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--event-type",
+        "issue_recurred",
+        "--subject",
+        "TF-1 transcript-fetcher",
+        "--detail",
+        "run=task-042",
+        "--detail",
+        "workflow=develop",
+        "--detail",
+        "fingerprint=083dacc2076c6739",
+        "--detail",
+        "finding=fnd-20260714-032120-083dacc2",
+        "--detail",
+        "note=gate failure recurred during task-042 develop run; dismissed as duplicate of open issue TF-1"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "task-042"
+      ],
+      "exit": 0
+    }
+  ]
+}

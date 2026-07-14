@@ -1,0 +1,159 @@
+{
+  "eval_id": 1,
+  "eval_name": "Duplicate by fingerprint is dismissed, not re-filed",
+  "arm": "without_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The agent ran the `triage` subcommand before deciding anything",
+      "passed": true,
+      "evidence": "3 matching `triage` call(s)"
+    },
+    {
+      "text": "The report identifies the existing issue TF-1 as the duplicate",
+      "passed": true,
+      "evidence": "report matches /(?i)TF-1/"
+    },
+    {
+      "text": "The finding was dismissed as noise with a reason naming the existing issue ID TF-1",
+      "passed": true,
+      "evidence": "dismissed, reason='duplicate of TF-1 (same fingerprint 083dacc2076c6739; TF-1 already open in docs/issues)'"
+    },
+    {
+      "text": "The known-issues ledger gained no new issue",
+      "passed": true,
+      "evidence": "issue count 3 \u2192 3 (delta 0); new: []"
+    },
+    {
+      "text": "the issue files, the index's issue lines, the backlog and the feedback state were mutated only by the CLI, never by hand",
+      "passed": true,
+      "evidence": "hash chain intact across ['issues_files', 'index_lines', 'backlog', 'feedback_state'] (13 CLI calls)"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A second issue was filed for a defect the ledger already tracks",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 0 matching `file` call(s)"
+    },
+    {
+      "text": "The index file KNOWN_ISSUES.md grew a new line",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 index lines 3 \u2192 3 (delta 0)"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "claim",
+        "--run-id",
+        "task-042"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-083dacc2",
+        "--as",
+        "noise",
+        "--reason",
+        "duplicate of TF-1 (same fingerprint 083dacc2076c6739; TF-1 already open in docs/issues)"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--help"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "journal",
+        "--event-type",
+        "issue_recurred",
+        "--subject",
+        "TF-1 083dacc2076c6739",
+        "--detail",
+        "run=task-042",
+        "--detail",
+        "workflow=develop",
+        "--detail",
+        "component=transcript-fetcher",
+        "--detail",
+        "note=gate failed again (fetch.py exit 7, ffmpeg missing on HLS ASR path); TF-1 remains open and reproducing"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "release",
+        "--run-id",
+        "task-042"
+      ],
+      "exit": 0
+    }
+  ]
+}

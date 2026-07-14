@@ -1,0 +1,135 @@
+{
+  "eval_id": 7,
+  "eval_name": "Mechanical, gate-verifiable defect gets auto_fixable + a runnable sh repro",
+  "arm": "with_skill",
+  "construction": "seeded",
+  "expectations": [
+    {
+      "text": "The finding was filed as a defect into the issues ledger",
+      "passed": true,
+      "evidence": "filed to ledger='issues' (expected 'issues')"
+    },
+    {
+      "text": "The issue is marked auto_fixable: true",
+      "passed": true,
+      "evidence": "val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-rejects-unquoted-colon-in-description.md: auto_fixable='true'"
+    },
+    {
+      "text": "The issue body's Reproduction section is a fenced ```sh block containing at least one runnable command",
+      "passed": true,
+      "evidence": "runnable sh repro present in ['val-1-validate-skill-py-accepts-frontmatter-that-strict-yaml-rejects-unquoted-colon-in-description.md']"
+    },
+    {
+      "text": "The production issues feed exposes exactly one auto-fixable issue to the heal harness",
+      "passed": true,
+      "evidence": "feed has 3 issue(s); auto_fixable in feed: 1 (expected 1)"
+    },
+    {
+      "text": "A `file --dry-run` preceded the real filing",
+      "passed": true,
+      "evidence": "all 1 real filing(s) were dry-run first"
+    }
+  ],
+  "forbidden_expectations": [
+    {
+      "text": "A real, gate-verifiable defect was misrouted to the backlog instead of the issues ledger",
+      "passed": true,
+      "evidence": "did NOT occur \u2014 backlog bullets 0 \u2192 0 (delta 0)"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {},
+  "cli_calls": [
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-6f6668c4",
+        "--as",
+        "defect",
+        "--title",
+        "validate_skill.py accepts frontmatter that strict YAML rejects (unquoted colon in description)",
+        "--category",
+        "skill-creator",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "skill-creator",
+        "--auto-fixable",
+        "--body-file",
+        ".agent/feedback/_body-val.md",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "file",
+        "--finding",
+        "fnd-20260714-032120-6f6668c4",
+        "--as",
+        "defect",
+        "--title",
+        "validate_skill.py accepts frontmatter that strict YAML rejects (unquoted colon in description)",
+        "--category",
+        "skill-creator",
+        "--severity",
+        "SEV-2",
+        "--component",
+        "skill-creator",
+        "--auto-fixable",
+        "--body-file",
+        ".agent/feedback/_body-val.md"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "init",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "issues",
+        "--status",
+        "open",
+        "--auto-fixable",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "doctor",
+        "--json"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "triage"
+      ],
+      "exit": 0
+    }
+  ]
+}

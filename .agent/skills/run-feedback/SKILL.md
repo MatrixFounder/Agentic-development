@@ -2,7 +2,7 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # Run Feedback
 
@@ -16,7 +16,9 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
 - "I'll append a line to KNOWN_ISSUES.md without creating the issue file" -> **WRONG**. Lockstep or
-  nothing — the `file` subcommand writes both or neither. Never hand-edit one side.
+  nothing — the `file` subcommand writes both or neither. Never hand-edit one side. Scope of this
+  ban: issue files and the index's `- **ID**` issue lines. The prefix→category TABLE row in the
+  index preamble is the ONE hand-edit that is yours (§7 step 6) — the script cannot write it.
 - "This finding is obviously a dup, I'll file it anyway for completeness" -> **WRONG**. A duplicate
   goes to `--as noise --reason "duplicate of <ID>"`; the recurrence is already counted by the
   fingerprint merge.
@@ -29,6 +31,11 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
   allocated ID and the exact index line; a mis-filed ID pollutes a hand-maintained ledger.
 - "I'll edit a finding JSON in the inbox by hand" -> **WRONG**. Only the CLI mutates inbox state;
   hand edits break fingerprint dedup and the audit trail.
+- "The body I just filed came out malformed, I'll fix the issue file" -> **WRONG**. Ledger writes
+  are create-only ([RF-2](../../../docs/issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md):
+  `file` does not validate the body and `--dry-run` never previews it). Compose the body in a REAL
+  file and check it — balanced ```sh fence, all template sections — BEFORE filing; never build it
+  from a heredoc you cannot re-read. Landed broken → leave it, tell the human.
 - "The retro step failed, I should retry it / fail the workflow" -> **WRONG**. The retro is
   non-blocking by contract: report one line and move on; it NEVER changes the calling workflow's verdict.
 
@@ -66,6 +73,11 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 ## 5. Safety Boundaries
 - **Allowed scope**: writes ONLY to `.agent/feedback/**` (machine state, gitignored) and — from
   `file` exclusively — the configured `issues_dir`, `index_path`, `backlog_path`.
+- **Bootstrap exception** (§7 Bootstrap only): finishing `init`'s todo is agent-side by design —
+  you MAY hand-edit `docs/feedback/*.json`, seat the work-item anchor in the repo's existing
+  backlog (`BACKLOG.md` / `ROADMAP.md` / similar — create a thin `docs/BACKLOG.md` only if none
+  exists), and add prefix→category table rows. Issue files, index issue lines, and finding JSONs
+  stay CLI-only even during bootstrap.
 - **Create-only ledger writes**: never edits or deletes an existing issue file or index line;
   resolving/flipping statuses belongs to humans or `/heal-issues` under `known-issues-format` rules.
 - **Lockstep**: issue file written first; if the index write fails the issue file is rolled back.
@@ -125,16 +137,31 @@ Same as the retro protocol without claim/release: gather friction from the CURRE
 commands, retries, blockers), scoped by the user's hint; `mine` first when the hint says so.
 
 ### Bootstrap protocol (unconfigured repo — self-serve, no operator needed)
-Trigger: you have findings to process but the repo is not set up — `collect`/`file` exits 3,
-`doctor` reports `config_source: built-in defaults`, or `docs/feedback/` is missing.
+Trigger: you have findings to process but the repo is not set up. **An unconfigured repo does NOT
+error** — `collect`/`file` run on built-in defaults and exit 0, and `doctor` still says
+`ready: true` — so do not wait for a failure. The signals are: `doctor` reports
+`config_source: built-in defaults`, its `remediation` list is non-empty, or `docs/feedback/` is
+missing. **Bootstrap BEFORE the first real filing**, not after something breaks.
+
+Exit 3 means something different: the config EXISTS but is corrupt (or the env is broken).
+`init` is create-only and CANNOT repair it — do not delete or rewrite the corrupt file to force
+a re-init, and never run `init` more than once per run. Inside a retro this is a non-blocking
+failure (report one line, move on — the guarantee in the Retro protocol wins over bootstrap);
+outside a retro, preserve the file and surface it to the human.
 1. Run `run_feedback.py init` — deterministic part: copies both config templates into
    `docs/feedback/` (**create-only**, existing files are never overwritten) and seeds the
    `id_prefixes` map from the EXISTING ledger (component→prefix pairs derived from
    `docs/issues/*.md` frontmatter; conflicts are reported, never guessed).
 2. Finish the `todo` list init prints — this is YOUR judgement, not the script's:
-   - **backlog anchor**: point `backlog_path` at the repo's real backlog and make sure
-     `backlog_anchor` (`<!-- feedback:discovered-issues -->`) sits inside its Discovered-Issues
-     section — or create a thin `docs/BACKLOG.md` with that section if the repo has none;
+   - **backlog anchor** — the WORK-ITEM destination (`file --as work-item`), separate from the
+     issues ledger (defects go to `docs/issues/` + `KNOWN_ISSUES.md`, which the CLI seeds
+     itself). The backlog is a human-ranked file, so the CLI refuses to guess an insertion
+     point — it inserts only at `backlog_anchor` (`<!-- feedback:discovered-issues -->`) and
+     exits 4 without it. FIRST look for the repo's existing backlog under its real name —
+     `docs/BACKLOG.md`, `docs/ROADMAP.md`, or similar — point `backlog_path` there and seat
+     the anchor inside its Discovered-Issues section. Create a thin `docs/BACKLOG.md` ONLY
+     when nothing of the kind exists; a second backlog next to a live ROADMAP splits the
+     project's work-item tracking;
    - **heal gates**: replace `example-component` with ONLY components that have real checks
      (unit/e2e/validator commands that exit 0); no gate = honestly not auto-fixable — do NOT
      invent gates;
@@ -169,6 +196,8 @@ Trigger: you have findings to process but the repo is not set up — `collect`/`
 | "I remember this issue already exists, no need to check" | Run `triage`; fingerprints and title-overlap candidates are computed, not remembered. |
 | "The retro question annoys the user, I'll skip asking" | One question per run, pre-filled — that's the contract. Skipping loses the only human-signal channel. |
 | "Exit 6 from claim is an error I should fix" | Exit 6 = you are NESTED. Skipping the retro is the correct behavior, not a failure. |
+| "Config is corrupt — Bootstrap says I should repair it" | `init` is create-only; it cannot fix a corrupt file, and retrying it just loops. Inside a retro: one report line, move on. Outside: preserve the file, hand it to the human. |
+| "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo. Check `doctor`'s `config_source` + `remediation` — bootstrap comes BEFORE the first real filing. |
 
 ## 10. Examples (Few-Shot)
 See [`examples/usage_example.md`](examples/usage_example.md) for a full capture→triage→file walk.

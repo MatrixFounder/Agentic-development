@@ -24,7 +24,8 @@ To strictly enforce "Requirements Hardening" by mechanically verifying that:
 python3 scripts/validate.py --mode task /absolute/path/to/docs/TASK.md
 ```
 **Checks**:
-- Presence of table `## Requirements Traceability`.
+- Presence of an RTM heading (h2–h4), matched flexibly: `## Requirements Traceability [Matrix]`,
+  `## N. ... (RTM)`, and the bare `### N. Requirements (RTM)` form are all accepted.
 - Columns `ID`, `Requirement`.
 
 ### Mode B: PLAN Validation
@@ -34,7 +35,8 @@ python3 scripts/validate.py --mode task /absolute/path/to/docs/TASK.md
 python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute/path/to/docs/TASK.md
 ```
 **Checks**:
-- Every `ID` in TASK matches a `[ID]` tag in PLAN.
+- Every RTM `ID` in TASK appears as a whole token somewhere in PLAN — in a step heading
+  (`## Step 1 — ... (R1)`) or a `- [ ] R1 ...` bullet. `R1` does not satisfy `R10`.
 
 ## 3. Failure Handling
 - **Exit Code 1**: Issues found. Orchestrator should trigger a **Correction Loop** (instruct Analyst/Planner to fix).

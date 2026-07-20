@@ -4,6 +4,23 @@ import argparse
 import re
 import os
 
+# The RTM heading, matched against the shapes the repo ACTUALLY ships. A survey of
+# docs/tasks/ finds the section written at least six ways — h2 AND h3, with/without a
+# section number, with a trailing "(RTM)", and the current form `### N. Requirements (RTM)`
+# which drops the word "Traceability" entirely. The old `## Requirements Traceability`
+# literal (and its `$`-anchored relaxation) matched NONE of them, so this gate had never
+# once passed on a shipped artifact and Step-1 validation was, in practice, skipped. A gate
+# that cannot pass on the artifacts it governs is not a gate.
+#
+# Rule: an h2..h4 heading, an optional "N."/"N)" section number, then a lookahead requiring
+# the line to name the RTM — either "Requirements Traceability[ Matrix]" or a bare "(RTM)"
+# token. Kept zero-width / non-capturing so RTM_HEADER.split() stays clean. The table checks
+# below (non-empty, columns ID + Requirement) are UNCHANGED.
+RTM_HEADER = re.compile(
+    r'^#{2,4}\s+(?:\d+[.)]\s*)?(?=.*(?:Requirements\s+Traceability|\bRTM\b)).*$',
+    re.MULTILINE | re.IGNORECASE)
+
+
 def parse_markdown_table(content):
     """
     Parses a markdown table into a list of dictionaries.
@@ -63,9 +80,10 @@ def validate_task(task_path):
          sys.exit(0)
 
     # 1. Check for RTM Header
-    if "## Requirements Traceability" not in content:
+    if not RTM_HEADER.search(content):
         print("Error: '## Requirements Traceability' section missing in TASK.md.")
-        print("Please add the RTM table.")
+        print("Please add the RTM table (a section number and a trailing "
+              "'Matrix' are both fine).")
         sys.exit(1)
         
     # 2. Extract Table
@@ -73,7 +91,7 @@ def validate_task(task_path):
     # But usually the table follows the header.
     
     # Let's try to extract the section first
-    rtm_section = re.split(r'^## Requirements Traceability', content, flags=re.MULTILINE)[1]
+    rtm_section = RTM_HEADER.split(content)[1]
     # Stop at next header
     rtm_block = re.split(r'^## ', rtm_section.strip(), flags=re.MULTILINE)[0]
     
@@ -112,11 +130,11 @@ def validate_plan(plan_path, task_path):
          sys.exit(0)
 
     # Extract IDs from TASK
-    if "## Requirements Traceability" not in task_content:
+    if not RTM_HEADER.search(task_content):
         print("Error: '## Requirements Traceability' section missing in TASK.md.")
         sys.exit(1)
 
-    rtm_section = re.split(r'^## Requirements Traceability', task_content, flags=re.MULTILINE)[1]
+    rtm_section = RTM_HEADER.split(task_content)[1]
     rtm_block = re.split(r'^## ', rtm_section.strip(), flags=re.MULTILINE)[0]
     rows = parse_markdown_table(rtm_block)
     
@@ -134,18 +152,31 @@ def validate_plan(plan_path, task_path):
     with open(plan_path, 'r') as f:
         plan_content = f.read()
 
+    # The contract is "every RTM item is referenced somewhere in the PLAN". Enforce THAT,
+    # not a literal `[**R-1**]` token — which is what the original version demanded and why
+    # the gate never passed on a shipped plan.
+    #
+    # IDs are referenced wherever the plan tracks them: the corpus splits between `- [ ]`
+    # checklist bullets and `## Step N — ... (R1, R2)` step headings (some plans use prose),
+    # so restricting to checklist lines would fail the majority. Search the WHOLE plan body,
+    # but as a WHOLE TOKEN — `R1` must not be satisfied by `R10`, and the token charset
+    # includes `-` for hyphenated namespaces (`R-065-1`, `TF-X-7`). IDs are normalised of
+    # markdown emphasis / brackets / backticks first. A genuinely un-referenced ID (e.g. a
+    # plan that omits R10, or tracks findings under a different `F#` scheme) is a real
+    # traceability gap — reporting it is the gate doing its job, not a false negative.
     missing_ids = []
     for rid in rtm_ids:
-        # Strict checking: Expecting "[RID]" or just "RID" if defined loosely?
-        # Proposal said: "Checklist items MUST start with the RTM ID (e.g., [R1] Implement...)."
-        # So we look for `[RID]` in the plan content.
-        token = f"[{rid.strip()}]"
-        if token not in plan_content:
-            missing_ids.append(rid)
-            
+        bare = rid.strip().strip("*`[] ")
+        if not bare:
+            continue
+        token = re.compile(r'(?<![\w-])' + re.escape(bare) + r'(?![\w-])')
+        if not token.search(plan_content):
+            missing_ids.append(bare)
+
     if missing_ids:
         print(f"Error: The following Requirement IDs are NOT covered in PLAN.md: {missing_ids}")
-        print("Please ensure every RTM item differs a checklist item starting with [ID].")
+        print("Please reference every RTM ID somewhere in PLAN.md "
+              "(a step heading like '## Step 1 — ... (R1)' or a '- [ ] R1 ...' bullet).")
         sys.exit(1)
         
     print(f"Success: All {len(rtm_ids)} requirements covered in PLAN.md.")

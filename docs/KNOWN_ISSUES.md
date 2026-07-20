@@ -93,6 +93,7 @@ the matching `## <category>` heading here, in ID order.
 
 ## validation
 
+- **FW-1** [Spec-validator bypass token matches anywhere in content](issues/validator-bypass-substring.md) — severity `SEV-4`, status `open`, opened 2026-07-20
 - **VAL-1** [validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)](issues/val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13
 - **VAL-2** [run_eval.py trigger probe false-negatives: name competition with installed skill and first-call strictness](issues/val-2-run-eval-py-trigger-probe-false-negatives-name-competition-with-installed-skill-and-first-call-strictness.md) — severity `SEV-3`, status `open`, opened 2026-07-13
 

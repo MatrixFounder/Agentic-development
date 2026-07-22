@@ -45,6 +45,13 @@ class TestBuildBlockBody(InstallerTestCase):
         # but .agent/sessions (mkdir under .agent/) IS ignored.
         self.assertIn("/.agent/sessions", body)
 
+    def test_feedback_machine_state_ignored(self) -> None:
+        # run-feedback machine state (.agent/feedback: inbox/journal/locks/
+        # heal-state) is a mkdir component under .agent/ — must be ignored so
+        # downstream projects never commit it (QUALITY_FEEDBACK_LOOP §setup).
+        body = build_block_body(_CLAUDE, [])
+        self.assertIn("/.agent/feedback", body)
+
     def test_exceptions_appended(self) -> None:
         body = build_block_body(_CLAUDE, ["!/.agent/skills/mine"])
         self.assertIn("!/.agent/skills/mine", body)

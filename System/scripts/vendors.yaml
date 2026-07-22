@@ -27,6 +27,7 @@ defaults:
     - { path: ".agent/tools",     action: link_folder,   source: ".agent/tools" }
     - { path: ".agent/rules",     action: link_folder,   source: ".agent/rules" }
     - { path: ".agent/sessions",  action: mkdir }
+    - { path: ".agent/feedback",  action: mkdir }
   root_components:
     - { path: "System", action: link_folder, source: "System" }
 

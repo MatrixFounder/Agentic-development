@@ -33,30 +33,78 @@ def normalize_slug(slug: str) -> str:
     return slug or "untitled"
 
 
+#: Any archived task file: `task-<id>-<rest>.md`. 3+ digits, future-proofed.
+TASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-.*\.md$')
+
+#: A PLANNER SUB-TASK: `task-<id>-<subid>-<slug>.md`, e.g. `task-005-1-usage-ddl.md`. The segment
+#: right after the id is purely numeric — that is what distinguishes it from a parent archive
+#: (`task-005-m2-alpha-paid.md`), whose slug never starts with a bare number segment.
+SUBTASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-(\d+)-.+\.md$')
+
+
 def get_existing_task_ids(tasks_dir: str = "docs/tasks") -> list[int]:
     """
-    Scan the tasks directory and extract all existing task IDs.
-    
+    Scan the tasks directory and extract all task IDs in use — parents AND sub-tasks.
+
+    Used for AUTO-GENERATION (`proposed_id=None`), where a sub-task must keep its parent's id
+    reserved: handing a brand-new task an id whose sub-task namespace is already populated would
+    interleave two unrelated tasks under one number.
+
     Args:
         tasks_dir: Path to the tasks directory
-    
+
     Returns:
         List of existing task IDs as integers
     """
     existing_ids = []
-    
+
     if not os.path.exists(tasks_dir):
         return existing_ids
-    
-    pattern = re.compile(r'^task-(\d{3,})-.*\.md$')  # Support 3+ digits for future-proofing
-    
+
     for filename in os.listdir(tasks_dir):
-        match = pattern.match(filename)
+        match = TASK_FILENAME_RE.match(filename)
         if match:
             task_id = int(match.group(1))
             existing_ids.append(task_id)
-    
+
     return existing_ids
+
+
+def get_parent_archive_ids(tasks_dir: str = "docs/tasks") -> list[int]:
+    """
+    Scan for IDs that already have a PARENT archive (`task-<id>-<slug>.md`), ignoring sub-tasks.
+
+    This is the set an explicit `--proposed-id` must be checked against. `get_existing_task_ids()`
+    counts sub-tasks too, so archiving a finished parent under its own id was refused whenever the
+    planner had written `task-<id>-1..N-*.md` for it — and `skill-archive-task` Step 4 then says
+    "set Task ID to the id used in filename", i.e. following the protocol literally RENUMBERED a
+    task that was already committed, breaking its pairing with its own sub-tasks, its
+    `docs/plans/plan-<id>-*.md` and any commit referencing it. Nothing errored; the archive was
+    simply wrong, in a hand-maintained ledger.
+
+    Known limitation: a parent slug that itself begins with a bare number segment
+    (`task-007-2024-migration.md`) is indistinguishable from sub-task 2024 by filename alone.
+    Avoid leading numeric segments in slugs; `normalize_slug` does not forbid them because a
+    project may legitimately want e.g. `task-012-3d-viewer` (segment `3d` is not purely numeric,
+    so it is read as a parent correctly).
+
+    Args:
+        tasks_dir: Path to the tasks directory
+
+    Returns:
+        List of task IDs that have a parent archive, as integers
+    """
+    parent_ids = []
+
+    if not os.path.exists(tasks_dir):
+        return parent_ids
+
+    for filename in os.listdir(tasks_dir):
+        match = TASK_FILENAME_RE.match(filename)
+        if match and not SUBTASK_FILENAME_RE.match(filename):
+            parent_ids.append(int(match.group(1)))
+
+    return parent_ids
 
 
 def find_next_available_id(existing_ids: list[int], start_from: int = 1) -> int:
@@ -114,9 +162,13 @@ def generate_task_archive_filename(
                 "message": f"Failed to create tasks directory: {e}"
             }
     
-    # Get existing IDs (must be after directory creation)
+    # Get existing IDs (must be after directory creation).
+    # Two different sets on purpose — see get_parent_archive_ids() for why:
+    #   existing_ids -> auto-generation (sub-tasks reserve their parent's id)
+    #   parent_ids   -> the --proposed-id conflict check (only a real parent archive conflicts)
     existing_ids = get_existing_task_ids(tasks_dir)
-    
+    parent_ids = get_parent_archive_ids(tasks_dir)
+
     if proposed_id is None:
         # Auto-generate: max + 1
         next_id = find_next_available_id(existing_ids)
@@ -145,8 +197,9 @@ def generate_task_archive_filename(
     
     formatted_proposed = f"{proposed_int:03d}"
     
-    # Check for conflict
-    if proposed_int in existing_ids:
+    # Check for conflict — against PARENT archives only. A populated sub-task namespace
+    # (`task-<id>-1..N-*.md`) is not a conflict for the parent that owns it.
+    if proposed_int in parent_ids:
         if allow_correction:
             # Find next available
             next_id = find_next_available_id(existing_ids, start_from=proposed_int + 1)

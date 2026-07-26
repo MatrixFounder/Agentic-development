@@ -16,6 +16,7 @@ import pytest
 from task_id_tool import (
     normalize_slug,
     get_existing_task_ids,
+    get_parent_archive_ids,
     find_next_available_id,
     generate_task_archive_filename
 )
@@ -97,6 +98,90 @@ class TestGetExistingTaskIds:
         (tasks_dir / "task-1001-newest.md").touch()
         result = sorted(get_existing_task_ids(str(tasks_dir)))
         assert result == [999, 1000, 1001]
+
+
+class TestParentArchiveVsSubTask:
+    """
+    Regression: a populated SUB-TASK namespace must not block archiving its own parent.
+
+    Before this, `get_existing_task_ids()` was the only scan, and it matched
+    `task-005-1-slug.md` as "id 005 in use". Archiving the finished parent TASK-005 under 005 was
+    therefore refused and silently renumbered to 006 — and `skill-archive-task` Step 4 says to set
+    the task's ID to the one in the filename, so following the protocol literally renumbered a
+    task that was already committed, breaking its pairing with its nine sub-tasks, with
+    `docs/plans/plan-005-*.md` and with every commit referencing TASK-005. Nothing raised; the
+    hand-maintained ledger just became wrong.
+    """
+
+    def test_subtasks_alone_do_not_create_a_parent_archive(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-005-1-canonical-types.md").touch()
+        (tasks_dir / "task-005-9-carryover.md").touch()
+        assert get_parent_archive_ids(str(tasks_dir)) == []
+        # ...while the auto-generate scan still sees the id as in use:
+        assert get_existing_task_ids(str(tasks_dir)) == [5, 5]
+
+    def test_parent_archive_is_detected(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-003-m1-read-layer.md").touch()
+        (tasks_dir / "task-003-1-sub.md").touch()
+        assert get_parent_archive_ids(str(tasks_dir)) == [3]
+
+    def test_proposed_id_accepted_when_only_subtasks_exist(self, tmp_path):
+        """The exact scenario that produced the wrong archive (TASK-006 retro, RF ledger)."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        for n in range(1, 10):
+            (tasks_dir / f"task-005-{n}-sub.md").touch()
+
+        result = generate_task_archive_filename(
+            "m2-alpha-paid", proposed_id="005", tasks_dir=str(tasks_dir)
+        )
+        assert result["used_id"] == "005"
+        assert result["status"] == "generated"
+        assert result["filename"] == "task-005-m2-alpha-paid.md"
+
+    def test_proposed_id_still_conflicts_with_a_real_parent(self, tmp_path):
+        """The guard must not be loosened into "never conflict"."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-005-m2-alpha-paid.md").touch()
+
+        result = generate_task_archive_filename(
+            "other", proposed_id="005", tasks_dir=str(tasks_dir)
+        )
+        assert result["status"] == "corrected"
+        assert result["used_id"] != "005"
+
+    def test_no_correction_mode_still_reports_conflict_on_a_real_parent(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-005-parent.md").touch()
+
+        result = generate_task_archive_filename(
+            "other", proposed_id="005", allow_correction=False, tasks_dir=str(tasks_dir)
+        )
+        assert result["status"] == "conflict"
+
+    def test_auto_generation_still_reserves_ids_held_only_by_subtasks(self, tmp_path):
+        """A brand-new task must NOT land on an id whose sub-task namespace is populated."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-005-1-sub.md").touch()
+
+        result = generate_task_archive_filename("brand-new", tasks_dir=str(tasks_dir))
+        assert result["used_id"] == "006"
+        assert result["status"] == "generated"
+
+    def test_slug_starting_with_a_letter_digit_segment_reads_as_a_parent(self, tmp_path):
+        """`m2`/`3d` are not purely numeric, so they are parents — only a bare number is a sub-id."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-005-m2-alpha-paid.md").touch()
+        (tasks_dir / "task-012-3d-viewer.md").touch()
+        assert sorted(get_parent_archive_ids(str(tasks_dir))) == [5, 12]
 
 
 class TestFindNextAvailableId:

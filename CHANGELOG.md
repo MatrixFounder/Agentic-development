@@ -16,6 +16,22 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.2 — `task_id_tool.py`: sub-tasks no longer block archiving their own parent**
+
+`get_existing_task_ids()` was the single scan behind both the auto-generated id **and** the `--proposed-id` conflict check, and it matched `task-005-1-slug.md` as "id 005 is taken". So archiving a **finished parent** TASK-005 under its own id was refused and silently corrected to 006 — while `skill-archive-task` Step 4 instructs the agent to "set Task ID to the id used in filename". Following the protocol literally therefore **renumbered an already-committed task**, breaking its pairing with its own nine sub-tasks, with `docs/plans/plan-005-*.md`, and with every commit referencing TASK-005. Nothing errored; the hand-maintained ledger simply became wrong. Found in a TASK-006 run of the `onchain-analytics` repo: `--proposed-id 005` returned `corrected -> 006` although `task-005-m2-alpha-paid.md` did not exist. Gate: 36/36 in the tool's own suite, 59 green across `.agent/tools`.
+
+#### **Fixed**
+* **The `--proposed-id` conflict check now runs against parent archives only.** New **`get_parent_archive_ids()`** returns the ids that actually own a parent archive (`task-<id>-<slug>.md`); a populated sub-task namespace (`task-<id>-1..N-*.md`) is no longer a conflict for the parent it belongs to. The two scans are split **by semantics, on purpose**: `get_existing_task_ids()` is **unchanged** and still backs **auto-generation**, where a sub-task must keep its parent's id reserved — otherwise a brand-new task would be handed a number whose sub-task namespace is already populated, interleaving two unrelated tasks under one id.
+* **Parent vs sub-task is decided by filename shape** — a sub-task's segment right after the id is purely numeric (`task-005-1-…`), a parent's is not (`task-005-m2-alpha-paid`). The repos' own precedent had been contradicting the tool: `task-003-m1-read-layer.md` sits next to `task-003-1..8`, i.e. "the parent keeps its id" is the convention actually practised.
+
+#### **Added**
+* **`TestParentArchiveVsSubTask`** (tool suite 29 → **36** tests) — covers the original scenario, the inverse (a real parent archive still conflicts), `allow_correction=False`, and that auto-generation still reserves ids held only by sub-tasks.
+
+#### **Changed**
+* Both filename patterns are now module-level constants (`TASK_FILENAME_RE`, `SUBTASK_FILENAME_RE`) instead of a regex compiled inside the loop, so the parent/sub-task distinction has one definition rather than two call sites that can drift.
+
+**Known limitation** (documented in the docstring, not silently accepted): a parent slug that itself begins with a bare number segment (`task-007-2024-migration.md`) is indistinguishable from sub-task 2024 by filename alone. `normalize_slug` does not forbid leading numeric segments, because `task-012-3d-viewer` is legitimate and reads correctly (`3d` is not purely numeric).
+
 ### **v3.21.1 — `documentation-standards` v1.4: Markdown structure is now a contract, not a preference**
 
 The framework had a standard for documenting **code** (docstrings, JSDoc, why-not-what comments) but none for the **shape** of the `.md` artifacts it emits on every run — so TASK/PLAN/ARCHITECTURE files kept degrading into unreadable walls: explanations stuffed into table cells, 30-line paragraphs with no entry points, 2000-character lines that turn a one-word fix into a whole-paragraph diff. This release makes structure a contract. Skill-only and **formatter-independent** — a Prettier/`markdownlint` setup only makes a violation *visible* sooner, it is not the reason the rule exists. No code, no installer, no `vendors.yaml` change. Gate: 45/45 skill validation green.

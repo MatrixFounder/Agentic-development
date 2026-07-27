@@ -16,6 +16,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.3 — Retro lessons hardened: portability review, vendor-bootstrap parity, one rule reverted**
+
+Five retro lessons from a consumer project had been written into Tier-1 skills and pipeline prompts; an adversarial pass over the batch found two of them inverted on other stacks. Gates: 45/45 skill validation, 228 pytest + 17 subtests, doctor / prompt-refs / workflow-smoke / security-lint green.
+
+#### **Fixed**
+* **`developer-guidelines` §5.1** — Go row is now `gofmt -l .` / `gofmt -w .` (`gofmt` takes paths, not the go-tool `./...` pattern), with `go fmt ./...` flagged as a writing form; `ruff format --check` replaces `--diff`; `ruff check .` and `cargo clippy` added to the reporting column.
+* **`developer-guidelines` §5.1** — narrowing the path argument to the task's files is now step 1; extending repo-wide ignore rules is a finding to RAISE, no longer a mandated edit.
+* **`code-review-checklist` §2** — the dead-code guard greps repo-wide instead of `test/`, with per-language test layouts listed (Go, Rust, JS/TS, Python, Foundry).
+* **`01_orchestrator.md` §5.1** — retracted C-07 claim removed; `skill-parallel-orchestration` citations corrected §4 → §2.2. Same claim removed from `docs/ARCHITECTURE.md`.
+* **`01_orchestrator.md` item 15** — stalled-subagent recovery branches on evidence: early stall → resume; late stall after substantial output → fresh spawn seeded with the partial artifact.
+* **`04_architect_prompt`** — incremental writes follow the order `architecture-format-*` mandates; out-of-order decisions go to a scratch draft.
+* **`08_developer_prompt` Step 2b** — "highest-value first" is scoped to within the assigned phase and never reorders the Stub-First phases.
+* **`CLAUDE.md`** — duplicate list numbering in Workspace Workflows (`3.` twice).
+
+#### **Added**
+* **`run-feedback` §7 triage step 4** (v1.2 → **1.3**) — a finding whose fix edits a shared artifact must be generalized out of the originating stack, and a behaviour change filed as a work-item for review rather than landed as guidance. Two matching Rationalization Table rows.
+* **`AGENTS.md` Workspace Workflows section** — Codex and Cursor previously had no workflow discovery or dispatch rules. `GEMINI.md` gained the Teams Dispatch item.
+
+#### **Changed**
+* **Bootstrap files name their own parallel-orchestration reference** instead of running the §1.1 detector. `GEMINI.md` splits guidance between Antigravity and Gemini CLI, since `vendors.yaml` maps both to it.
+* **War-story justifications and origin markers removed** from Tier-1 artifacts.
+
+#### **Reverted**
+* **Commit-granularity rule (`skill-planning-format`)** and its plan-template field — its premise is false under Stub-First (the stub commit is green by construction) and its trigger fires on every Stub-First plan.
+* **"Independent critics beat self-critique" (`vdd-enhanced.md`)** — uncited, and it deprecated the workflow that file dispatches. Retained: orchestrator-applied fixes carry into the next cycle as unreviewed, and a cap reached with one still unreviewed → verdict **WARNING, never PASS**.
+
 ### **v3.21.2 — `task_id_tool.py`: sub-tasks no longer block archiving their own parent**
 
 `get_existing_task_ids()` was the single scan behind both the auto-generated id **and** the `--proposed-id` conflict check, and it matched `task-005-1-slug.md` as "id 005 is taken". So archiving a **finished parent** TASK-005 under its own id was refused and silently corrected to 006 — while `skill-archive-task` Step 4 instructs the agent to "set Task ID to the id used in filename". Following the protocol literally therefore **renumbered an already-committed task**, breaking its pairing with its own nine sub-tasks, with `docs/plans/plan-005-*.md`, and with every commit referencing TASK-005. Nothing errored; the hand-maintained ledger simply became wrong. Found in a TASK-006 run of the `onchain-analytics` repo: `--proposed-id 005` returned `corrected -> 006` although `task-005-m2-alpha-paid.md` did not exist. Gate: 36/36 in the tool's own suite, 59 green across `.agent/tools`.

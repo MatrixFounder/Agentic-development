@@ -75,7 +75,12 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - If user asks for "TDD", prioritize `tdd-*` workflows.
    - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
    - If no variant specified, default to standard `01-04`.
-3. **Execution**: If a matching workflow is found, execute its steps strictly.
+3. **Teams Dispatch (Wave 1)**: `vdd-multi` spawns the three critics (`critic-logic`, `critic-security`, `critic-performance`). **This file is read by two runtimes — do not run the §1.1 detector, load your own reference directly:**
+   - **Antigravity** → `.agent/skills/skill-parallel-orchestration/references/antigravity.md`. Async subagent dispatch is documented (scaffold, not yet end-to-end validated) — use it.
+   - **Gemini CLI** → `.agent/skills/skill-parallel-orchestration/references/gemini-cli.md`. ⚠️ The Layer-A (parallel spawn) primitive is **not confirmed** in primary docs; if no spawn mechanism exists, fall back to `references/sequential-fallback.md` — a **degraded last resort, not an equivalent**.
+
+   Decision rule between Layer A (parallel spawn) and Layer B (peer communication) lives in that skill §2.2 and `System/Agents/01_orchestrator.md` §5.1.
+4. **Execution**: If a matching workflow is found, execute its steps strictly.
    - **CRITICAL**: Global Protocols (like `skill-archive-task`, `skill-update-memory`, and the end-of-run Retro from `run-feedback` SKILL.md §7) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
    - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
    - Support for **Nested Calls**: Use `Call /workflow-name` syntax to invoke other workflows.

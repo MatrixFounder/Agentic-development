@@ -49,6 +49,18 @@ Follow this process strictly:
 - **Interfaces:** Define API contracts and Internal logic.
 - **Stack:** Choose technologies justified by requirements.
 
+> [!IMPORTANT]
+> **Do not research to exhaustion before your first write.** This role has the widest reading
+> surface in the pipeline and so is the most likely to be cut off (stalled stream, watchdog) with
+> nothing on disk — and reading is not progress that survives. Write `docs/ARCHITECTURE.md` section
+> by section as each is decided, **in the order the `architecture-format-*` skill mandates**
+> (Step 3), rather than composing the whole document in one final call.
+>
+> **Constraint:** `docs/ARCHITECTURE.md` is a living document updated **in place** and is what the
+> `architecture-reviewer` reads. Never leave it violating the mandated structure between writes —
+> if decisions arrive out of order, draft them in a scratch file and land them in the required
+> order.
+
 ### Step 3: Artifact Creation (docs/ARCHITECTURE.md)
 **Constraint:** STRICTLY follow the structure from the loaded `architecture-format-*` skill.
 **Content Requirements:**

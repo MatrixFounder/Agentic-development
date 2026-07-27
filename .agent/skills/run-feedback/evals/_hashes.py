@@ -9,7 +9,8 @@ file" is false for KNOWN_ISSUES.md taken as a whole:
   issues_files   docs/issues/**        — CLI-owned outright. Any hand-written issue file is
                                          a lockstep violation.
   index_lines    the `- **ID** …` issue lines of the index, as a SET — CLI-owned. Hashing the
-                                         whole file would be wrong: SKILL.md §7.6 explicitly
+                                         whole file would be wrong: SKILL.md §7 "Triage protocol"
+                                         (final step) explicitly
                                          tells the agent to hand-add a row to the
                                          prefix→category TABLE ("the script warns; the table
                                          edit is yours"). That legitimate preamble edit must

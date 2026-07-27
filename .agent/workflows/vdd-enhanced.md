@@ -66,6 +66,15 @@ description: VDD-Enhanced Development (Hardened Pipeline)
     nitpicks.
 3.  **Outer cap**: **max 3 adversarial cycles** (critique → fix → re-critique). Cap reached
     without convergence → STOP and report the remaining findings to the User.
+4.  **Orchestrator-applied fixes are re-reviewed, and named as such.** A fix the orchestrator
+    writes itself — instead of dispatching it through the Developer → Reviewer loop — has had
+    **no review pass at all**. Carry every such fix into the NEXT cycle's brief, listed
+    explicitly as "applied outside the dev→review loop", so the critics know to attack the fix
+    and not only the original code. A fix is not exempt from review for having been written by the
+    orchestrator; a fix can be worse than the defect it replaced.
+5.  **Cap reached with an orchestrator-applied fix still un-reviewed** → the verdict is
+    **WARNING, never PASS**. Name the unreviewed change in the report to the User; do not let
+    "the cycle found nothing new" stand in for "this change was reviewed".
 
 ## 5. Retro (Global Protocol)
 Apply `run-feedback` SKILL.md §7 "Retro protocol":

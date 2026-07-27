@@ -57,6 +57,24 @@ Use your harness's **built-in tools** — Cursor and Codex CLI both provide file
 ### Session State Persistence
 - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
 
+## WORKSPACE WORKFLOWS (Dynamic Dispatch)
+Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.
+1. **Discovery**: List `.agent/workflows/` and match by name — filenames do not follow one pattern, so the authoritative set is the list below.
+    - **Available Workflows**: `01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `04-update-docs`, `05-run-full-task`, `light-01-start-feature` + `light-02-develop-task`, `base-stub-first`, `vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-adversarial`, `vdd-enhanced`, `vdd-multi`, `full-robust`, `security-audit`, `framework-upgrade`, `iterative-design`, `product-full-discovery`, `product-market-only`, `product-quick-vision`, `heal-issues` (+ ad-hoc feedback collection via the `run-feedback` skill; guide: `System/Docs/QUALITY_FEEDBACK_LOOP.md`).
+2. **Dispatch**:
+   - If user asks for "VDD", prioritize `vdd-*` workflows.
+   - If user asks for "TDD", prioritize `tdd-*` workflows.
+   - If task is trivial (typo, UI tweak, simple bugfix), **PROPOSE** `/light` workflow.
+   - If no variant specified, default to standard `01-04`.
+3. **Teams Dispatch (Wave 1)**: `vdd-multi` spawns the three critics (`critic-logic`, `critic-security`, `critic-performance`). **This file is read by more than one runtime — do not run the §1.1 detector (it is first-match-wins and resolves to Claude Code in any repo that also has `CLAUDE.md`). Load your own reference directly** from `.agent/skills/skill-parallel-orchestration/references/`:
+   - **Codex** → `codex-cli.md` (spawn-and-consolidate).
+   - **Cursor** → `cursor.md` (up to 10 concurrent).
+
+   Both are documented scaffolds, not yet end-to-end validated, but "no parallel primitive outside Claude Code" is **obsolete**. Sequential role-switching (`sequential-fallback.md`) is the **last resort** for genuinely primitive-less runtimes, not the default. Decision rule between Layer A (parallel spawn) and Layer B (peer communication) lives in that skill §2.2 and `System/Agents/01_orchestrator.md` §5.1.
+4. **Execution**: If a matching workflow is found, execute its steps strictly.
+   - **CRITICAL**: Global Protocols (like `skill-archive-task`, `skill-update-memory`, and the end-of-run Retro from `run-feedback` SKILL.md §7) **ALWAYS APPLY**, even inside workflows, unless explicitly skipped.
+   - **MANDATORY**: After every phase boundary, persist context via the Session State Persistence command above.
+
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
 1. **Analysis Phase**:

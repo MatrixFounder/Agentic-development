@@ -2,7 +2,7 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.2
+version: 1.3
 ---
 # Run Feedback
 
@@ -106,7 +106,20 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
    - **defect** — reproducible wrong behavior with a fix path → issues ledger;
    - **work-item** — enhancement / polish / signal without a broken contract → backlog;
    - **noise** — transient environment, operator error, already-fixed → dismiss with a reason.
-4. For defects: severity strictly from `SEV-2/SEV-3/SEV-4/LOW`; category from the ledger's
+4. **If the finding's resolution is an edit to a SHARED artifact** — a skill, an agent prompt, a
+   workflow, anything installed into other repos — two extra checks before filing:
+   - **Generalize it out of the stack it happened in.** Strip the language, tool, repo layout and
+     project name. A lesson filed as "grep `test/`" or "run `prettier --check`" is either ignored
+     as foreign on other stacks or, worse, followed literally and returns the wrong answer — Go
+     keeps tests beside the source, so that grep finds nothing and sanctions the deletion it was
+     written to prevent. State the rule so it holds on every stack the framework supports; concrete
+     commands belong in a per-ecosystem table, never in the rule itself.
+   - **Separate guidance from behaviour change.** Advisory text is cheap. Text that changes what
+     runs, what gets committed, or which workflow dispatches is a behaviour change: check it
+     against the target framework's MANDATORY rules first, and file it as a **work-item for
+     review**, not as guidance to land. A rule whose justification describes a scenario the target
+     framework cannot produce is a defect in the lesson, not a lesson.
+5. For defects: severity strictly from `SEV-2/SEV-3/SEV-4/LOW`; category from the ledger's
    prefix→category table; author the body from
    [`assets/templates/issue_body_template.md`](assets/templates/issue_body_template.md)
    (Symptom / Reproduction / Workaround / Fix path / Related / Do-not), citing `evidence` paths.
@@ -114,8 +127,8 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
    `/heal-issues` executes; prose repros are not auto-healable.
    Add `--auto-fixable` ONLY when the fix is mechanical and gate-verifiable — this is the explicit
    opt-in the heal harness selects on.
-5. **MUST** run `file … --dry-run`, read the previewed ID + index line, then run for real.
-6. Finish by reporting filed IDs, dismissed counts, and any new prefix that needs a row in the
+6. **MUST** run `file … --dry-run`, read the previewed ID + index line, then run for real.
+7. Finish by reporting filed IDs, dismissed counts, and any new prefix that needs a row in the
    ledger's prefix→category table (the script warns; the table edit is yours).
 
 ### Retro protocol (Global Protocol — end of every terminal workflow)
@@ -198,6 +211,8 @@ outside a retro, preserve the file and surface it to the human.
 | "Exit 6 from claim is an error I should fix" | Exit 6 = you are NESTED. Skipping the retro is the correct behavior, not a failure. |
 | "Config is corrupt — Bootstrap says I should repair it" | `init` is create-only; it cannot fix a corrupt file, and retrying it just loops. Inside a retro: one report line, move on. Outside: preserve the file, hand it to the human. |
 | "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo. Check `doctor`'s `config_source` + `remediation` — bootstrap comes BEFORE the first real filing. |
+| "I'll file the lesson exactly as it happened — the details make it concrete" | Concrete to THIS stack means wrong on the others. A shared-artifact lesson gets generalized before filing (§7 triage step 4). |
+| "It's just a line of guidance, it can't break anything" | If it changes what runs, what gets committed, or which workflow dispatches, it is a behaviour change — check it against the target's MANDATORY rules first (§7 triage step 4). |
 
 ## 10. Examples (Few-Shot)
 See [`examples/usage_example.md`](examples/usage_example.md) for a full capture→triage→file walk.

@@ -2,7 +2,7 @@
 name: code-review-checklist
 description: "Structured checklist for code review: bugs, style, performance, security, docs."
 tier: 1
-version: 1.1
+version: 1.2
 ---
 # Code Review Checklist
 
@@ -18,6 +18,18 @@ version: 1.1
 - [ ] **No Duplication:** used existing methods/helpers?
 - [ ] **Error Handling:** Exceptions caught and logged?
 - [ ] **Code Smells:** No magic numbers, understandable names?
+- [ ] **Dead Code:** Before proposing a deletion — symbol grepped repo-wide? (callout below)
+
+> ### Before acting on a "remove dead code" finding
+> 1. **Grep the symbol repo-wide — never scope the search to a test directory.** Tests are not
+>    always in one: Go keeps `*_test.go` beside the source, Rust puts unit tests inline under
+>    `#[cfg(test)]`, JS/TS co-locates `*.spec.ts` / `__tests__/`, Python uses `tests/`, Foundry
+>    uses `test/*.t.sol`. A directory-scoped grep returns "nothing depends on it" precisely where
+>    that answer is wrong.
+> 2. **If a test drives it, the fix is not deletion** — make production reach the branch (wire the
+>    flag, pass the parameter) so code and requirement agree.
+> 3. **Report it as "unreachable *and* covered by test X"**, not "dead, delete". A finding can be
+>    right about the smell and wrong about the fix.
 
 ## 3. Documentation "First"
 - [ ] **Directory Docs:** `.AGENTS.md` updated for touched source directories under memory tracking policy (or bootstrap step recorded)?
@@ -38,7 +50,7 @@ version: 1.1
 ## 6. High Assurance (If Tier 3 Active)
 - [ ] **Fail Reason Verified?** Did the tests fail exactly as predicted?
 - [ ] **Pass Reason Rational?** Does `EXPLAIN_PASS_REASON` match the code?
-- [ ] **Law of Minimalism:** No dead code? No speculation?
+- [ ] **Law of Minimalism:** No dead code? No speculation? (deletion guard: §2)
 - [ ] **Mutation Check:** If you delete a line, does it fail?
 
 ## Criticality Protocol

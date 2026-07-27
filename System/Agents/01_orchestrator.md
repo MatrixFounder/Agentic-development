@@ -55,9 +55,11 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 |---|---|---|---|
 | Parallel orthogonal critiques (logic + security + performance) | **A** | `Agent` tool, N parallel calls in one message, `subagent_type` from `.claude/agents/` | ✅ Wave 1 (see `.agent/workflows/vdd-multi.md`) |
 | Independent parallel exploration (research, discovery) | **A** | Same as above with Explore-type subagents | ✅ available |
-| Peer-debate / inter-teammate communication / long-running multi-session collab | **B** | `TeamCreate` + `SendMessage` + `Agent(team_name=...)` | ⏸ Wave 4 (stub in `skill-parallel-orchestration` §4) |
+| Peer-debate / inter-teammate communication / long-running multi-session collab | **B** | `TeamCreate` + `SendMessage` + `Agent(team_name=...)` | ⏸ deferred (Layer B defined in `skill-parallel-orchestration` §2.2) |
 
-**Decision rule**: use Layer A unless teammates need to exchange messages with each other during work. See `skill-parallel-orchestration` §4 for the full criterion. Non-Claude-Code vendors fall back to sequential role-switching (documented per-workflow).
+**Decision rule**: use Layer A unless teammates need to exchange messages with each other *during* their work. See `skill-parallel-orchestration` §2.2 for the full criterion.
+
+**Non-Claude-Code vendors**: resolve the runtime via that skill §1.1 and use its **native parallel adapter** (§7) — Codex spawns-and-consolidates, Cursor runs up to 10 concurrent, Antigravity dispatches async subagents. These adapters are documented scaffolds, not yet end-to-end validated. "No parallel primitive outside Claude Code" is **obsolete** (C-07). Sequential role-switching is the **last resort** for genuinely primitive-less runtimes — a degraded path, not an equivalent one.
 
 ## 6. STAGE-SPECIFIC INSTRUCTIONS
 
@@ -102,3 +104,18 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 ### 14. Blocking Questions
 **Context:** Blocking questions received.
 **Action:** PAUSE -> Ask User -> Resume at current stage.
+
+### 15. Subagent Stalled or Timed Out
+**Context:** A dispatched subagent died mid-stream (stalled response, watchdog timeout). This is
+usually transport, but **not always** — diagnose before retrying.
+**Action:** **Branch on the likely cause; do not default to one retry mode.**
+- **Stalled early, or mid-tool-call, with little output produced** → suspect transport. **RESUME**
+  rather than respawn: where the runtime supports addressing a live agent (`SendMessage` to its
+  id/name), the accumulated context survives, so the retry skips the re-reading.
+- **Stalled late, after substantial output** → suspect context-window exhaustion. Resuming appends
+  to an already-full window and re-stalls at the same point. **Spawn fresh**, seeded with the
+  partial artifact on disk and a narrower brief.
+- Either way, hand a respawned agent the partial output already written so it does not redo it.
+- Dispatch briefs for long tasks should carry the incremental-write instruction — see
+  `04_architect_prompt` Step 2 (callout) — and, for implementation work, a priority order
+  ("if you only finish one thing, finish X") — see `08_developer_prompt` Step 2b.

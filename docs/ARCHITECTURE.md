@@ -207,7 +207,7 @@ Tools note: simple tool names only; Bash sub-command restrictions live in projec
 
 - **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
 - **Source of truth**: methodology lives in `.agent/skills/*/SKILL.md` (critics) and `System/Agents/*.md` (pipeline roles). Wrapper files in `.claude/agents/` are thin adapters, not duplicated content.
-- **Vendor portability**: `.claude/agents/` is Claude Code specific. On other vendors (Codex, Antigravity), workflows fall back to sequential role-switching — see each workflow's `## Fallback` section.
+- **Vendor portability**: `.claude/agents/` is Claude Code specific. Other vendors resolve their own native parallel adapter via `skill-parallel-orchestration` §1.1 (Codex, Cursor, Antigravity all have documented — though not yet e2e-validated — parallel primitives); sequential role-switching is the last resort for primitive-less runtimes, documented per workflow under its vendor-dispatch section.
 
 ## 6. Key Principles
 - **Modular Skills**: Logic is decoupled from Personas. Agents load `skills` to perform specific tasks.

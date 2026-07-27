@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.2
+version: 1.3
 ---
 # Developers Guidelines
 
@@ -55,6 +55,42 @@ version: 1.2
 - **Prefer Native Tools:** ALWAYS use the IDE/agent's native tools (test runners, file operations, git integration) over raw shell commands.
 - **Shell as Fallback:** Use shell commands ONLY when no native tool exists for the required operation.
 - **Verify Availability:** Check which tools are available in the current environment before defaulting to shell.
+
+### 5.1 Blast Radius — Any Bulk-Rewrite Command (Report Before Write)
+Some commands rewrite many files in one invocation: formatters, auto-fixing linters, codemods,
+mass `sed -i` or rename. Pointed at a whole tree they rewrite files nobody asked you to touch —
+generated output, vendored code, recorded fixtures, hand-curated docs. The order is fixed:
+
+1. **Scope the path argument to the files your task touched** — not `.`. This is the default and
+   usually the end of it: a narrow run has no blast radius and needs no ignore rules.
+2. **If a repo-wide run is genuinely required**, run the **reporting form** first and read the file
+   list or diff it prints. Never invoke the writing form first.
+3. **If that list holds files the tool should never touch** — generated, vendored, recorded,
+   hand-curated — that is a **finding to RAISE, not a change to land**. Editing repo-wide ignore
+   config is outside your task's scope (§1); propose it and let the user decide.
+4. **Write only once the list is what you expect**, and only over what remains.
+
+| Ecosystem | Reporting form | Writing form |
+| :--- | :--- | :--- |
+| Python | `ruff format --check .`, `ruff check .`, `black --check .` | `ruff format .`, `ruff check --fix`, `black .` |
+| JS/TS | `prettier --check .`, `eslint .` | `prettier --write .`, `eslint --fix` |
+| Go | `gofmt -l .` | `gofmt -w .`, and `go fmt ./...` |
+| Rust | `cargo fmt --all -- --check`, `cargo clippy` | `cargo fmt --all`, `cargo clippy --fix` |
+| Solidity | `forge fmt --check` | `forge fmt` |
+
+⚠️ **Go trap:** `gofmt` takes paths, not go-tool package patterns — `gofmt -l ./...` fails with
+`stat ./...: no such file or directory`. Use `.`. And `go fmt ./...` is `gofmt -l -w`: it **writes**,
+so it is never the reporting form.
+
+**No reporting form exists?** Then run it on a clean worktree and inspect `git diff --stat`
+immediately after — revert if the blast radius exceeds your task. (Assumes git; adapt to the VCS
+in use.)
+
+Same rule for widening a lint config: scope the new globals/rules to the directory that needs them,
+never repo-wide.
+
+**"It's idempotent, so it's harmless" is wrong.** Idempotent describes the second run, not the
+first. Widening a tool's scope makes you responsible for every file it rewrites.
 
 ## 6. Verification Protocol
 ### 6.1 Bug Fixing (Universal)
@@ -112,3 +148,5 @@ Strong success criteria enable independent iteration. Weak criteria ("make it wo
 | "I'll add this feature/config now, we'll need it later" | Speculative additions are prohibited. Build what the task requires. |
 | "The plan says X but Y would be better architecture" | RAISE this as a concern to the user. Do not silently deviate from approved architecture. |
 | "I'll add type hints / docstrings to untouched code while I'm here" | Drive-by improvements to code you didn't need to touch are not your task. |
+| "I'll just run the formatter over the repo, it's idempotent" | Idempotent is not harmless. Run the reporting form, read the file list, fix the ignore rules, then write (§5.1). |
+| "The finding says this code is dead, so I'll delete it" | Grep the symbol repo-wide first, not just a test directory. Dead-looking code is sometimes an acceptance test's fixture (`code-review-checklist` §2). |

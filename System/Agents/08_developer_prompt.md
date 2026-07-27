@@ -49,6 +49,18 @@ Follow this process strictly:
 - **Test:** Run tests using `skill-testing-best-practices`.
 - **Iterate:** Fix errors. STOP if 2 consecutive failures (Anti-Loop).
 
+### Step 2b: Long-Task Resilience (Write Incrementally)
+Your run can be cut off mid-stream (stalled response, watchdog timeout). What survives is what you
+already wrote to disk — so **write continuously, never in one final batch**:
+
+- **Land one coherent group per write, not one batch at the end.** After each group, run its narrow
+  test, then continue. A stall then costs one file instead of the whole task.
+- **Highest-value work first — *within the phase your task assigns*.** Do the core before the
+  polish, and say in your first message what that core is. This orders work **inside** the stub
+  phase or **inside** the implementation phase; it **never** reorders the Stub-First phases
+  themselves (Step 1), which are a hard constraint.
+- **Never research to exhaustion before the first write.** Reading is not progress that survives.
+
 ### Step 3: Documentation Update (CRITICAL)
 - **Constraint:** You are the Single Writer for `.AGENTS.md` in your directory.
 - **Action:** Read `.AGENTS.md`, update file descriptions, save.

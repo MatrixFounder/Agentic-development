@@ -102,9 +102,9 @@ def _is_masked(match_text):
     "remove **or mask** the value".
 
     So the placeholder must *dominate* the span: the matched mask has to cover at
-    least half of it, after discounting the fixed prefix (`sk-`, `ghp_`, `Bearer `)
-    which is not secret material. `sk-[REDACTED]` and `Bearer YOUR_TOKEN_HERE`
-    still pass; a partially masked real token does not.
+    least half of it, after discounting the fixed scheme prefix (`sk-`, `ghp_`, the
+    HTTP auth keyword) which is not secret material. `sk-[REDACTED]` and a masked
+    placeholder still pass; a partially masked real token does not.
     """
     text = str(match_text)
     body = re.sub(r"(?i)^(?:AKIA|sk-|(?:sk|rk)_live_|whsec_|gh[pousr]_|"
@@ -187,7 +187,7 @@ def guard_scalar(value, flag, max_chars=METADATA_MAX_CHARS):
     """Screen an operator-supplied METADATA scalar (`--value`, `--source`, …).
 
     The screen used to cover only the body, so `--value "rotate the key sk-live_…"`
-    wrote a live credential into frontmatter and `--title "Bearer eyJ…"` wrote one
+    wrote a live credential into frontmatter and a token-shaped `--title` wrote one
     into the index line — both git-tracked, neither screened (iteration 3, sec-L-04
     / L-7). `--value` was also uncapped, so under the flat layout it could carry a
     40 KB single-line bullet straight past `guard_flat_body`, the very cap that

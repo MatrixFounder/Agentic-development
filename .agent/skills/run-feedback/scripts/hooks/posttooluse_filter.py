@@ -95,9 +95,15 @@ def _maybe_debug_dump(payload):
         dumps = sorted(cfg.feedback_dir.glob("hook_debug-*.json"))
         if len(dumps) < MAX_DEBUG_DUMPS:
             stamp = time.strftime("%Y%m%d-%H%M%S")
+            # REDACTED before it is persisted (iteration 3, sec-L-06): this was
+            # the only place unredacted tool output was durably stored. The dump
+            # exists to verify the tool_response *shape*, and redaction preserves
+            # structure while removing the value — so the facility keeps its whole
+            # purpose and stops being a plaintext secret sink.
+            from feedback_lib import filters
             (cfg.feedback_dir / ("hook_debug-%s-%d.json"
                                  % (stamp, os.getpid()))).write_text(
-                json.dumps(payload, ensure_ascii=False, indent=2),
+                filters.redact(json.dumps(payload, ensure_ascii=False, indent=2)),
                 encoding="utf-8")
     except Exception:  # noqa: BLE001 - a debug facility never breaks the hook
         pass

@@ -73,13 +73,32 @@ def _coerces_under_yaml(text):
                 or _YAML_NUMERIC_RE.match(text))
 
 
+def _quoted_span(value):
+    """(inner, True) when *value* is a properly quoted scalar, else (value, False).
+
+    "Properly" means: opens with a quote, has a matching closing quote, and nothing
+    but whitespace or a ` #` comment follows it. The old test was just
+    `startswith(("\'", \'"\'))` + "find the next one", so
+    `title: "The Big Bug" (again)` silently returned `The Big Bug` — dropping
+    `(again)` from a hand-maintained record with no warning — and `note: \'tis a
+    thing` kept a stray leading quote (iteration 3, L-22).
+    """
+    if not value or value[0] not in "'\"":
+        return value, False
+    quote = value[0]
+    end = value.find(quote, 1)
+    if end == -1:
+        return value, False           # unterminated: treat as literal text
+    tail = value[end + 1:].strip()
+    if tail and not tail.startswith("#"):
+        return value, False           # trailing content: not a quoted scalar
+    return value[1:end], True
+
+
 def _strip_comment(value):
-    # strip an unquoted trailing comment: `open   # note` -> `open`
-    if value.startswith(("'", '"')):
-        quote = value[0]
-        end = value.find(quote, 1)
-        if end != -1:
-            return value[1:end]
+    inner, quoted = _quoted_span(value)
+    if quoted:
+        return inner
     hash_pos = value.find(" #")
     if hash_pos != -1:
         value = value[:hash_pos]
@@ -108,6 +127,18 @@ def parse(text):
         match = _KEY_RE.match(line)
         if match:
             key, raw = match.group(1), match.group(2).strip()
+            if key in meta:
+                # A human skimming reads the FIRST value; a later-key-wins reader
+                # (this one, and PyYAML) uses the SECOND. That is a
+                # "hide it from the human, show it to the tool" primitive on files
+                # the Analysis phase trusts (iteration 3, sec-L-01).
+                raise CliError(
+                    "duplicate frontmatter key %r — a reader and a human would "
+                    "disagree about its value" % key,
+                    code=EXIT_FILING_CONFLICT, err_type="ContractError",
+                    remediation="keep one %r line; these records are contract-"
+                                "governed, so tolerance here hides tampering"
+                                % key)
             if raw == "":
                 meta[key] = []
                 current_list_key = key
@@ -120,7 +151,7 @@ def parse(text):
                 # this branch turned it straight back into `True`, so
                 # `parse(serialize(m)) == m` failed for exactly the values V-21 is
                 # about. Found by writing the round-trip test, not by reading.
-                was_quoted = raw.startswith(("'", '"'))
+                _, was_quoted = _quoted_span(raw)
                 value = _strip_comment(raw)
                 if not was_quoted and value.lower() in ("true", "false"):
                     value = value.lower() == "true"

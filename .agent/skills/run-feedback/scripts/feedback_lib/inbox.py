@@ -139,7 +139,8 @@ def collect(config, record):
             merged = finding_mod.merge_duplicate(existing, record)
             atomic.write_atomic(
                 existing_path,
-                json.dumps(merged, ensure_ascii=False, indent=2) + "\n")
+                json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
+                durable=False)
             return merged, True
         finding_mod.save(inbox, record)
         return record, False

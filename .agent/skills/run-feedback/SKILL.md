@@ -143,12 +143,17 @@ thin indexes over record files per `known-issues-format`: defects to `docs/issue
   pipeline in a mktemp repo).
 - **Expected evidence**: green suite; `doctor --json` reports `ready: true` in a configured repo.
 - **Contract sync**: `python3 ../known-issues-format/scripts/check_contract_sync.py` stays green.
-- **Expected security-scanner noise**: `run_audit.py` reports CRITICAL "secrets" in
-  `scripts/tests/test_wi_tail.py` and `scripts/tests/test_iteration3.py`. Those are the **synthetic
-  fixtures for the credential screen** — a test for a secret detector necessarily contains
-  secret-shaped strings (`"AKIA" + "A"*16`, a fake PEM header, `postgres://user:pw@host`). Verified by
-  reading each site; no live credential is committed. Production modules are expected to be clean, so
-  a hit **outside `tests/`** is a real finding.
+- **Expected security-scanner noise** — `run_audit.py` reports CRITICAL "secrets" at two kinds of site,
+  both benign, and it is worth knowing which is which because the alternative is learning to ignore the
+  scanner entirely:
+  - `scripts/tests/test_wi_tail.py`, `scripts/tests/test_iteration3.py` — the **synthetic fixtures for
+    the credential screen**. A test for a secret detector necessarily contains secret-shaped strings
+    (`"AKIA" + "A"*16`, a fake PEM header, `postgres://user:pw@host`).
+  - `scripts/feedback_lib/body.py` — the scanner's bearer rule is `bearer\s+\w+`, so it matches the
+    **English words** in this module's own class labels ("HTTP bearer token") and prose. Contorting a
+    user-facing error label to satisfy a regex that matches ordinary English would be the wrong trade.
+  Verified by reading every flagged site: **no live credential is committed anywhere.** A hit in any
+  *other* production module is a real finding.
 
 ## 7. Instructions
 

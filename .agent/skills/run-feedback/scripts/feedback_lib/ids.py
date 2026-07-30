@@ -60,12 +60,47 @@ def existing_ids(issues_dir, recursive=False):
             # meta only: this scan discarded a full-body join per record, twice per
             # filing, under the filing flock (iteration 3, perf Medium)
             meta = frontmatter.parse_meta_only(path)
+            value = meta.get("id")
         except OSError:
             continue
-        value = meta.get("id")
+        except CliError:
+            # A malformed record must not abort a whole-ledger scan (audit 094
+            # Risk 7). But for THIS scan, skipping is not safe either: the id
+            # namespace is what create-only uniqueness rests on, so a record the
+            # strict reader rejects could hide its id and let the next filing reuse
+            # it. So fall back to a lenient read that only looks for `id:` — no
+            # coercion, no contract checks, just "is this id taken".
+            value = _lenient_id(path)
         if value:
             out.append(str(value))
     return out
+
+
+_LENIENT_ID_RE = re.compile(r"^id:[ \t]*(.+?)[ \t]*$", re.MULTILINE)
+
+
+def _lenient_id(path):
+    """The `id:` of a record the strict reader refuses, or None.
+
+    Deliberately dumb: reads the frontmatter block only and takes the FIRST `id:`.
+    Its one job is to keep a tampered or hand-broken file visible to the uniqueness
+    guard.
+    """
+    try:
+        with open(str(path), encoding="utf-8", errors="replace") as handle:
+            if handle.readline().strip() != "---":
+                return None
+            block = []
+            for line in handle:
+                if line.strip() == "---":
+                    break
+                block.append(line)
+    except OSError:
+        return None
+    match = _LENIENT_ID_RE.search("".join(block))
+    if not match:
+        return None
+    return match.group(1).strip().strip("'\"")
 
 
 def assert_id_free(records_dir, record_id):

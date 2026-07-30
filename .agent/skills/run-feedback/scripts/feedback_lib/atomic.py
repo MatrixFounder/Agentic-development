@@ -27,6 +27,8 @@ import stat
 import tempfile
 from pathlib import Path
 
+from .envelope import EXIT_FILING_CONFLICT, CliError
+
 
 def read_verbatim(path, encoding="utf-8"):
     """Read a text file WITHOUT newline translation.
@@ -47,26 +49,47 @@ def read_verbatim(path, encoding="utf-8"):
         return handle.read()
 
 
-def write_atomic(path, text, encoding="utf-8", newline=""):
+def write_atomic(path, text, encoding="utf-8", newline="", durable=True):
     """Replace *path* with *text* via an unpredictable temp file in the same dir.
 
     ``newline=""`` by default: callers in this package preserve the file's own
     line endings verbatim and must not have them translated on the way out.
+
+    ``durable=False`` skips the ``fsync``. The ledgers are git-tracked artifacts and
+    keep the barrier; the inbox and the journal are regenerable machine state under a
+    gitignored dir, and their fsync sat INSIDE the collect flock, so every concurrent
+    capture serialized behind an unbounded barrier — on a network or FUSE mount, with
+    no timeout (iteration 3, perf). Paying for durability there was a habit, not a
+    trade.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
+    # `os.lstat`, not `path.stat()`: stat FOLLOWS a symlink, so the mode was copied
+    # from the link's TARGET and a symlink pointing at a 0666 file silently widened
+    # the replacement's permissions. And a symlink at the target path is refused
+    # outright — `os.replace` would otherwise replace the LINK, leaving the real
+    # file untouched while reporting success (iteration 3, sec-L-08).
     mode = None
     try:
-        mode = stat.S_IMODE(path.stat().st_mode)
+        info = os.lstat(str(path))
     except OSError:
-        pass
+        info = None
+    if info is not None:
+        if stat.S_ISLNK(info.st_mode):
+            raise CliError(
+                "refusing to replace %s: it is a symlink" % path,
+                code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+                remediation="run-feedback writes files, never through links — "
+                            "resolve or remove the symlink")
+        mode = stat.S_IMODE(info.st_mode)
     fd, tmp_name = tempfile.mkstemp(dir=str(path.parent),
                                     prefix=path.name + ".tmp.")
     try:
         with os.fdopen(fd, "w", encoding=encoding, newline=newline) as handle:
             handle.write(text)
             handle.flush()
-            os.fsync(handle.fileno())
+            if durable:
+                os.fsync(handle.fileno())
         if mode is not None:
             os.chmod(tmp_name, mode)
         else:

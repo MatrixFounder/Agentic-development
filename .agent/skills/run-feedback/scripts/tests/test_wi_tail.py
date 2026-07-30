@@ -388,8 +388,14 @@ class TestInboxLookup(unittest.TestCase):
         record = finding_mod.new_finding("workflow", "gate-failure", "demo",
                                          "boom")
         target = finding_mod.save(self.inbox, record)
-        self.assertEqual(target.name, record["finding_id"] + ".json")
-        self.assertTrue(target.stem.endswith(record["fingerprint"][:8]))
+        # L-19: assert against the GLOB the lookup actually uses, not a proxy for
+        # it. The old assertions (name == id + ".json", stem endswith fp8) would
+        # both survive `finding_id` losing its `fnd-` prefix or the separating `-`,
+        # while `find_by_fingerprint` silently matched nothing.
+        pattern = "fnd-*-%s.json" % record["fingerprint"][:8]
+        self.assertIn(target, list(self.inbox.glob(pattern)),
+                      "the filename no longer matches the lookup glob %r — dedup "
+                      "would go silently blind" % pattern)
 
     def test_a_path_outside_the_feedback_dirs_is_refused_and_not_deleted(self):
         """WI-6 — `consume` unlinks what `resolve` returns."""
@@ -417,6 +423,23 @@ class TestInboxLookup(unittest.TestCase):
         with self.assertRaises(CliError) as ctx:
             inbox.resolve(self.cfg, "fnd-\x00-nope")
         self.assertIn(ctx.exception.code, (2, 5))
+
+    def test_within_itself_survives_a_nul_path(self):
+        """L-18: the test above exits through the name lookup's NotFound, so it
+        never reaches `_within` — meaning the ValueError arm it was written for was
+        pinned by nothing. Exercise the function directly."""
+        self.assertFalse(
+            inbox._within(Path("/tmp/x\x00y"), (self.cfg.inbox_dir,)),
+            "_within must return False, not raise, on an unstattable path")
+
+    def test_within_rejects_a_sibling_prefix_directory(self):
+        """`root in resolved.parents` is the right test; a `startswith` on strings
+        would accept `<inbox>-evil/x`. Pinned because the containment decision is
+        what gates a DELETE."""
+        sibling = Path(str(self.cfg.inbox_dir) + "-evil")
+        sibling.mkdir(parents=True, exist_ok=True)
+        self.assertFalse(inbox._within(sibling / "f.json",
+                                       (self.cfg.inbox_dir,)))
 
 
 # --- V7 / V8: anchor resolution ---------------------------------------------

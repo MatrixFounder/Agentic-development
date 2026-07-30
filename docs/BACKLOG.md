@@ -73,13 +73,14 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-9** [Extract a shared ledger_core (WI-7 option 3)](backlog/wi-9-extract-a-shared-ledger-core-wi-7-option-3.md) — effort `L`, status `open`, opened 2026-07-30
-- **WI-8** [Iteration-3 residue (16 recorded findings)](backlog/wi-8-iteration-3-residue-16-recorded-findings.md) — effort `M`, status `open`, opened 2026-07-30
 
+_No open work-items._
 
 
 ## Closed
 
+- **WI-9** [Extract a shared ledger_core (WI-7 option 3)](backlog/wi-9-extract-a-shared-ledger-core-wi-7-option-3.md) — effort `L`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 094): one `file_record` for both registries; the whole pre-existing suite passed unmodified, and a per-registry guard inventory keeps it closed
+- **WI-8** [Iteration-3 residue (16 recorded findings)](backlog/wi-8-iteration-3-residue-16-recorded-findings.md) — effort `M`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 094): 15 of 16 rows; sec-L-10 accepted and documented (it is how linked worktrees legitimately work)
 - **WI-7** [Residual tail from the vdd-multi hardening (11 items)](backlog/wi-7-residual-tail-from-the-vdd-multi-hardening-11-items.md) — effort `M`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): all 11 rows; shared primitives + parameterized tests so the two ledgers cannot diverge again
 - **WI-6** [--finding accepts any path and consume unlinks it](backlog/wi-6-finding-accepts-any-path-and-consume-unlinks-it.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): containment on every path the tool deletes or moves, not only the ones it creates
 - **WI-5** [find_by_fingerprint rescans the whole inbox](backlog/wi-5-find-by-fingerprint-rescans-the-whole-inbox.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): glob on the fingerprint prefix already in the filename; the invariant that enables it is pinned by a test

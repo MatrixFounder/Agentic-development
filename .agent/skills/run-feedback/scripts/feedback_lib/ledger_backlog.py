@@ -36,7 +36,8 @@ import re
 import time
 from pathlib import Path
 
-from . import atomic, body as body_mod, frontmatter, ids, markdown
+from . import (atomic, body as body_mod, frontmatter, ids,
+               ledger_core, markdown)
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab (known-issues-format, Registry B) --------------------------------
@@ -137,7 +138,18 @@ def seed_backlog_text():
 #: a placeholder line the seed/live index carries while it has no entries;
 #: leaving it above a freshly inserted item reads as "no open work-items" over
 #: a list of open work-items
-_PLACEHOLDER_RE = re.compile(r"^_No\s.*work-items.*_$", re.IGNORECASE)
+#: EXACT seed texts, not a wildcard. `^_No\s.*work-items.*_$` also matched a
+#: legitimate italic note such as `_No longer tracked work-items live in
+#: docs/backlog/archive/._` — which this module would then DELETE, in a writer whose
+#: contract is that it never deletes (iteration 3, L-20).
+_PLACEHOLDERS = frozenset({
+    "_No work-items recorded yet._",
+    "_No open work-items._",
+})
+
+
+def _is_placeholder(line):
+    return line.strip() in _PLACEHOLDERS
 
 
 def scan_anchors(text, anchor):
@@ -240,8 +252,13 @@ def _strip_placeholder(lines, start):
         stripped = lines[idx].strip()
         if not stripped:
             continue
-        if _PLACEHOLDER_RE.match(stripped):
+        if _is_placeholder(stripped):
             del lines[idx]
+            # collapse the blank line the placeholder left behind, so repeated
+            # filings cannot accumulate blank runs
+            if idx < len(lines) and not lines[idx].strip() \
+                    and idx > 0 and not lines[idx - 1].strip():
+                del lines[idx]
         return
 
 
@@ -310,125 +327,56 @@ def file_work_item(config, item_id, slug, title, body, status="open",
                    extensions=None, dry_run=False):
     """Create ``<backlog_dir>/<slug>.md`` + its index line, atomically-ish.
 
-    Returns a dict describing what was (or would be) written. Caller holds the
-    filing flock.
+    Registry B's descriptor over the shared choreography in `ledger_core` — see
+    that module for why the write path is not implemented here. Signature and
+    result-dict keys are unchanged from before the extraction (that is the
+    compatibility contract that let the whole pre-existing suite verify it).
     """
-    if status not in STATUS_WRITE:
-        raise CliError("status %r outside the write vocabulary %s"
-                       % (status, list(STATUS_WRITE)),
-                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
-    if effort and effort not in EFFORT_WRITE:
-        raise CliError("effort %r outside the write vocabulary %s"
-                       % (effort, list(EFFORT_WRITE)),
-                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
-    opened_at = opened_at or time.strftime("%Y-%m-%d")
-
     index_path = Path(config.backlog_path)
     records_dir = Path(config.backlog_dir)
     record_path = records_dir / (slug + ".md")
-    # `exists()` FOLLOWS symlinks, so a dangling one reported False and the
-    # create-only check passed while write_text wrote through it, outside the
-    # record dir (verified exploit S-03). lexists + O_EXCL|O_NOFOLLOW below is
-    # the real guard; this check stays for the friendly error message.
-    if os.path.lexists(str(record_path)):
-        raise CliError("work-item file already exists: %s" % record_path,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
-    # ids are the human-facing registry key: re-scan under the caller's lock so a
-    # second feedback_dir or an archived subdir cannot silently reuse one (F10).
-    # Shared with the defect ledger — see `ids.assert_id_free`.
-    ids.assert_id_free(records_dir, item_id)
 
-    if index_path.is_file():
-        index_before = _read_verbatim(index_path)
-        seeded = False
-    else:
-        index_before = seed_backlog_text()
-        seeded = True
-
-    index_line = format_index_line(
-        item_id, title, record_link(index_path, record_path), status,
-        opened_at, effort)
-    # anchor first: an anchorless backlog must fail with ZERO writes
-    index_after = insert_after_anchor(index_before, config.backlog_anchor,
-                                     index_line, where=index_path)
-
-    body = body_mod.guard_config_body(config, body)
-    meta = _build_meta(item_id, slug, status, opened_at, effort, value, source,
-                       extensions)
-    banner = ""
-    if meta.get("finding_ref"):
-        banner = body_mod.provenance_banner(meta["finding_ref"]) + "\n\n"
-    record_text = (frontmatter.serialize(meta) + "\n# %s — %s\n\n%s%s\n"
-                   % (item_id, title, banner, body.strip()))
-
-    result = {"item_id": item_id, "slug": slug,
-              "record_path": str(record_path), "backlog_path": str(index_path),
-              "index_line": index_line, "seeded_backlog": seeded,
-              "layout": "index+files", "dry_run": dry_run}
-    if dry_run:
-        result["record_text"] = record_text
-        # the id is read from disk state that a real filing may change first
-        result["provisional_id"] = True
-        return result
-
-    if records_dir.is_symlink():
-        raise CliError("record dir is a symlink, refusing to write through it: "
-                       "%s" % records_dir,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
-    records_dir.mkdir(parents=True, exist_ok=True)
-    # the record write is INSIDE the guard: a mid-write failure (ENOSPC, EIO)
-    # must not leave a truncated orphan record with no index line (F2)
-    try:
-        # O_EXCL|O_NOFOLLOW: create-only enforced by the kernel, and a symlink
-        # at this path is refused rather than followed (S-03)
-        fd = os.open(str(record_path),
-                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                     0o644)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(record_text)
-    except FileExistsError:
-        # DIFFERENT message from the lexists pre-check on purpose: reaching here
-        # means the path appeared between the check and the open — a concurrent
-        # filing, or a symlink planted in that window. `O_EXCL` is the guard that
-        # actually refuses; without a distinct message no test could tell which of
-        # the two fired, so neither was pinned (V-22).
-        raise CliError(
-            "work-item file appeared while filing (create-only refused it): %s"
-            % record_path,
-            code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
-            remediation="another process filed this slug, or a symlink was "
-                        "planted at that path — re-run to get a fresh id")
-    except BaseException as exc:
-        # ANY failure, not just OSError: a KeyboardInterrupt or MemoryError
-        # mid-write left a truncated orphan record with no index line, while the
-        # docstring claimed no half-state could exist (iteration 2, V1)
-        _rollback(record_path)
-        if not isinstance(exc, OSError):
-            raise
-        raise CliError("could not write the work-item record %s (%s)"
-                       % (record_path, exc),
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
-                       remediation="check that %s is a writable directory and "
-                                   "not a symlink" % records_dir)
-    try:
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        _write_atomic(index_path, index_after)
-    except BaseException:
-        _rollback(record_path)
-        raise
-    return result
-
-
-def _rollback(record_path):
-    """Remove a just-written record so a half-state never survives.
-
-    Uses ``os.unlink`` on the path itself (never a symlink target) and reports
-    nothing: this runs while another exception is propagating.
-    """
-    try:
-        os.unlink(str(record_path))
-    except OSError:
-        pass
+    registry = ledger_core.Registry(
+        noun="work-item",
+        records_dir=records_dir,
+        index_path=index_path,
+        status_vocab=STATUS_WRITE,
+        rank_name="effort",
+        rank_vocab=EFFORT_WRITE,
+        seed_text=seed_backlog_text,
+        insert=lambda text, line, where: insert_after_anchor(
+            text, config.backlog_anchor, line, where=where),
+        format_line=format_index_line,
+        build_meta=_build_meta,
+        write_index=_write_atomic,
+    )
+    result = ledger_core.file_record(
+        registry, config, item_id, slug, title, body, status,
+        rank=effort, opened_at=opened_at, extensions=extensions,
+        dry_run=dry_run,
+        meta_kwargs={"item_id": item_id, "slug": slug, "status": status,
+                     "opened_at": opened_at or time.strftime("%Y-%m-%d"),
+                     "effort": effort, "value": value, "source": source,
+                     "extensions": extensions},
+        line_kwargs={"item_id": item_id, "title": title,
+                     "link": record_link(index_path, record_path),
+                     "status": status,
+                     "opened_at": opened_at or time.strftime("%Y-%m-%d"),
+                     "effort": effort},
+    )
+    # Registry B's historical result keys, preserved verbatim (see ledger_core's
+    # docstring on why the synonyms are not normalized here)
+    out = {"item_id": result["record_id"], "slug": result["slug"],
+           "record_path": result["record_path"],
+           "backlog_path": result["index_path"],
+           "index_line": result["index_line"],
+           "seeded_backlog": result["seeded_index"],
+           "layout": "index+files", "dry_run": result["dry_run"]}
+    if "record_text" in result:
+        out["record_text"] = result["record_text"]
+    if "provisional_id" in result:
+        out["provisional_id"] = result["provisional_id"]
+    return out
 
 
 # --- legacy flat layout -----------------------------------------------------

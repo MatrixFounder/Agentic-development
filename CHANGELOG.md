@@ -16,6 +16,65 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.8 — one ledger write path: the asymmetry class closed by construction**
+
+Three adversarial iterations each found a guard present on one ledger writer and absent on its twin
+(WI-23; iteration 2's V12; iteration 3's L-1, L-2, L-4, L-5, L-6, H-04). TASK 093 shared the
+*mechanisms* and still produced six new instances. This closes **WI-9** — the choreography is now one
+`file_record()` in `feedback_lib/ledger_core.py`, driven by a per-registry descriptor — and **WI-8**,
+the 16-row residue, fixed afterwards so the rows living in that choreography landed once for both
+registries rather than twice by hand. Gates: **320 tests** (286 → 320, zero skips), E2E PASS,
+contract-sync green with **zero edits** to `known-issues-format`, 45/45 skills, `doctor ready: true`,
+all five iteration-3 exploits re-probed and refused, both live consumer configs verified.
+
+#### **Changed — the extraction (WI-9)**
+* **`ledger_core.file_record`** holds the whole write: vocab → lexists pre-check → id uniqueness →
+  body policy → frontmatter → record text → index line → index insert → records-dir integrity →
+  `O_EXCL|O_NOFOLLOW` create → rollback → index write → rollback. Every guard exactly once; `O_EXCL`
+  now appears in **one** ledger module.
+* **The public API is byte-identical.** `file_defect` / `file_work_item` keep their signatures *and*
+  their result-dict keys, so the **286 pre-existing tests passed unmodified** — the plan forbade
+  editing a single one during the extraction, and the audit made that a gate. A refactor whose tests
+  change alongside it proves nothing.
+* When two rollback tests turned out to patch a seam the core no longer used, the seam was made real
+  (`Registry.write_index`) rather than the tests rewritten. The behaviour was never in question, only
+  where the mock attached, and keeping the net intact was worth more than removing an indirection.
+* **`tests/test_ledger_core.py`** is a guard *inventory* that runs each guard against **both**
+  registries and records **which one refused** — per-registry attribution was an audit requirement,
+  because a test asserting only "some registry refused" has the same blind spot as the defect class it
+  exists to catch. Nine guards mutation-verified; `O_EXCL` reddens it twice, once per registry.
+
+#### **Fixed — the residue (WI-8, 15 of 16 rows)**
+* **Correctness:** a **blank** (0-byte) index is now seeded, not left preamble-less; `doctor`
+  evaluates every validating config key so it can no longer report `ready: true` while every `file`
+  exits 3; the placeholder strip matches exact seed text instead of a wildcard that would delete a
+  human's italic note; a new category is placed by sort order, not file order; a quoted value with
+  trailing text (`title: "The Big Bug" (again)`) no longer silently loses the tail.
+* **Security:** duplicate frontmatter keys are refused (the "a human reads the first value, a tool
+  reads the second" primitive); the hook debug dump is redacted before it is persisted — it was the
+  only place unredacted tool output was durably stored; `write_atomic` refuses a symlink target and
+  takes its mode from `lstat`; the record dir's realpath is re-verified before the create, closing the
+  TOCTOU window on intermediate components that `O_NOFOLLOW` cannot see; `feedback_dir`'s exemption is
+  narrowed so `.git/objects` is refused while the documented `.agent/feedback` still works; every
+  `triage` table cell is escaped, not just `\|` in the message.
+* **Performance:** inbox and journal writes drop the `fsync` (regenerable state, and the barrier sat
+  inside the collect flock); an over-ceiling `--body-file` is refused by **stat**, before the read that
+  used to load a multi-GB log to measure it against the ceiling meant to refuse it.
+* **Tests:** the two under-pinning ones corrected — `_within` is exercised directly with a NUL path
+  (the old test exited through `NotFound`, so the arm it was written for was pinned by nothing), and
+  the filename invariant is asserted against the **glob the lookup uses** rather than a proxy.
+
+#### **Not fixed, with the reason**
+* **sec-L-10** — a repo-shipped `.git` *file* can relocate `data_root`. That mechanism is how linked
+  git worktrees legitimately work and the documented reason `data_root` exists; a hostile pointer and a
+  legitimate one cannot be told apart from the pointer alone, and a false refusal breaks worktree
+  support silently. Accepted and documented rather than guessed at.
+* The perf row also wanted opens-per-filing and fsyncs-per-capture counters. The fsync **asymmetry** is
+  pinned; absolute counts are not, so a regression there would still be invisible. Recorded, not claimed.
+* The four result-dict synonym pairs (`issue_id`/`item_id` …) mean the core carries a translation
+  layer. Normalizing them is a separate change with its own callers — doing it here would have
+  destroyed the unmodified-suite property that verified the refactor.
+
 ### **v3.21.7 — iteration 3: the task that closed the asymmetry class produced six more**
 
 `/vdd-multi` iteration 3 reviewed the WI-2…WI-7 fixes and found that **TASK 093 had not applied its

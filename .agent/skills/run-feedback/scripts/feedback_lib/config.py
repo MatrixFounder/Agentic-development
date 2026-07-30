@@ -387,8 +387,29 @@ class Config:
     def feedback_dir(self):
         # contained against data_root (the MAIN worktree), not repo_root: that
         # is the documented home of machine state for linked worktrees
-        return _contained(self.data_root, self._values["feedback_dir"],
-                          "feedback_dir", self.source, ledger=False)
+        resolved = _contained(self.data_root, self._values["feedback_dir"],
+                              "feedback_dir", self.source, ledger=False)
+        # `ledger=False` exempts machine state from the DOCUMENTATION rules (its
+        # home really is `.agent/feedback`, a dot-path). It should not have exempted
+        # it from `.git` (iteration 3, sec-L-09): git internals are not a place to
+        # put a JSON queue, and combined with an attacker-chosen filename that was a
+        # write into the object store. So the exemption is narrowed to `.agent`
+        # rather than removed.
+        parts = resolved.relative_to(Path(self.data_root).resolve()).parts \
+            if resolved != Path(self.data_root).resolve() else ()
+        folded = {unicodedata.normalize("NFC", part).casefold() for part in parts}
+        blocked = {name.casefold() for name in _FORBIDDEN_ROOTS} - {".agent"}
+        hit = folded & blocked
+        if hit:
+            raise CliError(
+                "config key 'feedback_dir' points into %s/, which is not a place "
+                "for machine state (%s) in %s"
+                % (sorted(hit)[0], self._values["feedback_dir"],
+                   self.source or "built-in defaults"),
+                code=EXIT_CONFIG, err_type="ConfigError",
+                remediation="keep the default .agent/feedback, or choose another "
+                            "non-executable directory")
+        return resolved
 
     @property
     def inbox_dir(self):

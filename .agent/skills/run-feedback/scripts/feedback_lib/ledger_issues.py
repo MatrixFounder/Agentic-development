@@ -24,7 +24,8 @@ import re
 import time
 from pathlib import Path
 
-from . import atomic, body as body_mod, frontmatter, ids, markdown
+from . import (atomic, body as body_mod, frontmatter, ids,
+               ledger_core, markdown)
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab -----------------------------------------------------------------
@@ -186,11 +187,16 @@ def insert_index_line(index_text, category, line):
 
     target = next(((i, cat) for i, cat in headings if cat == category), None)
     if target is None:
+        # Compare against the SORTED heading list: taking the first heading that
+        # sorts higher *in file order* put a new section in the wrong place in a
+        # ledger whose sections had drifted out of order — and this file is
+        # hand-maintained with no generator, so drift is its normal state
+        # (iteration 3, L-24).
         insert_at = len(lines)
-        for i, cat in headings:
-            if cat > category:
-                insert_at = i
-                break
+        later = sorted((cat for _, cat in headings if cat > category))
+        if later:
+            target_cat = later[0]
+            insert_at = next(i for i, cat in headings if cat == target_cat)
         block = ["## %s%s" % (category, pad), pad, line + pad, pad]
         # keep exactly one blank line before a newly appended heading
         while insert_at > 0 and lines[insert_at - 1].strip() == "":
@@ -269,112 +275,47 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
                 severity=None, opened_at=None, extensions=None, dry_run=False):
     """Create ``<issues_dir>/<slug>.md`` + its index line, atomically-ish.
 
-    Returns a dict describing what was (or would be) written. Caller holds
-    the filing flock.
+    Registry A's descriptor over the shared choreography in `ledger_core`.
+    Signature and result-dict keys unchanged from before the extraction.
     """
-    if status not in STATUS_WRITE:
-        raise CliError("status %r outside the write vocabulary %s"
-                       % (status, list(STATUS_WRITE)),
-                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
-    if severity and severity not in SEVERITY_WRITE:
-        raise CliError("severity %r outside the write vocabulary %s"
-                       % (severity, list(SEVERITY_WRITE)),
-                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
-    opened_at = opened_at or time.strftime("%Y-%m-%d")
-
     issues_dir = Path(config.issues_dir)
-    issue_path = issues_dir / (slug + ".md")
-    # lexists, not exists: a DANGLING symlink here reported False and the write
-    # then followed it outside issues_dir (vdd-multi S-03). O_EXCL|O_NOFOLLOW
-    # below is the enforcing guard.
-    if os.path.lexists(str(issue_path)):
-        raise CliError("issue file already exists: %s" % issue_path,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
-    # the id is the registry key, not the filename — a differing slug used to let a
-    # duplicate id through here, while the work-item ledger had guarded it since
-    # iteration 2 (iteration 3, L-6)
-    ids.assert_id_free(issues_dir, issue_id)
+    resolved_at = opened_at or time.strftime("%Y-%m-%d")
 
-    body = body_mod.guard_config_body(config, body)
-    meta = _build_meta(issue_id, slug, status, opened_at, category, severity,
-                       extensions)
-    banner = ""
-    if meta.get("finding_ref"):
-        banner = body_mod.provenance_banner(meta["finding_ref"]) + "\n\n"
-    issue_text = (frontmatter.serialize(meta) + "\n# %s — %s\n\n%s%s\n"
-                  % (issue_id, title, banner, body.strip()))
-    index_line = format_index_line(issue_id, title, slug, status, opened_at,
-                                   severity)
-
-    index_path = Path(config.index_path)
-    if index_path.is_file():
-        index_before = atomic.read_verbatim(index_path)
-        seeded = False
-    else:
-        index_before = seed_index_text()
-        seeded = True
-    index_after = insert_index_line(index_before, category, index_line)
-
-    result = {"issue_id": issue_id, "slug": slug,
-              "issue_path": str(issue_path), "index_path": str(index_path),
-              "index_line": index_line, "seeded_index": seeded,
-              "dry_run": dry_run}
-    if dry_run:
-        result["issue_text"] = issue_text
-        # the id came from a disk scan a real filing may win the race on — the
-        # backlog path said so and this one did not (iteration 2, V-10)
-        result["provisional_id"] = True
-        return result
-
-    if issues_dir.is_symlink():
-        raise CliError("issues dir is a symlink, refusing to write through it: "
-                       "%s" % issues_dir,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
-    issues_dir.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(str(issue_path),
-                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                     0o644)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(issue_text)
-    except FileExistsError:
-        # distinct from the lexists pre-check message — see the twin comment in
-        # ledger_backlog: reaching here means the path appeared between check and
-        # open, and O_EXCL is the guard that refused it (V-22)
-        raise CliError(
-            "issue file appeared while filing (create-only refused it): %s"
-            % issue_path,
-            code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
-            remediation="another process filed this slug, or a symlink was "
-                        "planted at that path — re-run to get a fresh id")
-    except BaseException as exc:
-        # ANY failure, not just OSError: a KeyboardInterrupt or MemoryError
-        # mid-write leaves a truncated orphan record with no index line, while this
-        # module's docstring claims no half-state can exist. `ledger_backlog` was
-        # widened for this in iteration 2 (V1) and this module was not — the same
-        # asymmetry WI-7 is about, found again in iteration 3 (L-4).
-        _rollback(issue_path)
-        if not isinstance(exc, OSError):
-            raise
-        raise CliError("could not write the issue record %s (%s)"
-                       % (issue_path, exc),
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
-                       remediation="check that %s is a writable directory and "
-                                   "not a symlink" % issues_dir)
-    try:
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        _write_atomic(index_path, index_after)
-    except BaseException:
-        _rollback(issue_path)
-        raise
-    return result
-
-
-def _rollback(issue_path):
-    try:
-        os.unlink(str(issue_path))
-    except OSError:
-        pass
+    registry = ledger_core.Registry(
+        noun="issue",
+        records_dir=issues_dir,
+        index_path=Path(config.index_path),
+        status_vocab=STATUS_WRITE,
+        rank_name="severity",
+        rank_vocab=SEVERITY_WRITE,
+        seed_text=seed_index_text,
+        insert=lambda text, line, where: insert_index_line(text, category, line),
+        format_line=format_index_line,
+        build_meta=_build_meta,
+        write_index=_write_atomic,
+    )
+    result = ledger_core.file_record(
+        registry, config, issue_id, slug, title, body, status,
+        rank=severity, opened_at=opened_at, extensions=extensions,
+        dry_run=dry_run,
+        meta_kwargs={"issue_id": issue_id, "slug": slug, "status": status,
+                     "opened_at": resolved_at, "category": category,
+                     "severity": severity, "extensions": extensions},
+        line_kwargs={"issue_id": issue_id, "title": title, "slug": slug,
+                     "status": status, "opened_at": resolved_at,
+                     "severity": severity},
+    )
+    out = {"issue_id": result["record_id"], "slug": result["slug"],
+           "issue_path": result["record_path"],
+           "index_path": result["index_path"],
+           "index_line": result["index_line"],
+           "seeded_index": result["seeded_index"],
+           "dry_run": result["dry_run"]}
+    if "record_text" in result:
+        out["issue_text"] = result["record_text"]
+    if "provisional_id" in result:
+        out["provisional_id"] = result["provisional_id"]
+    return out
 
 
 # --- tolerant reads ---------------------------------------------------------
@@ -388,7 +329,12 @@ def list_issues(config, status=None, component=None, auto_fixable=None):
     for path in sorted(issues_dir.glob("*.md")):
         try:
             meta = frontmatter.parse_meta_only(path)
-        except OSError:
+        except (OSError, CliError):
+            # A malformed record must not abort a whole-ledger scan. The
+            # duplicate-key refusal (sec-L-01) is a WRITE-side contract check;
+            # applied to a tolerant read it would turn one tampered file into a
+            # dead `issues` feed and a dead id allocator (audit 094 Risk 7 /
+            # standing constraint 5). Skip the record, keep the scan alive.
             continue
         if meta.get("type") != "known-issue":
             continue

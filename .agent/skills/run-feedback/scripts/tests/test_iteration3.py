@@ -27,6 +27,7 @@ both registries here, so "fixed on one path only" cannot pass again.
 """
 import json
 import os
+import stat
 import sys
 import tempfile
 import unittest
@@ -37,8 +38,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _fixtures as fx  # noqa: E402
-from feedback_lib import (body as body_mod, ids as ids_mod,  # noqa: E402
-                          ledger_backlog, ledger_issues, markdown)
+from feedback_lib import (body as body_mod, frontmatter,  # noqa: E402
+                          ids as ids_mod, ledger_backlog, ledger_issues,
+                          markdown)
 from feedback_lib.envelope import CliError  # noqa: E402
 
 ANCHOR = "<!-- feedback:discovered-issues -->"
@@ -593,3 +595,165 @@ class TestBoundedWork(unittest.TestCase):
         self.assertEqual(opened, [],
                          "doctor parsed %d inbox files to produce a count"
                          % len(opened))
+
+
+# --- TASK 094: the WI-8 residue fixes ---------------------------------------
+
+class TestResidueFixes(unittest.TestCase):
+    """WI-8 — the 16 recorded findings, fixed after the ledger_core extraction so
+    the ones living in the choreography landed once for both registries."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = fx.make_repo(self._tmp.name)
+
+    # R6 / sec-L-08
+    def test_write_atomic_refuses_a_symlinked_target(self):
+        from feedback_lib import atomic
+        victim = fx.write(self.root / "victim.md", "original\n")
+        link = self.root / "ledger.md"
+        os.symlink(str(victim), str(link))
+        with self.assertRaises(CliError) as ctx:
+            atomic.write_atomic(link, "replaced\n")
+        self.assertEqual(ctx.exception.code, 4)
+        self.assertEqual(victim.read_text(encoding="utf-8"), "original\n",
+                         "wrote through the symlink")
+
+    def test_write_atomic_preserves_mode_of_a_regular_file(self):
+        from feedback_lib import atomic
+        target = fx.write(self.root / "l.md", "a\n")
+        os.chmod(str(target), 0o640)
+        atomic.write_atomic(target, "b\n")
+        self.assertEqual(stat.S_IMODE(os.stat(str(target)).st_mode), 0o640)
+
+    # R15
+    def test_ledger_writes_fsync_and_inbox_writes_do_not(self):
+        from feedback_lib import atomic
+        calls = []
+        real = os.fsync
+        with mock.patch.object(atomic.os, "fsync",
+                               side_effect=lambda fd: calls.append(fd) or real(fd)):
+            atomic.write_atomic(self.root / "ledger.md", "x\n")
+            ledger_calls = len(calls)
+            atomic.write_atomic(self.root / "state.json", "{}\n", durable=False)
+        self.assertEqual(ledger_calls, 1, "a ledger write must be durable")
+        self.assertEqual(len(calls), ledger_calls,
+                         "an inbox write must not fsync inside the collect lock")
+
+    # R9 / L-22
+    def test_a_quoted_value_with_trailing_text_is_not_truncated(self):
+        meta, _ = frontmatter.parse(
+            '---\ntitle: "The Big Bug" (again)\n---\nbody\n')
+        self.assertEqual(meta["title"], '"The Big Bug" (again)')
+
+    def test_an_unterminated_quote_is_kept_literally(self):
+        meta, _ = frontmatter.parse("---\nnote: 'tis a thing\n---\nbody\n")
+        self.assertEqual(meta["note"], "'tis a thing")
+
+    def test_a_properly_quoted_value_with_a_comment_still_unquotes(self):
+        meta, _ = frontmatter.parse("---\nvalue: 'a: b' # note\n---\nbody\n")
+        self.assertEqual(meta["value"], "a: b")
+
+    # R10 / sec-L-01
+    def test_a_duplicate_frontmatter_key_is_refused(self):
+        with self.assertRaises(CliError) as ctx:
+            frontmatter.parse("---\nauto_fixable: false\nid: X-1\n"
+                              "auto_fixable: true\n---\nbody\n")
+        self.assertIn("duplicate", str(ctx.exception))
+
+    def test_a_tolerant_scan_skips_a_duplicate_key_record_without_aborting(self):
+        """The refusal must not turn a whole-ledger scan into a crash."""
+        from feedback_lib import ledger_issues as li
+        issues = self.root / "docs" / "issues"
+        fx.write_issue(issues, "RF-1", "rf-1-ok", title="Fine",
+                       category="robustness")
+        fx.write(issues / "rf-2-dup.md",
+                 "---\nid: RF-2\ntype: known-issue\nstatus: open\n"
+                 "status: fixed\nslug: rf-2-dup\n---\n# RF-2\n\nBody.\n")
+        fx.write(self.root / "docs" / "feedback" / "config.json",
+                 json.dumps({"v": 1}))
+        cfg = fx.load_cfg(self.root)
+        records = li.list_issues(cfg)
+        self.assertEqual([r["id"] for r in records], ["RF-1"],
+                         "the duplicate-key record must be skipped, not fatal")
+
+    # R7 / L-20
+    def test_only_the_exact_placeholder_is_deleted(self):
+        keep = "_No longer tracked work-items live in docs/backlog/archive/._"
+        out = ledger_backlog.insert_after_anchor(
+            "%s\n\n%s\n" % (ANCHOR, keep), ANCHOR, "- **WI-1** x")
+        self.assertIn(keep, out, "deleted a legitimate italic note (L-20)")
+        for placeholder in ("_No work-items recorded yet._",
+                            "_No open work-items._"):
+            with self.subTest(placeholder=placeholder):
+                out = ledger_backlog.insert_after_anchor(
+                    "%s\n\n%s\n" % (ANCHOR, placeholder), ANCHOR, "- **WI-1** x")
+                self.assertNotIn(placeholder, out)
+
+    # R8 / L-24
+    def test_a_new_category_lands_by_sort_order_not_file_order(self):
+        text = ("# K\n\n## zzz\n- **RF-1** [a](issues/a.md) — status `open`, opened 2026-01-01\n"
+                "\n## bbb\n- **RF-2** [b](issues/b.md) — status `open`, opened 2026-01-01\n")
+        out = ledger_issues.insert_index_line(
+            text, "ccc",
+            "- **RF-9** [c](issues/c.md) — status `open`, opened 2026-07-30")
+        order = [l[3:] for l in out.split("\n") if l.startswith("## ")]
+        self.assertLess(order.index("ccc"), order.index("zzz"),
+                        "ccc must precede zzz: %s" % order)
+
+    # R11 / L-17
+    def test_doctor_is_not_ready_when_a_validating_config_key_is_unusable(self):
+        fx.write(self.root / "docs" / "KNOWN_ISSUES.md", fx.INDEX_FIXTURE)
+        fx.write(self.root / "docs" / "feedback" / "config.json",
+                 json.dumps({"v": 1, "body_max_chars": 0}))
+        code, out, err = fx.run_cli(["--repo-root", str(self.root), "doctor",
+                                     "--json"])
+        payload = json.loads(out)
+        self.assertFalse(payload["ready"],
+                         "doctor said go while every `file` would exit 3 (L-17)")
+        self.assertIn("body_max_chars", json.dumps(payload["checks"]))
+        self.assertEqual(code, 3)
+
+    # R12 / sec-L-09 — the acceptance PAIR (audit 094 Required Action 2)
+    def test_feedback_dir_default_still_works_and_git_is_refused(self):
+        fx.write(self.root / "docs" / "feedback" / "config.json",
+                 json.dumps({"v": 1, "feedback_dir": ".agent/feedback"}))
+        cfg = fx.load_cfg(self.root)
+        self.assertTrue(str(cfg.feedback_dir).endswith("/.agent/feedback"))
+        for bad in (".git/objects", ".claude/state", "System/state"):
+            with self.subTest(bad=bad):
+                fx.write(self.root / "docs" / "feedback" / "config.json",
+                         json.dumps({"v": 1, "feedback_dir": bad}))
+                cfg = fx.load_cfg(self.root)
+                with self.assertRaises(CliError) as ctx:
+                    cfg.feedback_dir
+                self.assertEqual(ctx.exception.code, 3)
+
+    # R13 / sec-L-11
+    def test_a_triage_cell_cannot_forge_a_table_row(self):
+        import run_feedback as rf
+        cell = rf._cell("x\n| fnd-fake | forged | row |")
+        self.assertNotIn("\n", cell)
+        self.assertNotIn("| fnd-fake", cell.replace("\\|", "|PIPE"))
+
+    # R14
+    def test_an_oversized_body_file_is_refused_without_being_read(self):
+        import run_feedback as rf
+        big = fx.write(self.root / "huge.log", "x\n")
+        reads = []
+        real_read = Path.read_text
+
+        def counting(self_path, *a, **kw):
+            reads.append(str(self_path))
+            return real_read(self_path, *a, **kw)
+
+        class FakeStat:
+            st_size = 10 * 1024 * 1024
+
+        with mock.patch.object(Path, "stat", lambda self: FakeStat()):
+            with mock.patch.object(Path, "read_text", counting):
+                with self.assertRaises(CliError) as ctx:
+                    rf._body_within_ceiling(str(big), 64000)
+        self.assertEqual(ctx.exception.code, 2)
+        self.assertEqual(reads, [], "the file was read before being refused")

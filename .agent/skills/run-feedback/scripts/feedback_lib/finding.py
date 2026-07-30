@@ -136,8 +136,11 @@ def save(directory, record):
             "refusing to write a finding outside %s (id %r)"
             % (directory, record.get("finding_id")),
             code=EXIT_NOT_FOUND, err_type="NotFound")
+    # durable=False: regenerable machine state, and the barrier sat inside the
+    # collect flock (iteration 3, perf). Ledger writes stay durable.
     atomic.write_atomic(target,
-                        json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+                        json.dumps(record, ensure_ascii=False, indent=2) + "\n",
+                        durable=False)
     return target
 
 

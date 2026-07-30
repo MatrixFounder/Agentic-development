@@ -178,6 +178,21 @@ def _index_titles(cfg):
     return titles
 
 
+def _cell(text, limit=None):
+    """Render one markdown table cell from untrusted text.
+
+    This table is read by the triaging model as fact. Escaping only `|` left every
+    line break in place, so a mined message — transcript text an attacker influences
+    via any command's stdout — could splice **forged rows** into it (iteration 3,
+    sec-L-11). Everything that could end a cell or a row is collapsed or escaped,
+    and every cell goes through here rather than only the message.
+    """
+    value = " ".join(str(text or "").split())
+    if limit:
+        value = value[:limit]
+    return value.replace("\\", "\\\\").replace("|", "\\|")
+
+
 def _dup_candidates(record, issue_fps, titles):
     dups = []
     fprint = record.get("fingerprint")
@@ -233,10 +248,10 @@ def cmd_triage(args, cfg):
     print("|---|---|---|---|---|---|---|---|")
     for row in rows:
         print("| %s | %s | %s | %s | %s | %d | %s | %s |" % (
-            row["finding_id"], "+".join(row["sources"]), row["kind"],
-            row["component"], row["failure"], row["occurrences"],
-            (row["message"] or "")[:80].replace("|", "\\|"),
-            "; ".join(row["dup_candidates"]) or "-"))
+            _cell(row["finding_id"]), _cell("+".join(row["sources"])),
+            _cell(row["kind"]), _cell(row["component"]), _cell(row["failure"]),
+            row["occurrences"], _cell(row["message"], 80),
+            _cell("; ".join(row["dup_candidates"]) or "-")))
     for row in rows:
         if row["evidence_paths"]:
             print("- %s evidence: %s"
@@ -397,6 +412,30 @@ def _reject_inapplicable_flags(args, layout=None):
                         "to accept a flag it would not record")
 
 
+def _body_within_ceiling(spec, max_chars):
+    """Refuse an over-ceiling --body-file by STAT, before reading it.
+
+    `read_text()` then `len(text) > max_chars` loaded the whole file to measure it,
+    so `--body-file` on a multi-GB log was an OOM the ceiling existed to prevent —
+    and the refusal message even says "a body is a triage summary, not a log dump",
+    after loading the log dump (iteration 3, perf). UTF-8 is 1-4 bytes per char, so
+    a byte size above 4x the char ceiling cannot fit under it.
+    """
+    if not spec or spec == "-":
+        return
+    try:
+        size = Path(spec).stat().st_size
+    except OSError:
+        return  # let the read report it, with its own error
+    if max_chars and size > max_chars * 4:
+        raise CliError(
+            "--body-file %s is %d bytes, which cannot fit the %d-character "
+            "ceiling" % (spec, size, max_chars),
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="a record body is a triage summary, not a log dump — "
+                        "reference the log as evidence instead")
+
+
 def _read_body(args, cfg):
     """Read and POLICE the record body — the one gate both ledgers pass through.
 
@@ -406,6 +445,7 @@ def _read_body(args, cfg):
     never rewritten.
     """
     if args.body_file:
+        _body_within_ceiling(args.body_file, cfg.body_max_chars)
         return body_mod.guard_body(
             _read_maybe_stdin(
                 "@" + args.body_file if args.body_file != "-" else "-"),
@@ -789,6 +829,19 @@ def cmd_doctor(args, cfg):
         defects_ok = False
         checks["issues_config_error"] = str(exc)
         remediation.append("defect ledger path unreadable: %s" % exc)
+    # Every validating property, evaluated where a failure can be REPORTED. Without
+    # this `doctor` said `ready: true` while every `file` exited 3 — a readiness gate
+    # that disagrees with the engine it gates (iteration 3, L-17).
+    config_ok = True
+    for key in ("id_prefixes", "excerpt_max_chars", "body_max_chars",
+                "backlog_prefix", "backlog_anchor", "backlog_layout"):
+        try:
+            getattr(cfg, key)
+        except CliError as exc:
+            config_ok = False
+            checks.setdefault("config_errors", []).append("%s: %s" % (key, exc))
+            remediation.append("config key %s is unusable: %s" % (key, exc))
+    checks["config_values_valid"] = config_ok
     template_ok = ledger_issues._seed_template_path().is_file()
     checks["seed_template_reachable"] = template_ok
     if not template_ok and not checks.get("index_exists"):
@@ -885,6 +938,7 @@ def cmd_doctor(args, cfg):
     # a configured-but-unusable backlog is NOT ready: work-item filing, half of
     # what triage produces, would fail every time (F17)
     ready = (checks["feedback_dir_writable"] and backlog_usable and defects_ok
+             and config_ok
              and (checks.get("index_exists")
                   or checks["seed_template_reachable"]))
     payload = {"v": 1, "ready": ready, "checks": checks,

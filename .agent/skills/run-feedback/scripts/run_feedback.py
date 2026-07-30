@@ -66,6 +66,19 @@ def _read_maybe_stdin(spec):
         except OSError as exc:
             raise CliError("cannot read %s: %s" % (path, exc),
                            code=EXIT_USAGE, err_type="UsageError")
+        except UnicodeDecodeError as exc:
+            # UnicodeDecodeError is a ValueError, so it escaped the OSError arm and
+            # reached the last-resort handler, which re-raises in human mode: a raw
+            # traceback for the very ordinary case of a log file with one latin-1
+            # byte (iteration 3, L-11). NOT errors="replace" — mangling a body that
+            # the ledger contract preserves verbatim is worse than refusing it.
+            raise CliError(
+                "%s is not valid UTF-8 (byte %d: %s)"
+                % (path, exc.start, exc.reason),
+                code=EXIT_USAGE, err_type="UsageError",
+                remediation="re-encode the file as UTF-8, or extract the "
+                            "relevant lines by hand — a record body is embedded "
+                            "verbatim, so it is refused rather than mangled")
     return spec
 
 
@@ -142,14 +155,26 @@ def cmd_collect(args, cfg):
 # --- triage ------------------------------------------------------------------
 
 def _index_titles(cfg):
+    """[(issue_id, title, token_set)] from the index — tokens PRE-COMPUTED.
+
+    The token set is loop-invariant across inbox entries, and `_dup_candidates`
+    rebuilt it for every (entry, title) pair: at 200 entries × 500 titles that is
+    100 000 `lower()`+`split()`+set constructions instead of 500 (iteration 3, perf
+    Med-low). Read once, capped like every other hand-maintained-markdown read.
+    """
     titles = []
-    if Path(cfg.index_path).is_file():
-        entry_re = ledger_issues._INDEX_ENTRY_RE
-        for line in Path(cfg.index_path).read_text(encoding="utf-8").splitlines():
-            match = entry_re.match(line)
-            if match:
-                title = line[match.end():].split("](", 1)[0].lstrip("[")
-                titles.append((match.group(1), title))
+    index_path = Path(cfg.index_path)
+    if not index_path.is_file():
+        return titles
+    if index_path.stat().st_size > _DOCTOR_READ_CAP:
+        return titles  # a megabyte-scale index is not worth slurping for hints
+    entry_re = ledger_issues._INDEX_ENTRY_RE
+    for line in index_path.read_text(encoding="utf-8").splitlines():
+        match = entry_re.match(line)
+        if match:
+            title = line[match.end():].split("](", 1)[0].lstrip("[")
+            tokens = {tok for tok in title.lower().split() if len(tok) >= 4}
+            titles.append((match.group(1), title, tokens))
     return titles
 
 
@@ -158,12 +183,17 @@ def _dup_candidates(record, issue_fps, titles):
     fprint = record.get("fingerprint")
     if fprint in issue_fps:
         dups.append("issue %s (fingerprint)" % issue_fps[fprint])
+    # `.get`, not a subscript: `inbox.scan` is deliberately tolerant of any
+    # parseable JSON ("never let one bad file kill capture"), and every other read
+    # in triage honors that — this one subscript meant a single foreign or
+    # older-schema inbox file turned `triage` into a KeyError traceback until a
+    # human found and removed it (iteration 3, L-12)
     message_tokens = {t for t in
-                      (record["subject"].get("message") or "").lower().split()
+                      ((record.get("subject") or {}).get("message")
+                       or "").lower().split()
                       if len(t) >= 4}
-    for issue_id, title in titles:
-        overlap = message_tokens & {t for t in title.lower().split()
-                                    if len(t) >= 4}
+    for issue_id, title, title_tokens in titles:
+        overlap = message_tokens & title_tokens
         if len(overlap) >= 2:
             dups.append("issue %s (title overlap: %s)"
                         % (issue_id, ", ".join(sorted(overlap)[:3])))
@@ -283,6 +313,16 @@ def _ledger_identity(args):
             % (args.prefix, _PREFIX_RE.pattern),
             code=EXIT_USAGE, err_type="UsageError",
             remediation="prefixes become part of the record id, e.g. RF, SEC, WI")
+    # every operator free-text scalar that lands in a git-tracked ledger, not just
+    # the body: `--value "rotate sk-live_…"` wrote a credential into frontmatter and
+    # a bearer-token-shaped `--title` into the index line, neither screened; `--value`
+    # was uncapped so it slipped a 40 KB bullet past `guard_flat_body`
+    # (iteration 3, sec-L-04 / L-7)
+    body_mod.guard_scalar(args.title, "--title", max_chars=_TITLE_MAX)
+    for flag, value in (("--value", args.value), ("--source", args.source),
+                        ("--reason", args.reason),
+                        ("--component", args.component)):
+        body_mod.guard_scalar(value, flag)
     if args.classification == "defect":
         category = (args.category or "").strip()
         if not _CATEGORY_RE.match(category):
@@ -521,6 +561,10 @@ def cmd_file(args, cfg):
                 raise CliError("--reason is required for --as noise",
                                code=EXIT_USAGE, err_type="UsageError")
             _reject_inapplicable_flags(args)
+            # the noise path never reaches `_ledger_identity`, so `--reason` — which
+            # IS recorded, in the finding and the journal — would otherwise be the
+            # one operator scalar with no screen at all
+            body_mod.guard_scalar(args.reason, "--reason")
             result = {"reason": args.reason}
             filed_as = None
             human = "dismissed %s (%s)" % (record["finding_id"], args.reason)
@@ -768,7 +812,13 @@ def cmd_doctor(args, cfg):
         checks["feedback_dir_writable"] = False
         remediation.append("feedback dir not writable: %s" % cfg.feedback_dir)
     try:
-        checks["inbox_depth"] = len(inbox.scan(cfg.inbox_dir))
+        # count directory entries; do NOT parse them. `inbox.scan` opens and
+        # json.loads EVERY file, so producing an integer reintroduced the O(k) that
+        # WI-5 had just deleted from the capture path — one command over, in the
+        # same commit (iteration 3, perf Med-low).
+        checks["inbox_depth"] = sum(
+            1 for _ in Path(cfg.inbox_dir).glob("fnd-*.json")) \
+            if Path(cfg.inbox_dir).is_dir() else 0
     except OSError as exc:
         checks["inbox_depth"] = "unreadable (%s)" % exc
     backlog_usable = True

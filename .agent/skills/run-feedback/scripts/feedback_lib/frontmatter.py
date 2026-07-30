@@ -134,6 +134,36 @@ def parse_file(path):
     return parse(Path(path).read_text(encoding="utf-8"))
 
 
+def parse_meta_only(path):
+    """Frontmatter of *path* without ever materializing the body.
+
+    `parse_file` reads the whole record, `splitlines()` all of it, and then does
+    ``"\\n".join(lines[idx:])`` to build a body that every id-scanning caller
+    immediately discards as ``meta, _``. At 1000 records that is ~8 MB read and
+    ~16 MB of transient strings to answer "what is the next number" — twice per
+    filing, inside the exclusive filing flock (iteration 3, perf Medium).
+
+    Streams line by line and stops at the closing delimiter. Returns the same
+    mapping `parse` would for the frontmatter block, so it is a drop-in for every
+    metadata-only reader.
+    """
+    lines = []
+    try:
+        with open(str(path), encoding="utf-8") as handle:
+            first = handle.readline()
+            if first.strip() != _DELIM:
+                return {}
+            lines.append(first)
+            for line in handle:
+                lines.append(line)
+                if line.strip() == _DELIM:
+                    break
+    except UnicodeDecodeError:
+        return {}
+    meta, _ = parse("".join(lines) + "\n")
+    return meta
+
+
 def scalar(value, key="value"):
     """Render one frontmatter scalar, refusing record-injection and quoting prose.
 

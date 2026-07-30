@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 
 from .envelope import EXIT_CONFIG, CliError
@@ -46,6 +47,10 @@ _FORBIDDEN_ROOTS = frozenset({".git", ".claude", ".agent", ".codex", ".cursor",
 #: bootstrap instruction files a ledger path may never target
 _FORBIDDEN_NAMES = frozenset({"CLAUDE.md", "GEMINI.md", "AGENTS.md",
                               "SKILL.md", "README.md"})
+
+#: config keys that name a ledger FILE (as opposed to a record directory); these
+#: must be Markdown, because the writer appends markdown structure to them
+_LEDGER_FILE_KEYS = frozenset({"index_path", "backlog_path"})
 
 DEFAULTS = {
     "v": CONFIG_VERSION,
@@ -126,7 +131,15 @@ def _contained(root, raw, key, source, ledger=True):
                        code=EXIT_CONFIG, err_type="ConfigError",
                        remediation="use a path inside the repo, e.g. docs/backlog")
     root = Path(root).resolve()
-    resolved = (root / candidate).resolve()
+    try:
+        resolved = (root / candidate).resolve()
+    except (OSError, ValueError) as exc:
+        # ValueError, not OSError, is what an embedded NUL raises — so a corrupt or
+        # hostile config escaped as a bare traceback instead of the ConfigError
+        # every other bad value gets (iteration 3, L-23)
+        raise CliError("config key %r is not a usable path (%r): %s"
+                       % (key, raw, exc),
+                       code=EXIT_CONFIG, err_type="ConfigError")
     if resolved != root and root not in resolved.parents:
         raise CliError("config key %r escapes the repo root (%s -> %s) in %s"
                        % (key, raw, resolved, source or "built-in defaults"),
@@ -145,15 +158,69 @@ def _contained(root, raw, key, source, ledger=True):
     parts = resolved.relative_to(root).parts if resolved != root else ()
     if not ledger:
         return resolved
-    if parts and parts[0] in _FORBIDDEN_ROOTS:
+    # Compared CASEFOLDED and NFC-normalized, against EVERY component rather than
+    # just the first. `Path.resolve()` does not canonicalize case, and macOS/APFS
+    # and Windows are case-insensitive — so `".Claude/commands"` sailed past an
+    # exact-match check on `".claude"` and wrote an attacker-influenced record body
+    # into the real `.claude/commands/`, creating a slash command. That is the V-11
+    # exploit this control exists to stop, reachable by changing one letter's case
+    # (verified exploit, iteration 3 H-02). `.Agent`, `system`, `Claude.md` and
+    # `readme.md` bypassed identically.
+    folded = [unicodedata.normalize("NFC", part).casefold() for part in parts]
+    forbidden = {name.casefold() for name in _FORBIDDEN_ROOTS}
+    hit = next((part for part, fold in zip(parts, folded) if fold in forbidden),
+               None)
+    if hit is not None:
         raise CliError(
             "config key %r points into %s/, which is executable agent surface, "
             "not a ledger (%s) in %s"
-            % (key, parts[0], raw, source or "built-in defaults"),
+            % (key, hit, raw, source or "built-in defaults"),
             code=EXIT_CONFIG, err_type="ConfigError",
             remediation="put ledgers under docs/ (or another documentation "
                         "tree); run-feedback must not write agent instructions")
-    if resolved.name in _FORBIDDEN_NAMES:
+    # STRUCTURAL rules, not just a denylist. Eight forbidden dirs and five
+    # forbidden basenames is not a containment policy: everything else in the repo
+    # was a legal ledger target, and `insert_index_line` needs no anchor, so it
+    # would append a `## <category>` block to ANY text file. Reachable targets
+    # included `.cursorrules`, `.github/copilot-instructions.md` and any `@`-imported
+    # doc (agent-instruction injection), and `.envrc` — where the generated index
+    # line's backticks are command substitution to bash (iteration 3, H-03).
+    # Refusing dot-components kills that class outright, and both live consumer
+    # configs already satisfy both rules.
+    # `record_link`'s output is interpolated into a markdown link target, and only
+    # the link TEXT was escaped — so a config path containing `)` closed the link
+    # early and the rest became an attacker-controlled `[click here](https://…)`
+    # inside a git-tracked, agent-read index (iteration 3, sec-M-05). Control
+    # characters additionally forge lines in `doctor` output and in `hint:` lines,
+    # both of which the orchestrator reads as fact (sec-M-06).
+    bad = [ch for ch in raw if ch in "()[]<>|`\"'" or not ch.isprintable()]
+    if bad:
+        raise CliError(
+            "config key %r contains characters that are unsafe in a markdown "
+            "link or a report line (%s) in %s"
+            % (key, ", ".join(sorted({repr(c) for c in bad})),
+               source or "built-in defaults"),
+            code=EXIT_CONFIG, err_type="ConfigError",
+            remediation="use a plain path: letters, digits, '.', '-', '_', '/'")
+    dotted = next((part for part in parts if part.startswith(".")), None)
+    if dotted is not None:
+        raise CliError(
+            "config key %r points at a dotfile/dotdir component %r (%s) in %s"
+            % (key, dotted, raw, source or "built-in defaults"),
+            code=EXIT_CONFIG, err_type="ConfigError",
+            remediation="ledgers are documentation — put them under docs/. "
+                        "Dot-paths are tool configuration and agent instructions, "
+                        "never a ledger")
+    if key in _LEDGER_FILE_KEYS and resolved.suffix.lower() != ".md":
+        raise CliError(
+            "config key %r must name a Markdown file (got %r) in %s"
+            % (key, raw, source or "built-in defaults"),
+            code=EXIT_CONFIG, err_type="ConfigError",
+            remediation="a thin-index ledger is a .md file; pointing this at a "
+                        "structured file (package.json, a workflow yml) would "
+                        "append markdown into it")
+    if (unicodedata.normalize("NFC", resolved.name).casefold()
+            in {name.casefold() for name in _FORBIDDEN_NAMES}):
         raise CliError(
             "config key %r targets the bootstrap instruction file %s in %s"
             % (key, resolved.name, source or "built-in defaults"),

@@ -36,7 +36,7 @@ import re
 import time
 from pathlib import Path
 
-from . import atomic, body as body_mod, frontmatter, ids
+from . import atomic, body as body_mod, frontmatter, ids, markdown
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab (known-issues-format, Registry B) --------------------------------
@@ -130,10 +130,9 @@ def seed_backlog_text():
 
 # --- anchored insertion -----------------------------------------------------
 
-#: A fence OPENER per CommonMark §4.5: at most 3 leading spaces, then 3+ of one
-#: fence character, then an info string. A line indented 4+ spaces is an indented
-#: code block, not a fence.
-_FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})[ \t]*(.*)$")
+# Fence tracking lives in `feedback_lib/markdown.py` — see that module for why it
+# is shared rather than implemented here: it was implemented here first, and the
+# defect ledger went a whole task without it (iteration 3, L-2).
 
 #: a placeholder line the seed/live index carries while it has no entries;
 #: leaving it above a freshly inserted item reads as "no open work-items" over
@@ -164,30 +163,16 @@ def scan_anchors(text, anchor):
     the F3 defect. What V8 called a fail-closed DoS is fixed by making the
     *message* name the offending fence, not by granting permission to write.
     """
+    mask, fence_line = markdown.scan(text)
     out = []
-    fence_char = None
-    fence_len = 0
-    fence_line = None
     for i, line in enumerate(text.split("\n")):
-        match = _FENCE_OPEN_RE.match(line)
-        if fence_char is None:
-            if match:
-                run, info = match.group(1), match.group(2)
-                # an info string may not contain a backtick on a ``` fence
-                if not (run[0] == "`" and "`" in info):
-                    fence_char, fence_len, fence_line = run[0], len(run), i + 1
-                    continue
-        else:
-            # only a run of the SAME character, at least as long, closes it —
-            # and a closing fence carries no info string
-            if match:
-                run, info = match.group(1), match.group(2)
-                if (run[0] == fence_char and len(run) >= fence_len
-                        and not info.strip()):
-                    fence_char, fence_len, fence_line = None, 0, None
-                    continue
-            continue  # any other line inside the fence is content
-        if line.strip() == anchor:
+        if mask[i]:
+            continue
+        # An indented copy is something a renderer shows as code. Counting it made
+        # `doctor` report `anchor_present: true` for an anchor rendered inside an
+        # indented block, and would have inserted the pointer line into it
+        # (iteration 3, L-8).
+        if line.strip() == anchor and markdown.is_structure(line):
             out.append(i)
     return out, fence_line
 
@@ -348,20 +333,10 @@ def file_work_item(config, item_id, slug, title, body, status="open",
     if os.path.lexists(str(record_path)):
         raise CliError("work-item file already exists: %s" % record_path,
                        code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
-    # ids are the human-facing registry key: re-scan under the caller's lock so
-    # a second feedback_dir or an archived subdir cannot silently reuse one
-    # (F10). Compared CASE-INSENSITIVELY and RECURSIVELY: `--prefix wi` made
-    # `next_number`'s `^wi-(\d+)` blind to `WI-1`, and the first version of this
-    # guard used exact string membership, so it allocated `wi-1` beside `WI-1`
-    # — F10's own headline scenario (vdd-multi iteration 2, V2).
-    known = {str(existing).casefold()
-             for existing in ids.existing_ids(records_dir, recursive=True)}
-    if item_id.casefold() in known:
-        raise CliError("work-item id already in use: %s" % item_id,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
-                       remediation="another record already holds that id — "
-                                   "re-run without --prefix/--slug overrides "
-                                   "so the next id is allocated")
+    # ids are the human-facing registry key: re-scan under the caller's lock so a
+    # second feedback_dir or an archived subdir cannot silently reuse one (F10).
+    # Shared with the defect ledger — see `ids.assert_id_free`.
+    ids.assert_id_free(records_dir, item_id)
 
     if index_path.is_file():
         index_before = _read_verbatim(index_path)
@@ -377,6 +352,7 @@ def file_work_item(config, item_id, slug, title, body, status="open",
     index_after = insert_after_anchor(index_before, config.backlog_anchor,
                                      index_line, where=index_path)
 
+    body = body_mod.guard_config_body(config, body)
     meta = _build_meta(item_id, slug, status, opened_at, effort, value, source,
                        extensions)
     banner = ""

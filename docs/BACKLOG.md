@@ -73,8 +73,9 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-9** [Extract a shared ledger_core (WI-7 option 3)](backlog/wi-9-extract-a-shared-ledger-core-wi-7-option-3.md) — effort `L`, status `open`, opened 2026-07-30
+- **WI-8** [Iteration-3 residue (16 recorded findings)](backlog/wi-8-iteration-3-residue-16-recorded-findings.md) — effort `M`, status `open`, opened 2026-07-30
 
-_No open work-items._
 
 
 ## Closed

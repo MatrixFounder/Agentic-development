@@ -90,22 +90,33 @@ def resolve(config, ref):
     it *deletes*, not only the ones it creates.
     """
     directories = (config.inbox_dir, config.filed_dir, config.dismissed_dir)
+
+    def contained(path):
+        if _within(path, directories):
+            return path
+        raise CliError(
+            "finding reference %r resolves outside the feedback directories" % ref,
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="pass a bare finding id, or copy the record into %s "
+                        "first — filing MOVES the record, and run-feedback must "
+                        "not delete files outside its own state dir"
+                        % config.inbox_dir)
+
     candidate = Path(ref)
     if candidate.is_file():
-        if not _within(candidate, directories):
-            raise CliError(
-                "finding path %s is outside the feedback directories" % ref,
-                code=EXIT_USAGE, err_type="UsageError",
-                remediation="pass the finding id instead, or copy the record "
-                            "into %s first — filing MOVES the record, and "
-                            "run-feedback must not delete files outside its own "
-                            "state dir" % config.inbox_dir)
-        return candidate, finding_mod.load(candidate)
+        return contained(candidate), finding_mod.load(candidate)
     name = ref if ref.endswith(".json") else ref + ".json"
     for directory in directories:
+        # `contained` on THIS branch too. Guarding only the branch above was a fix
+        # that covered one of two paths — and the unguarded one is the path a ref
+        # without a `.json` suffix *necessarily* takes, so `--finding
+        # ../../../victim` read a foreign JSON and `consume` then UNLINKED it
+        # (verified exploit, iteration 3 H-04: the WI-6 exploit surviving on the
+        # sibling code path, which is the third instance of this class in as many
+        # iterations).
         path = Path(directory) / name
         if path.is_file():
-            return path, finding_mod.load(path)
+            return contained(path), finding_mod.load(path)
     raise CliError("finding not found: %s" % ref, code=EXIT_NOT_FOUND,
                    err_type="NotFound")
 

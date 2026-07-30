@@ -117,7 +117,10 @@ _REDACT_PATTERNS = [
     re.compile(r"\bgh[pousr]_[A-Za-z0-9]{16,}"),
     re.compile(r"\bxox[baprs]-[A-Za-z0-9\-]{8,}"),
     re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._\-]{8,}"),
-    re.compile(r"[\w.+\-]+@[\w\-]+\.[\w.\-]+"),
+    # bounded repetition: the unbounded form backtracks O(n^2) over a long run with
+    # no `@`, and this runs on tool output inside a SYNCHRONOUS hook — one minified
+    # JSON or base64 line was seconds of stall (iteration 3, M-04 / perf-High)
+    re.compile(r"[\w.+\-]{1,64}@[\w\-]{1,255}\.[\w.\-]{1,255}"),
 ]
 _KV_SECRET_RE = re.compile(
     r"(?i)\b(token|secret|passw\w*|api[_-]?key|apikey|cookie|authorization)"
@@ -134,9 +137,27 @@ def redact(text):
     return text
 
 
+#: how much more than the final limit to keep before redacting — enough that a
+#: redaction never has to look at the whole input, generous enough that no secret
+#: near the tail boundary is missed
+_PRE_SLICE_FACTOR = 4
+
+
 def clip(text, limit):
-    """Redact then hard-cap an excerpt; the tail is what matters for errors."""
-    text = redact(text or "")
+    """Hard-cap an excerpt, then redact; the tail is what matters for errors.
+
+    The order used to be redact-then-slice, so ``excerpt_max_chars`` bounded the
+    OUTPUT but not the WORK: a 100 MB excerpt file cost seven regex passes over
+    100 MB to produce 2 000 characters, and the same code runs on tool output
+    inside a synchronous hook (iteration 3, M-04 / perf-High). Slicing first with
+    a generous margin keeps the cost proportional to the limit.
+    """
+    text = text or ""
+    if limit and len(text) > limit * _PRE_SLICE_FACTOR:
+        text = text[-(limit * _PRE_SLICE_FACTOR):]
+    text = redact(text)
     if limit and len(text) > limit:
-        return "…" + text[-(limit - 1):]
+        # `text[-(limit - 1):]` is `text[-0:]` — the WHOLE string — when limit is 1,
+        # so a cap of 1 silently disabled itself (iteration 3, sec-L-02)
+        return "…" + (text[-(limit - 1):] if limit > 1 else "")
     return text

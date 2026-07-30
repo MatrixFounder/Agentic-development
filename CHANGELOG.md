@@ -16,6 +16,79 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.7 — iteration 3: the task that closed the asymmetry class produced six more**
+
+`/vdd-multi` iteration 3 reviewed the WI-2…WI-7 fixes and found that **TASK 093 had not applied its
+own organizing lesson to itself**. WI-7's generalization is *"a fix that lands on one of two
+symmetric code paths is half a fix"* — and the code written to close that class contained six more
+instances of it, including one that re-broke the CRLF fix in the branch a freshly seeded index always
+takes, and one where the defect ledger had **no fence awareness at all** a whole task after the
+work-item ledger got it. Vigilance was the wrong remedy. Gates: **286 tests** (265 → 286, zero
+skips), E2E PASS, contract-sync 0, 45/45 skills, `doctor ready: true`. Report:
+[`docs/reviews/vdd-multi-093.md`](docs/reviews/vdd-multi-093.md).
+
+#### **Fixed — 5 reproduced exploits**
+* **Arbitrary file write** (H-01): `finding.save` built its path from an unvalidated `finding_id`
+  read off disk, and `pathlib` discards the left operand on an absolute right one — so an inbox record
+  carrying `"finding_id": "/…/.claude/settings"` wrote its whole JSON object there, via `--as noise`,
+  the one path needing no title, body or category. Reproduced, then closed with **two independent
+  controls**, each pinned by its own test.
+* **Out-of-tree delete** (H-04): WI-6 guarded one of `resolve`'s two branches — and the unguarded one
+  is the branch a ref without a `.json` suffix *necessarily* takes, so `--finding ../../../victim`
+  read a foreign file and `consume` **unlinked it**. Reproduced.
+* **Case-variant denylist bypass** (H-02): `Path.resolve()` does not canonicalize case and APFS is
+  case-insensitive, so `.Claude/commands` reached the real `.claude/commands/` — the V-11 exploit
+  reachable by changing one letter. Now NFC-normalized and casefolded across **every** component.
+* **CRLF corruption** (L-1) and **insertion inside a code fence** (L-2), both reproduced by hand.
+
+#### **Fixed — structurally, not case-by-case**
+* **`feedback_lib/markdown.py`** — one CommonMark fence scanner both ledgers consume. The defect
+  index was fence-blind, so a pointer line landed inside a documented example; and an indented anchor
+  counted as live, so `doctor` could report `ready: true` for an anchor that renders as code.
+* **`ids.assert_id_free`** — one id guard both writers call (the defect writer had none).
+* **`body.guard_config_body`** — the WI-2 cap and screen now run **inside both writers**. Putting the
+  check in the CLI meant *neither* writer had it, and the docstring argued the inverse.
+* `atomic.read_verbatim`, `except BaseException` rollback, and the trailing-newline shape are now
+  identical on both paths, and every test covering a shared guard is parameterized over both
+  registries so "fixed on one path" cannot pass again.
+
+#### **Fixed — security**
+* The credential screen missed **the exploit it was written for**: `--body-file ./.env` passed,
+  as did PEM private keys, `github_pat_`, `glpat-`, `AIza`, JWTs and inline-credential URLs. 10 more
+  families plus one narrow `NAME=<20+ chars>` rule that still lets *"the bypass token:
+  [PLACEHOLDER]"* through. A **partially** masked secret (`ghp_xxxxxxxx<live tail>` — what the error
+  message's own "remove or mask" invites) no longer launders past: the mask must now dominate.
+* Metadata scalars (`--title`, `--value`, `--source`, `--reason`, `--component`) are screened and
+  capped — they land in frontmatter, the index line and the journal, all git-tracked.
+* Ledger config paths are validated **structurally** (no dot-component, `.md` for file keys, no
+  markdown/control characters) instead of against a denylist of 8 dirs and 5 basenames that left
+  `.cursorrules`, `.envrc` and `.github/**` legal targets.
+* `clip` slices before redacting (it scanned 100 MB to produce 2 000 chars, on tool output, inside a
+  synchronous hook), the email rule is bounded against O(n²) backtracking, and `clip(text, 1)` no
+  longer returns the whole string.
+
+#### **Fixed — performance**
+* The hook did **O(entire tool output)** work — full copy, `splitlines()`, full-text regex — *above*
+  the exit-0 discard, i.e. on every successful Bash call, synchronously in the session. WI-4 removed a
+  bounded ~5–30 ms `git` spawn from that path and left an unbounded allocation cost three lines
+  higher. Response tail-truncated to 64 KB; the `tool_name` discard moved above the imports.
+* `doctor` parsed every inbox JSON to produce an integer — the exact O(k) WI-5 had just deleted, one
+  command over, in the same commit. `_dup_candidates` rebuilt a loop-invariant token set per pair.
+  `existing_ids`/`list_issues` now read metadata only (`parse_file` joined a full record body that
+  every id scan discards, twice per filing, inside the filing flock).
+
+#### **Process — mine, not the code's**
+* **I edited the tree while the critics were reading it.** `critic-security` got two different
+  versions of one file and correctly refused to certify the exit bar on those grounds. Its one
+  integrity finding was an artifact of that window (verified). Freeze the tree for a review.
+* Mutation testing caught **a weak test of my own**: asserting the anchor *count* is 1 passes whether
+  the right or the wrong anchor resolved. The fence tests now assert **which line**.
+* Two independent controls **masked each other** in a test — neutralizing either left the suite green.
+  Each now has its own test, the same lesson as iteration 2's create-only guards.
+* **Not converged.** All three critics returned `issues-found`. The residue is filed as **WI-8** (16
+  recorded findings) and **WI-9** — extract a shared `ledger_core`, promoted from WI-7's "someday"
+  because writer asymmetry has produced a confirmed finding in *every* iteration, three for three.
+
 ### **v3.21.6 — the WI-2…WI-7 tail: shared primitives instead of vigilance**
 
 Closes all six work-items the two adversarial iterations of TASK 091/092 deferred. The organizing

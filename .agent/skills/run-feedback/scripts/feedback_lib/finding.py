@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -16,6 +17,34 @@ from . import atomic, fingerprint as fp
 from .envelope import EXIT_NOT_FOUND, CliError
 
 SCHEMA_VERSION = 1
+
+#: `finding_id` is read out of a JSON file in a directory this engine itself calls
+#: "torn/foreign", and it is then used to BUILD A PATH. `pathlib` discards the left
+#: operand when the right is absolute, so an inbox record carrying
+#: `"finding_id": "/Users/me/.claude/settings"` made `save()` write the attacker's
+#: whole JSON object to that path — `write_atomic` creates missing parents and
+#: replaces an existing file (verified exploit, iteration 3 H-01: agent permission
+#: escalation via `file --as noise`, the one path needing no title/body/category).
+#: WI-6 reasoned carefully about containing the file this tool DELETES and left the
+#: file it WRITES uncontained.
+_FINDING_ID_RE = re.compile(r"^fnd-\d{8}-\d{6}-[0-9a-f]{8}$")
+
+
+def validate_id(record_id):
+    """Return *record_id* if it matches the generated grammar, else refuse.
+
+    Fail closed: this is the only thing standing between a foreign inbox file and
+    an arbitrary-path write.
+    """
+    text = str(record_id or "")
+    if not _FINDING_ID_RE.match(text):
+        raise CliError(
+            "finding id %r is not a valid generated id" % text,
+            code=EXIT_NOT_FOUND, err_type="NotFound",
+            remediation="finding ids are generated as fnd-<YYYYMMDD>-<HHMMSS>-"
+                        "<8 hex>; a record carrying anything else did not come "
+                        "from `collect` and is not safe to file")
+    return text
 
 SOURCES = ("workflow", "skill", "command", "test", "ci", "hook", "transcript")
 KINDS = ("tool-error", "gate-failure", "test-failure", "review-finding",
@@ -93,10 +122,20 @@ def merge_duplicate(existing, incoming):
 
 
 def save(directory, record):
-    """Atomic write (tmp + os.replace); returns the target path."""
+    """Atomic write (tmp + os.replace); returns the target path.
+
+    The id is validated and the computed path asserted to be inside *directory* —
+    belt and braces, because this is the arbitrary-write sink of H-01 and one of
+    the two guards would suffice only until someone widened the other.
+    """
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    target = directory / (record["finding_id"] + ".json")
+    target = directory / (validate_id(record.get("finding_id")) + ".json")
+    if target.parent.resolve() != directory.resolve():
+        raise CliError(
+            "refusing to write a finding outside %s (id %r)"
+            % (directory, record.get("finding_id")),
+            code=EXIT_NOT_FOUND, err_type="NotFound")
     atomic.write_atomic(target,
                         json.dumps(record, ensure_ascii=False, indent=2) + "\n")
     return target
@@ -112,4 +151,10 @@ def load(path):
     except (OSError, json.JSONDecodeError) as exc:
         raise CliError("finding unreadable: %s (%s)" % (path, exc),
                        code=EXIT_NOT_FOUND, err_type="NotFound")
+    if not isinstance(record, dict):
+        raise CliError("finding %s is not a JSON object" % path,
+                       code=EXIT_NOT_FOUND, err_type="NotFound")
+    # a missing/foreign id used to surface as a raw KeyError traceback from three
+    # different call sites (iteration 3, L-13/sec-L-13)
+    validate_id(record.get("finding_id"))
     return record

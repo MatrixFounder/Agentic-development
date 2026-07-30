@@ -532,13 +532,39 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
         return path
 
     def test_both_ledgers_read_through_the_same_primitive(self):
-        """Not a style point: the asymmetry IS the defect class (WI-7)."""
-        self.assertIs(ledger_backlog._read_verbatim.__wrapped__
-                      if hasattr(ledger_backlog._read_verbatim, "__wrapped__")
-                      else atomic.read_verbatim, atomic.read_verbatim)
-        source = Path(ledger_issues.__file__).read_text(encoding="utf-8")
-        self.assertIn("atomic.read_verbatim", source,
-                      "the defect ledger still reads with newline translation")
+        """Not a style point: the asymmetry IS the defect class (WI-7).
+
+        Iteration 3 (L-3) caught the first version of this test being vacuous in
+        BOTH assertions: `assertIs(x, x)` after a `hasattr` that is always False,
+        and an `assertIn("atomic.read_verbatim", source)` that the *docstring* of
+        `insert_index_line` satisfies — so deleting the actual call left it green.
+        Behavioural now: patch the primitive and assert each writer calls it with
+        its own index path.
+        """
+        fx.write(self.root / "docs" / "BACKLOG.md", fx.BACKLOG_INDEX_FIXTURE)
+        fx.write(self.root / "docs" / "KNOWN_ISSUES.md", fx.INDEX_FIXTURE)
+        (self.root / "docs" / "backlog").mkdir(parents=True, exist_ok=True)
+        cfg = fx.load_cfg(self.root)
+        for label, filer in (
+                ("backlog", lambda: ledger_backlog.file_work_item(
+                    cfg, "WI-9", "wi-9-x", "T", "Body.",
+                    opened_at="2026-07-30")),
+                ("issues", lambda: ledger_issues.file_defect(
+                    cfg, "RF-9", "rf-9-x", "T", "robustness", "Body.",
+                    opened_at="2026-07-30"))):
+            with self.subTest(ledger=label):
+                seen = []
+                real = atomic.read_verbatim
+
+                def spy(path, *args, **kwargs):
+                    seen.append(str(path))
+                    return real(path, *args, **kwargs)
+
+                with mock.patch.object(atomic, "read_verbatim", spy):
+                    filer()
+                self.assertTrue(
+                    seen, "%s ledger did not read through atomic.read_verbatim — "
+                          "it is translating newlines again (V12)" % label)
 
     def test_a_crlf_backlog_keeps_crlf(self):
         index = self._write_crlf("docs/BACKLOG.md", fx.BACKLOG_INDEX_FIXTURE)

@@ -25,22 +25,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 MAX_DEBUG_DUMPS = 5
 
 
+#: Each response part is truncated to its last TAIL_CHARS before anything else
+#: touches it. Everything downstream only ever inspects the tail: `_exit_code`
+#: greps for a trailing `Exit code: N`, `find_envelope` reads the last 5 non-empty
+#: lines, `filters.clip` keeps the tail. Without this, a Bash call that printed a
+#: 5 MB log cost a 5 MB copy plus ~100k transient strings in `find_envelope` —
+#: ABOVE the exit-0 discard filter, i.e. on every successful command, synchronously
+#: in the user's session. WI-4 removed a bounded ~5-30ms `git` spawn from this path
+#: and left an unbounded allocation cost three lines higher (iteration 3, perf-High).
+TAIL_CHARS = 65536
+
+
+def _tail(text):
+    return text if len(text) <= TAIL_CHARS else text[-TAIL_CHARS:]
+
+
 def _response_text(resp):
     if resp is None:
         return ""
     if isinstance(resp, str):
-        return resp
+        return _tail(resp)
     if isinstance(resp, dict):
         parts = []
         for key in ("stdout", "stderr", "output", "content", "text", "error"):
             value = resp.get(key)
             if isinstance(value, str):
-                parts.append(value)
+                parts.append(_tail(value))
             elif isinstance(value, list):
-                parts.extend(p.get("text", "") for p in value
+                parts.extend(_tail(p.get("text", "")) for p in value
                              if isinstance(p, dict))
-        return "\n".join(parts)
-    return str(resp)
+        return _tail("\n".join(parts))
+    return _tail(str(resp))
 
 
 def _exit_code(resp, text):
@@ -63,43 +78,61 @@ def _interrupted(resp):
     return False
 
 
+def _maybe_debug_dump(payload):
+    """Persist the raw payload when RUN_FEEDBACK_HOOK_DEBUG=1. Always returns 0.
+
+    Loads config lazily and by itself so the normal path pays nothing, and is
+    reachable from the earliest discard so a dropped event can still be inspected —
+    diagnosing the filters is the whole point of the facility.
+    """
+    if os.environ.get("RUN_FEEDBACK_HOOK_DEBUG") != "1":
+        return 0
+    try:
+        from feedback_lib.config import load_config
+        cfg = load_config(repo_root=(os.environ.get("CLAUDE_PROJECT_DIR")
+                                     or payload.get("cwd") or os.getcwd()))
+        cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
+        dumps = sorted(cfg.feedback_dir.glob("hook_debug-*.json"))
+        if len(dumps) < MAX_DEBUG_DUMPS:
+            stamp = time.strftime("%Y%m%d-%H%M%S")
+            (cfg.feedback_dir / ("hook_debug-%s-%d.json"
+                                 % (stamp, os.getpid()))).write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8")
+    except Exception:  # noqa: BLE001 - a debug facility never breaks the hook
+        pass
+    return 0
+
+
 def main():
     try:
         payload = json.load(sys.stdin)
     except (ValueError, OSError):
         return 0
 
+    # The cheapest possible discard comes FIRST — before the feedback_lib imports,
+    # which pull in re, shlex, json, fcntl, tempfile, subprocess and unicodedata
+    # (~5-15ms of a ~40ms process) for an event that is about to be dropped. Same
+    # defect class as WI-4, one layer up (iteration 3, perf-High secondary).
+    if payload.get("tool_name") != "Bash":
+        return _maybe_debug_dump(payload)
+
     from feedback_lib import filters, finding, inbox, journal
     from feedback_lib.config import load_config
 
     repo_hint = (os.environ.get("CLAUDE_PROJECT_DIR")
                  or payload.get("cwd") or os.getcwd())
+    # The debug dump stays ABOVE the remaining filters and pays for its own config
+    # load: it exists to diagnose WHY the filters discarded something, so moving it
+    # below them would destroy its only purpose (WI-4 / audit 093 Step 3).
+    _maybe_debug_dump(payload)
     cfg = None
 
-    # The debug dump stays ABOVE the filters and pays for its own config load.
-    # It exists to diagnose why the filters discarded something, so moving it
-    # below them would destroy its only purpose (WI-4 / audit 093 Step 3).
-    if os.environ.get("RUN_FEEDBACK_HOOK_DEBUG") == "1":
-        try:
-            cfg = load_config(repo_root=repo_hint)
-            cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
-            dumps = sorted(cfg.feedback_dir.glob("hook_debug-*.json"))
-            if len(dumps) < MAX_DEBUG_DUMPS:
-                stamp = time.strftime("%Y%m%d-%H%M%S")
-                (cfg.feedback_dir / ("hook_debug-%s-%d.json"
-                                     % (stamp, os.getpid()))).write_text(
-                    json.dumps(payload, ensure_ascii=False, indent=2),
-                    encoding="utf-8")
-        except Exception:  # noqa: BLE001 - a debug facility never breaks the hook
-            pass
-
-    # --- cheap discard filters FIRST -------------------------------------
+    # --- cheap discard filters, before any config load --------------------
     # This hook runs synchronously on EVERY Bash tool call and most events are
     # discarded here. Loading config above these filters meant a config read plus
     # a `git rev-parse` for every discarded event, with the git timeout as the
     # worst-case stall of a hooked tool call (WI-4).
-    if payload.get("tool_name") != "Bash":
-        return 0
     command = (payload.get("tool_input") or {}).get("command", "")
     resp = payload.get("tool_response")
     text = _response_text(resp)

@@ -16,7 +16,7 @@ import unicodedata
 from pathlib import Path
 
 from . import frontmatter
-from .envelope import EXIT_USAGE, CliError
+from .envelope import EXIT_FILING_CONFLICT, EXIT_USAGE, CliError
 
 
 def normalize_slug(text):
@@ -57,13 +57,40 @@ def existing_ids(issues_dir, recursive=False):
     for path in sorted(issues_dir.rglob("*.md") if recursive
                        else issues_dir.glob("*.md")):
         try:
-            meta, _ = frontmatter.parse_file(path)
+            # meta only: this scan discarded a full-body join per record, twice per
+            # filing, under the filing flock (iteration 3, perf Medium)
+            meta = frontmatter.parse_meta_only(path)
         except OSError:
             continue
         value = meta.get("id")
         if value:
             out.append(str(value))
     return out
+
+
+def assert_id_free(records_dir, record_id):
+    """Refuse *record_id* if any record under *records_dir* already holds it.
+
+    Compared **casefolded** and **recursively**: `next_number`'s ``^P-(\\d+)`` is
+    case-sensitive, so ``--prefix wi`` was blind to an existing ``WI-1`` and
+    allocated ``wi-1`` beside it; and a record archived into a subdirectory still
+    holds its id while a flat scan silently freed it for reuse (F10, iteration 2
+    V2). Shared by BOTH ledgers — it lived only in `ledger_backlog`, so the defect
+    registry had no id-uniqueness guard at all (iteration 3, L-6).
+
+    The id is collapsed first, because that is what the writer stores: an id
+    carrying stray whitespace was compared in one form and written in another, so
+    the guard could not see its own previous output (iteration 3, L-13).
+    """
+    wanted = " ".join(str(record_id).split()).casefold()
+    known = {str(existing).casefold()
+             for existing in existing_ids(records_dir, recursive=True)}
+    if wanted in known:
+        raise CliError(
+            "record id already in use: %s" % record_id,
+            code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+            remediation="another record already holds that id — re-run without "
+                        "--prefix/--slug overrides so the next id is allocated")
 
 
 def next_number(issues_dir, prefix):

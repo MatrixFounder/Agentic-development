@@ -24,7 +24,7 @@ import re
 import time
 from pathlib import Path
 
-from . import atomic, body as body_mod, frontmatter
+from . import atomic, body as body_mod, frontmatter, ids, markdown
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab -----------------------------------------------------------------
@@ -114,16 +114,37 @@ def seed_index_text():
 
 # --- index insertion -------------------------------------------------------
 
-def _eol_of(lines, near):
-    """The line ending this file uses, sampled at the insertion point."""
-    if 0 <= near < len(lines) and lines[near].endswith("\r"):
-        return "\r\n"
-    return "\n"
+def _eol_of(lines, _near=None):
+    """The line ending this FILE uses, decided from the whole file.
+
+    Sampling one line near the insertion point was wrong in the case that matters
+    most: when the category is new and sorts last, ``insert_at == len(lines)`` and
+    the sampled line is the empty tail element that ``split("\\n")`` produces for
+    any file ending in a newline — so ``"".endswith("\\r")`` is False and a CRLF
+    ledger silently gained bare-LF lines. That path is not exotic: a freshly
+    seeded index has no category sections at all, so the **first defect ever
+    filed** takes it (iteration 3, L-1).
+    """
+    return "\r\n" if any(l.endswith("\r") for l in lines if l) else "\n"
 
 
-def _rejoin(lines, eol):
-    """Join back with exactly one trailing newline, in the file's own ending."""
-    return "\n".join(lines).rstrip("\r\n") + eol
+def _rejoin(lines, eol, trailer):
+    """Join back, restoring the file's ORIGINAL trailing shape.
+
+    ``rstrip("\\r\\n") + eol`` collapsed however many trailing blank lines a human
+    had left into exactly one newline — a multi-line diff for a one-line insertion,
+    in a file this module promises only to insert into (iteration 3, L-15).
+    *trailer* is what `_trailing_shape` measured before the edit.
+    """
+    text = "\n".join(lines).rstrip("\r\n")
+    return text + (trailer if trailer else eol)
+
+
+def _trailing_shape(text, eol):
+    """The exact trailing whitespace of *text* (so it can be restored verbatim)."""
+    stripped = text.rstrip("\r\n")
+    trailer = text[len(stripped):]
+    return trailer if trailer else eol
 
 
 def insert_index_line(index_text, category, line):
@@ -139,13 +160,27 @@ def insert_index_line(index_text, category, line):
     ``atomic.read_verbatim`` on the read side.
     """
     lines = index_text.split("\n")
+    eol = _eol_of(lines)
+    trailer = _trailing_shape(index_text, eol)
+    pad = "\r" if eol == "\r\n" else ""
+    # Fenced regions are skipped, via the SAME scanner the work-item anchor uses.
+    # Without it a `## <category>` heading or a `- **<ID>** …` example inside a
+    # fence counted as the real thing, and the new pointer was inserted into the
+    # code block — F3, on the sibling registry, a whole task later (iteration 3,
+    # L-2). Both live ledgers and the shipped template already contain such a
+    # fenced example.
+    fenced = markdown.fenced_mask(index_text)
+
+    def structural(index):
+        return not fenced[index] and markdown.is_structure(lines[index])
+
     headings = [(i, m.group(1)) for i, m in
                 ((i, _CATEGORY_HEADING_RE.match(l)) for i, l in enumerate(lines))
-                if m]
+                if m and structural(i)]
 
     def section_end(start_idx):
         for j in range(start_idx + 1, len(lines)):
-            if lines[j].startswith("## "):
+            if lines[j].startswith("## ") and structural(j):
                 return j
         return len(lines)
 
@@ -156,24 +191,25 @@ def insert_index_line(index_text, category, line):
             if cat > category:
                 insert_at = i
                 break
-        eol = _eol_of(lines, min(insert_at, len(lines) - 1))
-        pad = "\r" if eol == "\r\n" else ""
         block = ["## %s%s" % (category, pad), pad, line + pad, pad]
         # keep exactly one blank line before a newly appended heading
         while insert_at > 0 and lines[insert_at - 1].strip() == "":
             insert_at -= 1
         block.insert(0, pad)
         lines[insert_at:insert_at] = block
-        return _rejoin(lines, eol)
+        return _rejoin(lines, eol, trailer)
 
     start, end = target[0], section_end(target[0])
-    new_id = _INDEX_ENTRY_RE.match(line).group(1)
-    new_key = _id_sort_key(new_id)
+    id_match = _INDEX_ENTRY_RE.match(line)
+    if id_match is None:  # only format_index_line produces these; be explicit
+        raise CliError("index line %r does not match the pointer grammar" % line,
+                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
+    new_key = _id_sort_key(id_match.group(1))
     insert_at = None
     last_entry = None
     for j in range(start + 1, end):
         match = _INDEX_ENTRY_RE.match(lines[j])
-        if not match:
+        if not match or not structural(j):
             continue
         last_entry = j
         if _id_sort_key(match.group(1)) > new_key and insert_at is None:
@@ -182,9 +218,8 @@ def insert_index_line(index_text, category, line):
         insert_at = (last_entry + 1) if last_entry is not None else start + 2
         if last_entry is None and insert_at > len(lines):
             insert_at = end
-    eol = _eol_of(lines, start)
-    lines.insert(insert_at, line + ("\r" if eol == "\r\n" else ""))
-    return _rejoin(lines, eol)
+    lines.insert(insert_at, line + pad)
+    return _rejoin(lines, eol, trailer)
 
 
 def _write_atomic(path, text):
@@ -255,7 +290,12 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
     if os.path.lexists(str(issue_path)):
         raise CliError("issue file already exists: %s" % issue_path,
                        code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
+    # the id is the registry key, not the filename — a differing slug used to let a
+    # duplicate id through here, while the work-item ledger had guarded it since
+    # iteration 2 (iteration 3, L-6)
+    ids.assert_id_free(issues_dir, issue_id)
 
+    body = body_mod.guard_config_body(config, body)
     meta = _build_meta(issue_id, slug, status, opened_at, category, severity,
                        extensions)
     banner = ""
@@ -307,11 +347,20 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
             code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
             remediation="another process filed this slug, or a symlink was "
                         "planted at that path — re-run to get a fresh id")
-    except OSError as exc:
+    except BaseException as exc:
+        # ANY failure, not just OSError: a KeyboardInterrupt or MemoryError
+        # mid-write leaves a truncated orphan record with no index line, while this
+        # module's docstring claims no half-state can exist. `ledger_backlog` was
+        # widened for this in iteration 2 (V1) and this module was not — the same
+        # asymmetry WI-7 is about, found again in iteration 3 (L-4).
         _rollback(issue_path)
+        if not isinstance(exc, OSError):
+            raise
         raise CliError("could not write the issue record %s (%s)"
                        % (issue_path, exc),
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
+                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+                       remediation="check that %s is a writable directory and "
+                                   "not a symlink" % issues_dir)
     try:
         index_path.parent.mkdir(parents=True, exist_ok=True)
         _write_atomic(index_path, index_after)
@@ -338,7 +387,7 @@ def list_issues(config, status=None, component=None, auto_fixable=None):
         return out
     for path in sorted(issues_dir.glob("*.md")):
         try:
-            meta, _ = frontmatter.parse_file(path)
+            meta = frontmatter.parse_meta_only(path)
         except OSError:
             continue
         if meta.get("type") != "known-issue":

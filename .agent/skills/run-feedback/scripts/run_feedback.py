@@ -455,6 +455,22 @@ def _read_body(args, cfg):
                    code=EXIT_USAGE, err_type="UsageError")
 
 
+def _body_preview(args, result):
+    """Echo the rendered body under --dry-run (RF-2).
+
+    `--dry-run` previewed the id, the paths and the index line but never the BODY —
+    the one part an agent composes by hand and cannot repair after filing, because
+    ledger writes are create-only. Previewing everything except the fallible part is
+    a dry run that cannot catch the mistake it exists to catch.
+    """
+    if not args.dry_run:
+        return ""
+    text = result.get("issue_text") or result.get("record_text")
+    if not text:
+        return ""
+    return "\n--- record as it would be written ---\n" + text.rstrip("\n")
+
+
 def _provisional_note(result):
     """Human-readable caveat on a dry-run id.
 
@@ -549,7 +565,8 @@ def cmd_file(args, cfg):
             human = ("DRY-RUN would file" if args.dry_run else "filed") + \
                 " %s -> %s\nindex line: %s%s" % (
                     record["finding_id"], result["issue_path"],
-                    result["index_line"], _provisional_note(result))
+                    result["index_line"],
+                    _provisional_note(result) + _body_preview(args, result))
         elif args.classification == "work-item":
             if not cfg.backlog_path:
                 raise CliError("backlog_path is not configured",
@@ -595,7 +612,8 @@ def cmd_file(args, cfg):
                 human = ("DRY-RUN would file" if args.dry_run else "filed") + \
                     " %s -> %s\nindex line: %s%s" % (
                         record["finding_id"], result["record_path"],
-                        result["index_line"], _provisional_note(result))
+                        result["index_line"],
+                        _provisional_note(result) + _body_preview(args, result))
         else:  # noise
             if not args.reason:
                 raise CliError("--reason is required for --as noise",
@@ -809,6 +827,16 @@ def cmd_doctor(args, cfg):
     checks["repo_root"] = str(cfg.repo_root)
     checks["data_root"] = str(cfg.data_root)
     checks["config_source"] = cfg.source or "built-in defaults"
+    # `configured` is its own reported check AND part of `ready` (RF-1). Previously
+    # `ready` meant only "the filesystem works", so an unconfigured repo reported
+    # `ready: true` while the remediation in the SAME payload said "run init" — and
+    # any caller gating on `ready` (a workflow step, a heal run) concluded an
+    # unconfigured repo was configured. That is how eval agents filed into an
+    # unbootstrapped fixture repo with nothing stopping them. A readiness gate that
+    # contradicts its own remediation is worse than no gate: it is a gate people
+    # trust. Filing on built-in defaults still WORKS — this changes what `doctor`
+    # promises, not what `file` permits.
+    checks["configured"] = bool(cfg.source)
     if not cfg.source:
         remediation.append("no docs/feedback/config.json — run "
                            "`run_feedback.py init` to bootstrap from the "
@@ -937,7 +965,8 @@ def cmd_doctor(args, cfg):
             remediation.append("backlog path unreadable: %s" % exc)
     # a configured-but-unusable backlog is NOT ready: work-item filing, half of
     # what triage produces, would fail every time (F17)
-    ready = (checks["feedback_dir_writable"] and backlog_usable and defects_ok
+    ready = (checks["configured"]
+             and checks["feedback_dir_writable"] and backlog_usable and defects_ok
              and config_ok
              and (checks.get("index_exists")
                   or checks["seed_template_reachable"]))

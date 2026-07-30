@@ -125,13 +125,13 @@ class HardeningTestCase(unittest.TestCase):
             self.root / "docs" / "feedback" / "config.json",
             json.dumps({"v": 1, "backlog_path": "docs/BACKLOG.md"}))
         self.cfg = fx.load_cfg(self.root)
-        self.body = fx.write(self.root / "body.md", "Signal.\n")
+        self.body = fx.write(self.root / "body.md", fx.DEFECT_BODY)
 
     def file_item(self, **kwargs):
         kwargs.setdefault("item_id", "WI-3")
         kwargs.setdefault("slug", "wi-3-item")
         kwargs.setdefault("title", "An item")
-        kwargs.setdefault("body", "Signal.")
+        kwargs.setdefault("body", fx.DEFECT_BODY)
         kwargs.setdefault("opened_at", "2026-07-30")
         return ledger_backlog.file_work_item(self.cfg, **kwargs)
 
@@ -275,7 +275,7 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
             backlog_anchor=ANCHOR)
         with self.assertRaises(CliError) as ctx:
             ledger_backlog.file_work_item(
-                raw_cfg, "WI-3", "wi-3-item", "An item", "Signal.",
+                raw_cfg, "WI-3", "wi-3-item", "An item", fx.DEFECT_BODY,
                 opened_at="2026-07-30")
         self.assertEqual(ctx.exception.code, 4)
         self.assertEqual(list(elsewhere.iterdir()), [])

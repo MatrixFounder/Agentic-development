@@ -78,8 +78,8 @@ the matching `## <category>` heading here, in ID order.
 
 ## feedback
 
-- **RF-1** [doctor reports ready:true on built-in defaults, contradicting its own remediation](issues/rf-1-doctor-reports-ready-true-on-built-in-defaults-contradicting-its-own-remediation.md) — severity `SEV-4`, status `open`, opened 2026-07-13
-- **RF-2** [file accepts an unvalidated issue body and dry-run never previews it](issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md) — severity `SEV-3`, status `open`, opened 2026-07-14
+- **RF-1** [doctor reports ready:true on built-in defaults, contradicting its own remediation](issues/rf-1-doctor-reports-ready-true-on-built-in-defaults-contradicting-its-own-remediation.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13 · **fixed 2026-07-30** (TASK 095): `configured` is now a check and part of `ready`; E2E, cli_reference and SKILL.md §7 updated in lockstep
+- **RF-2** [file accepts an unvalidated issue body and dry-run never previews it](issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md) — severity `SEV-3`, status `fixed`, opened 2026-07-14 · **fixed 2026-07-30** (TASK 095): unbalanced fence + missing Reproduction refused at exit 4, and `--dry-run` echoes the rendered record
 
 
 ## hooks

@@ -293,6 +293,7 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
         format_line=format_index_line,
         build_meta=_build_meta,
         write_index=_write_atomic,
+        require_repro=True,
     )
     result = ledger_core.file_record(
         registry, config, issue_id, slug, title, body, status,

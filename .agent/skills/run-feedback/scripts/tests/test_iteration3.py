@@ -68,7 +68,7 @@ class LedgerCase(unittest.TestCase):
         kw.setdefault("item_id", "WI-9")
         kw.setdefault("slug", "wi-9-item")
         kw.setdefault("title", "An item")
-        kw.setdefault("body", "Signal.")
+        kw.setdefault("body", fx.DEFECT_BODY)
         kw.setdefault("opened_at", "2026-07-30")
         return ledger_backlog.file_work_item(self.cfg, **kw)
 
@@ -77,7 +77,7 @@ class LedgerCase(unittest.TestCase):
         kw.setdefault("slug", "rf-9-issue")
         kw.setdefault("title", "An issue")
         kw.setdefault("category", "robustness")
-        kw.setdefault("body", "Signal.")
+        kw.setdefault("body", fx.DEFECT_BODY)
         kw.setdefault("opened_at", "2026-07-30")
         return ledger_issues.file_defect(self.cfg, **kw)
 
@@ -267,8 +267,9 @@ class TestGuardsAreSymmetric(LedgerCase):
                     self.assertEqual(ctx.exception.code, 2)
 
     def test_an_honest_body_still_files_through_both_writers(self):
+        # a work-item needs no Reproduction section; a defect does (RF-2)
         self.file_work_item(body="A normal signal paragraph.")
-        self.file_defect(body="A normal signal paragraph.")
+        self.file_defect(body=fx.DEFECT_BODY)
 
     def test_id_reuse_is_refused_on_both_ledgers(self):
         """L-6: only the work-item writer had this guard; the defect writer

@@ -24,7 +24,7 @@ class DryRunTestCase(unittest.TestCase):
                  json.dumps({"v": 1, "backlog_path": "docs/BACKLOG.md"}))
         fx.write(self.root / "docs" / "BACKLOG.md", fx.BACKLOG_FIXTURE)
         self.body = fx.write(self.root / "docs" / "feedback" / "body.md",
-                             "Symptom: it exploded.\n")
+                             fx.DEFECT_BODY)
 
         code, out, err = fx.run_cli(
             ["--repo-root", self.root, "collect", "--source", "workflow",

@@ -117,8 +117,12 @@ the shipped templates are unreachable.
 
 ## doctor
 
-`doctor [--json]` — `{v, ready, checks, remediation}`; exit 0 ready / 3 not. Checks: repo/data
-roots, config source (built-in defaults → remediation suggests `init`), ledger paths, backlog
+`doctor [--json]` — `{v, ready, checks, remediation}`; exit 0 ready / 3 not. **`ready` means
+"configured AND usable"**: it is false in a repo with no `docs/feedback/config.json`, reported as
+`checks.configured: false` (RF-1 — it used to be true while the same payload's remediation said
+"run init", so a caller gating on `ready` treated an unbootstrapped repo as configured). Filing on
+built-in defaults still works; this is what `doctor` promises, not what `file` permits. Checks:
+repo/data roots, config source (built-in defaults → remediation suggests `init`), ledger paths, backlog
 anchor presence, `backlog_layout` + `backlog_dir` + backlog seed-template reachability, issues
 seed template reachability, feedback-dir writability. `backlog_layout: "flat"` is reported, not
 flagged — it is an explicit opt-in.

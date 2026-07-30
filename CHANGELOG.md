@@ -16,6 +16,41 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.9 — RF-1 / RF-2: two gates that did not check what they claimed**
+
+Both from the 2026-07-13/14 eval campaign, and one class — the one RF-2 names in its own "Related"
+line: **the gate does not check what it claims**. Light Mode. Gates: **330 tests** (320 → 330),
+E2E PASS, contract-sync OK, 45/45 skills, `doctor ready: true`.
+
+#### **Fixed**
+* **RF-1** — `doctor` reported `ready: true` in the same payload whose own remediation said "run
+  init", so any caller gating on `ready` concluded an unconfigured repo was configured (which is how
+  eval agents filed into an unbootstrapped fixture repo with nothing stopping them). `configured` is
+  now its own check **and** part of `ready`: an unconfigured repo is `ready: false`, exit 3, and
+  `init` then makes it ready. Option (a) from the Fix path, chosen over (b) deliberately — adding a
+  `configured` field while leaving `ready` alone would not have fixed the reported harm, because the
+  harm is that callers gate on `ready`. The record's "Do-not" was honored in lockstep:
+  `test_e2e.sh` (which asserted exit 0 in a config-less repo), `cli_reference.md`, and SKILL.md §7,
+  where a whole paragraph existed only to teach agents not to trust this field. `collect`/`file`
+  deliberately still run on built-in defaults and exit 0 — only `doctor` refuses.
+* **RF-2** — `file` validated nothing about the body, and `--dry-run` previewed the id, the paths and
+  the index line but never the **body**: the one part an agent composes by hand and cannot repair
+  afterwards, since §5 is create-only. `body.guard_structure` now refuses an unterminated code fence
+  (**both** registries) and a defect body with no `## Reproduction` section at exit 4 as the Fix path
+  specified, and `--dry-run` echoes the rendered record. Create-only was not relaxed — the gate was
+  fixed, not the invariant, which is what removes the trap that made an agent hand-edit a filed record.
+
+#### **Cost, recorded because it was not zero**
+The Reproduction requirement exposed that **28 test fixtures were filing defect bodies the documented
+contract had always forbidden** (bare stubs like `"Body."`). They now share one `fx.DEFECT_BODY`.
+Making the fixtures conform is the honest direction; loosening the gate to accept stubs would have
+been the gate bending to the tests. Two assertions comparing a body line-by-line, and one E2E line
+that broke under `set -o pipefail` (`doctor` exits 3 there by design, so the pipeline failed even
+when the grep matched), were fixed alongside.
+
+One deliberate asymmetry: work-item bodies need no Reproduction section (`/heal-issues` selects on a
+defect repro) but do need balanced fences. Five guards mutation-verified.
+
 ### **v3.21.8 — one ledger write path: the asymmetry class closed by construction**
 
 Three adversarial iterations each found a guard present on one ledger writer and absent on its twin

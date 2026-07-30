@@ -1,7 +1,7 @@
 ---
 id: RF-2
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-07-14
 category: feedback
 severity: SEV-3
@@ -10,9 +10,44 @@ component: run-feedback
 fingerprint: 2c90df145756fcae
 auto_fixable: true
 finding_ref: fnd-20260714-032058-2c90df14
+resolved_at: 2026-07-30
+resolved_by: TASK 095
 ---
 
 # RF-2 — file accepts an unvalidated issue body and dry-run never previews it
+
+> **✅ FIXED 2026-07-30 (TASK 095, Light Mode).** Both halves, per the Fix path.
+>
+> **The gate:** `body.guard_structure`, called from `ledger_core.file_record`, refuses an unterminated
+> code fence (**both** registries — an unbalanced fence swallows the rest of the rendered file) and a
+> defect body with no `## Reproduction` / `**Reproduction.**` section, with **exit 4** as specified.
+> The reproduction in this record — an unterminated ```sh fence with no repro section — now exits 4
+> and writes **nothing**; it previously exited 0 and put the unbalanced fence in the ledger.
+>
+> **The preview:** `--dry-run` now echoes the rendered record under
+> `--- record as it would be written ---`. Previewing the id, the paths and the index line but never
+> the BODY meant the dry run could not catch the one mistake it existed to catch: the body is the part
+> an agent composes by hand, and §5 create-only forbids repairing it afterwards.
+>
+> **The "Do-not" was honored:** create-only was not relaxed. The gate was fixed, not the invariant —
+> which is what removes the trap that made an agent hand-edit a filed record and journal
+> `body-amended`, a violation the rules left it no legal way to avoid.
+>
+> **Cost, recorded because it was not trivial:** the requirement exposed that **28 test fixtures were
+> filing defect bodies the documented contract had always forbidden** (bare stubs like `"Body."`, no
+> repro section). They now use one shared `fx.DEFECT_BODY`. Making the fixtures conform is the honest
+> direction; loosening the gate to accept stubs would have been the gate bending to the tests. Two
+> assertions that compared a body line-by-line, and one E2E line that broke under `set -o pipefail`
+> (`doctor` exits 3 by design there, so the pipeline failed even when the grep matched), were fixed
+> alongside.
+>
+> **Asymmetry that is deliberate:** work-item bodies need no Reproduction section — `/heal-issues`
+> selects on a defect repro and a work-item has nothing to reproduce — but they DO need balanced
+> fences. Both stated and pinned.
+>
+> Pinned by `tests/test_rf1_rf2.py::TestRF2BodyGate` (10 tests incl. the record's verbatim
+> reproduction); all three guards mutation-verified. `SKILL.md` §1's Red Flag citing this record as an
+> open trap has been rewritten to describe the gate instead.
 
 **Symptom.** `file` performs no validation of the issue body, and `--dry-run` previews only the allocated ID, the paths and the index line — never the body. An agent that pipes a malformed body (unterminated ```sh fence, missing template sections) via `--body-file -` cannot discover the defect before the write, and afterwards §5 create-only forbids repairing it. Observed in the eval campaign (case 5, iteration 4): the agent filed VM-1 with a broken body, then hand-edited `docs/issues/vm-1-*.md` to repair it and journaled `body-amended` — a create-only violation the skill's own rules left it no legal way to avoid.
 

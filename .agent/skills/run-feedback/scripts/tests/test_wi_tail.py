@@ -177,11 +177,11 @@ class TestProvenanceMarking(unittest.TestCase):
 
     def _file_both(self, extensions):
         work = ledger_backlog.file_work_item(
-            self.cfg, "WI-5", "wi-5-item", "An item", "Signal body.",
+            self.cfg, "WI-5", "wi-5-item", "An item", fx.DEFECT_BODY,
             opened_at="2026-07-30", extensions=extensions)
         defect = ledger_issues.file_defect(
             self.cfg, "RF-5", "rf-5-issue", "An issue", "robustness",
-            "Signal body.", opened_at="2026-07-30", extensions=extensions)
+            fx.DEFECT_BODY, opened_at="2026-07-30", extensions=extensions)
         return (Path(work["record_path"]).read_text(encoding="utf-8"),
                 Path(defect["issue_path"]).read_text(encoding="utf-8"))
 
@@ -198,7 +198,10 @@ class TestProvenanceMarking(unittest.TestCase):
             lines = [l for l in body.split("\n") if l.strip()]
             self.assertTrue(lines[0].startswith("# "), lines[0])
             self.assertTrue(lines[1].startswith("> Filed by"), lines[1])
-            self.assertEqual(lines[2], "Signal body.")
+            # the banner sits between the H1 and the body; the body itself follows
+            # verbatim, so assert it is present in order rather than line-by-line
+            after_banner = body.split("Filed by", 1)[1].split("\n", 1)[1]
+            self.assertIn(fx.DEFECT_BODY.strip(), after_banner)
 
     def test_a_record_without_a_finding_ref_gets_neither(self):
         """A hand-written record is not machine-provenanced. Library callers that
@@ -570,10 +573,10 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
         cfg = fx.load_cfg(self.root)
         for label, filer in (
                 ("backlog", lambda: ledger_backlog.file_work_item(
-                    cfg, "WI-9", "wi-9-x", "T", "Body.",
+                    cfg, "WI-9", "wi-9-x", "T", fx.DEFECT_BODY,
                     opened_at="2026-07-30")),
                 ("issues", lambda: ledger_issues.file_defect(
-                    cfg, "RF-9", "rf-9-x", "T", "robustness", "Body.",
+                    cfg, "RF-9", "rf-9-x", "T", "robustness", fx.DEFECT_BODY,
                     opened_at="2026-07-30"))):
             with self.subTest(ledger=label):
                 seen = []
@@ -593,7 +596,7 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
         index = self._write_crlf("docs/BACKLOG.md", fx.BACKLOG_INDEX_FIXTURE)
         cfg = fx.load_cfg(self.root)
         (self.root / "docs" / "backlog").mkdir(parents=True, exist_ok=True)
-        ledger_backlog.file_work_item(cfg, "WI-5", "wi-5-x", "T", "Body.",
+        ledger_backlog.file_work_item(cfg, "WI-5", "wi-5-x", "T", fx.DEFECT_BODY,
                                       opened_at="2026-07-30")
         raw = index.read_bytes()
         self.assertEqual(
@@ -606,7 +609,7 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
         index = self._write_crlf("docs/KNOWN_ISSUES.md", fx.INDEX_FIXTURE)
         cfg = fx.load_cfg(self.root)
         ledger_issues.file_defect(cfg, "RF-5", "rf-5-x", "T", "robustness",
-                                  "Body.", opened_at="2026-07-30")
+                                  fx.DEFECT_BODY, opened_at="2026-07-30")
         raw = index.read_bytes()
         self.assertEqual(raw.count(b"\r\n"), raw.count(b"\n"),
                          "the defect index still normalizes CRLF to LF — V12")
@@ -624,11 +627,11 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
                 if module is ledger_backlog:
                     (self.root / "docs" / "backlog").mkdir(parents=True,
                                                            exist_ok=True)
-                    module.file_work_item(cfg, "WI-6", "wi-6-x", "T", "B.",
+                    module.file_work_item(cfg, "WI-6", "wi-6-x", "T", fx.DEFECT_BODY,
                                           opened_at="2026-07-30")
                 else:
                     module.file_defect(cfg, "RF-6", "rf-6-x", "T", "robustness",
-                                       "B.", opened_at="2026-07-30")
+                                       fx.DEFECT_BODY, opened_at="2026-07-30")
                 after = path.read_text(encoding="utf-8")
                 self.assertEqual(after.count(" "), before,
                                  "U+2028 was consumed as a line break")
@@ -907,7 +910,7 @@ class TestProvisionalIdOnBothPaths(unittest.TestCase):
              "--message", "boom", "--json"])
         self.assertEqual(code, 0, err)
         self.fid = json.loads(out)["finding"]["finding_id"]
-        self.body = fx.write(self.root / "body.md", "Signal.\n")
+        self.body = fx.write(self.root / "body.md", fx.DEFECT_BODY)
 
     def _dry_run(self, classification, extra=()):
         return fx.run_cli(["--repo-root", str(self.root), "file", "--finding",
@@ -939,7 +942,7 @@ class TestConsumeFailureIsRecoverable(unittest.TestCase):
         fx.write(self.root / "docs" / "BACKLOG.md", fx.BACKLOG_INDEX_FIXTURE)
         fx.write(self.root / "docs" / "feedback" / "config.json",
                  json.dumps({"v": 1, "backlog_path": "docs/BACKLOG.md"}))
-        self.body = fx.write(self.root / "body.md", "Signal.\n")
+        self.body = fx.write(self.root / "body.md", fx.DEFECT_BODY)
 
     def _collect(self):
         code, out, err = fx.run_cli(

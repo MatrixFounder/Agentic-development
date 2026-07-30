@@ -27,8 +27,24 @@ RF="$PY $SCRIPTS/run_feedback.py --repo-root $TMP"
 
 step() { echo "-- $1"; }
 
-step "doctor"
-$RF doctor >/dev/null || { echo "FAIL: doctor not ready"; fail=1; }
+# RF-1: an unconfigured repo must NOT report ready. `doctor` used to exit 0 here
+# while its own remediation said "run init", so a caller gating on `ready` treated
+# an unbootstrapped repo as configured. Both halves are asserted, because a fix that
+# only made it exit 3 could have done so for the wrong reason.
+step "doctor (unconfigured: not ready, bootstrap trigger visible)"
+$RF doctor >/dev/null 2>&1 && { echo "FAIL: doctor reported ready in an unconfigured repo"; fail=1; }
+# capture first: the script runs under `set -o pipefail`, and `doctor` exits 3
+# here BY DESIGN, so piping it into grep would fail the pipeline on the exit code
+# even when the grep matches
+doctor_json="$($RF doctor --json 2>/dev/null || true)"
+case "$doctor_json" in
+  *'"configured": false'*) ;;
+  *) echo "FAIL: doctor did not report configured:false"; fail=1 ;;
+esac
+
+step "init, then doctor is ready"
+$RF init >/dev/null || { echo "FAIL: init"; fail=1; }
+$RF doctor >/dev/null || { echo "FAIL: doctor not ready after init"; fail=1; }
 
 step "collect x2 (cross-source dedup)"
 $RF collect --source hook --kind tool-error --component demo \

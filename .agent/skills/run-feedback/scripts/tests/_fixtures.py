@@ -178,3 +178,17 @@ def write_work_item(backlog_dir, item_id, slug, title="Fixture work-item",
                                  effort_line=effort_line, extra=extra,
                                  title=title, body=body)
     return write(Path(backlog_dir) / (slug + ".md"), text)
+
+
+#: A minimal CONTRACT-CONFORMING defect body: balanced fence + a Reproduction
+#: section. RF-2 made both mandatory at filing time, and the old fixtures were
+#: bare stubs ("Body.") — i.e. the suite was filing bodies the documented contract
+#: had always forbidden. Conforming here is the fix; loosening the gate to accept
+#: stubs would be the gate bending to the tests.
+DEFECT_BODY = (
+    "**Symptom.** The fixture body.\n\n"
+    "**Reproduction.**\n\n"
+    "```sh\n"
+    "exit 1\n"
+    "```\n"
+)

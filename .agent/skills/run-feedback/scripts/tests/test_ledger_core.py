@@ -63,7 +63,7 @@ class GuardInventory(unittest.TestCase):
         kw.setdefault("item_id", "WI-9")
         kw.setdefault("slug", "wi-9-item")
         kw.setdefault("title", "An item")
-        kw.setdefault("body", "Signal.")
+        kw.setdefault("body", fx.DEFECT_BODY)
         kw.setdefault("opened_at", "2026-07-30")
         kw.pop("category", None)
         rank = kw.pop("rank", None)
@@ -76,7 +76,7 @@ class GuardInventory(unittest.TestCase):
         kw.setdefault("slug", "rf-9-issue")
         kw.setdefault("title", "An issue")
         kw.setdefault("category", "robustness")
-        kw.setdefault("body", "Signal.")
+        kw.setdefault("body", fx.DEFECT_BODY)
         kw.setdefault("opened_at", "2026-07-30")
         rank = kw.pop("rank", None)
         if rank is not None:
@@ -177,10 +177,10 @@ class GuardInventory(unittest.TestCase):
             body_max_chars=64000)
         cases = (
             ("work-items", lambda: ledger_backlog.file_work_item(
-                raw, "WI-9", "wi-9-item", "T", "Body.",
+                raw, "WI-9", "wi-9-item", "T", fx.DEFECT_BODY,
                 opened_at="2026-07-30")),
             ("defects", lambda: ledger_issues.file_defect(
-                raw, "RF-9", "rf-9-issue", "T", "robustness", "Body.",
+                raw, "RF-9", "rf-9-issue", "T", "robustness", fx.DEFECT_BODY,
                 opened_at="2026-07-30")),
         )
         for name, call in cases:
@@ -351,9 +351,9 @@ class GuardInventory(unittest.TestCase):
             body_max_chars=64000)
         cases = (
             ("work-items", lambda: ledger_backlog.file_work_item(
-                raw, "WI-9", "wi-9-item", "T", "Body.", opened_at="2026-07-30")),
+                raw, "WI-9", "wi-9-item", "T", fx.DEFECT_BODY, opened_at="2026-07-30")),
             ("defects", lambda: ledger_issues.file_defect(
-                raw, "RF-9", "rf-9-issue", "T", "robustness", "Body.",
+                raw, "RF-9", "rf-9-issue", "T", "robustness", fx.DEFECT_BODY,
                 opened_at="2026-07-30")),
         )
         for name, call in cases:

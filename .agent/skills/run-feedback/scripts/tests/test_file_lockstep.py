@@ -33,7 +33,7 @@ class TestPlacement(LockstepTestCase):
     def test_inserts_into_right_section_in_id_order(self):
         before = self._index_text()
         ledger_issues.file_defect(self.cfg, "RF-2", "rf-2-second-issue",
-                                  "Second issue", "correctness", "Body.")
+                                  "Second issue", "correctness", fx.DEFECT_BODY)
         after = self._index_text()
         lines = after.splitlines()
         i_rf1 = next(i for i, l in enumerate(lines) if l.startswith("- **RF-1**"))
@@ -51,7 +51,7 @@ class TestPlacement(LockstepTestCase):
     def test_new_category_created_in_alphabetical_position(self):
         before = self._index_text()
         ledger_issues.file_defect(self.cfg, "DF-1", "df-1-dogfood-find",
-                                  "Dogfood find", "dogfood", "Body.")
+                                  "Dogfood find", "dogfood", fx.DEFECT_BODY)
         after = self._index_text()
         i_cor = after.index("## correctness")
         i_dog = after.index("## dogfood")
@@ -65,11 +65,11 @@ class TestPlacement(LockstepTestCase):
     def test_rules_preamble_never_touched(self):
         before = self._index_text()
         ledger_issues.file_defect(self.cfg, "RF-2", "rf-2-a", "A",
-                                  "correctness", "b")
+                                  "correctness", fx.DEFECT_BODY)
         ledger_issues.file_defect(self.cfg, "DF-1", "df-1-b", "B",
-                                  "dogfood", "b")
+                                  "dogfood", fx.DEFECT_BODY)
         ledger_issues.file_defect(self.cfg, "RF-5", "rf-5-c", "C",
-                                  "robustness", "b")
+                                  "robustness", fx.DEFECT_BODY)
         after = self._index_text()
         self.assertEqual(self._preamble(before), self._preamble(after))
         self.assertIn("## Rules / Conventions", after)
@@ -89,7 +89,7 @@ class TestIndexLineFormat(LockstepTestCase):
         today = time.strftime("%Y-%m-%d")
         result = ledger_issues.file_defect(
             self.cfg, "RF-6", "rf-6-no-sev", "No sev", "correctness",
-            "Body.", severity=None)
+            fx.DEFECT_BODY, severity=None)
         self.assertEqual(
             result["index_line"],
             "- **RF-6** [No sev](issues/rf-6-no-sev.md) — "
@@ -109,7 +109,7 @@ class TestRollback(LockstepTestCase):
         try:
             with self.assertRaises(RuntimeError):
                 ledger_issues.file_defect(self.cfg, "RF-7", "rf-7-rollback",
-                                          "Rollback", "correctness", "Body.")
+                                          "Rollback", "correctness", fx.DEFECT_BODY)
         finally:
             ledger_issues._write_atomic = original
         self.assertFalse((self.cfg.issues_dir / "rf-7-rollback.md").exists(),
@@ -145,7 +145,7 @@ class TestCreateIfAbsent(unittest.TestCase):
             cfg = fx.load_cfg(root)
             self.assertFalse(Path(cfg.index_path).exists())
             result = ledger_issues.file_defect(
-                cfg, "RF-1", "rf-1-first", "First", "logic", "Body.")
+                cfg, "RF-1", "rf-1-first", "First", "logic", fx.DEFECT_BODY)
             self.assertTrue(result["seeded_index"])
             text = Path(cfg.index_path).read_text(encoding="utf-8")
             self.assertIn("Rules / Conventions", text)
@@ -158,7 +158,7 @@ class TestCreateIfAbsent(unittest.TestCase):
 class TestExtensionKeys(LockstepTestCase):
     def test_extension_keys_appear_after_slug(self):
         ledger_issues.file_defect(
-            self.cfg, "RF-2", "rf-2-ext", "Ext", "correctness", "Body.",
+            self.cfg, "RF-2", "rf-2-ext", "Ext", "correctness", fx.DEFECT_BODY,
             severity="SEV-3",
             extensions={"component": "html",
                         "fingerprint": "abcd1234abcd1234",
@@ -178,7 +178,7 @@ class TestExtensionKeys(LockstepTestCase):
 
     def test_empty_extensions_are_omitted(self):
         ledger_issues.file_defect(
-            self.cfg, "RF-2", "rf-2-lean", "Lean", "correctness", "Body.",
+            self.cfg, "RF-2", "rf-2-lean", "Lean", "correctness", fx.DEFECT_BODY,
             extensions={"component": None, "fingerprint": "",
                         "evidence_paths": [], "auto_fixable": None,
                         "finding_ref": None})

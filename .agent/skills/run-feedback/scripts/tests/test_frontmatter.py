@@ -74,7 +74,7 @@ class TestGeneratedIssueFileStability(unittest.TestCase):
             cfg = fx.load_cfg(root)
             ledger_issues.file_defect(
                 cfg, "RF-9", "rf-9-generated", "Generated", "correctness",
-                "Body.", severity="SEV-4",
+                fx.DEFECT_BODY, severity="SEV-4",
                 extensions={"component": "html",
                             "fingerprint": "abcd1234abcd1234",
                             "evidence_paths": ["logs/a.log"],

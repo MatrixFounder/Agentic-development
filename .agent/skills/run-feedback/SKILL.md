@@ -39,11 +39,13 @@ thin indexes over record files per `known-issues-format`: defects to `docs/issue
   allocated ID and the exact index line; a mis-filed ID pollutes a hand-maintained ledger.
 - "I'll edit a finding JSON in the inbox by hand" -> **WRONG**. Only the CLI mutates inbox state;
   hand edits break fingerprint dedup and the audit trail.
-- "The body I just filed came out malformed, I'll fix the issue file" -> **WRONG**. Ledger writes
-  are create-only ([RF-2](../../../docs/issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md):
-  `file` does not validate the body and `--dry-run` never previews it). Compose the body in a REAL
-  file and check it — balanced ```sh fence, all template sections — BEFORE filing; never build it
-  from a heredoc you cannot re-read. Landed broken → leave it, tell the human.
+- "The body I just filed came out malformed, I'll fix the issue file" -> **WRONG**. Ledger writes are
+  create-only, so a filed body cannot be repaired. The gate now catches the two failures that used to
+  land silently ([RF-2](../../../docs/issues/rf-2-file-accepts-an-unvalidated-issue-body-and-dry-run-never-previews-it.md),
+  fixed): an unterminated fence and a defect body with no `## Reproduction` section are refused at
+  exit 4, and `--dry-run` echoes the **rendered record** so you can read the body before it lands.
+  Still compose in a REAL file rather than a heredoc you cannot re-read — the gate checks structure,
+  not whether the prose is right. Landed broken → leave it, tell the human.
 - "The retro step failed, I should retry it / fail the workflow" -> **WRONG**. The retro is
   non-blocking by contract: report one line and move on; it NEVER changes the calling workflow's verdict.
 
@@ -220,13 +222,15 @@ Same as the retro protocol without claim/release: gather friction from the CURRE
 commands, retries, blockers), scoped by the user's hint; `mine` first when the hint says so.
 
 ### Bootstrap protocol (unconfigured repo — self-serve, no operator needed)
-Trigger: you have findings to process but the repo is not set up. **An unconfigured repo does NOT
-error** — `collect`/`file` run on built-in defaults and exit 0, and `doctor` still says
-`ready: true` — so do not wait for a failure. The signals are: `doctor` reports
-`config_source: built-in defaults`, its `remediation` list is non-empty, or `docs/feedback/` is
-missing. **Bootstrap BEFORE the first real filing**, not after something breaks.
+Trigger: you have findings to process but the repo is not set up. `doctor` now tells you plainly —
+**`ready: false` with `configured: false`, exit 3** (RF-1; it used to report `ready: true` while its
+own remediation said "run init", so this section had to teach you not to trust the field). Note the
+asymmetry that remains and is deliberate: **`collect`/`file` still run on built-in defaults and exit
+0**, so filing does not error in an unconfigured repo — only `doctor` refuses. **Bootstrap BEFORE
+the first real filing**, not after something breaks.
 
-Exit 3 means something different: the config EXISTS but is corrupt (or the env is broken).
+Exit 3 from `doctor` on a repo with no config is this trigger. Exit 3 from `collect`/`file` means
+something different: the config EXISTS but is corrupt (or the env is broken).
 `init` is create-only and CANNOT repair it — do not delete or rewrite the corrupt file to force
 a re-init, and never run `init` more than once per run. Inside a retro this is a non-blocking
 failure (report one line, move on — the guarantee in the Retro protocol wins over bootstrap);
@@ -253,7 +257,8 @@ outside a retro, preserve the file and surface it to the human.
      invent gates;
    - **prefix rows**: every prefix in `id_prefixes` needs a row in the ledger's
      prefix→category table.
-3. Re-run `doctor` — `ready: true` with an empty remediation list — then resume the original
+3. Re-run `doctor` — `ready: true` (which now implies `configured: true`) with an empty
+   remediation list — then resume the original
    operation (the filing that hit exit 3, the retro, the heal run).
 4. Config files are repo-visible: mention their creation in your run report/commit. Inside a
    retro this protocol is still non-blocking — bootstrap failure → one report line, move on.
@@ -284,7 +289,7 @@ outside a retro, preserve the file and surface it to the human.
 | "The retro question annoys the user, I'll skip asking" | One question per run, pre-filled — that's the contract. Skipping loses the only human-signal channel. |
 | "Exit 6 from claim is an error I should fix" | Exit 6 = you are NESTED. Skipping the retro is the correct behavior, not a failure. |
 | "Config is corrupt — Bootstrap says I should repair it" | `init` is create-only; it cannot fix a corrupt file, and retrying it just loops. Inside a retro: one report line, move on. Outside: preserve the file, hand it to the human. |
-| "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo. Check `doctor`'s `config_source` + `remediation` — bootstrap comes BEFORE the first real filing. |
+| "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo — `file` does not gate on configuration. Run `doctor`: `ready: false` / `configured: false` is the answer. Bootstrap comes BEFORE the first real filing. |
 | "I'll file the lesson exactly as it happened — the details make it concrete" | Concrete to THIS stack means wrong on the others. A shared-artifact lesson gets generalized before filing (§7 triage step 4). |
 | "The backlog has no record dir yet, so this project must want flat bullets" | `backlog_layout` decides, not the dir listing. The default is `index+files` and the engine creates the dir; a flat backlog is an explicit opt-in. |
 | "It's just a line of guidance, it can't break anything" | If it changes what runs, what gets committed, or which workflow dispatches, it is a behaviour change — check it against the target's MANDATORY rules first (§7 triage step 4). |

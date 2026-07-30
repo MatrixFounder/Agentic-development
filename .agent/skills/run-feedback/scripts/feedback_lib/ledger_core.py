@@ -53,7 +53,8 @@ class Registry:
 
     def __init__(self, noun, records_dir, index_path, status_vocab,
                  seed_text, insert, format_line, build_meta, write_index=None,
-                 link_for=None, rank_name=None, rank_vocab=None):
+                 link_for=None, rank_name=None, rank_vocab=None,
+                 require_repro=False):
         self.noun = noun                  # "work-item" / "issue" — error wording
         self.records_dir = Path(records_dir)
         self.index_path = Path(index_path)
@@ -69,6 +70,8 @@ class Registry:
         self.link_for = link_for          # optional: (index_path, record) -> str
         self.rank_name = rank_name        # "effort" / "severity"
         self.rank_vocab = rank_vocab
+        # defects must carry a Reproduction section; work-items need not (RF-2)
+        self.require_repro = require_repro
 
 
 def check_vocab(reg, status, rank=None):
@@ -171,6 +174,8 @@ def file_record(reg, config, record_id, slug, title, body, status,
     ids.assert_id_free(reg.records_dir, record_id)
 
     body = body_mod.guard_config_body(config, body)
+    body = body_mod.guard_structure(body, reg.noun,
+                                    require_repro=reg.require_repro)
     meta = reg.build_meta(**(meta_kwargs or {}))
     banner = ""
     if meta.get("finding_ref"):

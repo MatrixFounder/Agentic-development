@@ -1,26 +1,126 @@
 [
-  {"query": "прогон /full упал на security-критике и потом ещё раз на coverage — собери фидбек по прогону", "should_trigger": true},
-  {"query": "the coverage gate failed twice during that run, get it into the known issues ledger before we forget", "should_trigger": true},
-  {"query": "retro this run before we wrap up for the day", "should_trigger": true},
-  {"query": "we just finished develop-task-042, run the end-of-run retro protocol", "should_trigger": true},
-  {"query": "file the errors from the last run so they don't evaporate", "should_trigger": true},
-  {"query": "три раза подряд падал один и тот же тест в прогоне, надо зафиксировать чтобы не потерялось", "should_trigger": true},
-  {"query": "that was painful - the vdd-multi step timed out twice. capture it somewhere so we don't hit it again next sprint", "should_trigger": true},
-  {"query": "collect the friction from today's session and triage what's worth keeping", "should_trigger": true},
-  {"query": "the transcript-fetcher gate blew up during /develop, queue it as a finding", "should_trigger": true},
-  {"query": "mine my claude code sessions from this week for tool failures worth filing", "should_trigger": true},
-  {"query": "надо занести баг из сегодняшнего прогона в docs/KNOWN_ISSUES.md", "should_trigger": true},
-  {"query": "dismiss that DNS blip as noise and file the real bug from the run as a defect", "should_trigger": true},
-
-  {"query": "fix the open issues in docs/KNOWN_ISSUES.md, start with the auto-fixable ones", "should_trigger": false},
-  {"query": "what's the exact format for a KNOWN_ISSUES.md index line? show me the frontmatter keys", "should_trigger": false},
-  {"query": "run the test suite and fix whatever comes back red", "should_trigger": false},
-  {"query": "review this PR for security problems, especially the auth middleware", "should_trigger": false},
-  {"query": "archive the current TASK.md and start a new feature branch", "should_trigger": false},
-  {"query": "summarize this meeting transcript into a markdown digest", "should_trigger": false},
-  {"query": "create a new skill for parsing supplier invoices", "should_trigger": false},
-  {"query": "why did the build fail? walk me through the stack trace and debug it", "should_trigger": false},
-  {"query": "клиент оставил плохой отзыв на фичу, помоги составить ответ", "should_trigger": false},
-  {"query": "give me feedback on my code style in src/parser.py - is it idiomatic?", "should_trigger": false},
-  {"query": "update the architecture doc, we moved the queue to redis", "should_trigger": false}
+  {
+    "query": "прогон /full упал на security-критике и потом ещё раз на coverage — собери фидбек по прогону",
+    "should_trigger": true
+  },
+  {
+    "query": "the coverage gate failed twice during that run, get it into the known issues ledger before we forget",
+    "should_trigger": true,
+    "instrument_sensitive": true
+  },
+  {
+    "query": "retro this run before we wrap up for the day",
+    "should_trigger": true
+  },
+  {
+    "query": "we just finished develop-task-042, run the end-of-run retro protocol",
+    "should_trigger": true
+  },
+  {
+    "query": "file the errors from the last run so they don't evaporate",
+    "should_trigger": true
+  },
+  {
+    "query": "три раза подряд падал один и тот же тест в прогоне, надо зафиксировать в реестре, чтобы не потерялось",
+    "should_trigger": true
+  },
+  {
+    "query": "that was painful - the vdd-multi step timed out twice. capture it somewhere so we don't hit it again next sprint",
+    "should_trigger": true
+  },
+  {
+    "query": "collect the friction from today's session and triage what's worth keeping",
+    "should_trigger": true
+  },
+  {
+    "query": "the transcript-fetcher gate blew up during /develop, queue it as a finding",
+    "should_trigger": true,
+    "instrument_sensitive": true
+  },
+  {
+    "query": "mine my claude code sessions from this week for tool failures worth filing",
+    "should_trigger": true,
+    "instrument_sensitive": true
+  },
+  {
+    "query": "надо занести баг из сегодняшнего прогона в docs/KNOWN_ISSUES.md",
+    "should_trigger": true,
+    "instrument_sensitive": true
+  },
+  {
+    "query": "dismiss that DNS blip as noise and file the real bug from the run as a defect",
+    "should_trigger": true
+  },
+  {
+    "query": "fix the open issues in docs/KNOWN_ISSUES.md, start with the auto-fixable ones",
+    "should_trigger": false
+  },
+  {
+    "query": "what's the exact format for a KNOWN_ISSUES.md index line? show me the frontmatter keys",
+    "should_trigger": false
+  },
+  {
+    "query": "run the test suite and fix whatever comes back red",
+    "should_trigger": false
+  },
+  {
+    "query": "review this PR for security problems, especially the auth middleware",
+    "should_trigger": false
+  },
+  {
+    "query": "archive the current TASK.md and start a new feature branch",
+    "should_trigger": false
+  },
+  {
+    "query": "summarize this meeting transcript into a markdown digest",
+    "should_trigger": false
+  },
+  {
+    "query": "create a new skill for parsing supplier invoices",
+    "should_trigger": false
+  },
+  {
+    "query": "why did the build fail? walk me through the stack trace and debug it",
+    "should_trigger": false
+  },
+  {
+    "query": "клиент оставил плохой отзыв на фичу, помоги составить ответ",
+    "should_trigger": false
+  },
+  {
+    "query": "give me feedback on my code style in src/parser.py - is it idiomatic?",
+    "should_trigger": false
+  },
+  {
+    "query": "update the architecture doc, we moved the queue to redis",
+    "should_trigger": false
+  },
+  {
+    "query": "по итогам прогона это не баг, а улучшение — занеси его в бэклог как work-item",
+    "should_trigger": true
+  },
+  {
+    "query": "the retro turned up an enhancement rather than a defect, put it in the backlog with an effort estimate",
+    "should_trigger": true
+  },
+  {
+    "query": "две шероховатости из этого прогона: одну в известные проблемы, другую в бэклог",
+    "should_trigger": true
+  },
+  {
+    "query": "triage what came out of this run and split it between the issues ledger and the backlog",
+    "should_trigger": true
+  },
+  {
+    "query": "prioritise the product backlog with WSJF, top ten items only",
+    "should_trigger": false
+  },
+  {
+    "query": "какие поля во frontmatter нужны записи в docs/backlog/? покажи схему",
+    "should_trigger": false
+  },
+  {
+    "query": "groom the sprint backlog and re-estimate the carried-over stories",
+    "should_trigger": false
+  }
 ]

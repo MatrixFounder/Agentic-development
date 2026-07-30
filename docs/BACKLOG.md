@@ -73,8 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-
-_No open work-items._
+- **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 
 
 ## Closed

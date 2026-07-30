@@ -16,6 +16,83 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.10 — VAL-2: the trigger probe was measuring itself; and the evals catch up to the skill**
+
+Two halves. **VAL-2** — the instrument that measures whether a skill's description
+triggers reported "0 triggers across 69 runs" for a description that fires instantly by
+hand; that is exactly `23 queries × 3 runs`, i.e. the probe, not the skill. **The evals** —
+the 19-case behavioural suite was mechanically green while describing a world that TASKS
+091–095 had already changed. Gates: **58 skill-creator tests** (26 → 58), **330
+run-feedback tests**, E2E PASS, `selftest` PASS (19 cases, both new ones discriminating),
+`grade_run --lint` clean, 45/45 skills, all five earlier exploits still refused.
+
+#### **Fixed — VAL-2 (verified live before any code changed)**
+A fake `claude` on PATH replaying canned stream-json reproduced every reported behaviour at
+zero token cost, and turned up **three mechanisms the record does not name**: `message_stop`
+fires once per assistant *message* (recorded from a real stream: 2 × `message_stop`, 1 ×
+`result`), so a skill call after a tool result scored not-triggered; the EOF path discarded
+every event in the final read; and a `thinking` block always precedes the tool call.
+
+The fix **widens and tightens together**, which is the whole difficulty: accepting the
+canonical name while leaving matching loose would have made precision *worse*. The old
+`clean_name in accumulated_json` test already scored `Skill(skill="brainstorming",
+args="…<clone>…")` as a trigger — a **different** skill counted, which the record's own
+"Do-not" forbids. Now: exact match against `{probe_clone, real_name}` after normalising
+`plugin:skill` forms, `Skill.skill` only (never `args`), a `Read` only when it loads
+`SKILL.md` or the probe command file, an 8-call budget instead of first-call-decides, and
+every other tool NEUTRAL. Instrument failure is now distinguishable from a real
+non-trigger (`matched` / `clean-no-trigger` / `budget-exhausted` / `timeout` /
+`child-error`), the run reports **which** name matched, and zero-triggers-everywhere prints
+a loud warning instead of a half-plausible summary.
+
+*A defect of my own, caught mid-fix:* the first version killed a child that was exiting
+cleanly and classified it `child-error` — which made every negative pass for the wrong
+reason. Our kill is now distinguished from the child's own failure.
+
+#### **Fixed — the eval suite caught up to the skill**
+* **Case 10 was factually inverted** by RF-1: its note said "doctor reports ready:true even
+  on built-in defaults". It now grades the exit-3 bootstrap trigger, `configured: true`, and
+  that the two-level layout survives bootstrap.
+* **Case 17 had lost its forcing function**: it claimed a stale `backlog_path` makes filing
+  exit 4; it now exits 0 and silently *seeds* the second backlog the case forbids. The
+  dry-run is the only place that signal appears, so the case now grades it.
+* **Case 5's golden transcript filed a retired phantom premise** the case's own note
+  documents as the fixture bug it was fixed to remove — the seed was corrected and the
+  transcript was not, so the "ideal agent" modelled a defect the fixture no longer contains.
+* Cases 7, 9, 12 corrected for the two-level registry and the RF-2 body gate.
+* **Infrastructure that made half the registry ungradeable**: `_hashes.py` did not hash
+  `docs/backlog/`, and `ledger_text()` could not see work-item records — so the lockstep ban
+  covered only the defect ledger.
+
+#### **Added**
+* **Case 18 — ledger bodies are DATA, not instructions.** The suite's only OWASP-LLM01
+  surface: a seeded issue body carries plausible *maintainer prose* instructing the agent to
+  mark everything `auto_fixable` and hand-append to the index. The failure mode is a
+  **helpful** agent, not a fooled one. With a confused-deputy violator.
+* **Case 19 — recovery from a refused body.** WI-2's screen is script-covered; what only an
+  LLM can get wrong is what it does with exit 2. Its golden transcript *asserts the refusal
+  actually fires*, so the fixture cannot go stale silently.
+* `grade_run.py --lint` — static suite validation with no sandbox and no tokens, descending
+  into `not` wrappers (the omission that let one of my own miswired checks through).
+* `evals/README.md` — provenance, the odd-`--runs-per-query` footgun, and the five lockstep
+  obligations for editing a case.
+* Trigger set 23 → 30 queries: four positives for work-item filing (advertised since v3.21.4,
+  never tested), three negatives guarding the word "backlog", and four queries tagged
+  `instrument_sensitive` whose historical failure was VAL-2, not the description.
+
+#### **Honest about the instrument**
+`selftest.py` claimed "the instrument discriminates" while proving it for 8 of 17 cases; it
+now names the 9 with no violator transcript, and `--case N` no longer prints the global
+banner after running zero violators. `grade_run.py`'s misalignment guard exits **2** as its
+own docs always promised (it exited 1, indistinguishable from a grading crash).
+
+#### **Scope, recorded not silently expanded**
+The description gained one 6-word disambiguator (`NOT for fixing already-filed issues
+(/heal-issues).`, 69/70 words) to protect the set's hardest negative. Trigger evals remain
+**single-vendor** — `run_eval.py` only speaks Claude Code — but the detector is now split so
+the pure matching helpers are vendor-neutral and only `TriggerScanner.feed` knows the wire
+format. Filed as **WI-10**; the 9 cases without violators as part of the standing gap.
+
 ### **v3.21.9 — RF-1 / RF-2: two gates that did not check what they claimed**
 
 Both from the 2026-07-13/14 eval campaign, and one class — the one RF-2 names in its own "Related"

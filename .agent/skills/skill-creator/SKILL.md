@@ -288,6 +288,26 @@ python3 scripts/run_loop.py \
 
 This splits eval set into 60% train / 40% test, runs each query 3 times, uses Claude with extended thinking to propose improvements, iterates up to 5 times, selects by test score to avoid overfitting.
 
+> **What counts as a "trigger"** (VAL-2, fixed 2026-07-30). The probe registers a
+> uuid-suffixed CLONE of the skill as a command, then watches the turn:
+> - a `Skill` call naming **either** the clone **or the real skill** counts — when the
+>   skill is already installed the model rationally invokes the canonical name, and
+>   scoring that as "not triggered" produced a 0/69 run that read as a bad description;
+> - a `Read` counts only when it loads the skill's `SKILL.md` or the probe's command
+>   file — not merely when the path contains the name;
+> - matching is EXACT after normalising `plugin:skill` / `apps/web:deploy` forms, never a
+>   substring, and `Skill.args` is never inspected. A call to a *different* skill is a
+>   non-trigger even if it quotes ours — near-miss negatives depend on this;
+> - the scan continues past unrelated tool calls (budget: `MAX_TOOL_CALLS_SCANNED = 8`)
+>   and across `message_stop`, because a turn is several messages and the skill call may
+>   follow a tool result.
+>
+> A run reports **which** name matched (`canonical_matches` per query) and warns when the
+> skill is installed in the probing repo: a canonical-name trigger may have been caused by
+> the INSTALLED description rather than the candidate one under test. Zero triggers across
+> the whole set now prints an instrument-failure warning instead of a plausible-looking
+> summary — that ambiguity is what let VAL-2 masquerade as a description problem.
+
 ### Step 4: Apply the result
 
 Take `best_description` from output, update the skill's frontmatter. Show before/after and scores.
@@ -302,6 +322,16 @@ All features work: subagents for parallel test runs, viewer via browser, `claude
 
 Codex supports subagents. Adapt:
 - **Description optimization**: `run_loop.py` uses `claude -p` which is Claude Code specific. Skip this step or run it manually.
+
+> **Trigger evals are single-vendor today.** `run_eval.py` spawns `claude -p`, writes
+> `.claude/commands/`, and parses Claude Code's `stream-json`. Porting it to Gemini CLI,
+> Codex, Cursor or another harness needs a per-vendor **event adapter** only: the detector
+> is already split so that `normalize_skill_ref` / `match_skill_ref` / `match_read_path` /
+> `classify_tool_use` are vendor-neutral pure functions, and just `TriggerScanner.feed`
+> knows the wire format. Tests follow the same seam — `tests/fixtures/fake_cli_claude_code.py`
+> replays one vendor's protocol with zero tokens and no API key, so a second vendor is a new
+> fixture beside it rather than a rewrite. Follow the adapter precedent in
+> `.agent/skills/skill-parallel-orchestration/references/<vendor>.md`.
 - **Viewer**: If no browser, use `--static <output_path>` for standalone HTML.
 
 ### Antigravity IDE

@@ -28,8 +28,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
 import sys
+import subprocess
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -144,12 +144,26 @@ class Ctx:
         return len(re.findall(r"(?m)^- ", text.split(anchor, 1)[1]))
 
     def ledger_text(self, scope: str = "both") -> str:
+        """Concatenated ledger text for a check to assert against.
+
+        Scopes: `issues` (defect record files) · `index` (KNOWN_ISSUES.md) ·
+        `backlog` (the work-item INDEX plus every record under backlog_dir) ·
+        `both` (all of the above). `backlog` did not exist, so no case could assert
+        anything about a work-item body — the two-level registry from TASK 091 was
+        half-invisible to the grader (audit: evals-staleness F-11).
+        """
         parts = []
         if scope in ("both", "issues"):
             parts += [p.read_text() for p in sorted(self.issues_dir.glob("*.md"))] \
                 if self.issues_dir.is_dir() else []
         if scope in ("both", "index") and self.index_path.exists():
             parts.append(self.index_path.read_text())
+        if scope in ("both", "backlog"):
+            if self.backlog_path.exists():
+                parts.append(self.backlog_path.read_text())
+            records = self.sandbox / self.cfg.get("backlog_dir", "docs/backlog")
+            if records.is_dir():
+                parts += [p.read_text() for p in sorted(records.glob("*.md"))]
         return "\n".join(parts)
 
     def frontmatter(self, issue_file: str) -> dict:
@@ -657,27 +671,98 @@ def assert_alignment(case: dict) -> None:
         exps = case.get(exp_key, [])
         chks = case.get(chk_key, [])
         if [c["text"] for c in chks] != exps:
-            raise SystemExit(
+            # exit 2, as the module docstring and evals.json both promise. A bare
+            # SystemExit(str) exits 1, which is indistinguishable from an ordinary
+            # grading failure — so any CI keyed on "2 means the suite is
+            # structurally broken" would never have fired (audit: harness D5).
+            print(
                 f"grade_run: eval {case['id']}: {chk_key} is not 1:1/in-order with "
                 f"{exp_key}. An expectation has drifted from its machine check.\n"
-                f"  {exp_key}: {exps}\n  {chk_key}: {[c['text'] for c in chks]}"
-            )
+                f"  {exp_key}: {exps}\n  {chk_key}: {[c['text'] for c in chks]}",
+                file=sys.stderr)
+            raise SystemExit(2)
+
+
+#: Two different config contracts, and they are NOT interchangeable — `_delta_ok`
+#: raises unless one of equals/min/max is present, while `lockstep_consistent`
+#: indexes `c["delta"]` directly. Accepting either key for both would let the lint
+#: green-light a config that still crashes at grading time.
+_THRESHOLD_CHECKS = ("issue_count_delta", "index_line_delta", "backlog_count_delta")
+_DELTA_KEY_CHECKS = ("lockstep_consistent",)
+
+
+def _lint_check(case_id, key, chk, depth=0):
+    """Validate one check config, DESCENDING into `not` wrappers.
+
+    The first version linted only the top level, so a `not` whose inner check had a
+    bad config passed the lint and blew up at grading time — which is exactly the
+    class of defect this lint exists to catch, one level down.
+    """
+    problems = []
+    ctype = chk.get("type")
+    where = f"eval {case_id}: {key}" + (" (inside `not`)" if depth else "")
+    if ctype not in CHECKS:
+        return [f"{where} has unknown type {ctype!r}"]
+    if ctype == "not":
+        inner = chk.get("of")
+        if not isinstance(inner, dict):
+            return [f"{where} `not` has no `of` check"]
+        return _lint_check(case_id, key, inner, depth + 1)
+    if ctype in _THRESHOLD_CHECKS and not any(
+            k in chk for k in ("equals", "min", "max")):
+        problems.append(f"{where} {ctype!r} has no equals/min/max threshold")
+    if ctype in _DELTA_KEY_CHECKS and "delta" not in chk:
+        problems.append(f"{where} {ctype!r} has no `delta` key")
+    return problems
+
+
+def lint_suite(suite: dict) -> int:
+    """Static check of the whole eval suite — no sandbox, no agent, no tokens.
+
+    Catches what the `--sandbox /nonexistent` alignment trick cannot: a check whose
+    `type` is a typo, or a delta check with no threshold. Those surfaced only at
+    grading time against a REAL sandbox, i.e. after an agent run had been paid for
+    (audit: harness D6).
+    """
+    problems = []
+    for case in suite["evals"]:
+        try:
+            assert_alignment(case)
+        except SystemExit as exc:
+            problems.append(str(exc) if exc.code != 2 else
+                            f"eval {case['id']}: expectations/checks misaligned")
+        for key in ("checks", "forbidden_checks"):
+            for chk in case.get(key, []):
+                problems += _lint_check(case["id"], key, chk)
+    for line in problems:
+        print("LINT: " + line, file=sys.stderr)
+    print("lint: %d case(s), %d problem(s)" % (len(suite["evals"]), len(problems)))
+    return 1 if problems else 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Deterministically grade one eval run")
-    ap.add_argument("--sandbox", type=Path, required=True)
-    ap.add_argument("--case", type=int, required=True)
+    ap.add_argument("--lint", action="store_true",
+                    help="statically validate the eval suite and exit (no sandbox)")
+    ap.add_argument("--sandbox", type=Path)
+    ap.add_argument("--case", type=int)
     ap.add_argument("--evals", type=Path, default=EVALS_DIR / "evals.json")
-    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--out", type=Path)
     args = ap.parse_args()
 
     suite = json.loads(args.evals.read_text())
+    if args.lint:
+        return lint_suite(suite)
+    if args.sandbox is None or args.case is None:
+        raise SystemExit("grade_run: --sandbox and --case are required "
+                         "(or use --lint)")
     case = next((e for e in suite["evals"] if e["id"] == args.case), None)
     if case is None:
         raise SystemExit(f"grade_run: no eval with id {args.case}")
     assert_alignment(case)
 
+    if args.out is None:
+        raise SystemExit("grade_run: --out is required when grading")
     ctx = Ctx(args.sandbox.resolve())
 
     graded, graded_forbidden = [], []

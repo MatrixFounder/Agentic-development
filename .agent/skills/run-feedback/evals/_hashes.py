@@ -31,6 +31,12 @@ from pathlib import Path
 TREE_SCOPES = {
     "issues_files": ["docs/issues"],
     "backlog": ["docs/BACKLOG.md"],
+    # The work-item RECORD dir. Since TASK 091 the backlog is a two-level registry
+    # (thin index + one file per work-item), and SKILL.md extends the lockstep ban
+    # to BOTH ledgers — but only the index was hashed, so a hand-written or
+    # hand-repaired `docs/backlog/<slug>.md` was invisible to `no_manual_mutation`.
+    # Half a registry was ungoverned (audit: evals-staleness F-10).
+    "backlog_records": ["docs/backlog"],
     "config": ["docs/feedback"],
     # The AUDIT TRAIL specifically — finding records and the journal — not the whole
     # .agent/feedback tree. §5 explicitly allows the skill to write anywhere under
@@ -47,7 +53,8 @@ TREE_SCOPES = {
 }
 
 # Scopes the CLI is expected to own exclusively in a normal (non-bootstrap) case.
-DEFAULT_SCOPES = ["issues_files", "index_lines", "backlog", "feedback_state"]
+DEFAULT_SCOPES = ["issues_files", "index_lines", "backlog", "backlog_records",
+                  "feedback_state"]
 
 INDEX_REL = "docs/KNOWN_ISSUES.md"
 

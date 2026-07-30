@@ -322,6 +322,14 @@ def build(case: dict, arm: str, dest: Path) -> dict:
     elif backlog:
         (dest / "docs" / "BACKLOG.md").write_text(BACKLOG_MD)
 
+    # Arbitrary fixture files a case needs in the sandbox (e.g. a build log the
+    # agent is told to quote). Kept a plain {relpath: text} map so a case declares
+    # its own fixtures instead of the harness growing a special case per scenario.
+    for rel, text in (seed.get("files") or {}).items():
+        target = dest / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+
     # --- skill copy, with the arm's single isolated variable applied -------------------
     skill_dst = dest / ".agent" / "skills" / "run-feedback"
     skill_dst.parent.mkdir(parents=True)

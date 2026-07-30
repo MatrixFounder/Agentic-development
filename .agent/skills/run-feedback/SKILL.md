@@ -1,6 +1,6 @@
 ---
 name: run-feedback
-description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
+description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. NOT for fixing already-filed issues (/heal-issues). Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
 version: 1.4
 ---

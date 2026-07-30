@@ -20,7 +20,7 @@ import re
 import time
 from pathlib import Path
 
-from . import filters, finding
+from . import atomic, filters, finding
 from . import fingerprint as fp
 
 MINE_STATE_VERSION = 1
@@ -64,9 +64,7 @@ def load_state(path):
 def save_state(path, state):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp.%d" % os.getpid())
-    tmp.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
-    os.replace(str(tmp), str(path))
+    atomic.write_atomic(path, json.dumps(state, indent=2) + "\n")
 
 
 # --- per-line extraction ------------------------------------------------------

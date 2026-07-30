@@ -11,7 +11,7 @@ import json
 import os
 from pathlib import Path
 
-from . import finding as finding_mod
+from . import atomic, finding as finding_mod
 from .envelope import EXIT_NOT_FOUND, CliError
 
 
@@ -67,10 +67,9 @@ def collect(config, record):
                                                       record["fingerprint"])
         if existing is not None:
             merged = finding_mod.merge_duplicate(existing, record)
-            tmp = existing_path.with_suffix(".json.tmp.%d" % os.getpid())
-            tmp.write_text(json.dumps(merged, ensure_ascii=False, indent=2)
-                           + "\n", encoding="utf-8")
-            os.replace(str(tmp), str(existing_path))
+            atomic.write_atomic(
+                existing_path,
+                json.dumps(merged, ensure_ascii=False, indent=2) + "\n")
             return merged, True
         finding_mod.save(inbox, record)
         return record, False

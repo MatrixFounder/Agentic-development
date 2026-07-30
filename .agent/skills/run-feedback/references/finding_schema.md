@@ -44,7 +44,8 @@ Field rules:
   in the preimage** — hook- and transcript-captures of one failure must collapse. Normalization:
   timestamps→`<ts>`, paths→`<path>`, hex≥8→`<hex>`, digits→`<n>`, lowercase, whitespace collapsed.
 - `status` lifecycle: `new` → `filed` | `dismissed`. `filed_as` =
-  `{"ledger": "issues"|"backlog", "id": "RF-3"|null, "path": "..."}`.
+  `{"ledger": "issues"|"backlog", "id": "RF-3"|"WI-9"|null, "path": "..."}` — `path` is the RECORD
+  file in both ledgers; `id` is null only for the legacy flat backlog layout, which allocates none.
 - `sources` is a union list, extended on every dedup-merge; `run` keeps the FIRST capture's
   context, later contexts append under `run.extra.later_runs`.
 - `proposed.*` are capture-side hints ONLY — triage (the LLM) decides; enum

@@ -32,7 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from feedback_lib import (claims, filters, finding, frontmatter,
+from feedback_lib import (atomic, claims, filters, finding, frontmatter,
                           ids as ids_mod, inbox, journal, ledger_backlog,
                           ledger_issues, mine as mine_mod)
 from feedback_lib.config import load_config
@@ -214,6 +214,147 @@ def cmd_triage(args, cfg):
 
 # --- file --------------------------------------------------------------------
 
+def _run_source(record):
+    """Human ``source:`` for a work-item, derived from the capture's run context
+    (``workflow task-id phase``). None when the capture carried no context."""
+    run = record.get("run") or {}
+    parts = [str(run.get(key)) for key in ("workflow", "task_id", "phase")
+             if run.get(key)]
+    return " ".join(parts) or None
+
+
+#: a title is one line of prose that lands in an H1 and a markdown link
+_TITLE_MAX = 120
+#: `--prefix` reaches `id:` in the record and the ledger's index line, so it is
+#: an identifier, not free text (vdd-multi iteration 2, V-15: it was the third
+#: delivery vector for the frontmatter-injection sink)
+_PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")
+#: doctor never reads more than this from a configured ledger path (S-12)
+_DOCTOR_READ_CAP = 2 * 1024 * 1024
+_CATEGORY_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def _ledger_identity(args):
+    """Validate the operator-supplied identity of a ledger record.
+
+    Every guard fails LOUDLY on purpose: these ledgers are hand-maintained with
+    no generator to reconcile drift, so junk lands permanently. Rejected here:
+    a missing title (used to yield `<prefix>-1-none.md`), a control character or
+    newline in the title (spliced a SECOND, forged index line — verified exploit
+    S-02), an over-long title (ENAMETOOLONG surfaced as an unexpected exit 1),
+    a slug that normalizes to nothing (a hidden `.md`), and — for defects — a
+    missing or non-conforming category (produced a `## None` section or a
+    TypeError traceback, F5).
+
+    Returns the normalized explicit slug, or None when the slug is derived.
+    """
+    # Validate and NORMALIZE in one place, then write the normalized values back
+    # onto args: the first version checked `.strip()`ed copies while the callers
+    # passed the raw strings, so ` logic ` passed the category regex and became
+    # the un-matchable heading `##  logic `, and a leading \r survived into the
+    # record H1 (vdd-multi iteration 2, V3 / V-23).
+    title = (args.title or "").strip()
+    if not title:
+        raise CliError("--title is required to file into a ledger",
+                       code=EXIT_USAGE, err_type="UsageError")
+    # tested on the RAW value: str.strip() would eat a leading \r or \x0b and
+    # hide exactly what we are looking for
+    offenders = sorted({ch for ch in (args.title or "")
+                        if not ch.isprintable() and ch != "\t"})
+    if offenders:
+        raise CliError(
+            "--title must be a single line without control or invisible "
+            "characters (found %s): %r"
+            % (", ".join(repr(c) for c in offenders), args.title),
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="put multi-line detail in the body (--body-file); the "
+                        "title becomes one index line and one H1")
+    args.title = title
+    if len(title) > _TITLE_MAX:
+        raise CliError("--title is %d chars, max %d" % (len(title), _TITLE_MAX),
+                       code=EXIT_USAGE, err_type="UsageError",
+                       remediation="shorten the title; the detail belongs in "
+                                   "the body")
+    if args.prefix is not None and not _PREFIX_RE.match(args.prefix):
+        raise CliError(
+            "--prefix %r is not an identifier (expected %s)"
+            % (args.prefix, _PREFIX_RE.pattern),
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="prefixes become part of the record id, e.g. RF, SEC, WI")
+    if args.classification == "defect":
+        category = (args.category or "").strip()
+        if not _CATEGORY_RE.match(category):
+            raise CliError(
+                "--category is required for a defect and must be a lowercase "
+                "single token (got %r)" % args.category,
+                code=EXIT_USAGE, err_type="UsageError",
+                remediation="use a category from the ledger's prefix→category "
+                            "table, e.g. logic / security / performance")
+        args.category = category
+    if not args.slug:
+        return None
+    slug = ids_mod.normalize_slug(args.slug)
+    if not slug:
+        raise CliError(
+            "--slug %r normalizes to an empty slug (non-latin or punctuation "
+            "only?)" % args.slug, code=EXIT_USAGE, err_type="UsageError",
+            remediation="pass an ASCII kebab-case slug, or omit --slug and let "
+                        "it be derived from the title")
+    if len(slug) > 200:
+        raise CliError("--slug is %d chars after normalization, max 200"
+                       % len(slug), code=EXIT_USAGE, err_type="UsageError")
+    return slug
+
+
+def _reject_inapplicable_flags(args, layout=None):
+    """Refuse flags that the chosen classification/layout would silently drop.
+
+    A silently ignored flag is how "we marked it auto-fixable" survives as a
+    belief into a heal run (S-16), and how `--slug` vanished under the flat
+    layout (F15). Every one of these is an operator statement of intent about a
+    permanent ledger record; dropping it quietly is worse than failing.
+    """
+    offenders = []
+    if args.classification == "work-item":
+        for flag, value in (("--auto-fixable", args.auto_fixable),
+                            ("--severity", args.severity),
+                            ("--category", args.category)):
+            if value:
+                offenders.append("%s (defects only)" % flag)
+        if layout == "flat":
+            for flag, value in (("--slug", args.slug), ("--source", args.source)):
+                if value:
+                    offenders.append('%s (ignored by backlog_layout "flat", '
+                                     "which allocates no record)" % flag)
+    elif args.classification == "defect":
+        for flag, value in (("--effort", args.effort), ("--value", args.value),
+                            ("--source", args.source)):
+            if value:
+                offenders.append("%s (work-items only)" % flag)
+    else:  # noise — nothing is recorded but the reason, so nothing else may be
+        # silently accepted. This branch was missing, so `--as noise
+        # --auto-fixable --severity SEV-2 …` exited 0 having dropped every flag
+        # (vdd-multi iteration 2, V-16).
+        for flag, value in (("--auto-fixable", args.auto_fixable),
+                            ("--severity", args.severity),
+                            ("--category", args.category),
+                            ("--effort", args.effort), ("--value", args.value),
+                            ("--source", args.source), ("--slug", args.slug),
+                            ("--prefix", args.prefix),
+                            ("--body-file", args.body_file)):
+            if value:
+                offenders.append("%s (a dismissal records only --reason)" % flag)
+    if args.classification != "noise" and args.reason:
+        offenders.append("--reason (dismissals only)")
+    if offenders:
+        raise CliError(
+            "these flags do not apply to --as %s: %s"
+            % (args.classification, ", ".join(offenders)),
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="drop the flag, or change --as; run-feedback refuses "
+                        "to accept a flag it would not record")
+
+
 def _read_body(args):
     if args.body_file:
         return _read_maybe_stdin(
@@ -236,11 +377,13 @@ def cmd_file(args, cfg):
         fcntl.flock(lock_fd, fcntl.LOCK_EX)
     try:
         if args.classification == "defect":
+            _reject_inapplicable_flags(args)
             component = args.component or subject.get("component")
             prefix = args.prefix or ids_mod.prefix_for(component,
                                                        cfg.id_prefixes)
-            if args.slug:
-                slug = ids_mod.normalize_slug(args.slug)
+            explicit_slug = _ledger_identity(args)
+            if explicit_slug:
+                slug = explicit_slug
                 number = ids_mod.next_number(cfg.issues_dir, prefix)
                 issue_id = "%s-%d" % (prefix, number)
             else:
@@ -267,20 +410,53 @@ def cmd_file(args, cfg):
             if not cfg.backlog_path:
                 raise CliError("backlog_path is not configured",
                                code=EXIT_CONFIG, err_type="ConfigError")
-            bullet = ledger_backlog.format_bullet(
-                args.title, _read_body(args), time.strftime("%Y-%m-%d"),
-                effort=args.effort, value=args.value)
-            result = ledger_backlog.append_work_item(
-                cfg.backlog_path, cfg.backlog_anchor, bullet,
-                dry_run=args.dry_run)
-            filed_as = {"ledger": "backlog", "id": None,
-                        "path": str(cfg.backlog_path)}
-            human = ("DRY-RUN would append" if args.dry_run else "appended") + \
-                " work-item bullet:\n%s" % bullet
+            _reject_inapplicable_flags(args, layout=cfg.backlog_layout)
+            explicit_slug = _ledger_identity(args)
+            body = _read_body(args)
+            if cfg.backlog_layout == "flat":
+                # legacy one-file backlog: refuse rather than silently inline a
+                # structured body into the index line
+                bullet = ledger_backlog.format_bullet(
+                    args.title, ledger_backlog.guard_flat_body(body),
+                    time.strftime("%Y-%m-%d"), effort=args.effort,
+                    value=args.value)
+                result = ledger_backlog.append_work_item(
+                    cfg.backlog_path, cfg.backlog_anchor, bullet,
+                    dry_run=args.dry_run)
+                filed_as = {"ledger": "backlog", "id": None,
+                            "path": str(cfg.backlog_path)}
+                human = ("DRY-RUN would append" if args.dry_run
+                         else "appended") + " work-item bullet:\n%s" % bullet
+            else:
+                prefix = args.prefix or cfg.backlog_prefix
+                if explicit_slug:
+                    slug = explicit_slug
+                    item_id = "%s-%d" % (
+                        prefix, ids_mod.next_number(cfg.backlog_dir, prefix))
+                else:
+                    item_id, slug = ids_mod.allocate(cfg.backlog_dir, prefix,
+                                                     args.title)
+                extensions = {
+                    "component": args.component or subject.get("component"),
+                    "fingerprint": record.get("fingerprint"),
+                    "evidence_paths": record.get("evidence", {}).get("paths", []),
+                    "finding_ref": record.get("finding_id"),
+                }
+                result = ledger_backlog.file_work_item(
+                    cfg, item_id, slug, args.title, body, effort=args.effort,
+                    value=args.value, source=args.source or _run_source(record),
+                    extensions=extensions, dry_run=args.dry_run)
+                filed_as = {"ledger": "backlog", "id": item_id,
+                            "path": result["record_path"]}
+                human = ("DRY-RUN would file" if args.dry_run else "filed") + \
+                    " %s -> %s\nindex line: %s" % (
+                        record["finding_id"], result["record_path"],
+                        result["index_line"])
         else:  # noise
             if not args.reason:
                 raise CliError("--reason is required for --as noise",
                                code=EXIT_USAGE, err_type="UsageError")
+            _reject_inapplicable_flags(args)
             result = {"reason": args.reason}
             filed_as = None
             human = "dismissed %s (%s)" % (record["finding_id"], args.reason)
@@ -446,17 +622,18 @@ def cmd_init(args, cfg):
         data = json.loads(template.read_text(encoding="utf-8"))
         if name == "config" and seeded:
             data["id_prefixes"].update(seeded)
-        tmp = target.with_suffix(".tmp")
-        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
-                       encoding="utf-8")
-        os.replace(tmp, target)
+        atomic.write_atomic(target,
+                            json.dumps(data, indent=2, ensure_ascii=False) + "\n")
         created.append(str(target))
 
     todo = []
     if created:
-        todo.append("verify docs/feedback/config.json: backlog_path/"
-                    "backlog_section must point at a REAL section (or seed "
-                    "'<!-- feedback:discovered-issues -->' inside it)")
+        todo.append("verify docs/feedback/config.json: backlog_path must point "
+                    "at the repo's REAL work-item ledger, with "
+                    "'<!-- feedback:discovered-issues -->' seeded inside it; "
+                    "backlog_dir (default docs/backlog) holds one file per "
+                    "work-item — keep the default two-level layout unless the "
+                    "project genuinely wants a single-file backlog")
         todo.append("fill docs/feedback/heal-config.json gates: only "
                     "components with REAL checks; replace 'example-component'")
         todo.append("every prefix in id_prefixes needs a row in the ledger's "
@@ -504,17 +681,62 @@ def cmd_doctor(args, cfg):
     except OSError:
         checks["feedback_dir_writable"] = False
         remediation.append("feedback dir not writable: %s" % cfg.feedback_dir)
+    backlog_usable = True
     if cfg.backlog_path:
-        exists = Path(cfg.backlog_path).is_file()
-        anchored = exists and (cfg.backlog_anchor
-                               in Path(cfg.backlog_path).read_text(
-                                   encoding="utf-8"))
-        checks["backlog_anchor_present"] = anchored
-        if not anchored:
-            remediation.append("seed the anchor %r inside the backlog's "
-                               "Discovered Issues section"
-                               % cfg.backlog_anchor)
-    ready = checks["feedback_dir_writable"] and (
+        # every probe is wrapped: doctor must REPORT a broken config, not crash
+        # on the very misconfiguration it exists to diagnose (F17), and it must
+        # not slurp an arbitrary configured path (S-12)
+        try:
+            backlog_file = Path(cfg.backlog_path)
+            exists = backlog_file.is_file()
+            anchored = False
+            if exists:
+                size = backlog_file.stat().st_size
+                checks["backlog_size_bytes"] = size
+                if size > _DOCTOR_READ_CAP:
+                    remediation.append(
+                        "backlog %s is %d bytes (> %d cap) — not scanned for "
+                        "the anchor" % (backlog_file, size, _DOCTOR_READ_CAP))
+                else:
+                    # SAME predicate the filing path uses: a substring test
+                    # reported "anchor present" for a ledger whose only mention
+                    # was documentation prose (F4)
+                    anchored = ledger_backlog.has_anchor(
+                        backlog_file.read_text(encoding="utf-8"),
+                        cfg.backlog_anchor)
+            checks["backlog_anchor_present"] = anchored
+            layout = cfg.backlog_layout
+            checks["backlog_layout"] = layout
+            if layout == "index+files":
+                checks["backlog_dir"] = str(cfg.backlog_dir)
+                checks["backlog_dir_exists"] = Path(cfg.backlog_dir).is_dir()
+                backlog_template_ok = (
+                    ledger_backlog._seed_template_path().is_file())
+                checks["backlog_seed_template_reachable"] = backlog_template_ok
+                if not backlog_template_ok and not exists:
+                    remediation.append(
+                        "known-issues-format backlog template unreachable and "
+                        "no backlog exists — filing work-items will fail")
+            # "flat" is an explicit opt-in (the default is index+files), so it
+            # is reported, not nagged about — a remediation line here would read
+            # as a bootstrap signal forever in a repo that deliberately chose it
+            backlog_usable = anchored or not exists
+            if not backlog_usable:
+                remediation.append(
+                    "backlog %s has no single standalone anchor line %r "
+                    "outside a code fence — `file --as work-item` will exit 4"
+                    % (backlog_file, cfg.backlog_anchor))
+        except CliError as exc:
+            backlog_usable = False
+            checks["backlog_config_error"] = str(exc)
+            remediation.append("backlog configuration unusable: %s" % exc)
+        except OSError as exc:
+            backlog_usable = False
+            checks["backlog_config_error"] = str(exc)
+            remediation.append("backlog path unreadable: %s" % exc)
+    # a configured-but-unusable backlog is NOT ready: work-item filing, half of
+    # what triage produces, would fail every time (F17)
+    ready = checks["feedback_dir_writable"] and backlog_usable and (
         checks["index_exists"] or checks["seed_template_reachable"])
     payload = {"v": 1, "ready": ready, "checks": checks,
                "remediation": remediation}
@@ -577,8 +799,10 @@ def build_parser(argv=None):
     p.add_argument("--component")
     p.add_argument("--auto-fixable", action="store_true")
     p.add_argument("--body-file", help="path or '-' for stdin")
-    p.add_argument("--effort")
+    p.add_argument("--effort", choices=ledger_backlog.EFFORT_WRITE)
     p.add_argument("--value")
+    p.add_argument("--source",
+                   help="work-item origin (default: the capture's run context)")
     p.add_argument("--reason")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--json", action="store_true")

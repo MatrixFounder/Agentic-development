@@ -33,7 +33,8 @@ index-line title. Classification is NOT automated — see SKILL.md §7.
 ```
 file --finding <id|path> --as defect  --title T --category C [--severity SEV-2|SEV-3|SEV-4|LOW]
      [--prefix P] [--slug S] [--component C] [--auto-fixable] --body-file PATH|- [--dry-run] [--json]
-file --finding <id|path> --as work-item --title T --body-file PATH|- [--effort E] [--value V] [--dry-run]
+file --finding <id|path> --as work-item --title T --body-file PATH|- [--effort S|M|L] [--value V]
+     [--source TEXT] [--prefix P] [--slug S] [--component C] [--dry-run] [--json]
 file --finding <id|path> --as noise --reason TEXT [--dry-run]
 ```
 
@@ -45,8 +46,22 @@ evidence_paths/auto_fixable/finding_ref` AFTER `slug`) + the index line into the
 Index seeded from the known-issues-format template when absent. Both writing paths run under
 `.agent/feedback/.filing.lock`.
 
-Work-item: bullet `- **<title> (<date>)** — <body>[ · Effort: E · Value: V]` inserted directly
-after the configured `backlog_anchor` comment. Missing anchor → exit 4.
+Work-item (`backlog_layout: "index+files"`, the default): allocates `WI-<n>` (prefix from
+`--prefix`, else config `backlog_prefix`) as max+1 over `backlog_dir/*.md` frontmatter `id:`, writes
+`docs/backlog/<slug>.md` (contract frontmatter `id/type/status/opened_at/slug` + optional
+`effort/value/source`; extension keys `component/fingerprint/evidence_paths/finding_ref` AFTER
+`source` — **never** `auto_fixable`, `/heal-issues` is defect-only) + ONE pointer line
+`- **WI-n** [title](backlog/<slug>.md) — effort \`E\`, status \`open\`, opened <date>` inserted
+directly after the configured `backlog_anchor` (newest first, because the backlog is human-ranked).
+Lockstep with rollback; the anchor is resolved BEFORE any write. `source` defaults to the capture's
+run context (`workflow task-id phase`). Missing anchor → exit 4 with zero writes; existing slug →
+exit 4. A missing `backlog_path` file is seeded from `known-issues-format`'s
+`backlog_md_template.md` (anchor preserved).
+
+Work-item (`backlog_layout: "flat"`, legacy single-file backlog): one bullet
+`- **<title> (<date>)** — <body>[ · Effort: E · Value: V]` after the anchor, and a body that would
+have to be flattened (>1 non-empty line, or >300 chars collapsed) is **refused** with exit 4 rather
+than silently inlined.
 
 Noise: requires `--reason`; moves the finding to `dismissed/` and journals it.
 
@@ -93,4 +108,6 @@ the shipped templates are unreachable.
 
 `doctor [--json]` — `{v, ready, checks, remediation}`; exit 0 ready / 3 not. Checks: repo/data
 roots, config source (built-in defaults → remediation suggests `init`), ledger paths, backlog
-anchor presence, seed template reachability, feedback-dir writability.
+anchor presence, `backlog_layout` + `backlog_dir` + backlog seed-template reachability, issues
+seed template reachability, feedback-dir writability. `backlog_layout: "flat"` is reported, not
+flagged — it is an explicit opt-in.

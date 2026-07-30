@@ -55,12 +55,20 @@ class DryRunTestCase(unittest.TestCase):
         self.assertEqual(fx.tree_hash(self.root), self.before,
                          "defect --dry-run must not touch the repo tree")
 
-    def test_work_item_dry_run_tree_identical(self):
+    def test_work_item_dry_run_tree_identical_and_previews_record_and_line(self):
         code, out, err = self._file("--as", "work-item",
                                     "--title", "Follow up on boom",
+                                    "--effort", "S",
                                     "--body-file", str(self.body))
         self.assertEqual(code, 0, err)
         self.assertIn("DRY-RUN", out)
+        # allocated ID (empty backlog dir -> WI-1), record path, exact line
+        self.assertIn("docs/backlog/wi-1-follow-up-on-boom.md", out)
+        expected_line = (
+            "- **WI-1** [Follow up on boom](backlog/wi-1-follow-up-on-boom.md)"
+            " — effort `S`, status `open`, opened %s"
+            % time.strftime("%Y-%m-%d"))
+        self.assertIn(expected_line, out)
         self.assertEqual(fx.tree_hash(self.root), self.before,
                          "work-item --dry-run must not touch the repo tree")
 

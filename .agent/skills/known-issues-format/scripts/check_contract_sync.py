@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
-"""Contract-sync gate for the KNOWN_ISSUES thin-index format.
+"""Contract-sync gate for the thin-index ledger formats.
 
-Asserts the format contract stays identical between the two **framework-shipped**
-copies: the skill authority (`SKILL.md`) and the seed template
-(`assets/templates/known_issues_md_template.md`). This closes the drift risk the
-VDD-adversarial review flagged (Task 088): the contract is embedded in more than
-one self-contained place, so a future edit to one copy could silently diverge.
+Asserts the format contract stays identical between the **framework-shipped**
+copies: the skill authority (`SKILL.md`) and the seed template of each registry.
+This closes the drift risk the VDD-adversarial review flagged (Task 088): the
+contract is embedded in more than one self-contained place, so a future edit to
+one copy could silently diverge.
 
-Compared fields: the status vocabulary, the severity vocabulary, the per-issue
-frontmatter key set, and the index-line format string.
+Two registries are gated (Task 091), each sliced out of its files by an HTML
+marker comment so the two contracts never bleed into each other's comparison:
 
-Exit 0 = in sync · 1 = drift (prints what diverged) · 2 = extraction/setup error.
-CI-gateable, like `System/scripts/validate_skills.py`.
+  * ``defects``    — ``<!-- contract:defects -->``    / `known_issues_md_template.md`
+  * ``work-items`` — ``<!-- contract:work-items -->`` / `backlog_md_template.md`
 
-NOTE: the live `docs/KNOWN_ISSUES.md` is a PER-PROJECT instance (its issues and
-prefixes differ per project), so it is intentionally NOT gated here — only the two
-artifacts the framework ships are compared.
+Compared per registry: the status vocabulary, the rank vocabulary (severity for
+defects, effort for work-items), the record frontmatter key set, and the
+index-line format string.
+
+Exit 0 = in sync · 1 = drift (prints the registry + what diverged) · 2 =
+extraction/setup error. CI-gateable, like `System/scripts/validate_skills.py`.
+
+NOTE: the live `docs/KNOWN_ISSUES.md` / `docs/BACKLOG.md` are PER-PROJECT
+instances (their records, prefixes, and local extensions differ per project), so
+they are intentionally NOT gated here — only the artifacts the framework ships
+are compared.
 """
 from __future__ import annotations
 
@@ -25,11 +33,36 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
 SKILL = _ROOT / "SKILL.md"
-TEMPLATE = _ROOT / "assets" / "templates" / "known_issues_md_template.md"
+TEMPLATES = _ROOT / "assets" / "templates"
+
+# registry key -> (seed template, rank-vocabulary marker)
+REGISTRIES = {
+    "defects": ("known_issues_md_template.md", "Severity vocabulary"),
+    "work-items": ("backlog_md_template.md", "Effort vocabulary"),
+}
+
+_MARKER_RE = re.compile(r"<!--\s*contract:([a-z\-]+)\s*-->")
 
 
 def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _slice(text: str, registry: str) -> str:
+    """Text from this registry's contract marker up to the next marker (or EOF).
+
+    Scoping the comparison per registry is what lets one SKILL.md hold both
+    contracts without the defect vocab being compared against the work-item one.
+    """
+    start = None
+    for match in _MARKER_RE.finditer(text):
+        if match.group(1) == registry:
+            start = match.end()
+            break
+    if start is None:
+        return ""
+    nxt = _MARKER_RE.search(text, start)
+    return text[start:nxt.start()] if nxt else text[start:]
 
 
 def _paragraph(text: str, marker: str) -> str:
@@ -67,44 +100,71 @@ def _index_line_format(text: str) -> str:
     return ""
 
 
-def _contract(text: str) -> dict:
+def _contract(text: str, rank_marker: str) -> dict:
     return {
         "status_vocab": _paragraph(text, "Status vocabulary"),
-        "severity_vocab": _paragraph(text, "Severity vocabulary"),
+        "rank_vocab": _paragraph(text, rank_marker),
         "frontmatter_keys": _frontmatter_keys(text),
         "index_line_format": _index_line_format(text),
     }
 
 
 def main() -> int:
-    for path in (SKILL, TEMPLATE):
-        if not path.is_file():
-            print(f"ERROR: missing {path}", file=sys.stderr)
-            return 2
-    a = _contract(SKILL.read_text(encoding="utf-8"))
-    b = _contract(TEMPLATE.read_text(encoding="utf-8"))
-
-    empty = [k for k in a if not a[k] or not b[k]]
-    if empty:
-        print(
-            f"ERROR: could not extract contract field(s) {empty} — the SKILL.md or "
-            f"template layout changed; update this gate to match.",
-            file=sys.stderr,
-        )
+    if not SKILL.is_file():
+        print(f"ERROR: missing {SKILL}", file=sys.stderr)
         return 2
+    skill_text = SKILL.read_text(encoding="utf-8")
 
-    drift = [k for k in a if a[k] != b[k]]
-    if drift:
-        print("CONTRACT DRIFT between SKILL.md (authority) and the seed template:")
-        for k in drift:
-            print(f"  - {k}:")
-            print(f"      SKILL.md: {a[k]}")
-            print(f"      template: {b[k]}")
-        print("Reconcile both — they are one contract in two shipped copies.")
+    drifted = False
+    for registry, (template_name, rank_marker) in REGISTRIES.items():
+        template = TEMPLATES / template_name
+        if not template.is_file():
+            print(f"ERROR: missing {template}", file=sys.stderr)
+            return 2
+
+        slices = {"SKILL.md": _slice(skill_text, registry),
+                  template_name: _slice(template.read_text(encoding="utf-8"),
+                                        registry)}
+        for label, sliced in slices.items():
+            if not sliced.strip():
+                print(
+                    f"ERROR: no <!-- contract:{registry} --> marker found in "
+                    f"{label} — the layout changed; restore the marker or update "
+                    f"this gate.",
+                    file=sys.stderr,
+                )
+                return 2
+
+        a = _contract(slices["SKILL.md"], rank_marker)
+        b = _contract(slices[template_name], rank_marker)
+
+        empty = [k for k in a if not a[k] or not b[k]]
+        if empty:
+            print(
+                f"ERROR: [{registry}] could not extract contract field(s) "
+                f"{empty} — the SKILL.md or template layout changed; update this "
+                f"gate to match.",
+                file=sys.stderr,
+            )
+            return 2
+
+        drift = [k for k in a if a[k] != b[k]]
+        if drift:
+            drifted = True
+            print(f"CONTRACT DRIFT [{registry}] between SKILL.md (authority) "
+                  f"and {template_name}:")
+            for k in drift:
+                print(f"  - {k}:")
+                print(f"      SKILL.md: {a[k]}")
+                print(f"      template: {b[k]}")
+
+    if drifted:
+        print("Reconcile both sides — they are one contract in shipped copies.")
         return 1
 
-    print("known-issues-format contract in sync (SKILL.md ↔ template): "
-          + ", ".join(a) + ".")
+    print("thin-index ledger contracts in sync (SKILL.md <-> seed templates): "
+          + ", ".join(REGISTRIES) + " x status_vocab, rank_vocab, "
+          "frontmatter_keys, index_line_format.")
     return 0
 
 

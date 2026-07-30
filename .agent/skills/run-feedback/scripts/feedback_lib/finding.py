@@ -12,7 +12,7 @@ import os
 import time
 from pathlib import Path
 
-from . import fingerprint as fp
+from . import atomic, fingerprint as fp
 from .envelope import EXIT_NOT_FOUND, CliError
 
 SCHEMA_VERSION = 1
@@ -97,10 +97,8 @@ def save(directory, record):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / (record["finding_id"] + ".json")
-    tmp = target.with_suffix(".json.tmp.%d" % os.getpid())
-    tmp.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n",
-                   encoding="utf-8")
-    os.replace(str(tmp), str(target))
+    atomic.write_atomic(target,
+                        json.dumps(record, ensure_ascii=False, indent=2) + "\n")
     return target
 
 

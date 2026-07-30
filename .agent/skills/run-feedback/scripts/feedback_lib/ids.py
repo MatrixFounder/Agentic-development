@@ -41,13 +41,21 @@ def prefix_for(component, id_prefixes):
     return default
 
 
-def existing_ids(issues_dir):
-    """Yield every frontmatter ``id:`` value found under *issues_dir*."""
+def existing_ids(issues_dir, recursive=False):
+    """Every frontmatter ``id:`` value found under *issues_dir*.
+
+    ``recursive=True`` also walks subdirectories: a record archived into
+    ``docs/backlog/archive/`` is still holding its id, and a non-recursive scan
+    silently freed it for reuse (vdd-multi iteration 2, V2). Allocation keeps
+    the flat scan (a subdir is not the next-number namespace); uniqueness
+    verification uses the recursive one.
+    """
     issues_dir = Path(issues_dir)
     if not issues_dir.is_dir():
         return []
     out = []
-    for path in sorted(issues_dir.glob("*.md")):
+    for path in sorted(issues_dir.rglob("*.md") if recursive
+                       else issues_dir.glob("*.md")):
         try:
             meta, _ = frontmatter.parse_file(path)
         except OSError:

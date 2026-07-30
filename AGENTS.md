@@ -80,7 +80,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
 1. **Analysis Phase**:
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Load Skills**: `skill-requirements-analysis`, `skill-archive-task`.
-   - Read `docs/KNOWN_ISSUES.md` (skip if absent — created on the first filed issue; format owned by `known-issues-format`).
+   - Read `docs/KNOWN_ISSUES.md` (skip if absent — created on the first filed issue; format owned by `known-issues-format`). Its sibling `docs/BACKLOG.md` holds **work-items** (enhancements/signals, no broken contract) as a thin index over `docs/backlog/` — same format skill, Registry B; read it when the task may already be tracked there.
    - If `docs/TASK.md` exists: Apply `skill-archive-task` for archiving protocol.
    - (Self-Correction): Check against `System/Agents/03_task_reviewer_prompt.md` using `skill-task-review-checklist`.
 

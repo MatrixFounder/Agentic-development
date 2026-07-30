@@ -12,3 +12,10 @@ __pycache__/
 
 # run-feedback machine state (inbox/journal/locks) — never tracked
 .agent/feedback/
+
+# Atomic-write temp files: mkstemp names them unpredictably inside the target
+# directory, so a crash between write and rename can leave one in a TRACKED dir
+# (docs/). Ignoring them keeps `git add -A` from committing a half-written ledger
+# (vdd-multi S-04 / F16 / V-10).
+*.tmp.*
+*.md.tmp*

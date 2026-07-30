@@ -62,6 +62,48 @@ grep -q '^- \*\*RF-1\*\* \[demo boom\](issues/rf-1-demo-boom.md) — severity `S
 grep -q '^## robustness$' "$TMP/docs/KNOWN_ISSUES.md" || { echo "FAIL: category section"; fail=1; }
 [ -f "$TMP/.agent/feedback/filed/$FND.json" ] || { echo "FAIL: finding not moved to filed/"; fail=1; }
 
+step "file --as work-item (two-level: record file + one-line pointer)"
+cat > "$TMP/wi-config.json" <<'JSON'
+{
+  "v": 1,
+  "issues_dir": "docs/issues",
+  "index_path": "docs/KNOWN_ISSUES.md",
+  "backlog_path": "docs/BACKLOG.md",
+  "backlog_dir": "docs/backlog",
+  "backlog_layout": "index+files"
+}
+JSON
+RFW="$PY $SCRIPTS/run_feedback.py --repo-root $TMP --config $TMP/wi-config.json"
+WI_BODY="$TMP/wi-body.md"
+printf '**Signal.** the retro filed by hand.\n\n| Option | Cost |\n|---|---|\n| lockstep | S |\n\n**Recommendation:** option 1.\n' > "$WI_BODY"
+$RFW collect --source workflow --kind user-friction --component demo \
+  --message "work-item had to be filed by hand" --workflow e2e >/dev/null || fail=1
+WFND="$(ls -t "$TMP/.agent/feedback/inbox" | head -1 | sed 's/\.json//')"
+$RFW file --finding "$WFND" --as work-item --title "backlog needs records" \
+  --effort S --value "bodies stop landing in the index" \
+  --body-file "$WI_BODY" >/dev/null || { echo "FAIL: work-item filing"; fail=1; }
+[ -f "$TMP/docs/backlog/wi-1-backlog-needs-records.md" ] \
+  || { echo "FAIL: work-item record file missing"; fail=1; }
+grep -q '^| Option | Cost |$' "$TMP/docs/backlog/wi-1-backlog-needs-records.md" \
+  || { echo "FAIL: work-item body not preserved"; fail=1; }
+grep -q '^- \*\*WI-1\*\* \[backlog needs records\](backlog/wi-1-backlog-needs-records.md) — effort `S`, status `open`,' \
+  "$TMP/docs/BACKLOG.md" || { echo "FAIL: backlog index line format"; fail=1; }
+grep -q 'Option | Cost' "$TMP/docs/BACKLOG.md" \
+  && { echo "FAIL: body inlined into the backlog index"; fail=1; }
+grep -q 'feedback:discovered-issues' "$TMP/docs/BACKLOG.md" \
+  || { echo "FAIL: seeded backlog lost its anchor"; fail=1; }
+
+step "flat layout refuses a body it would flatten"
+sed 's/"index+files"/"flat"/' "$TMP/wi-config.json" > "$TMP/flat-config.json"
+RFF="$PY $SCRIPTS/run_feedback.py --repo-root $TMP --config $TMP/flat-config.json"
+$RFF collect --source workflow --kind user-friction --component demo \
+  --message "second hand-filed work-item" --workflow e2e >/dev/null || fail=1
+FFND="$(ls -t "$TMP/.agent/feedback/inbox" | head -1 | sed 's/\.json//')"
+$RFF file --finding "$FFND" --as work-item --title "should be refused" \
+  --body-file "$WI_BODY" >/dev/null 2>&1 && { echo "FAIL: flat layout flattened a structured body"; fail=1; }
+[ -f "$TMP/.agent/feedback/inbox/$FFND.json" ] \
+  || { echo "FAIL: refused filing consumed the finding"; fail=1; }
+
 step "issues feed"
 $RF issues --status open --json | grep -q '"auto_fixable": true' \
   || { echo "FAIL: issues feed"; fail=1; }

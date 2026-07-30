@@ -1,6 +1,6 @@
 # Quality Feedback Loop (`run-feedback` + `/heal-issues`)
 
-**Version:** 1.0 (framework v3.21.0, task-089)
+**Version:** 1.1 (framework v3.21.0 → task-091: work-item filing is two-level, like defect filing)
 **Status:** Shipped & dogfooded — Stage 0 trust gate passed 2026-07-13 (3/3 pilot heals merged without correction).
 
 > [!NOTE]
@@ -10,6 +10,16 @@
 > LLM judgement owns classification and fix authorship, and the existing ledgers
 > (`known-issues-format` + the project backlog) stay the single source of truth. No new
 > tracker, no repo-level cron, nothing invisible.
+
+> [!NOTE]
+> **Why two ledgers and not one** (decision recorded in task-091). Defects and work-items share one
+> FORMAT (`known-issues-format` states the thin-index mechanics once and parameterizes them per
+> registry) but stay separate FILES. `KNOWN_ISSUES.md` is read by the Analysis phase of every
+> pipeline run and by `/heal-issues`; folding enhancement signal into it dilutes the
+> anti-regression channel. The vocabularies genuinely differ (`open/fixed/documented/by-design/
+> mitigated/wontfix` + severity/category vs `open/done/dropped` + effort/value/source), the ledger
+> readers filter on `type:` anyway, and the triage contract itself is *defect vs work-item* — one
+> file would make that distinction unobservable.
 
 ## Table of Contents
 - [Architecture](#architecture)
@@ -29,9 +39,10 @@ Capture                          Engine (.agent/skills/run-feedback)      Ledger
 ───────                          ───────────────────────────────────      ───────────────────────
 Retro step (Global Protocol) ─┐                                     ┌─► docs/issues/<slug>.md
 /run-feedback (ad-hoc)        ├─► collect ─► .agent/feedback/ ──────┤    + KNOWN_ISSUES.md (lockstep)
-SessionEnd hook + mine-on-end ┘    inbox/ + journal/ (gitignored)   ├─► backlog anchor (work-items)
-                                        │                           └─► dismissed/ (noise, with reason)
-                                   triage ─► LLM classification ─► file --dry-run → file
+SessionEnd hook + mine-on-end ┘    inbox/ + journal/ (gitignored)   ├─► docs/backlog/<slug>.md
+                                        │                           │    + BACKLOG.md (lockstep)
+                                   triage ─► LLM classification ─┐  └─► dismissed/ (noise, with reason)
+                                                                 └─► file --dry-run → file
 
 Consume: /heal-issues ─► issues --json ─► SELECT → REPRODUCE → FIX (branch, gates) → VERIFY & FILE
 Schedule: operator-side only (Stage 1), never a repo artifact.
@@ -54,7 +65,7 @@ no venv, runs from anywhere inside the repo (walks up to the root).
 | :--- | :--- | :--- |
 | `collect` | Queue one finding (idempotent: repeated fingerprint → merge, `sources[]` union, exit 0) | inbox + journal |
 | `triage` | Table of open findings + duplicate candidates (fingerprint + index-title overlap) | — (read-only) |
-| `file` | `--as defect` → issue file + index line **lockstep with rollback**; `--as work-item` → backlog anchor append; `--as noise` → dismiss with reason. `--dry-run` previews ID + exact index line with ZERO writes | ledgers |
+| `file` | `--as defect` → `docs/issues/<slug>.md` + index line; `--as work-item` → `docs/backlog/<slug>.md` + one pointer line after the backlog anchor — **both lockstep with rollback, both ID-allocating** (`<PREFIX>-<n>` / `WI-<n>`); `--as noise` → dismiss with reason. `--dry-run` previews ID, record path, and the exact index line with ZERO writes | ledgers |
 | `journal` | Append `## [ts] <event_type> \| <subject>` (flock+fsync, monthly rotation) | journal |
 | `issues` | Ledger feed for the harness (`--status open --auto-fixable --json`) | — (read-only) |
 | `mine` | Deterministic transcript extractor (tool errors, exit codes, envelopes, retry aggregation; redaction + excerpt caps; incremental byte offsets) | inbox |
@@ -131,14 +142,18 @@ judgement spelled out.
    prefix→category table — the engine warns), and the backlog anchor: `backlog_path` must
    point at the real backlog with the `<!-- feedback:discovered-issues -->` comment inside its
    Discovered-Issues section (missing anchor → `file --as work-item` exits 4, never appends
-   blindly).
+   blindly). The work-item ledger is two-level like the issues one: `backlog_dir`
+   (default `docs/backlog`) holds one file per work-item, `backlog_prefix` defaults to `WI`.
+   `backlog_layout: "flat"` is the opt-out for a project that genuinely wants a single-file
+   backlog — it then **refuses** bodies it would have to inline rather than flattening them.
 3. Fill `docs/feedback/heal-config.json` — per-component **gates** map: only components with
    REAL checks (each command must exit 0 for `status: fixed`); declare `venv` only where one
    exists (a declared-but-missing venv makes the component ineligible); `replication` only
    where a master/replica protocol applies. Adjust `human_only_categories` and
    `protected_paths` to the repo; `scheduling: {enabled: false}` stays `false` in git.
    **No gate → not auto-fixable** — that is honest scope, not a gap.
-4. Ensure the ledger exists per `known-issues-format` (create-if-absent from its template).
+4. Ensure both ledgers exist per `known-issues-format` (create-if-absent from its two templates:
+   `known_issues_md_template.md`, `backlog_md_template.md`).
 5. Optional Claude Code auto-capture: add the SessionEnd hook block to `.claude/settings.json`
    (see `run-feedback/references/capture_surfaces.md`) and set `RUN_FEEDBACK_HOOKS=1` +
    `RUN_FEEDBACK_MINE_ON_END=1` in personal `settings.local.json` `env`.

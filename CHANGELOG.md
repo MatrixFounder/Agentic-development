@@ -16,6 +16,50 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.5 — `skill-spec-validator`: tests anchored to the corpus, not to fixtures**
+
+The `/vdd-enhanced` gate shipped **zero tests**, and both matchers (RTM heading, PLAN id coverage) had drifted until they failed on 100% of shipped artifacts — invisible, because *a gate that never passes looks exactly like a gate nobody tripped*. Closes **WI-1**. Gates: **38 tests (0 → 38)**, 45/45 skill validation with the skill now warning-free.
+
+#### **Added**
+* **`scripts/tests/`** — the **8** RTM heading shapes the corpus actually ships (fixtures copied verbatim, incl. two `Acceptance Criteria (…)` forms WI-1 had not enumerated) + negative shapes; table, bypass and CLI-error paths; PLAN ids via `## Step N — … (R1)` headings **and** `- [ ] R1` bullets; the `R1`-vs-`R10` boundary, hyphenated ids, markdown-noise normalization; the table parser and RTM section slicing.
+* **`tests/test_corpus.py` — the anti-drift layer.** Fixtures alone would not have caught the original drift: the next author to re-tighten the regex would have updated the fixtures to match. So a probe keyed on the `trace*`/`rtm` stems — **wider** than the matcher's required phrase — asserts `RTM_HEADER` matches every RTM heading under `docs/tasks/` bar an explicit, staleness-checked allow-list; plus a regression pin on the 8 shapes and liveness floors (≥15 tasks, ≥10 plan pairs still pass). Discovering **zero** headings is itself a failure. Floors are canaries below today's counts (20 tasks, 14 of 27 pairs), so artifact churn never reddens the suite while a dead matcher always does; outside this repo the corpus tests **skip**.
+* **`tests/run_tests.sh`** — zero-test-discovery guard (`unittest discover` exits 0 on an empty run), plus a check that the corpus tests actually ran rather than skipped inside this repo.
+* **Proof the guard bites**: re-injecting the two historical regressions reddens the suite — the pre-TASK-090 `^## Requirements Traceability$` matcher → **28 failures**, the literal `[**R-1**]` PLAN token → **7**.
+
+#### **Changed**
+* **`skill-spec-validator` v1.0 → 1.1** — the four Execution-Policy sections + a ⚠️ on the bypass. Safety Boundaries states the rule the defect violated: **matchers are widened toward the corpus, never the corpus narrowed toward the matchers.**
+* **The first version of that probe was a tautology**, caught by the adversarial review: it required `requirements traceability` or `(rtm)` — a **subset** of what the matcher accepts — so "every probed heading matches" was true by construction. Widening it surfaced a real corpus case (a prose heading in `task-050`), now an explicit exclusion rather than a silent one.
+
+#### **Not changed (recorded, with reasons)**
+* `validate.py` still `sys.exit()`s from its entry points — tests assert on `SystemExit.code`; a testability refactor of a live gate is a separate change.
+* The `ID`/`Requirement` column contract stands, so one corpus artifact still fails `--mode task`. Loosening a gate to fit a non-conforming artifact is this defect running backwards.
+* The bypass token remains a bare substring anywhere in `TASK.md` — a spec that merely *mentions* it disables its own gate (this bit TASK 092's own first draft). Pinned by a test and documented; tightening it is a behaviour change for the owner.
+
+### **v3.21.4 — Work-item filing became two-level, like defect filing (one format contract, two registries)**
+
+`run-feedback` had two filing paths and they had diverged. The defect path wrote a record file **plus** a thin index line, in lockstep, with rollback. The work-item path collapsed the body to one line and inlined it **into the index**, never creating a record — so a retro that produced three work-items had to file them by hand, and `--dry-run` previewed a ~1 800-character bullet with a table folded into a single line. This framework's own `docs/BACKLOG.md` was the second live instance. Generalized: **if the target registry is an index over record files, an appender that writes only the index line is not a filing mechanism for it** — it either loses the body or makes the index unreadable, and in both cases silently. Gates: **167 unit tests (112 at `4281c96`, measured in a clean worktree)** + E2E green, 45/45 skill validation, contract-sync exit 0 (and exit 1 on injected drift).
+
+#### **Fixed**
+* **`ledger_backlog.py` rewritten** — `file_work_item()` writes `docs/backlog/<slug>.md` (contract frontmatter + body **verbatim**) **and** one pointer line after the anchor: lockstep with rollback, create-only, `WI-<n>` = max+1 over the record dir. The anchor resolves **before** any write, so an anchorless backlog exits 4 having written nothing; a missing `BACKLOG.md` is seeded from the new template; `--dry-run` previews id, record path and the exact index line.
+* **The flat layout refuses instead of flattening** — `backlog_layout: "flat"` (explicit opt-in for a single-file backlog) rejects a body it would have to inline (>1 non-empty line, or >300 collapsed chars) rather than silently collapsing it.
+
+#### **Hardened after adversarial review** ([`docs/reviews/vdd-multi-091-092.md`](docs/reviews/vdd-multi-091-092.md))
+Three parallel critics returned 41 findings; **four were reproduced as working exploits** before being fixed. A **second** round then re-verified the fixes in fresh contexts and found that the first pass had guarded the payloads I tested rather than the classes — `\n`/`\r` were refused while the reader also splits on `\x0b \x0c \x1c-\x1e \x85 U+2028 U+2029`; the bracket escaper did not escape its own backslash; the flat bullet still interpolated `--value` raw; `mkstemp` had landed at 2 of 6 temp-write sites; containment was repo-granular, so a config could aim a ledger at `CLAUDE.md` or `.claude/commands/`. All closed and re-verified, with 34 regression tests naming their findings (`tests/test_ledger_hardening.py`), one shared `feedback_lib/atomic.py`, and a `parse(serialize(m)) == m` property test — the single assertion that would have caught the whole injection class at once. The residual tail is filed as WI-7 rather than declared done:
+* **Frontmatter injection** — a newline in a metadata scalar forged contract keys, including `auto_fixable`, which `/heal-issues` selects on. `frontmatter.serialize` is now the choke point for both ledgers: newlines and a bare `---` are refused, prose is quoted (apostrophe normalized so the lenient reader cannot truncate it).
+* **Index-line injection** — a newline in `--title` spliced a **second, forged** pointer line into a hand-maintained index; `](` closed the link early. Titles are collapsed, `[`/`]` escaped, control characters and >120 chars refused.
+* **Symlink follow** — a *dangling* symlink at the record path was followed outside the ledger, because `exists()` follows links and reported `False`, so create-only never fired. Now `lexists` + `O_EXCL|O_NOFOLLOW`, and a symlinked record dir is refused.
+* **Config containment** — an absolute or traversing `backlog_dir` escaped the repo (`pathlib` discards the left operand). All five configured paths are resolved and required to stay inside the examined checkout, per SKILL.md §5.
+* Also: the record write moved **inside** the rollback guard; the anchor must be unique and outside code fences; `doctor` shares the filing path's anchor predicate and no longer crashes on the misconfiguration it exists to diagnose; `--category` guarded; id reuse refused; CRLF / U+2028 preserved instead of rewritten; flags that would be silently dropped are refused; `mkstemp` + cleanup replaces predictable `.tmp.<pid>` files.
+
+#### **Changed**
+* **`known-issues-format` v1.0 → 2.0: one contract, two registries.** The thin-index mechanics are stated **once** and parameterized per registry — defects (`docs/KNOWN_ISSUES.md` + `docs/issues/`) and work-items (`docs/BACKLOG.md` + `docs/backlog/`). No second format skill: two near-identical contracts are exactly the drift that produced this defect. `check_contract_sync.py` now gates **both** seed templates, slicing on `<!-- contract:* -->` markers so the vocabularies are never compared against each other.
+* **Config `v1` unchanged; three additive keys** — `backlog_dir` (`docs/backlog`), `backlog_prefix` (`WI`), `backlog_layout` (`index+files`). A config written before them loads with no warning and lands on the layout its project already maintained by hand.
+* **CLI/report surface** — `--source` (defaults to the capture's run context), `--effort` limited to `S/M/L`, `filed_as.id` is now the allocated `WI-<n>` and `filed_as.path` the record file; `doctor` reports layout, record dir and template reachability, and a `"flat"` layout is reported rather than flagged (it is an explicit opt-in).
+* **Skills and docs** — `run-feedback` v1.4 (§7 covers both classifications; two red flags; `work_item_body_template.md`; `auto_fixable` stays defect-only), `artifact-management` v1.4 (`BACKLOG.md` as a living Global Artifact with its format delegated), `QUALITY_FEEDBACK_LOOP.md` v1.1 with a "why two ledgers and not one" note, and the Analysis-phase ledger line added to `CLAUDE.md`, `GEMINI.md` **and** `AGENTS.md` — the first pass updated only `CLAUDE.md`, the same single-vendor omission v3.21.3 had to correct for Workspace Workflows.
+
+#### **Dogfood**
+* This repo's own flat `docs/BACKLOG.md` → a thin index over `docs/backlog/`, text preserved verbatim: the framework no longer ships a contract it violates. The five review findings that were **not** fixed (body redaction/cap, ledger-body provenance, an eager `git` spawn with a 10s cliff on the hook path, an O(k²) inbox scan, `--finding` path containment) were filed as **WI-2…WI-6** through the fixed CLI itself.
+
 ### **v3.21.3 — Retro lessons hardened: portability review, vendor-bootstrap parity, one rule reverted**
 
 Five retro lessons from a consumer project had been written into Tier-1 skills and pipeline prompts; an adversarial pass over the batch found two of them inverted on other stacks. Gates: 45/45 skill validation, 228 pytest + 17 subtests, doctor / prompt-refs / workflow-smoke / security-lint green.

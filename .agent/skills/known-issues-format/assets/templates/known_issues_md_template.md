@@ -21,7 +21,10 @@ symptom, workaround, and cross-links.
 
 > The index below is **hand-maintained** — there is no generator. When you add, resolve, or
 > re-categorize an issue you MUST edit **both** the per-issue file *and* the matching line here.
-> These rules keep that hand-editing consistent.
+> These rules keep that hand-editing consistent. An index line is a **pointer**: one line, never a
+> record body inlined.
+
+<!-- contract:defects -->
 
 **Per-issue file** — `docs/issues/<slug>.md`, YAML frontmatter then an H1 title and body:
 

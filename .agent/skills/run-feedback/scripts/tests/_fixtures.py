@@ -130,3 +130,51 @@ BACKLOG_FIXTURE = """# Product Backlog
 
 Unrelated section text.
 """
+
+#: two-level backlog: a thin index whose entries point at docs/backlog/*.md
+BACKLOG_INDEX_FIXTURE = """# Backlog — work-items
+
+**Purpose:** fixture work-item ledger for the run-feedback test suite.
+
+---
+
+## Rules / Conventions
+
+> Hand-maintained pointer index — this preamble must never be touched by the
+> filing engine. | pipes # hashes — all preserved verbatim.
+
+---
+
+## Discovered issues / work-items
+
+<!-- feedback:discovered-issues -->
+- **WI-2** [Second item](backlog/wi-2-second-item.md) — effort `S`, status `open`, opened 2026-01-02
+
+## Closed
+
+- **WI-1** [First item](backlog/wi-1-first-item.md) — effort `M`, status `done`, opened 2026-01-01
+"""
+
+WORK_ITEM_TMPL = """---
+id: {id}
+type: work-item
+status: {status}
+opened_at: {opened_at}
+slug: {slug}
+{effort_line}{extra}---
+# {id} — {title}
+
+{body}
+"""
+
+
+def write_work_item(backlog_dir, item_id, slug, title="Fixture work-item",
+                    status="open", opened_at="2026-01-01", effort=None,
+                    extra_lines=(), body="Body."):
+    effort_line = "effort: %s\n" % effort if effort else ""
+    extra = "".join(line + "\n" for line in extra_lines)
+    text = WORK_ITEM_TMPL.format(id=item_id, status=status,
+                                 opened_at=opened_at, slug=slug,
+                                 effort_line=effort_line, extra=extra,
+                                 title=title, body=body)
+    return write(Path(backlog_dir) / (slug + ".md"), text)

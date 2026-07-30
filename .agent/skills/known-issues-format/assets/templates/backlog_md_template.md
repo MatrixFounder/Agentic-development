@@ -1,14 +1,25 @@
-# Framework Backlog — work-items
+# Backlog — work-items
 
-**Purpose:** living work-item ledger for agentic-development — enhancements, polish, and signals
-with no broken contract. Defects live in [`docs/issues/`](issues/) +
-[`KNOWN_ISSUES.md`](KNOWN_ISSUES.md); the split is the one `run-feedback` triages on: **defect** =
-reproducible wrong behavior with a fix path, **work-item** = improvement or signal without a broken
-contract.
+**Purpose:** track enhancements, polish, and signals that carry no broken contract — the work worth
+doing that is not a defect. Defects live in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) +
+[`docs/issues/`](issues/); the split is the one `run-feedback` triages on: **defect** = reproducible
+wrong behavior with a fix path, **work-item** = improvement or signal without a broken contract.
 
 This file is a **thin index**. Each work-item lives in its own file under [`docs/backlog/`](backlog/);
 the lines below are one-per-item pointers. Read the linked file for the full signal, options, and
 recommendation.
+
+<!--
+  SEED TEMPLATE (shipped by the `known-issues-format` skill). On first use, copy this file to
+  `docs/BACKLOG.md`, KEEP the Purpose + Rules/Conventions sections and the
+  `feedback:discovered-issues` anchor comment, and DELETE this comment plus the
+  `_No work-items recorded yet._` block at the bottom. Then start filing.
+  If the project ALREADY tracks work under another name (`docs/ROADMAP.md`, an iteration backlog),
+  seat the anchor in THAT file instead of creating a second ledger. The index is HAND-MAINTAINED —
+  this framework ships no index generator.
+  NOTE for editors: never write a literal comment-close sequence inside this block — the seeder
+  strips comments non-greedily, so an early close would leave the rest of this text in the file.
+-->
 
 ---
 
@@ -16,9 +27,9 @@ recommendation.
 
 > The index below is **hand-maintained** — there is no generator. When you add or close a work-item
 > you MUST edit **both** the per-item file *and* the matching line here. An index line is a
-> **pointer**: one line, never a record body inlined. Format authority:
-> [`known-issues-format`](../.agent/skills/known-issues-format/SKILL.md) (Registry B) — the same
-> skill that owns `KNOWN_ISSUES.md`.
+> **pointer**: one line, never a record body inlined. This rule exists because a single inlined
+> entry once reached several thousand characters in one bullet — unreadable, undiffable, and
+> impossible to close in parts.
 
 <!-- contract:work-items -->
 
@@ -62,25 +73,27 @@ because `run-feedback`'s `file` / `doctor` are wired to it. **Do not move or del
 
 **Adding one:** ① `WI-<n>` = max existing + 1 across `docs/backlog/*.md`; ② create
 `docs/backlog/<slug>.md` with the frontmatter above (body preserved verbatim — never drop a clause);
-③ insert one index line directly after the anchor. `run-feedback file --as work-item` does all three.
+③ insert one index line directly after the anchor.
 
 **Closing one:** set `status: done | dropped` + `resolved_at` / `resolved_by`, add a resolution
 blockquote at the top of the body, and move the index line to `## Closed`. Nothing is ever deleted:
-a closed item is the answer to a question someone will ask again.
+a closed item is the answer to a question someone will ask again. Where the fix lands in **another
+repository** (a shared skill, prompt, or workflow), `resolved_by` names that repo and the edit — and
+"sent for review" is **not** closed: verify what actually landed there before writing the
+resolution.
 
 ---
 
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-7** [Residual tail from the vdd-multi hardening (11 items)](backlog/wi-7-residual-tail-from-the-vdd-multi-hardening-11-items.md) — effort `M`, status `open`, opened 2026-07-30
-- **WI-6** [--finding accepts any path and consume unlinks it](backlog/wi-6-finding-accepts-any-path-and-consume-unlinks-it.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-5** [find_by_fingerprint rescans the whole inbox](backlog/wi-5-find-by-fingerprint-rescans-the-whole-inbox.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-4** [Eager git spawn in every Config, with a 10s cliff on the hook path](backlog/wi-4-eager-git-spawn-in-every-config-with-a-10s-cliff-on-the-hook-path.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-3** [Ledger bodies are unmarked agent-trusted context](backlog/wi-3-ledger-bodies-are-unmarked-agent-trusted-context.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-2** [Record bodies are neither redacted nor size-capped](backlog/wi-2-record-bodies-are-neither-redacted-nor-size-capped.md) — effort `S`, status `open`, opened 2026-07-30
 
+_No work-items recorded yet._
 
-## Closed
+<!--
+  Once you file items, replace the line above with pointer lines, e.g.:
 
-- **WI-1** [Add unit tests for skill-spec-validator](backlog/wi-1-skill-spec-validator-unit-tests.md) — effort `S`, status `done`, opened 2026-07-20 · **done 2026-07-30** (TASK 092): 38 tests + corpus anti-drift guard; both historical matcher regressions now turn the suite red
+  - **WI-1** [Short title](backlog/wi-1-short-title.md) — effort `S`, status `open`, opened 2026-01-01
+
+  and keep closed ones under a `## Closed` heading below.
+-->

@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import os
 import re
+import tempfile
 import time
 from pathlib import Path
 
-from . import frontmatter, ids
+from . import atomic, frontmatter, ids
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab -----------------------------------------------------------------
@@ -54,9 +55,24 @@ def severity_rank(value):
 
 
 def format_index_line(issue_id, title, slug, status, opened_at, severity=None):
+    """The canonical Registry A index line (pure, single-line by construction).
+
+    Title collapsing + `[`/`]` escaping is the same guard as the work-item
+    grammar: a raw newline spliced a second, forged pointer line into a
+    hand-maintained index, and an unescaped `]` closed the link early
+    (vdd-multi S-02).
+    """
     severity_clause = "severity `%s`, " % severity if severity else ""
-    return ("- **%s** [%s](issues/%s.md) — %sstatus `%s`, opened %s"
-            % (issue_id, title, slug, severity_clause, status, opened_at))
+    line = ("- **%s** [%s](issues/%s.md) — %sstatus `%s`, opened %s"
+            % (" ".join(str(issue_id).split()),
+               re.sub(r"([\\\[\]])", r"\\\1", " ".join(str(title).split())),
+               " ".join(str(slug).split()), severity_clause,
+               " ".join(str(status).split()),
+               " ".join(str(opened_at).split())))
+    if "\n" in line or "\r" in line:
+        raise CliError("index line would span multiple lines: %r" % line,
+                       code=EXIT_FILING_CONFLICT, err_type="ContractError")
+    return line
 
 
 def _id_sort_key(issue_id):
@@ -143,10 +159,8 @@ def insert_index_line(index_text, category, line):
 
 
 def _write_atomic(path, text):
-    path = Path(path)
-    tmp = path.with_suffix(path.suffix + ".tmp.%d" % os.getpid())
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(str(tmp), str(path))
+    """Delegates to the shared primitive (see feedback_lib/atomic.py)."""
+    atomic.write_atomic(path, text)
 
 
 # --- the lockstep defect write ----------------------------------------------
@@ -170,7 +184,10 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
 
     issues_dir = Path(config.issues_dir)
     issue_path = issues_dir / (slug + ".md")
-    if issue_path.exists():
+    # lexists, not exists: a DANGLING symlink here reported False and the write
+    # then followed it outside issues_dir (vdd-multi S-03). O_EXCL|O_NOFOLLOW
+    # below is the enforcing guard.
+    if os.path.lexists(str(issue_path)):
         raise CliError("issue file already exists: %s" % issue_path,
                        code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
 
@@ -206,18 +223,39 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
         result["issue_text"] = issue_text
         return result
 
+    if issues_dir.is_symlink():
+        raise CliError("issues dir is a symlink, refusing to write through it: "
+                       "%s" % issues_dir,
+                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
     issues_dir.mkdir(parents=True, exist_ok=True)
-    issue_path.write_text(issue_text, encoding="utf-8")
+    try:
+        fd = os.open(str(issue_path),
+                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o644)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(issue_text)
+    except FileExistsError:
+        raise CliError("issue file already exists: %s" % issue_path,
+                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
+    except OSError as exc:
+        _rollback(issue_path)
+        raise CliError("could not write the issue record %s (%s)"
+                       % (issue_path, exc),
+                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
     try:
         index_path.parent.mkdir(parents=True, exist_ok=True)
         _write_atomic(index_path, index_after)
     except BaseException:
-        try:
-            issue_path.unlink()
-        except OSError:
-            pass
+        _rollback(issue_path)
         raise
     return result
+
+
+def _rollback(issue_path):
+    try:
+        os.unlink(str(issue_path))
+    except OSError:
+        pass
 
 
 # --- tolerant reads ---------------------------------------------------------

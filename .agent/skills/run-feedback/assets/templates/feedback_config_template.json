@@ -4,6 +4,9 @@
   "index_path": "docs/KNOWN_ISSUES.md",
   "backlog_path": "docs/BACKLOG.md",
   "backlog_anchor": "<!-- feedback:discovered-issues -->",
+  "backlog_dir": "docs/backlog",
+  "backlog_prefix": "WI",
+  "backlog_layout": "index+files",
   "id_prefixes": {
     "_default": "RF"
   },

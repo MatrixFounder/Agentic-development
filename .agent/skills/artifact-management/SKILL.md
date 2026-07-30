@@ -1,8 +1,8 @@
 ---
 name: artifact-management
-description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, PLAN.md, ARCHITECTURE.md, KNOWN_ISSUES.md)."
+description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, PLAN.md, ARCHITECTURE.md, KNOWN_ISSUES.md, BACKLOG.md)."
 tier: 0
-version: 1.3
+version: 1.4
 ---
 # Artifact Management
 
@@ -30,6 +30,7 @@ version: 1.3
 - **PLAN.md:** Development Plan. Managed by Planner. Rotated **in lockstep with TASK.md** to `docs/plans/plan-NNN-slug.md` (reuses the same ID/slug).
 - **ARCHITECTURE.md:** System Architecture. Managed by Architect. A **LIVING document** — updated in place, **never per-task archived**. Only restructured (split into `docs/architectures/` section chunks + a short index) when it exceeds 1500 lines.
 - **KNOWN_ISSUES.md:** Known-issues ledger. A **LIVING, hand-maintained thin index** (one file per issue under `docs/issues/`) — updated in place, **never per-task archived**. Its **format is defined in `known-issues-format`, not here** (the frontmatter schema, prefix→category table, status/severity vocab, index-line format, and per-issue recipe live there — parallel to how `ARCHITECTURE.md`'s structure lives in `architecture-format-core`). **Create-if-absent:** if the ledger is missing when you record an issue, first materialize it from `known-issues-format`'s `assets/templates/known_issues_md_template.md`, then file the issue.
+- **BACKLOG.md:** Work-item ledger — enhancements, polish, and signals with no broken contract (defects go to `KNOWN_ISSUES.md`). Also a **LIVING, hand-maintained thin index** (one file per work-item under `docs/backlog/`), updated in place, **never per-task archived**, and **human-ranked** — no machine-imposed sort. Its **format is defined in `known-issues-format`** too (same skill, Registry B: `type: work-item`, `WI-<n>`, `open/done/dropped`, optional `effort/value/source`, index line after the `<!-- feedback:discovered-issues -->` anchor). **Create-if-absent** from that skill's `assets/templates/backlog_md_template.md` — unless the project already tracks work under another name (`docs/ROADMAP.md`, an iteration backlog), in which case seat the anchor in **that** file rather than starting a second ledger.
 
 ## Dual State Tracking (CRITICAL)
 

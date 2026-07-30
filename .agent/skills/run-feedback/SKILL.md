@@ -2,23 +2,31 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.3
+version: 1.4
 ---
 # Run Feedback
 
 **Purpose**: Errors from runs evaporate today — a gate fails, gets retried, and the knowledge dies
 with the session. This skill closes the loop: deterministic **capture** (retro step, hooks, transcript
-miner) → LLM **triage** → deterministic **filing** into the existing ledgers (`docs/issues/` +
-`docs/KNOWN_ISSUES.md` per `known-issues-format`, or the project backlog). Filed issues marked
+miner) → LLM **triage** → deterministic **filing** into the existing ledgers, both of them
+thin indexes over record files per `known-issues-format`: defects to `docs/issues/` +
+`docs/KNOWN_ISSUES.md`, work-items to `docs/backlog/` + `docs/BACKLOG.md`. Filed issues marked
 `auto_fixable: true` feed the `/heal-issues` harness. Machine state lives under the gitignored
 `.agent/feedback/`; the repo-visible trace is the ledgers themselves.
 
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
 - "I'll append a line to KNOWN_ISSUES.md without creating the issue file" -> **WRONG**. Lockstep or
-  nothing — the `file` subcommand writes both or neither. Never hand-edit one side. Scope of this
-  ban: issue files and the index's `- **ID**` issue lines. The prefix→category TABLE row in the
-  index preamble is the ONE hand-edit that is yours (§7 step 6) — the script cannot write it.
+  nothing — the `file` subcommand writes both or neither, for **both** ledgers. Never hand-edit one
+  side. Scope of this ban: record files and the index's `- **ID**` pointer lines. The
+  prefix→category TABLE row in the index preamble is the ONE hand-edit that is yours (§7 step 6) —
+  the script cannot write it.
+- "A work-item is small, its body can just live in the backlog index line" -> **WRONG**. Both
+  indexes are **pointer** indexes: one line per record, body in
+  `docs/backlog/<slug>.md`. An inlined body is how a single entry once reached 7 849 characters —
+  unreadable, undiffable, impossible to close in parts. If a repo really runs a one-file backlog
+  (`backlog_layout: "flat"`), the engine REFUSES a body it would have to flatten; do not "fix" that
+  by squashing your body into one line — switch the layout or file the body where it belongs.
 - "This finding is obviously a dup, I'll file it anyway for completeness" -> **WRONG**. A duplicate
   goes to `--as noise --reason "duplicate of <ID>"`; the recurrence is already counted by the
   fingerprint merge.
@@ -42,8 +50,9 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 ## 2. Capabilities
 - Queue findings from any surface (`collect`) with cross-source dedup by fingerprint.
 - Prepare a triage table with duplicate candidates (`triage`).
-- File defects into `docs/issues/` + `KNOWN_ISSUES.md` in lockstep, work-items into the backlog
-  anchor, dismiss noise — all create-only, dry-runnable (`file`).
+- File defects into `docs/issues/` + `KNOWN_ISSUES.md` and work-items into `docs/backlog/` +
+  `BACKLOG.md` — both in lockstep with rollback, both allocating an ID (`<PREFIX>-<n>` / `WI-<n>`),
+  and dismiss noise — all create-only, dry-runnable (`file`).
 - Mine historical Claude Code session transcripts for failures (`mine`).
 - Deterministic retro ownership for nested workflows (`claim` / `release`).
 - Feed the self-heal harness (`issues --status open --json`).
@@ -60,7 +69,10 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 - **Subcommands**: `collect · triage · file · journal · issues · mine · claim · release · init · doctor`
   — full flag reference in [`references/cli_reference.md`](references/cli_reference.md).
 - **Config**: `docs/feedback/config.json` per repo (ledger paths, `component→prefix` map, backlog
-  anchor). Resolution: `--config` → `RUN_FEEDBACK_CONFIG` env → repo default → built-ins.
+  anchor, plus `backlog_dir` / `backlog_prefix` / `backlog_layout` for the work-item ledger).
+  Resolution: `--config` → `RUN_FEEDBACK_CONFIG` env → repo default → built-ins. Schema stays `v1`:
+  the work-item keys are additive with defaults (`docs/backlog`, `WI`, `index+files`), so a config
+  written before them loads unchanged.
 - **Exit codes**: `0` ok (incl. dedup) · `1` unexpected · `2` usage · `3` config/env (also
   `doctor` not-ready) · `4` filing conflict (slug exists, vocab violation, missing backlog anchor) ·
   `5` finding not found · `6` claim denied.
@@ -72,7 +84,7 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 
 ## 5. Safety Boundaries
 - **Allowed scope**: writes ONLY to `.agent/feedback/**` (machine state, gitignored) and — from
-  `file` exclusively — the configured `issues_dir`, `index_path`, `backlog_path`.
+  `file` exclusively — the configured `issues_dir`, `index_path`, `backlog_dir`, `backlog_path`.
 - **Bootstrap exception** (§7 Bootstrap only): finishing `init`'s todo is agent-side by design —
   you MAY hand-edit `docs/feedback/*.json`, seat the work-item anchor in the repo's existing
   backlog (`BACKLOG.md` / `ROADMAP.md` / similar — create a thin `docs/BACKLOG.md` only if none
@@ -80,7 +92,8 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
   stay CLI-only even during bootstrap.
 - **Create-only ledger writes**: never edits or deletes an existing issue file or index line;
   resolving/flipping statuses belongs to humans or `/heal-issues` under `known-issues-format` rules.
-- **Lockstep**: issue file written first; if the index write fails the issue file is rolled back.
+- **Lockstep** (both ledgers): the anchor/section is resolved BEFORE anything is written, the record
+  file is written first, and if the index write fails the record file is rolled back.
 - **No network, no secrets**: excerpts are redacted (tokens/keys/emails) and hard-capped before
   they are stored; transcripts are read locally and never scanned beyond tool errors (+ opt-in
   frustration markers).
@@ -89,9 +102,10 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
 
 ## 6. Validation Evidence
 - **Local verification**: `cd .agent/skills/run-feedback/scripts && python3 -m unittest discover -s tests`
-  (fingerprint stability, messy-ID allocation, index placement regression, lockstep rollback,
-  dry-run tree-hash, journal multiprocess hammer, miner fixtures) and `bash tests/test_e2e.sh`
-  (zero-test guard + scripted pipeline in a mktemp repo).
+  (fingerprint stability, messy-ID allocation, index placement regression, lockstep rollback for
+  BOTH ledgers, work-item body preservation + flat-layout refusal, dry-run tree-hash, journal
+  multiprocess hammer, miner fixtures) and `bash tests/test_e2e.sh` (zero-test guard + scripted
+  pipeline in a mktemp repo).
 - **Expected evidence**: green suite; `doctor --json` reports `ready: true` in a configured repo.
 - **Contract sync**: `python3 ../known-issues-format/scripts/check_contract_sync.py` stays green.
 
@@ -119,14 +133,24 @@ miner) → LLM **triage** → deterministic **filing** into the existing ledgers
      against the target framework's MANDATORY rules first, and file it as a **work-item for
      review**, not as guidance to land. A rule whose justification describes a scenario the target
      framework cannot produce is a defect in the lesson, not a lesson.
-5. For defects: severity strictly from `SEV-2/SEV-3/SEV-4/LOW`; category from the ledger's
-   prefix→category table; author the body from
-   [`assets/templates/issue_body_template.md`](assets/templates/issue_body_template.md)
-   (Symptom / Reproduction / Workaround / Fix path / Related / Do-not), citing `evidence` paths.
-   **MUST** make `## Reproduction` a fenced `sh` block with runnable commands — it is the input
-   `/heal-issues` executes; prose repros are not auto-healable.
-   Add `--auto-fixable` ONLY when the fix is mechanical and gate-verifiable — this is the explicit
-   opt-in the heal harness selects on.
+5. Author the body in a **REAL file** and pass it via `--body-file` — for BOTH classifications. Both
+   ledgers are thin indexes: the body becomes the record file, the index gets one pointer line.
+   - **Defects**: severity strictly from `SEV-2/SEV-3/SEV-4/LOW`; category from the ledger's
+     prefix→category table; body from
+     [`assets/templates/issue_body_template.md`](assets/templates/issue_body_template.md)
+     (Symptom / Reproduction / Workaround / Fix path / Related / Do-not), citing `evidence` paths.
+     **MUST** make `## Reproduction` a fenced `sh` block with runnable commands — it is the input
+     `/heal-issues` executes; prose repros are not auto-healable.
+     Add `--auto-fixable` ONLY when the fix is mechanical and gate-verifiable — this is the explicit
+     opt-in the heal harness selects on.
+   - **Work-items**: `--effort` strictly from `S/M/L` (omit when genuinely unknown), `--value` as
+     one line on what landing it buys, `--source` only to override the auto-derived run context;
+     body from
+     [`assets/templates/work_item_body_template.md`](assets/templates/work_item_body_template.md)
+     (Signal / Why it matters / Options / Recommendation / Related). **Never** `--auto-fixable`:
+     `/heal-issues` is defect-only. A work-item whose resolution is an edit to a shared artifact
+     keeps the step-4 verdict visible in the body ("behaviour change — for the framework owner's
+     review", not a landed fix).
 6. **MUST** run `file … --dry-run`, read the previewed ID + index line, then run for real.
 7. Finish by reporting filed IDs, dismissed counts, and any new prefix that needs a row in the
    ledger's prefix→category table (the script warns; the table edit is yours).
@@ -173,8 +197,11 @@ outside a retro, preserve the file and surface it to the human.
      exits 4 without it. FIRST look for the repo's existing backlog under its real name —
      `docs/BACKLOG.md`, `docs/ROADMAP.md`, or similar — point `backlog_path` there and seat
      the anchor inside its Discovered-Issues section. Create a thin `docs/BACKLOG.md` ONLY
-     when nothing of the kind exists; a second backlog next to a live ROADMAP splits the
-     project's work-item tracking;
+     when nothing of the kind exists (the CLI seeds it from `known-issues-format`'s
+     `backlog_md_template.md` on first filing); a second backlog next to a live ROADMAP splits
+     the project's work-item tracking. Record files go to `backlog_dir` (default
+     `docs/backlog/`), which the CLI creates — leave `backlog_layout` at `index+files` unless
+     the project genuinely wants a single-file backlog;
    - **heal gates**: replace `example-component` with ONLY components that have real checks
      (unit/e2e/validator commands that exit 0); no gate = honestly not auto-fixable — do NOT
      invent gates;
@@ -197,7 +224,8 @@ outside a retro, preserve the file and surface it to the human.
 
 | DO THIS | DO NOT DO THIS |
 | :--- | :--- |
-| `file --dry-run` before every real filing | Hand-edit `KNOWN_ISSUES.md` or inbox JSON |
+| `file --dry-run` before every real filing | Hand-edit `KNOWN_ISSUES.md` / `BACKLOG.md` or inbox JSON |
+| Author every body (defect AND work-item) in a real file | Inline a work-item body into the backlog index line |
 | Dismiss duplicates with the original's ID in the reason | File a second issue for a known fingerprint |
 | Runnable fenced `sh` repro in every defect body | Prose-only "point the tool at a slow source" repros |
 | Mark `--auto-fixable` only for mechanical, gate-verifiable fixes | Mark honest-scope / design decisions auto-fixable |
@@ -212,6 +240,7 @@ outside a retro, preserve the file and surface it to the human.
 | "Config is corrupt — Bootstrap says I should repair it" | `init` is create-only; it cannot fix a corrupt file, and retrying it just loops. Inside a retro: one report line, move on. Outside: preserve the file, hand it to the human. |
 | "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo. Check `doctor`'s `config_source` + `remediation` — bootstrap comes BEFORE the first real filing. |
 | "I'll file the lesson exactly as it happened — the details make it concrete" | Concrete to THIS stack means wrong on the others. A shared-artifact lesson gets generalized before filing (§7 triage step 4). |
+| "The backlog has no record dir yet, so this project must want flat bullets" | `backlog_layout` decides, not the dir listing. The default is `index+files` and the engine creates the dir; a flat backlog is an explicit opt-in. |
 | "It's just a line of guidance, it can't break anything" | If it changes what runs, what gets committed, or which workflow dispatches, it is a behaviour change — check it against the target's MANDATORY rules first (§7 triage step 4). |
 
 ## 10. Examples (Few-Shot)
@@ -235,7 +264,8 @@ python3 .agent/skills/run-feedback/scripts/run_feedback.py collect \
   [`references/capture_surfaces.md`](references/capture_surfaces.md) for the layering (retro step =
   portable; hooks/miner = Claude-Code-only accelerators) and the verified PostToolUse limitation
   (fires only on SUCCESSFUL tool calls — cannot capture failures; do not wire it).
-- `assets/templates/issue_body_template.md` — defect body skeleton.
+- `assets/templates/issue_body_template.md` — defect body skeleton;
+  `assets/templates/work_item_body_template.md` — work-item body skeleton.
 - `assets/templates/feedback_config_template.json` + `heal_config_template.json` — per-repo
   config starters; `run_feedback.py init` copies them create-only and seeds the prefix map
   (§7 Bootstrap protocol; recipe: `System/Docs/QUALITY_FEEDBACK_LOOP.md` §Setup).

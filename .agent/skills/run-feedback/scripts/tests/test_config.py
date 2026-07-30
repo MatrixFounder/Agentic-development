@@ -43,6 +43,37 @@ class TestDefaults(ConfigTestCase):
         self.assertEqual(cfg.id_prefixes, {"_default": "RF"})
         self.assertEqual(cfg.feedback_dir, self.root / ".agent" / "feedback")
 
+    def test_work_item_ledger_defaults_to_the_two_level_layout(self):
+        cfg = load_config(repo_root=str(self.root))
+        self.assertEqual(cfg.backlog_dir, self.root / "docs" / "backlog")
+        self.assertEqual(cfg.backlog_prefix, "WI")
+        self.assertEqual(cfg.backlog_layout, "index+files")
+
+    def test_pre_existing_config_without_the_new_keys_loads_clean(self):
+        """A config written before the two-level layout existed must keep
+        working — no version bump, no unknown-key warning, and it lands on the
+        layout its project already maintains by hand."""
+        cfg_path = fx.write(
+            self.root / "docs" / "feedback" / "config.json",
+            json.dumps({"v": 1, "backlog_path": "docs/BACKLOG.md",
+                        "backlog_anchor": "<!-- feedback:discovered-issues -->"}))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            cfg = load_config(repo_root=str(self.root))
+        self.assertEqual(err.getvalue(), "")
+        self.assertEqual(cfg.source, str(cfg_path))
+        self.assertEqual(cfg.backlog_path, self.root / "docs" / "BACKLOG.md")
+        self.assertEqual(cfg.backlog_dir, self.root / "docs" / "backlog")
+        self.assertEqual(cfg.backlog_layout, "index+files")
+
+    def test_unknown_backlog_layout_raises_code_3(self):
+        cfg_path = fx.write(self.root / "layout.json",
+                            json.dumps({"v": 1, "backlog_layout": "one-file"}))
+        cfg = load_config(config_arg=str(cfg_path), repo_root=str(self.root))
+        with self.assertRaises(CliError) as ctx:
+            cfg.backlog_layout
+        self.assertEqual(ctx.exception.code, 3)
+
     def test_data_root_falls_back_to_repo_root_without_real_git(self):
         cfg = load_config(repo_root=str(self.root))
         self.assertEqual(cfg.data_root, self.root)

@@ -21,11 +21,10 @@ from __future__ import annotations
 
 import os
 import re
-import tempfile
 import time
 from pathlib import Path
 
-from . import atomic, frontmatter, ids
+from . import atomic, body as body_mod, frontmatter
 from .envelope import EXIT_CONFIG, EXIT_FILING_CONFLICT, CliError
 
 # --- vocab -----------------------------------------------------------------
@@ -44,9 +43,15 @@ _CATEGORY_HEADING_RE = re.compile(r"^## ([a-z0-9][a-z0-9\-]*)\s*$")
 _INDEX_ENTRY_RE = re.compile(r"^- \*\*([^*]+)\*\* ")
 _ID_SORT_RE = re.compile(r"^(.*?)-(\d+)(?:[A-Z\-].*)?$")
 
+#: frontmatter keys in contract order; ``severity`` is the one optional member.
+#: This tuple BUILDS the mapping (``_build_meta``) — it used to be dead code
+#: sitting beside a hand-written literal that restated it (iteration 2, V11).
+#: Pinned to the `known-issues-format` SKILL.md authority by a test.
 CONTRACT_KEYS = ("id", "type", "status", "opened_at", "category", "severity",
                  "slug")
-EXTENSION_KEYS = ("component", "fingerprint", "evidence_paths",
+OPTIONAL_CONTRACT_KEYS = frozenset({"severity"})
+#: optional keys written AFTER the contract keys, in this order
+EXTENSION_KEYS = ("provenance", "component", "fingerprint", "evidence_paths",
                   "auto_fixable", "finding_ref")
 
 
@@ -109,10 +114,31 @@ def seed_index_text():
 
 # --- index insertion -------------------------------------------------------
 
+def _eol_of(lines, near):
+    """The line ending this file uses, sampled at the insertion point."""
+    if 0 <= near < len(lines) and lines[near].endswith("\r"):
+        return "\r\n"
+    return "\n"
+
+
+def _rejoin(lines, eol):
+    """Join back with exactly one trailing newline, in the file's own ending."""
+    return "\n".join(lines).rstrip("\r\n") + eol
+
+
 def insert_index_line(index_text, category, line):
     """Pure function: return index text with *line* routed into
-    ``## <category>`` (section created alphabetically when absent)."""
-    lines = index_text.splitlines()
+    ``## <category>`` (section created alphabetically when absent).
+
+    ``split("\\n")``, not ``splitlines()``: the latter also breaks on ``\\x0b``,
+    ``\\x0c``, ``\\x1c-\\x1e``, ``\\x85``, ``U+2028`` and ``U+2029``, and it
+    normalizes CRLF — so a one-line insertion silently rewrote the whole file's
+    line endings and split any record line containing one of those characters into
+    two. The work-item ledger was fixed for this in TASK 091 and **this module was
+    not**, which is the asymmetry WI-7 is about (iteration 2, V12). Pair with
+    ``atomic.read_verbatim`` on the read side.
+    """
+    lines = index_text.split("\n")
     headings = [(i, m.group(1)) for i, m in
                 ((i, _CATEGORY_HEADING_RE.match(l)) for i, l in enumerate(lines))
                 if m]
@@ -130,13 +156,15 @@ def insert_index_line(index_text, category, line):
             if cat > category:
                 insert_at = i
                 break
-        block = ["## %s" % category, "", line, ""]
+        eol = _eol_of(lines, min(insert_at, len(lines) - 1))
+        pad = "\r" if eol == "\r\n" else ""
+        block = ["## %s%s" % (category, pad), pad, line + pad, pad]
         # keep exactly one blank line before a newly appended heading
         while insert_at > 0 and lines[insert_at - 1].strip() == "":
             insert_at -= 1
-        block.insert(0, "")
+        block.insert(0, pad)
         lines[insert_at:insert_at] = block
-        return "\n".join(lines).rstrip("\n") + "\n"
+        return _rejoin(lines, eol)
 
     start, end = target[0], section_end(target[0])
     new_id = _INDEX_ENTRY_RE.match(line).group(1)
@@ -154,13 +182,50 @@ def insert_index_line(index_text, category, line):
         insert_at = (last_entry + 1) if last_entry is not None else start + 2
         if last_entry is None and insert_at > len(lines):
             insert_at = end
-    lines.insert(insert_at, line)
-    return "\n".join(lines).rstrip("\n") + "\n"
+    eol = _eol_of(lines, start)
+    lines.insert(insert_at, line + ("\r" if eol == "\r\n" else ""))
+    return _rejoin(lines, eol)
 
 
 def _write_atomic(path, text):
     """Delegates to the shared primitive (see feedback_lib/atomic.py)."""
     atomic.write_atomic(path, text)
+
+
+# --- frontmatter assembly ---------------------------------------------------
+
+def _build_meta(issue_id, slug, status, opened_at, category, severity,
+                extensions):
+    """Assemble the record frontmatter IN CONTRACT ORDER, driven by the tuple.
+
+    ``sources[key]`` is indexed, not ``.get()``: a key added to ``CONTRACT_KEYS``
+    with no value here raises ``KeyError`` immediately rather than emitting a
+    record missing a contract key. Mirrors ``ledger_backlog._build_meta`` — the
+    two ledgers implement one contract, so their assembly should be readable
+    side by side (WI-7).
+    """
+    sources = {"id": issue_id, "type": "known-issue", "status": status,
+               "opened_at": opened_at, "category": category,
+               "severity": severity, "slug": slug}
+    meta = {}
+    for key in CONTRACT_KEYS:
+        value = sources[key]
+        if value in (None, "", []):
+            if key not in OPTIONAL_CONTRACT_KEYS:
+                raise CliError(
+                    "contract key %r is empty — a defect record cannot be "
+                    "written without it" % key,
+                    code=EXIT_FILING_CONFLICT, err_type="ContractError")
+            continue
+        meta[key] = value
+    provenance = (extensions or {}).get("provenance")
+    if not provenance and (extensions or {}).get("finding_ref"):
+        provenance = body_mod.PROVENANCE_MACHINE
+    for key in EXTENSION_KEYS:
+        value = provenance if key == "provenance" else (extensions or {}).get(key)
+        if value not in (None, "", []):
+            meta[key] = value
+    return meta
 
 
 # --- the lockstep defect write ----------------------------------------------
@@ -191,24 +256,19 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
         raise CliError("issue file already exists: %s" % issue_path,
                        code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
 
-    meta = {"id": issue_id, "type": "known-issue", "status": status,
-            "opened_at": opened_at, "category": category}
-    if severity:
-        meta["severity"] = severity
-    meta["slug"] = slug
-    for key in EXTENSION_KEYS:
-        value = (extensions or {}).get(key)
-        if value not in (None, "", []):
-            meta[key] = value
-
-    issue_text = (frontmatter.serialize(meta) + "\n# %s — %s\n\n%s\n"
-                  % (issue_id, title, body.strip()))
+    meta = _build_meta(issue_id, slug, status, opened_at, category, severity,
+                       extensions)
+    banner = ""
+    if meta.get("finding_ref"):
+        banner = body_mod.provenance_banner(meta["finding_ref"]) + "\n\n"
+    issue_text = (frontmatter.serialize(meta) + "\n# %s — %s\n\n%s%s\n"
+                  % (issue_id, title, banner, body.strip()))
     index_line = format_index_line(issue_id, title, slug, status, opened_at,
                                    severity)
 
     index_path = Path(config.index_path)
     if index_path.is_file():
-        index_before = index_path.read_text(encoding="utf-8")
+        index_before = atomic.read_verbatim(index_path)
         seeded = False
     else:
         index_before = seed_index_text()
@@ -221,6 +281,9 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
               "dry_run": dry_run}
     if dry_run:
         result["issue_text"] = issue_text
+        # the id came from a disk scan a real filing may win the race on — the
+        # backlog path said so and this one did not (iteration 2, V-10)
+        result["provisional_id"] = True
         return result
 
     if issues_dir.is_symlink():
@@ -235,8 +298,15 @@ def file_defect(config, issue_id, slug, title, category, body, status="open",
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(issue_text)
     except FileExistsError:
-        raise CliError("issue file already exists: %s" % issue_path,
-                       code=EXIT_FILING_CONFLICT, err_type="FilingConflict")
+        # distinct from the lexists pre-check message — see the twin comment in
+        # ledger_backlog: reaching here means the path appeared between check and
+        # open, and O_EXCL is the guard that refused it (V-22)
+        raise CliError(
+            "issue file appeared while filing (create-only refused it): %s"
+            % issue_path,
+            code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+            remediation="another process filed this slug, or a symlink was "
+                        "planted at that path — re-run to get a fresh id")
     except OSError as exc:
         _rollback(issue_path)
         raise CliError("could not write the issue record %s (%s)"

@@ -45,9 +45,10 @@ slug: wi-1-short-title   # filename stem: a slugified, human-readable id+title
 effort: S                # OPTIONAL — see effort vocab below
 value: 'one line on what landing this buys'   # OPTIONAL
 source: TASK-007 retro   # OPTIONAL — where the signal came from
-# component: run-feedback         # OPTIONAL automation keys, appended AFTER source, written by
-# fingerprint: 614ee37f7fb28554   # the `run-feedback` filing step. No `auto_fixable` here:
-# evidence_paths:                 # /heal-issues is defect-only.
+# provenance: machine             # OPTIONAL automation keys, appended AFTER source, written by
+# component: run-feedback         # the `run-feedback` filing step. No `auto_fixable` here:
+# fingerprint: 614ee37f7fb28554   # /heal-issues is defect-only. `provenance: machine` marks a
+# evidence_paths:                 # body written by tooling: data, not instructions.
 #   - path/to/artifact
 # finding_ref: fnd-20260713-081500-614ee37f
 # resolved_at: 2026-02-01   # add ONLY when status: done | dropped

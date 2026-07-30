@@ -74,13 +74,14 @@ def main():
 
     repo_hint = (os.environ.get("CLAUDE_PROJECT_DIR")
                  or payload.get("cwd") or os.getcwd())
-    try:
-        cfg = load_config(repo_root=repo_hint)
-    except Exception:
-        return 0
+    cfg = None
 
+    # The debug dump stays ABOVE the filters and pays for its own config load.
+    # It exists to diagnose why the filters discarded something, so moving it
+    # below them would destroy its only purpose (WI-4 / audit 093 Step 3).
     if os.environ.get("RUN_FEEDBACK_HOOK_DEBUG") == "1":
         try:
+            cfg = load_config(repo_root=repo_hint)
             cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
             dumps = sorted(cfg.feedback_dir.glob("hook_debug-*.json"))
             if len(dumps) < MAX_DEBUG_DUMPS:
@@ -89,9 +90,14 @@ def main():
                                      % (stamp, os.getpid()))).write_text(
                     json.dumps(payload, ensure_ascii=False, indent=2),
                     encoding="utf-8")
-        except OSError:
+        except Exception:  # noqa: BLE001 - a debug facility never breaks the hook
             pass
 
+    # --- cheap discard filters FIRST -------------------------------------
+    # This hook runs synchronously on EVERY Bash tool call and most events are
+    # discarded here. Loading config above these filters meant a config read plus
+    # a `git rev-parse` for every discarded event, with the git timeout as the
+    # worst-case stall of a hooked tool call (WI-4).
     if payload.get("tool_name") != "Bash":
         return 0
     command = (payload.get("tool_input") or {}).get("command", "")
@@ -106,6 +112,13 @@ def main():
     if not filters.should_capture(command, exit_code, stderr_text=text,
                                   has_envelope=envelope is not None):
         return 0
+
+    # --- only now is a capture actually going to happen -------------------
+    if cfg is None:
+        try:
+            cfg = load_config(repo_root=repo_hint)
+        except Exception:
+            return 0
 
     component = filters.component_of(command, fallback="session")
     tail = [l for l in text.strip().splitlines() if l.strip()]

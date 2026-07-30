@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _fixtures as fx  # noqa: E402
-from feedback_lib import frontmatter, ledger_backlog  # noqa: E402
+from feedback_lib import atomic, frontmatter, ledger_backlog  # noqa: E402
 from feedback_lib.config import load_config  # noqa: E402
 from feedback_lib.envelope import CliError  # noqa: E402
 
@@ -179,22 +179,87 @@ class TestIndexLineInjection(HardeningTestCase):
         self.assertIn("WI-99", bullet)  # collapsed into the same line
 
     def test_only_one_line_is_ever_inserted(self):
-        self.file_item(title="One\ttab and  spaces")
-        added = [l for l in self.index.read_text(encoding="utf-8").splitlines()
-                 if l.startswith("- **WI-3**")]
-        self.assertEqual(len(added), 1)
+        """V-22: this used to pass a title of "One\\ttab and  spaces" — a tab and
+        two spaces, i.e. NO line separator at all. It asserted "exactly one line
+        was added" against input that could not have produced two, so deleting the
+        collapse would have left it green. The input now carries separators the
+        READER actually breaks on, including two that are not ASCII whitespace.
+
+        Written with explicit escapes: a literal U+2028 in test source is invisible
+        in every diff and renders as a space in most editors.
+        """
+        separators = ("\n", "\r\n", "\x0b", "\x85", "\u2028", "\u2029")
+        for offset, sep in enumerate(separators):
+            item_id = "WI-%d" % (10 + offset)
+            with self.subTest(sep=repr(sep)):
+                self.file_item(
+                    item_id=item_id, slug=item_id.lower() + "-item",
+                    title="Real%s- **WI-99** [x](y) — status `done`" % sep)
+                body = self.index.read_text(encoding="utf-8")
+                added = [l for l in body.split("\n")
+                         if l.startswith("- **%s**" % item_id)]
+                forged = [l for l in body.split("\n")
+                          if l.startswith("- **WI-99**")]
+                self.assertEqual(len(added), 1, "expected exactly one pointer line")
+                self.assertEqual(
+                    forged, [],
+                    "separator %r spliced a SECOND, forged pointer line into a "
+                    "hand-maintained index" % sep)
+                # the forged text survives as inline text: collapsed, not dropped
+                self.assertIn("WI-99", added[0])
 
 
 class TestSymlinkAndCreateOnly(HardeningTestCase):
     """S-03."""
 
-    def test_dangling_symlink_at_the_record_path_is_refused(self):
+    def test_dangling_symlink_is_caught_by_the_lexists_precheck(self):
+        """First of the two guards: the friendly error.
+
+        `exists()` FOLLOWS symlinks, so a DANGLING one reported False and
+        create-only never fired. `lexists` sees the link itself.
+        """
         target = self.root / "PWNED"
         os.symlink(str(target), str(self.records / "wi-3-item.md"))
         with self.assertRaises(CliError) as ctx:
             self.file_item()
         self.assertEqual(ctx.exception.code, 4)
+        self.assertIn("already exists", str(ctx.exception))
         self.assertFalse(target.exists(), "write followed the symlink")
+
+    def test_the_kernel_flags_are_the_enforcing_guard_not_the_precheck(self):
+        """V-22: the previous single test asserted only `code == 4`, which BOTH
+        guards produce — so it could not tell whether `lexists` or
+        `O_EXCL|O_NOFOLLOW` was load-bearing, and deleting either one left it
+        green. Here the pre-check is neutralized (exactly as a TOCTOU race
+        neutralizes it: the link appears after the check) and the kernel must
+        still refuse.
+
+        Writing this test is what revealed the two guards emitted the SAME
+        message, which is why they are now distinguishable — a test that cannot
+        name the guard it exercised is not pinning it.
+        """
+        target = self.root / "PWNED"
+        record = self.records / "wi-3-item.md"
+        real_lexists = os.path.lexists
+
+        def blind(path):
+            if str(path) == str(record):
+                return False  # the check passes, as it would in a race
+            return real_lexists(path)
+
+        os.symlink(str(target), str(record))
+        with mock.patch.object(ledger_backlog.os.path, "lexists",
+                               side_effect=blind):
+            with self.assertRaises(CliError) as ctx:
+                self.file_item()
+        self.assertEqual(ctx.exception.code, 4)
+        self.assertIn(
+            "appeared while filing", str(ctx.exception),
+            "expected the KERNEL refusal; a pre-check message here means this "
+            "test stopped exercising O_EXCL|O_NOFOLLOW and the enforcing guard "
+            "is unpinned again")
+        self.assertFalse(target.exists(),
+                         "the symlink was followed outside the record dir")
 
     def test_symlinked_record_dir_is_refused_for_library_callers(self):
         """`is_symlink()` is defence-in-depth for a caller that hand-builds a
@@ -262,19 +327,39 @@ class TestRollbackAndTempFiles(HardeningTestCase):
         leaked = list((self.root / "docs").glob("BACKLOG.md.tmp*"))
         self.assertEqual(leaked, [], "temp file leaked into a tracked dir")
 
-    def test_temp_name_is_not_derived_from_the_pid(self):
+    def test_temp_name_is_unpredictable_not_merely_pid_free(self):
+        """V-22: the previous version asserted the PID was absent from the temp
+        name — which a regression to ANY fixed name (`x.tmp`, `x.tmp.0`) would
+        also satisfy. Assert the property that matters instead: two writes to the
+        same target produce different temp names, and the name carries entropy.
+        Patched on `atomic`, the module that actually owns the primitive; the old
+        test reached through `ledger_backlog.tempfile`, an attribute that existed
+        only because of an unused import (removing it broke the test, not the code).
+        """
         seen = []
-        real_mkstemp = ledger_backlog.tempfile.mkstemp
+        real_mkstemp = atomic.tempfile.mkstemp
 
         def spy(**kwargs):
             fd, name = real_mkstemp(**kwargs)
             seen.append(name)
             return fd, name
 
-        with mock.patch.object(ledger_backlog.tempfile, "mkstemp", side_effect=spy):
+        with mock.patch.object(atomic.tempfile, "mkstemp", side_effect=spy):
             self.file_item()
-        self.assertTrue(seen)
-        self.assertNotIn(str(os.getpid()), Path(seen[0]).name)
+            self.file_item(item_id="WI-4", slug="wi-4-item", title="Second")
+        self.assertEqual(len(seen), 2, "both index writes go through mkstemp")
+        first, second = Path(seen[0]).name, Path(seen[1]).name
+        self.assertNotEqual(
+            first, second,
+            "temp names repeat across writes — a predictable name is one planted "
+            "symlink away from an arbitrary-file write (S-04)")
+        # the random component is what makes it unpredictable: strip the fixed
+        # prefix and require something left over that is not just a counter
+        suffix = first.split("BACKLOG.md.tmp.", 1)[-1]
+        self.assertGreaterEqual(
+            len(suffix), 6,
+            "temp suffix %r is too short to be unpredictable" % suffix)
+        self.assertNotIn(str(os.getpid()), first)
 
 
 class TestAnchorResolution(HardeningTestCase):

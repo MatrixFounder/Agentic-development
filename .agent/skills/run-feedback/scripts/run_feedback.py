@@ -25,6 +25,7 @@ import argparse
 import json
 import re
 import sys
+import tempfile
 import time
 import fcntl
 import os
@@ -32,13 +33,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from feedback_lib import (atomic, claims, filters, finding, frontmatter,
-                          ids as ids_mod, inbox, journal, ledger_backlog,
-                          ledger_issues, mine as mine_mod)
+from feedback_lib import (atomic, body as body_mod, claims, filters, finding,
+                          frontmatter, ids as ids_mod, inbox, journal,
+                          ledger_backlog, ledger_issues, mine as mine_mod)
 from feedback_lib.config import load_config
-from feedback_lib.envelope import (EXIT_CONFIG, EXIT_OK, EXIT_UNEXPECTED,
-                                   EXIT_USAGE, CliError, emit_json_error,
-                                   install_json_errors, wants_json_errors)
+from feedback_lib.envelope import (EXIT_CONFIG, EXIT_FILING_CONFLICT, EXIT_OK,
+                                   EXIT_UNEXPECTED, EXIT_USAGE, CliError,
+                                   emit_json_error, install_json_errors,
+                                   wants_json_errors)
 
 EXIT_CLAIM_DENIED = 6
 
@@ -355,12 +357,74 @@ def _reject_inapplicable_flags(args, layout=None):
                         "to accept a flag it would not record")
 
 
-def _read_body(args):
+def _read_body(args, cfg):
+    """Read and POLICE the record body — the one gate both ledgers pass through.
+
+    Placed here rather than in either ledger on purpose: a check that lives in one
+    writer is a check the other writer does not have, which is the whole shape of
+    WI-7. See ``feedback_lib/body.py`` for why the body is capped and screened but
+    never rewritten.
+    """
     if args.body_file:
-        return _read_maybe_stdin(
-            "@" + args.body_file if args.body_file != "-" else "-")
+        return body_mod.guard_body(
+            _read_maybe_stdin(
+                "@" + args.body_file if args.body_file != "-" else "-"),
+            cfg.body_max_chars,
+            source=("stdin" if args.body_file == "-" else args.body_file))
     raise CliError("--body-file is required for this classification",
                    code=EXIT_USAGE, err_type="UsageError")
+
+
+def _provisional_note(result):
+    """Human-readable caveat on a dry-run id.
+
+    The JSON payload carried ``provisional_id`` while the human line presented the
+    same id as final — and the human line is what an operator (or a model) copies
+    into a plan (iteration 2, V-10). The id comes from a disk scan that a real
+    filing can win the race on.
+    """
+    if not result.get("provisional_id"):
+        return ""
+    return ("\nNOTE: the id above is PROVISIONAL — it is the next free number as "
+            "of this scan, and a filing that lands first will take it.")
+
+
+def _consume_or_explain(cfg, path, record, new_status, filed_as):
+    """Move the finding out of the inbox; if that fails, leave a recoverable state.
+
+    The ledger write already succeeded by this point and is create-only, so a
+    failure here used to strand the run: the finding stayed ``new`` while the
+    record existed, and every retry hit the create-only guard and exited 4
+    **forever**, needing a hand edit to escape (iteration 2, V17).
+
+    So on failure the finding's status is flipped in place, best-effort, and the
+    error names both halves of the half-state. A retry then reports "already
+    filed" (exit 2, actionable) instead of "record exists" (exit 4, a dead end).
+    """
+    try:
+        inbox.consume(cfg, path, record, new_status)
+        return
+    except OSError as exc:
+        try:
+            record["status"] = new_status
+            atomic.write_atomic(
+                path, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+            noted = "the finding was marked %s in place" % new_status
+        except OSError:
+            noted = ("the finding could NOT be marked %s and is still `new`"
+                     % new_status)
+        written = (filed_as or {}).get("path")
+        raise CliError(
+            "the ledger write succeeded but the finding could not be moved out "
+            "of the inbox (%s)" % exc,
+            code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+            remediation="%s%s. Do NOT re-run with the same --slug: the record is "
+                        "create-only and a retry would exit 4. Move %s to %s by "
+                        "hand, or re-file under a new slug after deleting the "
+                        "orphan." % (("the record IS written at %s; " % written)
+                                     if written else "", noted, path,
+                                     cfg.filed_dir if new_status == "filed"
+                                     else cfg.dismissed_dir))
 
 
 def cmd_file(args, cfg):
@@ -398,21 +462,21 @@ def cmd_file(args, cfg):
             }
             result = ledger_issues.file_defect(
                 cfg, issue_id, slug, args.title, args.category,
-                _read_body(args), severity=args.severity,
+                _read_body(args, cfg), severity=args.severity,
                 extensions=extensions, dry_run=args.dry_run)
             filed_as = {"ledger": "issues", "id": issue_id,
                         "path": result["issue_path"]}
             human = ("DRY-RUN would file" if args.dry_run else "filed") + \
-                " %s -> %s\nindex line: %s" % (
+                " %s -> %s\nindex line: %s%s" % (
                     record["finding_id"], result["issue_path"],
-                    result["index_line"])
+                    result["index_line"], _provisional_note(result))
         elif args.classification == "work-item":
             if not cfg.backlog_path:
                 raise CliError("backlog_path is not configured",
                                code=EXIT_CONFIG, err_type="ConfigError")
             _reject_inapplicable_flags(args, layout=cfg.backlog_layout)
             explicit_slug = _ledger_identity(args)
-            body = _read_body(args)
+            body = _read_body(args, cfg)
             if cfg.backlog_layout == "flat":
                 # legacy one-file backlog: refuse rather than silently inline a
                 # structured body into the index line
@@ -449,9 +513,9 @@ def cmd_file(args, cfg):
                 filed_as = {"ledger": "backlog", "id": item_id,
                             "path": result["record_path"]}
                 human = ("DRY-RUN would file" if args.dry_run else "filed") + \
-                    " %s -> %s\nindex line: %s" % (
+                    " %s -> %s\nindex line: %s%s" % (
                         record["finding_id"], result["record_path"],
-                        result["index_line"])
+                        result["index_line"], _provisional_note(result))
         else:  # noise
             if not args.reason:
                 raise CliError("--reason is required for --as noise",
@@ -464,13 +528,13 @@ def cmd_file(args, cfg):
         if not args.dry_run:
             if args.classification == "noise":
                 record["dismiss_reason"] = args.reason
-                inbox.consume(cfg, path, record, "dismissed")
+                _consume_or_explain(cfg, path, record, "dismissed", None)
                 journal.append_event(cfg.journal_dir, "finding_dismissed",
                                      "%s %s" % (record["fingerprint"],
                                                 args.reason))
             else:
                 record["filed_as"] = filed_as
-                inbox.consume(cfg, path, record, "filed")
+                _consume_or_explain(cfg, path, record, "filed", filed_as)
                 journal.append_event(
                     cfg.journal_dir, "finding_filed",
                     "%s %s" % (filed_as.get("id") or "backlog",
@@ -665,22 +729,48 @@ def cmd_doctor(args, cfg):
         remediation.append("no docs/feedback/config.json — run "
                            "`run_feedback.py init` to bootstrap from the "
                            "shipped templates (create-only)")
-    checks["issues_dir_exists"] = Path(cfg.issues_dir).is_dir()
-    checks["index_exists"] = Path(cfg.index_path).is_file()
+    # EVERY config-derived probe is guarded. `cfg.issues_dir` and `cfg.index_path`
+    # run containment checks that raise on a bad config, and they used to sit
+    # outside the try — so `doctor`, the one command whose job is to REPORT a
+    # broken config, aborted on it (iteration 2, V9).
+    defects_ok = True
+    try:
+        checks["issues_dir_exists"] = Path(cfg.issues_dir).is_dir()
+        checks["index_exists"] = Path(cfg.index_path).is_file()
+    except CliError as exc:
+        defects_ok = False
+        checks["issues_config_error"] = str(exc)
+        remediation.append("defect ledger configuration unusable: %s" % exc)
+    except OSError as exc:
+        defects_ok = False
+        checks["issues_config_error"] = str(exc)
+        remediation.append("defect ledger path unreadable: %s" % exc)
     template_ok = ledger_issues._seed_template_path().is_file()
     checks["seed_template_reachable"] = template_ok
-    if not template_ok and not checks["index_exists"]:
+    if not template_ok and not checks.get("index_exists"):
         remediation.append("known-issues-format seed template unreachable and "
                            "no index exists — filing defects will fail")
     try:
         cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
-        probe = cfg.feedback_dir / ".doctor-probe"
-        probe.write_text("ok")
-        probe.unlink()
+        # mkstemp, not a fixed `.doctor-probe` + write_text: the name was
+        # predictable in a directory another local process can pre-populate, and
+        # write_text follows symlinks — the last predictable-name write in the
+        # engine (iteration 2, V-08)
+        fd, probe = tempfile.mkstemp(dir=str(cfg.feedback_dir),
+                                    prefix=".doctor-probe.")
+        try:
+            os.write(fd, b"ok")
+        finally:
+            os.close(fd)
+            os.unlink(probe)
         checks["feedback_dir_writable"] = True
     except OSError:
         checks["feedback_dir_writable"] = False
         remediation.append("feedback dir not writable: %s" % cfg.feedback_dir)
+    try:
+        checks["inbox_depth"] = len(inbox.scan(cfg.inbox_dir))
+    except OSError as exc:
+        checks["inbox_depth"] = "unreadable (%s)" % exc
     backlog_usable = True
     if cfg.backlog_path:
         # every probe is wrapped: doctor must REPORT a broken config, not crash
@@ -690,10 +780,16 @@ def cmd_doctor(args, cfg):
             backlog_file = Path(cfg.backlog_path)
             exists = backlog_file.is_file()
             anchored = False
+            unchecked = False
             if exists:
                 size = backlog_file.stat().st_size
                 checks["backlog_size_bytes"] = size
                 if size > _DOCTOR_READ_CAP:
+                    # NOT scanned is not the same as NOT anchored: reporting
+                    # `False` here read as "your ledger is broken" for a ledger
+                    # nobody looked at, and made `ready` false on a healthy repo
+                    # (iteration 2, V9)
+                    unchecked = True
                     remediation.append(
                         "backlog %s is %d bytes (> %d cap) — not scanned for "
                         "the anchor" % (backlog_file, size, _DOCTOR_READ_CAP))
@@ -704,7 +800,7 @@ def cmd_doctor(args, cfg):
                     anchored = ledger_backlog.has_anchor(
                         backlog_file.read_text(encoding="utf-8"),
                         cfg.backlog_anchor)
-            checks["backlog_anchor_present"] = anchored
+            checks["backlog_anchor_present"] = "unchecked" if unchecked else anchored
             layout = cfg.backlog_layout
             checks["backlog_layout"] = layout
             if layout == "index+files":
@@ -720,7 +816,7 @@ def cmd_doctor(args, cfg):
             # "flat" is an explicit opt-in (the default is index+files), so it
             # is reported, not nagged about — a remediation line here would read
             # as a bootstrap signal forever in a repo that deliberately chose it
-            backlog_usable = anchored or not exists
+            backlog_usable = anchored or not exists or unchecked
             if not backlog_usable:
                 remediation.append(
                     "backlog %s has no single standalone anchor line %r "
@@ -730,14 +826,17 @@ def cmd_doctor(args, cfg):
             backlog_usable = False
             checks["backlog_config_error"] = str(exc)
             remediation.append("backlog configuration unusable: %s" % exc)
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
+            # UnicodeDecodeError is not an OSError: a ledger holding one invalid
+            # byte crashed the report instead of being reported (iteration 2, V9)
             backlog_usable = False
             checks["backlog_config_error"] = str(exc)
             remediation.append("backlog path unreadable: %s" % exc)
     # a configured-but-unusable backlog is NOT ready: work-item filing, half of
     # what triage produces, would fail every time (F17)
-    ready = checks["feedback_dir_writable"] and backlog_usable and (
-        checks["index_exists"] or checks["seed_template_reachable"])
+    ready = (checks["feedback_dir_writable"] and backlog_usable and defects_ok
+             and (checks.get("index_exists")
+                  or checks["seed_template_reachable"]))
     payload = {"v": 1, "ready": ready, "checks": checks,
                "remediation": remediation}
     _emit(args, payload, "\n".join(
@@ -870,6 +969,14 @@ def main(argv=None):
             return emit_json_error(str(exc), code=exc.code,
                                    err_type=exc.err_type, details=exc.details)
         sys.stderr.write("run-feedback: error: %s\n" % exc)
+        # Human mode used to DROP the remediation, so every carefully written
+        # `remediation=` in this engine was visible only under --json-errors —
+        # including the recovery instructions for a half-state, which is the one
+        # error whose whole value is telling the operator what to do next
+        # (found while testing V17, outside the WI-2..WI-7 list).
+        hint = (exc.details or {}).get("remediation")
+        if hint:
+            sys.stderr.write("run-feedback: hint: %s\n" % hint)
         return exc.code
     except Exception as exc:  # noqa: BLE001 - last-resort envelope
         if json_mode:

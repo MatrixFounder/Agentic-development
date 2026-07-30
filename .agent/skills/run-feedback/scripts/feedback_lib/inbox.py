@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 
 from . import atomic, finding as finding_mod
-from .envelope import EXIT_NOT_FOUND, CliError
+from .envelope import EXIT_NOT_FOUND, EXIT_USAGE, CliError
 
 
 def scan(inbox_dir):
@@ -31,19 +31,78 @@ def scan(inbox_dir):
 
 
 def find_by_fingerprint(inbox_dir, fprint):
-    for path, record in scan(inbox_dir):
+    """Locate an inbox record by fingerprint via the filename, not a full scan.
+
+    **Invariant this relies on:** ``finding.save`` names every file
+    ``<finding_id>.json`` and ``finding_id`` is ``fnd-<stamp>-<fingerprint[:8]>``
+    — so the lookup key is already in the name and the lookup is a glob. It used
+    to open and ``json.loads`` *every* file in the inbox to answer one yes/no
+    question, under an exclusive lock, inside the fire-and-forget capture path.
+    The inbox only drains when a human triages, so *k* captures without triage
+    did 1+2+…+k reads — O(k²), roughly 20 100 parses at 200 stale findings (WI-5).
+
+    The 8-char prefix is not unique, so the FULL fingerprint is still verified on
+    every candidate. There is deliberately no full-scan fallback on a miss: a miss
+    is the *common* case (a genuinely new finding), so falling back would restore
+    the O(k²) this removes. The cost is that a hand-renamed inbox file no longer
+    dedups — a trade recorded in TASK 093 §4 rather than discovered later.
+    """
+    inbox_dir = Path(inbox_dir)
+    if not inbox_dir.is_dir():
+        return None, None
+    for path in sorted(inbox_dir.glob("fnd-*-%s.json" % str(fprint)[:8])):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue  # torn/foreign file: never let one bad file kill capture
         if record.get("fingerprint") == fprint:
             return path, record
     return None, None
 
 
+def _within(path, directories):
+    """True when *path* resolves inside one of *directories*."""
+    try:
+        resolved = path.resolve()
+    except (OSError, ValueError):
+        # ValueError: an embedded NUL byte reaches resolve() as a traceback
+        return False
+    for directory in directories:
+        try:
+            root = Path(directory).resolve()
+        except (OSError, ValueError):
+            continue
+        if resolved == root or root in resolved.parents:
+            return True
+    return False
+
+
 def resolve(config, ref):
-    """Resolve a finding reference (id, filename, or path) to (path, record)."""
+    """Resolve a finding reference (id, filename, or path) to (path, record).
+
+    A bare path is accepted only when it lands inside the feedback dirs. It used
+    to accept ANY readable JSON file with a ``finding_id``, and ``consume`` then
+    **unlinked the original** — so ``file --finding ./somebody/state.json --as
+    noise --reason x`` deleted a file outside every configured ledger path, while
+    SKILL.md §5 says those paths are the entire write scope (WI-6). The operator
+    supplies the path, so this was a footgun rather than an exploit; a tool that
+    documents "writes only inside X" still has to enforce containment on the paths
+    it *deletes*, not only the ones it creates.
+    """
+    directories = (config.inbox_dir, config.filed_dir, config.dismissed_dir)
     candidate = Path(ref)
     if candidate.is_file():
+        if not _within(candidate, directories):
+            raise CliError(
+                "finding path %s is outside the feedback directories" % ref,
+                code=EXIT_USAGE, err_type="UsageError",
+                remediation="pass the finding id instead, or copy the record "
+                            "into %s first — filing MOVES the record, and "
+                            "run-feedback must not delete files outside its own "
+                            "state dir" % config.inbox_dir)
         return candidate, finding_mod.load(candidate)
     name = ref if ref.endswith(".json") else ref + ".json"
-    for directory in (config.inbox_dir, config.filed_dir, config.dismissed_dir):
+    for directory in directories:
         path = Path(directory) / name
         if path.is_file():
             return path, finding_mod.load(path)

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -57,8 +58,14 @@ DEFAULTS = {
     "backlog_layout": "index+files",
     "id_prefixes": {"_default": "RF"},
     "excerpt_max_chars": 2000,
+    "body_max_chars": 64000,
     "feedback_dir": ".agent/feedback",
 }
+
+#: an ID prefix becomes part of a record id and of a filename stem, so it may not
+#: carry path separators, whitespace or markdown. The `-` is load-bearing: live
+#: consumers ship `TF-X`, `WIKI-INGEST`, `HTML2MD` (audit 093 Risk 1).
+_PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")
 
 
 def find_repo_root(start=None):
@@ -74,12 +81,20 @@ def find_repo_root(start=None):
 
 
 def main_worktree_root(repo_root):
-    """Resolve the MAIN working tree for *repo_root* (worktree-safe)."""
+    """Resolve the MAIN working tree for *repo_root* (worktree-safe).
+
+    ``timeout=2``, not 10: this is one `git rev-parse` against a local checkout,
+    and the only reason it would hang is a broken `.git` file, a stalled network
+    or FUSE mount, or index.lock contention — none of which get better with eight
+    more seconds. It used to run from ``Config.__init__``, so that timeout was the
+    worst-case stall of *every* invocation including the synchronous PostToolUse
+    hook (WI-4). Failure is silent by design: the fallback is ``repo_root``.
+    """
     repo_root = Path(repo_root)
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--git-common-dir"],
-            cwd=str(repo_root), capture_output=True, text=True, timeout=10)
+            cwd=str(repo_root), capture_output=True, text=True, timeout=2)
         if out.returncode == 0:
             common = Path(out.stdout.strip())
             if not common.is_absolute():
@@ -149,12 +164,47 @@ def _contained(root, raw, key, source, ledger=True):
     return resolved
 
 
+def _positive_int(values, key, source, default):
+    raw = values.get(key, default)
+    try:
+        number = int(raw)
+    except (TypeError, ValueError):
+        raise CliError("config key %r must be an integer (got %r) in %s"
+                       % (key, raw, source or "built-in defaults"),
+                       code=EXIT_CONFIG, err_type="ConfigError")
+    if number < 1:
+        raise CliError("config key %r must be >= 1 (got %r) in %s"
+                       % (key, number, source or "built-in defaults"),
+                       code=EXIT_CONFIG, err_type="ConfigError")
+    return number
+
+
 class Config:
     def __init__(self, values, repo_root, source):
         self._values = values
         self.repo_root = Path(repo_root)
         self.source = source  # path of the config file, or None for defaults
-        self.data_root = main_worktree_root(self.repo_root)
+        self._data_root = None
+
+    @property
+    def data_root(self):
+        """Main working tree, resolved on FIRST USE and cached per instance.
+
+        Only ``feedback_dir`` and its children need this, so ``doctor``,
+        ``issues``, ``triage`` and every ``--dry-run`` used to pay a fork+exec
+        they never read — and the hook paid it on every tool call, before the two
+        cheap filters that discard most events (WI-4).
+
+        The per-instance cache is not an optimization, it is a correctness
+        requirement: ``feedback_dir`` is read many times per run, and an uncached
+        property would spawn ``git`` on each access — worse than the eager call it
+        replaced. There is deliberately NO module-level memo: it would buy nothing
+        once the property is lazy, and a cache keyed on a path outlives the
+        temporary checkout it describes (audit 093 Risk 3).
+        """
+        if self._data_root is None:
+            self._data_root = main_worktree_root(self.repo_root)
+        return self._data_root
 
     def __getitem__(self, key):
         return self._values[key]
@@ -182,7 +232,28 @@ class Config:
 
     @property
     def backlog_anchor(self):
-        return self._values["backlog_anchor"]
+        """The insertion marker. Validated, because an empty or padded value is
+        not a harmless typo: ``anchor_positions`` compares ``line.strip() ==
+        anchor``, so ``""`` matches EVERY blank line in the ledger and the
+        exactly-one-match guard then reports "found 47 times" — or, in a ledger
+        with a single blank line, silently inserts there (V-13)."""
+        value = self._values["backlog_anchor"]
+        if not isinstance(value, str) or not value.strip():
+            raise CliError(
+                "config key 'backlog_anchor' must be a non-empty string (got "
+                "%r) in %s" % (value, self.source or "built-in defaults"),
+                code=EXIT_CONFIG, err_type="ConfigError",
+                remediation="use the default "
+                            "'<!-- feedback:discovered-issues -->'")
+        if value != value.strip() or "\n" in value or "\r" in value:
+            raise CliError(
+                "config key 'backlog_anchor' must be a single line with no "
+                "leading/trailing whitespace (got %r) in %s"
+                % (value, self.source or "built-in defaults"),
+                code=EXIT_CONFIG, err_type="ConfigError",
+                remediation="the anchor is compared against a stripped ledger "
+                            "line, so padding could never match")
+        return value
 
     @property
     def backlog_dir(self):
@@ -210,11 +281,39 @@ class Config:
 
     @property
     def id_prefixes(self):
-        return dict(self._values.get("id_prefixes") or {})
+        """component -> ID prefix. Values reach a record id AND a filename stem,
+        so an unvalidated one produced ids like ``../x-1`` or ``a b-1`` that no
+        `next_number` pattern could ever match again (V-13)."""
+        raw = self._values.get("id_prefixes") or {}
+        if not isinstance(raw, dict):
+            raise CliError(
+                "config key 'id_prefixes' must be an object (got %r) in %s"
+                % (type(raw).__name__, self.source or "built-in defaults"),
+                code=EXIT_CONFIG, err_type="ConfigError")
+        for component, prefix in raw.items():
+            if not isinstance(prefix, str) or not _PREFIX_RE.match(prefix):
+                raise CliError(
+                    "id_prefixes[%r] = %r is not a usable ID prefix in %s"
+                    % (component, prefix,
+                       self.source or "built-in defaults"),
+                    code=EXIT_CONFIG, err_type="ConfigError",
+                    remediation="a prefix starts with a letter and contains "
+                                "only letters, digits, '_' and '-' (max 32) — "
+                                "it becomes part of an id and a filename")
+        return dict(raw)
 
     @property
     def excerpt_max_chars(self):
-        return int(self._values.get("excerpt_max_chars", 2000))
+        return _positive_int(self._values, "excerpt_max_chars", self.source,
+                             2000)
+
+    @property
+    def body_max_chars(self):
+        """Ceiling for an operator-supplied record body (WI-2). Generous on
+        purpose: no honest triage summary approaches it, so hitting it means a log
+        got pasted where a summary belongs. Over-cap bodies are REFUSED, never
+        truncated — see ``feedback_lib/body.py`` for why nothing is rewritten."""
+        return _positive_int(self._values, "body_max_chars", self.source, 64000)
 
     # --- machine state (always on the main working tree) ------------------
     @property

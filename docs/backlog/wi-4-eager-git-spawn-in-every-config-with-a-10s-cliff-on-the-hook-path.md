@@ -1,7 +1,7 @@
 ---
 id: WI-4
 type: work-item
-status: open
+status: done
 opened_at: 2026-07-30
 slug: wi-4-eager-git-spawn-in-every-config-with-a-10s-cliff-on-the-hook-path
 effort: S
@@ -10,9 +10,30 @@ source: 'vdd-multi task-091'
 component: run-feedback
 fingerprint: bfe2dc4364e03f1f
 finding_ref: fnd-20260730-105029-bfe2dc43
+resolved_at: 2026-07-30
+resolved_by: TASK 093
 ---
 
 # WI-4 — Eager git spawn in every Config, with a 10s cliff on the hook path
+
+> **✅ DONE 2026-07-30 (TASK 093).** Option 1, minus the module-level memo.
+> `Config.data_root` is now a lazy property with a **per-instance** cache, and
+> `main_worktree_root`'s timeout dropped 10s → **2s**. `doctor`, `issues`, `triage` and every
+> `--dry-run` now spawn **zero** `git`; the hook moved `load_config` **below** the `tool_name` and
+> `should_capture` filters, so a discarded event costs no config read and no fork.
+>
+> Two decisions worth recording. **The per-instance cache is not an optimization but a correctness
+> requirement**: `feedback_dir` is read many times per run, so an *uncached* lazy property would
+> spawn `git` on every access — worse than the eager call it replaced. And the **module-level memo
+> was dropped** (audit 093 Risk 3): once the property is lazy it buys nothing, while a cache keyed
+> on a path outlives the temporary checkout it describes.
+>
+> The debug dump deliberately stays **above** the filters and pays for its own lazy load — it exists
+> to diagnose *why* the filters discarded something, so moving it below them would have destroyed
+> its only purpose. Pinned by `TestNoEagerGitSpawn` (a `subprocess.run` counter proving one spawn
+> for five `feedback_dir` accesses, and zero for a plain config build) and
+> `TestHookLoadsConfigOnlyWhenCapturing` (a non-Bash payload loads no config; debug mode still
+> dumps it).
 
 > Origin: vdd-multi review of TASK 091/092 (2026-07-30), `critic-performance` M-01 + I-06.
 

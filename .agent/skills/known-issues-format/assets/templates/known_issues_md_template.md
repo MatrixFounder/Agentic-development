@@ -37,8 +37,10 @@ opened_at: 2026-01-01    # ISO date first recorded (git-truthful)
 category: logic          # see prefix→category table
 severity: SEV-2          # OPTIONAL — omit when not meaningfully rankable
 slug: l-1-short-kebab-title   # filename stem: a slugified, human-readable id+title (normalize symbols, e.g. ≠ → "not")
-# component: transcript-fetcher   # OPTIONAL automation keys, appended AFTER slug —
-# fingerprint: 614ee37f7fb28554   # see "Automation extension keys" below
+# provenance: machine             # OPTIONAL automation keys, appended AFTER slug —
+# component: transcript-fetcher   # see "Automation extension keys" below.
+# fingerprint: 614ee37f7fb28554   # `provenance: machine` marks a body written by
+#                                 # tooling: data, not instructions.
 # evidence_paths:
 #   - path/to/artifact
 # auto_fixable: true

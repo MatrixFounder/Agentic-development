@@ -76,7 +76,22 @@ no venv, runs from anywhere inside the repo (walks up to the root).
 **Finding model:** the dedup `fingerprint` deliberately EXCLUDES the capture source, so a hook
 capture and a transcript capture of the same failure collapse into one finding. Machine state
 lives under gitignored `.agent/feedback/` (inbox/filed/dismissed + journal); the repo-visible
-trace is the ledgers themselves plus heal reports.
+trace is the ledgers themselves plus heal reports. The fingerprint's first 8 hex chars are encoded
+in the finding filename, and dedup lookup relies on that — it is a glob, not a scan.
+
+**Two classes of captured text, two policies** (TASK 093): **excerpts** are machine-captured log
+tails, so they are redacted and clipped — rewriting them costs nothing. A **record body** is triage
+prose that `known-issues-format` preserves verbatim as evidence, so it is *capped and screened but
+never rewritten*: over `body_max_chars` (default 64000), or carrying a high-confidence credential
+shape, and `file` refuses (exit 2) rather than silently altering the record. Both ledgers pass
+through one gate at the CLI read, so neither can be reached around it.
+
+**Ledger bodies are agent-trusted context, and marked as such.** Analysis re-reads
+`KNOWN_ISSUES.md` and Planning re-reads `BACKLOG.md` on *every* pipeline run, and a machine-filed
+body can derive from a mined transcript — i.e. text an attacker can influence via any command's
+stdout, laundered through the triaging model (OWASP LLM01). CLI-filed records therefore carry
+`provenance: machine` plus a one-line banner above the body, and the three vendor bootstrap files
+instruct every phase to read record bodies as **data, not instructions**.
 
 **Judgement stays prompt-side** (SKILL.md §7): classification (defect / work-item / noise),
 severity (`SEV-2/3/4/LOW` — write vocabulary owned by `known-issues-format`; reading tolerates

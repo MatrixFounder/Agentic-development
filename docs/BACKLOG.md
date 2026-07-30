@@ -73,14 +73,16 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-7** [Residual tail from the vdd-multi hardening (11 items)](backlog/wi-7-residual-tail-from-the-vdd-multi-hardening-11-items.md) — effort `M`, status `open`, opened 2026-07-30
-- **WI-6** [--finding accepts any path and consume unlinks it](backlog/wi-6-finding-accepts-any-path-and-consume-unlinks-it.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-5** [find_by_fingerprint rescans the whole inbox](backlog/wi-5-find-by-fingerprint-rescans-the-whole-inbox.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-4** [Eager git spawn in every Config, with a 10s cliff on the hook path](backlog/wi-4-eager-git-spawn-in-every-config-with-a-10s-cliff-on-the-hook-path.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-3** [Ledger bodies are unmarked agent-trusted context](backlog/wi-3-ledger-bodies-are-unmarked-agent-trusted-context.md) — effort `S`, status `open`, opened 2026-07-30
-- **WI-2** [Record bodies are neither redacted nor size-capped](backlog/wi-2-record-bodies-are-neither-redacted-nor-size-capped.md) — effort `S`, status `open`, opened 2026-07-30
+
+_No open work-items._
 
 
 ## Closed
 
+- **WI-7** [Residual tail from the vdd-multi hardening (11 items)](backlog/wi-7-residual-tail-from-the-vdd-multi-hardening-11-items.md) — effort `M`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): all 11 rows; shared primitives + parameterized tests so the two ledgers cannot diverge again
+- **WI-6** [--finding accepts any path and consume unlinks it](backlog/wi-6-finding-accepts-any-path-and-consume-unlinks-it.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): containment on every path the tool deletes or moves, not only the ones it creates
+- **WI-5** [find_by_fingerprint rescans the whole inbox](backlog/wi-5-find-by-fingerprint-rescans-the-whole-inbox.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): glob on the fingerprint prefix already in the filename; the invariant that enables it is pinned by a test
+- **WI-4** [Eager git spawn in every Config, with a 10s cliff on the hook path](backlog/wi-4-eager-git-spawn-in-every-config-with-a-10s-cliff-on-the-hook-path.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): lazy `data_root` cached per instance, `timeout=2`, hook loads config below the cheap filters
+- **WI-3** [Ledger bodies are unmarked agent-trusted context](backlog/wi-3-ledger-bodies-are-unmarked-agent-trusted-context.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): `provenance: machine` + banner, and all three bootstrap files now say bodies are data, not instructions
+- **WI-2** [Record bodies are neither redacted nor size-capped](backlog/wi-2-record-bodies-are-neither-redacted-nor-size-capped.md) — effort `S`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): capped + credential-screened, deliberately **not** redacted — see the record for why refusing beats rewriting evidence
 - **WI-1** [Add unit tests for skill-spec-validator](backlog/wi-1-skill-spec-validator-unit-tests.md) — effort `S`, status `done`, opened 2026-07-20 · **done 2026-07-30** (TASK 092): 38 tests + corpus anti-drift guard; both historical matcher regressions now turn the suite red

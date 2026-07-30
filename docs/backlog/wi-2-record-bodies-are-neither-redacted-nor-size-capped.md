@@ -1,7 +1,7 @@
 ---
 id: WI-2
 type: work-item
-status: open
+status: done
 opened_at: 2026-07-30
 slug: wi-2-record-bodies-are-neither-redacted-nor-size-capped
 effort: S
@@ -10,9 +10,40 @@ source: 'vdd-multi task-091'
 component: run-feedback
 fingerprint: 3f52bd920ad4e705
 finding_ref: fnd-20260730-105028-3f52bd92
+resolved_at: 2026-07-30
+resolved_by: TASK 093
 ---
 
 # WI-2 — Record bodies are neither redacted nor size-capped
+
+> **✅ DONE 2026-07-30 (TASK 093) — with a documented DEVIATION from this WI's own
+> recommendation.** Bodies are now **capped and screened, but never rewritten**:
+> `feedback_lib/body.py::guard_body` runs at the single CLI read (`_read_body`), so **both**
+> ledgers pass through it and neither can be reached around it. Over `body_max_chars` (new config
+> key, default 64000) → refused. Carrying a high-confidence credential shape (`AKIA…`, `sk-…`,
+> `gh[pousr]_…`, `xox[baprs]-…`, `Bearer <token>`) → refused, naming the class and the 1-based line
+> but **never echoing the match** (the message is printed and journaled, so echoing it would leak
+> the secret through the check that caught it).
+>
+> **Option 1 (redact the body) was deliberately NOT implemented.** Two reasons, both load-bearing:
+> ① WI-3's premise — and `known-issues-format`'s contract — is that a record body is preserved
+> **verbatim**, because it is the evidence someone re-reads to decide what happened. Redaction is a
+> silent rewrite of evidence; refusal is not. ② `filters.redact`'s two loosest rules over-match
+> prose: `\b(token|secret|passw\w*|…)\s*[=:]\s*(\S+)` rewrites *"the bypass token: …"* in a
+> work-item about the spec-validator gate, and the email rule rewrites any address in any body. A
+> false refusal blocks real filing, so those two rules are **excluded** from the screen and only the
+> structurally distinctive prefixed shapes are used. For preventing secrets-in-git, refusal is
+> strictly **stronger** than masking: the operator must fix the body before anything is written.
+>
+> An already-masked shape (`sk-[REDACTED]`, `Bearer YOUR_TOKEN_HERE`) still files — a record
+> describing this screen contains exactly those, and a screen that refuses its own documentation is
+> one nobody keeps enabled (audit 093 Risk 7).
+>
+> **The doc no longer overclaims either way**: `SKILL.md` §5 now states the two policies separately
+> (excerpts rewritten; bodies capped, screened, never rewritten) and names the excluded rules, and
+> the same paragraph is in `System/Docs/QUALITY_FEEDBACK_LOOP.md`, `cli_reference.md` and
+> `finding_schema.md`. Pinned by 14 tests in `tests/test_wi_tail.py::TestBodyPolicy` +
+> `TestBodyPolicyReachesBothLedgers` (both classifications, through the CLI).
 
 > Origin: vdd-multi adversarial review of TASK 091/092 (2026-07-30), `critic-security` S-06.
 > **Behaviour change for the owner's review, not a landed fix.**

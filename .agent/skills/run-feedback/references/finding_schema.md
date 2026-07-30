@@ -51,4 +51,6 @@ Field rules:
 - `proposed.*` are capture-side hints ONLY — triage (the LLM) decides; enum
   `defect|work-item|noise|unknown`.
 - `error_envelope` is the verbatim producer envelope when captured, never re-synthesized.
-- All stored text (message, excerpts) is redacted (tokens/keys/emails) and length-capped.
+- All stored text (message, excerpts) is redacted (tokens/keys/emails) and length-capped. A record
+  BODY passed to `file --body-file` is treated differently — capped and screened, never rewritten
+  (SKILL.md §5): an excerpt is a disposable log tail, a body is the evidence someone re-reads.

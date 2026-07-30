@@ -38,9 +38,20 @@ file --finding <id|path> --as work-item --title T --body-file PATH|- [--effort S
 file --finding <id|path> --as noise --reason TEXT [--dry-run]
 ```
 
+`--body-file` policy (both ledgers, enforced once at the read): the body is **capped** at
+`body_max_chars` (config, default 64000) and **screened** for high-confidence credential shapes
+(`AKIA…`, `sk-…`, `gh[pousr]_…`, `xox…`, `Bearer <token>`, unless already masked). Either check
+**refuses** (exit 2, naming the class and line, never echoing the match) — the body is never
+truncated or redacted, because `known-issues-format` preserves it verbatim as evidence. Unlike
+`collect --excerpt-file`, which redacts and clips.
+
+`--finding` accepts an id, a filename, or a path — but a bare path must resolve inside
+`inbox_dir`/`filed_dir`/`dismissed_dir`: filing MOVES the record, so an arbitrary path would be
+deleted (exit 2 otherwise).
+
 Defect: allocates `<PREFIX>-<n>` (prefix from `--prefix`, else config `id_prefixes[component]`,
 else `_default`; tolerant of messy live IDs like `TF-X-7`/`XLSX-10B-DEFER`), writes
-`docs/issues/<slug>.md` (contract frontmatter; optional keys `component/fingerprint/
+`docs/issues/<slug>.md` (contract frontmatter; optional keys `provenance/component/fingerprint/
 evidence_paths/auto_fixable/finding_ref` AFTER `slug`) + the index line into the matching
 `## <category>` section (created alphabetically; preamble untouched), lockstep with rollback.
 Index seeded from the known-issues-format template when absent. Both writing paths run under
@@ -49,8 +60,8 @@ Index seeded from the known-issues-format template when absent. Both writing pat
 Work-item (`backlog_layout: "index+files"`, the default): allocates `WI-<n>` (prefix from
 `--prefix`, else config `backlog_prefix`) as max+1 over `backlog_dir/*.md` frontmatter `id:`, writes
 `docs/backlog/<slug>.md` (contract frontmatter `id/type/status/opened_at/slug` + optional
-`effort/value/source`; extension keys `component/fingerprint/evidence_paths/finding_ref` AFTER
-`source` — **never** `auto_fixable`, `/heal-issues` is defect-only) + ONE pointer line
+`effort/value/source`; extension keys `provenance/component/fingerprint/evidence_paths/finding_ref`
+AFTER `source` — **never** `auto_fixable`, `/heal-issues` is defect-only) + ONE pointer line
 `- **WI-n** [title](backlog/<slug>.md) — effort \`E\`, status \`open\`, opened <date>` inserted
 directly after the configured `backlog_anchor` (newest first, because the backlog is human-ranked).
 Lockstep with rollback; the anchor is resolved BEFORE any write. `source` defaults to the capture's

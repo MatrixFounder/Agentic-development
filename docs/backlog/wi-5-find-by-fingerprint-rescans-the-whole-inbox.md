@@ -1,7 +1,7 @@
 ---
 id: WI-5
 type: work-item
-status: open
+status: done
 opened_at: 2026-07-30
 slug: wi-5-find-by-fingerprint-rescans-the-whole-inbox
 effort: S
@@ -10,9 +10,28 @@ source: 'vdd-multi task-091'
 component: run-feedback
 fingerprint: e783fb537a196b12
 finding_ref: fnd-20260730-105029-e783fb53
+resolved_at: 2026-07-30
+resolved_by: TASK 093
 ---
 
 # WI-5 — find_by_fingerprint rescans the whole inbox
+
+> **✅ DONE 2026-07-30 (TASK 093).** Option 1: `find_by_fingerprint` now globs
+> `fnd-*-<fp[:8]>.json` and verifies the **full** fingerprint on each candidate. A capture into an
+> inbox of 31 findings reads **one** file, asserted by a `Path.read_text` counter. `doctor` also
+> reports `inbox_depth`, so "it got slow" stops being a mystery.
+>
+> **The cost is recorded rather than discovered later**: dedup now depends on the filename encoding
+> the fingerprint prefix. `finding.save` is the only writer and derives the name from `finding_id`,
+> so the invariant holds in-tree — and is now **pinned by a test**, so if `save` ever stops deriving
+> the name, dedup does not go silently blind. A hand-renamed inbox file no longer dedups. A
+> full-scan fallback on a miss was **deliberately rejected**: a miss is the *common* case (every
+> genuinely new finding), so the fallback would have restored the O(k²) it removes while looking
+> like a safety net.
+>
+> Prefix collisions are handled correctly, not merely tolerated: a test plants two records sharing
+> `deadbeef` and asserts each resolves to its own record, and another asserts a filename whose
+> prefix lies is not a false match.
 
 > Origin: vdd-multi review of TASK 091/092 (2026-07-30), `critic-performance` M-02.
 

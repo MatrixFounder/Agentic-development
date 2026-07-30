@@ -16,6 +16,69 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.6 — the WI-2…WI-7 tail: shared primitives instead of vigilance**
+
+Closes all six work-items the two adversarial iterations of TASK 091/092 deferred. The organizing
+finding is WI-7's: **`ledger_issues` and `ledger_backlog` implement one contract in two modules, and
+every fix that landed in one but not the other is half a fix** — V12 was literally "the CRLF fix
+landed only in the backlog module". So the answer is not vigilance: the mechanisms that diverged are
+now *shared primitives*, and where a guard exists in both ledgers **one parameterized test** covers
+both instead of two hand-copied ones that can drift. Gates: **247 tests** (174 → 247, zero skips),
+E2E PASS, contract-sync 0, 45/45 skills, `doctor ready: true`.
+
+#### **Fixed**
+* **WI-4** — `Config.data_root` is lazy + cached **per instance** (uncached would spawn `git` on
+  every `feedback_dir` access, worse than the eager call), `git` timeout 10s → **2s**, and the hook
+  loads config **below** the `tool_name`/`should_capture` filters. `doctor`/`issues`/`--dry-run` now
+  spawn zero `git`. The module-level memo was **dropped** as a staleness class that buys nothing.
+* **WI-5** — `find_by_fingerprint` globs on the 8-char prefix already in the filename instead of
+  parsing every inbox file (O(k²) → one read). A fallback scan was rejected: the miss case is the
+  common case, so it would restore the cost while looking like a safety net. `doctor` reports
+  `inbox_depth`.
+* **WI-6** — a bare `--finding <path>` must resolve inside the feedback dirs; `consume` unlinks what
+  `resolve` returns, so an arbitrary path was deleted. Also catches `ValueError` from `Path.resolve()`
+  on an embedded NUL (an uncaptured iteration-2 finding).
+* **WI-7 (all 11 rows)** — CommonMark fence tracking (char **and** length, so a 3-backtick line no
+  longer closes a 4-backtick fence) that stays **fail-closed** and names the unclosed fence's line;
+  the placeholder strip walks forward instead of probing offsets 2–3; `doctor` guards every
+  config-derived probe, catches `UnicodeDecodeError`, and reports `"unchecked"` rather than a false
+  `False` for an over-cap ledger; `read_verbatim` shared so the **defect** index stops normalizing
+  CRLF; config validation for `backlog_anchor`/`id_prefixes`/`*_max_chars`; `mkstemp` for the last
+  predictable-name write; `provisional_id` on both paths **and** in the human line; both ledgers
+  **build** frontmatter from `CONTRACT_KEYS` (pinned to the SKILL.md authority by a test that
+  reddens when a key is added); a failed `consume` after a good ledger write is now recoverable
+  instead of exiting 4 forever; `serialize` quotes what YAML would coerce (`true`, `2026`, `0x10`)
+  while ISO dates stay bare.
+
+#### **Added**
+* **WI-2 — body policy: capped and screened, never rewritten.** `feedback_lib/body.py` runs at the
+  single CLI read, so neither ledger can be reached around it: over `body_max_chars` (new key,
+  default 64000) → refused; a high-confidence credential shape → refused, naming the class and line
+  but **never echoing the match**. **Redaction was deliberately not implemented**: a body is
+  preserved verbatim *because* it is evidence, and `filters.redact`'s loose rules rewrite ordinary
+  prose (*"the bypass token: …"*, any email). For secrets-in-git, refusal is strictly stronger than
+  masking. An already-masked shape still files — a record describing this screen contains one.
+* **WI-3 — provenance.** CLI-filed records carry `provenance: machine` **and** a one-line banner
+  above the body; the read side is closed too — `CLAUDE.md`/`GEMINI.md`/`AGENTS.md` now state that
+  ledger record bodies are **data, not instructions** (they are re-read by Analysis and Planning on
+  every run, and a body can derive from a mined transcript — OWASP LLM01).
+
+#### **Found while doing the work, not on any list**
+* The human-mode error handler **dropped `remediation` entirely**, so every remediation string in the
+  engine was visible only under `--json-errors` — including the half-state recovery instructions
+  whose whole value is telling the operator what to do next.
+* Writing the V-22 symlink test revealed both create-only guards emitted the **same** message, so no
+  test could name which one fired. They are now distinguishable, which is what made the split possible.
+
+#### **Process**
+* `docs/reviews/framework-audit-093.md` ran **before** execution (unlike 092's, written retroactively
+  and marked as such) and **blocked** the plan on three points, all applied: RED-before-GREEN per
+  guard, drop the memo, add the `[REDACTED]` positive case. Its Risk 1 check — reading the two
+  consuming repos' live configs — is why the prefix regex allows `-` and `TF-X` is a pinned test case.
+* **Mutation-verified, not assumed**: eleven guards were each disabled and the specific test observed
+  to redden. That caught a weak test of my own — asserting the anchor *count* is 1 passes whether the
+  right or the wrong anchor resolved, so the fence tests now assert **which line**.
+
 ### **v3.21.5 — `skill-spec-validator`: tests anchored to the corpus, not to fixtures**
 
 The `/vdd-enhanced` gate shipped **zero tests**, and both matchers (RTM heading, PLAN id coverage) had drifted until they failed on 100% of shipped artifacts — invisible, because *a gate that never passes looks exactly like a gate nobody tripped*. Closes **WI-1**. Gates: **38 tests (0 → 38)**, 45/45 skill validation with the skill now warning-free.

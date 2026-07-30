@@ -1,7 +1,7 @@
 ---
 id: WI-6
 type: work-item
-status: open
+status: done
 opened_at: 2026-07-30
 slug: wi-6-finding-accepts-any-path-and-consume-unlinks-it
 effort: S
@@ -10,9 +10,26 @@ source: 'vdd-multi task-091'
 component: run-feedback
 fingerprint: fa9fecf1f5b98f74
 finding_ref: fnd-20260730-105029-fa9fecf1
+resolved_at: 2026-07-30
+resolved_by: TASK 093
 ---
 
 # WI-6 — --finding accepts any path and consume unlinks it
+
+> **✅ DONE 2026-07-30 (TASK 093).** Option 1: `inbox.resolve` accepts a bare path only when it
+> resolves inside `inbox_dir`/`filed_dir`/`dismissed_dir`; anything else is exit 2 that **deletes
+> nothing**. Id and filename resolution are untouched, and the E2E plus every existing test uses
+> ids, so nothing in-tree relied on the old behaviour.
+>
+> Two details beyond the WI. `Path.resolve()` raises **`ValueError`**, not `OSError`, on an embedded
+> NUL byte — that was an uncaptured iteration-2 finding (V-12 security) and is now caught, so
+> `--finding $'fnd-\x00-nope'` is a clean CLI error instead of a traceback. And the error explains
+> the *reason* rather than just refusing: filing **moves** the record, so an out-of-tree path would
+> be unlinked — copy it into the inbox first.
+>
+> The generalized rule from this WI is now in `SKILL.md` §5 and `cli_reference.md`: a tool that
+> documents "writes only inside X" must enforce containment on every path it **deletes or moves**,
+> not only on the ones it creates.
 
 > Origin: vdd-multi review of TASK 091/092 (2026-07-30), `critic-security` S-08. Pre-existing path,
 > outside the TASK 091 diff. **Behaviour change for the owner's review.**

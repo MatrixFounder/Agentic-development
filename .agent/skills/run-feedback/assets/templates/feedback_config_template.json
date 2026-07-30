@@ -11,5 +11,6 @@
     "_default": "RF"
   },
   "excerpt_max_chars": 2000,
+  "body_max_chars": 64000,
   "feedback_dir": ".agent/feedback"
 }

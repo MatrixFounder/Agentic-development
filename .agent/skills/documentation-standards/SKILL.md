@@ -2,7 +2,7 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.5
+version: 1.6
 ---
 # Documentation Standards
 
@@ -69,12 +69,65 @@ edge case.
 **Prefer nominal over positional** wherever the target has a name. A reference to a symbol survives
 an inserted line; a reference to line 112 does not.
 
+**Pinning a deliberate quotation.** Suffix the reference with `@<rev>` — as in
+`` `src/app.py:42@v3.21.10` `` — or name the revision in the same line of prose
+("verified at v3.19.1", "as of 4f2a91c"). A pinned
+reference is a claim about *that* revision and is exempt from re-checking. An unpinned one claims
+the current state, which is what makes the check decidable at all.
+
 Concrete verification differs per ecosystem and does not belong in the rule:
 
 | Context | How to check |
 | :--- | :--- |
-| Any VCS-tracked repo | Verify against the **working tree**, not the last commit; when quoting a prior state, name the revision |
-| Scriptable toolchain | Resolve every `path:line` from the document and print the target line back for the author to compare |
+| Any VCS-tracked repo | Verify against the **working tree**, not the last commit |
+| Quoting a prior state | Pin with `@<rev>`, or name the revision in the same line |
+| Scriptable toolchain | Resolve every `path:line` and print the target line back for comparison |
+| This framework | Run `scripts/check_positional_refs.py` — see §4.2 |
+
+### 4.2. Reference resolver (advisory)
+
+`scripts/check_positional_refs.py` implements the scriptable row above. It is **advisory and
+diff-scoped**, not a gate, for a reason worth keeping: a survey of this repository's archived
+reviews found 54 of 84 resolvable references pointing into files edited after the citing document
+was written — and nearly all of them are correct records of the state at the time. A gate scoped
+that widely would fail on correct documents, which is how gates get switched off.
+
+```bash
+python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py   # current change
+python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --base main
+```
+
+| Finding | Severity | Meaning |
+| :--- | :--- | :--- |
+| `UNRESOLVABLE` | error | No file matches the path — objectively broken |
+| `AMBIGUOUS` | error | A shorthand matching several files; write a repo-relative path |
+| `OUT_OF_RANGE` | error | The line number is past end-of-file, zero, or a descending range |
+| `ORDINAL_MISSING` | error | The target document declares no such `§` section |
+| `DRIFT_SUSPECT` | warning | The target is edited by this same change; the §4.1 case |
+| `ESCAPES_ROOT` | warning | Points outside the repository: refused a read, not verifiable |
+
+Only `DRIFT_SUSPECT` needs judgement: the tool prints the target line back, and the reviewer
+confirms it still says what the document claims. Pinned references are skipped entirely.
+
+**Section ordinals** are positional too, and the tool checks the slice it can check honestly:
+an ordinal whose target is named *next to it* — a skill name, a repo path, or a markdown link
+(`` `developer-guidelines` §1.5 ``). Both numbered headings and numbered list items count as
+declarations, because references such as `01_orchestrator.md` §1.3 address a list item.
+Ranges (`§1–§3`) expand; external specs (CommonMark, OWASP) and other repositories are excluded.
+
+> [!NOTE]
+> **Known limits, stated because a green run must not overclaim.**
+> 1. Only *changed* documents are scanned. A change that edits only source, shifting lines
+>    under an untouched older document, is out of scope — the archived-document case above,
+>    where a warning would be noise rather than signal.
+> 2. A **bare** ordinal (`see §4.2`, `TASK §4`) is never checked. Its antecedent lives in
+>    prose, and guessing one manufactures false failures. In this repository that is roughly
+>    three quarters of all ordinals, so the tool prints that caveat in its own output.
+> 3. A target that numbers no headings at all makes its inbound ordinals *unverifiable*,
+>    not wrong; they are skipped.
+>
+> **Prefer the nominal form** where a document offers one: `[Section 5](#5-claudemd-specification)`
+> survives renumbering because the anchor, not the number, carries the meaning.
 
 ## 5. Markdown Structure (CRITICAL)
 
@@ -158,6 +211,35 @@ Policy: keep `.AGENTS.md` for source-code directories under memory tracking. Mis
 | "The table is the natural place for this detail" | A table answers *which* and *how much*. It cannot answer *why* — that is a paragraph. Mixing them costs both. |
 | "Reformatting the doc is cosmetic churn" | Structure is what makes a document auditable months later. An unreadable artifact is an absent one. |
 
-## 7. Resources
+## 7. Execution Policy
+
+### 7.1. Execution Mode
+- **Mode**: `hybrid`
+- **Rationale**: the documentation standards themselves are prompt-driven judgement, while
+  positional-reference resolution (§4.2) is mechanical and therefore script-driven.
+
+### 7.2. Script Contract
+- **Primary Command**: `python3 scripts/check_positional_refs.py [--root DIR] [--base REV]`
+- **Inputs**: repository root, revision defining the current change, optional `--all [DIR ...]`.
+- **Outputs**: human-readable findings, or a JSON array with `--json`.
+- **Failure Semantics**: `0` no errors, `1` errors present (or any finding under `--strict`),
+  `2` usage or environment problem such as a non-repository root.
+
+### 7.3. Safety Boundaries
+- **Scope**: read-only. The tool opens files and runs read-only `git` queries; it never writes,
+  edits, or deletes anything in the repository.
+- **Default Exclusions**: documents outside the current change are not scanned unless `--all`
+  is passed explicitly.
+- **Destructive Actions**: none. There is no fix or rewrite mode, deliberately — deciding whether
+  a reference is stale or a legitimate quotation is the reviewer's judgement, not the tool's.
+
+### 7.4. Validation Evidence
+- **Primary Evidence**: `tests/test_positional_refs.py` — 60 tests over throwaway git repositories
+  covering extraction, shorthand ambiguity, each finding class, pin exemption, ordinal parsing
+  and denylisting, path containment, and every exit code. Gated in `framework-gates.yml`.
+- **Secondary Evidence**: a diff-scoped run on the change under review, quoted in the review notes.
+- **Quality Gate**: no `error`-severity findings; every `DRIFT_SUSPECT` explicitly confirmed.
+
+## 8. Resources
 - `assets/templates/`: Collections of templates.
 - `examples/good_documentation.py`: Gold standard example.

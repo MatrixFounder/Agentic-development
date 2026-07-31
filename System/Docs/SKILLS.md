@@ -64,7 +64,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-single-task`, `vdd-enhanced` | Planner, Developer |
 | **`tdd-strict`** | **[High Assurance]** Strict TDD with mechanical verification (Fail Reason, Minimalism). Tier 3. | `full-robust` | Developer (Strict Mode) |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol. | `03-develop-single-task`, `base-stub-first` | Developer |
-| **`documentation-standards`** | Standards for docstrings (Google/JSDoc) and "The Why" comments. | All Development Workflows | Developer, Code Reviewer |
+| **`documentation-standards`** | Standards for docstrings (Google/JSDoc), "The Why" comments, Markdown structure, and positional-reference discipline (§4.1/§4.2). Advisory, diff-scoped resolver `scripts/check_positional_refs.py` resolves `path:line` and adjacent-target `§` ordinals against the working tree. | All Development Workflows | Developer, Code Reviewer |
 | **`testing-best-practices`** | Best practices: E2E/Unit hierarchy, no LLM mocking, realism. | `03-develop-single-task`, `vdd-03-develop` | Developer, Code Reviewer |
 
 ### Product Management

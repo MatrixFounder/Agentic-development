@@ -97,4 +97,5 @@ Describe the usage of files in `assets/`, `references/`, and scripts in `scripts
 - `references/guidelines.md`: [Description]
 
 ## 12. Evals (Optional but Recommended)
-Define 2-3 test prompts in `evals/evals.json` — see skill-creator §14 for format.
+Define 2-3 test prompts in `evals/evals.json` — see `skill-creator`'s
+`references/eval_schemas.md` for the full schema.

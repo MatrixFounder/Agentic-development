@@ -2,7 +2,7 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.4
+version: 1.5
 ---
 # Documentation Standards
 
@@ -39,12 +39,42 @@ Use JSDoc standards.
 - **Why vs What**: Explain the *reason* for logic, not the syntax.
 - **Work Tracking**: Use `# T O D O:` (Python) or `// T O D O:` (JS/TS) for future work.
 
-## 4. Path Standards (CRITICAL)
+## 4. Path & Reference Standards (CRITICAL)
 - **Relative Paths Only**: When linking to internal files in Artifacts (PLAN.md, TASK.md), ALWAYS use relative paths.
     - ✅ `[Ref](src/main.py)`
     - ✅ `[.agent/skills/core.md](.agent/skills/core.md)`
     - ❌ `file:///Users/username/project/src/main.py`
     - ❌ `/Absolute/System/Path`
+
+### 4.1. Positional references are verified LAST
+
+A reference is **positional** when it points at *where* something sits rather than *what* it is
+called: a line number, a byte offset, an item number in a numbered list, a section ordinal. A
+reference is **nominal** when it names the thing: a symbol, a function, a heading, an anchor.
+
+> **RULE**: If one task changes both an artifact and a document that references that artifact
+> **positionally**, the positional references are checked **after the artifact edits are final** —
+> never before. A quotation of the pre-edit state MUST carry an explicit revision identifier
+> (commit, tag, version), otherwise it reads as a claim about the current state.
+
+**Why this is a rule and not a tip.** The failure is silent and self-confirming: the author *did*
+verify the references — just before shifting them, so the check passed. The document then asserts
+"verified" while pointing at a line that has moved and quoting a sentence the same task deleted.
+Nothing fails; only a later reader or an adversarial review finds it.
+
+**Where it bites most**: decision records (ADR/RFC) that both settle a question and update the
+comments which referenced that question as open. That is the ordinary shape of such a task, not an
+edge case.
+
+**Prefer nominal over positional** wherever the target has a name. A reference to a symbol survives
+an inserted line; a reference to line 112 does not.
+
+Concrete verification differs per ecosystem and does not belong in the rule:
+
+| Context | How to check |
+| :--- | :--- |
+| Any VCS-tracked repo | Verify against the **working tree**, not the last commit; when quoting a prior state, name the revision |
+| Scriptable toolchain | Resolve every `path:line` from the document and print the target line back for the author to compare |
 
 ## 5. Markdown Structure (CRITICAL)
 

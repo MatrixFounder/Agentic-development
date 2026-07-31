@@ -2,7 +2,7 @@
 name: code-review-checklist
 description: "Structured checklist for code review: bugs, style, performance, security, docs."
 tier: 1
-version: 1.2
+version: 1.3
 ---
 # Code Review Checklist
 
@@ -35,6 +35,10 @@ version: 1.2
 - [ ] **Directory Docs:** `.AGENTS.md` updated for touched source directories under memory tracking policy (or bootstrap step recorded)?
 - [ ] **Docstrings:** Present for new classes/methods? (Google/JSDoc)
 - [ ] **Project Docs:** README updated if architecture changed?
+- [ ] **Positional references:** If this change touches BOTH an artifact and a document citing it by
+      line/offset/ordinal — were those references re-checked **against the final state** of the
+      change, and is any pre-edit quotation tagged with its revision? (`documentation-standards` §4.1)
+      **The reviewer owns this one**: the author's own check passes even when it ran too early.
 
 ## 4. Testing
 - [ ] **E2E:** Passed? Checks main scenario?

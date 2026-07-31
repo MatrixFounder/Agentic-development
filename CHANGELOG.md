@@ -16,6 +16,41 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.21.11 — positional references are verified last, or the check passes too early**
+
+A guidance-only patch, and deliberately not a gate. Filed from a live run
+(`onchain-intel` TASK-010): a task settled two open questions in ADRs **and** rewrote the
+source comments that had referenced those questions as open. The ADRs were written first,
+so they quoted a sentence the same task then deleted, and every line number after the
+insertion point was off by the size of the task's own diff — while the document's changelog
+asserted "all `file:line` references verified". Eight of the run's thirty confirmed review
+findings were this one cause. Gates: **179 tests** OK, unchanged.
+
+#### **Added — `documentation-standards` §4.1 (v1.4 → v1.5)**
+The rule names the distinction it turns on: a reference is **positional** when it points at
+*where* something sits (line number, byte offset, item number, section ordinal) and
+**nominal** when it names the thing (symbol, function, heading, anchor). Positional
+references break on an inserted line; nominal ones do not. So: when one task changes both
+an artifact and a document referencing it positionally, those references are checked
+**after the artifact edits are final**, and any quotation of the pre-edit state carries an
+explicit revision identifier — otherwise it reads as a claim about the present.
+
+Stated without a stack: per-ecosystem commands live in a two-row table beside the rule, not
+inside it. §4 is renamed *Path & Reference Standards* to hold it.
+
+#### **Added — `code-review-checklist` §3 (v1.2 → v1.3)**
+One checkbox, and it says whose job it is: **the reviewer owns this one**. That is the
+whole reason the rule needs a checklist entry and not only a guideline — the author's own
+verification *passes*, because it ran before they shifted the lines. A check that the
+author cannot fail is not a check; it has to be read by someone else.
+
+#### **Considered and rejected — a mandatory reference-resolving gate**
+Cheap to imagine, wrong to ship: a quotation of a prior state is legitimate and must remain
+possible, and a resolver cannot tell it from a stale reference. The gate would fail on
+correct documents, which is the failure mode that gets gates disabled.
+
+---
+
 ### **v3.21.10 — VAL-2: the trigger probe was measuring itself; and the evals catch up to the skill**
 
 Two halves. **VAL-2** — the instrument that measures whether a skill's description

@@ -85,18 +85,48 @@ class TestProductSkills(unittest.TestCase):
         processed = wsjf_script.calculate_wsjf(rows, indices)
         self.assertEqual(processed[0]['score'], 4.0)
 
+#: Pure-unittest modules in `tests/` that the curated suite pulls in by name. Blanket
+#: discovery is deliberately avoided: several `tests/test_*.py` files use pytest fixtures
+#: and would error under the unittest loader.
+#:
+#: This list is NOT the CI gate — `.github/workflows/framework-gates.yml` names its own,
+#: larger set. It exists so the modules most likely to be run locally before a commit are
+#: not invisible to this runner.
+CURATED_UNITTEST_MODULES = ("test_positional_refs", "test_scratch_hygiene")
+
+
 def load_tests(loader, standard_tests, pattern):
-    """Augment the curated suite with the installer test package (Task 063-11).
+    """Augment the curated suite with the installer package and named unittest modules.
 
     `tests/installer/` is a flat (non-package) directory of unittest modules;
     discovering it with its own `top_level_dir` lets the test modules import
     their sibling `_base` helper.
+
+    A missing curated module is a hard error, not a skip. Guarding the load with
+    `.is_file()` would turn the drift this list exists to prevent into a silent one: rename
+    the file and the runner quietly returns to its old count while still printing OK.
+
+    Raises:
+        FileNotFoundError: If a module named in :data:`CURATED_UNITTEST_MODULES` is gone.
     """
     installer_dir = PROJECT_ROOT / "tests" / "installer"
     if installer_dir.is_dir():
         standard_tests.addTests(
             loader.discover(start_dir=str(installer_dir),
                             top_level_dir=str(installer_dir))
+        )
+
+    tests_dir = PROJECT_ROOT / "tests"
+    for module_name in CURATED_UNITTEST_MODULES:
+        if not (tests_dir / f"{module_name}.py").is_file():
+            raise FileNotFoundError(
+                f"curated test module {module_name!r} is missing from {tests_dir}; "
+                "update CURATED_UNITTEST_MODULES in tests/run_tests.py"
+            )
+        standard_tests.addTests(
+            loader.discover(start_dir=str(tests_dir),
+                            pattern=f"{module_name}.py",
+                            top_level_dir=str(tests_dir))
         )
     return standard_tests
 

@@ -61,6 +61,58 @@ class TestExtractRefs(unittest.TestCase):
         refs = cpr.extract_refs("d.md", "as of 4f2a91c the line `src/app.py:42` held")
         self.assertEqual(refs[0].pin, "4f2a91c")
 
+    def test_prose_pin_works_in_a_non_english_document(self):
+        # The pin matches the revision token, not an English preposition: anchoring on
+        # "at / as of" made the documented escape hatch inert in every other language.
+        refs = cpr.extract_refs("d.md", "`src/types.ts:101-106` на `985f843`")
+        self.assertEqual(refs[0].pin, "985f843")
+
+    def test_bare_version_is_not_a_pin(self):
+        # Version strings are ordinary subject matter ("bump to v3.4"); pinning on them
+        # would silently exempt live references. Versions need a cue or the @rev suffix.
+        self.assertIsNone(cpr.extract_refs("d.md", "bump to v3.4 in `SKILLS.md:87`")[0].pin)
+        self.assertIsNone(cpr.extract_refs("d.md", "`a.py:1` по состоянию на v3.21.11")[0].pin)
+
+    def test_explicit_suffix_is_the_language_neutral_form_for_versions(self):
+        refs = cpr.extract_refs("d.md", "по состоянию на `a.py:1@v3.21.11`")
+        self.assertEqual(refs[0].pin, "v3.21.11")
+
+    def test_head_pin_works_in_any_language(self):
+        self.assertEqual(cpr.extract_refs("d.md", "`a.py:1` wie in HEAD~2")[0].pin, "HEAD~2")
+
+    def test_prose_pin_rejects_hex_legal_words(self):
+        # "deadbeef" is hex-legal but has no digit, so it is a word, not a revision.
+        refs = cpr.extract_refs("d.md", "`src/app.py:101` returns deadbeef")
+        self.assertIsNone(refs[0].pin)
+
+    def test_the_english_word_head_is_not_a_pin(self):
+        # Matching HEAD case-insensitively exempted every line containing "head" — a
+        # silent miss, and the worst outcome this tool can produce.
+        for line in ("the head of the list is `a.py:1`",
+                     "Head over to `a.py:1` for details",
+                     "the header in `a.py:1`"):
+            self.assertIsNone(cpr.extract_refs("d.md", line)[0].pin, line)
+
+    def test_uppercase_head_still_pins(self):
+        self.assertEqual(cpr.extract_refs("d.md", "`a.py:1` at HEAD")[0].pin, "HEAD")
+
+    def test_unmarked_hex_is_not_a_pin(self):
+        # CSS colours, build ids and digests are hex-shaped and are not revisions.
+        for line in ("`a.py:1` colour #deadb33f in the theme",
+                     "`a.py:1` id 1234567890abcdef",
+                     "`a.py:1` build cafe1234",
+                     "`a.py:1` see https://host/x/commit/985f843abc"):
+            self.assertIsNone(cpr.extract_refs("d.md", line)[0].pin, line)
+
+    def test_backticks_are_what_make_a_bare_hash_a_pin(self):
+        self.assertIsNone(cpr.extract_refs("d.md", "`a.py:1` rolled back to 985f843")[0].pin)
+        self.assertEqual(cpr.extract_refs("d.md", "`a.py:1` откат на `985f843`")[0].pin, "985f843")
+
+    def test_pin_survives_a_sentence_ending_period(self):
+        # A sentence that ends with the hash is ordinary writing; rejecting it made the
+        # documented mechanism fail in the most natural phrasing.
+        self.assertEqual(cpr.extract_refs("d.md", "`a.py:1` as of 985f843.")[0].pin, "985f843")
+
     def test_prose_pin_rejects_plain_quantity(self):
         # A quantity is not a commit hash; treating it as one silently skips the check.
         refs = cpr.extract_refs("d.md", "measured per 1000000 requests `src/app.py:42`")
@@ -78,6 +130,26 @@ class TestExtractRefs(unittest.TestCase):
     def test_explicit_pin_still_applies_among_several_refs(self):
         refs = cpr.extract_refs("d.md", "`a.py:1@v1.0` and `b.py:2`")
         self.assertEqual([r.pin for r in refs], ["v1.0", None])
+
+    def test_the_single_reference_guard_covers_ordinals_too(self):
+        # The guard existed for path:line references but not for ordinals, so one hash
+        # exempted every ordinal on the line.
+        line = "на `985f843` `demo` §1 и `demo` §2"
+        self.assertEqual([r.pin for r in cpr.extract_ordinal_refs("d.md", line)], [None, None])
+
+    def test_the_guard_counts_both_kinds_of_reference_together(self):
+        line = "на `985f843` `a.py:1` и `demo` §2"
+        self.assertIsNone(cpr.extract_refs("d.md", line)[0].pin)
+        self.assertIsNone(cpr.extract_ordinal_refs("d.md", line)[0].pin)
+
+    def test_a_lone_ordinal_still_accepts_a_prose_pin(self):
+        line = "на `985f843` `demo` §2"
+        self.assertEqual(cpr.extract_ordinal_refs("d.md", line)[0].pin, "985f843")
+
+    def test_descending_range_keeps_both_endpoints(self):
+        # range(6, 4) is empty, so "§5-§3" used to collapse to a single ordinal.
+        got = [r.ordinal for r in cpr.extract_ordinal_refs("d.md", "`demo` §5-§3")]
+        self.assertEqual(got, ["5", "3"])
 
     def test_refs_are_returned_in_column_order(self):
         refs = cpr.extract_refs("d.md", "[x](z.py#L9) then `a.py:1`")
@@ -228,7 +300,10 @@ class TestExitCodes(unittest.TestCase):
         self._tmp.cleanup()
 
     def _run(self, *extra):
-        return cpr.main(["--root", str(self.root), *extra])
+        # Swallow the CLI's own stdout: unittest does not capture it, and the report
+        # would otherwise interleave with the local runner's progress output.
+        with contextlib.redirect_stdout(io.StringIO()):
+            return cpr.main(["--root", str(self.root), *extra])
 
     def test_clean_change_exits_zero(self):
         (self.root / "note.md").write_text("nominal ref to `src/app.py` only\n")
@@ -269,11 +344,21 @@ class TestExitCodes(unittest.TestCase):
         (self.root / "note.md").write_text("`src/app.py:2`\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            self._run("--json")
+            cpr.main(["--root", str(self.root), "--json"])
         payload = json.loads(buf.getvalue())
         self.assertEqual(payload["doc_count"], 1)
         self.assertEqual(payload["ref_count"], 1)
         self.assertEqual(payload["findings"][0]["kind"], "DRIFT_SUSPECT")
+
+    def test_summary_counts_ordinals_as_references(self):
+        # An ordinal finding used to be reported "across 0 reference(s)".
+        (self.root / ".agent/skills/demo").mkdir(parents=True)
+        (self.root / ".agent/skills/demo/SKILL.md").write_text("# D\n## 1. One\n")
+        (self.root / "note.md").write_text("`demo` §9\n")
+        report = cpr.run(self.root, "HEAD", None)
+        self.assertEqual((report.ref_count, report.ordinal_count), (0, 1))
+        self.assertEqual(report.total_refs, 1)
+        self.assertIn("0 path:line + 1 ordinal", cpr.format_text(report))
 
 
 class TestScopeHonesty(unittest.TestCase):
@@ -410,21 +495,111 @@ class TestOrdinalClassification(unittest.TestCase):
         return [cpr.classify_ordinal(r, self.root, *self.caches) for r in refs]
 
     def test_existing_ordinal_passes(self):
-        self.assertEqual(self._check("`demo` §2.1"), [None])
+        self.assertEqual(self._check("`demo` §2.1"), [(None, "checked")])
 
     def test_missing_ordinal_is_an_error(self):
-        [finding] = self._check("`demo` §9")
+        [(finding, outcome)] = self._check("`demo` §9")
         self.assertEqual(finding.kind, "ORDINAL_MISSING")
         self.assertEqual(finding.severity, "error")
+        self.assertEqual(outcome, "checked")
 
     def test_target_numbering_nothing_is_unverifiable_not_wrong(self):
-        self.assertEqual(self._check("`unnumbered` §3"), [None])
+        # An ADR heading like "## D1 — Decision" declares no ordinal; §3 into it is
+        # unverifiable, and the report must say so rather than imply a pass.
+        self.assertEqual(self._check("`unnumbered` §3"), [(None, "unnumbered-target")])
 
     def test_unknown_antecedent_is_skipped(self):
-        self.assertEqual(self._check("`no-such-skill` §1"), [None])
+        self.assertEqual(self._check("`no-such-skill` §1"), [(None, "unknown-target")])
 
     def test_pinned_ordinal_is_skipped(self):
-        self.assertEqual(self._check("at v1.0 `demo` §9"), [None])
+        self.assertEqual(self._check("at v1.0 `demo` §9"), [(None, "pinned")])
+
+    def test_markdown_link_target_is_actually_checked(self):
+        # All three antecedent forms must reach classification, not just skill names.
+        (self.root / "docs").mkdir()
+        (self.root / "docs/adr.md").write_text("# A\n## 1. One\n")
+        [(finding, outcome)] = self._check("[ADR](docs/adr.md) §9")
+        self.assertEqual(outcome, "checked")
+        self.assertEqual(finding.kind, "ORDINAL_MISSING")
+
+    def test_backticked_path_target_is_actually_checked(self):
+        (self.root / "docs").mkdir()
+        (self.root / "docs/adr.md").write_text("# A\n## 1. One\n")
+        [(finding, outcome)] = self._check("`docs/adr.md` §9")
+        self.assertEqual(outcome, "checked")
+        self.assertEqual(finding.kind, "ORDINAL_MISSING")
+
+
+class TestOrdinalScopeReporting(unittest.TestCase):
+    """The report must distinguish what it checked, what failed, and what it never saw."""
+
+    def test_scope_line_names_each_skip_reason(self):
+        note = cpr.describe_ordinal_scope(
+            {"checked": 3, "unknown-target": 2, "unnumbered-target": 1, "pinned": 1}, 0, 5
+        )
+        self.assertIn("3 checked (3 passed, 0 failed)", note)
+        self.assertIn("2 skipped (target is not a document in this repository)", note)
+        self.assertIn("1 skipped (target declares no numbered sections)", note)
+        self.assertIn("1 skipped (pinned to a revision)", note)
+        self.assertIn("5 NOT examined", note)
+
+    def test_failed_ordinals_are_not_reported_as_passed(self):
+        # "3 verified" while one of them is an error is the overclaim this line exists
+        # to prevent.
+        note = cpr.describe_ordinal_scope({"checked": 3}, 1, 0)
+        self.assertIn("3 checked (2 passed, 1 failed)", note)
+
+    def test_scope_line_omits_absent_reasons(self):
+        note = cpr.describe_ordinal_scope({"checked": 2}, 0, 0)
+        self.assertIn("2 checked", note)
+        self.assertNotIn("skipped", note)
+        self.assertNotIn("NOT examined", note)
+
+    def test_unknown_outcome_names_are_not_dropped(self):
+        # A new outcome must widen the tally, not silently shrink it.
+        note = cpr.describe_ordinal_scope({"checked": 1, "brand-new-outcome": 4}, 0, 0)
+        self.assertIn("4 brand-new-outcome", note)
+
+
+class TestScopeHonestyInOutput(unittest.TestCase):
+    """The headline must not claim verification it did not perform."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        _git(self.root, "init", "-q")
+        _git(self.root, "config", "user.email", "t@example.com")
+        _git(self.root, "config", "user.name", "Test")
+        (self.root / "src").mkdir()
+        (self.root / "src/app.py").write_text("a\nb\nc\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-q", "-m", "init")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_pinned_references_are_excluded_from_the_resolve_claim(self):
+        (self.root / "d.md").write_text("`src/app.py:99@v1.0`\n")
+        report = cpr.run(self.root, "HEAD", None)
+        self.assertEqual((report.total_refs, report.pinned_count), (1, 1))
+        self.assertEqual(report.examined_refs, 0)
+        text = cpr.format_text(report)
+        self.assertIn("0 of 1", text)
+        self.assertIn("1 pinned, not checked", text)
+
+    def test_a_document_of_only_bare_ordinals_still_reports_its_scope(self):
+        # Reporting a clean OK with no mention of the ordinals it ignored is the exact
+        # overclaim the scope note exists to prevent.
+        (self.root / "d.md").write_text("see §4.2 and TASK §4 for the rule\n")
+        report = cpr.run(self.root, "HEAD", None)
+        self.assertEqual(report.ordinal_count, 0)
+        self.assertEqual(report.ordinal_out_of_scope, 2)
+        self.assertIn("2 NOT examined", cpr.format_text(report))
+
+    def test_external_specification_ordinals_count_as_not_examined(self):
+        (self.root / "d.md").write_text("CommonMark §4.5 defines this\n")
+        report = cpr.run(self.root, "HEAD", None)
+        self.assertEqual(report.ordinal_out_of_scope, 1)
 
 
 class TestSafeJoin(unittest.TestCase):

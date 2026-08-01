@@ -54,13 +54,42 @@ MD_LINK_REF = re.compile(
     r"#L(?P<line>\d+)(?:-L?(?P<end>\d+))?\)"
 )
 
-#: A prose revision pin on the same line, e.g. "verified at v3.19.1", "as of 4f2a91c".
-#: The hex alternative excludes all-digit runs so that quantities and dates ("per 1000000
-#: requests", "at 20260731") are not mistaken for commit hashes — that would silently
-#: exempt a live reference from checking, which is the very failure §4.1 exists to stop.
+#: A prose revision pin on the same line, e.g. "verified at v3.19.1", "на `985f843`".
+#:
+#: The pattern matches the revision TOKEN, not an English preposition. Anchoring on
+#: "at / as of / per" made the documented escape hatch silently inert in every
+#: non-English document — the mechanism looked present and did nothing, which is exactly
+#: the failure mode §4.1 exists to stop. A revision-shaped token is language-independent.
+#:
+#: The hex alternative demands at least one digit AND at least one a-f letter. That
+#: excludes quantities and dates ("1000000", "20260731") on one side and ordinary words
+#: that happen to be hex-legal ("deadbeef", "defaced") on the other. Scope stays bounded
+#: because a prose pin only applies to a line carrying a single reference.
+#: A hash-shaped token: 7-40 hex digits carrying at least one digit AND one a-f letter.
+#: Both are required — an all-digit run is a quantity or a date, an all-letter run is a
+#: word that happens to be hex-legal ("deadbeef", "defaced").
+_SHA = (
+    r"(?<![0-9a-fA-F])(?=[0-9a-fA-F]*[0-9])(?=[0-9a-fA-F]*[a-fA-F])"
+    r"[0-9a-fA-F]{7,40}(?![0-9a-fA-F])"
+)
+
+#: An English lead-in that announces a revision.
+_CUE = r"\b(?:at|as of|per|against)\s+(?:commit\s+|tag\s+|revision\s+)?"
+
 PROSE_PIN = re.compile(
-    r"\b(?:at|as of|per|against)\s+(?:commit\s+|tag\s+|revision\s+)?"
-    r"(?P<rev>v\d[\w.\-]*|(?![0-9]+\b)[0-9a-f]{7,40}|HEAD(?:[~^]\d*)?)\b",
+    # 1. A BACKTICKED hash pins in any language. The backticks are what carry the meaning
+    #    across languages: they mark the token as an identifier rather than prose, which
+    #    no list of prepositions can do. This is the form real documents use — ``на
+    #    `985f843` `` — and it is why the rule no longer depends on English.
+    r"`(?P<quoted>" + _SHA + r")`"
+    # 2. HEAD pins in any language, matched CASE-SENSITIVELY. Lower-case "head" is an
+    #    ordinary English word ("the head of the list"), and honouring it would exempt
+    #    every line containing it — a silent miss, which is the worst outcome here.
+    r"|(?<!\w)(?P<head>(?-i:HEAD(?:[~^]\d*)*))(?!\w)"
+    # 3. A BARE hash or version pins only after an English cue. Unmarked hex is a CSS
+    #    colour, a build id or a digest far more often than a revision, and a bare version
+    #    is usually the subject of the sentence ("bump to v3.4").
+    r"|" + _CUE + r"(?P<cued>" + _SHA + r"|v\d[\w.\-]*)",
     re.IGNORECASE,
 )
 
@@ -102,6 +131,10 @@ LIST_ORDINAL = re.compile(r"^(?P<indent> {0,3})(?P<num>\d+)[.)]\s")
 
 #: Leading blockquote markers, stripped before headings and list items are recognised.
 BLOCKQUOTE_PREFIX = re.compile(r"^(?:\s*>)+ ?")
+
+#: ANY section ordinal, whether or not its target can be identified. Counting these is how
+#: the report can state what it did NOT examine instead of quietly omitting it.
+ANY_ORDINAL = re.compile(r"§\s?\d+(?:\.\d+)*")
 
 #: ``ESCAPES_ROOT`` is deliberately NOT here. A path above the root is refused a read — that
 #: is the security boundary — but it is *unverifiable*, not provably wrong: this corpus holds
@@ -151,6 +184,41 @@ class Finding:
     def severity(self) -> str:
         """Return ``"error"`` for objective defects, ``"warning"`` otherwise."""
         return "error" if self.kind in ERROR_KINDS else "warning"
+
+
+def prose_pin_for_line(line: str) -> str | None:
+    """Return the revision a line's prose pins, or ``None``.
+
+    Prose is line-granular: it cannot say *which* reference it qualifies. So a prose pin
+    applies only when the line carries exactly one reference — counting `path:line` and
+    `§` ordinals together, since a line mixing the two is just as ambiguous as a line
+    with two of either. Explicit ``@rev`` suffixes are per-reference and bypass this.
+
+    Args:
+        line: One line of a document.
+
+    Returns:
+        The revision identifier, or ``None`` when the line has no pin or too many
+        references for one to be unambiguous.
+    """
+    sites = sum(
+        1
+        for pattern in (CODE_SPAN_REF, MD_LINK_REF, SECTION_ORDINAL)
+        for _ in pattern.finditer(line)
+    )
+    if sites != 1:
+        return None
+    return _pin_of(PROSE_PIN.search(line))
+
+
+def _pin_of(match: re.Match | None) -> str | None:
+    """Return the revision a :data:`PROSE_PIN` match names, or ``None``.
+
+    The pattern has three alternatives, so the caller must not assume a single group.
+    """
+    if match is None:
+        return None
+    return match.group("quoted") or match.group("head") or match.group("cued")
 
 
 class GitError(RuntimeError):
@@ -306,9 +374,7 @@ def extract_refs(doc_rel: str, text: str) -> list[Ref]:
             m for pattern in (CODE_SPAN_REF, MD_LINK_REF) for m in pattern.finditer(line)
         ]
         matches.sort(key=lambda m: m.start())
-
-        prose = PROSE_PIN.search(line)
-        prose_rev = prose.group("rev") if prose and len(matches) == 1 else None
+        prose_rev = prose_pin_for_line(line)
 
         for m in matches:
             groups = m.groupdict()
@@ -384,13 +450,13 @@ def extract_ordinal_refs(doc_rel: str, text: str) -> list[Ref]:
     """
     refs: list[Ref] = []
     for doc_line, line in enumerate(text.splitlines(), start=1):
+        pin = prose_pin_for_line(line)
         for m in SECTION_ORDINAL.finditer(line):
             antecedent = m.group("link") or m.group("quoted") or m.group("bare")
             prefix = line[max(0, m.start() - 40) : m.end()]
             if EXTERNAL_ANTECEDENT.search(prefix):
                 continue
 
-            pin = PROSE_PIN.search(line)
             ordinals = [m.group("ord")]
 
             # Absorb "§1–§7" / "§3.1 + §3.3" continuations that inherit this target.
@@ -398,7 +464,14 @@ def extract_ordinal_refs(doc_rel: str, text: str) -> list[Ref]:
             while (cont := ORDINAL_CONTINUATION.match(line, pos)) is not None:
                 previous, current = ordinals[-1], cont.group("ord")
                 if cont.group("sep") in "–—-" and "." not in previous and "." not in current:
-                    ordinals.extend(str(n) for n in range(int(previous) + 1, int(current) + 1))
+                    if int(current) < int(previous):
+                        # A descending range ("§5–§3") asserts nothing coherent. Keep both
+                        # endpoints rather than silently dropping the tail.
+                        ordinals.append(current)
+                    else:
+                        ordinals.extend(
+                            str(n) for n in range(int(previous) + 1, int(current) + 1)
+                        )
                 else:
                     ordinals.append(current)
                 pos = cont.end()
@@ -409,11 +482,42 @@ def extract_ordinal_refs(doc_rel: str, text: str) -> list[Ref]:
                         doc=doc_rel,
                         doc_line=doc_line,
                         path=antecedent,
-                        pin=pin.group("rev") if pin else None,
+                        pin=pin,
                         ordinal=ordinal,
                     )
                 )
     return refs
+
+
+def count_out_of_scope_ordinals(text: str) -> int:
+    """Count `§` ordinals the tool never examines.
+
+    These are the bare ones (`see §4.2`, `TASK §4`) and the ones pointing at an external
+    specification. They are not failures — their target simply cannot be identified. They
+    ARE, however, the majority, so a report that omits them lets a green run be read as
+    covering every ordinal in the document.
+
+    Args:
+        text: Full document text.
+
+    Returns:
+        How many ordinal tokens fall outside the checked slice.
+    """
+    total = 0
+    for line in text.splitlines():
+        covered: list[tuple[int, int]] = []
+        for m in SECTION_ORDINAL.finditer(line):
+            if EXTERNAL_ANTECEDENT.search(line[max(0, m.start() - 40) : m.end()]):
+                continue
+            end = m.end()
+            while (cont := ORDINAL_CONTINUATION.match(line, end)) is not None:
+                end = cont.end()
+            covered.append((m.start(), end))
+
+        for token in ANY_ORDINAL.finditer(line):
+            if not any(start <= token.start() < end for start, end in covered):
+                total += 1
+    return total
 
 
 def resolve_ordinal_target(root: Path, antecedent: str) -> str | None:
@@ -441,7 +545,7 @@ def classify_ordinal(
     root: Path,
     line_cache: dict[str, list[str]],
     ordinal_cache: dict[str, set[str]],
-) -> Finding | None:
+) -> tuple[Finding | None, str]:
     """Check that an ordinal reference addresses a section its target declares.
 
     Args:
@@ -451,35 +555,37 @@ def classify_ordinal(
         ordinal_cache: Memoized ordinal sets, keyed by repo-relative path.
 
     Returns:
-        A :class:`Finding` when the ordinal does not exist, else ``None``.
+        ``(finding, outcome)``. The outcome names why an ordinal was or was not checked, so
+        the report can say which references it actually verified instead of implying all of
+        them. Outcomes: ``checked``, ``pinned``, ``unknown-target``, ``unnumbered-target``.
     """
     if ref.pin:
-        return None
+        return None, "pinned"
 
     target = resolve_ordinal_target(root, ref.path)
     if target is None:
-        return None  # Informal label, workflow basename, or a file in another repository.
+        # Informal label, workflow basename, or a file in another repository.
+        return None, "unknown-target"
 
     if target not in ordinal_cache:
         try:
             lines = (root / target).read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
-            return None
+            return None, "unknown-target"
         line_cache.setdefault(target, lines)
         ordinal_cache[target] = parse_ordinals(lines)
 
     declared = ordinal_cache[target]
     if not declared:
-        # The target numbers nothing; the reference is unverifiable, not wrong.
-        return None
+        # The target numbers nothing — headings like "## D1 — Decision" declare no
+        # ordinal. The reference is unverifiable here, not wrong.
+        return None, "unnumbered-target"
     if ref.ordinal in declared:
-        return None
+        return None, "checked"
 
-    return Finding(
-        ref,
-        "ORDINAL_MISSING",
-        f"{target} declares no §{ref.ordinal}",
-        target=target,
+    return (
+        Finding(ref, "ORDINAL_MISSING", f"{target} declares no §{ref.ordinal}", target=target),
+        "checked",
     )
 
 
@@ -602,8 +708,25 @@ class Report:
     findings: list[Finding] = field(default_factory=list)
     doc_count: int = 0
     ref_count: int = 0
+    pinned_count: int = 0
     ordinal_count: int = 0
+    ordinal_outcomes: dict[str, int] = field(default_factory=dict)
+    ordinal_out_of_scope: int = 0
     notes: list[str] = field(default_factory=list)
+
+    @property
+    def total_refs(self) -> int:
+        """Return every reference seen, positional and ordinal alike."""
+        return self.ref_count + self.ordinal_count
+
+    @property
+    def examined_refs(self) -> int:
+        """Return references actually checked — pinned ones were deliberately skipped.
+
+        Kept distinct from :attr:`total_refs` so the report never claims to have resolved
+        a reference it was told to leave alone.
+        """
+        return self.total_refs - self.pinned_count - self.ordinal_outcomes.get("pinned", 0)
 
 
 def run(root: Path, base: str, scan_all: list[str] | None) -> Report:
@@ -639,22 +762,62 @@ def run(root: Path, base: str, scan_all: list[str] | None) -> Report:
 
         for ref in extract_refs(doc, text):
             report.ref_count += 1
+            if ref.pin:
+                report.pinned_count += 1
             found = classify(ref, root, index, changed, line_cache)
             if found:
                 report.findings.append(found)
 
         for ref in extract_ordinal_refs(doc, text):
             report.ordinal_count += 1
-            found = classify_ordinal(ref, root, line_cache, ordinal_cache)
+            found, outcome = classify_ordinal(ref, root, line_cache, ordinal_cache)
+            report.ordinal_outcomes[outcome] = report.ordinal_outcomes.get(outcome, 0) + 1
             if found:
                 report.findings.append(found)
 
-    if report.ordinal_count:
+        report.ordinal_out_of_scope += count_out_of_scope_ordinals(text)
+
+    if report.ordinal_count or report.ordinal_out_of_scope:
+        failed = sum(1 for f in report.findings if f.kind == "ORDINAL_MISSING")
         report.notes.append(
-            "section ordinals: only those naming their target adjacently are checked; "
-            "bare ordinals (§4.2) are out of scope and were NOT verified"
+            describe_ordinal_scope(report.ordinal_outcomes, failed, report.ordinal_out_of_scope)
         )
     return report
+
+
+def describe_ordinal_scope(outcomes: dict[str, int], failed: int, out_of_scope: int) -> str:
+    """Spell out which ordinals were checked, which failed, and which were never examined.
+
+    A bare count of findings implies every ordinal was checked. Most were not — their
+    target is unnamed, unknown, or numbers nothing — and a report that hides that repeats
+    the overclaim §4.1 is about. Unrecognised outcome names are printed verbatim rather
+    than dropped, so adding an outcome cannot silently shrink the tally.
+
+    Args:
+        outcomes: Tally keyed by the outcome names :func:`classify_ordinal` returns.
+        failed: How many checked ordinals produced a finding.
+        out_of_scope: Ordinal tokens the tool never examined at all.
+
+    Returns:
+        A single note line.
+    """
+    reasons = {
+        "unknown-target": "target is not a document in this repository",
+        "unnumbered-target": "target declares no numbered sections",
+        "pinned": "pinned to a revision",
+    }
+    checked = outcomes.get("checked", 0)
+    parts = [f"{checked} checked ({checked - failed} passed, {failed} failed)"]
+    parts += [
+        f"{outcomes[key]} skipped ({why})" for key, why in reasons.items() if outcomes.get(key)
+    ]
+    parts += [
+        f"{count} {key}" for key, count in sorted(outcomes.items())
+        if key not in reasons and key != "checked" and count
+    ]
+    if out_of_scope:
+        parts.append(f"{out_of_scope} NOT examined (no adjacent target)")
+    return "section ordinals — " + ", ".join(parts)
 
 
 def format_text(report: Report) -> str:
@@ -670,10 +833,11 @@ def format_text(report: Report) -> str:
             "Nothing was verified." + suffix
         )
     if not findings:
+        skipped = report.total_refs - report.examined_refs
+        tail = f" ({skipped} pinned, not checked)" if skipped else ""
         return (
-            f"OK: {report.ref_count} path:line + {report.ordinal_count} ordinal "
-            f"reference(s) in {doc_count} document(s) resolve against the working tree."
-            + suffix
+            f"OK: {report.examined_refs} of {report.total_refs} reference(s) in "
+            f"{doc_count} document(s) resolve against the working tree{tail}." + suffix
         )
 
     lines: list[str] = []
@@ -695,8 +859,9 @@ def format_text(report: Report) -> str:
         lines.append("")
 
     lines.append(
-        f"{len(errors)} error(s), {len(warnings)} warning(s) across "
-        f"{report.ref_count} reference(s) in {doc_count} document(s)."
+        f"{len(errors)} error(s), {len(warnings)} warning(s) across {report.total_refs} "
+        f"reference(s) ({report.ref_count} path:line + {report.ordinal_count} ordinal) "
+        f"in {doc_count} document(s)."
     )
     if warnings:
         lines.append(
@@ -759,6 +924,7 @@ def main(argv: list[str] | None = None) -> int:
                     "doc_count": report.doc_count,
                     "ref_count": report.ref_count,
                     "ordinal_count": report.ordinal_count,
+                    "ordinal_outcomes": report.ordinal_outcomes,
                     "notes": report.notes,
                     "findings": [
                         {

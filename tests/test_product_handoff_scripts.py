@@ -2,10 +2,13 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
+
+sys.path.append(str(Path(__file__).resolve().parent))
+
+from _scratch import repo_scratch_dir  # noqa: E402 - needs the path append above
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / ".agent" / "skills" / "skill-product-handoff" / "scripts"
@@ -35,10 +38,13 @@ def _to_repo_rel(path: Path) -> str:
 
 @pytest.fixture
 def handoff_workspace() -> Path:
-    base = REPO_ROOT / "tests" / "tmp_product_handoff"
-    base.mkdir(parents=True, exist_ok=True)
+    """Yield a workspace **inside** the repository.
 
-    workspace = Path(tempfile.mkdtemp(prefix="run_", dir=base))
+    It cannot move to system temp: the scripts under test reject any path outside the
+    repository root, which is the behaviour these tests exercise. `tests/_scratch.py`
+    sweeps the directory at session start and end instead.
+    """
+    workspace = repo_scratch_dir(prefix="handoff_")
     product_dir = workspace / "docs" / "product"
     product_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,8 +74,8 @@ def test_help_mode_exits_without_mutation(script: Path, handoff_workspace: Path)
     assert output_file.exists() == before_output_exists
 
 
-def test_sign_off_rejects_outside_repo_path() -> None:
-    outside_file = Path("/tmp/product_handoff_outside.md")
+def test_sign_off_rejects_outside_repo_path(tmp_path: Path) -> None:
+    outside_file = tmp_path / "product_handoff_outside.md"
     outside_file.write_text("# outside\n", encoding="utf-8")
 
     result = _run_script(SIGN_OFF, ["--file", str(outside_file)])
@@ -78,8 +84,8 @@ def test_sign_off_rejects_outside_repo_path() -> None:
     assert "outside repository root" in result.stdout.lower()
 
 
-def test_verify_gate_rejects_outside_repo_path() -> None:
-    outside_file = Path("/tmp/product_handoff_outside_verify.md")
+def test_verify_gate_rejects_outside_repo_path(tmp_path: Path) -> None:
+    outside_file = tmp_path / "product_handoff_outside_verify.md"
     outside_file.write_text("# outside\n", encoding="utf-8")
 
     result = _run_script(VERIFY_GATE, ["--file", str(outside_file)])
@@ -88,11 +94,11 @@ def test_verify_gate_rejects_outside_repo_path() -> None:
     assert "outside repository root" in result.stdout.lower()
 
 
-def test_compile_brd_rejects_outside_output_path(handoff_workspace: Path) -> None:
+def test_compile_brd_rejects_outside_output_path(
+    handoff_workspace: Path, tmp_path: Path
+) -> None:
     product_dir = handoff_workspace / "docs" / "product"
-    outside_output = Path("/tmp/product_handoff_brd.md")
-    if outside_output.exists():
-        outside_output.unlink()
+    outside_output = tmp_path / "product_handoff_brd.md"
 
     result = _run_script(
         COMPILE_BRD,

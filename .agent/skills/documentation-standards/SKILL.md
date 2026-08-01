@@ -69,11 +69,29 @@ edge case.
 **Prefer nominal over positional** wherever the target has a name. A reference to a symbol survives
 an inserted line; a reference to line 112 does not.
 
-**Pinning a deliberate quotation.** Suffix the reference with `@<rev>` — as in
-`` `src/app.py:42@v3.21.10` `` — or name the revision in the same line of prose
-("verified at v3.19.1", "as of 4f2a91c"). A pinned
-reference is a claim about *that* revision and is exempt from re-checking. An unpinned one claims
-the current state, which is what makes the check decidable at all.
+**Pinning a deliberate quotation.** A pinned reference is a claim about *that* revision and is
+exempt from re-checking; an unpinned one claims the current state, which is what makes the
+check decidable at all. Two forms:
+
+| Form | Example | Works in |
+| :--- | :--- | :--- |
+| `@<rev>` suffix | `` `src/app.py:42@v3.21.10` `` | any language, any revision kind |
+| **Backticked** hash | `` …:101 на `985f843` `` | any language |
+| `HEAD`, `HEAD~2` | "…`a.py:1` wie in HEAD~2" | any language, case-sensitive |
+| Bare hash or version | "verified at 4f2a91c", "at v3.19.1" | needs an English cue |
+
+**The backticks are what make it language-independent**, not the surrounding words: they
+mark the token as an identifier rather than prose, which no list of prepositions can do
+across languages. An *unmarked* hex run is a CSS colour, a build id or a digest far more
+often than a revision, and an unmarked version is usually the subject of the sentence
+("bump to v3.4") — so those pin only after an English cue.
+
+`HEAD` is matched **case-sensitively** on purpose. Lower-case "head" is an ordinary English
+word, and honouring it would exempt every line containing "the head of the list".
+
+A prose pin applies only when the line carries **exactly one** reference — `path:line` and
+`§` ordinals counted together — because prose cannot say which reference it qualifies.
+Prefer `@<rev>`: it is per-reference, unambiguous, and language-neutral.
 
 Concrete verification differs per ecosystem and does not belong in the rule:
 
@@ -122,9 +140,15 @@ Ranges (`§1–§3`) expand; external specs (CommonMark, OWASP) and other reposi
 >    where a warning would be noise rather than signal.
 > 2. A **bare** ordinal (`see §4.2`, `TASK §4`) is never checked. Its antecedent lives in
 >    prose, and guessing one manufactures false failures. In this repository that is roughly
->    three quarters of all ordinals, so the tool prints that caveat in its own output.
-> 3. A target that numbers no headings at all makes its inbound ordinals *unverifiable*,
->    not wrong; they are skipped.
+>    three quarters of all ordinals.
+> 3. A target that numbers no headings at all — an ADR whose headings read `## D1 — Decision`
+>    — makes its inbound ordinals *unverifiable*, not wrong; they are skipped.
+>
+> Limits 2 and 3 are not left to this document. Every run that meets a `§` at all prints how
+> many ordinals it **checked** (passed and failed separately), how many it skipped **with the
+> reason**, and how many it **never examined** — so a green report cannot be read as covering
+> references it never looked at. Pinned `path:line` references are excluded from the
+> "resolve" count for the same reason.
 >
 > **Prefer the nominal form** where a document offers one: `[Section 5](#5-claudemd-specification)`
 > survives renumbering because the anchor, not the number, carries the meaning.
@@ -234,9 +258,11 @@ Policy: keep `.AGENTS.md` for source-code directories under memory tracking. Mis
   a reference is stale or a legitimate quotation is the reviewer's judgement, not the tool's.
 
 ### 7.4. Validation Evidence
-- **Primary Evidence**: `tests/test_positional_refs.py` — 60 tests over throwaway git repositories
-  covering extraction, shorthand ambiguity, each finding class, pin exemption, ordinal parsing
-  and denylisting, path containment, and every exit code. Gated in `framework-gates.yml`.
+- **Primary Evidence**: `tests/test_positional_refs.py` — 84 tests over throwaway git repositories
+  covering extraction, shorthand ambiguity, each finding class, language-independent pinning and
+  its false-pin guards, ordinal parsing and denylisting, scope honesty, path containment, and
+  every exit code. Gated in `framework-gates.yml` and named in `tests/run_tests.py`, so the
+  suite a developer runs locally is not blind to it.
 - **Secondary Evidence**: a diff-scoped run on the change under review, quoted in the review notes.
 - **Quality Gate**: no `error`-severity findings; every `DRIFT_SUSPECT` explicitly confirmed.
 

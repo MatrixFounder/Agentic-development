@@ -19,3 +19,9 @@ __pycache__/
 # (vdd-multi S-04 / F16 / V-10).
 *.tmp.*
 *.md.tmp*
+
+# Test scratch space. Most tests write to system temp, but a few scripts under test
+# reject paths outside the repository root, so their workspace MUST live in the tree
+# (tests/_scratch.py explains which). The suite sweeps this at session start and end;
+# ignoring it means a run killed before its teardown cannot dirty the tree either.
+tests/.scratch/

@@ -1,7 +1,6 @@
 import pytest
 import os
 import sys
-import shutil
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -24,22 +23,20 @@ init_product = load_module_from_path("init_product",
 calculate_wsjf = load_module_from_path("calculate_wsjf",
     PROJECT_ROOT / ".agent/skills/skill-product-backlog-prioritization/scripts/calculate_wsjf.py")
 
-TEST_OUTPUT_DIR = "tests/tmp_output"
-
 @pytest.fixture
-def setup_output():
-    if os.path.exists(TEST_OUTPUT_DIR):
-        shutil.rmtree(TEST_OUTPUT_DIR)
-    os.makedirs(TEST_OUTPUT_DIR)
-    yield
-    # Cleanup
-    if os.path.exists(TEST_OUTPUT_DIR):
-        shutil.rmtree(TEST_OUTPUT_DIR)
+def setup_output(tmp_path):
+    """Yield a scratch directory in system temp.
+
+    Nothing here needs to sit inside the repository, and the previous location
+    (`tests/tmp_output`, resolved against the *current working directory*) both dirtied
+    the tree and landed somewhere different depending on where pytest was invoked from.
+    """
+    return str(tmp_path)
 
 class TestInitProduct:
     def test_headless_generation(self, setup_output):
         """Test headless mode generates file."""
-        output_file = os.path.join(TEST_OUTPUT_DIR, "VISION.md")
+        output_file = os.path.join(setup_output, "VISION.md")
         
         # Mock sys.argv
         test_args = [
@@ -73,7 +70,7 @@ class TestInitProduct:
 class TestCalculateWSJF:
     def test_valid_calculation_and_sort(self, setup_output):
         """Test WSJF calculation and sorting."""
-        backlog_path = os.path.join(TEST_OUTPUT_DIR, "BACKLOG.md")
+        backlog_path = os.path.join(setup_output, "BACKLOG.md")
         
         # Create dummy backlog
         content = """
@@ -118,7 +115,7 @@ class TestCalculateWSJF:
 
     def test_job_size_zero_protection(self, setup_output):
         """Test error on Job Size 0."""
-        backlog_path = os.path.join(TEST_OUTPUT_DIR, "BACKLOG_ZERO.md")
+        backlog_path = os.path.join(setup_output, "BACKLOG_ZERO.md")
         content = "| Bad | 1 | 1 | 1 | 0 | 0 |"
         with open(backlog_path, 'w') as f:
             f.write(content)
@@ -132,7 +129,7 @@ class TestCalculateWSJF:
 
     def test_malformed_table_row_count(self, setup_output):
         """Test error on row length mismatch."""
-        backlog_path = os.path.join(TEST_OUTPUT_DIR, "BACKLOG_BAD.md")
+        backlog_path = os.path.join(setup_output, "BACKLOG_BAD.md")
         content = """
 | Col1 | Col2 |
 |---|---|

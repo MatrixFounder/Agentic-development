@@ -22,8 +22,8 @@ From a live run (`onchain-intel` TASK-010): one task settled two open questions 
 **and** rewrote the comments that referenced them as open. The ADRs went first, so they
 quoted a sentence the task then deleted, and every line past the insertion point shifted —
 while the document asserted "all `file:line` references verified". Eight of thirty confirmed
-findings, one cause. Gates: **288 pytest** (228 → 288) + 17 subtests, **179 `run_tests.py`**
-unchanged, 45/45 skills, prompt-refs / security-lint / workflow-smoke green.
+findings, one cause. Gates: **324 pytest** (228 → 324) + 17 subtests, **275 `run_tests.py`**
+(179 → 275), 45/45 skills, prompt-refs / security-lint / workflow-smoke green.
 
 #### **Added — `documentation-standards` §4.1–§4.2 (v1.4 → v1.6)**
 A reference is **positional** when it points at *where* something sits (line, offset, item
@@ -37,7 +37,20 @@ Standards*; per-ecosystem commands sit in a table beside the rule, not inside it
 read-only. It resolves `path:line` plus the `§` ordinals whose target is named adjacently,
 printing the target line back for comparison. Errors are objective (missing file, ambiguous
 shorthand, line past EOF, absent `§`); drift and paths leaving the repository are warnings a
-human judges. 60 tests, gated in `framework-gates.yml`.
+human judges. Every run prints how many ordinals it checked (passed and failed apart), skipped
+with the reason, and never examined — and pinned references are excluded from the "resolve"
+count — so a green report cannot be read as covering what it never looked at. 96 tests,
+gated in `framework-gates.yml` and named in `tests/run_tests.py`, so the suite a developer
+runs locally is not blind to them.
+
+Pinning is language-independent, and **backticks** are what make it so: they mark a token
+as an identifier rather than prose, which no list of prepositions can do across languages.
+So `` …:101 на `985f843` `` pins in Russian exactly as in English, while an *unmarked* hex
+run — a CSS colour, a build id, a digest — does not, and an unmarked version does not
+either, because it is usually the subject of the sentence ("bump to v3.4"). `HEAD` is
+matched case-sensitively: honouring lower-case "head" would exempt every line containing
+"the head of the list". One prose pin covers a line only when that line carries exactly one
+reference, ordinals included. `@<rev>` remains the unambiguous per-reference form.
 
 #### **Added — `code-review-checklist` §3 (v1.2 → v1.3)**
 One checkbox that names its owner: **the reviewer**. The author's own verification *passes*,

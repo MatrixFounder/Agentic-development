@@ -19,6 +19,26 @@ Post-implementation adversarial cycle for zero-slop robustness.
       - Apply the `vdd-adversarial` skill: Red Flags, Challenge Assumptions, Failure Simulation.
       - Use critique template from `.agent/skills/vdd-adversarial/assets/template_critique.md`.
       - Review all code + tests with fresh context (avoids multi-turn assumption lock-in and context rot — audit-067 C-02).
+      - **Cycle Brief** — supplied by the caller on every re-entry. Treat as INPUT: these are
+        claims to ATTACK, not findings to accept. Same shape as `vdd-multi`'s execution-evidence
+        block, and for the same reason: a fresh context knows nothing the caller does not say.
+
+        ```
+        Cycle Brief (supplied by the orchestrator — INPUT, attack it):
+        - Applied outside the dev→review loop: {file:site — what changed | NONE}
+        - Assertion fixes (N of M): {claim — fixed N of M sites found; sites left + why | NONE}
+        - Cycle: {n} of {cap}
+        ```
+
+        Every listed change has had **no review pass at all** — the dev→review loop never saw it.
+        Attack the fix itself, not only the original code; a fix can be worse than the defect.
+        For an `N of M` line, verify the **ratio**: re-run the search yourself and confirm M, then
+        confirm all N. A fix applied to one site of four is the recurring failure this block exists
+        for, and it reads as finished work.
+
+        If the block is **missing entirely** on a re-entry, emit the finding "cycle brief missing —
+        carried-over changes unverifiable" and do not signal clean-pass. An explicit `NONE` is a
+        claim the caller made and you may test; an absent block is a claim nobody made.
    b. If real issues found:
       - Call workflow `03-develop-single-task` to fix issues.
       - Repeat this workflow (recursive call if needed).

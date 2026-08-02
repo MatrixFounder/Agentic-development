@@ -1,11 +1,22 @@
 # Task X.Y: [Task Name]
 
+<!--
+  Anchors below (`<!-- contract:* -->`) are how a MACHINE addresses a section:
+  a gate must never key on the heading's words, because those are prose and
+  prose has a language. Rule + registry: `documentation-standards` §4.3/§4.4.
+  Keep them; translate the headings freely. Never invent an unregistered one.
+-->
+
 ## Use Case Connection
 - UC-XX: [Use Case Name]
 - UC-YY: [Use Case Name]
 
+<!-- contract:goal -->
+
 ## Task Goal
 [Brief description of what must be achieved]
+
+<!-- contract:changes -->
 
 ## Changes Description
 
@@ -32,6 +43,8 @@
 ### Component Integration
 [Description of how new components integrate with existing ones]
 
+<!-- contract:tests -->
+
 ## Test Cases
 
 ### End-to-end Tests
@@ -49,6 +62,8 @@
 ### Regression Tests
 - Run all existing tests from `tests/` directory
 - Ensure functionality is not broken: [list critical scenarios]
+
+<!-- contract:acceptance -->
 
 ## Acceptance Criteria
 - [ ] All new classes/methods added

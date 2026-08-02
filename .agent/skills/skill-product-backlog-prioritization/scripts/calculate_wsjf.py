@@ -48,18 +48,43 @@ def is_separator(cells):
     return all(re.match(r'^:?-+:?$', c) for c in cells)
 
 def get_column_indices(headers):
-    """Identify indices of required columns."""
+    """Identify indices of required columns.
+
+    Names first, position second. Matching the four English names is kept
+    because it tolerates column REORDERING, which is the common case in an
+    English backlog. But a name match asserts that the backlog is written in
+    English — an assertion nobody made and this script cannot check — so when
+    it fails, the columns are resolved POSITIONALLY instead of the whole table
+    being rejected (TASK 095 / WI-30 generalized; `documentation-standards`
+    §4.3).
+
+    The positional contract is the documented column order: the id column,
+    then User Value, Time Criticality, Risk Reduction, Job Size. A table too
+    narrow to hold them is still rejected in any language — the fallback must
+    not become a rubber stamp.
+    """
     mapping = {}
     required = ['User Value', 'Time Criticality', 'Risk Reduction', 'Job Size']
-    
+
     for i, h in enumerate(headers):
         clean_h = h.replace('*', '').strip() # Remove bolding
         if clean_h in required:
             mapping[clean_h] = i
         elif clean_h == 'WSJF':
             mapping['WSJF'] = i
-            
+
     missing = [r for r in required if r not in mapping]
+
+    # No English name matched at all -> the header row is prose in some other
+    # language. Fall back to position. A PARTIAL match is NOT rescued: mixing
+    # two resolution strategies inside one table would silently pair the wrong
+    # column with the wrong weight, and a wrong WSJF score is worse than a
+    # refusal.
+    if len(missing) == len(required) and len(headers) >= len(required) + 1:
+        for offset, name in enumerate(required, start=1):
+            mapping[name] = offset
+        missing = []
+
     return mapping, missing
 
 def map_size_to_fib(value_str):

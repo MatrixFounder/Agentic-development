@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.3
+version: 1.4
 ---
 # Developers Guidelines
 
@@ -63,6 +63,9 @@ generated output, vendored code, recorded fixtures, hand-curated docs. The order
 
 1. **Scope the path argument to the files your task touched** — not `.`. This is the default and
    usually the end of it: a narrow run has no blast radius and needs no ignore rules.
+   **This governs the WRITING form only.** Narrowing the *checking* form answers a different
+   question than CI asks — see §6.3, and note that every reporting form in the table below is
+   already repo-wide.
 2. **If a repo-wide run is genuinely required**, run the **reporting form** first and read the file
    list or diff it prints. Never invoke the writing form first.
 3. **If that list holds files the tool should never touch** — generated, vendored, recorded,
@@ -109,6 +112,34 @@ For ANY multi-step task, state a brief plan with verification checkpoints:
 ```
 Strong success criteria enable independent iteration. Weak criteria ("make it work") require constant clarification.
 
+### 6.3 Before you call a gate green
+
+Three ways a gate reports success without having verified anything. All three end in exit code 0,
+so none of them can catch itself — that is what makes them worth a rule.
+
+1. **Verify with the invocation CI runs, not a narrower one.** §5.1 tells you to narrow the path a
+   command *writes* to. The command that *renders a verdict* is the opposite: a narrower run answers
+   a different question, and agreement between the two answers is luck, not a property. A formatter
+   filtered to one package picks up that package's ignore file; the root invocation CI runs does not
+   read it, and the branch is red on a change reported green.
+   **Narrow what you write; reproduce CI for what you verify.**
+2. **A pipeline's exit code belongs to its last command.** `cmd | tail` reports on `tail`. Take the
+   status before the pipe, redirect to a file and read the file afterwards, or use the shell's
+   facility for per-stage statuses (`set -o pipefail`, `PIPESTATUS`/`pipestatus`).
+3. **Exit 0 is not evidence that work happened.** Tools routinely succeed having done nothing: a
+   filter that matched no project, an empty test selection, a skipped step. Before reporting green,
+   name the **sign of work** in the output — the test count, the file count, the target name — and
+   quote it next to the verdict. Where a tool prints no such sign, say so explicitly rather than
+   letting the bare 0 stand in for it.
+
+State the expected sign **before** running, not after. Chosen afterwards, it is whatever the output
+happened to contain.
+
+> **Why this is here and not in `core-principles`.** These are facts about shells and tools, and
+> they bind the roles that run commands. `core-principles` is TIER 0 — loaded into every session,
+> including the Analyst, Architect and Planner, who never invoke a gate. A rule costs its tier's
+> audience on every run, and this one has a narrower audience than that.
+
 ## 7. Language Specific Guidelines
 - **Dynamic Loading:** If you are working in a specific language, you MUST read the corresponding guideline file from `references/languages/` if it exists.
   - Go: `references/languages/golang.md`
@@ -150,3 +181,5 @@ Strong success criteria enable independent iteration. Weak criteria ("make it wo
 | "I'll add type hints / docstrings to untouched code while I'm here" | Drive-by improvements to code you didn't need to touch are not your task. |
 | "I'll just run the formatter over the repo, it's idempotent" | Idempotent is not harmless. Run the reporting form, read the file list, fix the ignore rules, then write (§5.1). |
 | "The finding says this code is dead, so I'll delete it" | Grep the symbol repo-wide first, not just a test directory. Dead-looking code is sometimes an acceptance test's fixture (`code-review-checklist` §2). |
+| "The gate exited 0, so it passed" | Exit 0 means the process ended, not that the work happened. Name the sign of work — test count, file count, target — and quote it, or state that the tool prints none (§6.3). |
+| "I ran the linter on my package and it was clean" | CI runs it from the root, where your package-local ignore file is not read. Verify with CI's invocation; narrow only what WRITES (§5.1, §6.3). |

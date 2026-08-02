@@ -2,7 +2,7 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.6
+version: 1.7
 ---
 # Documentation Standards
 
@@ -152,6 +152,95 @@ Ranges (`§1–§3`) expand; external specs (CommonMark, OWASP) and other reposi
 >
 > **Prefer the nominal form** where a document offers one: `[Section 5](#5-claudemd-specification)`
 > survives renumbering because the anchor, not the number, carries the meaning.
+
+### 4.3. Structural anchors — a machine addresses a section by anchor, never by prose
+
+§4.1 sorts references into **positional** (where a thing sits) and **nominal** (what it is called),
+and prefers nominal. That is right and incomplete: a nominal reference can still break, because it
+names its target **in a language**. Three rungs, not two:
+
+| Rung | Form | Survives renumbering | Survives retitling | Survives translation |
+| :--- | :--- | :--- | :--- | :--- |
+| Positional | `§4.5`, `line 112` | ✗ | ✗ | ✗ |
+| Nominal-by-prose | `## Requirements Traceability`, a `\| Requirement \|` column | ✓ | ✗ | ✗ |
+| **Nominal-by-anchor** | `<!-- contract:rtm -->` | ✓ | ✓ | ✓ |
+
+> **RULE**: A **human** may address a section at any rung. A **machine gate** addresses an authored
+> document at the **anchor** rung. A gate that matches a heading's words, or a table's column names,
+> is asserting that the document is written in a particular language — an assertion nobody made and
+> the gate cannot check.
+
+**Why this is a rule and not a tip.** Both failure modes are silent in the way that matters. The
+loud one — the gate exits non-zero on a perfectly good document — pushes the author to write in a
+language they do not use, or to stop running the step; and a step that can be quietly skipped is
+distinguishable from a passed one only by someone eventually looking. The quiet one is worse: a
+non-latin slug that normalizes to `"untitled"` makes two different documents resolve to one
+filename, and reports nothing.
+
+This framework had already reached the conclusion once, for one file — `known-issues-format` inserts
+at a comment anchor *"because headings get renumbered and retitled"* — and did not generalize it. By
+the time it was generalized there were three independent instances of the same defect, only one of
+which anyone had filed.
+
+**Syntax.** An HTML comment alone on its line, directly above the section heading or block it names,
+followed by a blank line:
+
+```markdown
+<!-- contract:rtm -->
+
+## 1. Requirements Traceability Matrix (RTM)
+```
+
+`<name>` is lowercase ASCII kebab-case. The comment is invisible in every Markdown renderer, so the
+prose heading stays exactly as the author wrote it — the two audiences stop competing for one string.
+
+**Lookup semantics** (binding on every gate that reads an anchor):
+
+| Situation | Behaviour |
+| :--- | :--- |
+| Anchor present | Line-exact match after stripping whitespace. It wins over any prose matcher. |
+| Anchor absent | Fall back to the gate's pre-existing prose matcher, unchanged. |
+| Anchor present more than once | **Error**, never "first wins" — an ambiguous anchor is a document defect. |
+| Anchor present, expected content absent | Error naming the anchor, not the heading. |
+
+**Compatibility.** Anchors are **emitted on write, optional on read**. Every gate keeps its old
+matcher as the fallback branch, so documents written before the anchor existed — archived artifacts,
+which doctrine forbids editing, and every downstream project's corpus — behave byte-identically.
+An anchor is never *required* by a gate; requiring one would break the corpus it governs, which is
+the failure `skill-spec-validator` already survived once.
+
+**Registry.** Reserved anchors live in §4.4. **No gate may key on an unregistered anchor.** The
+converse is deliberately permitted: an anchor may be registered and emitted before any reader
+exists, for the required sections of pipeline artifacts (§4.4), so that the *next* gate is
+language-independent by construction instead of by remembering this rule.
+
+### 4.4. Reserved anchor registry
+
+`—` in **Consumer** means: emitted by the template, no reader yet, reserved so a future gate has a
+structural target. Adding a row is how a new anchor is introduced; adding a *gate* that reads an
+anchor absent from this table is a defect.
+
+| Anchor | Document | Names | Consumer |
+| :--- | :--- | :--- | :--- |
+| `contract:defects` | `known-issues-format` SKILL + `known_issues_md_template.md` | Registry A schema block | `check_contract_sync.py` |
+| `contract:work-items` | `known-issues-format` SKILL + `backlog_md_template.md` | Registry B schema block | `check_contract_sync.py` |
+| `feedback:discovered-issues` | `docs/BACKLOG.md` | Index-line insertion point | `feedback_lib/ledger_backlog.py` |
+| `contract:rtm` | `docs/TASK.md` | The RTM table | `skill-spec-validator` (`--mode task` **and** `--mode plan`) |
+| `contract:meta` | `docs/TASK.md` | Meta table (ID, slug, type) | — |
+| `contract:problem` | `docs/TASK.md` | Problem statement | — |
+| `contract:use-cases` | `docs/TASK.md` | Use cases | — |
+| `contract:acceptance` | `docs/TASK.md`, `docs/tasks/*.md` | Acceptance criteria | — |
+| `contract:open-questions` | `docs/TASK.md` | Open questions | — |
+| `contract:sequence` | `docs/PLAN.md` | Task execution sequence | — |
+| `contract:coverage` | `docs/PLAN.md` | Use-case coverage table | — |
+| `contract:goal` | `docs/tasks/*.md` | Task goal | — |
+| `contract:changes` | `docs/tasks/*.md` | Changes description | — |
+| `contract:tests` | `docs/tasks/*.md` | Test cases | — |
+
+> [!NOTE]
+> `feedback:discovered-issues` keeps its own namespace: it marks an **insertion point** for a writer,
+> not a contract block for a reader, and it predates this registry. Renaming it would rewrite live
+> ledgers in every consumer project to no benefit.
 
 ## 5. Markdown Structure (CRITICAL)
 

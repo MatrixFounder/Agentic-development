@@ -75,6 +75,28 @@ description: VDD-Enhanced Development (Hardened Pipeline)
 5.  **Cap reached with an orchestrator-applied fix still un-reviewed** → the verdict is
     **WARNING, never PASS**. Name the unreviewed change in the report to the User; do not let
     "the cycle found nothing new" stand in for "this change was reviewed".
+6.  **Fixing an assertion: find every site FIRST, then fix, then report the ratio.** A fact is
+    usually written in several places — a docstring, a README, a test name, a prompt. The critic
+    points at one. Fixing only that one *looks* like completed work, which makes it more dangerous
+    than the untouched defect: it removes the alarm without removing the cause. Order is fixed:
+    -   **Search before editing.** Grep the distinctive wording, the number, the name — whatever
+        form the assertion takes — across the repository. Searching costs less than one review
+        cycle; discovering the other three sites next cycle costs a full critic pass.
+    -   **Report "fixed N of M found"** in the cycle report. "Fixed" without a denominator is an
+        assertion with no guard — precisely the genre these cycles exist to catch.
+    -   **N < M is a legitimate outcome, silence is not.** Archived documents must not be edited,
+        and a translated copy may lag. Name what was left and why.
+    -   **Repeated verbatim in several files → prefer one declaration with readers** over synchronized
+        copies. A synchronized copy must be re-synchronized on every future change; a declaration
+        need not. This is a preference, not a rule: it loses to the archive doctrine.
+    Carry the ratio into the **Cycle Brief** (§4.7), so the next cycle verifies the *ratio* and not
+    only the fix it was shown.
+7.  **The Cycle Brief is a real input, not an implied one.** Items 4 and 6 both hand something to
+    the next cycle, so the next cycle must have somewhere to receive it. When re-entering
+    `.agent/workflows/vdd-adversarial.md`, pass the **Cycle Brief block** defined in its step 2a
+    — `Applied outside the dev→review loop` and `Assertion fixes (N of M)`. An empty brief is
+    written as empty; **omitting the block entirely** is what the adversary reports as
+    "cycle brief missing", exactly as it treats missing execution evidence.
 
 ## 5. Retro (Global Protocol)
 Apply `run-feedback` SKILL.md §7 "Retro protocol":

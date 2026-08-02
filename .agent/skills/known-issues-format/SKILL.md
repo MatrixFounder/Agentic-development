@@ -2,7 +2,7 @@
 name: known-issues-format
 description: "Use when creating, formatting, or adding an entry to a project's thin-index ledger — `docs/KNOWN_ISSUES.md` + `docs/issues/` for defects, or `docs/BACKLOG.md` + `docs/backlog/` for work-items — or seeding either in a new project: shared index-over-records mechanics, per-registry frontmatter schema, prefix→category table, status/severity/effort vocab, index-line format, record-file recipe."
 tier: 2
-version: 2.0
+version: 2.1
 ---
 # Thin-Index Ledger Format
 
@@ -186,6 +186,13 @@ machine may impose. New lines go directly after the anchor comment
 headings get renumbered and retitled. Closed records are moved **by hand** to a `## Closed` group.
 Automated writers insert at the anchor only; a missing anchor is a hard error, never a blind
 EOF append.
+
+> [!NOTE]
+> That reasoning is now framework-wide doctrine, not a local convention: see
+> [`documentation-standards` §4.3](../documentation-standards/SKILL.md) — *a machine addresses a
+> section by anchor, never by prose* — with the reserved-anchor registry in §4.4. This skill owns
+> three of its rows (`contract:defects`, `contract:work-items`, `feedback:discovered-issues`); a new
+> anchor is introduced by adding a row there, and a gate keyed on an unregistered anchor is a defect.
 
 **Adding a new work-item:** ① `WI-<n>` = max existing + 1 across `docs/backlog/*.md`; ② create
 `docs/backlog/<slug>.md` with the frontmatter above (body verbatim); ③ insert one index line

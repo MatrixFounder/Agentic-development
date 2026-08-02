@@ -15,7 +15,13 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from task_id_tool import generate_task_archive_filename
+from task_id_tool import generate_task_archive_filename, normalize_slug
+
+
+#: Structural address of the meta section, registered in
+#: `documentation-standards` §4.4. Checked before the English prose probes so
+#: that a TASK.md in any language is read correctly.
+META_ANCHOR = "<!-- contract:meta -->"
 
 
 def parse_task_meta(content: str) -> dict:
@@ -37,29 +43,41 @@ def parse_task_meta(content: str) -> dict:
         "has_meta": False
     }
     
-    # Check if Meta Information section exists
-    if "## 0. Meta Information" not in content and "Meta Information" not in content:
+    # Locate the meta section. The anchor is checked FIRST and in any language;
+    # the two English prose probes stay as the fallback for every TASK.md
+    # written before the anchor existed (`documentation-standards` §4.3/§4.4).
+    # The prose probe alone was already too narrow for this framework's own
+    # template, which heads the section `## 0. Meta` — so archiving quietly
+    # took the H1 fallback path on documents that DO have a meta table.
+    if (META_ANCHOR not in content
+            and "## 0. Meta Information" not in content
+            and "Meta Information" not in content):
         # Fallback: try to extract slug from H1 header
         h1_match = re.search(r'^#\s+(?:Task\s+\d+:\s+)?(.+)$', content, re.MULTILINE)
         if h1_match:
-            # Convert title to slug
-            title = h1_match.group(1).strip()
-            slug = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
-            result["slug"] = slug
+            # Convert title to slug. Delegated, never re-implemented: this used
+            # its own `[^a-zA-Z0-9]+` class, which deleted a non-latin title
+            # outright and let it fall through to the shared "untitled", so two
+            # different tasks archived over one filename (TASK 095 / WI-30).
+            result["slug"] = normalize_slug(h1_match.group(1).strip())
         return result
-    
+
     result["has_meta"] = True
-    
+
     # Extract Task ID from table format: | Task ID  | 042 |
     id_match = re.search(r'\|\s*Task ID\s*\|\s*(\d+)\s*\|', content)
     if id_match:
         result["task_id"] = id_match.group(1)
-    
+
     # Extract Slug from table format: | Slug | existing-feature |
-    slug_match = re.search(r'\|\s*Slug\s*\|\s*([a-z0-9-]+)\s*\|', content)
+    # The VALUE is captured as "anything but a pipe" and then normalized, rather
+    # than matched against `[a-z0-9-]+`: a charset that admits only latin cannot
+    # tell "no slug row" from "a slug row I refuse to read", and both produced
+    # the same silent "untitled".
+    slug_match = re.search(r'\|\s*Slug\s*\|\s*([^|]+?)\s*\|', content)
     if slug_match:
-        result["slug"] = slug_match.group(1)
-    
+        result["slug"] = normalize_slug(slug_match.group(1))
+
     return result
 
 

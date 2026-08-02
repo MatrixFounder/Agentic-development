@@ -16,6 +16,79 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.22.0 — a gate must not depend on the language of the document it judges**
+
+From three work-items filed by a downstream project whose artifacts are written in Russian
+(WI-30/31/32, one `/vdd` run). The reported symptom was one validator refusing a perfectly
+good RTM. Re-verification found the same defect in **four** places, one of them silent, and
+the framework had already solved it once — for a single ledger — without generalizing.
+Gates: **185 pytest** (161 → 185), 45/45 skills, prompt-refs / security-lint / workflow-smoke
+green; both artifact corpora re-measured unchanged.
+
+#### **Added — `documentation-standards` §4.3–§4.4 (v1.6 → v1.7)**
+§4.1 sorts references into positional and nominal and prefers nominal. That was right and
+incomplete: a nominal reference can still break, because it names its target **in a language**.
+The third rung is **nominal-by-anchor** — `<!-- contract:rtm -->` survives renumbering,
+retitling *and* translation. **RULE: a human may address a section at any rung; a machine gate
+addresses an authored document at the anchor rung.** §4.4 is the reserved-anchor registry
+(14 rows, each naming its consumer); no gate may key on an unregistered anchor. Anchors are
+**emitted on write, optional on read**, so every existing artifact behaves byte-identically.
+
+`known-issues-format` (v2.0 → v2.1) points at the registry: its own "a comment, not a heading,
+because headings get renumbered and retitled" is where this reasoning was first written down.
+`docs/ARCHITECTURE.md` §7 gains §7.2 and invariant **L1** — §7 previously modelled localization
+as *translating the framework*, which is a different problem from *the project's own artifacts
+being in another language*.
+
+#### **Fixed — `skill-spec-validator`: three language couplings, not one**
+`RTM_HEADER` (English heading words), `expected_cols = ['ID','Requirement']` (the reported
+failure), and — independently — `r['ID']` in `validate_plan`, which kept `--mode plan` dead
+*even after* the column check was fixed. Both modes now share one `locate_rtm()`; they held two
+copies and each past fix landed in only one of them. Under an anchor the table is read
+**positionally** (first column = id); without one, the pre-existing contract runs unchanged.
+`RTM_HEADER` is byte-identical and the corpus floors are untouched. 38 → 47 tests, and the
+47-test suite is now **wired into CI**, where it had never run.
+
+#### **Fixed — the same defect in three more places, only one of which anyone had filed**
+- `calculate_wsjf.py` matched four English column names against an authored backlog table.
+  Falls back to position when no name matches; a *partial* match is deliberately not rescued.
+- `task_id_tool.normalize_slug` stripped every non-latin character and returned `"untitled"` —
+  silently, and identically every time, so `"реестр-инструментов"` and `"единый-реестр"` both
+  archived to `task-095-untitled.md`. Now transliterates before stripping.
+- `archive_protocol.py` re-implemented the slug rule twice more with its own character classes,
+  and gated the meta section on the English string `"Meta Information"` — so it did not even
+  recognize the `## 0. Meta` table this framework's own template writes. Now delegates to
+  `normalize_slug` and checks `<!-- contract:meta -->` first.
+
+#### **Added — `developer-guidelines` §6.3 (v1.3 → v1.4)**
+Three ways a gate reports success without verifying anything, all ending in exit code 0:
+verifying with a narrower invocation than CI runs, taking an exit code after a pipe, and
+treating exit 0 as evidence that work happened. §5.1 item 1 gains the missing qualifier —
+**narrow what you write; reproduce CI for what you verify** — resolving a latent contradiction
+with a rule that already told developers to narrow the path argument. **Nothing was added to
+`core-principles`**: at 43 lines and TIER 0 it is loaded by every role including those that
+never invoke a gate, and shell mechanics are not a principle.
+
+#### **Added — `vdd-enhanced` §4 items 6–7, `vdd-adversarial` Cycle Brief**
+Four consecutive cycles of one run found the same shape: not a wrong fix, but a fix applied to
+one site of an assertion written in four. Item 6 requires enumerating every site **before**
+editing and reporting `fixed N of M found` — "fixed" without a denominator is an assertion with
+no guard. Item 7 makes the "next cycle's brief" that §4.4 has always referred to a **real
+input**: `vdd-adversarial` step 2a now defines the block, and a *missing* block is itself a
+finding, exactly as missing execution evidence is. Items 6 and 7 are **appended**, not inserted:
+two documents and three ledger lines across two repositories cite §4.4/§4.5 by ordinal, and
+shifting them would reproduce the very defect being fixed.
+
+#### **Not shipped, deliberately**
+The other half of WI-30 ("a skipped step must be an event") and the mechanically-enforceable
+half of WI-31 both need one mechanism — a wrapper that runs the command, so it owns the true
+exit code, records the invocation verbatim, and makes "did not run" a distinguishable state.
+That is `run_stack.py gate`, already designed as Component C of design spec 095. Field evidence
+was recorded against that spec's Phase-5 entry gate instead of building a second mechanism
+beside it. Spec 095 also received an independent four-lens adversarial review
+(`docs/reviews/review-095-independent.md`): 57 findings, 30 CRITICAL/HIGH, **11 surviving** a
+refutation pass — it is **not** ready to build from.
+
 ### **v3.21.11 — positional references are verified last, or the check passes too early**
 
 From a live run (`onchain-intel` TASK-010): one task settled two open questions in ADRs

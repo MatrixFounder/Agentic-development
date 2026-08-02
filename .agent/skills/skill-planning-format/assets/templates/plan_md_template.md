@@ -1,5 +1,14 @@
 # Development Plan: [Project Name]
 
+<!--
+  Anchors below (`<!-- contract:* -->`) are how a MACHINE addresses a section:
+  a gate must never key on the heading's words, because those are prose and
+  prose has a language. Rule + registry: `documentation-standards` §4.3/§4.4.
+  Keep them; translate the headings freely. Never invent an unregistered one.
+-->
+
+<!-- contract:sequence -->
+
 ## Task Execution Sequence
 
 ### Stage 1: Structure Creation and Stubs
@@ -23,6 +32,8 @@
 
 ### Stage 4: Deployment
 [...]
+
+<!-- contract:coverage -->
 
 ## Use Case Coverage
 

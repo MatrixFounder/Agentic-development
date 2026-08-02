@@ -219,9 +219,54 @@ Tools note: simple tool names only; Bash sub-command restrictions live in projec
 - **Source of Truth**: Documentation (`docs/`), `System/Agents`, `.agent/skills`, and `latest.yaml`.
 
 ## 7. Localization Strategy
+
+### 7.1 Framework language
 - **Default**: English (`System/Agents`).
 - **Alternative**: Russian (`System/Agents_ru` -> `Translations/RU`).
 - Switching is done by swapping the source directory in the orchestrator config.
+
+### 7.2 Project language ≠ framework language
+
+The framework is installed into projects that write **their own** artifacts — `docs/TASK.md`,
+`docs/PLAN.md`, task files, ledgers — in whatever language the team uses. Swapping the agent-prompt
+directory (§7.1) does not address this: the prompts are the framework's, the artifacts are the
+project's, and only the second kind is read back by a gate.
+
+**Invariant (L1): a machine gate never depends on the natural language of the document it judges.**
+
+A gate that matches an English heading or an English column name has two failure modes, and the
+quiet one is worse:
+
+| Mode | Example | Consequence |
+| :--- | :--- | :--- |
+| Loud | `validate.py --mode task` exits 1 on a non-English RTM | The author rewrites the document in a language they do not use — or stops running the step, and a skipped gate is indistinguishable from a passed one |
+| Silent | a non-latin slug degrades to `"untitled"` | Two different documents resolve to one filename; nothing reports it |
+
+**Addressing ladder.** [`documentation-standards` §4.1](../.agent/skills/documentation-standards/SKILL.md)
+already distinguishes *positional* from *nominal* references. L1 adds the missing third rung: a
+reference can be nominal and still break, because it names its target **in a language**.
+
+| Rung | Form | Survives renumbering | Survives retitling | Survives translation |
+| :--- | :--- | :--- | :--- | :--- |
+| Positional | `§4.5`, `line 112` | ✗ | ✗ | ✗ |
+| Nominal-by-prose | `## Requirements Traceability`, `\| Requirement \|` | ✓ | ✗ | ✗ |
+| **Nominal-by-anchor** | `<!-- contract:rtm -->` | ✓ | ✓ | ✓ |
+
+**Humans address at any rung; machines address at the anchor rung.** Prose headings stay exactly as
+they are — the anchor sits beside them and carries the machine contract, so the two audiences stop
+competing for one string.
+
+**Anchor namespace.** `<!-- contract:<name> -->`, reusing the namespace already in service for the
+two ledgers. The reserved set and each anchor's consumer are registered in
+[`documentation-standards` §4.4](../.agent/skills/documentation-standards/SKILL.md), alongside the
+rule itself. **No gate may key on an unregistered anchor.** The converse is deliberately allowed:
+an anchor may be registered and emitted before any reader exists, so that the next gate is
+language-independent by construction rather than by remembering the rule.
+
+**Compatibility rule.** Anchors are **emitted on write, optional on read**: a template and a prompt
+produce them, and every gate keeps its pre-existing prose matcher as a fallback. Documents written
+before an anchor existed — including archived artifacts, which are immutable by doctrine, and every
+downstream project's corpus — behave exactly as before.
 
 ## 8. Skill Architecture & Optimization Standards
 

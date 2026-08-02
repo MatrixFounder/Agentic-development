@@ -53,14 +53,32 @@ Follow this process strictly:
     - **Action:** Skip RTM generation. Focus on concise fix description.
 
 **Content Requirements (Standard Mode):**
-1.  **Meta Information:** ID, Slug, Context.
-2.  **Requirements Traceability Matrix (RTM):**
-    - **Format:** Table with columns `| ID | Requirement | MVP? | Sub-features |`.
+1.  **Meta Information:** ID, Slug, Context. — anchor `<!-- contract:meta -->`
+2.  **Requirements Traceability Matrix (RTM):** — anchor `<!-- contract:rtm -->`
+    - **Format:** a table whose **first column is the requirement ID**. The recommended
+      shape is `| ID | Requirement | MVP? | Sub-features |`.
     - **Constraint:** Granularity MUST be high (at least 3 sub-features per requirement).
-3.  **Problem Description:** Clear summary.
-4.  **Use Cases:** detailed main/alternative scenarios.
-5.  **Acceptance Criteria:** Verifiable pass/fail conditions.
-6.  **Open Questions:** ANY ambiguity must be listed here.
+    - **The column NAMES are prose** — write them in the document's language. The gate reads the
+      first column positionally, via the anchor. It never reads the words.
+3.  **Problem Description:** Clear summary. — anchor `<!-- contract:problem -->`
+4.  **Use Cases:** detailed main/alternative scenarios. — anchor `<!-- contract:use-cases -->`
+5.  **Acceptance Criteria:** Verifiable pass/fail conditions. — anchor `<!-- contract:acceptance -->`
+6.  **Open Questions:** ANY ambiguity must be listed here. — anchor `<!-- contract:open-questions -->`
+
+> [!IMPORTANT]
+> **Emit the anchor above each section heading**, on its own line, followed by a blank line:
+> ```markdown
+> <!-- contract:rtm -->
+>
+> ## 1. Requirements Traceability Matrix (RTM)
+> ```
+> The comment is invisible in every renderer, so write the **headings and the prose in whatever
+> language the project uses** — the anchor is what the machine addresses, and it is the reason the
+> gate does not care. Rule and registry: `documentation-standards` §4.3/§4.4. Never invent an
+> anchor that is not in that registry.
+>
+> Anchors are **optional on read**: a TASK without them still passes through the older
+> English-heading matcher. Emit them anyway — that fallback is the thing being retired.
 
 > [!TIP]
 > **Examples:** Refer to `skill-task-model` for the exact Markdown structure and examples of high-quality scenarios.

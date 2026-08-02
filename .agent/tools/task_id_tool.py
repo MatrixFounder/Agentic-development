@@ -10,18 +10,52 @@ import re
 from typing import Optional
 
 
+#: Cyrillic -> latin, for filename stems only. Deliberately NOT a general
+#: transliterator and never shown to a user: its whole job is to keep two
+#: different titles apart in `docs/tasks/`. Digraphs come first so that `щ`
+#: does not decompose into `ш`+`ч` by accident.
+_TRANSLIT = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+    'і': 'i', 'ї': 'yi', 'є': 'ye', 'ґ': 'g',
+}
+
+
 def normalize_slug(slug: str) -> str:
     """
-    Normalize slug to lowercase with dashes, removing special characters.
-    
+    Normalize slug to a latin, filename-safe stem.
+
+    Non-latin input is transliterated (Cyrillic by table, everything else by
+    Unicode decomposition) BEFORE the character strip. It used to be stripped
+    directly, which deleted the whole title and fell through to the literal
+    ``"untitled"`` — silently, and with the same value every time, so
+    ``"реестр-инструментов"`` and ``"единый-реестр"`` both produced
+    ``task-095-untitled.md`` and the second archive overwrote the first
+    (TASK 095 / WI-30, the unfiled half of the defect).
+
+    ``"untitled"`` is kept for input that genuinely carries no word characters
+    (``""``, ``"!!!"``) — there the fallback is honest rather than lossy.
+
     Args:
-        slug: Raw slug string (e.g., "New Feature", "my_task")
-    
+        slug: Raw slug string (e.g., "New Feature", "my_task", "Единый реестр")
+
     Returns:
-        Normalized slug (e.g., "new-feature", "my-task")
+        Normalized slug (e.g., "new-feature", "my-task", "edinyy-reestr")
     """
+    import unicodedata
+
     # Convert to lowercase
     slug = slug.lower()
+    # Transliterate Cyrillic, then let NFKD handle the rest (accents, ligatures,
+    # full-width forms). Anything still non-latin after both is dropped below,
+    # exactly as before — this only ADDS survivors, it never changes a stem that
+    # was already pure latin.
+    slug = ''.join(_TRANSLIT.get(ch, ch) for ch in slug)
+    slug = unicodedata.normalize('NFKD', slug)
+    slug = slug.encode('ascii', 'ignore').decode('ascii')
     # Replace underscores and spaces with dashes
     slug = re.sub(r'[_\s]+', '-', slug)
     # Remove all non-alphanumeric characters except dashes

@@ -20,6 +20,138 @@ RTM_HEADER = re.compile(
     r'^#{2,4}\s+(?:\d+[.)]\s*)?(?=.*(?:Requirements\s+Traceability|\bRTM\b)).*$',
     re.MULTILINE | re.IGNORECASE)
 
+# --- Structural anchor (TASK 095 / WI-30) ------------------------------------
+#
+# Everything above addresses the RTM through the document's own PROSE, and so
+# only works for documents written in English. Three independent places did it:
+# this heading regex, the ['ID','Requirement'] column-name check in
+# validate_task, and a second r['ID'] lookup in validate_plan — which fails even
+# after the first two are fixed, so a project that patched only the reported one
+# still had a dead --mode plan gate.
+#
+# `documentation-standards` §4.3 states the rule this implements: a human may
+# address a section by its heading; a MACHINE addresses it by anchor. A gate
+# matching heading words or column names asserts that the document is written in
+# a particular language — an assertion nobody made and the gate cannot check.
+#
+# The anchor is OPTIONAL and WINS when present. When it is absent every matcher
+# below behaves exactly as before, which is what keeps the whole shipped corpus
+# (and every downstream project) passing unchanged — see tests/test_corpus.py.
+# Deliberately a SEPARATE pattern rather than an alternation inside RTM_HEADER:
+# RTM_HEADER.split() is pinned to exactly two parts by test_validate, and the
+# corpus pins that it is never narrowed. Additive, in both senses.
+ANCHOR_NAME = "contract:rtm"
+ANCHOR_RTM = re.compile(
+    r'^[ \t]*<!--[ \t]*' + re.escape(ANCHOR_NAME) + r'[ \t]*-->[ \t]*$',
+    re.MULTILINE)
+
+#: cut the located section at the next h2, matching the pre-existing fallback
+#: behaviour exactly — an `### Details by ID` subsection stays inside the block,
+#: and the table parser stops at the first non-table line anyway.
+_SECTION_END = re.compile(r'^## ', re.MULTILINE)
+
+
+def _anchor_block(content):
+    """Slice the RTM section addressed by the anchor.
+
+    Returns ``(block, error)`` — ``(None, None)`` when there is no anchor at
+    all, so the caller falls back to the heading matcher.
+
+    A duplicated anchor is an ERROR, never "first one wins": an ambiguous
+    address is a document defect, and quietly picking one hides it (the same
+    reasoning `known-issues-format` applies to its ledger anchors).
+    """
+    matches = list(ANCHOR_RTM.finditer(content))
+    if not matches:
+        return None, None
+    if len(matches) > 1:
+        return None, (
+            "Error: the '<!-- %s -->' anchor appears %d times in TASK.md; "
+            "it must appear exactly once." % (ANCHOR_NAME, len(matches)))
+
+    # The anchor sits directly ABOVE the heading it names, so the heading line
+    # itself must be stepped over before cutting at the next h2 — otherwise the
+    # section terminator fires on the very heading the anchor introduced and
+    # the block comes back empty.
+    rest = content[matches[0].end():].split('\n')
+    i = 0
+    while i < len(rest) and not rest[i].strip():
+        i += 1
+    if i < len(rest) and re.match(r'#{1,6}\s', rest[i]):
+        i += 1
+    return _SECTION_END.split('\n'.join(rest[i:]).strip())[0], None
+
+
+def _table_columns(block):
+    """Header cells of the first markdown table in *block*, in order.
+
+    `parse_markdown_table` returns dicts, and a dict cannot answer "which
+    column came first" once two columns share a name. Positional reading is
+    the whole point of the anchor path, so the order is read from the raw
+    header row instead of recovered from the rows.
+    """
+    for line in block.split('\n'):
+        stripped = line.strip()
+        if stripped.startswith('|'):
+            cells = re.split(r'(?<!\\)\|', stripped.strip('|'))
+            return [c.strip() for c in cells]
+    return []
+
+
+def locate_rtm(content, artifact="TASK.md"):
+    """Locate the RTM and extract ``(rows, ids, error)``.
+
+    Shared by both modes so that the two cannot drift apart again — they held
+    two copies of this logic, and only one of them got fixed each time.
+
+    Anchor present -> the table is read POSITIONALLY: the first column holds
+    the requirement id, whatever it is called. Column names are prose.
+    Anchor absent  -> the pre-existing English column-name contract, unchanged.
+    """
+    block, err = _anchor_block(content)
+    via_anchor = block is not None
+    if err:
+        return None, None, [err]
+
+    if not via_anchor:
+        if not RTM_HEADER.search(content):
+            return None, None, [
+                "Error: '## Requirements Traceability' section missing in %s." % artifact,
+                "Please add the RTM table (a section number and a trailing "
+                "'Matrix' are both fine), or mark it with the "
+                "'<!-- %s -->' anchor — the anchor works in any language." % ANCHOR_NAME]
+        block = _SECTION_END.split(RTM_HEADER.split(content)[1].strip())[0]
+
+    rows = parse_markdown_table(block)
+    if not rows:
+        if via_anchor:
+            return None, None, [
+                "Error: no requirements table found under the '<!-- %s -->' "
+                "anchor in %s." % (ANCHOR_NAME, artifact)]
+        return None, None, [
+            "Error: Requirements Traceability Matrix table is empty or invalid."]
+
+    if via_anchor:
+        columns = _table_columns(block)
+        if len(columns) < 2:
+            return None, None, [
+                "Error: the table under '<!-- %s -->' has %d column(s); an RTM "
+                "needs at least an id column and one more."
+                % (ANCHOR_NAME, len(columns))]
+        id_column = columns[0]
+    else:
+        expected_cols = ['ID', 'Requirement']
+        if not all(col in rows[0] for col in expected_cols):
+            return None, None, [
+                "Error: RTM table must contain columns: %s" % expected_cols,
+                "Or mark the table with the '<!-- %s -->' anchor, which reads "
+                "the first column as the id and needs no English column names."
+                % ANCHOR_NAME]
+        id_column = 'ID'
+
+    ids = [r[id_column] for r in rows if id_column in r]
+    return rows, ids, None
+
 
 def parse_markdown_table(content):
     """
@@ -79,33 +211,15 @@ def validate_task(task_path):
          print("Validation bypassed via [BYPASS_VALIDATION] flag.")
          sys.exit(0)
 
-    # 1. Check for RTM Header
-    if not RTM_HEADER.search(content):
-        print("Error: '## Requirements Traceability' section missing in TASK.md.")
-        print("Please add the RTM table (a section number and a trailing "
-              "'Matrix' are both fine).")
+    # Locating the RTM and reading its id column is ONE decision, made in
+    # locate_rtm() and shared with validate_plan below. It used to be two
+    # copies, and each fix landed in only one of them — which is precisely the
+    # half-applied-fix defect this task also closes elsewhere.
+    rows, _ids, errors = locate_rtm(content, artifact="TASK.md")
+    if errors:
+        for line in errors:
+            print(line)
         sys.exit(1)
-        
-    # 2. Extract Table
-    # A simple regex to find the table block might be needed if parse_markdown_table isn't robust enough for full file
-    # But usually the table follows the header.
-    
-    # Let's try to extract the section first
-    rtm_section = RTM_HEADER.split(content)[1]
-    # Stop at next header
-    rtm_block = re.split(r'^## ', rtm_section.strip(), flags=re.MULTILINE)[0]
-    
-    rows = parse_markdown_table(rtm_block)
-    
-    if not rows:
-        print("Error: Requirements Traceability Matrix table is empty or invalid.")
-        sys.exit(1)
-        
-    # 3. Check for specific columns
-    expected_cols = ['ID', 'Requirement']
-    if not all(col in rows[0] for col in expected_cols):
-         print(f"Error: RTM table must contain columns: {expected_cols}")
-         sys.exit(1)
 
     print(f"Success: Found {len(rows)} requirements in TASK.md.")
     sys.exit(0)
@@ -129,21 +243,16 @@ def validate_plan(plan_path, task_path):
          print("Validation bypassed via [BYPASS_VALIDATION] flag.")
          sys.exit(0)
 
-    # Extract IDs from TASK
-    if not RTM_HEADER.search(task_content):
-        print("Error: '## Requirements Traceability' section missing in TASK.md.")
+    # Same locator as validate_task. The old code here re-derived the ids with
+    # `r['ID']` — a dict lookup on the AUTHORED header text — which is a second,
+    # independent language coupling: it kept --mode plan dead on a non-English
+    # document even after the column-name check in validate_task was fixed.
+    _rows, rtm_ids, errors = locate_rtm(task_content, artifact="TASK.md")
+    if errors:
+        for line in errors:
+            print(line)
         sys.exit(1)
 
-    rtm_section = RTM_HEADER.split(task_content)[1]
-    rtm_block = re.split(r'^## ', rtm_section.strip(), flags=re.MULTILINE)[0]
-    rows = parse_markdown_table(rtm_block)
-    
-    if not rows:
-        print("Error: RTM table invalid.")
-        sys.exit(1)
-        
-    rtm_ids = [r['ID'] for r in rows if 'ID' in r]
-    
     if not rtm_ids:
         print("Error: No IDs found in RTM table.")
         sys.exit(1)

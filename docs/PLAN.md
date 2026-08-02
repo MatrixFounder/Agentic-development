@@ -7,37 +7,26 @@
 
 ## 0. Rollback
 
-Before Stage 1, back up every file this plan edits:
+Every file this plan edits is tracked, so **git is the backup** — no side copy is kept, and the
+pre-change version of any file is one command away:
 
 ```bash
-mkdir -p .agent/archive/095
-for f in \
-  .agent/skills/documentation-standards/SKILL.md \
-  .agent/skills/known-issues-format/SKILL.md \
-  .agent/skills/developer-guidelines/SKILL.md \
-  .agent/skills/skill-spec-validator/SKILL.md \
-  .agent/skills/skill-spec-validator/scripts/validate.py \
-  .agent/skills/skill-planning-format/assets/templates/plan_md_template.md \
-  .agent/skills/skill-planning-format/assets/templates/task_md_template.md \
-  .agent/skills/skill-product-backlog-prioritization/scripts/calculate_wsjf.py \
-  .agent/tools/task_id_tool.py .agent/tools/archive_protocol.py \
-  .agent/workflows/vdd-enhanced.md .agent/workflows/vdd-adversarial.md \
-  System/Agents/02_analyst_prompt.md System/Docs/SKILLS.md System/Docs/WORKFLOWS.md \
-  docs/design/095_workflow_loop_contract.md ; do
-  [ -f "$f" ] || continue
-  mkdir -p ".agent/archive/095/$(dirname "$f")" && cp "$f" ".agent/archive/095/$f"
-done
-echo "backed up: $(find .agent/archive/095 -type f | wc -l | tr -d ' ') files"   # expect 16
+git show HEAD:<path>                 # read the pre-change version
+git checkout HEAD -- <path>          # revert one file
+git checkout HEAD -- $(git diff --name-only)   # revert all tracked edits
 ```
 
-> The trailing count is not decoration. The first version of this block used `install -D`, which
-> GNU coreutils has and BSD/macOS `install` does not: every copy failed, `&&` swallowed it, and the
-> loop exited 0. The count printed `0` and the step was caught immediately. This is `T-095-05`'s
-> third rule — *a zero exit is not evidence of work* — demonstrated on this plan's own first command.
+New files (`docs/TASK.md`, `docs/PLAN.md`, `tests/test_language_independence.py`,
+`scripts/tests/test_anchor.py`, `scripts/tools/compat_diff.py`, `docs/tasks/task-095-*.md`,
+`docs/reviews/*095*.md`) are untracked; removing them is the whole of their rollback.
 
-Restore: `cp -R .agent/archive/095/. .` — no migration, no data format change, so restore is
-sufficient at any point. `core-principles` and `skill-safe-commands` are not in the list because
-this plan does not touch them (TASK A5).
+> An earlier revision of this step copied 16 files to `.agent/archive/095/` first. That was
+> redundant with git and has been dropped. It did earn its keep once, though: it used `install -D`,
+> which BSD/macOS `install` does not support, so every copy failed while the loop still exited 0 —
+> caught only because the step printed a file count and the count was `0`. That is `T-095-05`'s
+> third rule demonstrated on this plan's own first command.
+>
+> `core-principles` and `skill-safe-commands` are untouched by this plan (TASK A5).
 
 <!-- contract:sequence -->
 

@@ -200,3 +200,95 @@ class TestArchiveProtocolDerivesSlugsTheSameWay:
         no_meta = ap.parse_task_meta("# New Feature Work\n")
         assert no_meta["has_meta"] is False
         assert no_meta["slug"] == "new-feature-work"
+
+
+class TestPositionalFallbackNeedsStructuralEvidence:
+    """The guard on the fallback added by TestWsjfReadsColumnsStructurally.
+
+    Filed by a reviewing agent against TASK 095, and correct: the first version of
+    the positional fallback fired on ANY row of >= 5 cells, because with no English
+    names to recognize there was nothing left telling it a row was a header at all.
+    A lone `| Bad | 1 | 1 | 1 | 0 | 0 |` was therefore consumed AS the header row,
+    leaving zero data rows, and the script exited 0 — a malformed backlog turned
+    into a silent success. That is the same class of defect the language fix exists
+    to remove, reintroduced one layer down.
+
+    The structural evidence is the markdown separator row (`|---|---|`) that follows
+    a header. The English path gets the equivalent for free by recognizing its
+    column names; the positional path has to ask for it.
+    """
+
+    @pytest.fixture()
+    def wsjf(self):
+        import importlib.util
+        path = (REPO_ROOT / ".agent/skills/skill-product-backlog-prioritization"
+                / "scripts/calculate_wsjf.py")
+        spec = importlib.util.spec_from_file_location("calculate_wsjf_guard", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _run(self, wsjf, tmp_path, content):
+        """Drive main() over a backlog file; return its exit code."""
+        import sys
+        from unittest.mock import patch
+        p = tmp_path / "BACKLOG.md"
+        p.write_text(content, encoding="utf-8")
+        with patch.object(sys, "argv", ["calculate_wsjf.py", "--file", str(p)]):
+            try:
+                wsjf.main()
+            except SystemExit as exc:
+                return exc.code if exc.code is not None else 0
+        return 0
+
+    def test_a_headerless_row_is_not_accepted_as_a_header(self, wsjf, tmp_path):
+        """The exact regression: no separator row -> no positional fallback."""
+        code = self._run(wsjf, tmp_path, "| Bad | 1 | 1 | 1 | 0 | 0 |\n")
+        assert code == 1, "a headerless row was accepted as a WSJF backlog"
+
+    def test_job_size_zero_is_rejected_in_a_wellformed_english_table(self, wsjf, tmp_path):
+        """The protection `test_product_scripts.py::test_job_size_zero_protection`
+        names, now actually reached.
+
+        `calculate_wsjf.py` used to read `if js == 0: js = 1  # Avoid div by zero`,
+        so a row sized 0 was silently rescored against a denominator nobody wrote:
+        (8+5+3)/0 came out as 16.0 and sorted to the top of the backlog, looking
+        exactly like a real 16. The named test asserted exit 1 and passed the whole
+        time on an unrelated path — its fixture is a headerless row, rejected
+        earlier as a malformed table — so the guard had never run.
+        """
+        code = self._run(wsjf, tmp_path,
+            "| ID | User Value | Time Criticality | Risk Reduction | Job Size | WSJF |\n"
+            "|----|-----------|------------------|----------------|----------|------|\n"
+            "| A1 | 8 | 5 | 3 | 0 | |\n")
+        assert code == 1, "Job Size = 0 was scored instead of refused"
+
+    def test_job_size_zero_is_rejected_on_the_positional_path_too(self, wsjf, tmp_path):
+        """The non-English path added by TASK 095 gets the same guard — a fix that
+        held on one of two paths is the half-applied shape this task is about."""
+        code = self._run(wsjf, tmp_path,
+            "| ИД | Ценность | Срочность | Снижение риска | Объём работ | WSJF |\n"
+            "|----|----------|-----------|----------------|-------------|------|\n"
+            "| A1 | 8 | 5 | 3 | 0 | |\n")
+        assert code == 1, "Job Size = 0 slipped through the positional path"
+
+    def test_the_backlog_is_not_rewritten_when_a_row_is_refused(self, wsjf, tmp_path):
+        """Refusing must not leave the file half-scored: the caller re-runs after
+        fixing the row, and a partially rewritten backlog would make that ambiguous."""
+        content = (
+            "| ID | User Value | Time Criticality | Risk Reduction | Job Size | WSJF |\n"
+            "|----|-----------|------------------|----------------|----------|------|\n"
+            "| A1 | 8 | 5 | 3 | 2 | |\n"
+            "| A2 | 4 | 4 | 4 | 0 | |\n")
+        code = self._run(wsjf, tmp_path, content)
+        assert code == 1
+        assert (tmp_path / "BACKLOG.md").read_text(encoding="utf-8") == content, \
+            "the backlog was modified despite the run being refused"
+
+    def test_a_wellformed_non_english_backlog_still_succeeds(self, wsjf, tmp_path):
+        """The guard must not have cost the feature it guards."""
+        code = self._run(wsjf, tmp_path,
+            "| ИД | Ценность | Срочность | Снижение риска | Объём работ | WSJF |\n"
+            "|----|----------|-----------|----------------|-------------|------|\n"
+            "| A1 | 8 | 5 | 3 | 2 | |\n")
+        assert code == 0

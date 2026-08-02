@@ -22,8 +22,9 @@ From three work-items filed by a downstream project whose artifacts are written 
 (WI-30/31/32, one `/vdd` run). The reported symptom was one validator refusing a perfectly
 good RTM. Re-verification found the same defect in **four** places, one of them silent, and
 the framework had already solved it once — for a single ledger — without generalizing.
-Gates: **185 pytest** (161 → 185), 45/45 skills, prompt-refs / security-lint / workflow-smoke
-green; both artifact corpora re-measured unchanged.
+Gates: **779 tests** across the four local suites, 45/45 skills, prompt-refs / security-lint /
+workflow-smoke green; compatibility measured differentially — **0 of 1102 artifacts changed
+verdict across 10 projects** (`scripts/tools/compat_diff.py`, old = `14799d3`).
 
 #### **Added — `documentation-standards` §4.3–§4.4 (v1.6 → v1.7)**
 §4.1 sorts references into positional and nominal and prefers nominal. That was right and
@@ -78,6 +79,34 @@ input**: `vdd-adversarial` step 2a now defines the block, and a *missing* block 
 finding, exactly as missing execution evidence is. Items 6 and 7 are **appended**, not inserted:
 two documents and three ledger lines across two repositories cite §4.4/§4.5 by ordinal, and
 shifting them would reproduce the very defect being fixed.
+
+#### **Corrections after review — two of this entry's own defects**
+A reviewing agent checked the above against the repository and found two things wrong with it.
+Both are recorded rather than quietly amended, because both are the genre this release is about.
+
+- **The `calculate_wsjf.py` fix broke a test that was not in the CI job list.** The positional
+  fallback fired on *any* row of ≥5 cells, so a lone headerless `| Bad | 1 | 1 | 1 | 0 | 0 |` was
+  consumed as the header row, leaving zero data rows and exiting 0 —
+  `test_product_scripts.py::test_job_size_zero_protection` went red. The fallback now requires the
+  markdown separator row that follows a real header. Missed because verification used the CI job
+  list, and that list is a **subset** of the local suite; §6.3 rule 1 now says CI is a floor and to
+  take the union.
+- **Pulling that thread found the named protection had never run.** Its fixture was rejected on
+  column names long before reaching the guard, and the guard did not exist:
+  `calculate_wsjf.py` read `if js == 0: js = 1  # Avoid div by zero` **and**
+  `return max(1, num)  # Ensure at least 1`, so a row sized 0 scored `(8+5+3)/1 = 16.0` and sorted
+  to the top of the backlog looking like a real 16. **Two sites, both closed** — fixing only the
+  first left `0` and `-3` still scoring. Job Size ≤ 0 is now refused, the backlog is left
+  unmodified when it is, and four tests cover it on both the English and positional paths.
+- **A denominator in this changelog was typed, not counted.** "0 of 1105 artifacts" was a literal
+  in a print statement's format string; the real total is **1102**. The substantive claim (no
+  artifact changed verdict) was genuinely computed and holds. §6.3 gains **rule 4**: a number you
+  report must be produced by the thing you measured. The measurement is now a checked-in script
+  with its evidence line in the skill.
+
+Also noted and deliberately **not** changed: `map_size_to_fib`'s `num > 40` branch contains two
+unreachable comparisons (`num <= 10`, `num <= 30`). Verified across the range — the first reachable
+branch returns the same value they would have, so it is dead code, not a behaviour defect.
 
 #### **Not shipped, deliberately**
 The other half of WI-30 ("a skipped step must be an event") and the mechanically-enforceable

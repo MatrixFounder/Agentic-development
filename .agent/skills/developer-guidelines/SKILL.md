@@ -123,6 +123,11 @@ so none of them can catch itself — that is what makes them worth a rule.
    filtered to one package picks up that package's ignore file; the root invocation CI runs does not
    read it, and the branch is red on a change reported green.
    **Narrow what you write; reproduce CI for what you verify.**
+   **And CI is a floor, not a ceiling:** a repository's CI job often names a *subset* of the local
+   suite, so "I ran what CI runs" can still miss a suite that only ever runs locally. Take the
+   **union** — CI's invocation *and* the full local suite. Where suites live in different
+   directories with different import roots, each needs its own correct invocation; running them
+   all from the repo root can manufacture failures that are not there.
 2. **A pipeline's exit code belongs to its last command.** `cmd | tail` reports on `tail`. Take the
    status before the pipe, redirect to a file and read the file afterwards, or use the shell's
    facility for per-stage statuses (`set -o pipefail`, `PIPESTATUS`/`pipestatus`).
@@ -131,6 +136,12 @@ so none of them can catch itself — that is what makes them worth a rule.
    name the **sign of work** in the output — the test count, the file count, the target name — and
    quote it next to the verdict. Where a tool prints no such sign, say so explicitly rather than
    letting the bare 0 stand in for it.
+
+4. **A number you report must be produced by the thing you measured.** Computing a result and then
+   *typing* its denominator into the summary line beside it is not a measurement — the two can
+   disagree and nothing will say so. If a script prints `0 of 1105 changed`, the `1105` must come
+   from the same pass that produced the `0`. A literal in a format string is a claim wearing the
+   costume of an output.
 
 State the expected sign **before** running, not after. Chosen afterwards, it is whatever the output
 happened to contain.

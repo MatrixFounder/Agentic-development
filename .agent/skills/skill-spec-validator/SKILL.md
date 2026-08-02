@@ -93,6 +93,15 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   **Measured 2026-07-30 (recount after archiving TASK 092's own artifacts): 46 probed headings,
   8 normalized shapes, 20 tasks and 14 of 27 pairs passing** — the floors are canaries below those
   numbers, not targets. Outside the framework repo these tests **skip** rather than fail.
+- **Differential compatibility check** (`scripts/tools/compat_diff.py`): runs the PRE-change
+  validator and the current one over every `docs/tasks/*.md` in every sibling project and reports
+  how many artifacts **changed verdict**. This answers a question the corpus floors cannot: those
+  are liveness canaries ("the gate is not dead"), set below the measured counts so ordinary churn
+  never turns them red, and a floor cannot see one file flip while another flips back.
+  **Measured for the anchor change (TASK 095), old = `14799d3`: `0 of 1102 artifacts changed
+  verdict across 10 projects`.** Every number in that line is counted by the script; the first
+  time this was reported the denominator had been typed by hand into the output string and was
+  wrong by 3 (`developer-guidelines` §6.3 rule 4 now names that defect).
 - **Proof the guard bites:** re-injecting each historical regression makes the suite red —
   the pre-TASK-090 `^## Requirements Traceability$` matcher → 28 failures (incl. every corpus test);
   the literal `[**R-1**]` PLAN token → 7 failures. Re-verify with those two edits, not by reading.

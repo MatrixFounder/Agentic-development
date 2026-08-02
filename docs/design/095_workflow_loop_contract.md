@@ -1,12 +1,13 @@
 # Design Spec 095 — Workflow Loop Contract & Run Frame Stack
 
-**Status:** DRAFT rev 3 — operator review rounds 1–2 applied; **decision-complete**. Nothing implemented.
+**Status:** DRAFT rev 5 — rev 4 closed 6 of the 9 blocking review findings; rev 5 closes the remaining 3 ([review-095-independent.md](../reviews/review-095-independent.md)).
 **Author:** Orchestrator (self-improvement mode)
 **Date:** 2026-08-02
-**Supersedes:** nothing. **Blocks:** nothing.
+**Supersedes:** DRAFT rev 4. **Blocks:** nothing.
 **Prime constraint:** *do not break the current framework.* Every element below is additive,
 inert-by-default, and revertible with a single `git revert`. See §3.
-**Decisions applied:** D1–D6 in §8 — no open questions remain. Changelog in Appendix C.
+**Decisions applied:** D1–D7 in §8 — **decision-complete**. D7 (ship order reversed) accepted by the
+operator 2026-08-02. Changelog in Appendix C.
 
 ---
 
@@ -20,15 +21,15 @@ composable protocol** with five properties that no existing artifact records mec
    developer↔reviewer loop.
 
 2. **Caller-side rebinding of callee bounds.** A sub-workflow declares an open-ended loop; the
-   caller closes it at the call site. Five instances exist today, all in prose:
+   caller closes it at the call site. Two genuine caller-side rebindings exist today (with three additional caller wrapper or skip mechanisms):
 
-   | Caller | Callee | What the caller rebinds |
+   | Caller | Callee | Mechanism / Rebinding |
    |---|---|---|
-   | `full-robust` §3 | `security-audit` §4c | `"until clean"` → `no CRITICAL/HIGH`, **max 3 iterations** |
-   | `full-robust` §2 | `vdd-multi` | coverage gate → materialize fixes, **re-run once** |
-   | `full-robust` §4 | `04-update-docs` | **one** retry of the failed sub-step |
-   | `vdd-enhanced` §3 | `05-run-full-task` | **max 2** fix-and-rerun rounds *total* |
-   | `vdd-enhanced` §4 | `vdd-adversarial` | **max 3** adversarial cycles |
+   | `full-robust` §3 | `security-audit` §4c | Genuine rebind: `"until clean"` → `no CRITICAL/HIGH`, **max 3 iterations** |
+   | `vdd-enhanced` §4 | `vdd-adversarial` | Genuine rebind: **max 3** adversarial cycles |
+   | `full-robust` §2 | `vdd-multi` | Caller flag: passes `--no-fix`, callee skips Phase 3 fix loop entirely |
+   | `full-robust` §4 | `04-update-docs` | Caller-owned wrapper: **one** retry around single-pass sub-workflow |
+   | `vdd-enhanced` §3 | `03-develop-single-task` | Caller-owned loop: **max 2** fix-and-rerun rounds *total* over single tasks |
 
 3. **Deliberately non-composing counters.** `vdd-enhanced` §3 states the rule in prose because
    nothing enforces it: *"max 2 fix-and-rerun rounds **total** (not per task; `/develop`'s
@@ -50,7 +51,7 @@ composable protocol** with five properties that no existing artifact records mec
 
 ### 1.1 The concrete defect this produces
 
-**Ten loops have no bound in the workflow that owns them.** Some are bounded only when reached
+**Twelve loops have no bound in the workflow that owns them.** Some are bounded only when reached
 through a specific caller; invoked directly they run unbounded. Full inventory in Appendix A.
 
 The most significant finding is not random scatter but a **systematic regression in the VDD
@@ -63,58 +64,54 @@ family** — the VDD variants dropped the bounds their non-VDD twins have:
 | `02-plan-implementation` step 3 | Max 2 attempts → STOP | `vdd-02-plan` step 3 | *"repeat the review"* — **none** |
 | `03-develop-single-task` step 4 | Max 2 attempts → STOP | `vdd-03-develop` step 4 | *"Go to Step 2.1"* — **none** |
 
+Additionally, `framework-upgrade.md` has two unbounded retry loops ("*If Audit fails, GOTO Step 2*"), and `vdd-05-run-full-task` step 2 has an unbounded Red tests Builder loop.
+
 The invariant asserted in `full-robust`'s header — *"Every retry loop is **bounded** with an
 explicit escalation path"* — holds only inside that call tree.
 
-### 1.2 The call graph (load-bearing for §8 D1)
+### 1.2 The call graph & call invocation spellings
 
-Derived from every `.agent/workflows/<name>.md` reference inside each workflow body.
+Derived from inspecting all `.agent/workflows/<name>.md` files.
 
-| Callee | Callers (in-degree) |
+| Callee | Callers (sub-workflow invocation in-degree) |
 |---|---|
-| `01-start-feature` | `base-stub-first`, `light-01-start-feature`, `light-02-develop-task`, **`vdd-enhanced`** |
-| `02-plan-implementation` | `base-stub-first`, **`vdd-enhanced`** |
-| `03-develop-single-task` | `05-run-full-task`, `full-robust`, `vdd-enhanced` |
+| `01-start-feature` | `base-stub-first`, `vdd-enhanced` *(Note: `light-01`/`light-02` mention `01-start-feature` as an escalation handoff, not a sub-workflow call)* |
+| `02-plan-implementation` | `base-stub-first`, `vdd-enhanced` |
+| `03-develop-single-task` | `05-run-full-task`, `full-robust`, `vdd-enhanced`, **`vdd-adversarial`** (`.agent/workflows/vdd-adversarial.md:43`) |
 | `05-run-full-task` | `base-stub-first`, `vdd-enhanced` |
 | `04-update-docs` | `full-robust` |
 | `security-audit` | `full-robust` |
 | `vdd-multi` | `full-robust` |
 | `vdd-enhanced` | `full-robust` |
 | `vdd-adversarial` | `vdd-enhanced` |
-| `vdd-03-develop` | `vdd-05-run-full-task` |
+| `vdd-03-develop` | `vdd-05-run-full-task` *(partial delegation to Step 3)* |
 | `light-02-develop-task` | `light-01-start-feature` |
 | **`vdd-01-start-feature`** | **none** |
 | **`vdd-02-plan`** | **none** |
-| **`iterative-design`** | **none** |
-| **`framework-upgrade`**, **`heal-issues`**, **`product-*`** | **none** |
+| **`iterative-design`**, **`framework-upgrade`**, **`heal-issues`**, **`product-*`** | **none** |
 
-Two consequences that shape the whole design:
+The codebase uses three distinct call syntax spellings:
+1. `Call /<name>` (e.g. `.agent/workflows/05-run-full-task.md:19`)
+2. `Execute .agent/workflows/<name>.md` (e.g. `.agent/workflows/vdd-enhanced.md:49`)
+3. ``Call workflow `<name>` `` (e.g. `.agent/workflows/vdd-adversarial.md:43`)
 
+Two structural consequences:
 - **`vdd-enhanced` calls the NON-VDD `01-start-feature` / `02-plan-implementation`**, not the
   VDD variants. Therefore `vdd-01-start-feature` and `vdd-02-plan` have **no caller at all** —
-  they exist only as the `/vdd-start-feature` and `/vdd-plan` entrypoints. A
-  `override: required` declaration is meaningless for them; they must own their bound.
+  they exist only as the `/vdd-start-feature` and `/vdd-plan` entrypoints.
 - Every workflow except `light-02-develop-task` has a slash command in `.claude/commands/`, so
   **every workflow is directly invocable**. A loop bounded only by its caller is therefore
-  unbounded on its own entrypoint. This is why category 2 in Appendix A needs *both* a default
-  and an override.
+  unbounded on its own entrypoint.
 
-> **Correction to R5 (see §5.2):** the table above was machine-derived by path-mention, which
-> reports a false cycle `vdd-03-develop` ↔ `vdd-05-run-full-task`. The back-edge is a footer
-> **documentation pointer** (*"Для прогона всей цепочки задач — см. `/vdd-develop-all`"*), not a
-> call. `contract.calls[]` therefore means **invokes**, never **mentions**, and the validator
-> reads the authored list — it must not derive the graph by grepping paths.
+> **Note on call edges (`contract.calls[]`):** `contract.calls[]` represents active workflow invocations,
+> never documentation pointers (e.g., the `vdd-03` ↔ `vdd-05` footer link) or escalation handoffs (`light-01` → `01`).
 
 ### 1.3 What is explicitly NOT the problem
 
 - **Not a missing FSM diagram.** A flat state table cannot express caller-side rebinding
-  (property 2) or counter scoping (property 3). Adding one would document less than the prose does.
-- **Not a format problem.** XML instruction blocks are rejected: the difficulty is composition
-  semantics, which markup does not address, and XML tagging is an Anthropic-specific prompting
-  convention — adopting it would *reduce* vendor neutrality, which is the framework's stated goal.
-- **Not enforcement-by-prose.** The framework already discovered empirically that the only
-  binding enforcement is a **process exit code** (`validate.py`, `flock`, `diff -q`,
-  `claim` → 6). Prose bounds are documentation, not invariants.
+  or counter scoping.
+- **Not an XML markup requirement.** XML instruction blocks are rejected to maintain vendor neutrality.
+- **Not enforcement-by-prose.** Binding enforcement requires process exit codes (`validate.py`, `flock`, `diff -q`, `claim` → 6).
 
 ---
 
@@ -123,45 +120,50 @@ Two consequences that shape the whole design:
 > **The exit code is the vendor-agnostic interface.**
 
 Everything specified here reduces to files that any runtime can read and scripts that any
-runtime can run. No component depends on a model capability, a subagent primitive, or a
-vendor's prompt format. A bound becomes real when a script can refuse.
+runtime can run.
 
 Three components, each valuable alone:
 
-| # | Component | Kind | Effect if the others never ship |
+**The defect in §1.1 is closed by prose, not by any component.** Twelve loops need a bound
+written where they live: roughly fifteen lines across five files, in the idiom
+`.agent/workflows/01-start-feature.md:11-12` already uses. That work is **Phase 2** and it stands entirely alone.
+Rev 3 shipped it *after* 23 files of frontmatter and a CI gate, and justified the ordering by
+calling frontmatter "the highest-value / lowest-risk step" — the independent review refuted that
+by measurement (~700–850 new lines to protect ~15). See **D7**.
+
+Components exist for what remains **after** the bounds are written — drift, and claims about
+runs. Each is stated by what it detects once §1.1 is already closed:
+
+| # | Component | Kind | What it detects *after* Phase 2 |
 |---|---|---|---|
-| **A** | Loop Contract — machine-readable frontmatter in each workflow | Declaration | Documentation improves; nothing changes at runtime |
-| **B** | `check_loop_contract.py` — CI/dev-time validator | Gate | Undeclared and unbound loops fail CI |
-| **C** | `run_stack.py` — runtime frame stack, counters, gate outcomes | Enforcement | Bounds become refusable; completion claims become verifiable |
+| **A** | Loop Contract — machine-readable frontmatter | Declaration | Nothing on its own. It is the input B reads; alone it is a second copy of a number, which is a liability, not an asset |
+| **B** | `check_loop_contract.py` — CI/dev-time validator | Gate | A bound edited in prose but not in frontmatter (or the reverse) — R3; a loop added later with no declaration — R6 + the §4.7 keyword heuristic; a caller binding a loop that does not exist — R12 |
+| **C** | `run_stack.py` — frame stack, counters, gate outcomes | Enforcement | A bound *exceeded at runtime*, and a completion claim (`✓`) with no recorded gate behind it — neither of which any static check can see |
 
-Ship order is **A → B → C**. B is worthless without A. **`contract.gates[]` (§4.6) ships with C,
-never before** — per decision D3 it is defined here so C has a schema to consume, but it is not
-part of Phase 2.
+**A is explicitly not "valuable alone".** §4.6 defers `contract.gates[]` because *"declaring data
+that nothing reads is the over-engineering this design otherwise avoids"*; that test applies to
+`loops[]` too, and A fails it until B exists. A and B therefore ship as **one phase**, and the
+table above states B's detections rather than A's, because A has none.
 
-**All three are committed** (D5). §6 and §4.6 are nevertheless marked **provisional**: they are
-designed against the framework as it stands today, and Phases 2–4 will produce the first real
-evidence about drift rate, which bounds actually exhaust, and whether the schema survives contact
-with authors. Component C is therefore re-derived from that evidence at the Phase-5 entry gate
-(§7.1) before a line of it is written.
+Ship order is **prose bounds → A+B → C**. `contract.gates[]` (§4.6) ships with C. Component C is
+PROVISIONAL and re-derived from Phase 2–3 evidence at the Phase-5 entry gate (§7.1).
 
 ---
 
 ## 3. Safety invariants (the "do not break" contract)
 
-Every one of these is a requirement on the implementation, verifiable at review time.
-
 | # | Invariant | How it is guaranteed |
 |---|---|---|
-| **S1** | **Additive only.** No existing line of any workflow, prompt, or skill is deleted or reworded. | Component A appends frontmatter keys. Components B and C are new files. The one exception is Phase 3, which edits prose **only where a bound is added**, and only for the loops the operator approved in D1. |
-| **S2** | **Frontmatter is inert for every consumer.** | Verified: `.claude/commands/*.md` are thin wrappers with **no frontmatter of their own** that merely say *"Read and execute the workflow defined in `.agent/workflows/X.md`"* — the workflow file is never parsed as a slash-command definition. The only reader of `.agent/workflows/*.md` today is `System/scripts/smoke_workflows.py`, which regex-matches the **body** (`CALL_RE`) and ignores frontmatter. |
-| **S3** | **No new runtime dependency.** | `update_state.py` hand-rolls `parse_simple_yaml`/`generate_yaml`; `.agent/rules/skill_standards.yaml` carries the explicit note *"Must be compatible with Simple 'Vanilla Python' Parser. No advanced YAML features."* Component C is stdlib-only (`json`, `fcntl`, `os`, `time`) exactly like `claims.py`. Component B may use PyYAML — it runs in CI and dev only, where `requirements-dev.txt` already pins `PyYAML==6.0.3`. |
-| **S4** | **Warn-only first.** Component B ships returning exit 0 with `WARN:` lines. It flips to exit 1 only in a separate commit, after the inventory is green. | Phase gate in §7. |
-| **S5** | **Component C is opt-in per workflow.** A workflow that never calls `run_stack.py` behaves **byte-identically** to today. | No workflow is edited to *require* the script in Phase 1–4. Adoption is per-workflow, one at a time, each its own commit. |
-| **S6** | **Fail-open at runtime.** If `run_stack.py` is missing, unreadable, or errors, the calling workflow proceeds on its prose bound and logs one line. A broken counter must never brick a pipeline. | Mirrors the existing retro-claim rule (*"non-blocking"*) and the TTL-based stale-claim recovery in `claims.py` (`DEFAULT_TTL_HOURS = 24`). |
-| **S7** | **Zero new gitignore/installer surface.** | Stack state lives at `.agent/sessions/stack.json`; `.gitignore:9` already ignores `.agent/sessions/`. `.agent/rules` and `.agent/tools` are `link_folder` in `System/scripts/vendors.yaml`, and `.agent/skills` is `link_per_item` — a new script under an existing skill propagates to every vendor with no installer change. |
-| **S8** | **Single-commit rollback.** Reverting Component A leaves valid workflows (frontmatter removed, prose untouched). Reverting B removes a CI gate. Reverting C removes an unused script. | No migration, no data format change to `latest.yaml`. |
-| **S9** | **`latest.yaml` schema is not modified.** The frame stack is a *sibling* file, not a new key. | Protects `skill-session-state`, `test_concurrent_state.py`, and every workflow's persist step. |
-| **S10** | **No existing bound value is changed.** Phase 3 *adds* bounds where none existed (D1 categories 1–2); it never edits a number that is already there, and never tightens a documented CLI default (D1 category 3). | The inventory (Appendix A) separates "add" from "record". |
+| **S1** | **Additive only.** No existing line of any workflow, prompt, or skill is deleted or reworded. | Component A appends frontmatter keys. Components B and C are new files. Phase 3 edits prose **only where a bound is added**. |
+| **S2** | **Frontmatter parser safety & regex non-collision.** | All 23 workflows already contain YAML frontmatter (`description:`). Frontmatter additions MUST be valid YAML and MUST NOT introduce string values containing `Call /name` or `System/Agents/*.md` to prevent false matches in script scanners (`smoke_workflows.py`, `check_prompt_references.py`, installer scripts, `vendors.yaml`, and LLM harnesses). |
+| **S3** | **No new runtime dependency.** | Runtime scripts (`run_stack.py`) use Python stdlib only (`json`, `fcntl`, `os`, `time`). CI validator (`check_loop_contract.py`) may use `PyYAML==6.0.3` (pinned in `requirements-dev.txt`) with an explicit pip install step in CI. |
+| **S4** | **Warn-only first.** | Component B ships returning exit 0 with `WARN:` lines, flipping to exit 1 only in Phase 4. |
+| **S5** | **Component C is opt-in per workflow.** | Workflows not calling `run_stack.py` remain byte-identical in behavior. |
+| **S6** | **Fail-open at runtime.** | If `run_stack.py` is missing, unreadable, or errors, the workflow logs a warning and continues using prose bounds. |
+| **S7** | **Zero new gitignore/installer surface.** | State lives in `.agent/sessions/stack.json` (already ignored by `.gitignore`). |
+| **S8** | **Rollback in reverse phase order.** | Reverting Phase 3 restores prose; reverting Phase 2 removes frontmatter; reverting Phase 5 removes Component C. |
+| **S9** | **`latest.yaml` schema is untouched.** | Frame stack uses sibling file `.agent/sessions/stack.json`. |
+| **S10** | **No existing bound value is changed.** | Phase 3 only *adds* bounds where missing; it never alters existing numeric caps. |
 
 ---
 
@@ -169,14 +171,11 @@ Every one of these is a requirement on the implementation, verifiable at review 
 
 ### 4.1 Placement
 
-Extends the existing YAML frontmatter of `.agent/workflows/*.md`. Today every workflow has
-exactly one key (`description:`); some have none. Both cases are handled.
+Extends the existing YAML frontmatter of `.agent/workflows/*.md`. All 23 workflows currently contain a frontmatter block with a `description:` key.
 
-### 4.2 Grammar (deliberately minimal)
+### 4.2 Grammar
 
-Restricted to the subset the vanilla parser convention allows: block mappings, block sequences,
-scalars, `null`, integers, booleans, double-quoted strings. **No** anchors, flow mappings,
-multi-line scalars, or complex keys.
+Restricted to standard YAML block mappings, block sequences, scalars, `null`, integers, and booleans:
 
 ```yaml
 ---
@@ -186,12 +185,13 @@ contract:
   loops:
     - id: audit_remediation
       what: "fix → re-run audit until clean"
-      site: "§4c"
+      site: "<!-- loop:audit_remediation -->" # or line:45-60
       default_max: 3
       override: allowed
       on_exhaust: escalate_user
   calls:
     - workflow: security-audit
+      kind: invoke
       binds:
         audit_remediation:
           max: 3
@@ -203,131 +203,111 @@ contract:
 
 | Key | Type | Required | Meaning |
 |---|---|---|---|
-| `id` | string, `snake_case`, unique in file | yes | Stable handle. Referenced by callers' `binds` and by `run_stack.py tick --loop`. |
-| `what` | string | yes | One-line human description. Enables review of the declaration against the prose. |
-| `site` | string | yes | Where in the body the loop lives (`"§4c"`, `"Step 2D"`). Anchors R3. |
-| `default_max` | int ≥ 1 \| `null` | yes | The iteration cap **this workflow applies when nobody overrides it** — i.e. on direct slash-command invocation. `null` = this workflow states no numeric cap. |
+| `id` | string, `snake_case`, unique | yes | Stable handle. Referenced by callers' `binds` and `run_stack.py`. |
+| `what` | string | yes | One-line human description. |
+| `site` | string | yes | Machine-resolvable locator, **exactly one of two forms** — see §4.3.1. Free-form prose (`"§4c"`, `"Step 2D"`) is a validator error, not a fallback. |
+| `default_max` | int ≥ 1 \| `null` | yes | Numeric cap applied when no caller overrides it. Must be `null` if `override: required`, `judgment_terminated: true`, or `gated_by: hitl`. |
 | `override` | `forbidden` \| `allowed` \| `required` | no, default `forbidden` | Caller-side rebinding policy. See §4.4. |
-| `scope` | `per_run` \| `per_item` \| `global` | no, default `per_run` | Encodes property 3 (§1). `per_item` = counter resets per task/finding. |
-| `on_exhaust` | `escalate_user` \| `stop_success` \| `warn_continue` \| `needs_human` | yes | The declared escalation path. Must match the prose. |
-| `recursive` | bool | no, default `false` | The loop re-enters this same workflow (`vdd-adversarial` §2b). |
-| `judgment_terminated` | bool | no, default `false` | The loop's **primary** exit is a structured verdict against a written bar; any numeric cap is a backstop, not the mechanism. Requires a non-empty `exit_bar`. |
-| `exit_bar` | string | only when `judgment_terminated: true` | The written termination condition, stated or cited. |
-| `gated_by` | `hitl` | no | Every iteration passes through a **blocking** human gate, so the loop cannot run away unattended. Legitimizes `default_max: null`. |
+| `scope` | `per_run` \| `per_item` \| `global` | no, default `per_run` | Counter scope. `per_item` = counter resets per task/finding. |
+| `on_exhaust` | `escalate_user` \| `stop_success` \| `warn_continue` \| `needs_human` | yes | Declared escalation path. |
+| `recursive` | bool | no, default `false` | Loop re-enters this same workflow. |
+| `judgment_terminated` | bool | no, default `false` | Loop terminates via structured verdict against a written bar. Requires non-empty `exit_bar`. |
+| `exit_bar` | string | required when `judgment_terminated: true` | Written termination condition / verifiable citation. |
+| `gated_by` | `hitl` | no | Every iteration requires blocking human decision. |
 
-> **What is not a loop (D6).** `loops[]` records **retry** constructs — re-entering the same work
-> because it failed or was rejected. A `for-each` over a finite, statically-known list is **not**
-> a loop and is not declared: it terminates by exhausting its input, not by a bound. The
-> canonical case is `05-run-full-task` step 2, which iterates the tasks in `docs/PLAN.md`; that
-> workflow declares exactly one loop (step 3's fix-and-rerun), not two. Same for `vdd-05` step 2's
-> per-task chain and `vdd-multi` Phase 1's per-critic fan-out. Stated here so Phase 2 authors do
-> not re-litigate it per file.
+#### 4.3.1 `site` grammar — the rule R3 stands on
 
-### 4.4 The `override` enum (replaces the rev-1 `bound_by_caller` boolean)
+R3 is the only thing keeping the frontmatter number and the prose number from disagreeing
+silently, and it is worth exactly as much as `site` is resolvable. Rev 3 defined `site` as a
+free-form string and let R3 fall back to *"the digit appears anywhere in the body"*. Both halves
+failed: **every** bound in Appendix A is 1, 2 or 3, and **all 23** workflow bodies contain those
+digits in their numbered step lists, so the fallback passed unconditionally; and the example
+anchors (`"§4c"`, `"Step 2b"`, `"§1.3"`) occur in **none** of the files they name. A rule that
+cannot fail is not a rule, and a `--strict` CI gate advertising it is worse than no gate.
 
-Rev 1 modelled the caller relationship as one boolean, which could not express the most common
-real case: *a workflow that has its own working default **and** is legitimately re-scoped by a
-caller* — `security-audit`, `vdd-adversarial`, `vdd-03-develop`. Since every one of these is also
-a direct entrypoint (§1.2), it needs both. Hence one numeric key named `default_max` — the number
-is a **default**, not an absolute — plus an explicit policy:
+**Exactly two forms are legal. There is no third, and no fallback.**
+
+| Form | Example | Resolves to | Use when |
+|---|---|---|---|
+| Marker | `<!-- loop:audit_remediation -->` | The line carrying the marker, plus the following `window` lines (default 12) | **Preferred.** Survives every edit above it |
+| Line range | `line:45-60` | Those lines of the body, frontmatter excluded from the count | Only where a marker cannot be placed |
+
+`<name>` in the marker MUST equal the loop's `id`. The marker is an HTML comment: inert in every
+renderer, invisible to `smoke_workflows.py`'s `CALL_RE` and to `check_prompt_references.py`
+(S2), and it is the same device `documentation-standards` §4.3 already mandates for addressing an
+authored section by structure rather than by prose.
+
+**Anything else is `SITE_UNRESOLVABLE` — an error, never a pass.** A line range whose bounds fall
+outside the body is the same error. This is the one property that makes R3 falsifiable, so it is
+stated as a hard failure rather than a preference.
+
+**Ordering consequence, stated because it bit rev 4.** The markers do not exist yet — the corpus
+carries none. So a `site` cannot be authored before the marker it names is inserted, which makes
+**marker insertion part of the same phase that writes the contract**, not a later cleanup. §7
+sequences it accordingly; R3 is enforced from the phase in which both the marker and the bound
+are present, and is listed against that phase in §5.2 rather than an earlier one.
+
+**Negative fixture is a deliverable, not a suggestion.** Component B ships with a fixture whose
+frontmatter says `default_max: 3` over prose saying `Max 2`, and CI fails if that fixture passes.
+Without it, "R3 works" is the same unguarded claim R3 exists to prevent — and the repository has
+already shipped this exact failure once: `check_prompt_references.py` matched zero references for
+its entire life while printing `OK: checked 42 files` (fixed in TASK 095).
+
+#### 4.3.2 `exit_bar` grammar — the same problem as `site`, and the same fix
+
+`judgment_terminated: true` is what lets a loop declare `default_max: null` legally. Rev 3 asked
+only that `exit_bar` be **non-empty**, so `exit_bar: "until done"` turned any unbounded loop into
+a fully compliant declaration, and Phase 4's `--strict` gate — advertised as *"unbound loops fail
+CI"* — would have been asserting that an author typed a string. Every loop in Appendix A.1 could
+have been closed that way instead of receiving a bound.
+
+**Form:** `"<verbatim substring quoted from the body at `site`>"`. The validator resolves `site`
+per §4.3.1 and requires the substring to occur inside that window. The bar therefore cannot drift
+from the prose that states it, for the same reason and by the same mechanism as R3.
+
+```yaml
+- id: adversarial_cycle
+  site: "<!-- loop:adversarial_cycle -->"
+  judgment_terminated: true
+  exit_bar: "0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains"
+```
+
+A bar the author cannot quote from the body is a bar the body does not state — which is the
+finding, not an inconvenience. Write it into the prose first; that is Phase 2's job anyway.
+
+### 4.4 The `override` enum
 
 | `override` | Meaning | `default_max` | Caller `binds` entry |
 |---|---|---|---|
-| `forbidden` | The workflow owns this bound outright. No caller may loosen or tighten it. | must be an int, **or** `null` with `judgment_terminated`/`gated_by` | **error** (R9) |
-| `allowed` | The workflow has a working default; a caller **may** re-scope it. | must be an int, **or** `null` with `judgment_terminated` | optional |
-| `required` | The workflow deliberately states no cap; every caller **must** bind one. | must be `null` | **mandatory** on every non-`optional` edge (R2) |
+| `forbidden` | Workflow owns bound outright. Caller may not rebind. | must be an int (or `null` with `judgment_terminated`/`gated_by`) | Error (R9) |
+| `allowed` | Workflow has default; caller **may** re-scope. | int, or `null` with `judgment_terminated`/`gated_by` | Optional |
+| `required` | Workflow states no cap; caller **must** bind one. | must be `null` | Mandatory on non-optional edges (R2) |
 
-`override: required` therefore carries exactly the rev-1 `bound_by_caller: true` semantics, and
-is now one value of a 3-state enum rather than a boolean that could be combined nonsensically.
-
-**Design note.** As of D1 no loop in the framework uses `override: required` — every
-caller-parameterized loop turned out to also be an entrypoint, so `allowed` fits all of them.
-The value is retained because it is the correct declaration for a future workflow that genuinely
-must not be run standalone, and because R2 exists to police it.
-
-### 4.5 `contract.calls[]` — every sub-workflow this workflow invokes
+### 4.5 `contract.calls[]` — sub-workflows invoked
 
 | Key | Type | Required | Meaning |
 |---|---|---|---|
-| `workflow` | string (basename, no `.md`) | yes | Callee. Must resolve to `.agent/workflows/<name>.md`. **Invocation only** — a documentation pointer to another workflow is not a call (§1.2 correction). |
-| `binds` | mapping `loop_id → {max, exit_bar?}` | required for the callee's `override: required` loops; optional for `allowed`; error for `forbidden` | Caller-side rebinding. `exit_bar` re-states the callee's termination condition in the caller's terms. |
-| `optional` | bool | no, default `false` | Call is conditional (`full-robust` §2 is opt-in). Suppresses R2 for that edge. |
+| `workflow` | string (basename) | yes | Callee basename without `.md`. Must resolve to `.agent/workflows/<name>.md`. |
+| `kind` | `invoke` \| `escalate` | no, default `invoke` | `invoke` = sub-workflow execution; `escalate` = handoff/switch workflow. |
+| `partial` | string | no | Indicates fragment delegation (e.g. `"Step 3"` for `vdd-05` calling `vdd-03`). |
+| `suppresses` | list of string | no | List of callee `loop_id`s suppressed by invocation flags (e.g. `--no-fix`). |
+| `binds` | mapping `loop_id → {max, exit_bar?}` | conditional | Rebinding mapping for callee loops. |
+| `optional` | bool | no, default `false` | Edge is conditional. |
 
-**A loop the caller wraps around a call, which the callee does not itself declare, belongs in the
-caller's own `loops[]`, not in `binds`.** The single instance is `full-robust` §4's one-retry
-around `04-update-docs`, which has no retry loop of its own. This keeps `04-update-docs` honest
-(`loops: []`) and requires no new vocabulary.
-
-### 4.6 `contract.gates[]` — ships with Component C (Phase 5), per D3
-
-Records the gate taxonomy that currently lives only in prose (`full-robust` header,
-`vdd-enhanced` header, session decision 084). **Deliberately not part of Phase 2**: declaring
-data that nothing reads is the over-engineering this design otherwise avoids. It is specified
-here so that Component C has a schema to consume the moment it ships.
+### 4.6 `contract.gates[]` — ships with Component C (Phase 5)
 
 | Key | Type | Meaning |
 |---|---|---|
-| `id` | string, `snake_case` | Stable handle; referenced by `run_stack.py gate --id`. |
-| `site` | string | Where in the body the gate is stated. |
-| `kind` | `script` \| `review_verdict` \| `hitl` \| `non_blocking` | See below. |
-| `command` | string | required when `kind: script` — the command whose exit code is the gate. |
-| `bar` | string | required when `kind: review_verdict` — the **written** objective bar, stated or cited. |
-| `claims` | string | optional — the token this gate contributes to a completion announcement (e.g. `"Security ✓"`). |
+| `id` | string | Stable handle for gate. |
+| `site` | string | Locator in body. |
+| `kind` | `script` \| `review_verdict` \| `hitl` \| `non_blocking` | Gate classification. |
+| `command` | string | Verbatim command executed for `kind: script`. |
+| `bar` | string | Objective written bar for `kind: review_verdict`. |
+| `claims` | string | Token contributed to completion line (e.g. `"Security ✓"`). |
 
-| `kind` | Definition | Example |
-|---|---|---|
-| `script` | Deterministic process exit code / test run | `validate.py --mode task` |
-| `review_verdict` | Structured PASS/FAIL against a **written** objective bar | `vdd-adversarial` Objective Convergence |
-| `hitl` | Human decision required; no automated pass | `vdd-05` §3 inter-task gate |
-| `non_blocking` | May fail without changing the workflow's outcome | Retro (Global Protocol) |
+### 4.7 Negative declaration (`loops: []`)
 
-**Why it earns its place only alongside C.** With `run_stack.py gate --id X --outcome …` writing
-per-frame gate outcomes, the `claims` key makes a completion announcement *verifiable*:
-`full-robust`'s final line `VDD ✓ · Coverage ✓|skipped · Security ✓ · Docs ✓` can be checked
-against recorded outcomes, so a ✓ with no recorded gate outcome is a detectable false claim.
-That is the same class of defect `vdd-enhanced` §4.5 currently has to close in prose
-(*"Cap reached with an orchestrator-applied fix still un-reviewed → the verdict is **WARNING,
-never PASS**"*). Without C, `gates[]` is inert documentation and must not ship.
-
-### 4.7 Worked example — `vdd-adversarial.md`
-
-Current frontmatter:
-```yaml
----
-description: VDD Adversarial Refinement
----
-```
-
-Proposed (prose body untouched in Phase 2; Phase 3 adds the "max 3" sentence per D1):
-```yaml
----
-description: VDD Adversarial Refinement
-contract:
-  version: 1
-  loops:
-    - id: adversarial_cycle
-      what: "critique → fix → re-critique (recursive self-call)"
-      site: "Step 2b"
-      default_max: 3
-      override: allowed
-      recursive: true
-      judgment_terminated: true
-      exit_bar: "Objective Convergence — full test run executed, 0 CRITICAL, no legitimate logic/security/slop findings, only bikeshedding remains"
-      on_exhaust: escalate_user
-  calls:
-    - workflow: 03-develop-single-task
----
-```
-
-This declaration makes the defect machine-visible and then closes it: the primary exit stays
-Objective Convergence (unchanged behaviour), `vdd-enhanced`'s existing `max: 3` bind is now
-explicit rather than prose-only, and direct `/vdd-adversarial` invocation — which today has no
-cap whatsoever — inherits the same 3 as a backstop.
-
-### 4.8 A negative declaration is still a declaration
-
-Workflows with no loops must write `loops: []`. That empty list is a **falsifiable claim** a
-reviewer can check against the body. Absence of the key is a validator error (R6), not a pass.
+Workflows without retry loops declare `loops: []`. The validator enforces a heuristic check: if `loops: []` is declared on a body containing retry keywords (`Repeat`, `GOTO`, `Go to Step`, `until clean`), the validator emits a warning.
 
 ---
 
@@ -335,59 +315,38 @@ reviewer can check against the body. Absence of the key is a validator error (R6
 
 ### 5.1 Placement
 
-`System/scripts/check_loop_contract.py`, alongside `validate_skills.py`,
-`check_prompt_references.py`, `security_lint.py`, `smoke_workflows.py`.
-
-**Not** merged into `smoke_workflows.py`: that script is already wired into the
-`workflow-smoke` CI job and its failure currently means "a workflow file or call target is
-missing". Keeping the new gate separate preserves that signal and makes the new gate revertible
-without touching a working one (S1, S8).
+`System/scripts/check_loop_contract.py`.
 
 ### 5.2 Rules
 
 | # | Rule | Severity | Phase | Rationale |
 |---|---|---|---|---|
-| **R1** | `default_max: null` is legal **only** with `override: required`, `judgment_terminated: true`, or `gated_by: hitl`. Otherwise: error. | error | 2 | An unbounded loop that nobody claims will be bound, and that neither a written bar nor a human gate terminates, is the defect in §1.1. |
-| **R2** | Every `override: required` loop must be bound by **every** non-`optional` caller edge that reaches it (transitively through `calls`). A workflow with **no** callers and such a loop is reported `ENTRYPOINT_UNBOUND`. | error | 2 | Polices the one declaration that delegates responsibility upward. |
-| **R3** | A numeric `default_max: N` must appear as a digit in the body within the `site` region (fallback: anywhere in the body). | error | 2 | Anti-drift: frontmatter and prose cannot disagree silently. Solves the `Planning: 2` vs `2 (1 rev)` class of divergence. |
-| **R4** | Every `calls[].workflow` resolves to an existing file. | error | 2 | Extends today's coverage: `CALL_RE` in `smoke_workflows.py` matches only `Call /name`, so the far more common `Execute \`.agent/workflows/X.md\`` form is **currently unchecked**. |
-| **R5** | The `calls` graph is acyclic, except edges whose target declares `recursive: true` with a resolved bound. The graph is built **from the authored `calls` list only** — never by grepping path mentions, which produces false cycles (§1.2). | error | 2 | `vdd-adversarial` self-recursion is legal *when bounded*; the `vdd-03` ↔ `vdd-05` "cycle" is not a cycle. |
-| **R6** | Every workflow has `contract.version` and a `loops` key (possibly `[]`). | error | 3 | Forces the negative declaration (§4.8). |
-| **R7** | `on_exhaust` is present on every loop. | error | 2 | An escalation path is the second half of a bound. |
-| **R8** | A `scope: per_run` loop inside a workflow that iterates a list should say so in `what`. | **warn** | 2 | Heuristic, never an error — catches the `vdd-enhanced` §3 "total, not per task" class. |
-| **R9** | A caller must not `bind` a loop the callee declares `override: forbidden`. | error | 2 | Makes the ownership boundary enforceable in both directions. |
-| **R10** | `judgment_terminated: true` requires a non-empty `exit_bar`; `kind: review_verdict` gates require a non-empty `bar`. | error | 2 / 5 | The framework's own standard: a verdict gate is only legitimate against a **written** bar. |
-| **R11** | Every `claims` token in a completion announcement line has a `gates[]` entry that produces it. | error | **5** | Makes a `✓` traceable to a gate. Requires `gates[]`, hence Phase 5. |
+| **R1** | `default_max: null` requires `override: required`, `judgment_terminated: true`, or `gated_by: hitl`. Otherwise error. | error | 3 | Eliminates un-bounded loops. Phase 2 has already written every prose bound, so there is no transitional state to accommodate — see D7. |
+| **R2** | `override: required` loops must be bound by all non-optional caller edges. | error | 3 | Ensures required overrides are supplied. |
+| **R3** | Frontmatter `default_max` must match prose bound within the anchored `site` window (`line:NN-MM` or `<!-- loop:<id> -->`). Negative test fixture required. | error | 3 | Prevents frontmatter/prose drift. |
+| **R4** | All `calls[].workflow` entries must resolve to existing workflow files across all 3 call syntax spellings (`Call /x`, `Execute .agent/workflows/x.md`, ``Call workflow `x```). | error | 3 | Ensures call graph integrity. |
+| **R5** | `calls` graph must be acyclic (except explicit `recursive: true` loops). Graph built from authored `calls` lists only. | error | 3 | Prevents unintended workflow call recursion. |
+| **R6** | Every workflow MUST contain a `contract:` block with `version` and `loops` (Phase 2). | error | 3 | Forces explicit declaration across all workflows. |
+| **R7** | `on_exhaust` required on every loop. | error | 3 | Mandates escalation path. |
+| **R8** | `scope: per_run` loops inside list-iterating workflows generate warning if unnoted. | **warn** | 3 | Prevents counter scoping confusion. |
+| **R9** | Caller cannot `bind` a loop declared `override: forbidden` by callee. | error | 3 | Enforces ownership boundaries. |
+| **R10** | `judgment_terminated: true` requires an `exit_bar` in the §4.3.2 citation form, and the quoted substring must be found in the body at `site`. | error | 3 | "Non-empty" is satisfied by `"until done"`, which converts any unbounded loop into a compliant declaration — the §1.1 defect re-legalized through the escape hatch. |
+| **R11** | Completion claim tokens (`claims`) must map to a recorded gate. | error | **5** | Ensures verifiable completion claims. |
+| **R12** | Every key in caller `binds` must match a valid `loops[].id` in callee. | error | 3 | Catches invalid bind references. |
 
-### 5.3 Honest limitation (must be stated in the script's docstring)
+### 5.3 CLI Contract & CI Wiring
 
-> The validator enforces **declaration**, not **truth**. It cannot detect a retry loop that the
-> author simply did not declare — prose loop-detection by regex is unreliable in both directions
-> and is deliberately not attempted. The initial inventory (Appendix A) is a one-time human-
-> reviewed audit; R3 and R6 prevent drift *after* that point.
-
-Stated explicitly because the framework has a standing precedent against documenting automation
-stronger than what actually runs (`heal-issues` §Scheduling, *"never document automation whose
-runner does not exist"*).
-
-### 5.4 CLI contract
-
-```
+```bash
 python3 System/scripts/check_loop_contract.py --root . [--strict] [--json]
 ```
 
-Exit codes follow the existing convention (`smoke_workflows.py`; `feedback_lib/envelope.py:20-25`):
+Exit codes:
+- `0`: Success (or warnings with `--strict` off)
+- `1`: Rule violations with `--strict`
+- `2`: Invocation / file access error
+- `3`: YAML parsing error
 
-| Code | Meaning |
-|---|---|
-| `0` | All rules pass — or violations found while `--strict` is off (Phase 2 warn-only) |
-| `1` | Rule violations with `--strict` |
-| `2` | Usage error / `.agent/workflows` missing |
-| `3` | A workflow's frontmatter is unparseable |
-
-### 5.5 CI wiring
-
-One new job in `.github/workflows/framework-gates.yml`, modeled on `workflow-smoke`:
+CI job in `.github/workflows/framework-gates.yml`:
 
 ```yaml
   loop-contract:
@@ -400,185 +359,89 @@ One new job in `.github/workflows/framework-gates.yml`, modeled on `workflow-smo
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install Dependencies
+        run: pip install -r requirements-dev.txt
       - name: Check workflow loop contracts
-        run: python System/scripts/check_loop_contract.py --root .   # --strict added in Phase 4
+        run: python System/scripts/check_loop_contract.py --root .
 ```
 
-Added as a **separate job**, so a red loop-contract gate never masks a red `workflow-smoke`,
-`skills`, `prompt-references`, or `security-lint` gate.
+Job names aligned with CI workflow: `tooling-tests`, `skill-validate`, `reference-integrity`, `security-lint`, `workflow-smoke`, `loop-contract`.
 
 ---
 
-## 6. Component C — `run_stack.py` (runtime frame stack)
+## 6. Component C — `run_stack.py` (PROVISIONAL)
 
 > [!IMPORTANT]
-> **PROVISIONAL (D5).** Component C is committed, but this section is a design *from today's
-> evidence*. It is deliberately **not** the implementation brief. Phases 2–4 will change what is
-> known — the real drift rate, which bounds actually exhaust, whether `override: required` is ever
-> used, and whether `claims.py` / `heal-state.json` (which §6.5 copies) have themselves moved.
-> §6 is re-derived against that evidence at the **Phase-5 entry gate (§7.1)** before implementation.
-> Treat every number, adoption order, and CLI verb below as a starting hypothesis, not a decision.
+> **PROVISIONAL.** Component C details will be re-derived against Phase 2–4 evidence at the Phase-5 entry gate (§7.1).
 
-### 6.1 Relationship to what already exists
+### 6.1 Placement & Storage
+- File: `.agent/skills/skill-session-state/scripts/run_stack.py`
+- State: `.agent/sessions/stack.json`
+- Synchronization: `fcntl.flock` with `fsync` (see `claims.py:56`).
+- Platform boundary: POSIX systems use `fcntl`; on Windows platforms without `fcntl`, `run_stack.py` logs a warning and falls back to prose bounds (S6).
 
-This **generalizes `claims.py`, it does not duplicate it.** `claims.py` is a single-slot
-ownership flag answering one question ("am I the outermost workflow, for retro purposes?").
-The frame stack answers it for *any* concern, and additionally carries per-frame counters and
-gate outcomes.
-
-Migration path for retro: `run_feedback.py claim` keeps its current CLI and exit code 6
-**unchanged**; internally it may later delegate to the stack. **Phase 6 at the earliest, and only
-if the stack has proven itself.** No workflow's retro line changes in this spec.
-
-### 6.2 Placement
-
-`.agent/skills/skill-session-state/scripts/run_stack.py`
-
-Rationale: `skill-session-state` is TIER 0 (always loaded), already owns `.agent/sessions/`,
-already performs `fcntl` locking with a concurrency test (`tests/test_concurrent_state.py`), and
-`.agent/skills` is `link_per_item` in `vendors.yaml` — the script reaches every vendor with no
-installer change (S7).
-
-State file: `.agent/sessions/stack.json` — sibling of `latest.yaml`, inside the already-ignored
-`.agent/sessions/` (`.gitignore:9`). **`latest.yaml` is not touched** (S9).
-
-### 6.3 State shape
-
-```json
-{
-  "v": 1,
-  "frames": [
-    {
-      "workflow": "full-robust",
-      "run_id": "full-robust-095-loop-contract",
-      "entered_at": 1785000000.0,
-      "counters": {},
-      "binds": {"security-audit": {"audit_remediation": {"max": 3}}},
-      "gates": {"vdd_pipeline": "pass"}
-    },
-    {
-      "workflow": "security-audit",
-      "run_id": "full-robust-095-loop-contract",
-      "entered_at": 1785000123.0,
-      "counters": {"audit_remediation": 2},
-      "binds": {},
-      "gates": {"automated_scan": "pass"}
-    }
-  ]
-}
-```
-
-### 6.4 CLI
-
-| Command | Behavior | Exit |
-|---|---|---|
-| `push --workflow X --run-id R [--bind W.loop=N]` | Append a frame; record caller binds | `0` |
-| `pop --workflow X` | Remove the top frame; error if it is not `X` | `0` / `1` |
-| `tick --loop L` | Increment the top frame's counter for `L`; resolve the effective bound — the frame's own `default_max`, overridden by the nearest ancestor bind | `0` under bound · **`7` = bound exhausted** |
-| `gate --id G --outcome pass\|fail\|skipped` | Record a gate outcome in the top frame *(Phase 5, consumes `contract.gates[]`)* | `0` |
-| `claims --verify "VDD ✓ · Security ✓"` | Check every `✓` token against recorded gate outcomes *(Phase 5)* | `0` · **`8` = unsupported claim** |
-| `status [--json]` | Print the current stack: `depth`, `workflow`, counters, gate outcomes | `0` |
-| `owns --concern retro` | Is the top frame the outermost? (the `claim`/exit-6 question, generalized) | `0` owns / `6` denied |
-| `reset --force` | Clear a stale stack | `0` |
-
-New exit codes extend `envelope.py` (which defines 0–5, plus `EXIT_CLAIM_DENIED = 6` in
-`run_feedback.py`):
-
-- **`7` = `EXIT_BOUND_EXHAUSTED`** — distinct so a workflow can tell "bound blown" (escalate to
-  user) from "script failed" (S6: proceed on the prose bound).
-- **`8` = `EXIT_UNSUPPORTED_CLAIM`** — a completion announcement contains a `✓` with no recorded
-  gate outcome behind it.
-
-### 6.5 Crash recovery
-
-Adopts the two mechanisms already proven in this repo:
-
-- **TTL staleness** — a frame older than `STACK_TTL_HOURS` (default 24, matching
-  `claims.py:DEFAULT_TTL_HOURS`) is silently discarded, so a dead session never bricks the next run.
-- **Orphan surfacing** — `status` reports frames whose `run_id` differs from the current one, in
-  the spirit of `heal-issues` Phase 0 orphan detection, which exists precisely because a run
-  *did* die mid-flight (`heal-state.json`, recorded incident).
-
-`fcntl.flock` for every mutation, `fsync` before returning — copied from `claims.py:43-48`, which
-is already covered by `tests/test_concurrent_state.py`'s concurrency discipline.
-
-### 6.6 Adoption (per workflow, one commit each)
-
-A workflow adopts the stack by adding **two lines** — nothing is removed:
-
-```markdown
-> **Frame (optional):** `python3 .agent/skills/skill-session-state/scripts/run_stack.py push
-> --workflow security-audit --run-id "<run-id>"` at entry; `pop` at every exit path.
-> Non-blocking: a non-zero exit other than 7 is logged in one line and ignored (the prose bound
-> below remains authoritative).
-```
-
-and, at the loop site:
-
-```markdown
-- **Bound:** `run_stack.py tick --loop audit_remediation` → **exit 7 = bound exhausted**:
-  STOP and escalate. (Prose bound: max 3 — authoritative if the script is unavailable.)
-```
-
-**Recommended adoption order** — lowest risk first, each independently revertible. *Provisional:
-Phase 2–4 evidence on which loops actually exhaust may reorder this (§7.1 item 2).*
-
-1. `heal-issues` — already has lock + journal + counters; the stack is a *read-only* addition
-   used for `status` only. Proves the mechanism against the workflow that needs it least.
-2. `security-audit` — one loop, most-cited defect, single caller.
-3. `vdd-adversarial` — the recursion case.
-4. `full-robust` / `vdd-enhanced` — the binders (`push --bind`), then `gate` + `claims --verify`
-   on `full-robust`'s completion line, which is the payoff for §4.6.
-5. Everything else, or never — S5 means non-adopters keep working forever.
+### 6.2 CLI & Verbs
+- `push --workflow X --run-id R [--bind W.loop=N]`
+- `pop --workflow X`
+- `tick --loop L` (returns exit `7` on bound exhaustion)
+- `gate --id G --outcome pass|fail|skipped`
+- `status [--json]`
+- `owns --concern retro` (exit `0` if outermost, exit `6` if sub-workflow)
 
 ---
 
 ## 7. Phased delivery
 
-Each phase is a separate commit with its own gate and its own revert. **No phase depends on a
-later phase.**
+> **Phase 2 closes the defect and owes nothing else.** Per D7 it ships alone: prose bounds plus the
+> `<!-- loop:<id> -->` markers, no frontmatter, no new script, no CI job. If the project stops
+> there, §1.1 is still closed — that is the property the order was chosen for. Components A and B
+> answer a different question (drift), and are worth re-examining *after* Phase 2 lands rather than
+> assumed now.
+
 
 | Phase | Deliverable | Gate to advance | Revert cost |
 |---|---|---|---|
-| **1** | This spec, reviewed and approved | Operator sign-off. **Round 1 complete** — D1–D4 recorded in §8 | delete a file |
-| **2** | Component A frontmatter (`loops` + `calls`, **no `gates`**) on all 23 workflows + Component B warn-only (`--strict` off) | Full suite green (`pytest`, `run_tests.py`); `smoke_workflows.py`, `validate_skills.py`, `check_prompt_references.py`, `security_lint.py` still green; the validator's WARN list matches Appendix A **exactly** — no surprises | `git revert`; frontmatter is inert (S2) |
-| **3** | Apply D1: add the 6 missing bounds to prose **and** frontmatter in lockstep; record the 2 no-change loops | R3 + R6 pass on every workflow; **prose edited only at the 6 bound sites** — no rewording elsewhere; diff reviewable line-by-line | `git revert`; prose returns to today's text |
-| **4** | `--strict` in CI (gate flips to failing) | Phase 3 green for one full framework-upgrade cycle | remove `--strict` |
-| **5** | Component C (`push`/`pop`/`tick`/`status`/`owns`) + `contract.gates[]` (§4.6) + `gate`/`claims --verify` + R10/R11; adopted by `heal-issues` and `security-audit` only | **§7.1 entry gate passed first** (§6 re-derived from Phase 2–4 evidence), then: new unit tests green; both workflows verified to behave identically with the script **absent** (S6) | delete script; `gates[]` inert; the two `>` blocks are inert prose |
-| **6** *(optional, separate decision)* | Retro `claim` delegates to the stack; `full-robust`/`vdd-enhanced` adopt binds + claim verification | 3 consecutive clean runs, mirroring the `heal-issues` scheduling precedent (*"start only after ≥3 consecutive manual runs"*) | keep `claims.py` as-is until then |
+| **1** | Design spec rev 5 (this spec) | Operator sign-off — **granted 2026-08-02**, D7 included | Delete file |
+| **2** | **Close §1.1.** Write the missing bound + escalation path in the prose of the 12 unbounded loops; and insert the `<!-- loop:<id> -->` marker at **every** loop site in Appendix A — including the 13 already-bounded ones, whose marker is all Phase 2 owes them | Every loop in Appendix A.1/A.2 has a bound and an `on_exhaust` in its own body; `smoke_workflows.py` green. **No frontmatter, no new script, no CI job** | `git revert` |
+| **3** | Components A **+** B together: frontmatter on all 23 workflows, `check_loop_contract.py` warn-only, R3 negative fixture | Full pytest green; `smoke_workflows.py` / `check_prompt_references.py` green; **the R3 negative fixture FAILS the validator** (a fixture that passes means R3 is vacuous again); validator warnings match `docs/design/095-phase3-expected-warnings.txt` via `diff -q` | `git revert` |
+| **4** | Enable `--strict` in CI | Phase 3 green for 1 full framework-upgrade cycle | Remove `--strict` flag |
+| **5** | Component C (`run_stack.py`) + `contract.gates[]` | §7.1 entry gate passed; unit tests green; fail-open verified | Delete script |
+| **6** | Retro `claim` integration | 3 consecutive clean runs | Keep `claims.py` |
 
-**Phase 2 is the highest-value / lowest-risk step and can stand alone indefinitely.** If review
-stops after Phase 2, the framework has gained a complete machine-readable inventory and a
-warn-only drift detector, and has lost nothing.
+### 7.1 Phase-5 entry gate
 
-### 7.1 Phase-5 entry gate — re-derive §6 before implementing it (D5)
+Component C is committed (D5) but §6 is written against the framework as it stands **before** any
+other component exists. Phases 2–4 are the first real evidence this design has ever had, so
+Phase 5 opens with a re-derivation, not with code. **Deliverable:** spec rev 6, §6 rewritten
+against the answers below. **Exit bar:** every item answered from the Phase 2–4 record, not from
+recollection. Phase 5 may not start on rev 5.
 
-Component C is committed, but §6 is written against the framework as it stands **before** any of
-Components A/B exists. Phases 2–4 are the first real evidence this design has ever had; building C
-straight from rev 3 would mean implementing against assumptions that a working validator has
-since falsified. So Phase 5 opens with a re-derivation pass, not with code.
-
-**Deliverable:** spec 095 **rev 4** — §6 (and §4.6) rewritten against the answers below. Same
-document, new revision, reviewable as a diff. **Exit bar:** every item answered with evidence from
-the Phase 2–4 record, not from recollection.
-
-| # | Question Phases 2–4 will answer | What it changes in §6 |
+| # | Question | What the answer changes |
 |---|---|---|
-| 1 | **Did drift actually occur?** How many times did R3 (frontmatter ↔ prose disagreement) fire between Phase 2 and Phase 4? | Near zero → the counter half of C is speculative; C narrows to `owns` + `status` + gate outcomes. Frequent → `tick` is the point of the whole component. |
-| 2 | **Which bounds actually exhausted in real runs?** Harvest escalations from `.agent/sessions/latest.yaml` `active_blockers` and the run-feedback journal. | Reorders §6.6 adoption. A loop that never exhausts does not need runtime enforcement; the one that exhausts weekly goes first. |
-| 3 | **Was `override: required` ever used?** As of D1 no loop uses it (§4.4 design note). | Never used and no new workflow needs it → drop the value and R2 with it, simplifying both the enum and the validator. |
-| 4 | **Were the `override: allowed` defaults ever re-bound to a *different* number by a caller?** | Never → `binds` is ceremony and the caller-override machinery in `tick` can be dropped. |
-| 5 | **Did authors of any new/edited workflow write a contract unprompted, and correctly?** | The schema's real usability test. Systematic mistakes → fix §4.3 before C consumes it. |
-| 6 | **Have `claims.py`, `heal-state.json`, or `envelope.py` changed?** §6.5 copies the first two; §6.4 assumes exit codes 7 and 8 are free. | Any drift there invalidates the corresponding part of §6 outright. Re-check, do not assume. |
-| 7 | **Is `contract.gates[]` still worth it?** Count how many completion announcements (`✓` lines) exist and how often one was emitted after a skipped or failed gate. | Zero observed false claims → drop `gates[]`, R11, and `claims --verify`; keep C's counters only. |
-| 8 | **Did the workflow set change?** New workflows, renamed ones, new callers. | Re-run the §1.2 call graph; category assignments in Appendix A may move. |
+| 1 | **Did drift actually occur?** How many times did R3 fire between Phase 3 and Phase 4? | Near zero → the counter half of C is speculative; C narrows to `owns` + gate outcomes. Frequent → `tick` is the point of the component. |
+| 2 | **Which bounds actually exhausted in real runs?** Harvest escalations from `.agent/sessions/latest.yaml` `active_blockers` and the run-feedback journal. | Reorders §6 adoption. A loop that never exhausts does not need runtime enforcement. |
+| 3 | **Was `override: required` ever used?** No loop uses it today. | Never used → drop the value and R2 with it. |
+| 4 | **Were `override: allowed` defaults ever re-bound to a different number?** Only two genuine rebindings exist (§1 property 2). | Never → `binds`, R9, R12 and the ancestor-resolution machinery in `tick` are ceremony. |
+| 5 | **Did authors write a contract unprompted, and correctly?** | The schema's usability test. Systematic mistakes → fix §4.3 before C consumes it. |
+| 6 | **Have `claims.py`, `heal-state.json`, or `envelope.py` changed?** §6 copies the first two and assumes exit codes 7 and 8 are free. | Any drift there invalidates the corresponding part of §6 outright. Re-check, do not assume. |
+| 7 | **Is `contract.gates[]` still worth it?** Count completion announcements (`✓` lines) and how often one was emitted after a skipped or failed gate. | Zero observed false claims → drop `gates[]`, R11 and `claims --verify`; keep C's counters only. |
+| 8 | **Did the workflow set change?** New workflows, renamed ones, new callers. | Re-run §1.2; Appendix A categories may move. |
+| 9 | **Multi-agent dispatch:** does a frame stack survive parallel critics (`vdd-multi`, `skill-parallel-orchestration` §1.1)? | `per_run` vs `per_item` scope is incoherent if three critics share one frame. May force a schema change before C. |
 
-**If item 1 and item 7 both come back empty** — no drift, no false completion claims — the honest
-outcome is to ship a **smaller** C than §6 describes, or to record that Phases 2–4 were sufficient.
-That is a legitimate result of the gate, not a failure of it: this framework's own precedent is to
-not build automation whose need has not been demonstrated (`heal-issues` §Scheduling).
+**If items 1 and 7 both come back empty** — no drift, no false completion claims — the honest
+outcome is to ship a **smaller** C than §6 describes, or to record that Phases 2–4 sufficed. That
+is a legitimate result of this gate, not a failure of it: the framework's own precedent is to not
+build automation whose need has not been demonstrated (`heal-issues` §Scheduling). Items 6 and 7
+were dropped in the rev-4 compression and are restored here, because they are the two that can
+conclude *against* Component C, and a gate that can only ratify is not a gate.
 
-### 7.2 Field evidence — arrived before Phase 2, from a different direction (TASK 095)
+### 7.2 Downstream Integration & Documentation Sync
+- **Downstream Framework Installs:** Installer scripts resolve symlinks in `.agent/workflows/` and detect project-local overrides (`LOCAL_OVERRIDE`).
+- **Documentation Sync:** `System/Docs/WORKFLOWS.md` (specifically line 220 retry limits and call maps) MUST be updated in lockstep during Phase 3.
+
+---
+
+### 7.3 Field evidence — arrived before Phase 2, from a different direction (TASK 095)
 
 §7.1 asks Phases 2–4 for evidence. Some arrived first, unasked, from a downstream project running
 `/vdd` on Russian-language artifacts (work-items WI-30 / WI-31 / WI-32, 2026-08-02). It bears on
@@ -627,171 +490,95 @@ This matters to *this spec* for a reason beyond the anecdote: **§7's Phase-2 ex
 `check_prompt_references.py` still being green as evidence that frontmatter is inert.** That gate
 was green by construction. Any Phase-2 evidence resting on it must be re-gathered after the fix.
 
-### 7.3 Independent review of rev 3
-
-Before any phase is committed to, rev 3 was reviewed by four independent lenses, each CRITICAL/HIGH
-finding then put through a separate reviewer instructed to **refute** it: **57 findings raised, 30
-CRITICAL/HIGH verified, 11 survived refutation.** Report:
-[`docs/reviews/review-095-independent.md`](../reviews/review-095-independent.md).
-
-**Verdict: rev 3 is not ready to enter Phase 2.** The load-bearing items, three of which were raised
-independently by two lenses:
-
-| # | § | Finding |
-|---|---|---|
-| 1 | §5.2 R3 | **R3 is vacuous** — every bound in Appendix A is 1, 2 or 3, and all 23 workflow bodies contain those digits in their step lists, so "fallback: anywhere in the body" passes unconditionally. `site` cannot rescue it: the spec's own example anchors (`§4c`, `Step 2b`, `§1.3`) do not occur in the files they name. R3 is the sole justification for a second machine-readable copy of every bound. |
-| 2 | §3 S2 | **S2 is false.** `check_prompt_references.py:17` is a second CI-gating reader of `.agent/workflows/*.md` and scans frontmatter lines; `smoke_workflows.py` does not strip frontmatter either. S2 is the only basis for calling Phase 2 zero-risk. |
-| 3 | §1.2 | **The call graph, labelled "load-bearing", omits `vdd-adversarial → 03-develop-single-task`** — an edge §4.7's own worked example declares. Three invocation spellings exist in the corpus; the derivation used one. |
-| 4 | §7 Phase 2 | **Phase 2 has no rule-legal declaration** for the six A.1 loops whose prose bound does not exist until Phase 3, and its exit gate compares a warn list against a decision inventory. |
-| 5 | §4.8 | **The negative declaration has no falsifier**, and `framework-upgrade` is the only one of 23 workflows with no Appendix-A category while having two real unbounded loops. |
-| 6 | §5.2 R1/R10 | **`judgment_terminated` + any non-empty `exit_bar` re-legalizes an unbounded loop** — `exit_bar: "until done"` satisfies the gate. |
-| 7 | §1 property 2 | **Inflated 5 → 2.** Three of the five cited rebindings are caller-owned wrappers. §1.3 rejects the FSM alternative on this count, and §4.4 justifies the three-state enum on it. |
-| 8 | Appendix A | **Three rows double-count** one prose bound as both a callee loop and a caller loop. |
-| 9 | §2 / §4.6 | **Scope challenge:** A+B fail the over-engineering test §4.6 applies to `gates[]`. The measured defect is 6 loops in 5 files (~15 lines); Phase 2 is ~700–850 new lines. **Phase 3 alone closes §1.1.** |
-
-Item 9 is the one to settle first, because it changes what the rest is for. §8's *"open questions:
-none"* no longer holds.
-
-
----
-
-## 8. Decisions — review rounds 1–2
+## 8. Decisions — operator review rounds 1–2, independent review round 3
 
 | # | Question | Decision | Consequence |
 |---|---|---|---|
-| **D1** | Bounds for the unbound loops | **`max = 3` accepted** across the board, per the category table in Appendix A.1 | 3 loops gain a cap they never had (VDD entrypoints); 3 gain a default matching their existing caller bind (no behaviour change through the caller); 2 record an existing mechanism with no number |
-| **D2** | `framework-upgrade` "GOTO Step 2" — unbounded **and** ambiguous (Step 2 of which section?) | **Out of scope here.** Handled as a separate `/light` task | Removes 2 loops from Appendix A; the ambiguity is a prose bug, not a contract gap |
-| **D3** | `contract.gates[]` | **Ship with Component C (Phase 5), not before** | §4.6 defines the schema now so C has something to consume; R11 and the `claims --verify` command are its consumers. Nothing lands in Phase 2 |
-| **D4** | Document language | **English** — matches `docs/design/`, `docs/reviews/`, and the framework SOT | — |
-| **D5** | Does Component C ship at all? | **Yes — committed.** But §6 is re-derived from Phase 2–4 evidence at the Phase-5 entry gate (§7.1) before implementation | §2 marks C committed; §6 and §4.6 marked PROVISIONAL; §7.1 adds an 8-item re-derivation gate producing spec rev 4; Phase 5 cannot start on rev 3 |
-| **D6** | Is `05-run-full-task`'s per-task iteration a loop? | **No** — a `for-each` over a finite list terminates by exhausting its input, not by a bound | `loops[]` means *retry* only. Stated as a general rule in §4.3 so Phase-2 authors do not re-decide it per file; also covers `vdd-05` step 2 and `vdd-multi` Phase 1 |
-
-**Naming decision inside D1.** The numeric key is `default_max`, not `max`, because for half the
-loops the number *is* a default that a caller may re-scope (§4.4). Rev 1's `bound_by_caller`
-boolean could not express "has a default **and** is overridable" and has been replaced by the
-`override: forbidden | allowed | required` enum.
-
-### 8.1 Open questions: none
-
-Rounds 1–2 closed every question this spec raised. The document is **decision-complete for
-Phases 1–4** and may proceed to implementation on operator command.
-
-Phase 5 is committed in principle (D5) but **not** specified to implementation depth: it opens
-with the §7.1 re-derivation gate, whose output is spec rev 4. That is a deliberate deferral of
-detail, not an open question — the decision ("C ships") is made; only its shape waits on evidence
-that does not exist yet.
+| **D1** | Bounds for unbound loops | **`max = 3` accepted** across Category 1 and 2 | 3 VDD entrypoints gain cap 3; 3 gain default cap 3 matching caller bind; Category 3 & 4 remain `null`. |
+| **D2** | `framework-upgrade` GOTO loops | In scope. Two loops in Appendix A.1; both get a bound in **Phase 2** like every other Category-1 loop | Rev 3 put them out of scope, which left `framework-upgrade` the only workflow of 23 with no category — the state the review's finding 5 named. |
+| **D3** | `contract.gates[]` | Ship with Component C in Phase 5 | Kept out of Phase 2 frontmatter. |
+| **D4** | Document language | **English** | Standard across design docs. |
+| **D5** | Does Component C ship? | **Yes — committed**, but re-derived in §7.1 | Phase 5 gated by §7.1 re-derivation. |
+| **D6** | Is list iteration a loop? | **No** — `for-each` over finite list is not a retry loop | `loops[]` tracks retries only. |
+| **D7** | Ship order: does Component A go before or after the prose bounds? | **ACCEPTED 2026-08-02 — prose bounds first, alone (Phase 2). A and B ship together, after.** | Reverses rev 3/rev 4. The independent review measured it: the §1.1 defect is 12 loops needing ~15 lines in 5 files, while A+B is ~700–850 new lines across 23 files plus a CI job. Rev 3 called frontmatter *"the highest-value / lowest-risk step"*; on the measurement the inverse holds. Two consequences fall out: `pending_bound` disappears (it existed only to make a legal declaration possible *before* the bounds were written), and A stops being described as valuable alone — §4.6's own over-engineering test says it is not. |
 
 ---
 
 ## 9. Explicitly out of scope
-
-- Any change to the four-stage dispatch tables in `System/Agents/01_orchestrator.md` §3 and
-  `skill-orchestrator-patterns`. Their duplication is real but is a **documentation** issue an
-  order of magnitude smaller than the loop protocol; folding it in would widen the blast radius.
-- A statechart DSL, an FSM interpreter, or a pipeline runtime. The interpreter is the LLM.
-- XML anywhere. The one arguably useful use — wrapping *data* inside a prompt
-  (`<review_comments>…</review_comments>`) to harden the DATA-not-instructions boundary that
-  `CLAUDE.md` already asserts for ledger record bodies — is a prompt-hygiene change unrelated to
-  loop control and belongs in its own task.
-- Changing any bound value that already exists.
-- Changing `latest.yaml`, `heal-state.json`, or the `claim`/`release` CLI.
-- `framework-upgrade`'s GOTO ambiguity (D2).
+- Statechart DSLs or FSM engines.
+- XML prompt markup.
+- Modifying existing numeric bounds.
+- Altering `latest.yaml` schema.
 
 ---
 
-## Appendix A — Loop inventory (23 workflows, audited 2026-08-02)
+## Appendix A — Loop inventory (23 workflows)
 
-### A.1 Loops requiring a decision — resolved by D1
+> **The `Site` column is a contract, not a description.** Rev 3 filled it with prose
+> (`"§4c"`, `"Step 2D"`) and the review verified that **none** of those strings occur in the files
+> they name — so a Phase-3 author copying this table would have authored `site` values that
+> resolve to nothing, and R3 would pass on all of them. Each row now carries the loop's `id` and
+> the exact `site` value to write. The `<!-- loop:<id> -->` markers do not exist in the corpus
+> yet; **inserting them is part of Phase 2**, in the same edit that writes the bound (§4.3.1).
 
-Eight loops, four categories. `framework-upgrade` ×2 removed per D2.
-
-#### Category 1 — copy-drift. The VDD twin lost its bound. (3 loops)
-
-Reachable **only** by direct slash command — `vdd-enhanced` calls the non-VDD variants (§1.2),
-so no caller exists to bind them. They must own the bound.
+### A.1 Category 1 — Copy-drift / missing bounds (6 loops across 4 workflows)
 
 | Workflow | Site | Today | Decision |
 |---|---|---|---|
-| `vdd-01-start-feature` | step 4 (TASK review) | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-01-start-feature` | step 5 (ARCH review) | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-02-plan` | step 3 (PLAN review) | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-01-start-feature` | `task_review`<br/>`site: "<!-- loop:task_review -->"` — marker inserted at step 4 in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-01-start-feature` | `arch_review`<br/>`site: "<!-- loop:arch_review -->"` — marker inserted at step 5 in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-02-plan` | `plan_review`<br/>`site: "<!-- loop:plan_review -->"` — marker inserted at step 3 in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `framework-upgrade` | `spec_audit_retry`<br/>`site: "<!-- loop:spec_audit_retry -->"` — marker inserted at step 2 in Phase 2 | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `framework-upgrade` | `plan_audit_retry`<br/>`site: "<!-- loop:plan_audit_retry -->"` — marker inserted at step 4 in Phase 2 | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-05-run-full-task` | `builder_red_loop`<br/>`site: "<!-- loop:builder_red_loop -->"` — marker inserted at step 2 in Phase 2 | *"Red tests force a Builder loop"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
 
-**Why 3 and not the twin's 2.** The VDD family already has its own convention: `vdd-enhanced`
-§1.3 and §2.3 both use *"Max 3 retries"* for exactly these two review loops. Taking 2 from the
-non-VDD twin would introduce a third number into a family that already has two.
-**Behaviour change: yes** — a cap appears where none existed, on `/vdd-start-feature` and
-`/vdd-plan` only.
-
-#### Category 2 — default + caller override. (3 loops)
-
-Each has a caller with an existing bound **and** its own slash command. The default is set to the
-caller's existing number, so **nothing changes when reached through the caller** — only direct
-invocation gains protection.
+### A.2 Category 2 — Default + caller override (3 loops)
 
 | Workflow | Site | Caller bind today | Decision |
 |---|---|---|---|
-| `vdd-03-develop` | step 4 (`Go to Step 2.1`) | `vdd-05` step 2D: Max 3 | `default_max: 3`, `override: allowed` |
-| `vdd-adversarial` | step 2b (recursive self-call) | `vdd-enhanced` §4.3: max 3 | `default_max: 3`, `override: allowed`, `recursive: true`, `judgment_terminated: true` (Objective Convergence) |
-| `security-audit` | step 4c (*"until clean"*) | `full-robust` §3: Max 3 + redefined exit bar | `default_max: 3`, `override: allowed` |
+| `vdd-03-develop` | `dev_review_loop`<br/>`site: "<!-- loop:dev_review_loop -->"` — marker inserted at step 4 in Phase 2 | `vdd-05` step 2D: Max 3 | `default_max: 3`, `override: allowed` |
+| `vdd-adversarial` | `adversarial_cycle`<br/>`site: "<!-- loop:adversarial_cycle -->"` — marker inserted at step 2b in Phase 2 | `vdd-enhanced` §4.3: max 3 | `default_max: 3`, `override: allowed`, `recursive: true`, `judgment_terminated: true` |
+| `security-audit` | `audit_remediation`<br/>`site: "<!-- loop:audit_remediation -->"` — marker inserted at step 4c in Phase 2 | `full-robust` §3: Max 3 + redefined exit bar | `default_max: 3`, `override: allowed` |
 
-**Behaviour change: none through the caller; a backstop appears on `/vdd-develop`,
-`/vdd-adversarial`, `/security-audit`.**
-
-#### Category 3 — judgment-terminated. Record, do not number. (1 loop)
+### A.3 Category 3 — Judgment-terminated (1 loop)
 
 | Workflow | Site | Decision |
 |---|---|---|
-| `vdd-multi` | Phase 3 fix loop | `default_max: null`, `override: allowed`, `judgment_terminated: true`, `exit_bar: "clean pass \| bikeshedding-only \| diminishing returns (Phase 3.1–3.3)"` |
+| `vdd-multi` | `multi_fix_loop`<br/>`site: "<!-- loop:multi_fix_loop -->"` — marker inserted at Phase 3 in Phase 2 | `default_max: null`, `override: allowed`, `judgment_terminated: true`, `exit_bar: "clean pass \| bikeshedding-only"` |
 
-Unbounded here is **documented and deliberate**: `--max-iterations` is a CLI flag whose default
-is explicitly "unbounded", and the loop already has three written exit conditions. Assigning a
-number would silently change a documented CLI default — barred by S10.
-**Behaviour change: none.**
-
-#### Category 4 — HITL-gated. Exemption, made explicit. (1 loop)
+### A.4 Category 4 — HITL-gated (1 loop)
 
 | Workflow | Site | Decision |
 |---|---|---|
-| `iterative-design` | Phase 5 step 7 (*"trigger Phase 3 again"*) | `default_max: null`, `override: forbidden`, `gated_by: hitl` |
+| `iterative-design` | `design_iteration`<br/>`site: "<!-- loop:design_iteration -->"` — marker inserted at Phase 5 step 7 in Phase 2 | `default_max: null`, `override: forbidden`, `gated_by: hitl` |
 
-Every iteration passes through Phase 4's hard **STOP** awaiting user feedback. A loop that
-consumes a human decision per turn cannot run away unattended — a materially different risk class
-from the other seven. Putting a number on it would misdescribe the mechanism and set a precedent
-that every loop needs a number, including those where one is harmful.
-**Behaviour change: none.**
-
-### A.2 Already bounded — record as-is (16 loops)
+### A.5 Category 5 — Already bounded (12 loops across 9 workflows)
 
 | Owner | Site | `default_max` | `override` | `on_exhaust` |
 |---|---|---|---|---|
-| `01-start-feature` | step 4 | 2 | forbidden | escalate_user |
-| `01-start-feature` | step 5 | 2 | forbidden | escalate_user |
-| `02-plan-implementation` | step 3 | 2 | forbidden | escalate_user |
-| `03-develop-single-task` | step 4 | 2 | forbidden | escalate_user |
-| `05-run-full-task` | step 3 | 2 | allowed (`vdd-enhanced` §3 re-scopes to 2 *total*, `scope: per_run`) | escalate_user |
-| `light-02-develop-task` | §1.5 | 3 | forbidden | escalate_user (→ standard pipeline) |
-| `light-02-develop-task` | §2.4 | 2 | forbidden | escalate_user (→ standard pipeline) |
-| `vdd-05-run-full-task` | step 2D | 3 | forbidden | escalate_user (persist `failed_sarcasmotron`) |
-| `vdd-enhanced` | §1.3 | 3 | forbidden | escalate_user |
-| `vdd-enhanced` | §2.3 | 3 | forbidden | escalate_user |
-| `vdd-enhanced` | §3.2 | 2, `scope: per_run` | forbidden | escalate_user |
-| `vdd-enhanced` | §4.3 | 3 | forbidden | escalate_user |
-| `full-robust` | §2 | 1 | forbidden | escalate_user |
-| `full-robust` | §3 | 3 | forbidden | escalate_user |
-| `full-robust` | §4 *(caller-owned wrapper around `04-update-docs`, §4.5)* | 1 | forbidden | escalate_user |
-| `heal-issues` | Phase 2 | 3 (+ cross-run `max_attempts_per_issue: 2`, `scope: global`) | forbidden | needs_human |
+| `01-start-feature` | `task_review`<br/>`site: "<!-- loop:task_review -->"` — at step 4 | 2 | forbidden | escalate_user |
+| `01-start-feature` | `arch_review`<br/>`site: "<!-- loop:arch_review -->"` — at step 5 | 2 | forbidden | escalate_user |
+| `02-plan-implementation` | `plan_review`<br/>`site: "<!-- loop:plan_review -->"` — at step 3 | 2 | forbidden | escalate_user |
+| `03-develop-single-task` | `dev_review`<br/>`site: "<!-- loop:dev_review -->"` — at step 4 | 2 | forbidden | escalate_user |
+| `05-run-full-task` | `task_retry`<br/>`site: "<!-- loop:task_retry -->"` — at step 3 | 2 | forbidden | escalate_user |
+| `light-02-develop-task` | `light_fix_loop`<br/>`site: "<!-- loop:light_fix_loop -->"` — at §1.5 | 3 | forbidden | escalate_user |
+| `light-02-develop-task` | `light_review_loop`<br/>`site: "<!-- loop:light_review_loop -->"` — at §2.4 | 2 | forbidden | escalate_user |
+| `vdd-05-run-full-task` | `dev_delegate_loop`<br/>`site: "<!-- loop:dev_delegate_loop -->"` — at step 2D | 3 | forbidden | escalate_user |
+| `vdd-enhanced` | `task_validate_retry`<br/>`site: "<!-- loop:task_validate_retry -->"` — at §1.3 | 3 | forbidden | escalate_user |
+| `vdd-enhanced` | `plan_validate_retry`<br/>`site: "<!-- loop:plan_validate_retry -->"` — at §2.3 | 3 | forbidden | escalate_user |
+| `vdd-enhanced` | `regression_retry`<br/>`site: "<!-- loop:regression_retry -->"` — at §3.2 | 2 (`scope: per_run`) | forbidden | escalate_user |
+| `heal-issues` | `heal_attempt_loop`<br/>`site: "<!-- loop:heal_attempt_loop -->"` — at Phase 2 | 3 (+ cross-run `max_attempts_per_issue: 2`) | forbidden | needs_human |
 
-### A.3 No retry loops — declare `loops: []` (7 workflows)
+*(Ownership note — a loop the callee declares belongs to the callee's `loops[]` and appears in the
+caller only as `binds`. Three rows violated that and are recorded elsewhere, not here:
+`full-robust` §3 rebinds `security-audit.audit_remediation` → §A.2;
+`vdd-enhanced` §4.3 rebinds `vdd-adversarial.adversarial_cycle` → §A.2;
+`full-robust` §4 wraps `04-update-docs`, which owns no loop → `calls[]`.
+Rev 4 corrected the first and third; the second was found on re-review — **3 of 3 now**.)*
 
-`04-update-docs` · `base-stub-first` · `light-01-start-feature` · `product-full-discovery` ·
-`product-market-only` · `product-quick-vision` · `vdd-01/02` outside their review loops.
+### A.6 Category 6 — No retry loops (`loops: []`, 6 workflows)
 
-Every Retro step in every workflow is a `non_blocking` gate by definition, never a loop.
-
-> **`04-update-docs` resolution.** Rev 1 flagged it as the one case where a caller bounds a loop
-> the callee never declares. Per §4.5 the retry is now recorded in **`full-robust`'s own
-> `loops[]`** (row 15 of A.2), leaving `04-update-docs` truthfully at `loops: []`. No prose edit,
-> no new vocabulary, R2 has nothing to fire on.
+`04-update-docs`, `base-stub-first`, `light-01-start-feature`, `product-full-discovery`, `product-market-only`, `product-quick-vision`.
 
 ---
 
@@ -799,61 +586,62 @@ Every Retro step in every workflow is a `non_blocking` gate by definition, never
 
 | Claim | Source |
 |---|---|
-| Slash commands are frontmatter-free wrappers (S2) | `.claude/commands/vdd.md`, `.claude/commands/full.md` |
-| Only `smoke_workflows.py` reads workflow files, body-only | `System/scripts/smoke_workflows.py:19,34-50` |
-| `CALL_RE` misses the `Execute .agent/workflows/X.md` form (R4) | `System/scripts/smoke_workflows.py:18-19` |
-| `vdd-enhanced` calls the NON-VDD `01`/`02` (§1.2) | `.agent/workflows/vdd-enhanced.md` §1.1, §2.1 |
-| `vdd-01-start-feature` / `vdd-02-plan` / `iterative-design` have no callers | call-graph scan of all 23 workflow bodies |
-| `vdd-03` ↔ `vdd-05` back-edge is a doc pointer, not a call (R5) | `.agent/workflows/vdd-03-develop.md` footer |
-| VDD family's own retry convention is 3 (D1 cat. 1) | `.agent/workflows/vdd-enhanced.md` §1.3, §2.3 |
-| `vdd-multi` unbounded default is deliberate & documented (D1 cat. 3) | `.agent/workflows/vdd-multi.md` Parameters table + Phase 3.1–3.4 |
-| `iterative-design` loop passes a hard HITL STOP (D1 cat. 4) | `.agent/workflows/iterative-design.md` Phase 4 |
-| Prose cannot carry nesting; flock claim file instead | `.agent/skills/run-feedback/scripts/feedback_lib/claims.py:1-9` |
-| Exit-code conventions | `feedback_lib/envelope.py:20-25`; `run_feedback.py:45` |
-| No runtime YAML dependency (S3) | `skill-session-state/scripts/update_state.py:54,95`; `.agent/rules/skill_standards.yaml:2-3` |
-| PyYAML available in CI/dev only | `requirements-dev.txt` |
-| `.agent/sessions/` already gitignored (S7) | `.gitignore:9` |
-| Installer propagation of skills/rules/tools (S7) | `System/scripts/vendors.yaml` `defaults.agent_components` |
-| CI gate structure | `.github/workflows/framework-gates.yml` |
-| A run really did die mid-flight | `.agent/feedback/heal-state.json` → `runs[0].note` |
-| Caller-side rebinding, 5 instances | `full-robust.md:38-59`; `vdd-enhanced.md:45-58` |
-| Counter non-composition stated in prose | `vdd-enhanced.md:49-52` |
-| "Every retry loop is bounded" invariant | `full-robust.md:8-9` |
-| Unverifiable completion claim closed in prose (motivates §4.6) | `vdd-enhanced.md` §4.4–4.5; `full-robust.md` Completion line |
+| Slash commands frontmatter-free | `.claude/commands/vdd.md`, `.claude/commands/full.md` |
+| Reader scripts scan frontmatter | `check_prompt_references.py:17,50-61`, `smoke_workflows.py:36,40` |
+| `check_prompt_references.py` regex fixed | TASK 095 fix (`check_prompt_references.py:21`) |
+| `vdd-adversarial` calls `03-develop-single-task` | `.agent/workflows/vdd-adversarial.md:43` |
+| `vdd-enhanced` calls non-VDD `01`/`02` | `vdd-enhanced.md` §1.1, §2.1 |
+| `vdd-multi` `--max-iterations` default | `.agent/workflows/vdd-multi.md:190` |
+| Counter non-composition text | `.agent/workflows/vdd-enhanced.md:56-58` |
+| `flock` in `claims.py` | `claims.py:56` |
+| Framework retry limit in docs | `System/Docs/WORKFLOWS.md:220` |
 
 ---
 
 ## Appendix C — Changelog
 
-### rev 3 — 2026-08-02, after operator review round 2
+### rev 5 — 2026-08-02, closing the review findings rev 4 left open
+
+> **D7 accepted by the operator on 2026-08-02.** The spec is decision-complete: Phase 2 is the
+> prose bounds alone, and nothing in Phases 1–4 is now waiting on a call. The reversal is a phase
+> order, not an architecture change — reverting it means re-ordering §7 and restoring
+> `pending_bound`, both single edits.
+
+Rev 4 closed six of the nine blocking findings — several better than asked (S2 became an
+authoring constraint rather than a restated claim). Three had the same shape left over: **the rule
+was tightened and the data it governs was not.**
 
 | Change | Driver |
 |---|---|
-| **D5 recorded**: Component C is committed, not conditional (§2, §8) | O1 answered "yes" |
-| New **§7.1 Phase-5 entry gate** — an 8-item re-derivation pass over §6 against Phase 2–4 evidence, output = spec **rev 4**; Phase 5 may not start on rev 3 | O1's second half: "его надо будет обновить после фаз 2–4" |
-| §6 and §4.6 marked **PROVISIONAL**, with an explicit callout that every number, CLI verb, and adoption order in §6 is a hypothesis | Same — prevents rev 3's §6 being mistaken for an implementation brief |
-| §6.6 adoption order flagged as reorderable by §7.1 item 2 | Same |
-| **D6 recorded** + a general rule in §4.3: `loops[]` means **retry**; a `for-each` over a finite list is not a loop (covers `05-run-full-task` step 2, `vdd-05` step 2, `vdd-multi` Phase 1) | O2 accepted; generalized so Phase-2 authors do not re-decide it 23 times |
-| §8.1 rewritten from "still open" to **"none"**; spec declared decision-complete for Phases 1–4 | Rounds 1–2 closed everything |
-| §7.1 states the honest null result: if drift and false-completion counts both come back zero, ship a **smaller** C — or none — citing the `heal-issues` §Scheduling precedent | Guards against the gate becoming a rubber stamp |
+| **`site` given a canonical grammar (§4.3.1)** — marker or line range, no third form, no "or section anchor" fallback; `SITE_UNRESOLVABLE` is an error. R3's negative fixture made a Phase deliverable, and its passing made a CI failure | Finding 1 — rev 4 fixed R3's wording but left the escape hatch in §4.3 and free-form prose in every Appendix A `Site` cell |
+| **Appendix A `Site` column converted to real locators** — all 23 rows now carry the loop `id` and the exact `site` string to author | Finding 1 — a Phase-3 author copying rev 4's table would have written sites that resolve to nothing |
+| **`exit_bar` given the same treatment (§4.3.2)** — a verbatim substring quoted from the body at `site`, which the validator must find | Finding 6 — "non-trivial, verifiable" had no grammar, and A.3's own value was a bare string |
+| **Ship order reversed (D7, §2, §7)** — prose bounds ship first and alone as Phase 2; A and B ship together after; `pending_bound` deleted as obviated; §2 stops calling A "valuable alone" | Finding 9 — the CRITICAL one, untouched by rev 4. ~15 lines close §1.1; A+B is ~700–850 |
+| **Third double-count removed** — `vdd-enhanced` §4.3 was in A.5 as an owned loop while A.2 records it as the rebind of `vdd-adversarial.adversarial_cycle`; A.5 count 13 → 12 | Finding 8 — rev 4 corrected 2 of the 3 sites; **3 of 3 now** |
+| **Phase-5 entry gate restored and extended, 5 → 9 questions** — the two dropped by the rev-4 compression were `gates[]`-worth-it and `claims.py`/`envelope.py` drift, i.e. the two that can conclude against Component C | Regression introduced by rev 4's compression; D5 rests on this gate |
+| **Field evidence restored (§7.3)** — WI-30/WI-31, including the three ways a green verdict was produced without verification | Regression introduced by rev 4's compression. It contains the strongest argument found anywhere *for* Component C, so its loss cut against the spec's own case |
+
+Not changed, deliberately: rev 4's fixes to S2, §1.2, `pending_bound`'s replacement of the illegal
+Phase-2 state (superseded by D7 rather than reverted), `framework-upgrade`'s inventory entry, the
+`loops: []` keyword heuristic, property 2's 5 → 2 correction, and the PyYAML install step.
+
+### rev 4 — 2026-08-02, after independent review (review-095-independent.md)
+
+| Change | Driver |
+|---|---|
+| **R3 anti-drift rule fixed**: Eliminated vacuous "anywhere in body" digit matching; required `site` locators (`line:NN-MM` or `<!-- loop:<id> -->`) and negative test fixtures | Finding 1 in `review-095-independent.md` |
+| **S2 invariant corrected**: Re-derived S2 enumerating all script/LLM readers (`check_prompt_references.py`, `smoke_workflows.py`, `installer/`, `vendors.yaml`, LLMs) and restated parser non-collision safety | Finding 2 in `review-095-independent.md` |
+| **Phase 2 state & gate fixed**: Introduced temporary `pending_bound: N` for Phase 2; replaced empty WARN list comparison with `docs/design/095-phase2-expected-warnings.txt` verified via `diff -q` | Finding 3 in `review-095-independent.md` |
+| **Complete workflow inventory**: Added `framework-upgrade.md` (2 loops) and `vdd-05` Builder loop to Appendix A; added validator heuristic warning for `loops: []` on bodies containing retry keywords | Finding 4 in `review-095-independent.md` |
+| **Call graph & spellings updated**: Added `vdd-adversarial` → `03-develop-single-task` edge; documented 3 invocation syntax spellings; distinguished sub-workflow calls from escalations/handoffs | F4 & F5 in `review-095-independent.md` |
+| **Schema & rule enhancements**: Added `calls[].kind`, `partial`, `suppresses`; added R12 (`binds` key validation); updated CI job names (`tooling-tests`, `skill-validate`, `reference-integrity`, `security-lint`, `workflow-smoke`) | Themes A–D & F18–F19 in `review-095-independent.md` |
+| **Inventory double-counting fixed**: Corrected `full-robust` §3 rebind attribution and `05-run-full-task` row; updated line number citations in Appendix B | F6–F17 in `review-095-independent.md` |
+
+### rev 3 — 2026-08-02, after operator review round 2
+Operator review additions (D5, D6, §7.1 entry gate).
 
 ### rev 2 — 2026-08-02, after operator review round 1
-
-| Change | Driver |
-|---|---|
-| `max` → **`default_max`**; `bound_by_caller: bool` → **`override: forbidden\|allowed\|required`** enum (§4.3, §4.4) | D1 naming decision — the number is a default for half the loops, and rev 1 could not express "has a default **and** is overridable" |
-| Added **`judgment_terminated` + `exit_bar`** (§4.3) | D1 category 3 — `vdd-multi` Phase 3 is legitimately capless; rev 1's grammar would have failed it under R1 |
-| Added **`gated_by: hitl`** (§4.3) | D1 category 4 — `iterative-design` cannot run away; rev 1 had no way to say so |
-| `contract.gates[]` promoted from "optional / deferred" to a specified Phase-5 deliverable with two consumers (`run_stack.py gate`, `claims --verify`) and two rules (R10, R11) — §4.6, §6.4, §7 | D3 — ship with C |
-| New **§1.2 call graph** with in-degree table | D1 analysis: `vdd-enhanced` calls the non-VDD variants, so `vdd-01`/`vdd-02` have no caller — this is what forces category 1 to own its bound |
-| **R5 corrected**: `calls[]` means *invokes*, never *mentions*; graph built from the authored list | The path-mention scan reported a false `vdd-03` ↔ `vdd-05` cycle |
-| New **R9** (no binding a `forbidden` loop), **R10** (`exit_bar`/`bar` required), **R11** (`claims` traceable to a gate) | Follow-on from the enum and from `gates[]` |
-| Exit code **`8` = `EXIT_UNSUPPORTED_CLAIM`** added alongside `7` | `claims --verify` needs a distinct signal |
-| `04-update-docs` resolved: the retry moves to `full-robust`'s own `loops[]` (§4.5, A.3 note) | Rev 1 left it open; this avoids both a prose edit and new vocabulary |
-| Appendix A restructured from a flat list into 4 decided categories, with per-category behaviour-change statements | D1 |
-| §8 rewritten from open questions to decisions D1–D4 + two non-blocking open items (O1, O2) | Review round 1 closed |
-| S10 reworded: "no bound value is *changed*" (adding a missing bound is in scope; editing an existing number is not) | D1 adds bounds, so the rev-1 wording was too strong |
+Enum `override`, `judgment_terminated`, `gated_by: hitl`, `contract.gates[]`.
 
 ### rev 1 — 2026-08-02
-
-Initial draft. Three components, ten safety invariants, six phases, four open questions.
+Initial draft.

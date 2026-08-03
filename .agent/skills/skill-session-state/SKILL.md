@@ -27,6 +27,16 @@ This skill provides the mechanism to persist your current working state to a fil
     *   Check `active_blockers` to see if you were blocked.
 
 ## 3. Update Protocol (During Work)
+
+> **First: can you execute at all?** This skill is TIER 0 — it loads into **every** role, including
+> the read-only reviewers and critics (`task-reviewer`, `plan-reviewer`, `architecture-reviewer`,
+> `critic-*`), which are declared without an execution tool on purpose. If you have no way to run a
+> command, this section **does not apply to you**: session state is the ORCHESTRATOR's to persist,
+> you have no phase boundary of your own to record, and you should proceed to your actual task.
+> **Do not spend your turn attempting the command** — a mandatory-sounding instruction that a role
+> cannot satisfy is how a subagent burns its whole turn and returns nothing
+> (`skill-parallel-orchestration` §2.4).
+
 **WHENEVER** you call the `task_boundary` tool, you **MUST** immediately follow it with a call to the `update_state.py` script.
 
 ### Command Syntax

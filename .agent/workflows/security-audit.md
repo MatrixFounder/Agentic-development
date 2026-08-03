@@ -20,6 +20,11 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
      python3 .agent/skills/security-audit/scripts/run_audit.py . --scan-type all
      ```
    - Analyze output for Critical/High issues (BLOCKERS).
+   - **If you cannot execute it** (no execution tool in your role, or the environment refuses):
+     record `scan_status: NOT_RUN (<reason>)`, continue to step 3, and carry that status into the
+     report. **Never invent the output** (`security-audit` §1). `NOT_RUN` makes the audit
+     `INCOMPLETE`, never `PASS` — step 4's "until clean" loop cannot be satisfied by a scan that
+     never ran.
 
 3. **Manual Adversarial Review ("Think Like a Hacker")**
    - Refer to `.agent/skills/security-audit/SKILL.md` Section 3.

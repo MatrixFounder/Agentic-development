@@ -97,6 +97,16 @@ description: VDD-Enhanced Development (Hardened Pipeline)
     — `Applied outside the dev→review loop` and `Assertion fixes (N of M)`. An empty brief is
     written as empty; **omitting the block entirely** is what the adversary reports as
     "cycle brief missing", exactly as it treats missing execution evidence.
+8.  **Gather the execution evidence before spawning — on EVERY cycle, the first included.** The
+    adversary is read-only (no `Bash`), so a test run or a scanner is *your* job, not its. Run them
+    first, then pass the `Execution evidence` block defined in `vdd-adversarial.md` step 2a — with an
+    honest `NOT RUN (<reason>)` line for anything you did not run. This is the same contract
+    `vdd-multi` Step 1.0 states for the parallel path and `skill-parallel-orchestration` §2.4 states
+    for every path. Omitting it does not merely lose a fact: a teammate whose skill tells it to run
+    something it cannot run will spend the whole turn trying. Measured — two subagents stalled 600 s
+    each in one run of this workflow; for one of them the truncated output shows the turn spent
+    trying to launch a scanner its role cannot execute, and both worked normally on a relaunch that
+    only told them not to attempt it. The second stall is recorded as observed, not as explained.
 
 ## 5. Retro (Global Protocol)
 Apply `run-feedback` SKILL.md §7 "Retro protocol":

@@ -46,6 +46,10 @@ explicit escalation path — never loop silently, never proceed past an undefine
    - **Gate:** the automated scan exits clean AND the manual review (per the
      `security-audit` skill §3 checklists) emits a severity-labelled findings table with
      **no CRITICAL/HIGH findings**.
+   - **A scan that did not run is not a scan that passed.** `scan_status: NOT_RUN` (equivalently a
+     `scan: NOT RUN (<reason>)` line) fails the first conjunct: the gate is **not met**, the verdict
+     is `INCOMPLETE`, and the reason is escalated to the user. Left unstated, `NOT RUN` is neither
+     clean nor unclean and the undefined branch resolves in practice to "the other conjunct passed".
    - **Bounded remediation:** the sub-workflow's "fix → re-run audit until clean" loop is
      re-scoped HERE at the caller: "clean" = the gate above (no CRITICAL/HIGH) — MEDIUM/LOW
      leftovers are recorded in the audit report and do **not** trigger further iterations.

@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.6
+version: 3.7
 ---
 
-# Security Audit v3.6
+# Security Audit v3.7
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 
@@ -19,12 +19,24 @@ This skill runs **two complementary layers**; neither substitutes for the other:
 ## 1. Red Flags (Anti-Rationalization)
 **STOP and READ THIS if you are thinking:**
 - "I'll skip the script because I just checked the code manually" -> **WRONG**. Humans miss regex patterns. **EXECUTE** the script.
+- "I have no way to run it, so I'll write down what it would have said" -> **WRONG, and the worst of them.** Inventing scanner output manufactures a passed gate nobody can see through. There is exactly ONE legitimate way not to execute — §2's `NOT RUN` branch — and it is legitimate precisely because it is *visible*.
 - "This is an internal tool, so AuthZ doesn't matter" -> **WRONG**. Zero Trust applies everywhere.
 - "Dependencies are probably fine" -> **WRONG**. Supply chain attacks are the #1 vector.
 - "I don't have time for a full audit" -> **WRONG**. Breach cleanup takes 100x longer.
 - "The LLM output is safe to use directly" -> **WRONG**. LLM output is untrusted input. Sanitize it.
 
 ## 2. Automated Detection
+
+> **First, check whether you CAN execute.** Some roles that load this skill are declared without an
+> execution tool at all (`critic-security` is `Read, Grep, Glob` — read-only by design, see
+> `skill-parallel-orchestration` §2.4). If a scan result was supplied to you in an execution-evidence
+> block, **ingest it and do not re-run**. If you have no execution tool and no supplied result,
+> record the line `scan: NOT RUN (no execution tool in this role)` and go straight to §3's manual
+> review. **Do not spend your turn attempting the command** — that is a measured failure mode, not a
+> hypothetical: subagents have stalled for 600 s doing it. And never write down output you did not
+> get: §1's "I have no way to run it" Red Flag. (Named, not numbered — this cross-reference said
+> "third" and pointed at an unrelated bullet, because the new one was inserted second.)
+
 **EXECUTE** the unified audit script to detect vulnerabilities:
 ```bash
 python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \

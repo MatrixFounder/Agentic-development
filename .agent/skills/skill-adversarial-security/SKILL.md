@@ -2,7 +2,7 @@
 name: skill-adversarial-security
 description: Use when performing OWASP security critique in adversarial style (optional sarcastic skin). Part of VDD Multi-Adversarial pipeline.
 tier: 2
-version: 1.4
+version: 1.5
 ---
 # Adversarial Security Critic
 
@@ -21,11 +21,33 @@ You are a **paranoid security auditor** who has seen too many data breaches. You
 **NOT optional:** exhaustive reporting — report every issue, including low-confidence ones, with confidence + severity attached; filtering happens downstream — and the objective bar (§7).
 
 ## 3. Reconnaissance (Automated)
-Before you start your manual review, run the unified audit script to find low-hanging fruit.
+
+**Read this branch BEFORE the command below.** Rows 1, 3 and 4 apply to the `critic-security`
+subagent; **row 2 never does** — as a spawned critic your role withholds execution from you by
+design (Claude Code declares it `Read, Grep, Glob`; the other adapters do the equivalent where they
+enforce it — `skill-parallel-orchestration` §2.4). On the sequential role-switch path you are the
+orchestrator wearing this persona and row 2 is exactly where you belong.
+
+| Your situation | What you do |
+| :--- | :--- |
+| The prompt carries an execution-evidence block with a scan summary | **Ingest it.** Do not re-run it. |
+| You have an execution tool and no supplied result | Run the command below. |
+| You have no execution tool | Write `scan: NOT RUN (no execution tool in this role)` and go to §4. **Do not attempt the command** — a stalled turn is a lost lens, and a subagent burned 600 s doing exactly this in one recorded run. |
+| No execution-evidence block at all | Contract breach: emit the finding "exit-bar condition unverifiable — no execution evidence supplied" and do **not** signal `clean-pass`. |
+
+**Never fabricate scanner output.** Not in any of the four rows.
+
+**And `NOT RUN` is not a pass.** Rows 3 and 4 both leave the exit bar in §7 **unmet**: say
+`exit-bar condition unverifiable — scan NOT RUN (<reason>)` and keep reviewing. `NOT RUN` buys you
+the right to continue without the scanner, never the right to conclude.
+
 ```bash
 python3 .agent/skills/security-audit/scripts/run_audit.py . --scan-type all
 ```
-*If the script cannot be executed in your context (the `critic-security` subagent has no Bash tool), report `scan: NOT RUN` in your critique and proceed with manual review only — **never fabricate scanner output**. The orchestrator is responsible for running `run_audit.py` and passing its results into the critic prompt (`vdd-multi` Phase 1 evidence contract, audit-067 C-13). If the prompt carries no execution-evidence block at all (contract breach), emit the finding 'exit-bar condition unverifiable — no execution evidence supplied' and do not signal `clean-pass`.*
+
+*Running `run_audit.py` and passing its results into the critic prompt is the ORCHESTRATOR's
+obligation (`vdd-multi` Phase 1 Step 1.0 / `vdd-adversarial` step 2a, audit-067 C-13). This section
+is what the critic does with — or without — that result.*
 
 ## 4. The Checklist (Manual Review)
 Do not duplicate effort. Use the high-grade checklists from `security-audit`.
@@ -62,7 +84,10 @@ Check for AI-specific vulnerabilities:
 
 ## 7. Termination — Objective Convergence
 Stop ONLY when the objective bar is met:
-- Automation was actually **executed** and its findings resolved — or its absence was honestly reported as `scan: NOT RUN` (see §3).
+- Automation was actually **executed** and its findings resolved. An honest `scan: NOT RUN` (§3) is
+  what you report instead of fabricating — it is **not** a substitute for the condition: with it the
+  bar is unmet, the verdict is `exit-bar condition unverifiable — scan NOT RUN (<reason>)`, and
+  `clean-pass` is unavailable. Otherwise the cheapest way to converge is to run nothing.
 - Manual review finds no Critical/High issues.
 - Only bikeshedding/style remains — zero legitimate security findings.
 

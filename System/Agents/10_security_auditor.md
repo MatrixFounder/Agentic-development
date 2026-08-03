@@ -72,9 +72,20 @@ Classify findings:
 ```json
 {
   "audit_file": "docs/audit/security-001.md",
+  "audit_status": "PASS",
+  "scan_status": "clean",
   "has_critical_issues": true
 }
 ```
+
+- `scan_status` is `"clean" | "findings" | "NOT_RUN"` and is **required**. `"NOT_RUN"` forces
+  `audit_status: "INCOMPLETE"` — never `"PASS"`. Without it a scan-less audit is machine-
+  indistinguishable from a clean one, and every consumer that branches on this footer treats
+  "we did not look" as "we looked and it was fine".
+- **Spawned as the `security-auditor` subagent?** Then you do NOT write the report file — omit
+  `audit_file` and return the report as text; the orchestrator persists it. That wrapper's
+  adaptations override this step, and this sentence is here so "follow strictly" no longer sends the
+  two documents in opposite directions.
 
 ## 5. QUALITY CHECKLIST (VDD)
 Before returning result:

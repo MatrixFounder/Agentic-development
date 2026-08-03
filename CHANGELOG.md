@@ -198,6 +198,40 @@ with no data-vs-instructions marker, which this repository's own ledger doctrine
 the branch table's lead sentence contradicted two of its own rows; and the instance list named 2 of
 at least 4 readers.
 
+#### **Cycle 2 — the corrections had their own defects, and the loophole was closed at 2 SOTs of 3**
+A second adversarial pass over the corrections above:
+
+- **`skill-adversarial-performance` still blessed `NOT RUN`** while all five `critic-performance`
+  wrappers said the opposite and ordered the agent to follow that skill *strictly*. The bullet above
+  claimed "both critic skills' §7"; there are three critic SOTs. Fixed (v1.3 → 1.4).
+- **`vdd-multi` Step 1.0 — the canonical instance, and the template the parallel path actually
+  injects — never got the clause.** Fixed, together with the "valid only in the caller's message"
+  rule the injected prompt also lacked.
+- **`10_security_auditor.md` was not updated**, so the SOT the fixed wrapper says to follow strictly
+  still specified a two-field footer without `scan_status` and demanded an `audit_file` the wrapper
+  forbids writing. Both reconciled in that file.
+- **`NOT RUN` had no honest escape**, so a module with genuinely nothing to run could never converge
+  — pressure toward writing a trivial test to clear the gate, i.e. the fabrication mode one layer up.
+  Added `NOT APPLICABLE (<what was checked>)` as the orchestrator's positive, attackable claim.
+- **The generator's `if evidence / elif readonly_clause`** meant filling `critic-logic`'s evidence
+  string **deleted** the vendor read-only line from its Gemini and Antigravity wrappers — the two
+  adapters §2.4 identifies as enforcing nothing. Both clauses now emit.
+- **§9's history still carried the retracted numbers** ("six sites", "their own generated scaffolds
+  carry") while the retraction lived only in this changelog — the corrected text in the file nobody
+  loads, the wrong text in the file every agent loads. Fixed.
+- **The version denominator was 5 of 6** (`System/Docs/VDD.md` still said v3.2), and §2's
+  anti-fabrication cross-reference said "§1's third Red Flag" while the new one was inserted second.
+  Both fixed; the cross-reference is now nominal.
+- **The instance list is now a table of readers**, split by half, after cycle 2 showed "all of them"
+  named five of a dozen.
+
+**Still open, named rather than closed:** `vdd-multi`'s merged verdict is `PASS | FAIL at <severity>`
+with no state for "unverifiable", so three critics reporting it can still aggregate to `PASS`; and
+the same "role cannot run what its skill mandates" defect is live for `product-analyst` and
+`solution-architect` (`skill-product-analysis`, `skill-product-solution-blueprint` both instruct
+`python3 …` at roles with no Bash). The correct search space is *every skill loaded by a Bash-less
+role*, and it has not been swept exhaustively.
+
 #### **One correction to this release's own verification**
 The first pass verified with `pytest tests/ -q` — **343 tests** — and reported that number. CI runs
 a different list which *adds* `.agent/skills/skill-spec-validator/scripts/tests/`; the union is

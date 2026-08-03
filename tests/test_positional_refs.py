@@ -45,6 +45,17 @@ class TestExtractRefs(unittest.TestCase):
         refs = cpr.extract_refs("d.md", "`src/app.py:10-25`")
         self.assertEqual((refs[0].line, refs[0].end), (10, 25))
 
+    def test_markdown_link_records_that_it_is_a_link(self):
+        """A Markdown link is document-relative; a code span is repo-relative. Without
+        this flag both were resolved against the root, so `docs/reviews/x.md` linking
+        `../../.agent/...` — a valid link to a repo file — was reported as escaping."""
+        refs = cpr.extract_refs("docs/reviews/x.md", "[v](../../.agent/s/v.py#L10)")
+        self.assertTrue(refs[0].md_link)
+
+    def test_code_span_is_not_a_link(self):
+        refs = cpr.extract_refs("docs/reviews/x.md", "see `src/app.py:42`")
+        self.assertFalse(refs[0].md_link)
+
     def test_markdown_link_anchor(self):
         refs = cpr.extract_refs("d.md", "[app](src/app.py#L42-L51)")
         self.assertEqual((refs[0].path, refs[0].line, refs[0].end), ("src/app.py", 42, 51))
@@ -280,6 +291,68 @@ class TestClassificationOnRepo(unittest.TestCase):
     def test_unchanged_document_is_out_of_diff_scope(self):
         scanned = {f.ref.doc for f in self.findings}
         self.assertEqual(scanned, {"docs/new.md"})
+
+
+class TestMarkdownLinkResolution(unittest.TestCase):
+    """A Markdown link resolves against its own document, not the repository root.
+
+    `docs/reviews/x.md` linking `../../.agent/foo.md#L1` names a repo file and is
+    correct Markdown. Resolving it against the root reported it as escaping — a
+    correct document failed by the gate, and because ESCAPES_ROOT is only a warning
+    the misresolution stayed invisible.
+
+    This class builds its OWN repository: the shared fixture above asserts on finding
+    counts, so adding documents to it breaks unrelated tests.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        root = cls.root = Path(cls._tmp.name)
+        _git(root, "init", "-q")
+        _git(root, "config", "user.email", "t@example.com")
+        _git(root, "config", "user.name", "Test")
+        (root / "src").mkdir()
+        (root / "docs" / "nested").mkdir(parents=True)
+        (root / "src/app.py").write_text("line 1\nline 2\n")
+        (root / "docs/nested/deep.md").write_text(
+            "up-link: [app](../../src/app.py#L1)\n"
+            "root-relative link: [app](src/app.py#L1)\n"
+            "code span stays repo-relative: `src/app.py:1`\n"
+        )
+        _git(root, "add", "-A")
+        _git(root, "commit", "-q", "-m", "init")
+        # Scan `docs` exhaustively. `None` here means DIFF scope, and this fixture
+        # commits everything — the first draft of these tests passed against an empty
+        # finding list, i.e. against nothing having run at all.
+        report = cpr.run(root, "HEAD", ["docs"])
+        cls.findings = report.findings
+        assert report.ref_count == 3, f"fixture scanned {report.ref_count} refs, expected 3"
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def _by_path(self, path):
+        return [f for f in self.findings if f.ref.path == path]
+
+    def test_up_link_from_a_nested_document_resolves(self):
+        self.assertEqual(self._by_path("../../src/app.py"), [],
+                         "a valid Markdown up-link was flagged")
+
+    def test_root_relative_link_in_a_nested_document_is_reported(self):
+        """The other direction: written root-relative, the link does not work AS A
+        LINK from a nested document, and must not be silently accepted."""
+        bad = self._by_path("src/app.py")
+        md = [f for f in bad if f.ref.md_link]
+        self.assertTrue(md, "a root-relative link from docs/nested/ should not resolve")
+        self.assertEqual(md[0].kind, "UNRESOLVABLE")
+
+    def test_code_span_is_still_repo_relative(self):
+        """Only the link form changed. A code span is this framework's repo-relative
+        convention and must keep resolving from the root."""
+        spans = [f for f in self._by_path("src/app.py") if not f.ref.md_link]
+        self.assertEqual(spans, [], f"repo-relative code span was flagged: {spans}")
 
 
 class TestExitCodes(unittest.TestCase):

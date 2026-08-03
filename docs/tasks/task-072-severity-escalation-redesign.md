@@ -22,7 +22,7 @@ The merge rule "two critics independently flagging the same location → escalat
 - **Do NOT touch** (roadmap discipline list): dedup rule 1 (±3 lines), cross-category re-attribution rule 2, bikeshedding filter rule 4, `--severity` filter rule 5, iteration caps.
 - Item 11 (orchestrator-supplies-evidence contract) also edits vdd-multi Phase 1/2 and "pairs naturally" with item 7 per the roadmap — but the user scoped this cycle to R3a/R3b/R3d; item 11 stays 🔜.
 
-**Blast radius (established by repo-wide grep, 2026-06-10):** the rule appears in exactly the 4 locations the roadmap names — `vdd-multi.md:106` (+ Overlaps placeholder `:131`), `skill-parallel-orchestration/SKILL.md:107` (+ §2.3 merge-summary echo `:60`), `references/sequential-fallback.md:47` (+ adjacent independence claim `:97`), `examples/usage_example.md:45-46`. `System/Agents/`, `.claude/agents/`, and `System/Docs/` carry no copy of the rule.
+**Blast radius (established by repo-wide grep, 2026-06-10):** the rule appears in exactly the 4 locations the roadmap names — `.agent/workflows/vdd-multi.md:106` (+ Overlaps placeholder `:131`), `skill-parallel-orchestration/SKILL.md:107` (+ §2.3 merge-summary echo `:60`), `references/sequential-fallback.md:47` (+ adjacent independence claim `:97`), `.agent/skills/skill-parallel-orchestration/examples/usage_example.md:45-46`. `System/Agents/`, `.claude/agents/`, and `System/Docs/` carry no copy of the rule.
 
 ## 2. Requirements Traceability Matrix (RTM)
 

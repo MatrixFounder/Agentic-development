@@ -54,7 +54,7 @@ Atomic edits, one file at a time; new wording cites the three documented mechani
 
 ## Step 4 — Item 12: perf-critic termination alignment (R9)
 
-4.1 `skill-adversarial-performance/SKILL.md:75–80` — replace "## Termination Condition" body with **Objective Convergence** form: (1) evidence condition — execution evidence supplied by orchestrator or honest `tests: NOT RUN` (critic has no Bash; never fabricate); (2) all 6 categories reviewed; (3) zero legitimate Critical/High findings; (4) only micro-optimizations/style remain. Append the 3-state signal line with enum `clean-pass | issues-found | bikeshedding-only` matching `critic-performance.md:13` semantics (incl. "NOT \"forced to invent problems\"" clause).
+4.1 `skill-adversarial-performance/SKILL.md:75–80` — replace "## Termination Condition" body with **Objective Convergence** form: (1) evidence condition — execution evidence supplied by orchestrator or honest `tests: NOT RUN` (critic has no Bash; never fabricate); (2) all 6 categories reviewed; (3) zero legitimate Critical/High findings; (4) only micro-optimizations/style remain. Append the 3-state signal line with enum `clean-pass | issues-found | bikeshedding-only` matching `.claude/agents/critic-performance.md:13` semantics (incl. "NOT \"forced to invent problems\"" clause).
 4.2 Frontmatter `version: 1.1` → `1.2`.
 
 **Verify:** G4 — enum string identical to wrapper's; SKILL still passes `validate_skill.py`.

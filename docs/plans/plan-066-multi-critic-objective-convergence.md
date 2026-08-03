@@ -17,7 +17,7 @@
 
 ## Phase 1 — Critic enum (E-1)
 ### T1 — Rename + define the state in the 3 critic agents
-- [ ] `.claude/agents/critic-logic.md:13`, `critic-security.md:13`, `critic-performance.md:13`: `hallucinating` → `bikeshedding-only` + objective definition.
+- [ ] `.claude/agents/critic-logic.md:13`, `.claude/agents/critic-security.md:13`, `.claude/agents/critic-performance.md:13`: `hallucinating` → `bikeshedding-only` + objective definition.
 - **Verifies**: E1.
 
 ## Phase 2 — Consumers (E-2, E-3)

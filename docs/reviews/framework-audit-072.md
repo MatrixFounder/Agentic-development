@@ -26,7 +26,7 @@ No blocking failure conditions (no Tier-0 removal, no bootstrap-file modificatio
 
 ## Execution evidence (gates)
 
-- **G1a** `grep -rn "escalate severity by one level" .agent/ .claude/ System/` (excl. `.agent/archive/`, `.agent/sessions/`) → 2 hits, both inside the **new** R3b different-mechanism bullets (`vdd-multi.md:108`, `SKILL.md:109`); `examples/usage_example.md` uses the capitalized new-wording variant ("Escalate … only when … different failure mechanisms").
+- **G1a** `grep -rn "escalate severity by one level" .agent/ .claude/ System/` (excl. `.agent/archive/`, `.agent/sessions/`) → 2 hits, both inside the **new** R3b different-mechanism bullets (`.agent/workflows/vdd-multi.md:108`, `.agent/skills/skill-parallel-orchestration/SKILL.md:109`); `examples/usage_example.md` uses the capitalized new-wording variant ("Escalate … only when … different failure mechanisms").
 - **G1b** old-wording grep (`independently flagging the same location|independently flag the same location|escalation on independent overlap|escalate severity on cross-category overlap`) → **empty**.
 - **G2** rule-3 block extracted from `vdd-multi.md` and `SKILL.md §6`, normalized `teammates→critics`, `diff` → **empty** (byte-identical modulo the documented noun split).
 - **G3** `validate_skill.py skill-parallel-orchestration` → PASS (pre-existing warning-first items only); full sweep `.agent/skills/*/` → **43/43**.

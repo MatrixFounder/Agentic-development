@@ -44,7 +44,7 @@ Reproduced minimally on a table headed `| ИД | Требование | MVP? |`:
 `RTM table must contain columns: ['ID', 'Requirement']`.
 
 **R3** — `--mode plan` fails independently at
-[`validate.py:145`](.agent/skills/skill-spec-validator/scripts/validate.py#L145) (`r['ID']`, a dict
+[`validate.py:145`](../.agent/skills/skill-spec-validator/scripts/validate.py#L145) (`r['ID']`, a dict
 lookup on the authored header text) with `Error: No IDs found in RTM table.` Patching only the
 column check at `:105` leaves this path broken — which is precisely the WI-32 failure mode
 (a fix applied to one site of several) reproduced inside the fix for WI-30.
@@ -53,7 +53,7 @@ column check at `:105` leaves this path broken — which is precisely the WI-32 
 `task-095-untitled.md`. The degradation is silent and collides, so it is more dangerous than the
 loud failure that was reported.
 
-**R8** — [`developer-guidelines` §5.1](.agent/skills/developer-guidelines/SKILL.md#L64) instructs
+**R8** — [`developer-guidelines` §5.1](../.agent/skills/developer-guidelines/SKILL.md#L64) instructs
 narrowing the path argument ("not `.`"), while its own ecosystem table (lines 73–79) already lists
 every *reporting* form as repo-wide. The doctrine was already correct; the sentence was
 under-qualified. `core-principles` is 43 lines and TIER 0 — loaded in every session by roles that
@@ -80,7 +80,7 @@ the gate is appeased, or stops running it) and silently (a slug degrades to `unt
 documents collide, nothing reports it).
 
 The framework has already discovered the fix once, for one ledger, and did not generalize it:
-[`known-issues-format`](.agent/skills/known-issues-format/SKILL.md#L185) inserts at a comment anchor
+[`known-issues-format`](../.agent/skills/known-issues-format/SKILL.md#L185) inserts at a comment anchor
 "because headings get renumbered and retitled". The same reasoning applies to every gate, and the
 same defect is already present in a second script that nobody has reported yet.
 

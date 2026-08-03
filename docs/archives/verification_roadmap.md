@@ -190,9 +190,9 @@ Document in `references/claude-code.md` + critic wrappers: `fable` tier exists a
 Critics (`tools: Read, Grep, Glob`) cannot execute tests/scanners, yet their exit bar requires "full test run executed". Chosen direction (consistent with P0 item 2 residual): **orchestrator supplies execution evidence** — `vdd-multi.md` Phase 1 prompt template includes: test-run output (or `tests: NOT RUN`), `run_audit.py` JSON for critic-security. Critics treat supplied evidence as input; absence → finding "exit-bar condition unverifiable", not approval. Alternative (rejected for now): granting critics Bash — widens attack/cost surface, breaks read-only critic guarantee.
 
 ### 12. ✅ [C-16] Align skill-adversarial-performance termination with the objective bar
-- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. Termination section → "Objective Convergence": evidence condition (orchestrator-supplied or honest `tests: NOT RUN` — critic has no Bash, never fabricates) + the 3-state enum, byte-aligned with wrapper `critic-performance.md:13`. `skill-adversarial-performance` 1.1→1.2. Orchestrator-side evidence injection remains item 11.
+- **Done in:** Task 073 / v3.20.4 (2026-06-10), gate artifact `docs/reviews/framework-audit-073.md`. Termination section → "Objective Convergence": evidence condition (orchestrator-supplied or honest `tests: NOT RUN` — critic has no Bash, never fabricates) + the 3-state enum, byte-aligned with wrapper `.claude/agents/critic-performance.md:13`. `skill-adversarial-performance` 1.1→1.2. Orchestrator-side evidence injection remains item 11.
 - **Verified:** enum parenthetical byte-identical wrapper↔SKILL (grep diff); skill gate 43/43.
-`.agent/skills/skill-adversarial-performance/SKILL.md:73–79`: add test-execution/evidence condition + the 3-state convergence enum (`clean-pass | issues-found | bikeshedding-only`) so the SKILL matches its own wrapper `critic-performance.md:13`. Bump version, gate.
+`.agent/skills/skill-adversarial-performance/SKILL.md:73–79`: add test-execution/evidence condition + the 3-state convergence enum (`clean-pass | issues-found | bikeshedding-only`) so the SKILL matches its own wrapper `.claude/agents/critic-performance.md:13`. Bump version, gate.
 
 ---
 

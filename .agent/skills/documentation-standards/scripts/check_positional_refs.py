@@ -153,6 +153,12 @@ class Ref:
         line: The referenced start line number.
         end: The referenced end line number, when a range was written.
         pin: Revision identifier if the reference is pinned, else ``None``.
+        md_link: True when the reference was written as a Markdown link. Markdown
+            link targets are resolved relative to the CONTAINING DOCUMENT, per the
+            Markdown spec; a code span such as ``\`src/app.py:42\``` is repo-relative
+            by this framework's convention. Conflating the two reports correct
+            documents as escaping the root — `docs/reviews/x.md` linking
+            ``../../.agent/...`` is a valid link to a repo file, and was flagged.
     """
 
     doc: str
@@ -162,6 +168,7 @@ class Ref:
     end: int | None = None
     pin: str | None = None
     ordinal: str | None = None
+    md_link: bool = False
 
     @property
     def label(self) -> str:
@@ -371,12 +378,14 @@ def extract_refs(doc_rel: str, text: str) -> list[Ref]:
     refs: list[Ref] = []
     for doc_line, line in enumerate(text.splitlines(), start=1):
         matches = [
-            m for pattern in (CODE_SPAN_REF, MD_LINK_REF) for m in pattern.finditer(line)
+            (m, pattern is MD_LINK_REF)
+            for pattern in (CODE_SPAN_REF, MD_LINK_REF)
+            for m in pattern.finditer(line)
         ]
-        matches.sort(key=lambda m: m.start())
+        matches.sort(key=lambda pair: pair[0].start())
         prose_rev = prose_pin_for_line(line)
 
-        for m in matches:
+        for m, is_md_link in matches:
             groups = m.groupdict()
             end = groups.get("end")
             refs.append(
@@ -387,6 +396,7 @@ def extract_refs(doc_rel: str, text: str) -> list[Ref]:
                     line=int(groups["line"]),
                     end=int(end) if end else None,
                     pin=groups.get("pin") or prose_rev,
+                    md_link=is_md_link,
                 )
             )
     return refs
@@ -616,7 +626,18 @@ def classify(
         # reviewer the LAST line of the file as evidence for the FIRST.
         return Finding(ref, "OUT_OF_RANGE", "line numbers start at 1 and ranges ascend")
 
-    joined = safe_join(root, ref.path)
+    # A Markdown link is document-relative (`docs/reviews/x.md` -> `../../.agent/...`
+    # names a repo file). Resolving it against the root instead reported valid links as
+    # escaping — the document was correct and the gate was not.
+    lookup = ref.path
+    if ref.md_link and not os.path.isabs(ref.path):
+        from_doc = os.path.normpath(
+            os.path.join(os.path.dirname(ref.doc), ref.path)
+        )
+        if not from_doc.startswith("..") and safe_join(root, from_doc) is not None:
+            lookup = from_doc
+
+    joined = safe_join(root, lookup)
     if joined is None:
         return Finding(
             ref,
@@ -624,9 +645,9 @@ def classify(
             "points outside the repository — refused a read, and not verifiable here",
         )
 
-    candidates = index.get(ref.path, [])
+    candidates = index.get(lookup, [])
     if joined.is_file():
-        candidates = [os.path.normpath(ref.path)]
+        candidates = [os.path.normpath(lookup)]
 
     if not candidates:
         detail = (

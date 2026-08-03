@@ -949,11 +949,19 @@ Fixing the numbers a fourth time was not the fix. What changed:
 | **`docs/reviews/review-095-rev6-adversarial.md` pinned wholesale** (14 refs) | A review is a record of the corpus it reviewed. Its header already declared `75f624b`; every ref now says so machine-readably |
 | **The gate wired into CI** — `check_positional_refs.py --all docs/design --strict` in `reference-integrity` | **The framework already had this checker, with unit tests running in CI, and never ran the check itself over a document.** That is why 24 unresolvable references accumulated here unnoticed: the tests proved the checker worked, and nothing pointed it at anything |
 
-**Scope stated rather than implied.** The gate is scoped to `docs/design`, which now passes
-(60 of 64 references resolve, 4 pinned). A full-tree run reports **36 further findings** in
-`docs/reviews` (29), `docs/tasks` (10 — includes the 3 in `docs/plans`), and `docs/archives` (2),
-all of them records of past corpus states whose correct fix is a pin, not a renumber. Widening the
-gate is separate, deliberate work; leaving it unsaid would make a scoped gate read as a clean tree.
+**Scope widened the same day, and the deferred assumption turned out to be wrong.** The gate now
+runs over the **whole** `docs/` tree — 495 references across 241 documents, **0 errors**. The
+deferral above predicted the remaining 36 findings were stale records needing pins. They were not:
+**33 of 35 resolve correctly against the current tree** once the *path* is disambiguated. They had
+never been stale — only **unaddressable**: a bare *SKILL.md* + line number matches 47 files in this
+repository, and a bare *vdd-multi.md* + line number matches two (`.agent/workflows/` and
+`.claude/commands/`). Mass-pinning them, as the deferral assumed, would have marked 33 correct
+references `unchecked` **permanently** — a pinned reference is skipped by the checker. The fix was
+to qualify the path and let the gate do its job.
+
+*(The two shorthands above are written in prose rather than as code spans on purpose: written the
+normal way they are themselves ambiguous references, and the gate flags them — which is how this
+paragraph was corrected.)*
 
 ### Phase 3 — 2026-08-03, shipped (Components A + B)
 

@@ -64,16 +64,18 @@ jobs:
         run: python System/scripts/check_prompt_references.py --root .
 
       # documentation-standards §4.1. The checker and its unit tests already existed;
-      # nothing ever ran the CHECK itself over a document, so `docs/design` accumulated
-      # 24 unresolvable references before anyone looked. Scoped to the living design
-      # docs deliberately: docs/reviews, docs/tasks, docs/plans and docs/archives are
-      # records of past corpus states and carry 36 further findings that are correctly
-      # fixed by PINNING (`@<rev>`), not by renumbering. Widening this scope is a
-      # separate, deliberate piece of work — not something to leave implied.
-      - name: Check positional references (docs/design)
+      # nothing ever ran the CHECK itself over a document, so 39 unresolvable references
+      # accumulated across docs/ before anyone looked.
+      #
+      # Whole tree, and deliberately WITHOUT --strict. Errors already exit 1 on their own;
+      # --strict additionally promotes DRIFT_SUSPECT, which fires when a reference points
+      # into a file the same change edits. `docs/TASK.md` is rewritten by every task, so
+      # --strict here would paint a normal pipeline run red for a warning whose own text
+      # is "re-check after the edits are final".
+      - name: Check positional references (docs/)
         run: |
           python .agent/skills/documentation-standards/scripts/check_positional_refs.py \
-            --all docs/design --strict
+            --all docs
 
   security-lint:
     name: Security lint

@@ -12,8 +12,8 @@
 
 Audit 067 graded two claims in `.agent/skills/skill-adversarial-security/SKILL.md` (v1.1) **HARMFUL** — both are residuals that contradict the framework's own v3.18/v3.19 Objective Convergence doctrine and `core-principles` §3 (anti-hallucination):
 
-- **C-05** (`SKILL.md:68`, §7 Termination): termination requires "at least one snarky comment" — tone-as-success-criterion forces noise on clean code and directly contradicts `vdd-sarcastic/SKILL.md` §4 ("Approval is bound to the objective bar — NOT to 'I was forced to invent a flaw'").
-- **C-15** (`SKILL.md:29`, §3 Reconnaissance): "Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit)" — instructs a security critic to **fabricate scanner evidence**. Compounding: the `critic-security` subagent has no Bash tool (C-13), so in every `/vdd-multi` run the fabrication branch is the *default* path, not the exception.
+- **C-05** (`.agent/skills/skill-adversarial-security/SKILL.md:68`, §7 Termination): termination requires "at least one snarky comment" — tone-as-success-criterion forces noise on clean code and directly contradicts `vdd-sarcastic/SKILL.md` §4 ("Approval is bound to the objective bar — NOT to 'I was forced to invent a flaw'").
+- **C-15** (`.agent/skills/skill-adversarial-security/SKILL.md:29`, §3 Reconnaissance): "Mock the results if you cannot run it directly, but assume standard tool outputs (slither/bandit)" — instructs a security critic to **fabricate scanner evidence**. Compounding: the `critic-security` subagent has no Bash tool (C-13), so in every `/vdd-multi` run the fabrication branch is the *default* path, not the exception.
 
 This task deletes both harmful instructions and replaces C-15's with an honest no-fabrication protocol (`scan: NOT RUN` + manual-review-only + orchestrator-supplied scan results).
 

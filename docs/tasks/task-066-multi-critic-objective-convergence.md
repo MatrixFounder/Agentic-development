@@ -10,7 +10,7 @@
 
 ## 1. General Description
 
-Each parallel critic emits `Convergence signal: clean-pass | issues-found | hallucinating` (`.claude/agents/critic-*.md:13`). That `hallucinating` state feeds two consumers:
+Each parallel critic emits `Convergence signal: clean-pass | issues-found | hallucinating` (`.claude/agents/critic-logic.md:13` (same line in all three critics)). That `hallucinating` state feeds two consumers:
 1. **Termination gate** (`vdd-multi.md` Phase 3): *"Hallucinating: critic inventing problems → category ✓"* — an **approval gate** driven by the critic self-reporting fabrication. Same subjective, gameable flaw Task 065 fixed in Sarcasmotron.
 2. **Merge noise-filter** (`vdd-multi.md` rule 4, `skill-parallel-orchestration` rule 4): a critic reporting `hallucinating` → drop its low-severity items this iteration. A defensible filter, but keyed on the same subjective self-report.
 

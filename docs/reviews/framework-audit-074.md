@@ -26,7 +26,7 @@
 
 ## Execution evidence (gates)
 
-- **G1 (contract surface):** `grep -rln "exit-bar condition unverifiable"` → **exactly 7 files**: `vdd-multi.md`, `vdd-adversarial/SKILL.md`, `vdd-sarcastic/SKILL.md`, `vdd-methodology.md`, `skill-adversarial-security/SKILL.md`, `skill-adversarial-performance/SKILL.md`, `sequential-fallback.md`. `Execution evidence` block present at `vdd-multi.md:101`.
+- **G1 (contract surface):** `grep -rln "exit-bar condition unverifiable"` → **exactly 7 files**: `vdd-multi.md`, `vdd-adversarial/SKILL.md`, `vdd-sarcastic/SKILL.md`, `vdd-methodology.md`, `skill-adversarial-security/SKILL.md`, `skill-adversarial-performance/SKILL.md`, `sequential-fallback.md`. `Execution evidence` block present at `.agent/workflows/vdd-multi.md:101`.
 - **G2 (lockstep):** the supplied-evidence parenthetical extracted from the 3 exit-bar locations → **1 unique md5** (byte-identical).
 - **G3 (skill gate):** full sweep `.agent/skills/*/` → **PASS=43 FAIL=0**.
 - **G4 (regression):** pytest security-audit → **30 passed**.

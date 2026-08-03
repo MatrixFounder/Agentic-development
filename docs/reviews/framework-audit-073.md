@@ -46,7 +46,7 @@
 
 ## Judgment calls (documented, per TASK §5)
 
-1. Workflow file `vdd-adversarial.md:19` added to item-8 scope — required for G1 grep-clean; roadmap file list was incomplete.
+1. Workflow file `.agent/workflows/vdd-adversarial.md:19` added to item-8 scope — required for G1 grep-clean; roadmap file list was incomplete.
 2. `security-audit` insertion as **§0** — keeps §1–§7 numbering stable (referenced by roadmap/audit artifacts).
 3. "Entropy Resistance" renamed with old name in parentheses — traceability; not part of any grep gate.
 4. Item 9 implemented in the "explicit comment" form (roadmap's first alternative); tier-diverse config stays with R3c.

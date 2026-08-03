@@ -13,7 +13,7 @@
 Critics (`tools: Read, Grep, Glob`) physically cannot execute tests or scanners, yet their shared exit bar requires "the full test run has actually been executed". Chosen direction (pre-specified in roadmap, consistent with P0 item 2): **the orchestrator supplies execution evidence** — it has Bash, runs the evidence commands *before* Phase-1 spawn, and injects results into every critic prompt. Critics treat supplied evidence as **input**; total absence of an evidence block → finding **"exit-bar condition unverifiable"**, never approval. Rejected alternative (per roadmap): granting critics Bash — widens attack/cost surface, breaks the read-only critic guarantee.
 
 **Blast radius (greps, 2026-06-10):**
-- Phase-1 prompt skeleton exists **only** in `vdd-multi.md:85-93` — no lockstep duplicates.
+- Phase-1 prompt skeleton exists **only** in `.agent/workflows/vdd-multi.md:85-93` — no lockstep duplicates.
 - Exit-bar condition "(1) the full test run has actually been executed" is a **3-location lockstep family** (065/066 discipline): `vdd-adversarial/SKILL.md:29`, `vdd-sarcastic/SKILL.md:32`, `vdd-methodology.md:38` — the critic-side parenthetical must land byte-identically in all three.
 - Critic-side groundwork already present: `skill-adversarial-security` §3/§5/§7 (NOT RUN honesty + "orchestrator is responsible…", from 068) and `skill-adversarial-performance` Termination cond 1 (from 073). Each needs only the **absence-rule** clause.
 - `sequential-fallback.md` "Concrete pattern" (3-critic VDD run, lines 67-89) has no evidence step — sequential path must stay flag/contract-equivalent.

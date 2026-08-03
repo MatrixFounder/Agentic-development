@@ -39,8 +39,8 @@ composable protocol** with five properties that no existing artifact records mec
    | `full-robust` §3 | `security-audit` §4c | Genuine rebind: `"until clean"` → `no CRITICAL/HIGH`, **max 3 iterations** |
    | `vdd-enhanced` §4 | `vdd-adversarial` | Genuine rebind: **max 3** adversarial cycles |
    | `full-robust` §2 | `vdd-multi` | Caller flag: passes `--no-fix`, callee skips Phase 3 fix loop entirely |
-   | `full-robust` §2 | *(own loop)* | Caller-owned wrapper: **one** re-run of the coverage gate after a materialized fix task (`full-robust.md:42-43`) |
-   | `full-robust` §4 | `04-update-docs` | Caller-owned wrapper: **one** retry around single-pass sub-workflow (`full-robust.md:62-63`) |
+   | `full-robust` §2 | *(own loop)* | Caller-owned wrapper: **one** re-run of the coverage gate after a materialized fix task (`<!-- loop:coverage-fix-retry -->` in `.agent/workflows/full-robust.md`) |
+   | `full-robust` §4 | `04-update-docs` | Caller-owned wrapper: **one** retry around single-pass sub-workflow (`<!-- loop:docs-update-retry -->` in `.agent/workflows/full-robust.md`) |
    | `vdd-enhanced` §3 | `03-develop-single-task` | Caller-owned loop: **max 2** fix-and-rerun rounds *total* over single tasks |
 
 3. **Deliberately non-composing counters.** `vdd-enhanced` §3 states the rule in prose because
@@ -92,13 +92,13 @@ Derived from inspecting all `.agent/workflows/<name>.md` files.
 |---|---|
 | `01-start-feature` | `base-stub-first`, `vdd-enhanced` *(Note: `light-01`/`light-02` mention `01-start-feature` as an escalation handoff, not a sub-workflow call)* |
 | `02-plan-implementation` | `base-stub-first`, `vdd-enhanced` |
-| `03-develop-single-task` | `05-run-full-task`, `full-robust`, `vdd-enhanced`, **`vdd-adversarial`** (`.agent/workflows/vdd-adversarial.md:74`) |
+| `03-develop-single-task` | `05-run-full-task`, `full-robust`, `vdd-enhanced`, **`vdd-adversarial`** (`.agent/workflows/vdd-adversarial.md`, ``Call workflow `03-develop-single-task` ``) |
 | `05-run-full-task` | `base-stub-first`, `vdd-enhanced` |
 | `04-update-docs` | `full-robust` |
 | `security-audit` | `full-robust` |
 | `vdd-multi` | `full-robust` |
 | `vdd-enhanced` | `full-robust` |
-| `vdd-adversarial` | `vdd-enhanced`, **itself** (`vdd-adversarial.md:75`, *"Repeat this workflow"*) — the `calls[]` self-edge R5's recursion exception is keyed on (§4.5), not a second call path |
+| `vdd-adversarial` | `vdd-enhanced`, **itself** (`.agent/workflows/vdd-adversarial.md`, *"Repeat this workflow (recursive call if needed)"*) — the `calls[]` self-edge R5's recursion exception is keyed on (§4.5), not a second call path |
 | `vdd-03-develop` | `vdd-05-run-full-task` *(partial delegation to Step 3)* |
 | `light-02-develop-task` | `light-01-start-feature` |
 | **`vdd-01-start-feature`** | **none** |
@@ -106,9 +106,9 @@ Derived from inspecting all `.agent/workflows/<name>.md` files.
 | **`iterative-design`**, **`framework-upgrade`**, **`heal-issues`**, **`product-*`** | **none** |
 
 The codebase uses three distinct call syntax spellings:
-1. ``Call `/<name>` `` (e.g. `.agent/workflows/05-run-full-task.md:19`)
-2. `Execute .agent/workflows/<name>.md` (e.g. `.agent/workflows/vdd-enhanced.md:62`)
-3. ``Call workflow `<name>` `` (e.g. `.agent/workflows/vdd-adversarial.md:74`)
+1. ``Call `/<name>` `` (e.g. ``Call `/03-develop-single-task` `` in `.agent/workflows/05-run-full-task.md`)
+2. `Execute .agent/workflows/<name>.md` (e.g. `**Execute**: .agent/workflows/vdd-adversarial.md` in `.agent/workflows/vdd-enhanced.md`)
+3. ``Call workflow `<name>` `` (e.g. `.agent/workflows/vdd-adversarial.md`)
 
 Only spelling 1 is machine-detected today — `smoke_workflows.py:19`'s `CALL_RE` matches it and
 neither of the other two:
@@ -151,7 +151,7 @@ Three components, each valuable alone:
 
 **The defect in §1.1 is closed by prose, not by any component.** Nine loops need a bound written
 where they live: roughly twenty lines across seven files, in the idiom
-`.agent/workflows/01-start-feature.md:11-12` already uses. That work is **Phase 2** and it stands entirely alone.
+`.agent/workflows/01-start-feature.md` already uses (*"**Retry (Max 2 attempts)**"*). That work is **Phase 2** and it stands entirely alone.
 Rev 3 shipped it *after* 23 files of frontmatter and a CI gate, and justified the ordering by
 calling frontmatter "the highest-value / lowest-risk step" — the independent review refuted that
 by measurement (~700–850 new lines to protect ~20). See **D7**.
@@ -237,7 +237,7 @@ contract:
 | `site` | string | yes | Machine-resolvable locator, **exactly one of two forms** — see §4.3.1. Free-form prose (`"§4c"`, `"Step 2D"`) is a validator error, not a fallback. |
 | `default_max` | int ≥ 1 \| `null` | yes | Numeric cap applied when no caller overrides it. Must be `null` if `override: required`. **May** be `null` — and only then — if `judgment_terminated: true` or `gated_by: hitl`; a numeric backstop *under* a judgment bar or a HITL gate stays legal, and is the common case (D8). One value only: a second, differently-scoped counter over the same loop is not expressible in v1 — see §4.3.3. |
 | `override` | `forbidden` \| `allowed` \| `required` | no, default `forbidden` | Caller-side rebinding policy. See §4.4. |
-| `scope` | `per_run` \| `per_item` \| `global` | no, default `per_run` | Counter scope. `per_item` = counter resets per task, finding, **or critic category** (`vdd-multi` re-spawns per category and reports `L=<Nl>, S=<Ns>, P=<Np>` at `vdd-multi.md:214`). |
+| `scope` | `per_run` \| `per_item` \| `global` | no, default `per_run` | Counter scope. `per_item` = counter resets per task, finding, **or critic category** (`vdd-multi` re-spawns per category and reports `L=<Nl>, S=<Ns>, P=<Np>` in the termination line of `.agent/workflows/vdd-multi.md`). |
 | `on_exhaust` | `escalate_user` \| `stop_success` \| `warn_continue` \| `needs_human` | yes | Declared escalation path. |
 | `recursive` | bool | no, default `false` | Loop re-enters this same workflow. |
 | `judgment_terminated` | bool | no, default `false` | Loop terminates via structured verdict against a written bar. Requires an `exit_bar` in the §4.3.2 citation form (R10). |
@@ -286,9 +286,10 @@ while diverging from it was rev 6's state, and the divergence was in three place
 3. **Placement at a non-heading site.** §4.3's syntax — *"alone on its line, directly above the
    section heading or block it names, followed by a blank line"* — is written for headings, and the
    workflow corpus is written as **numbered step lists**: nearly every site in Appendix A sits
-   inside one, not under a heading (`01-start-feature.md:8`, `vdd-01-start-feature.md:15`,
-   `security-audit.md:38`, `full-robust.md:42`, `heal-issues.md:80`). Only where a loop coincides
-   with a section heading — `vdd-multi.md:189`, `## Phase 3 — Iterative fix loop` — does §4.3's
+   inside one, not under a heading (`task-review`, `audit-remediation`, `coverage-fix-retry`,
+   `heal-attempt-loop`, and 16 more). Only where a loop coincides with a section heading —
+   `multi-fix-loop` above `## Phase 3 — Iterative fix loop`, `design-iteration` above
+   `## Phase 5` — does §4.3's
    heading form apply unchanged, and there it is preferred. Inside a list the
    marker goes **on its own line at the content indentation of the item it names, immediately above
    that item's loop text, with no blank line after it** — a blank line there makes the list loose
@@ -313,8 +314,8 @@ stated as a hard failure rather than a preference.
 them a form.** "Must match prose bound" is undefined until *prose bound* is. The corpus writes the
 same fact seven ways (`Max 2 attempts`, `max 3 fix-and-rerun attempts`, `Max 3 iterations`,
 `max 2 review cycles`, `max 2 fix-and-rerun rounds total`, `bounded loop, max 3 iterations`) —
-and twice **in words**: `full-robust.md:43` (`re-run the coverage gate **once**`) and `:58`
-(`**one** retry of the failed sub-step`). A digit matcher errors on those two correctly-bounded
+and twice **in words**, both in `.agent/workflows/full-robust.md`: `re-run the coverage gate
+**once**` and `**one** retry of the failed sub-step`. A digit matcher errors on those two correctly-bounded
 loops; a matcher loose enough to accept them is on the road back to rev 3's vacuity.
 
 **Canonical form:** `max <digits>`, case-insensitive, as a whole word, inside the resolved window —
@@ -326,7 +327,7 @@ termination is policed by R10 instead. Where the existing prose states the bound
 than rewording the sentence — an addition, so S1 holds.
 
 **The window is a declaration, because the default collides in the real corpus.** Simulating this
-rule against `.agent/workflows/` before writing it down: a marker on `light-02-develop-task.md:25`
+rule against `.agent/workflows/` before writing it down: a marker at `light-fix-loop` in `.agent/workflows/light-02-develop-task.md`
 (`max 3 fix-and-rerun attempts`) pulls `:34`'s `max 2 review cycles` into a 12-line window and
 reports `BOUND_AMBIGUOUS` on a correctly-declared loop. Two adjacent loops in one section is the
 normal case, not the exotic one — `01-start-feature`'s two review loops sit 8 lines apart
@@ -339,7 +340,7 @@ normal case, not the exotic one — `01-start-feature`'s two review loops sit 8 
 Rev 6 justified `full-robust.coverage-fix-retry`'s narrowing by *"the default reaches §3's
 `Max 3 iterations` at `:52`"*. That bound had already moved to `:56` by `75f624b`, and after marker
 insertion it sits at `:57` — so the collision the narrowing was measured against no longer exists,
-while the narrowing itself became the defect: with the marker at `full-robust.md:38` and the
+while the narrowing itself became the defect: with the `coverage-fix-retry` marker and the
 appended `(max 1)` at `:43`, **`window: 4` reports `BOUND_UNRESOLVABLE`** on a correctly bounded
 loop. Measured values now: **`window: 8`** there (bound at +5, neighbour at +19), and a new
 **`window: 2`** on `vdd-enhanced.plan-validate-retry`, whose 12-line default reaches §3's
@@ -395,7 +396,9 @@ finding, not an inconvenience. Write it into the prose first; that is Phase 2's 
 >
 > **Rev 7 note — the substring survived, its address did not.** Both `exit_bar` values still match
 > verbatim at `75f624b` (`grep -F` re-run), but the *lines* rev 6 cited for them moved within the
-> same commit: `vdd-multi.md:188`→**`:195`**, `vdd-adversarial.md:64`→**`:76`**. That is the
+> same commit (positions as of `75f624b`, before Component A shifted them again):
+> `.agent/workflows/vdd-multi.md:188@75f624b`→**`:195@75f624b`**,
+> `.agent/workflows/vdd-adversarial.md:64@75f624b`→**`:76@75f624b`**. That is the
 > argument for quoting the bar **by content** instead of pointing at it: §4.3.2's grammar held
 > under an edit that broke every line number beside it.
 
@@ -403,8 +406,8 @@ finding, not an inconvenience. Write it into the prose first; that is Phase 2's 
 
 One loop carries **one** counter. Two real loops carry two, and v1 records only the inner one:
 
-- `heal-issues` — `max 3` iterations *per run* (`heal-issues.md:80`) **and** a cross-run
-  `max_attempts_per_issue: 2` (`:58`) that survives process death in `.agent/feedback/heal-state.json`.
+- `heal-issues` — `max 3` iterations *per run* (`<!-- loop:heal-attempt-loop -->` in `.agent/workflows/heal-issues.md`) **and** a cross-run
+  `max_attempts_per_issue: 2` (its Phase-0 eligibility rule, same file) that survives process death in `.agent/feedback/heal-state.json`.
 - `vdd-multi` — three independent per-category counters. `scope: per_item` (item = critic category)
   names the shape; it does not carry three values.
 
@@ -438,8 +441,8 @@ that is the evidence for adding the key.
 
 1. **`partial` bounds what is bindable.** On an edge carrying `partial`, only loops *inside the
    delegated fragment* may be bound; binding anything else is R12. Rev 5 recorded `vdd-05`'s
-   `Max 3` (`vdd-05-run-full-task.md:17`) as a bind on `vdd-03-develop.dev-review-loop` — but
-   `vdd-05:15` delegates to **Step 3** only and never enters vdd-03's step-4 loop. The cap is
+   `Max 3` (its own `dev-delegate-loop`) as a bind on `vdd-03-develop.dev-review-loop` — but
+   its Step C delegates to **Step 3** only and never enters vdd-03's step-4 loop. The cap is
    vdd-05's **own** loop, already inventoried as `dev-delegate-loop`. A caller cannot rebind a
    loop it never reaches; when it caps a fragment it invoked, that is an owned loop, not a bind.
    **What a validator can and cannot do here, stated because the first implementation blurred
@@ -478,8 +481,8 @@ apply to — rev 5's state — and R5 would fire on the first author who declare
 `pass` \| `fail` \| `skipped` \| **`not_run`** (§6.2). The last two are not synonyms and v3.22.1
 made the distinction load-bearing in prose across five workflows: `skipped` is a **decision** (the
 opt-in coverage gate was not requested), `not_run` is a **missing capability** (`scan_status:
-NOT_RUN` — the role had no tool to execute it, `security-audit.md:23-27`, and the audit verdict
-becomes `INCOMPLETE`, `full-robust.md:49-52`). Collapsing them would make Component C record the
+NOT_RUN` — the role had no tool to execute it, `.agent/workflows/security-audit.md`, and the
+audit verdict becomes `INCOMPLETE`, `.agent/workflows/full-robust.md`). Collapsing them would make Component C record the
 exact conflation E1 exists to expose.
 
 ### 4.7 Negative declaration (`loops: []`) and the completeness of `calls[]`
@@ -706,10 +709,11 @@ gathered after the fix, never carried over from a run that predates it.
 `75f624b`).** E3's conclusion — *"no wrapper was built"* and *"there is no **portable** mechanism
 other than C"* — was true when written and is no longer. WI-29, filed from the same downstream
 `/vdd` run, produced a NOT-RUN contract now carried in prose by five workflows and three skills:
-`full-robust.md:49-52` (*"A scan that did not run is not a scan that passed"* → verdict
-`INCOMPLETE`), `security-audit.md:23-27` (`scan_status: NOT_RUN`, *"step 4's 'until clean' loop
-cannot be satisfied by a scan that never ran"*), `vdd-adversarial.md:22-52` (execution-evidence
-block + *"a `NOT RUN` line does not satisfy step 2c"*), `vdd-multi.md:96,237`, and
+`.agent/workflows/full-robust.md` (*"A scan that did not run is not a scan that passed"* → verdict
+`INCOMPLETE`), `.agent/workflows/security-audit.md` (`scan_status: NOT_RUN`, *"step 4's 'until clean'
+loop cannot be satisfied by a scan that never ran"*), `.agent/workflows/vdd-adversarial.md`
+(execution-evidence block + *"a `NOT RUN` line does not satisfy step 2c"*),
+`.agent/workflows/vdd-multi.md` (Step 1.0 and its Phase-3 sibling), and
 `skill-parallel-orchestration` §2.4. Audit:
 [framework-audit-20260803-wi29-execution-evidence.md](../reviews/framework-audit-20260803-wi29-execution-evidence.md).
 
@@ -778,13 +782,13 @@ The design consequence is in §4.6: the contract v3.22.1 wrote distinguishes thr
 
 | Workflow | Site | Today | Decision |
 |---|---|---|---|
-| `vdd-01-start-feature` | `task-review`<br/>`site: "<!-- loop:task-review -->"` — marker inserted at step 4, the TASK-review branch (`vdd-01-start-feature.md:15`) in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-01-start-feature` | `arch-review`<br/>`site: "<!-- loop:arch-review -->"` — marker inserted at step 5, the ARCH-review branch (`:19`) in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-02-plan` | `plan-review`<br/>`site: "<!-- loop:plan-review -->"` — marker inserted at step 3 (`vdd-02-plan.md:15`) in Phase 2 | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `framework-upgrade` | `spec-audit-retry`<br/>`site: "<!-- loop:spec-audit-retry -->"` — marker inserted at **§1.3, the Meta-Audit gate** (`framework-upgrade.md:19`) in Phase 2 | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `framework-upgrade` | `plan-audit-retry`<br/>`site: "<!-- loop:plan-audit-retry -->"` — marker inserted at **§2.3, the Meta-Audit gate** (`framework-upgrade.md:27`) in Phase 2 | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-05-run-full-task` | `builder-red-loop`<br/>`site: "<!-- loop:builder-red-loop -->"` — marker inserted at step 2 Step B (`vdd-05-run-full-task.md:14`) in Phase 2 | *"Red tests force a Builder loop"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
-| `vdd-03-develop` | `dev-review-loop`<br/>`site: "<!-- loop:dev-review-loop -->"` — marker inserted at step 4, the REJECTED branch (`vdd-03-develop.md:24`) in Phase 2 | *"Go to Step 2.1"* — **none** | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-01-start-feature` | `task-review`<br/>`site: "<!-- loop:task-review -->"` — at step 4, the TASK-review branch | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-01-start-feature` | `arch-review`<br/>`site: "<!-- loop:arch-review -->"` — at step 5, the ARCH-review branch | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-02-plan` | `plan-review`<br/>`site: "<!-- loop:plan-review -->"` — at step 3, the plan-review branch | *"repeat the review"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `framework-upgrade` | `spec-audit-retry`<br/>`site: "<!-- loop:spec-audit-retry -->"` — at **§1.3, the Meta-Audit gate** | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `framework-upgrade` | `plan-audit-retry`<br/>`site: "<!-- loop:plan-audit-retry -->"` — at **§2.3, the Meta-Audit gate** | *"If Audit fails, GOTO Step 2"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-05-run-full-task` | `builder-red-loop`<br/>`site: "<!-- loop:builder-red-loop -->"` — at step 2, Step B (Verification) | *"Red tests force a Builder loop"* | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
+| `vdd-03-develop` | `dev-review-loop`<br/>`site: "<!-- loop:dev-review-loop -->"` — at step 4, the REJECTED branch | *"Go to Step 2.1"* — **none** | `default_max: 3`, `override: forbidden`, `on_exhaust: escalate_user` |
 
 > **The `framework-upgrade` rows are stated as section-and-step because rev 5's were wrong.**
 > `spec-audit-retry`'s cell said "step 2" — that is the GOTO *target*, not the gate — and
@@ -795,9 +799,9 @@ The design consequence is in §4.6: the contract v3.22.1 wrote distinguishes thr
 >
 > **`vdd-03-develop.dev-review-loop` moved here from Category 2 (F10 of the independent review,
 > unapplied until rev 6).** Its listed binder — *"`vdd-05` step 2D: Max 3"* — does not exist:
-> `vdd-05-run-full-task.md:15` delegates to `vdd-03-develop.md` **Step 3** only, never entering
-> vdd-03's step-4 loop, and the Max 3 at `vdd-05:17` is vdd-05's own loop, already in A.5 as
-> `dev-delegate-loop`. With no binder, `override: allowed` had nothing to justify it and the loop is
+> `.agent/workflows/vdd-05-run-full-task.md` Step C delegates to `vdd-03-develop.md` **Step 3** only, never entering
+> vdd-03's step-4 loop, and that `Max 3` is vdd-05's own loop, already in A.5 as
+> `dev-delegate-loop` (`Max 3 iterations` at its Step D). With no binder, `override: allowed` had nothing to justify it and the loop is
 > simply unbounded — Category 1. See §4.5 constraint 1.
 
 ### A.2 Category 2 — Default + caller override (2 loops)
@@ -806,14 +810,14 @@ The design consequence is in §4.6: the contract v3.22.1 wrote distinguishes thr
 
 | Workflow | Site | Caller bind today | Decision |
 |---|---|---|---|
-| `vdd-adversarial` | `adversarial-cycle`<br/>`site: "<!-- loop:adversarial-cycle -->"` — marker inserted at step 2b (`vdd-adversarial.md:73`) in Phase 2 | `vdd-enhanced` §4.3 (`vdd-enhanced.md:67`): max 3 | `default_max: 3`, `override: allowed`, `recursive: true`, `judgment_terminated: true`, `exit_bar: "0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains"` (verbatim at `vdd-adversarial.md:76`), plus the `calls[]` self-edge R5 requires (§4.5). **Phase 2 must write `max 3` into this body**: the cap lives only in the caller, so R3 would report `BOUND_UNRESOLVABLE` against `default_max: 3` — the file contains no `max` at all today |
-| `security-audit` | `audit-remediation`<br/>`site: "<!-- loop:audit-remediation -->"` — marker inserted at step 4c (`security-audit.md:38`) in Phase 2 | `full-robust` §3 (`full-robust.md:53-57`): Max 3 + redefined exit bar | `default_max: 3`, `override: allowed`. Phase 2 also writes `max 3` here (same reason as the row above), **and records the entry precondition v3.22.1 added**: `security-audit.md:25-27` states this loop *"cannot be satisfied by a scan that never ran"* (`scan_status: NOT_RUN` → `INCOMPLETE`). That is a written termination condition — Phase 3 decides whether it is an `exit_bar` (§4.3.2) or a `gates[]` entry (§4.6); it is not nothing |
+| `vdd-adversarial` | `adversarial-cycle`<br/>`site: "<!-- loop:adversarial-cycle -->"` — at step 2b | `vdd-enhanced` §4.3 (*"**max 3 adversarial cycles**"*) | `default_max: 3`, `override: allowed`, `recursive: true`, `judgment_terminated: true`, `exit_bar: "0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains"` (verbatim in the step-2c termination bar), plus the `calls[]` self-edge R5 requires (§4.5). **Phase 2 must write `max 3` into this body**: the cap lives only in the caller, so R3 would report `BOUND_UNRESOLVABLE` against `default_max: 3` — the file contains no `max` at all today |
+| `security-audit` | `audit-remediation`<br/>`site: "<!-- loop:audit-remediation -->"` — at step 4c | `full-robust` §3 (*"Bounded remediation … **Max 3 iterations**"*): Max 3 + redefined exit bar | `default_max: 3`, `override: allowed`. Phase 2 also writes `max 3` here (same reason as the row above), **and records the entry precondition v3.22.1 added**: `.agent/workflows/security-audit.md` states this loop *"cannot be satisfied by a scan that never ran"* (`scan_status: NOT_RUN` → `INCOMPLETE`). That is a written termination condition — Phase 3 decides whether it is an `exit_bar` (§4.3.2) or a `gates[]` entry (§4.6); it is not nothing |
 
 ### A.3 Category 3 — Judgment-terminated (1 loop)
 
 | Workflow | Site | Decision |
 |---|---|---|
-| `vdd-multi` | `multi-fix-loop`<br/>`site: "<!-- loop:multi-fix-loop -->"` — marker inserted at Phase 3 in Phase 2 | `default_max: null`, `override: allowed`, `judgment_terminated: true`, `scope: per_item` (item = critic category, §4.3.3), `exit_bar: "no legitimate findings remain — only style/nits"` (verbatim at `vdd-multi.md:195`) |
+| `vdd-multi` | `multi-fix-loop`<br/>`site: "<!-- loop:multi-fix-loop -->"` — above the `## Phase 3` heading | `default_max: null`, `override: allowed`, `judgment_terminated: true`, `scope: per_item` (item = critic category, §4.3.3), `exit_bar: "no legitimate findings remain — only style/nits"` (verbatim in the Phase-3 exit conditions) |
 
 *(Rev 5's value here was `"clean pass | bikeshedding-only"`, which occurs nowhere in `vdd-multi.md` —
 the §4.3.2 grammar rev 5 introduced, failed by rev 5's own data. The replacement was `grep -F`'d.)*
@@ -822,13 +826,13 @@ the §4.3.2 grammar rev 5 introduced, failed by rev 5's own data. The replacemen
 
 | Workflow | Site | Decision |
 |---|---|---|
-| `iterative-design` | `design-iteration`<br/>`site: "<!-- loop:design-iteration -->"` — marker inserted at Phase 5 step 7 in Phase 2 | `default_max: null`, `override: forbidden`, `gated_by: hitl` |
+| `iterative-design` | `design-iteration`<br/>`site: "<!-- loop:design-iteration -->"` — above the `## Phase 5` heading | `default_max: null`, `override: forbidden`, `gated_by: hitl` |
 
 ### A.5 Category 5 — Already bounded (14 loops across 9 workflows)
 
 | Owner | Site | `default_max` | `override` | `on_exhaust` |
 |---|---|---|---|---|
-| `01-start-feature` | `task-review`<br/>`site: "<!-- loop:task-review -->"` — at the **TASK-review** verification loop, `01-start-feature.md:7-8` | 2 | forbidden | escalate_user |
+| `01-start-feature` | `task-review`<br/>`site: "<!-- loop:task-review -->"` — at the **TASK-review** verification loop (step 4) | 2 | forbidden | escalate_user |
 | `01-start-feature` | `arch-review`<br/>`site: "<!-- loop:arch-review -->"` — at step 5 | 2 | forbidden | escalate_user |
 | `02-plan-implementation` | `plan-review`<br/>`site: "<!-- loop:plan-review -->"` — at step 3 | 2 | forbidden | escalate_user |
 | `03-develop-single-task` | `dev-review`<br/>`site: "<!-- loop:dev-review -->"` — at step 4 | 2 | forbidden | escalate_user |
@@ -837,10 +841,10 @@ the §4.3.2 grammar rev 5 introduced, failed by rev 5's own data. The replacemen
 | `light-02-develop-task` | `light-review-loop`<br/>`site: "<!-- loop:light-review-loop -->"` — at §2.4 | 2 | forbidden | escalate_user |
 | `vdd-05-run-full-task` | `dev-delegate-loop`<br/>`site: "<!-- loop:dev-delegate-loop -->"` — at step 2D | 3 | forbidden | escalate_user |
 | `vdd-enhanced` | `task-validate-retry`<br/>`site: "<!-- loop:task-validate-retry -->"` — at §1.3 | 3 | forbidden | escalate_user |
-| `vdd-enhanced` | `plan-validate-retry`<br/>`site: "<!-- loop:plan-validate-retry -->"` — at §2.3 (`vdd-enhanced.md:47`), **`window: 2`** (the default reaches §3's `max 2 review attempts` and `max 2 fix-and-rerun rounds` → `BOUND_AMBIGUOUS [3,2,2]`; measured in Phase 2) | 3 | forbidden | escalate_user |
+| `vdd-enhanced` | `plan-validate-retry`<br/>`site: "<!-- loop:plan-validate-retry -->"` — at §2.3, **`window: 2`** (the default reaches §3's `max 2 review attempts` and `max 2 fix-and-rerun rounds` → `BOUND_AMBIGUOUS [3,2,2]`; measured in Phase 2) | 3 | forbidden | escalate_user |
 | `vdd-enhanced` | `regression-retry`<br/>`site: "<!-- loop:regression-retry -->"` — at §3.2 | 2 (`scope: per_run`) | forbidden | escalate_user |
-| `full-robust` | `coverage-fix-retry`<br/>`site: "<!-- loop:coverage-fix-retry -->"` — marker at `full-robust.md:38`, bound at `:43`, **`window: 8`** (measured: bound at +5, §3's `Max 3 iterations` at +19; rev 7's `window: 4` reported `BOUND_UNRESOLVABLE` — §4.3.1). `what:` records that the enclosing coverage gate is opt-in; the **edge** carries `optional: true`, not this loop (§4.5 constraint 3) | 1 | forbidden | escalate_user |
-| `full-robust` | `docs-update-retry`<br/>`site: "<!-- loop:docs-update-retry -->"` — marker at `full-robust.md:63`, bound at `:64` (default window clears) | 1 | forbidden | escalate_user |
+| `full-robust` | `coverage-fix-retry`<br/>`site: "<!-- loop:coverage-fix-retry -->"` — at step 2's coverage gate, **`window: 8`** (measured: bound at +5, §3's `Max 3 iterations` at +19; rev 7's `window: 4` reported `BOUND_UNRESOLVABLE` — §4.3.1). `what:` records that the enclosing coverage gate is opt-in; the **edge** carries `optional: true`, not this loop (§4.5 constraint 3) | 1 | forbidden | escalate_user |
+| `full-robust` | `docs-update-retry`<br/>`site: "<!-- loop:docs-update-retry -->"` — at step 4's bounded retry (default window clears) | 1 | forbidden | escalate_user |
 | `heal-issues` | `heal-attempt-loop`<br/>`site: "<!-- loop:heal-attempt-loop -->"` — at Phase 2 | 3 (`scope: per_run`) | forbidden | needs_human |
 
 **Two notes this table earns its shape from.**
@@ -876,20 +880,20 @@ All rows resolved against **`75f624b`**. Read the note below before using any of
 | Reader scripts scan every line, frontmatter included | `check_prompt_references.py:17` (glob) + `:72` (the per-line scan), `smoke_workflows.py:36,40` |
 | `check_prompt_references.py` regex fixed | TASK 095 fix — comment `check_prompt_references.py:21-29`, corrected regex `:30` |
 | `CALL_RE` sees spelling 1 only (§1.2, R13) | `System/scripts/smoke_workflows.py:19` |
-| `vdd-adversarial` calls `03-develop-single-task` | `.agent/workflows/vdd-adversarial.md:74` |
-| `vdd-adversarial` re-enters itself (R5 self-edge) | `.agent/workflows/vdd-adversarial.md:75` |
-| `vdd-05` delegates to a **fragment** of `vdd-03` (§4.5 constraint 1) | `.agent/workflows/vdd-05-run-full-task.md:15` ("Step 3") vs the loop at `vdd-03-develop.md:24` |
-| `full-robust` owns two wrapper retries | `.agent/workflows/full-robust.md:42-43`, `:62-63` |
-| `vdd-multi` exit conditions (source of A.3's `exit_bar`) | `.agent/workflows/vdd-multi.md:194-197` |
-| `heal-issues` two-level counter (§4.3.3) | `.agent/workflows/heal-issues.md:80` (per-run 3) + `:58` (cross-run 2) |
+| `vdd-adversarial` calls `03-develop-single-task` | `.agent/workflows/vdd-adversarial.md` — ``Call workflow `03-develop-single-task` `` |
+| `vdd-adversarial` re-enters itself (R5 self-edge) | `.agent/workflows/vdd-adversarial.md` — *"Repeat this workflow"* |
+| `vdd-05` delegates to a **fragment** of `vdd-03` (§4.5 constraint 1) | `.agent/workflows/vdd-05-run-full-task.md` Step C (*"delegate to … **Step 3**"*) vs `<!-- loop:dev-review-loop -->` in `.agent/workflows/vdd-03-develop.md` |
+| `full-robust` owns two wrapper retries | `<!-- loop:coverage-fix-retry -->` and `<!-- loop:docs-update-retry -->` in `.agent/workflows/full-robust.md` |
+| `vdd-multi` exit conditions (source of A.3's `exit_bar`) | `<!-- loop:multi-fix-loop -->` in `.agent/workflows/vdd-multi.md`, Phase-3 exit list |
+| `heal-issues` two-level counter (§4.3.3) | `<!-- loop:heal-attempt-loop -->` in `.agent/workflows/heal-issues.md` (per-run 3) + its Phase-0 eligibility rule (cross-run 2) |
 | Exit codes 0–6 allocated, 7 free | `feedback_lib/envelope.py:20-25`, `run_feedback.py:45` |
-| `vdd-enhanced` calls non-VDD `01`/`02` | `vdd-enhanced.md:24`, `:37` |
-| `vdd-multi` `--max-iterations` default | `.agent/workflows/vdd-multi.md:197` |
-| Counter non-composition text | `.agent/workflows/vdd-enhanced.md:56-58` |
+| `vdd-enhanced` calls non-VDD `01`/`02` | `.agent/workflows/vdd-enhanced.md` §1.1, §2.1 — `contract.calls[]` records both |
+| `vdd-multi` `--max-iterations` default | `.agent/workflows/vdd-multi.md`, Phase-3 exit condition 4 |
+| Counter non-composition text | `<!-- loop:regression-retry -->` in `.agent/workflows/vdd-enhanced.md` |
 | `flock` in `claims.py` | `claims.py:56` |
 | Framework retry limit in docs | `System/Docs/WORKFLOWS.md:220` (+ per-workflow copies at `:148`, `:152`, `:161`, `:163`, `:350`) |
 | Anchor grammar + reserved registry (D9) | `.agent/skills/documentation-standards/SKILL.md` §4.3 (`:156-195`), §4.4 (`:217-243`) |
-| NOT-RUN contract, v3.22.1 (E5, §4.6) | `full-robust.md:49-52`, `security-audit.md:23-27`, `vdd-adversarial.md:22-52`, `vdd-multi.md:96`, `:237` |
+| NOT-RUN contract, v3.22.1 (E5, §4.6) | `.agent/workflows/`: `full-robust.md`, `security-audit.md`, `vdd-adversarial.md`, `vdd-multi.md` — search `NOT_RUN` / `NOT RUN` |
 
 > **This index is re-resolved in Phase 2 and trusted at no other time. Twice now it was wrong on
 > arrival.** Rev 6 recorded that an edit to `vdd-adversarial.md` shifted `:43`→`:62` and `:45`→`:64`
@@ -916,7 +920,7 @@ Prose bounds + markers only. No frontmatter, no validator, no CI job — per D7.
 | Delivered | Evidence |
 |---|---|
 | **9 bounds + escalation paths** written into the 7 files of A.1/A.2 | `vdd-01-start-feature` ×2, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `framework-upgrade` ×2, `vdd-adversarial`, `security-audit` |
-| **Canonical `max <N>` appended** where the corpus spelled the bound in words | `full-robust.md:43` (`**once** (max 1)`), `:64` (`**one** retry (max 1)`) — appended, never reworded (S1) |
+| **Canonical `max <N>` appended** where the corpus spelled the bound in words | `.agent/workflows/full-robust.md`: `**once** (max 1)` and `**one** retry (max 1)` — appended, never reworded (S1) |
 | **25 `<!-- loop:<id> -->` markers** placed, one per Appendix-A site | `grep -c` = 25, ids unique per file |
 | **`loop:<id>` registered** in `documentation-standards` §4.4 (D9) | the row R14 requires, authored in the same phase as the first marker |
 | **`WORKFLOWS.md` lockstep** | `:220`'s framework-wide "2 attempts" split into Standard = 2 / VDD = 3 (S10: doc correction); rows for Framework Upgrade, VDD Develop, Security Audit, Iterative Design updated; the stale call-map edges `VDDE→Base` / `VDDE→VDDMulti` replaced with the four edges `vdd-enhanced` actually contains, plus a `vdd-adversarial` node and its self-edge |
@@ -928,6 +932,28 @@ Two things Phase 2 corrected that no earlier revision had caught: `framework-upg
 section-local; now stated in the body), and three markers first landed at column 0 inside ordered
 lists, which splits the list in CommonMark — they are indented to the item's content column, which
 is what §4.3.1's placement rule says and what the first pass did not do.
+
+### Positional-citation fix — 2026-08-03 (the class, not the instances)
+
+Phase 3 added 6–20 frontmatter lines to all 23 workflows and thereby invalidated **every**
+positional citation into a workflow body in this document — the third consecutive time, and the
+second inside one session. Rev 7 had already diagnosed it and written the rule; Phase 3 then shipped
+without applying that rule to the citations it moved.
+
+Fixing the numbers a fourth time was not the fix. What changed:
+
+| Change | Why this and not renumbering |
+|---|---|
+| **Live citations into workflow bodies replaced by anchors and quoted content** — `<!-- loop:<id> -->` in `.agent/workflows/<file>.md`, or a verbatim phrase | The markers exist as of Phase 2, so §4.3.1's own answer is now available to this document. An anchor survives every insertion above it; a line number survives nothing |
+| **Historical citations pinned** (`file.md:N@75f624b`) | A changelog row recording *"`:64`→`:76`"* is a record of a corpus state, not a pointer into the current one. `documentation-standards` §4.1 already provides `@<rev>` for exactly this, and the checker honours it |
+| **`docs/reviews/review-095-rev6-adversarial.md` pinned wholesale** (14 refs) | A review is a record of the corpus it reviewed. Its header already declared `75f624b`; every ref now says so machine-readably |
+| **The gate wired into CI** — `check_positional_refs.py --all docs/design --strict` in `reference-integrity` | **The framework already had this checker, with unit tests running in CI, and never ran the check itself over a document.** That is why 24 unresolvable references accumulated here unnoticed: the tests proved the checker worked, and nothing pointed it at anything |
+
+**Scope stated rather than implied.** The gate is scoped to `docs/design`, which now passes
+(60 of 64 references resolve, 4 pinned). A full-tree run reports **36 further findings** in
+`docs/reviews` (29), `docs/tasks` (10 — includes the 3 in `docs/plans`), and `docs/archives` (2),
+all of them records of past corpus states whose correct fix is a pin, not a renumber. Widening the
+gate is separate, deliberate work; leaving it unsaid would make a scoped gate read as a clean tree.
 
 ### Phase 3 — 2026-08-03, shipped (Components A + B)
 
@@ -959,14 +985,14 @@ observed the moment the frontmatter landed, not reasoned about in advance.
 
 | Change | Driver |
 |---|---|
-| **Nine citations re-resolved against `75f624b`** — `vdd-adversarial.md:62`→`74`, `:64`→`76`; `vdd-multi.md:188`→`195`, `:207`→`214`, `:190`→`197`, `:187-189`→`194-197`; `full-robust.md:58-59`→`62-63`, `:52`→`56`; `vdd-enhanced.md:49`→`62`. Appendix B's freshness **assertion** replaced by a **rule** (quote by content, re-resolve in Phase 2), and its two-table split repaired | H-01 — rev 6 asserted *"every row re-resolved on 2026-08-03"* in the commit that broke nine of them. A verification claim with no gate behind it is E1's own thesis, third revision running |
+| **Nine citations re-resolved against `75f624b`** — in `vdd-adversarial.md`, `vdd-multi.md`, `full-robust.md` and `vdd-enhanced.md`; the before/after line pairs are recorded in commit `cfe86fd` rather than restated here, because Component A shifted every one of them again one commit later. That is the argument for §4.3.1's anchors, made twice. Appendix B's freshness **assertion** replaced by a **rule** (quote by content, re-resolve in Phase 2), and its two-table split repaired | H-01 — rev 6 asserted *"every row re-resolved on 2026-08-03"* in the commit that broke nine of them. A verification claim with no gate behind it is E1's own thesis, third revision running |
 | **D9 + R14 — the anchor conforms to `documentation-standards` §4.3/§4.4.** All 25 loop `id`s renamed to kebab-case; §4.4 registry row made a Phase-2 deliverable; §4.3.1 gains the non-heading placement rule (own line, content indentation, no blank line inside a list) | H-03 — §4.4: *"adding a gate that reads an anchor absent from this table is a defect"*, and R3/R10 are that gate. 20 of 25 sites are inside lists, where §4.3's heading syntax would split the structure and break S1 |
 | **`optional: true` removed from A.5's `coverage-fix-retry` loop row**; §4.5 gains constraint 3 (conditionality is an edge property; a loop never entered has no bound to relax) | H-02 — `optional` is a `calls[]` key with no `loops[]` definition. Same shape as C-03: a Phase-3 author copies an illegal key out of Appendix A |
 | **R13 added (warn, Phase 3)** — a prose call spelling with no `calls[]` entry warns; §4.7 renamed and extended to say why | H-04 — R2/R5 are capped by a list nothing checks for completeness, and an omitted edge passes every rule. Warn, not error: `CALL_RE` sees 1 of 3 spellings |
 | **§4.3.1's window walk demoted from result to Phase-2 re-run**, with the `:52`→`:56` correction stated as the reason | M-01 — the four-line NOT-RUN paragraph `75f624b` inserted at `:49-52` moved the collision the narrowing was measured against; the companion claim *"every other site clears the default"* rests on the same stale walk |
 | **§7.3 E5 added** — v3.22.1's portable prose NOT-RUN contract across five workflows and three skills, stated in **both** directions; E3 marked partly superseded; §7.1 item 7 re-pointed at it | M-02 — E3 asserts *"no portable mechanism other than C"*. One shipped. The Phase-5 gate is designed to answer from the record, and the record stopped one commit short |
 | **`not_run` added to the gate-outcome vocabulary** (§4.6, §6.2) | M-03 — v3.22.1 made *skipped* (a decision) vs *never ran* (a missing capability) load-bearing in prose; `pass\|fail\|skipped` could record only two of three states, which is the conflation E1 exists to expose |
-| **A.2's `audit-remediation` records the entry precondition** `security-audit.md:25-27` added, and both A.2 rows now state that Phase 2 must write `max 3` into the **callee** body | M-04 + a defect neither pass caught: both Category-2 caps live only in the caller, so R3 would report `BOUND_UNRESOLVABLE` against `default_max: 3` — `vdd-adversarial.md` contains no `max` at all |
+| **A.2's `audit-remediation` records the entry precondition** v3.22.1 added to `.agent/workflows/security-audit.md`, and both A.2 rows now state that Phase 2 must write `max 3` into the **callee** body | M-04 + a defect neither pass caught: both Category-2 caps live only in the caller, so R3 would report `BOUND_UNRESOLVABLE` against `default_max: 3` — `vdd-adversarial.md` contains no `max` at all |
 | **`id` uniqueness scoped to the workflow** (§4.3) | M-05 — `task-review` / `arch-review` / `plan-review` each exist in two workflows; unqualified "unique" reads as global, which the inventory violates three times |
 | **§7.2 gains `WORKFLOWS.md:350`** and the instruction to re-derive the list by `grep` | M-06 — an enumeration presented as *"every bound"* that missed one; carrying it between revisions is how it went missing |
 | **Seven LOW corrections** — App. B's `check_prompt_references.py:50-61`→`:72`; §1.2 spelling 1 given its backticks and the `CALL_RE` caveat; §1.2 gains the `vdd-adversarial` self-edge R5 requires; §7.1 item 9 re-pointed from `skill-parallel-orchestration` §1.1 to §2.2/§2.4; `--json` given an output shape | L-01 … L-06 |

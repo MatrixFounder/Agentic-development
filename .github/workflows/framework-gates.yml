@@ -63,6 +63,18 @@ jobs:
       - name: Check prompt references
         run: python System/scripts/check_prompt_references.py --root .
 
+      # documentation-standards §4.1. The checker and its unit tests already existed;
+      # nothing ever ran the CHECK itself over a document, so `docs/design` accumulated
+      # 24 unresolvable references before anyone looked. Scoped to the living design
+      # docs deliberately: docs/reviews, docs/tasks, docs/plans and docs/archives are
+      # records of past corpus states and carry 36 further findings that are correctly
+      # fixed by PINNING (`@<rev>`), not by renumbering. Widening this scope is a
+      # separate, deliberate piece of work — not something to leave implied.
+      - name: Check positional references (docs/design)
+        run: |
+          python .agent/skills/documentation-standards/scripts/check_positional_refs.py \
+            --all docs/design --strict
+
   security-lint:
     name: Security lint
     runs-on: ubuntu-latest

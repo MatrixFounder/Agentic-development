@@ -114,6 +114,29 @@ class TestNegativeFixtures(unittest.TestCase):
         self.assertIn("BOUND_UNRESOLVABLE", codes)
         self.assertIn("BOUND_AMBIGUOUS", codes)
 
+    def test_resolution_failures_name_the_part_that_failed(self):
+        """A `window: 0` reported as SITE_UNRESOLVABLE sends the author to inspect the
+        one part of the declaration that is correct. Each cause gets its own code."""
+        by_code = {f["code"]: f for f in findings(self.NEGATIVE)}
+        self.assertIn("WINDOW_INVALID", by_code)
+        self.assertIn("the site itself resolves", by_code["WINDOW_INVALID"]["detail"])
+        self.assertIn("SITE_ID_MISMATCH", by_code)
+
+    def test_bind_across_a_fragment_delegation_warns(self):
+        """§4.5 constraint 1 — the F10 shape: a caller binding a loop its delegated
+        fragment never reaches. Reachability is prose, so this warns rather than
+        pretending to decide it; silence here would be the defect F10 already was."""
+        found = findings(self.NEGATIVE)
+        warns = [f for f in found if f["code"] == "BIND_OVER_PARTIAL_EDGE"]
+        self.assertEqual(len(warns), 1, f"partial-edge bind produced no finding: {found}")
+        self.assertEqual(warns[0]["severity"], "warn")
+
+    def test_partial_edge_without_binds_is_silent(self):
+        """The correct case must stay quiet, or the warning is noise: `vdd-05`
+        delegates a fragment of `vdd-03` and binds nothing."""
+        found = findings(PROJECT_ROOT)
+        self.assertEqual([f for f in found if f["code"] == "BIND_OVER_PARTIAL_EDGE"], [])
+
     def test_exit_bar_must_be_quotable(self):
         """R10 — `"until done"` is what 'non-empty' accepts and this rule rejects."""
         found = findings(self.NEGATIVE)

@@ -110,12 +110,11 @@ def split_frontmatter(text: str) -> tuple[str | None, list[str]]:
     return None, lines
 
 
-def load_workflows(root: Path) -> tuple[list[Workflow], list[Finding]]:
+def load_workflows(root: Path) -> list[Workflow]:
     wf_dir = root / ".agent" / "workflows"
     if not wf_dir.is_dir():
         raise FileNotFoundError(f"no workflow directory at {wf_dir}")
     workflows: list[Workflow] = []
-    findings: list[Finding] = []
     for path in sorted(wf_dir.glob("*.md")):
         text = path.read_text(encoding="utf-8")
         fm_text, body = split_frontmatter(text)
@@ -128,33 +127,44 @@ def load_workflows(root: Path) -> tuple[list[Workflow], list[Finding]]:
             if isinstance(data, dict):
                 contract = data.get("contract")
         workflows.append(Workflow(path.stem, path, contract, body))
-    return workflows, findings
+    return workflows
 
 
-def resolve_site(wf: Workflow, loop: dict) -> tuple[int, int] | None:
-    """Resolve `site` to a 0-based [start, end) slice of the body, or None."""
+def resolve_site(wf: Workflow, loop: dict) -> tuple[tuple[int, int] | None, str]:
+    """Resolve `site` to a 0-based [start, end) body slice.
+
+    Returns (span, code). `code` names WHICH thing failed: a caller that reports
+    SITE_UNRESOLVABLE for a bad `window` sends the author to inspect the one part of
+    the declaration that is correct.
+
+    Resolution is deliberately over `wf.body`, never the whole file: once Component A
+    ships, the marker also appears in frontmatter as the `site` value, so a whole-file
+    search finds two hits for every correctly-placed marker (spec §4.3.1).
+    """
     site = loop.get("site")
     if not isinstance(site, str):
-        return None
+        return None, "SITE_UNRESOLVABLE"
     marker = MARKER_RE.fullmatch(site.strip())
     if marker:
         name = marker.group(1)
         if name != loop.get("id"):
-            return None
+            return None, "SITE_ID_MISMATCH"
         hits = [i for i, line in enumerate(wf.body) if f"<!-- loop:{name} -->" in line]
-        if len(hits) != 1:
-            return None
+        if len(hits) == 0:
+            return None, "SITE_UNRESOLVABLE"
+        if len(hits) > 1:
+            return None, "SITE_AMBIGUOUS"
         window = loop.get("window", DEFAULT_WINDOW)
-        if not isinstance(window, int) or window < 1:
-            return None
-        return hits[0], min(len(wf.body), hits[0] + window + 1)
+        if not isinstance(window, int) or isinstance(window, bool) or window < 1:
+            return None, "WINDOW_INVALID"
+        return (hits[0], min(len(wf.body), hits[0] + window + 1)), "OK"
     rng = LINE_SITE_RE.fullmatch(site.strip())
     if rng:
         start, end = int(rng.group(1)), int(rng.group(2))
         if start < 1 or end < start or end > len(wf.body):
-            return None
-        return start - 1, end
-    return None
+            return None, "SITE_OUT_OF_RANGE"
+        return (start - 1, end), "OK"
+    return None, "SITE_UNRESOLVABLE"
 
 
 def check_loop_schema(wf: Workflow, loop: dict, out: list[Finding]) -> None:
@@ -201,11 +211,18 @@ def check_loop_schema(wf: Workflow, loop: dict, out: list[Finding]) -> None:
 
 def check_site_and_bound(wf: Workflow, loop: dict, out: list[Finding]) -> None:
     lid = loop.get("id")
-    span = resolve_site(wf, loop)
+    span, code = resolve_site(wf, loop)
     if span is None:
-        out.append(Finding("R3", "error", wf.name, "SITE_UNRESOLVABLE",
-                           f"`site: {loop.get('site')!r}` resolves to nothing "
-                           "(§4.3.1: marker or line:NN-MM, no third form)", lid))
+        detail = {
+            "SITE_UNRESOLVABLE": f"`site: {loop.get('site')!r}` resolves to nothing "
+                                 "(§4.3.1: marker or line:NN-MM, no third form)",
+            "SITE_ID_MISMATCH": f"`site` names a marker that is not this loop's id ({lid!r})",
+            "SITE_AMBIGUOUS": f"the marker for {lid!r} occurs more than once in the body",
+            "SITE_OUT_OF_RANGE": f"`site: {loop.get('site')!r}` falls outside the body",
+            "WINDOW_INVALID": f"`window: {loop.get('window')!r}` must be an int >= 1 "
+                              "(the site itself resolves — only the window is wrong)",
+        }[code]
+        out.append(Finding("R3", "error", wf.name, code, detail, lid))
         return
     start, end = span
     window_text = wf.body[start:end]
@@ -274,11 +291,21 @@ def check_calls(wf: Workflow, by_name: dict[str, Workflow], out: list[Finding]) 
             if callee_loops[loop_id].get("override", "forbidden") == "forbidden":
                 out.append(Finding("R9", "error", wf.name, "BIND_FORBIDDEN",
                                    f"`{target}.{loop_id}` is `override: forbidden`"))
-            # §4.5 constraint 1 — a `partial` edge bounds what is bindable.
             if isinstance(spec, dict) and "max" in spec:
-                if not isinstance(spec["max"], int) or spec["max"] < 1:
+                if not isinstance(spec["max"], int) or isinstance(spec["max"], bool) or spec["max"] < 1:
                     out.append(Finding("R12", "error", wf.name, "BIND_MAX_INVALID",
                                        f"`{target}.{loop_id}.max` must be an int >= 1"))
+            # §4.5 constraint 1 — on a `partial` edge only loops INSIDE the delegated
+            # fragment may be bound. The fragment is named in prose ("Step 3"), so no
+            # script can decide reachability: this warns and says why, rather than
+            # claiming a check it cannot perform. It is silent on the correct case —
+            # `vdd-05` delegates a fragment and binds nothing — and fires on exactly the
+            # shape that produced F10, where a caller bound a loop it never reaches.
+            if edge.get("partial"):
+                out.append(Finding("R12", "warn", wf.name, "BIND_OVER_PARTIAL_EDGE",
+                                   f"binds `{target}.{loop_id}` across a fragment delegation "
+                                   f"({edge['partial']!r}); reachability is stated in prose and "
+                                   "must be confirmed by a human (§4.5 constraint 1)"))
         for loop_id in edge.get("suppresses") or []:
             if loop_id not in callee_loops:
                 out.append(Finding("R12", "error", wf.name, "SUPPRESS_UNKNOWN_LOOP",
@@ -381,13 +408,18 @@ def check_anchor_registry(root: Path, workflows: list[Workflow], out: list[Findi
         out.append(Finding("R14", "error", "<registry>", "REGISTRY_MISSING",
                            f"{REGISTRY_PATH} not found; the `loop:<id>` anchor cannot be registered"))
         return
-    if REGISTRY_ANCHOR not in registry.read_text(encoding="utf-8"):
+    rows = [l for l in registry.read_text(encoding="utf-8").splitlines()
+            if l.lstrip().startswith("|") and REGISTRY_ANCHOR in l]
+    if not rows:
         out.append(Finding("R14", "error", "<registry>", "ANCHOR_UNREGISTERED",
                            f"`loop:<id>` has no row in {REGISTRY_PATH} §4.4"))
 
 
-def run(root: Path) -> list[Finding]:
-    workflows, findings = load_workflows(root)
+def run(root: Path) -> tuple[list[Finding], int]:
+    """Return (findings, loops_checked). The count is returned rather than recomputed:
+    a summary that re-derives its own number can disagree with the run it summarises."""
+    workflows = load_workflows(root)
+    findings: list[Finding] = []
     by_name = {wf.name: wf for wf in workflows}
 
     for wf in workflows:
@@ -424,7 +456,7 @@ def run(root: Path) -> list[Finding]:
     check_required_overrides(workflows, findings)
     check_acyclic(workflows, findings)
     check_anchor_registry(root, workflows, findings)
-    return findings
+    return findings, sum(len(wf.loops) for wf in workflows)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -439,7 +471,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root)
     try:
-        findings = run(root)
+        findings, loops_checked = run(root)
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE
@@ -460,8 +492,7 @@ def main(argv: list[str] | None = None) -> int:
         for finding in findings:
             print(finding.as_line())
         # The count is the point: a run that checked nothing must not read like a clean one.
-        loops = sum(len(wf.loops) for wf in load_workflows(root)[0])
-        print(f"checked {loops} loops: {len(errors)} error(s), {len(warns)} warning(s)")
+        print(f"checked {loops_checked} loops: {len(errors)} error(s), {len(warns)} warning(s)")
 
     if errors and args.strict:
         return EXIT_VIOLATIONS

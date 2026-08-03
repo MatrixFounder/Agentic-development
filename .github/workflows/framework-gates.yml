@@ -92,3 +92,33 @@ jobs:
 
       - name: Run workflow smoke checks
         run: python System/scripts/smoke_workflows.py --root .
+
+  loop-contract:
+    name: Loop contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # PyYAML — the one dependency Component B adds (spec S3), pinned in requirements-dev.txt.
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # Phase 3 is warn-only (S4). Phase 4 adds --strict here and nothing else changes.
+      - name: Check workflow loop contracts
+        run: python System/scripts/check_loop_contract.py --root .
+
+      # A validator that cannot fail is not a validator. If this fixture ever passes,
+      # the step above is asserting nothing and the job must go red.
+      - name: R3 negative fixture must FAIL
+        run: |
+          if python System/scripts/check_loop_contract.py \
+               --root tests/fixtures/loop_contract/negative --strict; then
+            echo "::error::R3 negative fixture passed the validator — R3 is vacuous"
+            exit 1
+          fi

@@ -1,5 +1,15 @@
 ---
 description: Security Audit
+contract:
+  version: 1
+  loops:
+    - id: audit-remediation
+      what: fix -> re-run the audit script until clean
+      site: "<!-- loop:audit-remediation -->"
+      default_max: 3
+      override: allowed
+      on_exhaust: escalate_user
+  calls: []
 ---
 
 **Description:**

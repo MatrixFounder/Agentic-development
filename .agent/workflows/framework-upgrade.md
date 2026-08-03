@@ -1,5 +1,21 @@
 ---
 description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skills, System Logic)
+contract:
+  version: 1
+  loops:
+    - id: spec-audit-retry
+      what: specification meta-audit fails -> redraft TASK
+      site: "<!-- loop:spec-audit-retry -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+    - id: plan-audit-retry
+      what: plan meta-audit fails -> redraft PLAN
+      site: "<!-- loop:plan-audit-retry -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 
 # Workflow: Framework Upgrade

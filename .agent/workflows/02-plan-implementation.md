@@ -1,5 +1,15 @@
 ---
 description: Plan the implementation of the feature
+contract:
+  version: 1
+  loops:
+    - id: plan-review
+      what: plan reviewer rejects -> update and re-review
+      site: "<!-- loop:plan-review -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 1. Read `System/Agents/06_planner_prompt.md` to understand the Planning phase.
 2. Create or update `docs/PLAN.md` with the overall plan.

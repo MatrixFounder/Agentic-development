@@ -1,5 +1,24 @@
 ---
 description: Develop a task using Light Mode (Dev + Review loop)
+contract:
+  version: 1
+  loops:
+    - id: light-fix-loop
+      what: tests fail -> fix and re-run
+      site: "<!-- loop:light-fix-loop -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+      window: 6
+    - id: light-review-loop
+      what: reviewer finds issues -> return to the developer step
+      site: "<!-- loop:light-review-loop -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+  calls:
+    - workflow: 01-start-feature
+      kind: escalate
 ---
 
 # Light Mode: Develop Task

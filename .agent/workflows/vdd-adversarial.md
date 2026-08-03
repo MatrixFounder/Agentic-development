@@ -1,5 +1,22 @@
 ---
 description: VDD Adversarial Refinement
+contract:
+  version: 1
+  loops:
+    - id: adversarial-cycle
+      what: critique -> fix -> re-critique until objective convergence
+      site: "<!-- loop:adversarial-cycle -->"
+      default_max: 3
+      override: allowed
+      on_exhaust: escalate_user
+      recursive: true
+      judgment_terminated: true
+      exit_bar: "0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains"
+  calls:
+    - workflow: 03-develop-single-task
+      kind: invoke
+    - workflow: vdd-adversarial
+      kind: invoke
 ---
 
 # Workflow: VDD Adversarial Refinement

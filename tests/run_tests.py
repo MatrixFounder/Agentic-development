@@ -92,7 +92,7 @@ class TestProductSkills(unittest.TestCase):
 #: This list is NOT the CI gate — `.github/workflows/framework-gates.yml` names its own,
 #: larger set. It exists so the modules most likely to be run locally before a commit are
 #: not invisible to this runner.
-CURATED_UNITTEST_MODULES = ("test_positional_refs", "test_scratch_hygiene")
+CURATED_UNITTEST_MODULES = ("test_positional_refs", "test_scratch_hygiene", "test_loop_contract")
 
 
 def load_tests(loader, standard_tests, pattern):

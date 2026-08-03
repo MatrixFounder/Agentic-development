@@ -1,5 +1,13 @@
 ---
 description: Start a feature using Light Mode (fast-track for trivial tasks)
+contract:
+  version: 1
+  loops: []
+  calls:
+    - workflow: light-02-develop-task
+      kind: invoke
+    - workflow: 01-start-feature
+      kind: escalate
 ---
 
 # Light Mode: Start Feature

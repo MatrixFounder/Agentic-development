@@ -1,5 +1,21 @@
 ---
 description: Start a new feature development cycle (VDD Mode - High Integrity)
+contract:
+  version: 1
+  loops:
+    - id: task-review
+      what: TASK reviewer rejects -> update and re-review
+      site: "<!-- loop:task-review -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+    - id: arch-review
+      what: ARCHITECTURE reviewer rejects -> update and re-review
+      site: "<!-- loop:arch-review -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: You are now operating under Verification-Driven Development. Precision and decomposition are paramount.

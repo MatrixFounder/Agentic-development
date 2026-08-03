@@ -1,5 +1,24 @@
 ---
 description: Execute all tasks in PLAN.md with adversarial Sarcasmotron review (no auto-commit)
+contract:
+  version: 1
+  loops:
+    - id: builder-red-loop
+      what: red tests force a builder round before the roast
+      site: "<!-- loop:builder-red-loop -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+    - id: dev-delegate-loop
+      what: roast REJECTED -> return to the builder step
+      site: "<!-- loop:dev-delegate-loop -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+  calls:
+    - workflow: vdd-03-develop
+      kind: invoke
+      partial: "Step 3"
 ---
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: Adversarial chain. **Auto-commit is forbidden.** Resumable via session-state.

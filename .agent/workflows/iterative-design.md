@@ -1,5 +1,16 @@
 ---
 description: "Iterative design loop: Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine"
+contract:
+  version: 1
+  loops:
+    - id: design-iteration
+      what: refine the spec against user feedback
+      site: "<!-- loop:design-iteration -->"
+      default_max: null
+      override: forbidden
+      on_exhaust: needs_human
+      gated_by: hitl
+  calls: []
 ---
 
 # Iterative Concept Design Workflow

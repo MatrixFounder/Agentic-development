@@ -1,5 +1,16 @@
 ---
 description: Bounded self-healing over the known-issues ledger — select an explicitly auto-fixable open issue, reproduce, fix on a branch, verify with the component's gates, flip status. Never touches main, never pushes.
+contract:
+  version: 1
+  loops:
+    - id: heal-attempt-loop
+      what: fix -> run the component gates, per run
+      site: "<!-- loop:heal-attempt-loop -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: needs_human
+      scope: per_run
+  calls: []
 ---
 # Workflow: Heal Issues
 

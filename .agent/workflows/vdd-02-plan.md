@@ -1,5 +1,15 @@
 ---
 description: Plan the implementation using Chainlink Decomposition
+contract:
+  version: 1
+  loops:
+    - id: plan-review
+      what: plan reviewer rejects -> update and re-review
+      site: "<!-- loop:plan-review -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: Ensure every atomic unit of work ("Bead") is documented.

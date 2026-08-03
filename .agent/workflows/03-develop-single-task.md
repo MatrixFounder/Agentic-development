@@ -1,5 +1,15 @@
 ---
 description: Develop a specific task
+contract:
+  version: 1
+  loops:
+    - id: dev-review
+      what: code reviewer rejects -> update and re-review
+      site: "<!-- loop:dev-review -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 > **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "03-develop-single-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
 

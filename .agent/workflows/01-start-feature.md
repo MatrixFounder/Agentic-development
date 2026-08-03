@@ -1,5 +1,21 @@
 ---
 description: Start a new feature development cycle (Analysis & Architecture)
+contract:
+  version: 1
+  loops:
+    - id: task-review
+      what: TASK reviewer rejects -> update and re-review
+      site: "<!-- loop:task-review -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+    - id: arch-review
+      what: ARCHITECTURE reviewer rejects -> update and re-review
+      site: "<!-- loop:arch-review -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 1. Read `System/Agents/02_analyst_prompt.md` to understand the Analysis phase.
 2. Read `docs/KNOWN_ISSUES.md` to be aware of past problems (skip if absent — created on the first filed issue).

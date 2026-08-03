@@ -1,0 +1,10 @@
+# Phase-3 expected WARN set for `check_loop_contract.py --root .`
+#
+# Format: "<rule> <workflow> <code>", one per line, sorted. Compared against the live
+# run by tests/test_loop_contract.py::test_warnings_match_the_recorded_fixture.
+#
+# The file is deliberately allowed to be empty of entries: the live corpus after Phase 2
+# produces no warnings, and an empty EXPECTED set is only meaningful because the negative
+# fixtures prove the warn-emitting rules (R6 heuristic, R13) can fire at all. Adding a
+# warning to the corpus without adding it here is a test failure, which is the point —
+# a growing WARN list must be an explicit decision, never a drift nobody noticed.

@@ -1,5 +1,18 @@
 ---
 description: VDD Multi-Adversarial — parallel critics via Layer-A teammate spawn (Claude Code); sequential fallback on other vendors
+contract:
+  version: 1
+  loops:
+    - id: multi-fix-loop
+      what: fix -> re-spawn one critic until its category is clean
+      site: "<!-- loop:multi-fix-loop -->"
+      default_max: null
+      override: allowed
+      on_exhaust: escalate_user
+      judgment_terminated: true
+      scope: per_item
+      exit_bar: "no legitimate findings remain — only style/nits"
+  calls: []
 ---
 
 # Workflow: VDD Multi-Adversarial

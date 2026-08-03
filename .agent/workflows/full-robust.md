@@ -1,5 +1,39 @@
 ---
 description: Run the full robust pipeline (Stub-First + VDD + Security) with bounded, gated loops
+contract:
+  version: 1
+  loops:
+    - id: coverage-fix-retry
+      what: coverage gate FAIL -> materialize fix task, re-run the gate once
+      site: "<!-- loop:coverage-fix-retry -->"
+      default_max: 1
+      override: forbidden
+      on_exhaust: escalate_user
+      window: 8
+    - id: docs-update-retry
+      what: documentation sub-step fails -> one retry with the error verbatim
+      site: "<!-- loop:docs-update-retry -->"
+      default_max: 1
+      override: forbidden
+      on_exhaust: escalate_user
+  calls:
+    - workflow: vdd-enhanced
+      kind: invoke
+    - workflow: vdd-multi
+      kind: invoke
+      optional: true
+      suppresses: [multi-fix-loop]
+    - workflow: security-audit
+      kind: invoke
+      binds:
+        audit-remediation:
+          max: 3
+          exit_bar: "no CRITICAL/HIGH findings"
+    - workflow: 04-update-docs
+      kind: invoke
+    - workflow: 03-develop-single-task
+      kind: invoke
+      optional: true
 ---
 # Workflow: Full Robust Development
 

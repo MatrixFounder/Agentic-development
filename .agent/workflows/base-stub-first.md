@@ -1,5 +1,15 @@
 ---
 description: Start a feature using the standard Stub-First pipeline
+contract:
+  version: 1
+  loops: []
+  calls:
+    - workflow: 01-start-feature
+      kind: invoke
+    - workflow: 02-plan-implementation
+      kind: invoke
+    - workflow: 05-run-full-task
+      kind: invoke
 ---
 # Workflow: Base Stub-First Development
 

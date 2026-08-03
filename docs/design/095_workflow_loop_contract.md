@@ -301,6 +301,14 @@ while diverging from it was rev 6's state, and the divergence was in three place
 outside the body is the same error. This is the one property that makes R3 falsifiable, so it is
 stated as a hard failure rather than a preference.
 
+> **Resolution is body-only, and this is not an implementation detail.** The `site` **value** is
+> the marker string, so once Component A ships, every marker occurs **twice** in its file: once in
+> frontmatter as `site: "<!-- loop:x -->"` and once in the body. A whole-file search therefore finds
+> two hits and reports `SITE_UNRESOLVABLE` on all 25 correctly-placed markers — observed, not
+> predicted: the Phase-2 walk script did exactly this the moment Phase 3's frontmatter landed. The
+> validator strips frontmatter first (`split_frontmatter`) and counts only body hits, which is also
+> what makes the `line:NN-MM` form's "frontmatter excluded from the count" consistent with it.
+
 **The bound needs a grammar too — R3 stands on two resolvable things, and rev 5 gave only one of
 them a form.** "Must match prose bound" is undefined until *prose bound* is. The corpus writes the
 same fact seven ways (`Max 2 attempts`, `max 3 fix-and-rerun attempts`, `Max 3 iterations`,
@@ -586,7 +594,7 @@ Job names aligned with CI workflow: `tooling-tests`, `skill-validate`, `referenc
 |---|---|---|---|
 | **1** | Design spec (this file) | Operator sign-off. **Granted 2026-08-02 on rev 5** (D7 included) and **extended to D9 on 2026-08-03**. Revs 6–7 are review-driven corrections within that sign-off. **Phase 1 closed.** | Delete file |
 | **2** ✅ **DONE 2026-08-03** | **Close §1.1.** Write the missing bound + escalation path in the prose of the **9** loops of A.1/A.2 (7 files); append the canonical `max <N>` form (§4.3.1) wherever an existing bound is spelled in words; insert the `<!-- loop:<id> -->` marker at **every** loop site in Appendix A — all **25**, including the 14 already-bounded ones, whose marker is all Phase 2 owes them; register the `loop:<id>` namespace in `documentation-standards` §4.4 (D9); re-run the §4.3.1 window walk and the Appendix B citation resolve, writing the results back | Every loop in Appendix A.1/A.2 has a bound and an `on_exhaust` in its own body; every A.1–A.5 site carries its marker and exactly one canonical `max <N>` (A.3/A.4 excepted — they are `null` by D1); §4.4 carries the `loop:<id>` row; every positional citation in this spec re-resolves at the Phase-2 commit; `smoke_workflows.py` green. **No frontmatter, no new script, no CI job** | `git revert` |
-| **3** | Components A **+** B together: frontmatter on all 23 workflows, `check_loop_contract.py` warn-only, R3 negative fixture | Full pytest green; `smoke_workflows.py` / `check_prompt_references.py` green; **the R3 negative fixture FAILS the validator** (a fixture that passes means R3 is vacuous again); validator warnings match `docs/design/095-phase3-expected-warnings.txt` via `diff -q` | `git revert` |
+| **3** ✅ **DONE 2026-08-03** | Components A **+** B together: frontmatter on all 23 workflows, `check_loop_contract.py` warn-only, R3 negative fixture | Full pytest green; `smoke_workflows.py` / `check_prompt_references.py` green; **the R3 negative fixture FAILS the validator** (a fixture that passes means R3 is vacuous again); validator warnings match `docs/design/095-phase3-expected-warnings.txt` via `diff -q` | `git revert` |
 | **4** | Enable `--strict` in CI | Phase 3 green for 1 full framework-upgrade cycle | Remove `--strict` flag |
 | **5** | Component C (`run_stack.py`) + `contract.gates[]` | §7.1 entry gate passed; unit tests green; fail-open verified | Delete script |
 | **6** | Retro `claim` integration | 3 consecutive clean runs | Keep `claims.py` |
@@ -915,6 +923,24 @@ Two things Phase 2 corrected that no earlier revision had caught: `framework-upg
 section-local; now stated in the body), and three markers first landed at column 0 inside ordered
 lists, which splits the list in CommonMark — they are indented to the item's content column, which
 is what §4.3.1's placement rule says and what the first pass did not do.
+
+### Phase 3 — 2026-08-03, shipped (Components A + B)
+
+Frontmatter on all 23 workflows + `System/scripts/check_loop_contract.py`, warn-only per S4.
+
+| Delivered | Evidence |
+|---|---|
+| **`contract:` block on all 23 workflows** — 25 loops, 20 call edges | generated from ONE inventory so a number cannot differ between two files; R6 passes on all 23 |
+| **`check_loop_contract.py`** implementing R1–R7, R9, R10, R12, R13, R14 | R8 and R11 remain Phase 5 (§5.2), as declared |
+| **Negative fixtures — the deliverable, not the suggestion** | `tests/fixtures/loop_contract/`: R3 `BOUND_MISMATCH` (`default_max: 3` over prose `Max 2`), plus `SITE_UNRESOLVABLE`, `BOUND_UNRESOLVABLE`, `BOUND_AMBIGUOUS`, R10 `"until done"`, R14 unregistered anchor, an R5 cycle, an unpaired self-edge, R2/R4/R9/R12/R13. **`test_every_phase3_rule_fires` fails if any of the 12 rules stops producing a finding** |
+| **CI job `loop-contract`** | runs the validator warn-only **and** asserts the negative fixture FAILS — if the fixture ever passes, the job goes red |
+| **Expected-warnings fixture** | `docs/design/095-phase3-expected-warnings.txt`, compared in-test rather than eyeballed |
+| **Gates** | `tests/run_tests.py` **293 OK** (was 278; +15) · live corpus `checked 25 loops: 0 error(s), 0 warning(s)` · negative root exits **1** under `--strict`, **0** without (S4) · `smoke_workflows.py` OK · `check_prompt_references.py` 41/42 |
+
+One property Phase 3 discovered and §4.3.1 now states: once `site` values exist, **every marker
+appears twice in its file** — in frontmatter as the `site` value, and in the body. A whole-file
+search reports `SITE_UNRESOLVABLE` on all 25 correct markers. Resolution is body-only. This was
+observed the moment the frontmatter landed, not reasoned about in advance.
 
 ### rev 7 — 2026-08-03, after the rev-6 adversarial pass ([review-095-rev6-adversarial.md](../reviews/review-095-rev6-adversarial.md))
 

@@ -1,5 +1,9 @@
 ---
 description: Ensure documentation is up to date
+contract:
+  version: 1
+  loops: []
+  calls: []
 ---
 > **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "04-update-docs-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
 

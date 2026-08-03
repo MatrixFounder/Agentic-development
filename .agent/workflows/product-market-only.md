@@ -1,5 +1,9 @@
 ---
 description: Run Market Research Only. Stops after Strategy.
+contract:
+  version: 1
+  loops: []
+  calls: []
 ---
 
 # Product Discovery (Market Only)

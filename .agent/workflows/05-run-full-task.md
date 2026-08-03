@@ -1,5 +1,17 @@
 ---
 description: Automatically execute all tasks in the current PLAN.md
+contract:
+  version: 1
+  loops:
+    - id: task-retry
+      what: red regression suite -> re-enter the developer workflow
+      site: "<!-- loop:task-retry -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+  calls:
+    - workflow: 03-develop-single-task
+      kind: invoke
 ---
 # Workflow: Run Full Task
 

@@ -1,5 +1,9 @@
 ---
 description: Run the Full Product Discovery Pipeline (Strategy -> Vision -> Gate -> Solution -> Handoff)
+contract:
+  version: 1
+  loops: []
+  calls: []
 ---
 
 # Product Discovery (Full Mode)

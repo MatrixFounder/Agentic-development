@@ -1,5 +1,9 @@
 ---
 description: Run the Quick Product Vision Pipeline (Vision -> Gate -> Handoff). Skips Strategy.
+contract:
+  version: 1
+  loops: []
+  calls: []
 ---
 
 # Product Discovery (Quick Mode)

@@ -1,5 +1,15 @@
 ---
 description: Develop a task using the Adversarial Loop
+contract:
+  version: 1
+  loops:
+    - id: dev-review-loop
+      what: Sarcasmotron REJECTED -> return to the builder step
+      site: "<!-- loop:dev-review-loop -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+  calls: []
 ---
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: Prepare for the **Adversarial Roast**.

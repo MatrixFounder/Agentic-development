@@ -1,5 +1,42 @@
 ---
 description: VDD-Enhanced Development (Hardened Pipeline)
+contract:
+  version: 1
+  loops:
+    - id: task-validate-retry
+      what: RTM validation fails -> re-run the analyst role
+      site: "<!-- loop:task-validate-retry -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+    - id: plan-validate-retry
+      what: plan validation fails -> re-run the planner role
+      site: "<!-- loop:plan-validate-retry -->"
+      default_max: 3
+      override: forbidden
+      on_exhaust: escalate_user
+      window: 2
+    - id: regression-retry
+      what: red regression suite -> fix and re-run, total not per task
+      site: "<!-- loop:regression-retry -->"
+      default_max: 2
+      override: forbidden
+      on_exhaust: escalate_user
+      scope: per_run
+  calls:
+    - workflow: 01-start-feature
+      kind: invoke
+    - workflow: 02-plan-implementation
+      kind: invoke
+    - workflow: 05-run-full-task
+      kind: invoke
+    - workflow: 03-develop-single-task
+      kind: invoke
+    - workflow: vdd-adversarial
+      kind: invoke
+      binds:
+        adversarial-cycle:
+          max: 3
 ---
 
 # Workflow: VDD-Enhanced (Hardened)

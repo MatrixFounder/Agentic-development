@@ -47,6 +47,7 @@ graph TD
         VDDE([vdd-enhanced]):::pipeline
         Robust([full-robust]):::pipeline
         VDDMulti([vdd-multi]):::pipeline
+        VDDAdv([vdd-adversarial]):::pipeline
         Light([light]):::pipeline
 
         subgraph Product [Product Discovery]
@@ -95,8 +96,13 @@ graph TD
     Robust -->|2. opt-in coverage gate| VDDMulti
     Robust -->|3. calls| SecAudit
 
-    VDDE -->|1. calls| Base
-    VDDE -->|2. adversarial refine| VDDMulti
+    VDDE -->|1. Analysis| Start
+    VDDE -->|2. Planning| Plan
+    VDDE -->|3. Development| RunAll
+    VDDE -->|4. adversarial refine| VDDAdv
+
+    VDDAdv -->|fix cycle| Dev
+    VDDAdv -->|re-enters itself, max 3| VDDAdv
 
     Base -->|1. Analysis| Start
     Base -->|2. Planning| Plan
@@ -147,8 +153,8 @@ The workflows are organized into three categories:
 | **Full Robust** | The Ultimate Pipeline: Runs `VDD Enhanced` strategy (Adversarial) with **Strict TDD** (High Assurance), an opt-in `vdd-multi` coverage gate, and a Security Audit. Every step is a gate (script exit codes, test runs, structured review verdicts) with bounded retries + explicit escalation; vendor-dispatch section documents non-Claude harnesses. | `run full-robust` or `/full` |
 | **VDD Enhanced** | **Hardened Pipeline.** Stub-First Plan + **RTM Validation** + VDD Adversarial execution. All four phases use bounded self-correction loops (max 3 validator retries, max 2 regression fix-and-rerun rounds, max 3 adversarial cycles) with escalation on exhaustion; gates are objective checks — `validate.py` exit codes, the regression suite, and the adversarial objective-convergence bar (model-agnostic). Phase 4 additionally requires that a fix to an assertion enumerate **all** its sites before editing and report `fixed N of M found`, and passes a **Cycle Brief** (§4.7) into each re-entry — carried-over changes and the N-of-M ratio — which the adversary verifies rather than accepts. | `run vdd-enhanced` or `/vdd` |
 | **VDD Multi-Adversarial** | **Parallel** execution of 3 specialized critics (logic, security, performance) via Layer A — single `Agent` tool-use spawning `.claude/agents/critic-*` subagents in one message. Supports 5 inline flags: `--scope`, `--no-fix`, `--fail-on`, `--output`, `--diff-only`. See §6 for wrapper details and `.agent/workflows/vdd-multi.md` for full parameter reference. | `run vdd-multi [target] [flags]` or `/vdd-multi ...` |
-| **Framework Upgrade** | **Meta-Workflow.** Safely upgrades the Agentic System itself (Prompts/Skills) with Audit Gates. | `run framework-upgrade` |
-| **Iterative Design** | **Concept Refinement Loop.** Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine. | `run iterative-design` |
+| **Framework Upgrade** | **Meta-Workflow.** Safely upgrades the Agentic System itself (Prompts/Skills) with Audit Gates. Both Meta-Audit gates (§1.3, §2.3) are bounded — **max 3 audit rounds each**, then escalate. | `run framework-upgrade` |
+| **Iterative Design** | **Concept Refinement Loop.** Brainstorm -> Spec Draft -> VDD -> Human Review -> Refine. Phase 5 is deliberately uncapped — every iteration is HITL-gated, so the human is the bound. | `run iterative-design` |
 | **Light Mode** | **Fast-track for trivial tasks.** Skips Architecture/Planning. Uses Analysis → Dev → Review loop — bounded (max 3 test-fix attempts, max 2 review cycles); bound exhaustion escalates to the standard pipeline. | `run light` or `/light` |
 
 ---
@@ -159,7 +165,7 @@ The workflows are organized into three categories:
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
 | **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. **Auto-commits only on a green regression suite**; on failure, bounded fix loop (max 2 re-entries into `03-develop-single-task`), then escalates to the user. | `run 05-run-full-task` or `/develop-all` |
-| **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task. | `run vdd-03-develop` |
+| **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task — **max 3 roast→fix rounds**, then escalate. | `run vdd-03-develop` |
 | **VDD Run Full Task** | **VDD Chain Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, applies adversarial Sarcasmotron review per task. Mandatory inter-task HITL gate (`yes / pause / abort`). Max 3 REJECTED iterations before escalation. **No auto-commit.** Resumable from `.agent/sessions/latest.yaml` after `pause`. Supports `--dry-run` and `--auto-continue=<sec>` flags. | `run vdd-05-run-full-task` or `/vdd-develop-all` |
 | **Heal Issues** | **The Ledger Burn-Down Engine.** Consumes `docs/issues/` (fed by the `run-feedback` skill): picks ONE `status: open` + `auto_fixable: true` issue, re-proves it red from its fenced repro, fixes it on a `fix/` branch (≤3 iterations, component gates re-run each pass), flips the ledger status in the same commit. **Branch-only — never touches the base branch, never pushes/merges/opens PRs.** Output = PR-ready branch + run report for HUMAN review. Scheduling is operator-side opt-in only (Stage 0 → Stage 1). Full guide: [`QUALITY_FEEDBACK_LOOP.md`](QUALITY_FEEDBACK_LOOP.md). | `run heal-issues` or `/heal-issues` (`--dry-run`) |
 
@@ -174,7 +180,7 @@ The workflows are organized into three categories:
 | **Plan Impl** | Planning Phase only (creates PLAN). | `run 02-plan-implementation` |
 | **Develop Task** | Executes a **single** task from the plan (No loop). | `run 03-develop-single-task` |
 | **Update Docs** | Updates documentation artifacts. | `run 04-update-docs` |
-| **Security Audit** | runs the security auditor agent. | `run security-audit` |
+| **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max 3 iterations** when invoked directly; `full-robust` §3 re-scopes both the cap and the definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, never clean. | `run security-audit` |
 | **Light Start** | Light Mode Analysis Phase only (creates TASK with `[LIGHT]` tag). | `run light-01-start-feature` |
 | **Light Develop** | Light Mode Dev → Review loop (skips Plan). | `run light-02-develop-task` |
 
@@ -217,7 +223,7 @@ It also escalates after **3 consecutive REJECTED** iterations (no silent retry) 
 
 All **Standard** automation workflows include **Mandatory Verification Loops** and **Safety Limits**:
 1.  **Verification**: Every artifact (TASK, Architecture, Plan, Code) is checked by a specialized Reviewer Agent.
-2.  **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets **2 attempts** to fix it. If it fails a 3rd time, the workflow stops to request User intervention.
+2.  **Retry Limit**: If a Reviewer rejects an artifact, the Doer gets a **bounded** number of attempts to fix it; on exhaustion the workflow stops to request User intervention. The bound is **2 attempts in the Standard family** (`01-start-feature`, `02-plan-implementation`, `03-develop-single-task`, `05-run-full-task`) and **3 in the VDD family** (`vdd-01-start-feature`, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-adversarial`, `security-audit`, `framework-upgrade`). Per-workflow values are stated in each workflow body at its `<!-- loop:<id> -->` site — that body is the source of truth, this line documents it.
 
 ---
 

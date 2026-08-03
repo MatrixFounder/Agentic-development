@@ -21,7 +21,11 @@ description: Develop a task using the Adversarial Loop
       > 4. **Exit Strategy — Objective Convergence**: Approve ONLY when ALL FOUR hold — (1) the full test run has actually been executed (not assumed); (2) zero CRITICAL findings; (3) zero legitimate findings in logic / security / slop; (4) only bikeshedding/style remains. Until all four hold, REJECT. Approval is bound to this objective bar — NEVER to 'I'm forced to invent nitpicks'. The burden of proof is on the code: assume broken until these conditions are demonstrably met."
     - **Execution**: Review the `docs/tasks/[current].md` implementation against this persona.
 4. **Refinement Strategy**:
+    <!-- loop:dev-review-loop -->
     - **REJECTED**: If Sarcasmotron finds legitimate logical flaws, security risks, or slop — OR the full test run has not actually been executed -> **Go to Step 2.1**.
+    - **Bound: max 3 roast→fix rounds.** Still REJECTED after the 3rd: **STOP** and escalate to the
+      user with the outstanding findings. Never merge on an exhausted counter — an exhausted bound
+      is an escalation, not an approval.
     - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> **Merge and Proceed**.
 
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":

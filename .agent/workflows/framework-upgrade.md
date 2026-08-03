@@ -16,7 +16,12 @@ description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skill
 3. **Meta-Audit**:
    - **Call**: `skill-self-improvement-verificator` (Mode: SPECIFICATION AUDIT).
    - **Instruction**: "Check `docs/TASK.md` for safety violations."
+   <!-- loop:spec-audit-retry -->
    - **Gate**: If Audit fails, GOTO Step 2.
+   - **Target of that GOTO**: **Step 2 of THIS section** (§1.2, redraft `docs/TASK.md`) — not §2.
+   - **Bound: max 3 audit rounds.** Still failing after the 3rd: **STOP** and escalate to the user
+     with the verificator's outstanding safety violations. A framework upgrade never proceeds on an
+     unaudited TASK.
 
 ## 2. Planning & Safety Check
 1. **Architect**: Update `docs/ARCHITECTURE.md` (if System Architecture changes).
@@ -24,7 +29,11 @@ description: Pipeline for upgrading the Agentic Framework itself (Prompts, Skill
 3. **Meta-Audit**:
    - **Call**: `skill-self-improvement-verificator` (Mode: PLAN AUDIT).
    - **Instruction**: "Check `docs/PLAN.md` for rollback and verification steps."
+   <!-- loop:plan-audit-retry -->
    - **Gate**: If Audit fails, GOTO Step 2.
+   - **Target of that GOTO**: **Step 2 of THIS section** (§2.2, redraft `docs/PLAN.md`).
+   - **Bound: max 3 audit rounds.** Still failing after the 3rd: **STOP** and escalate to the user
+     with the verificator's outstanding findings — do not enter §3 Execution.
 
 ## 3. Execution (Atomic Updates)
 1. **Backup**:

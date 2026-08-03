@@ -30,6 +30,7 @@ description: VDD-Enhanced Development (Hardened Pipeline)
         -   Re-run the Analyst role (`System/Agents/02_analyst_prompt.md`; subagent `analyst`
             on Claude Code, role-switch elsewhere) with instruction: "Fix RTM gaps: [Error
             Message]. Ensure strict RTM table."
+        <!-- loop:task-validate-retry -->
         -   **Loop**: Repeat Validation (Max 3 retries).
         -   **Escalation**: If still failing, STOP and ask User.
 
@@ -43,6 +44,7 @@ description: VDD-Enhanced Development (Hardened Pipeline)
         -   Re-run the Planner role (`System/Agents/06_planner_prompt.md`; subagent `planner`
             on Claude Code, role-switch elsewhere) with instruction: "Fix missing RTM IDs in
             Plan: [Error Message]. Ensure every task starts with `[ID]`."
+        <!-- loop:plan-validate-retry -->
         -   **Loop**: Repeat Validation (Max 3 retries).
         -   **Escalation**: If still failing, STOP and ask User.
 
@@ -52,6 +54,7 @@ description: VDD-Enhanced Development (Hardened Pipeline)
         `.agent/workflows/03-develop-single-task.md` (max 2 review attempts, then escalate);
         the standard Developer prompt enforces Stub-First.
 2.  **Gate (caller-side)**: the **full regression suite passes**.
+    <!-- loop:regression-retry -->
     -   **IF FAIL**: re-enter `.agent/workflows/03-develop-single-task.md` (alias: `/develop`)
         for each failing task, then re-run the full regression suite — **max 2 fix-and-rerun
         rounds total** (not per task; `/develop`'s internal max-2 review loop counts

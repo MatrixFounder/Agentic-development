@@ -22,6 +22,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 2. Load skill: `.agent/skills/light-mode/SKILL.md` (if not already loaded).
 3. Implement the fix directly. **Do not overengineer.**
 4. Run tests: `pytest` / `npm test` / relevant test command.
+   <!-- loop:light-fix-loop -->
 5. If tests fail: fix and re-run — **max 3 fix-and-rerun attempts**. Still red after the
    3rd attempt → **STOP**: the task is not trivial; follow the **Escalation** section below.
 6. **Memory Update**: Update `.AGENTS.md` to reflect changes.
@@ -31,6 +32,7 @@ description: Develop a task using Light Mode (Dev + Review loop)
 1. Read `System/Agents/09_code_reviewer_prompt.md`.
 2. Load skill: `.agent/skills/code-review-checklist/SKILL.md`.
 3. **Security Sanity Check**: Verify no credentials leaked, no new dependencies added without approval.
+   <!-- loop:light-review-loop -->
 4. If issues found: Return to Step 1 (Developer) — **max 2 review cycles**. Issues still
    open after the 2nd cycle → **STOP** and follow the **Escalation** section below.
 5. If approved: Proceed to Commit.

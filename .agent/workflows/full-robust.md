@@ -35,12 +35,13 @@ explicit escalation path — never loop silently, never proceed past an undefine
      ab-experiment-075, `/vdd-multi` is a coverage & CI-gating tool (highest pooled recall at
      ~3× tokens), **not** the default review path — Step 1 already contains the default
      adversarial review.
+   <!-- loop:coverage-fix-retry -->
    - **Gate:** verdict PASS. On FAIL: persist the merged report
      (`--output=docs/reviews/coverage-<task-id>.md`), materialize the ≥threshold findings as
      one fix-task file `docs/tasks/task-<ID>-coverage-fixes.md` (one checklist item per
      finding, citing the report), execute `.agent/workflows/03-develop-single-task.md`
      (alias: `/develop`) with that task file as its input, then re-run the coverage gate
-     **once**; still FAIL → STOP and escalate the remaining findings to the user.
+     **once** (max 1); still FAIL → STOP and escalate the remaining findings to the user.
 
 3. **Security audit** — execute `.agent/workflows/security-audit.md` (alias: `/security-audit`).
    - **Gate:** the automated scan exits clean AND the manual review (per the
@@ -59,8 +60,9 @@ explicit escalation path — never loop silently, never proceed past an undefine
 4. **Documentation update** — execute `.agent/workflows/04-update-docs.md` (alias: `/update-docs`).
    - **Gate:** every sub-step completes without error and with no unresolved doc/code
      mismatch (task rotation, architecture check, `.AGENTS.md` scopes current).
-   - **Bounded retry:** on failure, feed the error output verbatim into **one** retry of the
-     failed sub-step; still failing → STOP and escalate — do not announce `Docs ✓`.
+   <!-- loop:docs-update-retry -->
+   - **Bounded retry:** on failure, feed the error output verbatim into **one** retry (max 1) of
+     the failed sub-step; still failing → STOP and escalate — do not announce `Docs ✓`.
 
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "full-robust-<task-slug>"` → exit 6 = nested, SKIP this step;

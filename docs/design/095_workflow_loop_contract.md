@@ -327,15 +327,24 @@ normal case, not the exotic one — `01-start-feature`'s two review loops sit 8 
 `BOUND_AMBIGUOUS` exists to make them do. Appendix A carries the narrowed value on two rows
 (`light-02.light-fix-loop`, `full-robust.coverage-fix-retry`).
 
-**The walk that produced those two rows is a Phase-2 re-run, not a result — and rev 6 is why.**
+**The walk was re-run in Phase 2 against the placed markers, and it changed two of its own answers.**
 Rev 6 justified `full-robust.coverage-fix-retry`'s narrowing by *"the default reaches §3's
-`Max 3 iterations` at `:52`"*. At `75f624b` that bound is at **`:56`**: the same commit that
-shipped rev 6 inserted a four-line `NOT_RUN` paragraph at `:49-52`, and from a marker at `:42` the
-12-line default now ends at `:54` and clears it. The narrowing is **kept** — a 13-line gap that one
-inserted paragraph closes is not a margin, and the last two edits to that file moved it in both
-directions — but the number it was measured against is gone, and so is the sentence rev 6 built on
-the same walk (*"every other site clears the default"*). Marker insertion shifts lines too. Phase 2
-re-runs the walk and writes the result; nothing here may be copied on sight.
+`Max 3 iterations` at `:52`"*. That bound had already moved to `:56` by `75f624b`, and after marker
+insertion it sits at `:57` — so the collision the narrowing was measured against no longer exists,
+while the narrowing itself became the defect: with the marker at `full-robust.md:38` and the
+appended `(max 1)` at `:43`, **`window: 4` reports `BOUND_UNRESOLVABLE`** on a correctly bounded
+loop. Measured values now: **`window: 8`** there (bound at +5, neighbour at +19), and a new
+**`window: 2`** on `vdd-enhanced.plan-validate-retry`, whose 12-line default reaches §3's
+`max 2 review attempts` and `max 2 fix-and-rerun rounds` and reports `BOUND_AMBIGUOUS` on `[3,2,2]`.
+
+Result of the full Phase-2 simulation over all 25 placed markers: **23 loops resolve to exactly one
+agreeing bound, 2 are `null`-exempt, 0 failures.** Two sites match the same digit **twice** and pass
+only because the digits agree — `vdd-05-run-full-task.builder-red-loop` and
+`vdd-01-start-feature.task-review`; if either neighbour's bound is ever changed alone, R3 turns
+`BOUND_AMBIGUOUS` there first, which is the correct behaviour and worth knowing in advance.
+
+The standing rule is unchanged: this walk is re-run whenever a marker moves. It has now produced a
+different answer on three consecutive attempts, twice because of edits made in the same session.
 
 **Ordering consequence, stated because it bit rev 4 and was mis-stated in rev 5.** The markers do
 not exist yet — the corpus carries none. So a `site` cannot be authored before the marker it names
@@ -576,7 +585,7 @@ Job names aligned with CI workflow: `tooling-tests`, `skill-validate`, `referenc
 | Phase | Deliverable | Gate to advance | Revert cost |
 |---|---|---|---|
 | **1** | Design spec (this file) | Operator sign-off. **Granted 2026-08-02 on rev 5** (D7 included) and **extended to D9 on 2026-08-03**. Revs 6–7 are review-driven corrections within that sign-off. **Phase 1 closed.** | Delete file |
-| **2** | **Close §1.1.** Write the missing bound + escalation path in the prose of the **9** loops of A.1/A.2 (7 files); append the canonical `max <N>` form (§4.3.1) wherever an existing bound is spelled in words; insert the `<!-- loop:<id> -->` marker at **every** loop site in Appendix A — all **25**, including the 14 already-bounded ones, whose marker is all Phase 2 owes them; register the `loop:<id>` namespace in `documentation-standards` §4.4 (D9); re-run the §4.3.1 window walk and the Appendix B citation resolve, writing the results back | Every loop in Appendix A.1/A.2 has a bound and an `on_exhaust` in its own body; every A.1–A.5 site carries its marker and exactly one canonical `max <N>` (A.3/A.4 excepted — they are `null` by D1); §4.4 carries the `loop:<id>` row; every positional citation in this spec re-resolves at the Phase-2 commit; `smoke_workflows.py` green. **No frontmatter, no new script, no CI job** | `git revert` |
+| **2** ✅ **DONE 2026-08-03** | **Close §1.1.** Write the missing bound + escalation path in the prose of the **9** loops of A.1/A.2 (7 files); append the canonical `max <N>` form (§4.3.1) wherever an existing bound is spelled in words; insert the `<!-- loop:<id> -->` marker at **every** loop site in Appendix A — all **25**, including the 14 already-bounded ones, whose marker is all Phase 2 owes them; register the `loop:<id>` namespace in `documentation-standards` §4.4 (D9); re-run the §4.3.1 window walk and the Appendix B citation resolve, writing the results back | Every loop in Appendix A.1/A.2 has a bound and an `on_exhaust` in its own body; every A.1–A.5 site carries its marker and exactly one canonical `max <N>` (A.3/A.4 excepted — they are `null` by D1); §4.4 carries the `loop:<id>` row; every positional citation in this spec re-resolves at the Phase-2 commit; `smoke_workflows.py` green. **No frontmatter, no new script, no CI job** | `git revert` |
 | **3** | Components A **+** B together: frontmatter on all 23 workflows, `check_loop_contract.py` warn-only, R3 negative fixture | Full pytest green; `smoke_workflows.py` / `check_prompt_references.py` green; **the R3 negative fixture FAILS the validator** (a fixture that passes means R3 is vacuous again); validator warnings match `docs/design/095-phase3-expected-warnings.txt` via `diff -q` | `git revert` |
 | **4** | Enable `--strict` in CI | Phase 3 green for 1 full framework-upgrade cycle | Remove `--strict` flag |
 | **5** | Component C (`run_stack.py`) + `contract.gates[]` | §7.1 entry gate passed; unit tests green; fail-open verified | Delete script |
@@ -733,9 +742,17 @@ The design consequence is in §4.6: the contract v3.22.1 wrote distinguishes thr
 > **The `Site` column is a contract, not a description.** Rev 3 filled it with prose
 > (`"§4c"`, `"Step 2D"`) and the review verified that **none** of those strings occur in the files
 > they name — so a Phase-3 author copying this table would have authored `site` values that
-> resolve to nothing, and R3 would pass on all of them. Each row now carries the loop's `id` and
-> the exact `site` value to write. The `<!-- loop:<id> -->` markers do not exist in the corpus
-> yet; **inserting them is part of Phase 2**, in the same edit that writes the bound (§4.3.1).
+> resolve to nothing, and R3 would pass on all of them. Each row carries the loop's `id` and the
+> exact `site` value to write.
+>
+> **All 25 markers are placed as of Phase 2 (2026-08-03).** The R3 rule was simulated over the
+> placed corpus before this table was updated: **23 loops resolve to exactly one agreeing
+> `max <N>`, 2 are `null`-exempt, 0 failures.** Two `window` values in this table are *measured*,
+> not assumed (`vdd-enhanced.plan-validate-retry: 2`, `full-robust.coverage-fix-retry: 8`) — and
+> the value rev 7 carried for the second would have failed. Placement follows §4.3.1: markers
+> inside a list sit at the content indentation of the item they name (column 0 would split the
+> list), and the two loops that coincide with a section heading (`vdd-multi` Phase 3,
+> `iterative-design` Phase 5) use `documentation-standards` §4.3's heading form.
 >
 > **Coverage is the property this appendix is checked on, and rev 5 failed it.** 6+3+1+1+12 = 23
 > loops across **22** workflows under a header that said 23 — `full-robust` had no category at all,
@@ -807,10 +824,10 @@ the §4.3.2 grammar rev 5 introduced, failed by rev 5's own data. The replacemen
 | `light-02-develop-task` | `light-review-loop`<br/>`site: "<!-- loop:light-review-loop -->"` — at §2.4 | 2 | forbidden | escalate_user |
 | `vdd-05-run-full-task` | `dev-delegate-loop`<br/>`site: "<!-- loop:dev-delegate-loop -->"` — at step 2D | 3 | forbidden | escalate_user |
 | `vdd-enhanced` | `task-validate-retry`<br/>`site: "<!-- loop:task-validate-retry -->"` — at §1.3 | 3 | forbidden | escalate_user |
-| `vdd-enhanced` | `plan-validate-retry`<br/>`site: "<!-- loop:plan-validate-retry -->"` — at §2.3 | 3 | forbidden | escalate_user |
+| `vdd-enhanced` | `plan-validate-retry`<br/>`site: "<!-- loop:plan-validate-retry -->"` — at §2.3 (`vdd-enhanced.md:47`), **`window: 2`** (the default reaches §3's `max 2 review attempts` and `max 2 fix-and-rerun rounds` → `BOUND_AMBIGUOUS [3,2,2]`; measured in Phase 2) | 3 | forbidden | escalate_user |
 | `vdd-enhanced` | `regression-retry`<br/>`site: "<!-- loop:regression-retry -->"` — at §3.2 | 2 (`scope: per_run`) | forbidden | escalate_user |
-| `full-robust` | `coverage-fix-retry`<br/>`site: "<!-- loop:coverage-fix-retry -->"` — at step 2, `full-robust.md:42-43`, **`window: 4`** (§3's `Max 3 iterations` sits at `:56`, 13 lines out — one inserted paragraph from colliding, §4.3.1). `what:` records that the enclosing coverage gate is opt-in; the **edge** carries `optional: true`, not this loop (§4.5 constraint 3) | 1 | forbidden | escalate_user |
-| `full-robust` | `docs-update-retry`<br/>`site: "<!-- loop:docs-update-retry -->"` — at step 4, `full-robust.md:62-63` | 1 | forbidden | escalate_user |
+| `full-robust` | `coverage-fix-retry`<br/>`site: "<!-- loop:coverage-fix-retry -->"` — marker at `full-robust.md:38`, bound at `:43`, **`window: 8`** (measured: bound at +5, §3's `Max 3 iterations` at +19; rev 7's `window: 4` reported `BOUND_UNRESOLVABLE` — §4.3.1). `what:` records that the enclosing coverage gate is opt-in; the **edge** carries `optional: true`, not this loop (§4.5 constraint 3) | 1 | forbidden | escalate_user |
+| `full-robust` | `docs-update-retry`<br/>`site: "<!-- loop:docs-update-retry -->"` — marker at `full-robust.md:63`, bound at `:64` (default window clears) | 1 | forbidden | escalate_user |
 | `heal-issues` | `heal-attempt-loop`<br/>`site: "<!-- loop:heal-attempt-loop -->"` — at Phase 2 | 3 (`scope: per_run`) | forbidden | needs_human |
 
 **Two notes this table earns its shape from.**
@@ -878,6 +895,26 @@ All rows resolved against **`75f624b`**. Read the note below before using any of
 ---
 
 ## Appendix C — Changelog
+
+### Phase 2 — 2026-08-03, shipped (the defect of §1.1 is closed)
+
+Prose bounds + markers only. No frontmatter, no validator, no CI job — per D7.
+
+| Delivered | Evidence |
+|---|---|
+| **9 bounds + escalation paths** written into the 7 files of A.1/A.2 | `vdd-01-start-feature` ×2, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`, `framework-upgrade` ×2, `vdd-adversarial`, `security-audit` |
+| **Canonical `max <N>` appended** where the corpus spelled the bound in words | `full-robust.md:43` (`**once** (max 1)`), `:64` (`**one** retry (max 1)`) — appended, never reworded (S1) |
+| **25 `<!-- loop:<id> -->` markers** placed, one per Appendix-A site | `grep -c` = 25, ids unique per file |
+| **`loop:<id>` registered** in `documentation-standards` §4.4 (D9) | the row R14 requires, authored in the same phase as the first marker |
+| **`WORKFLOWS.md` lockstep** | `:220`'s framework-wide "2 attempts" split into Standard = 2 / VDD = 3 (S10: doc correction); rows for Framework Upgrade, VDD Develop, Security Audit, Iterative Design updated; the stale call-map edges `VDDE→Base` / `VDDE→VDDMulti` replaced with the four edges `vdd-enhanced` actually contains, plus a `vdd-adversarial` node and its self-edge |
+| **R3 simulated over the placed corpus** | 23 resolve to one agreeing bound, 2 `null`-exempt, **0 failures**. Two `window` values measured; `full-robust.coverage-fix-retry`'s rev-7 value of `4` reported `BOUND_UNRESOLVABLE` and is now `8` |
+| **Gates** | `tests/run_tests.py` 278 OK · `smoke_workflows.py` OK · `check_prompt_references.py` 41/42 resolve · `validate_skill.py documentation-standards` PASSED |
+
+Two things Phase 2 corrected that no earlier revision had caught: `framework-upgrade`'s two
+*"GOTO Step 2"* gates were ambiguous about which section's Step 2 they mean (both are
+section-local; now stated in the body), and three markers first landed at column 0 inside ordered
+lists, which splits the list in CommonMark — they are indented to the item's content column, which
+is what §4.3.1's placement rule says and what the first pass did not do.
 
 ### rev 7 — 2026-08-03, after the rev-6 adversarial pass ([review-095-rev6-adversarial.md](../reviews/review-095-rev6-adversarial.md))
 

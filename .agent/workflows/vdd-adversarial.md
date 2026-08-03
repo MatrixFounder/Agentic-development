@@ -70,9 +70,14 @@ Post-implementation adversarial cycle for zero-slop robustness.
         If the block is **missing entirely** on a re-entry, emit the finding "cycle brief missing —
         carried-over changes unverifiable" and do not signal clean-pass. An explicit `NONE` is a
         claim the caller made and you may test; an absent block is a claim nobody made.
+   <!-- loop:adversarial-cycle -->
    b. If real issues found:
       - Call workflow `03-develop-single-task` to fix issues.
       - Repeat this workflow (recursive call if needed).
+      - **Bound: max 3 cycles** (critique → fix → re-critique) when this workflow is entered
+        directly. A caller may re-scope it — `vdd-enhanced` §4.3 binds the same cap. Cap reached
+        without convergence → **STOP** and report the remaining findings to the user; an exhausted
+        counter is an escalation, never a clean pass.
    c. Terminate on **Objective Convergence** — the full test run has executed, 0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains (see `vdd-adversarial` / `vdd-sarcastic` skills). Never approve because the adversary was forced to invent nitpicks.
 3. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-adversarial-<task-slug>"` → exit 6 = nested, SKIP this step;

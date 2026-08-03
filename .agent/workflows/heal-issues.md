@@ -77,6 +77,7 @@ opens PRs, and never commits to the base branch.
      resolution blockquote (body text preserved verbatim), update the ONE index line in
      `docs/KNOWN_ISSUES.md` in lockstep, commit the ledger-only change (explicit paths), report.
 
+   <!-- loop:heal-attempt-loop -->
 2. **FIX** — bounded loop, max 3 iterations, on branch `fix/<id-lower>-<slug>`.
    - **Branch collision:** if the branch already exists from a previous attempt, resume it;
      if resuming is unsafe (diverged), create `fix/<id-lower>-<slug>-2`. Never delete branches.

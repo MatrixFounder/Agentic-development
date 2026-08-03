@@ -33,6 +33,8 @@ description: "Iterative design loop: Brainstorm -> Spec Draft -> VDD -> Human Re
    - Ask: "What points in the Spec or Critique should be accepted, rejected, or modified?"
    - **STOP**: Execution pauses here until you (the User) provide feedback.
 
+<!-- loop:design-iteration -->
+
 ## Phase 5: Refinement Loop (Repeatable)
 6. **Integration**:
    - Read User Feedback.

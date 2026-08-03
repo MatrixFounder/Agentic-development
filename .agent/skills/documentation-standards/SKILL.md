@@ -236,6 +236,7 @@ anchor absent from this table is a defect.
 | `contract:goal` | `docs/tasks/*.md` | Task goal | — |
 | `contract:changes` | `docs/tasks/*.md` | Changes description | — |
 | `contract:tests` | `docs/tasks/*.md` | Test cases | — |
+| `loop:<id>` | `.agent/workflows/*.md` | A retry loop's site (`<id>` = the loop's `contract.loops[].id`) | `check_loop_contract.py` (R3, R10) — design spec 095 |
 
 > [!NOTE]
 > `feedback:discovered-issues` keeps its own namespace: it marks an **insertion point** for a writer,

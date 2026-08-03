@@ -6,6 +6,7 @@ description: Plan the implementation of the feature
    - When re-planning the **SAME** task, overwrite `docs/PLAN.md` in place (no archive).
    - For a NEW task, the previous PLAN.md was already rotated to `docs/plans/` by `skill-archive-task` during the Analysis phase.
 3. Create task files in `docs/tasks/*.md` for each actionable task, following the stub-first strategy.
+    <!-- loop:plan-review -->
     - **Verification Loop**: Read `System/Agents/07_plan_reviewer_prompt.md`.
     - If the Reviewer requests changes:
         - Update `docs/PLAN.md` and task files.

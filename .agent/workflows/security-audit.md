@@ -35,7 +35,12 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
    - If findings exist:
      a. Fix implementation (apply patches, rotate secrets).
      b. Add regression tests (security-focused).
-     c. Re-run audit script until clean.
+     <!-- loop:audit-remediation -->
+     c. Re-run audit script until clean. **Bound: max 3 iterations** when this workflow is entered
+        directly; a caller may re-scope both the cap and the definition of "clean" (`full-robust`
+        §3 does exactly that). On exhaustion with findings still open → **STOP** and escalate the
+        open findings to the user. Per step 2, a `scan_status: NOT_RUN` never satisfies this loop:
+        the verdict is `INCOMPLETE`, not clean.
    - Save report as `docs/audit/security-{ID}.md` (consistent with `security-auditor` agent and `skill-archive-task` ID convention).
    - Update `.AGENTS.md` with security notes.
 

@@ -12,9 +12,15 @@ description: Start a new feature development cycle (VDD Mode - High Integrity)
     - **Constraint**: You MUST structure the requirements into **Epics** and **Issues**.
     - **Constraint**: Do not accept vague requirements. If ambiguous, ask the user.
     - **Verification Loop**: Read `System/Agents/03_task_reviewer_prompt.md`.
+    <!-- loop:task-review -->
     - If the Reviewer requests changes: Update `docs/TASK.md` and repeat the review.
+    - **Bound: max 3 attempts.** Still rejected after the 3rd: **STOP** and escalate to the user
+      with the Reviewer's outstanding objections — do not proceed to Architecture.
     - If approved: Proceed.
 5. **Architecture**: Read `System/Agents/04_architect_prompt.md` and update `docs/ARCHITECTURE.md` in place (living document — never per-task archived; if it exceeds 1500 lines, apply the Index-Mode split per `architecture-format-core`).
     - **Verification Loop**: Read `System/Agents/05_architecture_reviewer_prompt.md`.
+    <!-- loop:arch-review -->
     - If the Reviewer requests changes: Update `docs/ARCHITECTURE.md` and repeat the review.
+    - **Bound: max 3 attempts.** Still rejected after the 3rd: **STOP** and escalate to the user
+      with the Reviewer's outstanding objections.
     - If approved: Proceed.

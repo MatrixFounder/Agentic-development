@@ -186,6 +186,8 @@ Merge the reports from critics that ran. Apply:
 - If `--output=<path>` → write the merged report to that file; emit a short pointer inline (`"Merged report written to <path> (verdict: <V>)"`).
 - Else → emit the full merged report inline.
 
+<!-- loop:multi-fix-loop -->
+
 ## Phase 3 — Iterative fix loop
 
 **Skip entirely if `--no-fix` is set.**

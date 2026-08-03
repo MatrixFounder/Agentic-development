@@ -10,6 +10,7 @@ description: Develop a specific task
     - Verify rendering/compilation.
     - Implement logic.
 4. Initiate Code Review.
+    <!-- loop:dev-review -->
     - **Verification Loop**: Read `System/Agents/09_code_reviewer_prompt.md`. 
     - If the Reviewer requests changes:
         - Update code/stubs.

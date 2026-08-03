@@ -11,9 +11,11 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
 1. **Plan parsing**: Read `docs/PLAN.md`. Extract the ordered task list (`Task X.Y`) with paths to `docs/tasks/task-{ID}-{SubID}-{slug}.md`. Respect Stage 1 / Stage 2 sectioning and dependency order. Apply `skill-spec-validator` for PLAN ↔ TASK conformance before iteration. **Flag `--dry-run`**: if present, print the planned chain (task IDs in dependency order) and exit; no execution, no state writes.
 2. **Per-task VDD cycle** (apply for each task in dependency order):
    - Step A — Builder: implement per `System/Agents/08_developer_prompt.md` + `tdd-stub-first` (Stub → Logic). Strict adherence to the task file; no creative reinterpretation.
-   - Step B — Verification: run `python3 tests/run_tests.py` (the project test harness; or `pytest tests/` if available) and `validate_skill.py` where the task touches `.agent/skills/`. **Red tests force a Builder loop before Sarcasmotron** — never roast a broken build.
+   <!-- loop:builder-red-loop -->
+   - Step B — Verification: run `python3 tests/run_tests.py` (the project test harness; or `pytest tests/` if available) and `validate_skill.py` where the task touches `.agent/skills/`. **Red tests force a Builder loop before Sarcasmotron** — never roast a broken build. **Bound: max 3 Builder rounds**; still red after the 3rd → STOP and escalate to the user with the failing test list. Do not proceed to Step C on a red suite, and do not silently drop the failures.
    - Step C — Sarcasmotron-roast: **delegate to `.agent/workflows/vdd-03-develop.md` Step 3** (DRY — do not inline the persona overlay here). Adopt the persona exactly as defined there, then return a verdict: REJECTED or APPROVED (incl. Objective Convergence).
    - Step D — Refinement loop:
+     <!-- loop:dev-delegate-loop -->
      - REJECTED → return to Step A. **Max 3 iterations.**
      - On the 3rd consecutive REJECTED → STOP. **Persist failure to session-state** via Step 4 with `--status "failed_sarcasmotron" --add_blocker "Task <name>: 3 REJECTED iterations"`, then escalate to user with a digest of findings (no silent retry — escalation is a feature).
      - APPROVED (incl. Objective Convergence) → merge task, **then call Step 4 (persist) → then Step 3 (HITL gate) → then loop to next task**. Order is load-bearing: persist BEFORE the HITL prompt so a runner crash during user wait does not lose merge state.

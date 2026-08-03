@@ -12,6 +12,7 @@ from contextlib import redirect_stdout
 
 from _base import FRAMEWORK_ROOT, InstallerTestCase
 from installer.cli import main
+from installer.managed_block import GITIGNORE_MARKERS, inject_block
 
 
 def _install_ns(target, vendor="claude", **kw) -> argparse.Namespace:
@@ -163,6 +164,47 @@ class TestUpdate(InstallerTestCase):
         main(_update_ns(target))
         after = settings.read_text() if settings.is_file() else None
         self.assertEqual(before, after)
+
+    def _restate_gitignore(self, target, body: str) -> None:
+        """Write ``body`` as the managed block and record its hash in state.
+
+        Simulates a project installed by an OLDER framework: the on-disk block
+        differs from what the current code emits, yet still matches the hash in
+        the state file, so the anti-clobber guard sees no tampering.
+        """
+        state_file = target / ".agentic-installer-state.json"
+        state = json.loads(state_file.read_text())
+        state["gitignore_block_hash"] = inject_block(
+            target / ".gitignore", body, GITIGNORE_MARKERS, state_hash=None)
+        state_file.write_text(json.dumps(state), encoding="utf-8")
+
+    def test_update_refreshes_stale_gitignore_block(self) -> None:
+        # A shipped .gitignore fix must reach existing projects. `switch` gets it
+        # via _cmd_install; `update` silently did not, so an upgraded framework
+        # left the old rule in place forever.
+        target = self.make_target()
+        main(_install_ns(target))
+        self._restate_gitignore(target, "/.agentic-development/\n/stale-rule")
+        self.assertEqual(main(_update_ns(target)), 0)
+        lines = (target / ".gitignore").read_text().splitlines()
+        self.assertIn("/.agentic-development", lines)
+        self.assertNotIn("/stale-rule", lines)
+
+    def test_update_survives_hand_edited_gitignore(self) -> None:
+        # Block edited by hand => hash mismatch. The symlink re-sync has already
+        # succeeded, so update warns and stays green instead of aborting midway,
+        # and the user's edit is preserved.
+        target = self.make_target()
+        main(_install_ns(target))
+        gi = target / ".gitignore"
+        gi.write_text(gi.read_text().replace("/System", "/System\n/hand-edit"),
+                      encoding="utf-8")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = main(_update_ns(target))
+        self.assertEqual(rc, 0)
+        self.assertIn("warning: .gitignore block left untouched", buf.getvalue())
+        self.assertIn("/hand-edit", gi.read_text().splitlines())
 
 
 class TestDoctor(InstallerTestCase):

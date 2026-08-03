@@ -16,6 +16,195 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.22.2 — a trailing slash is a type assertion, and the default install is the other type**
+
+Reported from a downstream `install.sh install --vendor antigravity` run: the generated
+`.gitignore` did not actually ignore `.agentic-development`. Fixing it surfaced a second, larger
+defect — the installer had no way to *deliver* a `.gitignore` fix to an existing project. Both are
+fixed here. Gates: **393 pytest + 35 subtests** (CI list ∪ local `tests/`, +3 from the regressions
+below), **278 `run_tests.py`** (+3), **177 installer `unittest`** (+2).
+
+#### **The rule was right about the name and wrong about the kind**
+`build_block_body` emitted `/.agentic-development/`. In gitignore syntax a trailing slash is a
+*directory-only* assertion, and git does not follow symlinks — it records one as a blob of type
+symlink, i.e. a file. The installer's **default** mode makes `.agentic-development` exactly that
+symlink (`framework_root.ensure_agentic_dev`, `mode='symlink'`), so the pattern described a shape
+the default install never produces and the entry stayed visible to `git status`.
+
+Reproduced before touching anything, then again after, in both modes:
+
+| mode | on disk | before | after |
+|------|---------|--------|-------|
+| `symlink` (default) | symlink | `?? .agentic-development` | `.gitignore:5:/.agentic-development` |
+| `copy` | real dir | ignored | `.gitignore:5:/.agentic-development` |
+
+Dropping the slash is strictly wider and costs nothing: the slashless form matches directories,
+files, and symlinks, so it covers both modes with one rule.
+
+**Vendor-independent.** It reads as an Antigravity report because that is where it was seen, but
+the line is a hard-coded constant shared by every profile. The other symlinked entry, `/System`,
+was already correct — every component rule is generated as `/{path}` without a slash. The defect
+was one hard-coded string, not the generator.
+
+#### **The assertion that let it ship**
+Two tests covered the line as `assertIn("/.agentic-development/", body)` — a *substring* check,
+which passes against both spellings and so could never tell them apart. They are now exact-line
+membership (`assertIn(..., body.splitlines())`), plus a dedicated
+`test_framework_rule_has_no_trailing_slash`. Verified red-then-green: reverted to the buggy string,
+watched all three fail, restored the fix.
+
+#### **Not changed, deliberately**
+The same report asked whether `GEMINI.md` should be gitignored too. It should not, and the reporter
+was right to flag their own uncertainty. `GEMINI.md` is in `bootstrap.PROTECTED` — project-owned,
+never overwritten even under `--force`; the installer only maintains a managed block inside it and
+tells the author to "edit outside the markers only". Ignoring it would drop the author's own text
+out of version control and leave a fresh clone with no bootstrap file. The existing split is the
+intended one: pure-framework artifacts (`CLAUDE.agentic.md`, `CLAUDE.local.md`) are ignored,
+project-owned ones (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) are tracked.
+
+#### **A fix nobody can receive is not shipped — `update` now refreshes `.gitignore`**
+Checking the upgrade path turned up the worse half. `update_gitignore` had exactly **one** call
+site — step 8 of `install`. `switch` inherits it by delegating to `_cmd_install`, but `update`
+never touched `.gitignore` at all. So the rule above, once fixed, would have reached **no existing
+project**: the natural "pull the framework, run `update`" upgrade left the broken rule in place
+indefinitely. Reproduced on a project installed from a deliberately-buggy build, then confirmed
+fixed on the same setup.
+
+`_cmd_update` now refreshes the block. Two independent reasons it belongs there: linking and
+`--prune` change which entries are project-local, so the `!`-exception list drifts on every update;
+and the block body itself changes when the framework is upgraded.
+
+A hand-edited block raises `IntegrityError`, which must **not** abort `update` — the symlink
+re-sync has already happened, and dying half-done would be worse than the stale rule. It warns,
+keeps the exit code green, and preserves the edit; `install --force` remains the deliberate way to
+overwrite a customised block. Both paths are covered by new tests
+(`test_update_refreshes_stale_gitignore_block`, `test_update_survives_hand_edited_gitignore`),
+verified red-then-green by removing the refresh and watching exactly those two fail.
+
+**Upgrade note.** Either `install` or `update` now delivers the fix; `update` is enough. A project
+that already committed the symlink must still untrack it once:
+`git rm --cached .agentic-development`. Note the ordering constraint for anyone upgrading from a
+build older than this one: the `update`-side fix only exists *after* you have this version, so the
+first hop still needs a re-run of `install` if your installed copy predates it.
+
+### **v3.22.1 — a contract declared universal must live where every path can read it**
+
+From WI-29, filed by the same downstream project from the same `/vdd` run as v3.22.0: two
+subagents stalled for **600 s each**, one of them visibly spending its turn trying to launch
+`run_audit.py` — a script its role has no `Bash` to execute. Gates: **390 pytest + 35 subtests**
+(CI list ∪ local `tests/`), **275 `run_tests.py`**, 45/45 skills, prompt-refs / security-lint /
+workflow-smoke green, `doctor.py` preflight passed.
+
+#### **The reported fix was already in the file, and had been for seven weeks**
+WI-29 proposed adding the branch "if Bash is unavailable, record `scan: NOT RUN` and review
+manually" to `skill-adversarial-security` SKILL.md. `git blame` puts that branch at `e9a2360`,
+**2026-06-10** — seven weeks before the stall it did not prevent. Recorded rather than quietly
+skipped, because applying it would have re-applied an existing fix and closed a record on a change
+that changes nothing. A proposed fix is a hypothesis; the first step is to check whether it is
+already there.
+
+#### **Added — `skill-parallel-orchestration` §2.4 (v3.7 → v3.8)**
+§7 has always claimed that "all universal concepts (§2–§6) — including merge rules **and the
+evidence contract** — apply on every path". §2 defined roles, layers and the three-phase protocol,
+and no evidence contract: it existed only inside `vdd-multi` Step 1.0. A claim with no referent.
+§2.4 now states both halves where §7 says they live — the **orchestrator** runs anything that must
+be executed to be known and injects it, writing `NOT RUN (<reason>)` for what it did not run; the
+**teammate** uses what it is given, reports a missing block as a finding, and — the half nobody had
+written down — records `NOT RUN (no execution tool in this role)` for a command its role cannot run
+**instead of spending the turn attempting it**.
+
+#### **Fixed — `/vdd` phase 4 spawned read-only teammates with neither half**
+`/vdd` does not run `vdd-multi`. It runs `vdd-adversarial.md`, which since v3.22.0 carries a Cycle
+Brief and *mentions* the evidence block by analogy without ever requiring one. Step 2a now defines
+it, on **every** entry including the first cycle. `vdd-enhanced` §4 gains **item 8** — the caller's
+obligation to gather evidence before spawning — **appended**, not inserted, for the same reason
+items 6–7 were: spec 095 cites these ordinals.
+
+#### **Fixed — `security-audit` §1–§2 (v3.6 → v3.7), `skill-adversarial-security` §3 (v1.4 → v1.5)**
+§1's Red Flags said **"EXECUTE the script"** with no branch for a role declared without an execution
+tool, and §3's escape hatch was an italic footnote *after* the fenced command. The agent followed
+the instruction it met first. §2 now opens with the check "can you execute at all"; §3 leads with a
+four-row branch table and puts the command below it. §1 gains a third Red Flag against the failure
+mode that is worse than the stall — **inventing the output of a scan you did not run**. The
+`security-audit` H1 heading was bumped along with the frontmatter: that skill's own docs record
+version sprawl as lesson L10.
+
+#### **Fixed — the hand-maintained donor had drifted behind its own generated copies**
+`wrappers_manifest.json` calls Claude Code "the validated reference/donor … INTENTIONALLY NOT
+generated here (it stays hand-maintained)". Since Task 081 the generated `.gemini` / `.codex` /
+`.cursor` critic wrappers have each carried "You are read-only: you cannot run run_audit.py … never
+fabricate scanner output". The hand-maintained donor carried none of it — and the donor is the only
+one that runs. All three `.claude/agents/critic-*` wrappers now state it.
+
+#### **Fixed — an instruction to fabricate a security gate**
+`.claude/agents/security-auditor.md` read "mock results if the environment restricts execution",
+contradicting "never fabricate scanner output" in three neighbouring files. Replaced with
+`scan: NOT RUN (<reason>)`. This is the **only behaviour change** in the release: a role that
+previously produced a fabricated scan section now produces an honest gap.
+
+#### **Not shipped, deliberately**
+The second stalled subagent in that run was `task-reviewer`, and this does **not** explain it.
+Neither its prompt nor either of its TIER-1 skills mandates a script, and a grep for `python3`
+across all eleven `Bash`-less roles finds nothing addressed to it. Recording it as fixed because its
+sibling was is the exact error WI-29 itself objects to when it refuses to file both cases under the
+already-closed WI-7. Filed downstream as its own open work-item instead.
+
+#### **Corrections after review — seven of this entry's own defects**
+An adversarial pass over this release found seven things wrong with it. All are recorded rather than
+quietly amended, because every one is the genre the release is about.
+
+- **`NOT RUN` satisfied every exit bar in the framework, and was refused by none.** The contract as
+  first written made a *missing* block a finding while a block reading `Tests: NOT RUN; Scan: NOT
+  RUN` passed — and `skill-adversarial-security` §7 explicitly blessed it. That trades a loud
+  600-second stall for a **silent unverified pass**, which is strictly worse because nothing
+  downstream can see it. `NOT RUN` now licenses continuing a review, never concluding one: it leaves
+  the bar unmet in §2.4, in both critic skills' §7, in `vdd-adversarial` (skill and workflow) and in
+  all six critic wrappers.
+- **The one behaviour change shipped a third state into consumers that had two.** `security-auditor`
+  reports `scan: NOT RUN` in prose while its machine-readable footer still had only
+  `PASS`/`FAIL` — so a scan-less audit was indistinguishable from a clean one, and both consumers
+  (`full-robust` §3's "the scan exits clean AND…", `security-audit.md`'s "re-run until clean")
+  resolved the undefined branch in favour of passing. Footer gains `scan_status`, `NOT_RUN` forces
+  `INCOMPLETE`, and both consumers now say so.
+- **Item 8 was INSERTED, not appended** — it sat above item 7 in the file, and three documents
+  (both changelogs and the audit) claimed otherwise. Since CommonMark renumbers ordered lists in
+  document order, the item labelled `8.` rendered as 7, which is exactly the breakage the
+  append-don't-insert rule exists to prevent. Now genuinely last.
+- **"Nothing addressed to `task-reviewer`" was a true search of the wrong space.** The grep covered
+  role *definitions*; the sibling defect lives in a **loaded skill**, and TIER-0
+  `skill-session-state` §3 tells every role — including the three read-only reviewers — that it
+  **MUST** run `update_state.py`. That is the exact mechanism §2.4 names, live for
+  `task-reviewer`/`plan-reviewer`/`architecture-reviewer`. §3 now opens with "can you execute at
+  all", and the three wrappers say they are read-only. (The other half of that finding did *not*
+  hold: the prompts tell reviewers to write a review file, but each wrapper already overrides that
+  with "do NOT write it yourself".)
+- **The version bump honoured L10 at 2 sites of 5.** `audit/__init__.py` — which L10's own remedy
+  made the source of truth — plus `run_audit.py`'s CLI header and `System/Docs/SKILLS.md` were left
+  behind, so the scanner would have printed `v3.5` for a skill documented as 3.7. All five now agree.
+- **"All three generated wrappers already carried the read-only line" was 2 of 3.** The manifest's
+  `evidence` string for `critic-logic` was empty, so its `.gemini`/`.codex`/`.cursor`/`.antigravity`
+  wrappers carried nothing. Worse, fixing the donor first left the **donor ahead of the manifest** —
+  the same drift with the arrows reversed. Manifest updated, all 12 scaffolds regenerated,
+  `generate_wrappers.py --check` green.
+- **The 600-second anecdote was stated as two proven cases in three files.** One stall is traced to
+  the scanner attempt; the second is *observed*, and the same release says so two sections later.
+  Corrected wherever it is told.
+
+Also found and fixed while checking: `§2.4`'s "read-only **by construction** — every vendor adapter"
+is false for two of five (Antigravity has no read-only field at all, Gemini's whitelist is
+self-declared unverified) and for the sequential role-switch path, where the persona keeps the
+orchestrator's tools; the evidence block was a new agent-trusted channel carrying "do not verify"
+with no data-vs-instructions marker, which this repository's own ledger doctrine settled long ago;
+the branch table's lead sentence contradicted two of its own rows; and the instance list named 2 of
+at least 4 readers.
+
+#### **One correction to this release's own verification**
+The first pass verified with `pytest tests/ -q` — **343 tests** — and reported that number. CI runs
+a different list which *adds* `.agent/skills/skill-spec-validator/scripts/tests/`; the union is
+**390**. That is rule 1 of the `developer-guidelines` §6.3 this framework shipped one release ago,
+missed while shipping the next one. The numbers above are the union, and `run_tests.py` (a suite the
+CI job list does not contain at all) was run alongside it.
+
 ### **v3.22.0 — a gate must not depend on the language of the document it judges**
 
 From three work-items filed by a downstream project whose artifacts are written in Russian

@@ -69,7 +69,11 @@ def build_block_body(profile: dict, exceptions: list[str]) -> str:
         "# Managed by the agentic-development installer. Do not edit between the markers.",
         "",
         "# Framework content (symlink or local copy) and installer state.",
-        "/.agentic-development/",
+        # No trailing slash: a `dir/` pattern matches directories only, and git does
+        # not follow symlinks — in the default symlink mode `.agentic-development` is
+        # a symlink, so `/.agentic-development/` would leave it untracked-but-visible.
+        # The slashless form covers symlink (default) and copy mode alike.
+        "/.agentic-development",
         "/.agentic-installer-state.json",
         "",
         "# Framework components.",

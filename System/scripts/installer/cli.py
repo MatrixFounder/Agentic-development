@@ -505,6 +505,19 @@ def _cmd_update(args) -> int:
         if args.prune:
             pruned += _prune_stale_symlinks(target_dir, agentic)
 
+    # Refresh the .gitignore block. Two reasons this cannot be skipped: linking
+    # and pruning above change which entries are project-local, so the
+    # `!`-exception list goes stale; and a framework upgrade may change the block
+    # body itself, which is the only way a shipped rule fix reaches an existing
+    # project. `switch` gets this via _cmd_install — `update` used to miss it.
+    try:
+        state["gitignore_block_hash"] = update_gitignore(target, profile, state)
+    except IntegrityError as exc:
+        # The block was hand-edited. The symlink re-sync above already succeeded,
+        # so warn and keep the run green rather than aborting half-done; `install
+        # --force` is the deliberate way to overwrite a customised block.
+        print(f"warning: .gitignore block left untouched — {exc}", flush=True)
+
     state["managed_paths"] = state_mod.collect_managed_symlinks(target)
     state_mod.save_state(target, state)
     print(f"update complete — {linked} new link(s), {pruned} stale link(s) pruned.")

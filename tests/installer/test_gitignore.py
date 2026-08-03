@@ -25,8 +25,18 @@ class TestBuildBlockBody(InstallerTestCase):
 
     def test_body_has_framework_and_state(self) -> None:
         body = build_block_body(_CLAUDE, [])
-        self.assertIn("/.agentic-development/", body)
-        self.assertIn("/.agentic-installer-state.json", body)
+        # Exact-line membership, not assertIn on the raw text: a substring check
+        # passes just as happily against "/.agentic-development/" and so cannot
+        # tell the two apart. See test_framework_rule_has_no_trailing_slash.
+        self.assertIn("/.agentic-development", body.splitlines())
+        self.assertIn("/.agentic-installer-state.json", body.splitlines())
+
+    def test_framework_rule_has_no_trailing_slash(self) -> None:
+        # Regression: a `dir/` pattern matches directories only, and git does not
+        # follow symlinks. In the default symlink mode `.agentic-development` is a
+        # symlink, so a trailing slash left it visible to `git status`.
+        body = build_block_body(_CLAUDE, [])
+        self.assertNotIn("/.agentic-development/", body.splitlines())
 
     def test_per_item_dirs_ignore_contents(self) -> None:
         body = build_block_body(_CLAUDE, [])
@@ -116,7 +126,7 @@ class TestUpdateGitignore(InstallerTestCase):
         text = gi.read_text()
         self.assertIn("*.log", text)
         self.assertIn("build/", text)
-        self.assertIn("/.agentic-development/", text)
+        self.assertIn("/.agentic-development", text.splitlines())
 
     def test_idempotent_rerun(self) -> None:
         h1 = update_gitignore(self.target, _CLAUDE, self.state)

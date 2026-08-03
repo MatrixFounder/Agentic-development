@@ -149,6 +149,63 @@ class TestNegativeFixtures(unittest.TestCase):
         self.assertIn("REGISTRY_MISSING", codes)
 
 
+class TestDocumentedExample(unittest.TestCase):
+    """The §4.2 grammar block is what an author copies. Nothing checked it.
+
+    The example is extracted from the spec AT TEST TIME rather than copied into a
+    fixture: a copy is a second source of truth and would drift from the section it
+    illustrates — the failure mode this whole spec is about. Editing §4.2 into
+    something the validator rejects now fails the suite.
+
+    This closes only the CHECKABLE half of §7.1 item 5. Whether a human can author a
+    contract unprompted remains untested: all 23 live contracts were generated.
+    """
+
+    SPEC = PROJECT_ROOT / "docs" / "design" / "095_workflow_loop_contract.md"
+
+    def _example(self) -> str:
+        import re
+        text = self.SPEC.read_text(encoding="utf-8")
+        m = re.search(r"### 4\.2 Grammar.*?```yaml\n(.*?)```", text, re.S)
+        self.assertIsNotNone(m, "§4.2 no longer contains a yaml example")
+        return m.group(1).rstrip("\n")
+
+    def test_the_documented_grammar_example_validates(self):
+        import shutil, tempfile
+        example = self._example()
+        self.assertIn("contract:", example)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            wf = root / ".agent" / "workflows"
+            wf.mkdir(parents=True)
+            reg = root / ".agent" / "skills" / "documentation-standards"
+            reg.mkdir(parents=True)
+            shutil.copy(
+                FIXTURES / "negative" / ".agent" / "skills" / "documentation-standards" / "SKILL.md",
+                reg / "SKILL.md",
+            )
+            (wf / "example-caller.md").write_text(
+                example + "\n\n1. Run the audit.\n"
+                "   <!-- loop:audit-remediation -->\n"
+                "   - On findings: fix and re-run until clean — **max 3 iterations**, then escalate.\n",
+                encoding="utf-8",
+            )
+            # The callee the example's `binds` names must exist and must permit the rebind.
+            (wf / "security-audit.md").write_text(
+                "---\ndescription: callee for the documented example\ncontract:\n"
+                "  version: 1\n  loops:\n    - id: audit-remediation\n"
+                "      what: fix -> re-run the audit script until clean\n"
+                '      site: "<!-- loop:audit-remediation -->"\n'
+                "      default_max: 3\n      override: allowed\n"
+                "      on_exhaust: escalate_user\n  calls: []\n---\n"
+                "1. Audit.\n   <!-- loop:audit-remediation -->\n"
+                "   - Re-run until clean — **max 3 iterations**.\n",
+                encoding="utf-8",
+            )
+            code, out = run_validator(root, "--strict")
+            self.assertEqual(code, 0, f"the spec's own §4.2 example fails the validator:\n{out}")
+
+
 class TestCliContract(unittest.TestCase):
 
     def test_missing_root_is_exit_2(self):

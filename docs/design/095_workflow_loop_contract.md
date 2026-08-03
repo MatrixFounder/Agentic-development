@@ -730,6 +730,51 @@ Both directions, stated rather than picked:
 The design consequence is in §4.6: the contract v3.22.1 wrote distinguishes three gate states, and
 `pass|fail|skipped` could only record two.
 
+### 7.4 Phase-5 entry gate — answers on record (opened 2026-08-03, after Phase 3)
+
+§7.1 requires each item to be *"answered from the Phase 2–4 record, not from recollection."* This
+is that record. It is opened now, while the evidence is fresh, rather than reconstructed at Phase 5
+— reconstruction is what the gate exists to prevent. Every figure below was measured against the
+shipped contracts, not recalled.
+
+**Two answers already point away from Component C**, which is the outcome §7.1 was written to make
+possible. They are stated first for that reason.
+
+| # | Question | Answer as of Phase 3 | Status |
+|---|---|---|---|
+| **3** | Was `override: required` ever used? | **No — 0 of 25 loops.** Distribution: `forbidden` 22, `allowed` 3. R2 has **no input in the live corpus**; it fires only against the fixture built to prove it can. | **ANSWERED.** §7.1's own disposal rule applies: *"Never used → drop the value and R2 with it."* |
+| **4** | Were `override: allowed` defaults ever re-bound to a *different* number? | **No.** Both binds that exist carry the value they were binding away from: `full-robust` → `security-audit.audit-remediation` `max: 3` against `default_max: 3`; `vdd-enhanced` → `vdd-adversarial.adversarial-cycle` `max: 3` against `default_max: 3`. Deleting both changes nothing. | **ANSWERED, with a caveat that is the interesting half** — see below. |
+| **5** | Did authors write a contract unprompted, and correctly? | **Half closed, half open — and the open half is the one that matters.** *Closed:* the §4.2 grammar example — the block an author copies — had never been validated. It now is, by a test that extracts it **from this document at test time** rather than from a fixture copy, so editing §4.2 into something the validator rejects fails the suite. *Open:* all 23 live contracts were emitted from one generator table in a single pass, precisely so a bound could not differ between two files by hand. **No human authored one.** | **OPEN — an entry condition, not a formality.** Phase 5 consumes this schema and nothing yet shows an author can produce it. The cheapest honest close is the next real workflow added to the framework: its contract must be written by hand, unassisted, and the mistakes recorded. |
+| **6** | Have `claims.py`, `heal-state.json` or `envelope.py` changed? Is exit code 7 still free? | **No drift.** Re-resolved this session: `envelope.py` allocates 0–5, `run_feedback.py` allocates 6, **7 is free**. `claims.py` still carries the flock and the thesis quoted in §1. | **ANSWERED (re-check at Phase 5 entry — this is a fact with a shelf life).** |
+| **10** | Did a third two-level counter appear? | **No.** `scope` distribution across 25 loops: `per_run` 24, `per_item` 1 (`vdd-multi.multi-fix-loop`). The two known cases are unchanged. | **ANSWERED.** §4.3.3 stands: leave it non-expressible and documented. |
+| **1** | Did drift actually occur? How often did R3 fire between Phase 3 and Phase 4? | **Partial.** The Phase-3→Phase-4 window has not elapsed. But R3 has already fired once, on this document: the Phase-2 walk found that the `window: 4` **rev 7 itself recorded** for `full-robust.coverage-fix-retry` reports `BOUND_UNRESOLVABLE`. First real use, first real catch — against the spec's own data. Live corpus since: 0 drift. | **PARTIAL — needs the Phase-4 window.** |
+| **2** | Which bounds actually exhausted in real runs? | No runs have executed under the new bounds. | **BLOCKED on Phase 4.** |
+| **7** | Is `contract.gates[]` still worth it? | Unchanged since §7.3 E5, which is the evidence that matters and cuts both ways. | **BLOCKED — re-read E5, not this row.** |
+| **8** | Did the workflow set change? | **No.** 23 workflows, unchanged through Phases 2–3. | **ANSWERED (cheap to re-run).** |
+| **9** | Does a frame stack survive parallel critics? | Untested — no Component C exists to test. | **BLOCKED on Phase 5 itself.** |
+
+**Item 4's caveat, which is the finding rather than the answer.** `binds` is empty of information
+*because of a decision this spec made*, not because the mechanism was never needed. Before Phase 2
+the two callees stated **no default at all** — the caller's `max 3` was the only bound in
+existence, and `binds` carried the whole cap. D1 then set both callee defaults to **3**, the same
+number, to close §1.1. The rebinding machinery was designed for a corpus where callee default and
+caller cap differ; D1 made them agree. So the honest reading is **not** *"callers never re-scope"*
+— it is *"after D1, nothing in this corpus needs to."* A future caller wanting `max 1` for a
+pre-release pass would re-open the case immediately. Phase 5 should weigh `binds`/R9/R12 knowing
+the redundancy was manufactured, not observed.
+
+**One schema fact the completed corpus settles (spec L-03).** `on_exhaust` declares four values and
+the finished 25-loop inventory uses **two**: `escalate_user` (23) and `needs_human` (2).
+`stop_success` and `warn_continue` have no instance anywhere. The earlier justification for keeping
+them — that Phase 2 had not yet written its nine new values — is now spent: Phase 2 is done and they
+are still unused. By §4.6's own test they are declared data with no reader. Recorded here for the
+Phase-5 decision rather than removed unilaterally, because the enum is schema and schema changes are
+D-level. The same test clears the rest: `scope: global` is unused (1 of 3 values idle), while
+`kind: escalate` (2), `optional` (2), `partial` (1) and `suppresses` (1) each have at least one real
+instance, and all three `window` overrides are measured rather than guessed.
+
+---
+
 ## 8. Decisions — operator review rounds 1–2, independent review round 3
 
 | # | Question | Decision | Consequence |

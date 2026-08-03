@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.21.11
+# Multi-Agent Software Development System v3.23.0
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -27,6 +27,7 @@ The methodology combines two key approaches (see [Comparison](System/Docs/TDD_VS
 - [Workspace Workflows](#-workspace-workflows)
   - [Quick Start](#quick-start)
   - [Variants](#variants)
+  - [Every retry loop is bounded](#every-retry-loop-is-bounded-v3230)
 - [How to Start Development](#-how-to-start-development-step-by-step-plan)
   - [Phase 0: Product Discovery](#phase-0-product-discovery-optional)
   - [Stages 1-5](#stage-1-pre-flight-check)
@@ -357,6 +358,19 @@ You can run a workflow simply by asking the agent:
    - **VDD Enhanced** (`run vdd-enhanced`; alias: `/vdd-enhanced`): Runs Stub-First then VDD Refinement.
    - **VDD Multi-Adversarial** (`run vdd-multi`; alias: `/vdd-multi`): Sequential 3-critic verification (Logic → Security → Performance).
    - **Full Robust** (`run full-robust`; alias: `/full-robust`): Runs VDD Enhanced then Security Audit.
+
+### Every retry loop is bounded (v3.23.0)
+
+No workflow retries forever. Each retry loop states a numeric cap and an escalation path **in the
+workflow that owns it** — 2 attempts in the Standard family, 3 in the VDD family — and an exhausted
+counter escalates to you; it is never treated as approval. Two loops are deliberately uncapped: the
+`vdd-multi` fix loop terminates on a written objective bar, and `iterative-design` Phase 5 is
+HITL-gated, so you are the bound.
+
+The caps are also machine-readable. Every workflow declares a `contract:` block in its frontmatter,
+and the `loop-contract` CI gate (`System/scripts/check_loop_contract.py`) fails when the declared
+number and the number written in the prose disagree. Design rationale:
+[095_workflow_loop_contract.md](docs/design/095_workflow_loop_contract.md).
 
 ---
 

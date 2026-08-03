@@ -16,6 +16,78 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.23.0 — every retry loop states its own bound, and the gate that checks it can fail**
+
+Design spec 095 Phases 2 and 3. Eleven retry loops across the corpus had **no numeric bound in the
+workflow that owned them** — the VDD family had systematically dropped the caps its non-VDD twins
+carry, and `framework-upgrade` had two unbounded `GOTO` loops. Nine now state a bound and an
+escalation path where they live; two stay `null` deliberately (one judgment-terminated, one
+HITL-gated). On top of that, all 23 workflows declare a machine-readable loop contract and a new CI
+gate checks the declaration against the prose. Gates: **417 pytest + 58 subtests** (CI list ∪ local
+`tests/`, +24 / +23), **302 `run_tests.py`** (+24), **177 installer `unittest`** (unchanged).
+
+#### **The bounds, where they execute** (Phase 2)
+`vdd-01-start-feature` ×2, `vdd-02-plan`, `vdd-03-develop`, `vdd-05-run-full-task`,
+`framework-upgrade` ×2, `vdd-adversarial`, `security-audit` — nine loops, ~20 lines, seven files.
+Each gets `max 3` (operator decision D1) plus a written escalation path; an exhausted counter is an
+escalation, never an approval. `full-robust` spelled two bounds in words (`once`, `one` retry) and
+now carries the canonical `(max 1)` *appended* beside them — never a rewrite of the sentence.
+`framework-upgrade`'s two gates both read *"If Audit fails, GOTO Step 2"* without saying whose
+Step 2; both are section-local and now say so.
+
+`System/Docs/WORKFLOWS.md` held a third copy of every bound plus a framework-wide *"the Doer gets
+**2 attempts**"* that D1 contradicts head-on. It is now split into Standard = 2 / VDD = 3, and its
+call map lost two edges `vdd-enhanced` does not contain.
+
+#### **`contract:` frontmatter and `check_loop_contract.py`** (Phase 3)
+All 23 workflows declare `contract.loops[]` and `contract.calls[]` — 25 loops, 20 call edges,
+generated from one inventory so a bound cannot differ between two files by hand. Call edges were
+derived mechanically from the corpus across all three call spellings, not copied from prose.
+
+`System/scripts/check_loop_contract.py` implements R1–R7, R9, R10, R12, R13, R14, warn-only. The
+rule it exists for is **R3**: the number in frontmatter must equal the number in the prose that
+executes it, resolved through a `<!-- loop:<id> -->` anchor with a declared search window.
+
+**The negative fixtures are the deliverable, not the suggestion.** The validator's first run against
+the live corpus printed `0 error(s), 0 warning(s)` — the exact shape of a gate that checks nothing,
+which this repository has shipped once already. `tests/fixtures/loop_contract/` now trips every rule
+(20 distinct codes), `test_every_phase3_rule_fires` fails if any rule stops producing a finding, and
+the CI job goes red **if the R3 fixture ever passes**.
+
+#### **Anchors conform to `documentation-standards` §4.3/§4.4** (D9)
+That section's rule is explicit: *adding a gate that reads an anchor absent from the registry is a
+defect*. R3 and R10 are such a gate, so `loop:<id>` gained a registry row, all 25 ids are lowercase
+kebab-case, and the non-heading placement rule is written down — nearly every loop site sits inside
+a numbered step list, where a comment at column 0 splits the list.
+
+#### **Fixed: Markdown links were resolved against the wrong base**
+`check_positional_refs.py` resolved Markdown link targets against the repository **root**. Links are
+document-relative: a review at `docs/reviews/x.md` linking `../../.agent/foo.md#L1` names a repo
+file and is correct — the gate reported it `ESCAPES_ROOT`, and because that kind is deliberately a
+warning, the misresolution never surfaced. Links now resolve against their own document; code spans
+stay repo-relative. The fix immediately exposed **three genuinely broken links** in `docs/TASK.md`,
+dead in any editor, hidden for as long as they existed.
+
+#### **Fixed: a checker whose tests ran in CI while the check never did**
+`check_positional_refs.py` and its 89 unit tests already existed; nothing ever pointed the checker at
+a document. 39 unresolvable references had accumulated across `docs/`. Now wired into
+`reference-integrity` over the whole tree: **0 errors across 495 references in 241 documents**.
+
+The 36 archived findings were **not** stale records needing pins, as first assumed — 33 of 35 resolve
+correctly once the *path* is disambiguated. They were unaddressable, not wrong: a bare `SKILL.md` +
+line number matches 47 files here. Pinning them would have marked 33 correct references unchecked
+permanently, since a pinned reference is skipped.
+
+#### **Fixed: `tests/test_loop_contract.py` was not in the CI list**
+Added to `run_tests.py`'s curated suite in Phase 3 but not to the `tooling-tests` pytest line, so the
+negative fixtures guarding the validator did not run in CI at all. Now in both.
+
+#### Not shipped, and why
+**Phase 4** (`--strict` in CI) is a one-word change waiting on its gate: *Phase 3 green for one full
+framework-upgrade cycle*. **Phase 5** (Component C) is gated by the §7.1 entry questions, five of
+which are now answered on record in §7.4 — and two of those answers point *away* from building it:
+`override: required` is used by 0 of 25 loops, and neither of the two caller binds changes a number.
+
 ### **v3.22.2 — a trailing slash is a type assertion, and the default install is the other type**
 
 Reported from a downstream `install.sh install --vendor antigravity` run: the generated

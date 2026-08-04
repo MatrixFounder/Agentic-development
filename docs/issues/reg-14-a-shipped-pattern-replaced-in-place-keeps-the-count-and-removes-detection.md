@@ -1,15 +1,22 @@
 ---
 id: REG-14
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
 category: register
 severity: SEV-3
 slug: reg-14-a-shipped-pattern-replaced-in-place-keeps-the-count-and-removes-detection
 component: '.agent/skills/artifact-formalizer/scripts/selftest_scan.py'
+resolved_at: 2026-08-04
+resolved_by: TASK 100
 ---
 
 # REG-14 — A shipped pattern replaced in place keeps the count and removes detection
+
+> **Resolved 2026-08-04 by TASK 100.** `SHIPPED_SURFACES` pins every shipped pattern by identity,
+> per language and per rule class. This record's own reproduction fails `TC-100-02`, and the rule-2
+> variant fails `TC-100-01`; each case prints the pattern added and the pattern removed. `TC-100-03`
+> fails when the surface pin and the TASK 099 count pins are re-pinned apart.
 
 **Component:** `.agent/skills/artifact-formalizer/scripts/selftest_scan.py`
 

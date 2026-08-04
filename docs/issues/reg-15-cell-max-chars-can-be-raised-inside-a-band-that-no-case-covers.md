@@ -1,15 +1,22 @@
 ---
 id: REG-15
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
 category: register
 severity: SEV-3
 slug: reg-15-cell-max-chars-can-be-raised-inside-a-band-that-no-case-covers
 component: '.agent/skills/artifact-formalizer/data/register-en.json'
+resolved_at: 2026-08-04
+resolved_by: TASK 100
 ---
 
 # REG-15 — `cell_max_chars` can be raised inside a band that no case covers
+
+> **Resolved 2026-08-04 by TASK 100.** `SHIPPED_THRESHOLDS` pins all four keys each rule file
+> declares, and `SHIPPED_DEFAULTS` pins the six the scanner falls back to — including
+> `sentence_pressure_band` and `cell_prose_chars`, which no rule file states. This record's own
+> reproduction fails `TC-100-04` in both languages, and moving a default fails `TC-100-05`.
 
 **Component:** `.agent/skills/artifact-formalizer/data/register-en.json`
 

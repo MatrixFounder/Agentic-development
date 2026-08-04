@@ -1,15 +1,26 @@
 ---
 id: REG-16
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
 category: register
 severity: SEV-3
 slug: reg-16-dropping-the-flags-key-from-entries-no-case-references-removes-findings-silently
 component: '.agent/skills/artifact-formalizer/data/register-en.json'
+resolved_at: 2026-08-04
+resolved_by: TASK 100
 ---
 
 # REG-16 — Dropping the `flags` key from entries no case references removes findings silently
+
+> **Resolved 2026-08-04 by TASK 100.** `SHIPPED_SURFACES` carries each entry's `flags` beside its
+> pattern, so this record's own reproduction fails `TC-100-01` and names every entry that lost the
+> key. A roster check alone could not close it: keyed on the declared flag, it is switched off by
+> the edit that removes the flag, and the reproduction stayed at `174/174` and `18/18`, both exit 0.
+> The roster gained the sibling guarantee instead — every entry declaring `i` is re-run against a
+> case-flipped copy of its own probe, so a flag declared and not applied exits 2 with all six
+> lexical rows DEAD (`TC-100-12`), where before it named only the 15 entries whose own probe
+> happened to carry a capital.
 
 **Component:** `.agent/skills/artifact-formalizer/data/register-en.json`
 

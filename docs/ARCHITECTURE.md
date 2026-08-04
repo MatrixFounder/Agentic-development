@@ -340,6 +340,33 @@ mispairing can travel.
 document. Naming them stops a zero finding count from reading as a clean document. Failing on them
 would break the advisory rule stated above in §7.3.
 
+### 7.5 What the scanner's own gates may compare against
+
+**Invariant (L4): a gate over the scanner compares the artefact under test against a value declared
+outside it.**
+
+The two CI gates are the acceptance battery and the detector roster. Both once read their expected
+value out of the data they judged, so an edit moved both sides of the comparison at once. Two
+measurements. Deleting every rule-6 entry of one language printed `17/17 detectors live` at exit 0.
+Replacing a rule-3 pattern together with its declared example left the battery at `174/174` and the
+roster at `18/18`, with a real finding lost.
+
+The invariant applies to three kinds of declared value, in order of strength:
+
+| Declared value | Catches | Misses |
+| :--- | :--- | :--- |
+| A count of what ships | an entry deleted | an entry replaced in place |
+| The identity of what ships | an entry replaced in place | a detector blinded outside the data |
+| A fixture the mutation must break | a detector blinded in code | a class the fixture does not reach |
+
+**Why all three.** TASK 099 added the counts, and TASK 100 records five mutations that survived
+them. A pattern set, a threshold set and a glyph set are pinned by identity. `SKIP_LINE` and the
+case flag are held by fixtures the roster runs, because neither is a value a document declares.
+
+A fixture derived from the value it tests is not a declared value. `_structural_probes` builds its
+sentence from the active `sentence_max_words`, so that fixture measures the detector and never the
+threshold; the threshold is pinned separately.
+
 ## 8. Skill Architecture & Optimization Standards
 
 > **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).

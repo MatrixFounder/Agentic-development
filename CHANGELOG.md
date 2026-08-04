@@ -16,6 +16,106 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.24.4 — a count is not an identity (TASK 100)**
+
+TASK 099 pinned what the two register gates COUNT. Five defects from its own adversarial
+verification keep every count and remove detection. Each was reproduced against `23827c1`: the
+battery printed `174/174 passed` and the roster `18/18 detectors live`, both exit 0, over 636 files.
+
+#### Fixed
+
+- **REG-14 — the lexicons were pinned by size, not content.** Replacing the rule-2 `robust` pattern
+  with its probe cost `marker` 447 → 406; the same edit on a rule-3 causal silenced the sentence it
+  exists to catch. `SHIPPED_SURFACES` now pins every pattern with its flags and prints the symmetric
+  difference on failure. A digest was rejected: it names nothing, so re-pinning means copying the
+  printed value, which accepts the mutation under review.
+- **REG-15 — one threshold of six was pinned.** `_structural_probes` builds each fixture FROM the
+  active thresholds, so it cannot notice one moving: 120 → 150 cost `cell_width` 811 → 613.
+  `SHIPPED_THRESHOLDS` pins the four declared keys, `SHIPPED_DEFAULTS` the six the scanner falls
+  back to.
+- **REG-16 — a removed case flag survived both gates, and needed two fixes.** A roster check keyed
+  on the declared flag is switched off by the edit that removes it, so the data half moved to
+  `SHIPPED_SURFACES`. The roster kept the failure no data pin can see — a flag declared and NOT
+  applied, which the scan compiles at a different site from the validator. That now exits 2 with all
+  six lexical rows DEAD, against 15 entries named before.
+- **REG-17 — the roster's fixtures were bare sentences.** Rules 1 and 3 read `prose_blocks`, which
+  drops a `SKIP_LINE` match first, and this corpus holds 12,415 bullet and 3,336 ordered-list lines
+  against 34,852 other. Widening `SKIP_LINE` cost 4,835 → 4,354 findings at exit 0. Each rule-1 and
+  rule-3 fixture now runs bare, as `- ` and as `1. `, and both widenings exit 2 at `12/18`. Forms
+  are per row, not new rows: three documents state the roster size of 18.
+- **REG-18 — nothing pinned the rule-5 glyph sets.** Widening `TICK_GLYPHS` to ten glyphs cost
+  `emoji_severity` 1,012 → 779 at exit 0. The battery imports `scan_register` and pins both
+  frozensets by membership. Reading the source text was rejected — ARC-9 records a case that
+  asserted a literal against a literal and never imported what it named.
+
+#### Added
+
+- **ARCHITECTURE §7.5, invariant L4** — a gate over the scanner compares the artefact under test
+  against a value declared outside it, and what each of a count, an identity and a fixture misses.
+- `scanner_copy`: a throwaway skill root with an edited SCANNER SOURCE, for surfaces that are code
+  rather than data. It fails loudly when its anchor moves.
+- 17 regression pins, battery 174 → 191. Reverting either scanner-side fix turns a case red.
+
+#### Verified
+
+- 15 mutations recorded, including a revert of each fix. Adversarial verification found two
+  survivors of the first implementation, both closed here: a `SKIP_LINE` widened with `\d+\.\s`
+  instead cost 63 findings at exit 0, and a duplicated entry collapsed into one set member.
+- **Detection is unchanged**: the `.md` files of `23827c1` scanned with the old and the new scanner
+  give 4,845 findings each, same per-kind breakdown.
+- Six `framework-gates.yml` jobs pass locally; 342 pytest and 307 unittest cases; 0 reference errors.
+
+### **v3.24.3 — the two register gates stopped measuring themselves (TASK 099)**
+
+Twelve defects, one class: both CI gates compared the data under test against itself, so an edit
+that removed a detector left them green. Deleting one rule-6 entry from `register-en.json` left the
+battery at `145/145` and the roster at `18/18`, both exit 0.
+
+#### Fixed
+
+- **REG-4 — the roster's denominator shrank with its numerator.** Deleting a whole detector class
+  printed `17/17 detectors live` exit 0; one language printed `9/9`. `PROBE_ROSTER` and
+  `SHIPPED_LANGS` are literals and a class with no detector appends a DEAD row, so the two runs
+  print `17/18` and `14/18` at exit 2. Strictness is keyed on `not args.rules`: a caller with its
+  own rule file is entitled to a partial one.
+- **REG-3 — a rule-3 pattern could be edited away from its example.** Dropping the `probes` entry
+  then replacing the pattern loaded clean at `18/18` exit 0 and `145/145`, while the sentence it
+  targets reported nothing. A declared example is mandatory at load, and the `reasoning` row — which
+  could only re-assert what the loader guaranteed — now reports DEAD when no pattern was exercised.
+- **REG-2 — the battery derived its counts from the file under test.** Deleting `of course` left
+  every case green: both sides shrank together. `SHIPPED_ENTRIES`, `SHIPPED_REASONING` and
+  `SHIPPED_PROBES` are literals. Measured: 21 of 24 rule-3 patterns were deletable at `18/18` exit 0.
+- **REG-8 — the battery counted itself.** The denominator was `len(RESULTS)`, so a deleted test
+  function printed a self-consistent `N/N passed` at exit 0, and four documents stated 128 against
+  145 running. `TC-META-01` pins the run and `TC-SHIP-08` every stated count in the documents.
+- **REG-5, REG-6, REG-7 — three fixes had no regression pin.** A table inside a `> [!IMPORTANT]`
+  callout (`dequote`), the `i.e.`/`vs.`/`см.` sentence-split lookbehinds, and two of the three
+  cross-key `check_thresholds` invariants each gained a case keyed on what is unique to it.
+- **REG-10 — `✓` and `✗` were promised exempt and were not.** Two normative documents stated the
+  exemption without qualification; the scanner applied it inside a table cell only. Measured: 704
+  out-of-table status glyphs over 631 documents, 0 of which rank a finding. Ticks are exempt in
+  every position, `☐` joins the in-table set, and a status glyph gets status-word guidance instead
+  of "replace with `SEV-2`".
+- **REG-11, REG-12 — two detectors the authoring contract names shipped in Russian only.** English
+  gains the rule-4 red/green verb entry and the rule-2 ranking entry, each with a false-positive
+  control (`Red-Green-Refactor` and the `the key insight` overlap). Members are the ones a corpus
+  measurement produced; eight candidates scored zero over 977,960 masked lines and are left out.
+- **REG-9, REG-13 — two documents stated what the data does not.** `measurement-baseline.md` §4 row
+  65 recorded negative parallelism as adopted with no entry behind it and 0 corpus hits; it reads
+  `not adopted`. `SKILL.md` gave two different, both wrong, cardinals for a list the contract
+  declares open; the cardinal is gone from all three sites.
+
+#### Added
+
+- 29 regression pins, battery 145 → 174. Every mutation was executed and recorded before the ledger
+  was flipped, and `--probe` reports what it exercised per class, so a zero is a measured zero.
+
+#### Known
+
+- **REG-14 … REG-18 filed.** Five further silent-failure routes found by adversarial verification.
+  None is the symptom any `REG-2` … `REG-13` record states, so closing them there would have widened
+  the task past its records. Closed in v3.24.4.
+
 ### **v3.24.2 — archiving identity: eleven defects from the ARC-1/ARC-2 review (TASK 098)**
 
 An adversarial review of `992b3ef` — the commit that closed ARC-1 and ARC-2 — filed ten further

@@ -488,6 +488,13 @@ def load_rules(paths):
                         "marker": e["marker"],
                         "guidance": e["guidance"],
                         "probe": e["probe"],
+                        # Carried so `verify_detectors` can check that a
+                        # DECLARED flag is APPLIED. The declaration is read from
+                        # the data and the application from this compile, which
+                        # is a different site from the validator's own compile
+                        # above; a divergence between the two is invisible to
+                        # every other check.
+                        "flags": e.get("flags", ""),
                         "severity": e.get("severity", "warn"),
                         "rule": e.get("rule", 2),
                         "note": e.get("note", ""),
@@ -1059,28 +1066,69 @@ def apply_terms(findings, terms_blob, sources):
 
 
 # ------------------------------------------------------------- diagnostics ----
+#: A fixture must reach the detector through the LINE FILTER, not only through
+#: the rule. Rule 1 and rule 3 read `prose_blocks`, which drops a line matching
+#: `SKIP_LINE` before any rule sees it, and most prose in the corpora this skill
+#: scans is written as list items. Adding `[-*+]\s` to that alternation took
+#: `sentence_length` from 826 findings to 546, `sentence_near_limit` from 712 to
+#: 517 and `reasoning` from 22 to 16 over 636 documents, while the battery
+#: printed `174/174 passed` and this roster printed `18/18 detectors live`, both
+#: exit 0 (REG-17). Every fixture for those rules is therefore run in both line
+#: forms, and a kind is live only when both fire.
+#:
+#: A form per ROW rather than a row per form: the roster is 18, and `SKILL.md`
+#: §5, `System/Docs/SKILLS.md` and TASK 099 `TC-099-02`/`TC-099-03` state that
+#: number (TASK 100 D3).
+#:
+#: BOTH list forms, because `LIST_MARK` accepts both and the corpus uses both:
+#: 12,415 bullet lines and 3,336 ordered-list lines against 34,852 other
+#: non-blank lines. With the bullet form alone, widening `SKIP_LINE` with
+#: `\d+\.\s` instead cost 63 findings at `18/18 detectors live` exit 0.
+LINE_FORMS = (("bare", "{}"), ("list item", "- {}"),
+              ("ordered item", "1. {}"))
+
+
 def _structural_probes(thresholds):
     """Known-positive fixtures built from the ACTIVE thresholds.
 
-    Deriving them from the thresholds is what stops a moved threshold from
-    leaving a probe behind, still green against a value nobody uses.
+    → [(kind, [(form_name, fixture), ...])]. Deriving the fixtures from the
+    thresholds is what stops a moved threshold from leaving a probe behind,
+    still green against a value nobody uses. It is also why a threshold cannot
+    be pinned HERE: both sides of that comparison move together. The battery
+    pins the threshold values against a literal (REG-15).
 
     The kinds returned here are `STRUCTURAL_KINDS`, which pins them into
     `PROBE_ROSTER`: adding a fixture without adding its name there leaves the
     roster short by one row, and the roster is the number the CI gate states.
+
+    The cell rules and rule 5 carry one form each. `prose_blocks` never sees a
+    table row, and the rule-5 loop reads every line without consulting
+    `SKIP_LINE`, so a second form there would measure nothing new.
     """
     limit = thresholds["sentence_max_words"]
     near = thresholds["sentence_near_words"]
     wide = "x" * (thresholds["cell_max_chars"] + 10)
     prose_cell = ("Alpha " * ((thresholds["cell_prose_chars"] // 6) + 2)
                   + "ends. Second sentence here.")
+    long_sentence = "Alpha " + "word " * (limit + 4) + "ends."
+    near_sentence = "Alpha " + "word " * (near - 2) + "ends."
     return [
-        ("sentence_length", "Alpha " + "word " * (limit + 4) + "ends."),
-        ("sentence_near_limit", "Alpha " + "word " * (near - 2) + "ends."),
-        ("cell_width", f"| a | b |\n| --- | --- |\n| {wide} | ok |"),
-        ("cell_sentences", f"| a | b |\n| --- | --- |\n| {prose_cell} | ok |"),
-        ("emoji_severity", "\U0001F534 Critical: the thing."),
+        ("sentence_length", [(n, f.format(long_sentence))
+                             for n, f in LINE_FORMS]),
+        ("sentence_near_limit", [(n, f.format(near_sentence))
+                                 for n, f in LINE_FORMS]),
+        ("cell_width", [("table", f"| a | b |\n| --- | --- |\n| {wide} | ok |")]),
+        ("cell_sentences",
+         [("table", f"| a | b |\n| --- | --- |\n| {prose_cell} | ok |")]),
+        ("emoji_severity", [("bare", "\U0001F534 Critical: the thing.")]),
     ]
+
+
+def _entry_fires(entry, text, thresholds, rule):
+    """→ True when `entry` alone reports its own kind on `text`."""
+    return any(h["match"] for h in scan_document(
+        text + "\n", [entry], None, thresholds, "<probe>")
+        if h["kind"] == RULE_KIND[rule])
 
 
 def _pin_roster(results):
@@ -1114,23 +1162,42 @@ def verify_detectors(entries, reasoning, thresholds, strict=False):
     `--rules` file is entitled to configure fewer classes than this skill ships.
     """
     results = []
-    for kind, fixture in _structural_probes(thresholds):
-        hits = scan_document(fixture + "\n", [], None, thresholds, "<probe>")
-        results.append((kind, any(h["kind"] == kind for h in hits),
-                        "synthesised fixture"))
+    for kind, forms in _structural_probes(thresholds):
+        missed = [name for name, fixture in forms
+                  if not any(h["kind"] == kind for h in scan_document(
+                      fixture + "\n", [], None, thresholds, "<probe>"))]
+        results.append((kind, not missed,
+                        f"synthesised fixture, {len(forms)} line form(s)"
+                        + (f"; no hit as: {', '.join(missed)}" if missed
+                           else "")))
 
     for rule in LEXICAL_RULES:
         group = [e for e in entries if e["rule"] == rule]
         if not group:
             continue
-        dead = [e["marker"] for e in group
-                if not any(h["match"] for h in scan_document(
-                    e["probe"] + "\n", [e], None, thresholds, "<probe>")
-                    if h["kind"] == RULE_KIND[rule])]
-        results.append((RULE_KIND[rule], not dead,
-                        f"{len(group) - len(dead)}/{len(group)} entries "
-                        f"verified" + (f"; dead: {', '.join(dead)}" if dead
-                                       else "")))
+        dead, caseblind = [], []
+        for e in group:
+            if not _entry_fires(e, e["probe"], thresholds, rule):
+                dead.append(e["marker"])
+                continue
+            # An entry declaring `i` must still match when the case of its own
+            # probe is flipped. Both the loader and the line above run an entry
+            # against ITS OWN probe, and most shipped probes are lower-case
+            # prose, so removing `"flags": "i"` left the entry matching that one
+            # sentence and nothing else: 35 entries lost the key with the
+            # battery at `174/174` and this roster at `18/18`, both exit 0, and
+            # 15 real `marker` findings gone (REG-16). Applied only where the
+            # flag is DECLARED -- `head / tail (of a call)` omits it on purpose,
+            # because with `i` it matched the git ref `HEAD` corpus-wide.
+            if "i" in (e.get("flags") or "") and not _entry_fires(
+                    e, e["probe"].swapcase(), thresholds, rule):
+                caseblind.append(e["marker"])
+        verified = len(group) - len(dead) - len(caseblind)
+        results.append((RULE_KIND[rule], not dead and not caseblind,
+                        f"{verified}/{len(group)} entries verified"
+                        + (f"; dead: {', '.join(dead)}" if dead else "")
+                        + (f"; case-blind: {', '.join(caseblind)}"
+                           if caseblind else "")))
 
     if reasoning and reasoning.get("probe"):
         # One declared sentence exercised the ONE modal and the ONE causal it
@@ -1163,9 +1230,16 @@ def verify_detectors(entries, reasoning, thresholds, strict=False):
                                 if key == "modal" else
                                 f"The field {partner} be set {lit} it holds.")
                     exercised += 1
-                    if not _scan_reasoning(mask(sentence + "\n"), reasoning,
-                                           "<probe>"):
-                        dead.append(f"{key} {pat}")
+                    # Both line forms, for the reason `LINE_FORMS` states: rule
+                    # 3 reads `prose_blocks`, so a `SKIP_LINE` that swallows a
+                    # list marker takes this vocabulary from 22 corpus findings
+                    # to 16 with every gate at exit 0 (REG-17).
+                    missed = [name for name, form in LINE_FORMS
+                              if not _scan_reasoning(
+                                  mask(form.format(sentence) + "\n"),
+                                  reasoning, "<probe>")]
+                    if missed:
+                        dead.append(f"{key} {pat} ({', '.join(missed)})")
         else:
             # Nothing to pair against, so no pattern below can be exercised.
             # The previous row reported `bool(hits)` on the declared sentence,
@@ -1182,7 +1256,8 @@ def verify_detectors(entries, reasoning, thresholds, strict=False):
             return _pin_roster(results) if strict else results
         total = len(modals) + len(causals)
         results.append(("reasoning", not dead and not unprobed,
-                        f"{exercised} exercised of {total} patterns"
+                        f"{exercised} exercised of {total} patterns, "
+                        f"{len(LINE_FORMS)} line form(s) each"
                         + (f"; unprobed: {', '.join(unprobed)}" if unprobed
                            else "")
                         + (f"; dead: {', '.join(dead)}" if dead else "")))

@@ -1,15 +1,23 @@
 ---
 id: REG-18
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
 category: register
 severity: SEV-4
 slug: reg-18-the-rule-5-glyph-sets-are-unpinned-in-size-and-membership
 component: '.agent/skills/artifact-formalizer/scripts/scan_register.py'
+resolved_at: 2026-08-04
+resolved_by: TASK 100
 ---
 
 # REG-18 — The rule-5 glyph sets are unpinned in size and membership
+
+> **Resolved 2026-08-04 by TASK 100.** The battery imports `scan_register` and compares both
+> frozensets against `SHIPPED_TICK_GLYPHS` and `SHIPPED_STATUS_GLYPHS`, printing the symmetric
+> difference. This record's own reproduction fails `TC-100-07`; adding a glyph to `STATUS_GLYPHS`
+> fails `TC-100-08`. `TC-100-09` holds the ticks a subset of the status set, so the
+> exempt-everywhere and exempt-in-table guards cannot contradict.
 
 **Component:** `.agent/skills/artifact-formalizer/scripts/scan_register.py`
 
@@ -21,7 +29,7 @@ component: '.agent/skills/artifact-formalizer/scripts/scan_register.py'
 
 ## Reproduction
 
-Widen `TICK_GLYPHS` at `scan_register.py:589` to `frozenset("✓✗❌⚠🚀📘🛠🧪❓🔧")`. Measured over the
+Widen `TICK_GLYPHS` at `scan_register.py:589@23827c1` to `frozenset("✓✗❌⚠🚀📘🛠🧪❓🔧")`. Measured over the
 631 tracked `.md` files: `emoji_severity` findings fall from 1,011 to 778, a loss of 233, while
 `selftest_scan.py` reports `174/174 passed` exit 0 and `scan_register.py --probe` reports
 `18/18 detectors live` exit 0.

@@ -216,14 +216,21 @@ mistyped.
 
 ## 8. Validation Evidence
 
-- **Selftest**: `python3 scripts/selftest_scan.py` — 174 cases. `TC-META-01` asserts the battery ran
+- **Selftest**: `python3 scripts/selftest_scan.py` — 191 cases. `TC-META-01` asserts the battery ran
   that many, and a second case reads this number out of this file. A dropped case is then a red run
   rather than a smaller self-consistent total. They cover the schema, masking, every detector, the
   probe contract, diagnostics, sections, the terms downgrade and every exit code. Each finding of
   the WI-096 adversarial review carries its own regression pin.
+- **What the battery compares against.** Every pin is a value declared in the battery, never one
+  read out of the file under test. The lexicons are pinned by pattern and flags, the thresholds and
+  the rule-5 glyph sets by value. Two surfaces live only in code: the line filter and the flag
+  compilation. Each is held by a fixture. The battery edits the scanner in a throwaway copy and
+  requires the roster to report the edit.
 - **Probe**: `--probe` verifies 18 detectors across both shipped languages on every run. The roster
   is a literal of nine rows per shipped language. A detector class with no rule behind it prints a
-  DEAD row and exits 2, instead of leaving the denominator with the numerator.
+  DEAD row and exits 2, instead of leaving the denominator with the numerator. Each rule-1 and
+  rule-3 fixture runs twice: as a bare line, and as a list item. An entry declaring `flags: "i"`
+  runs again against a case-flipped copy of its own probe.
 - **Corpus check** and the full baseline, including the two detector defects found by measurement
   and pinned as regressions: [`references/measurement-baseline.md`](references/measurement-baseline.md).
 

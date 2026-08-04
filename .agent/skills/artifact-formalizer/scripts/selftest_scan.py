@@ -22,6 +22,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(HERE)
 SCANNER = os.path.join(HERE, "scan_register.py")
 
+# Every other case runs the scanner as a subprocess, which is what pins the
+# EXIT CODES and the printed report. A frozenset and a defaults dict have no
+# command-line surface, so the only way to assert their VALUE is to read the
+# module. ARC-9 records the alternative: a case that asserted a schema literal
+# against a test literal, named the dispatcher it was checking, and never
+# imported it -- it stayed green when the dispatcher was reverted.
+sys.path.insert(0, HERE)
+import scan_register                                       # noqa: E402
+
 RESULTS: list[tuple[str, bool, str]] = []
 
 #: Shipped vocabulary sizes, PINNED. Deriving them from the file under test
@@ -49,13 +58,187 @@ SHIPPED_REASONING = {
 #: 5 structural + marker + maxim + metaphor + reasoning, per shipped language.
 SHIPPED_PROBES = 18
 
+#: Shipped detection surfaces, PINNED BY IDENTITY. The counts above answer
+#: "how many"; an entry REPLACED in place keeps the count, keeps matching its
+#: own declared probe, and removes real detection with both gates at exit 0.
+#: Measured: swapping the rule-2 `robust` pattern for `\bZZZNEVERWORD\b` and
+#: moving its probe with it left the battery at `174/174` and the roster at
+#: `18/18`, both exit 0, while `marker` findings over 636 documents fell from
+#: 447 to 406; the same edit on the rule-3 causal `\bfor the reason that\b` took
+#: `The installer shall abort for the reason that the target exists.` from one
+#: finding to none (REG-14).
+#:
+#: `flags` rides in the tuple because it is half of what a pattern MATCHES, and
+#: no roster check can hold it: a check keyed on the declared flag is switched
+#: off by the edit that removes the flag. Dropping `"flags": "i"` from the 35
+#: entries no case names cost 15 `marker` findings at `174/174` and `18/18`,
+#: both exit 0 (REG-16). Rule 3 carries no flags -- `_scan_reasoning` compiles
+#: its vocabulary with `IGNORECASE` unconditionally -- so its tuple is patterns.
+SHIPPED_SURFACES = {
+    "en": {
+        2: (
+            (r"\bof course\b", "i"),
+            (r"\b(un)?obvious(ly)?\b", "i"),
+            (r"\bmerely\b", "i"),
+            (r"\bindeed\b", "i"),
+            (r"\bit is worth noting\b", "i"),
+            (r"\belegant\w*\b", "i"),
+            (r"\bnothing more than\b", "i"),
+            (r"\bwaste\b", "i"),
+            (r"\bna(i|ï)ve(ly)?\b", "i"),
+            (r"\b(trap|pitfall)s?\b", "i"),
+            (r"\bunfortunately\b", "i"),
+            (r"\b(the key insight|the whole point|the real question)\b", "i"),
+            (r"\b(the|a|an|our|its|this)\s+(main|biggest|largest|primary|key|greatest|central)\s+(risk|problem|danger|challenge|question|idea|thing)\b", "i"),
+            (r"\bsubtle(ty|ties)?\b", "i"),
+            (r"\brobust\b", "i"),
+            (r"\bseamless\w*\b", "i"),
+            (r"\bcrucial\b", "i"),
+            (r"\bpivotal\b", "i"),
+            (r"\bcomprehensive\b", "i"),
+            (r"\bleverag(e|es|ed|ing)\b", "i"),
+            (r"\butiliz(e|es|ed|ing)\b", "i"),
+            (r"\bdelv(e|es|ed|ing)\b", "i"),
+            (r"\bunderscor(e|es|ed|ing)\b", "i"),
+            (r"\bintricate\w*\b", "i"),
+            (r"\bprecisely\b", "i"),
+            (r"\bexactly\b", "i"),
+            (r"\bsimply\b", "i"),
+            (r"\bthe very\b", "i"),
+        ),
+        4: (
+            (r"\b(can ?not|could ?n[o']t|will never) fail\b", "i"),
+            (r"\b(proves|checks|verifies|asserts) nothing\b", "i"),
+            (r"\b(always|forever|permanently) green\b", "i"),
+            (r"\b(go(es|ing)?|went|gone|turn(s|ed|ing)?|flip(s|ped|ping)?)\s+(back\s+)?(red|green)\b", "i"),
+            (r"\b(bless(es|ed)?|rubber-?stamps?)\b", "i"),
+            (r"\bbit(e|es|ing)\b", "i"),
+            (r"\b(outliv|outlast)(ed|es|ing)\b", "i"),
+            (r"\b(strikes?|starv(e|es|ing)|punish(es|ing)?)\b", "i"),
+            (r"\bsilent(ly)?\b", "i"),
+        ),
+        6: (
+            (r"\bseams?\b", "i"),
+            (r"\blegs?\b", "i"),
+            (r"\bbeads?\b", "i"),
+            (r"\b(head|tail)s?\b", ""),
+            (r"\bin[- ]flight\b", "i"),
+        ),
+        3: (
+            r"\bmust\b",
+            r"\bshall\b",
+            r"\bis required to\b",
+            r"\bmay not\b",
+            r"\bis forbidden\b",
+            r"\bbecause\b",
+            r"\bsince\b",
+            r"\botherwise\b",
+            r"\bfor the reason that\b",
+            r"\bas a result of\b",
+            r"\bwhich is why\b",
+        ),
+    },
+    "ru": {
+        2: (
+            (r"\bразумеется\b", "i"),
+            (r"\b(не)?очевид(н\w*|ен)\b", "i"),
+            (r"\bпопросту\b", "i"),
+            (r"\bна самом деле\b", "i"),
+            (r"\bстоит отмети(ть|м)\b", "i"),
+            (r"\bважно (понимать|помнить|отметить)\b", "i"),
+            (r"\bэлегантн\w*\b", "i"),
+            (r"\bчестн(о|ый|ая|ое|ые)\b", "i"),
+            (r"\bнаив(н\w*|ен)\b", "i"),
+            (r"\bловушк\w*\b", "i"),
+            (r"\bковарн\w*\b", "i"),
+            (r"\b(красив|изящн)\w*\b", "i"),
+            (r"\b(к сожалению|увы)\b", "i"),
+            (r"\bглавн(ая|ое|ый)\s+(опасность|проблема|риск|мысль|идея|сложность)\b", "i"),
+            (r"\b(самое (важное|главное)|суть в том)\b", "i"),
+            (r"\bтонк(ое место|ий момент|ость)\b", "i"),
+            (r"\bбесшовн\w*\b", "i"),
+            (r"\bкраеугольн\w*\b", "i"),
+            (r"\bигра(ет|ют) ключев\w+ роль\b", "i"),
+            (r"\bровно\b", "i"),
+            (r"\bименно\b", "i"),
+            (r"\bпросто\b", "i"),
+        ),
+        4: (
+            (r"\bне мож(ет|но) провалиться\b", "i"),
+            (r"\bничего не (провер|доказ)\w+", "i"),
+            (r"\bвечно зел[её]н\w*\b", "i"),
+            (r"\bснятие которого не рон\w+", "i"),
+            (r"\b(по)?(красне|зелене)(ет|ют|л|ла|ло|ли|я|ть)\b|\bкраснит\b", "i"),
+            (r"\bблагослов\w+", "i"),
+            (r"\b(на укус|укус\w*|кусает\w*)\b", "i"),
+            (r"\bпережи(л|ла|ло|ли|вш\w+)\b", "i"),
+            (r"\b(бь[её]т|душ(ит|ат)|убива(ет|ют))\b", "i"),
+            (r"\b(молч(а|ит|ат|аливо)|тих(ая|ий|ое|ую)\s+(ложь|правка|подмена|откат))\b", "i"),
+        ),
+        6: (
+            (r"\b(шов|шв(ов|ы|а|е|у|ам|ами))\b", "i"),
+            (r"\bбусин\w+", "i"),
+            (r"\b(ног(а|и|у|ой|ах)|плеч(о|а|у|ом|и|ах))\b", "i"),
+            (r"\bв пол[её]те\b", "i"),
+            (r"\b(голов(а|ы|у|е|ой)|хвост\w*)\b", "i"),
+            (r"\bмост(ик)?(ом|а|у|ы|ов|е)?\b", "i"),
+        ),
+        3: (
+            r"\bобязан\w*\b",
+            r"\bдолж(ен|на|но|ны)\b",
+            r"\bнельзя\b",
+            r"\bзапрещ(ён|ен|ена|ено|ены)\b",
+            r"\bтребуется\b",
+            r"\bне имеет права\b",
+            r"\bпотому что\b",
+            r"\bпоскольку\b",
+            r"\bтак как\b",
+            r"\bведь\b",
+            r"\bиначе\b",
+            r"\bоттого что\b",
+            r"\bпо той причине\b",
+        ),
+    },
+}
+
+#: Thresholds, PINNED. `TC-SHIP-02` pinned `sentence_max_words` alone, and
+#: `_structural_probes` builds every fixture FROM the active thresholds, so the
+#: fixture moves with the value and cannot notice it: raising `cell_max_chars`
+#: to 150 in both rule files cost 198 `cell_width` findings over 636 documents
+#: with the battery at `174/174` and the roster at `18/18`, both exit 0
+#: (REG-15). The band above ~200 was caught incidentally by
+#: `TC-PREC-01`/`TC-PREC-02`; everything below it was not.
+SHIPPED_THRESHOLDS = {
+    "sentence_max_words": 35, "sentence_near_words": 30,
+    "cell_max_chars": 120, "cell_max_sentences": 1,
+}
+#: The scanner's own fallbacks, which supply the two keys no rule file declares.
+#: Pinning the rule files alone would leave `sentence_pressure_band` and
+#: `cell_prose_chars` movable in code with every gate green.
+SHIPPED_DEFAULTS = {
+    "sentence_max_words": 35, "sentence_near_words": 30,
+    "sentence_pressure_band": 2, "cell_max_chars": 120,
+    "cell_max_sentences": 1, "cell_prose_chars": 40,
+}
+
+#: Rule 5's exempt sets, PINNED BY MEMBERSHIP. `SHIPPED_ENTRIES` and
+#: `SHIPPED_SURFACES` reach the JSON lexicons; these two frozensets live in the
+#: scanner and nothing held them. A glyph moved into the exempt set stops being
+#: reported, and the individual cases cover `\U0001F534`, `\u2705`, `\u26D4`,
+#: `\u2714` and `\u203C` only. Measured: widening `TICK_GLYPHS` to ten glyphs
+#: cost 233 `emoji_severity` findings over 636 documents with the battery at
+#: `174/174` and the roster at `18/18`, both exit 0 (REG-18).
+SHIPPED_TICK_GLYPHS = frozenset("\u2713\u2717")
+SHIPPED_STATUS_GLYPHS = frozenset("\u2713\u2717\u2705\u274C\u2611\u2612\u2610")
+
+
 #: The total this battery PRINTS, PINNED. The denominator was `len(RESULTS)`,
 #: so deleting a test function from the tuple in `main` printed a
 #: self-consistent `N/N passed` and exited 0, and four documents stated a count
 #: that nothing compared against anything: the drift had already shipped, 128
 #: documented against 145 running (REG-8). `TC-META-01` pins the run against
 #: this number, `TC-SHIP-08` pins the documents against it.
-EXPECTED_CASES = 174
+EXPECTED_CASES = 191
 
 
 def check(name, cond, detail=""):
@@ -124,6 +307,34 @@ def skill_copy(rules):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(doc, f, ensure_ascii=False)
     return scanner
+
+
+def scanner_copy(old, new):
+    """→ the scanner path inside a skill root whose SCANNER SOURCE was edited.
+
+    `skill_copy` mutates the DATA. Two of the surfaces this battery has to hold
+    are code: `SKIP_LINE` decides which lines reach rules 1 and 3, and the flag
+    compilation decides whether a declared `i` is applied. Neither is a value a
+    rule file states, so neither can be pinned as data -- the mutation has to be
+    made in the scanner and observed through the roster.
+
+    The shipped `data/` is copied verbatim, because the claim under test is what
+    the SHIPPED ruleset reports through a changed scanner.
+    """
+    root = tempfile.mkdtemp()
+    shutil.copytree(os.path.join(SKILL, "data"), os.path.join(root, "data"))
+    os.makedirs(os.path.join(root, "scripts"))
+    scanner = os.path.join(root, "scripts", "scan_register.py")
+    src = open(SCANNER, encoding="utf-8").read()
+    if old not in src:
+        return None                  # the anchor moved; the caller fails loudly
+    with open(scanner, "w", encoding="utf-8") as f:
+        f.write(src.replace(old, new, 1))
+    return scanner
+
+
+def dead_rows(out):
+    return [l for l in out.splitlines() if l.startswith("DEAD")]
 
 
 def kinds_of(rep):
@@ -1636,6 +1847,142 @@ def t_099_en_entries():
           not missed, f"missed={missed}")
 
 
+# ------------------ TASK 100: what the gates measure against, not how many ----
+# Every mutation below was green before this section: the battery printed
+# `174/174 passed` exit 0 and the roster printed `18/18 detectors live` exit 0
+# while a detector was gone. The counts TASK 099 pinned answer "how many"; each
+# of these keeps the count and removes detection (REG-14 … REG-18).
+
+
+def t_100_surface_pins():
+    """Which patterns ship, and with which flags — not how many."""
+    for lang in ("en", "ru"):
+        doc = json.load(open(os.path.join(SKILL, "data", f"register-{lang}.json"),
+                             encoding="utf-8"))
+        keys = [(e.get("rule", 2), e["pattern"], e.get("flags", ""))
+                for cat in doc["languages"][lang]["categories"]
+                for e in cat["entries"]]
+        loaded = set(keys)
+        pinned = {(rule, pat, fl)
+                  for rule, pairs in SHIPPED_SURFACES[lang].items()
+                  if rule != 3 for pat, fl in pairs}
+        # The symmetric difference, not a bare inequality: a pin that says only
+        # "these differ" is re-pinned by copying the loaded value, which accepts
+        # the mutation under review (TASK 100 D1).
+        #
+        # Uniqueness is asserted with it. Two entries carrying the same pattern
+        # and flags collapse into one set member, so a duplicate would pass this
+        # comparison while reporting every match twice.
+        check(f"TC-100-01 {lang} ships the pinned lexical surfaces",
+              loaded == pinned and len(keys) == len(loaded),
+              f"added={sorted(loaded - pinned)} removed={sorted(pinned - loaded)} "
+              f"entries={len(keys)} distinct={len(loaded)}")
+
+        block = doc["languages"][lang].get("reasoning") or {}
+        r3 = tuple(block.get("modals") or []) + tuple(block.get("causals") or [])
+        check(f"TC-100-02 {lang} ships the pinned rule-3 surfaces",
+              set(r3) == set(SHIPPED_SURFACES[lang][3]),
+              f"added={sorted(set(r3) - set(SHIPPED_SURFACES[lang][3]))} "
+              f"removed={sorted(set(SHIPPED_SURFACES[lang][3]) - set(r3))}")
+
+        # The two pins state the same fact at different strengths. Re-pinning
+        # one and not the other leaves the weaker one describing a vocabulary
+        # that no longer exists, which is how REG-2's fix would rot.
+        sizes = {rule: len(pairs)
+                 for rule, pairs in SHIPPED_SURFACES[lang].items() if rule != 3}
+        r3_size = len(SHIPPED_SURFACES[lang][3])
+        want_r3 = sum(SHIPPED_REASONING[lang].values())
+        check(f"TC-100-03 {lang} surface and count pins agree",
+              sizes == SHIPPED_ENTRIES[lang] and r3_size == want_r3,
+              f"surfaces={sizes}/{r3_size} counts={SHIPPED_ENTRIES[lang]}/{want_r3}")
+
+
+def t_100_threshold_and_glyph_pins():
+    """Values the scanner applies, pinned against literals declared here."""
+    for lang in ("en", "ru"):
+        doc = json.load(open(os.path.join(SKILL, "data", f"register-{lang}.json"),
+                             encoding="utf-8"))
+        check(f"TC-100-04 {lang} ships the pinned thresholds",
+              doc.get("thresholds") == SHIPPED_THRESHOLDS,
+              f"loaded={doc.get('thresholds')} pinned={SHIPPED_THRESHOLDS}")
+
+    check("TC-100-05 the scanner's threshold defaults are pinned",
+          scan_register.DEFAULTS == SHIPPED_DEFAULTS,
+          f"loaded={scan_register.DEFAULTS} pinned={SHIPPED_DEFAULTS}")
+    # Every key a rule file may declare has a default, or a partial rule file
+    # raises KeyError deep inside a scan instead of being rejected at load.
+    check("TC-100-06 every threshold key has a default",
+          set(scan_register.THRESHOLD_KEYS) == set(SHIPPED_DEFAULTS),
+          f"keys={sorted(scan_register.THRESHOLD_KEYS)} "
+          f"defaults={sorted(SHIPPED_DEFAULTS)}")
+
+    check("TC-100-07 TICK_GLYPHS membership is pinned",
+          scan_register.TICK_GLYPHS == SHIPPED_TICK_GLYPHS,
+          f"added={sorted(scan_register.TICK_GLYPHS - SHIPPED_TICK_GLYPHS)} "
+          f"removed={sorted(SHIPPED_TICK_GLYPHS - scan_register.TICK_GLYPHS)}")
+    check("TC-100-08 STATUS_GLYPHS membership is pinned",
+          scan_register.STATUS_GLYPHS == SHIPPED_STATUS_GLYPHS,
+          f"added={sorted(scan_register.STATUS_GLYPHS - SHIPPED_STATUS_GLYPHS)} "
+          f"removed={sorted(SHIPPED_STATUS_GLYPHS - scan_register.STATUS_GLYPHS)}")
+    # A tick is exempt everywhere and the wider set only inside a table, so the
+    # first must stay a subset of the second or the two guards contradict.
+    check("TC-100-09 every tick glyph is also a status glyph",
+          scan_register.TICK_GLYPHS <= scan_register.STATUS_GLYPHS,
+          f"outside={sorted(scan_register.TICK_GLYPHS - scan_register.STATUS_GLYPHS)}")
+
+
+def t_100_code_mutations():
+    """Two detectors blinded in CODE, where no data pin can reach them."""
+    # The control. `scanner_copy` is machinery; machinery that stopped producing
+    # a runnable scanner would make the mutations below "fail" for the wrong
+    # reason -- a green pair of cases testing nothing.
+    scanner = scanner_copy("SHIPPED_LANGS", "SHIPPED_LANGS")
+    code, out, err = run_at(scanner, ["--probe"])
+    check("TC-100-10 control: an unmutated scanner copy probes 18/18 live",
+          code == 0 and "18/18 detectors live" in out,
+          f"exit={code} tail={out.strip()[-60:]!r} err={err.strip()[:90]}")
+
+    # REG-17. `prose_blocks` drops a `SKIP_LINE` match before rules 1 and 3 see
+    # it, and the fixtures were bare sentences, so a filter that swallows list
+    # markers was invisible: 4,835 findings fell to 4,354 over 636 documents
+    # with both gates at exit 0. Most prose in these corpora is a list item.
+    scanner = scanner_copy(
+        r'SKIP_LINE = re.compile(r"^\s*(#{1,6}\s|```|~~~|-{3,}\s*$)")',
+        r'SKIP_LINE = re.compile(r"^\s*([-*+]\s|#{1,6}\s|```|~~~|-{3,}\s*$)")')
+    code, out, _ = run_at(scanner, ["--probe"]) if scanner else (0, "", "")
+    dead = dead_rows(out)
+    check("TC-100-11 a SKIP_LINE that swallows list markers reports DEAD",
+          scanner and code == 2 and "12/18 detectors live" in out
+          and {"sentence_length", "sentence_near_limit", "reasoning"}
+          <= {l.split()[2] for l in dead},
+          f"exit={code} dead={[l.split()[2] for l in dead]}")
+
+    # REG-16, code half. The scan compiles its regex at a different site from
+    # the validator's own compile, so losing the flag there left the loader
+    # green. Before the case-flip check the roster named the 15 entries whose
+    # own probe happened to carry a capital and reported the other 63 verified.
+    scanner = scanner_copy(
+        '                    for f_ in e.get("flags", ""):\n'
+        "                        fl |= FLAG_MAP[f_]",
+        '                    for f_ in e.get("flags", ""):\n'
+        "                        fl |= 0")
+    code, out, _ = run_at(scanner, ["--probe"]) if scanner else (0, "", "")
+    dead = dead_rows(out)
+    check("TC-100-12 a declared flag that is not applied reports DEAD",
+          scanner and code == 2 and len(dead) == 6
+          and all("case-blind" in l for l in dead),
+          f"exit={code} dead={len(dead)} "
+          f"kinds={[l.split()[2] for l in dead]}")
+
+    # The other direction of the same claim: the shipped scanner APPLIES every
+    # flag it accepts, so no shipped entry is case-blind. Without this, TC-100-12
+    # would pass on a scanner that reported every entry case-blind always.
+    code, out, _ = run(["--probe"])
+    check("TC-100-13 no shipped entry is case-blind",
+          code == 0 and "case-blind" not in out,
+          f"exit={code} {[l for l in out.splitlines() if 'case-blind' in l]}")
+
+
 def main():
     for fn in (t_schema, t_masking, t_structural, t_lexical, t_reasoning,
                t_probe, t_diagnostics, t_sections, t_terms, t_language,
@@ -1644,7 +1991,9 @@ def main():
                t_contract_gaps, t_exit_contract, t_rule_authoring_gaps,
                t_reporting_gaps, t_097_masking, t_097_input_defects,
                t_097_exit_contract, t_097_probe_coverage,
-               t_099_roster_pin, t_099_reasoning_examples, t_099_en_entries):
+               t_099_roster_pin, t_099_reasoning_examples, t_099_en_entries,
+               t_100_surface_pins, t_100_threshold_and_glyph_pins,
+               t_100_code_mutations):
         try:
             fn()
         except Exception as exc:                      # noqa: BLE001

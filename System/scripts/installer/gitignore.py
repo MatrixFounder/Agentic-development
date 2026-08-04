@@ -28,12 +28,30 @@ def _points_into_agentic(entry: Path, target: Path) -> bool:
     return resolves_inside(entry, Path(target) / ".agentic-development")
 
 
+def _survives_a_clone(entry: Path, target: Path) -> bool:
+    """True if a fresh clone of ``target`` would still resolve ``entry``.
+
+    A real file or directory always qualifies. A symlink qualifies only when it
+    resolves back inside the project, because its destination is then part of
+    the same repository. A symlink leaving the project — ``.claude/skills/x`` →
+    ``~/ExternalTools/...`` — names a path that exists on this machine alone, so
+    committing it hands every other clone a dangling link.
+
+    This is the same argument :func:`build_block_body` already makes about the
+    framework's own symlink, which is why that pattern carries no trailing slash.
+    """
+    if not entry.is_symlink():
+        return True
+    return resolves_inside(entry, target)
+
+
 def scan_local_exceptions(target: Path) -> list[str]:
     """Return sorted ``!/path`` lines for project-local (non-framework) entries.
 
     An entry is project-local when it is not a symlink, or is a symlink that
-    does not resolve into ``.agentic-development/``. Dotfiles are skipped.
-    A broken framework symlink is reported as a warning and not emitted.
+    resolves inside the project and not into ``.agentic-development/``. Dotfiles
+    are skipped. Two kinds of entry are reported as a warning and not emitted: a
+    broken framework symlink, and a symlink pointing outside the project.
     """
     target = Path(target)
     exceptions: list[str] = []
@@ -52,6 +70,14 @@ def scan_local_exceptions(target: Path) -> list[str]:
                         flush=True,
                     )
                 continue  # framework symlink — never a project-local exception
+            if not _survives_a_clone(entry, target):
+                print(
+                    f"warning: {entry} resolves outside the project "
+                    f"({Path(entry).resolve()}) — left ignored, because a "
+                    f"committed link to it would dangle on every other clone",
+                    flush=True,
+                )
+                continue
             exceptions.append(f"!/{rel}/{entry.name}")
     return sorted(exceptions)
 

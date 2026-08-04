@@ -61,6 +61,8 @@ def _parse_argv(argv: list[str]) -> argparse.Namespace:
     p_update.add_argument("--target", type=Path, default=Path.cwd())
     p_update.add_argument("--prune", action="store_true",
                           help="Remove symlinks whose source no longer exists")
+    p_update.add_argument("--no-gitignore", action="store_true",
+                          help="Re-sync symlinks without touching .gitignore")
 
     p_uninstall = sub.add_parser("uninstall", help="Remove framework artifacts")
     p_uninstall.add_argument("--target", type=Path, default=Path.cwd())

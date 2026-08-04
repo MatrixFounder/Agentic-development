@@ -4,7 +4,10 @@ Task 063-08. Run: ``python3 -m unittest discover -s tests/installer -v``
 """
 from __future__ import annotations
 
+import io
 import os
+from contextlib import redirect_stdout
+from pathlib import Path
 
 from _base import FRAMEWORK_ROOT, InstallerTestCase
 from installer.errors import IntegrityError
@@ -103,6 +106,55 @@ class TestScanLocalExceptions(InstallerTestCase):
                                 "../../.agentic-development/.agent/skills/gone")
         result = scan_local_exceptions(self.target)
         self.assertEqual(result, [])  # broken framework link is not an exception
+
+    # -- symlinks leaving the project ------------------------------------
+    # A `!` on one of these invites `git add -A` to commit a path that exists on
+    # the author's machine only. Measured on a real project: one `update` added
+    # 15 such lines for skills symlinked out of ~/ExternalTools.
+
+    def _outbound_symlink(self, name: str) -> Path:
+        """Symlink ``name`` at a real directory outside the target project."""
+        outside = self.tmp / "outside" / name
+        outside.mkdir(parents=True)
+        os.symlink(outside, self.skills / name)
+        return outside
+
+    def test_outbound_symlink_not_exception(self) -> None:
+        self._outbound_symlink("external-skill")
+        self.assertEqual(scan_local_exceptions(self.target), [])
+
+    def test_outbound_symlink_warned(self) -> None:
+        self._outbound_symlink("external-skill")
+        with redirect_stdout(io.StringIO()) as out:
+            scan_local_exceptions(self.target)
+        self.assertIn("external-skill", out.getvalue())
+        self.assertIn("resolves outside the project", out.getvalue())
+
+    def test_inbound_symlink_is_exception(self) -> None:
+        # `.claude/skills/x` -> `.agent/skills/x` is relative and in-repo, so a
+        # clone resolves it; it stays trackable.
+        (self.skills / "owned").mkdir()
+        claude_skills = self.target / ".claude" / "skills"
+        claude_skills.mkdir(parents=True)
+        os.symlink("../../.agent/skills/owned", claude_skills / "owned")
+        self.assertEqual(
+            scan_local_exceptions(self.target),
+            ["!/.agent/skills/owned", "!/.claude/skills/owned"],
+        )
+
+    def test_outbound_symlink_stays_out_across_repeated_updates(self) -> None:
+        # The block is regenerated on every `update`, so a one-off correct run
+        # proves nothing: the defect must not come back on the second pass.
+        self._outbound_symlink("external-skill")
+        state: dict = {}
+        with redirect_stdout(io.StringIO()):
+            state["gitignore_block_hash"] = update_gitignore(
+                self.target, _CLAUDE, state)
+            update_gitignore(self.target, _CLAUDE, state)
+        body = extract_block(
+            (self.target / ".gitignore").read_text(encoding="utf-8"),
+            GITIGNORE_MARKERS)
+        self.assertNotIn("external-skill", body)
 
 
 class TestUpdateGitignore(InstallerTestCase):

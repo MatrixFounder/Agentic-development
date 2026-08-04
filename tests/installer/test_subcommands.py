@@ -39,7 +39,7 @@ def _uninstall_ns(target, **kw) -> argparse.Namespace:
 
 
 def _update_ns(target, **kw) -> argparse.Namespace:
-    d = dict(command="update", target=target, prune=False)
+    d = dict(command="update", target=target, prune=False, no_gitignore=False)
     d.update(kw)
     return argparse.Namespace(**d)
 
@@ -189,6 +189,23 @@ class TestUpdate(InstallerTestCase):
         lines = (target / ".gitignore").read_text().splitlines()
         self.assertIn("/.agentic-development", lines)
         self.assertNotIn("/stale-rule", lines)
+
+    def test_update_no_gitignore_leaves_the_file_alone(self) -> None:
+        # `install` has always offered this opt-out; `update` did not, so a
+        # project that manages its own .gitignore had to hand-edit the managed
+        # block — which costs it every future shipped block fix.
+        target = self.make_target()
+        main(_install_ns(target))
+        gi = target / ".gitignore"
+        self._restate_gitignore(target, "/.agentic-development/\n/stale-rule")
+        before = gi.read_text()
+        state_file = target / ".agentic-installer-state.json"
+        hash_before = json.loads(state_file.read_text())["gitignore_block_hash"]
+        self.assertEqual(main(_update_ns(target, no_gitignore=True)), 0)
+        self.assertEqual(gi.read_text(), before)
+        self.assertEqual(
+            json.loads(state_file.read_text())["gitignore_block_hash"],
+            hash_before)
 
     def test_update_survives_hand_edited_gitignore(self) -> None:
         # Block edited by hand => hash mismatch. The symlink re-sync has already

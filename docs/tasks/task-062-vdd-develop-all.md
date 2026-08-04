@@ -17,7 +17,7 @@ Load-bearing differences from `/develop-all`:
 - Resumable from `.agent/sessions/latest.yaml` if interrupted.
 - Hard escalation after 3 consecutive REJECTED iterations (no silent retry).
 
-Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle patterns (see [ARCHITECTURE.md §3, §5.1](ARCHITECTURE.md#3-workflow-logic-v31)). No new agents, skills, or infrastructure.
+Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle patterns (see [ARCHITECTURE.md §3, §5.1](../ARCHITECTURE.md#3-workflow-logic-v31)). No new agents, skills, or infrastructure.
 
 ## 2. Epics & Issues (Chainlink Decomposition)
 
@@ -38,7 +38,7 @@ Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle pat
 
 #### Issue I1.3 — Step 2: Per-task VDD cycle
 **Acceptance:**
-- ✅ Step A (Builder): references [System/Agents/08_developer_prompt.md](../System/Agents/08_developer_prompt.md) and `tdd-stub-first` skill (Stub → Logic).
+- ✅ Step A (Builder): references [System/Agents/08_developer_prompt.md](../../System/Agents/08_developer_prompt.md) and `tdd-stub-first` skill (Stub → Logic).
 - ✅ Step B (Verification): runs `bash tests/test_e2e.sh` (or per-skill equivalent), unit-test discovery, and `validate_skill.py` where the task touches `.agent/skills/`. Red tests force a Builder loop **before** Sarcasmotron — never roast a broken build.
 - ✅ Step C (Sarcasmotron-roast): **delegates** to `/vdd-develop` Step 3 (DRY — no inline copy of persona overlay). Cross-link must point at [.agent/workflows/vdd-03-develop.md](vdd-03-develop.md).
 - ✅ Step D (Refinement loop): on REJECTED → return to Step A; **max 3 iterations**; on 3rd consecutive REJECTED → STOP, escalate to user with digest of findings (rationale: Sarcasmotron is stricter than standard reviewer; 2 is too tight, 4+ wastes tokens on stuck tasks).
@@ -61,7 +61,7 @@ Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle pat
 **Acceptance:**
 - ✅ After every merge, calls `python3 .agent/skills/skill-session-state/scripts/update_state.py` with `--mode "vdd-develop-all" --task "<TaskName>" --status "merged" --add_completed_task "<TaskName>"`.
 - ✅ Critical decisions (e.g., "approved via Hallucination Convergence on iteration 2") logged via `--add_decision`.
-- ✅ References [.agent/skills/skill-session-state/SKILL.md](../.agent/skills/skill-session-state/SKILL.md) §3–§4.
+- ✅ References [.agent/skills/skill-session-state/SKILL.md](../../.agent/skills/skill-session-state/SKILL.md) §3–§4.
 
 #### Issue I1.6 — Step 5: Finalization (no auto-commit)
 **Acceptance:**
@@ -75,7 +75,7 @@ Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle pat
 #### Issue I1.7 — Resumability section
 **Acceptance:**
 - ✅ Workflow includes a `## Resumability` block: re-invoking `/vdd-develop-all` after `pause` reads `.agent/sessions/latest.yaml`, identifies first non-merged task in PLAN.md, resumes from Step 2 of cycle for that task.
-- ✅ Cross-link to [.agent/skills/skill-session-state/SKILL.md](../.agent/skills/skill-session-state/SKILL.md) §2 (Boot Protocol).
+- ✅ Cross-link to [.agent/skills/skill-session-state/SKILL.md](../../.agent/skills/skill-session-state/SKILL.md) §2 (Boot Protocol).
 - ✅ **Behavioral smoke test** (documented in workflow's `## Resumability` block): invoke `/vdd-develop-all`, send `pause` after task 1.1 merge, re-invoke; chain must resume at task 1.2 Step 2 — not restart from task 1.1.
 
 #### Issue I1.8 — Vendor-agnostic note
@@ -90,14 +90,14 @@ Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle pat
 
 #### Issue I2.1 — `.claude/commands/vdd-develop-all.md`
 **Acceptance:**
-- ✅ Created using the same template as [.claude/commands/vdd-develop.md](../.claude/commands/vdd-develop.md) and [.claude/commands/develop-all.md](../.claude/commands/develop-all.md).
+- ✅ Created using the same template as [.claude/commands/vdd-develop.md](../../.claude/commands/vdd-develop.md) and [.claude/commands/develop-all.md](../../.claude/commands/develop-all.md).
 - ✅ Body: `Read and execute the workflow defined in '.agent/workflows/vdd-05-run-full-task.md'. … User's task context: $ARGUMENTS`.
 
 ### Epic E3 — Documentation cross-links
 
 #### Issue I3.1 — `CLAUDE.md` registry update
 **Acceptance:**
-- ✅ `## WORKSPACE WORKFLOWS` block in [CLAUDE.md](../CLAUDE.md) "Available Commands" list updated to include `/vdd-develop-all`.
+- ✅ `## WORKSPACE WORKFLOWS` block in [CLAUDE.md](../../CLAUDE.md) "Available Commands" list updated to include `/vdd-develop-all`.
 
 #### Issue I3.2 — Cross-link from `vdd-03-develop.md`
 **Acceptance:**
@@ -119,7 +119,7 @@ Architectural impact: **none**. Workflow uses existing Layer A / Stage Cycle pat
 
 - **Assumes** `docs/PLAN.md` exists and follows the convention of sibling plans (Stage 1 / Stage 2 sections, `Task X.Y` enumerator, links to `docs/tasks/task-{ID}-{SubID}-{slug}.md`).
 - **Assumes** the existing `/vdd-develop` workflow remains the source of truth for the Sarcasmotron persona overlay. If `/vdd-develop` is renamed or refactored, this workflow must be updated.
-- **Verified** `update_state.py` supports `--add_completed_task` and `--add_decision` flags (`grep` against [.agent/skills/skill-session-state/scripts/update_state.py](../.agent/skills/skill-session-state/scripts/update_state.py) on 2026-05-07).
+- **Verified** `update_state.py` supports `--add_completed_task` and `--add_decision` flags (`grep` against [.agent/skills/skill-session-state/scripts/update_state.py](../../.agent/skills/skill-session-state/scripts/update_state.py) on 2026-05-07).
 - **No architecture changes** — see ARCHITECTURE.md §3 / §5.1 — workflow is a composition of existing patterns.
 
 ## 5. Open Questions

@@ -6,7 +6,7 @@
 - **Mode:** VDD (Verification-Driven Development)
 - **Type:** New tooling — installer for the agentic-development framework
 - **Source Plan:** `/Users/sergey/.claude/plans/snug-foraging-wind.md` (approved)
-- **Already created:** [install.sh](../install.sh) + [System/scripts/install.py](../System/scripts/install.py) (argparse skeletons only — no logic yet)
+- **Already created:** [install.sh](../../install.sh) + [System/scripts/install.py](../../System/scripts/install.py) (argparse skeletons only — no logic yet)
 
 ## 1. General Description
 
@@ -52,7 +52,7 @@
 #### Issue I1.1 — `install.sh` bash wrapper
 **Status:** ✅ Stub created (uncommitted).
 **Acceptance:**
-- ✅ Файл [install.sh](../install.sh) исполняемый (`chmod +x`).
+- ✅ Файл [install.sh](../../install.sh) исполняемый (`chmod +x`).
 - ✅ Shebang `#!/usr/bin/env bash` + `set -euo pipefail`.
 - ✅ Guard `[ -z "${BASH_VERSION:-}" ]` отказывает с понятной ошибкой если запущен под `sh`/`dash`.
 - ✅ Проверка наличия `python3` (≥3.9) и PyYAML, hint при отсутствии.

@@ -1,6 +1,6 @@
 # Task 063-01 — Installer package skeleton + `vendors.yaml` + test scaffold
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — Framework Installer (Task 063)
+**Parent**: [docs/PLAN.md](../plans/plan-063-framework-installer.md) — Framework Installer (Task 063)
 **Stage**: 1 — Structure & Stubs `[STUB CREATION]` (per [tdd-stub-first](../../.agent/skills/tdd-stub-first/SKILL.md))
 **Predecessor**: none
 **Successor**: Task 063-02
@@ -31,7 +31,7 @@ Every module per [ARCHITECTURE §9.2](../ARCHITECTURE.md#9-framework-installer-s
 
 ### Config — `System/scripts/vendors.yaml`
 
-**Full content** (not a stub — pure config, single task per [planning-decision-tree](../../.agent/skills/planning-decision-tree/SKILL.md) §1). Exactly the schema from [TASK.md Issue I1.3](../TASK.md) and the approved plan: `version: 1`, `defaults` (`agent_components` + `root_components`), and 5 vendor profiles `claude / antigravity / codex / cursor / gemini-cli` with `bootstrap_strategy`, `bootstrap_file`, `bootstrap_aliases`, `bootstrap_source`, `vendor_dir`, `git_root_required`, `components`.
+**Full content** (not a stub — pure config, single task per [planning-decision-tree](../../.agent/skills/planning-decision-tree/SKILL.md) §1). Exactly the schema from [TASK.md Issue I1.3](task-063-framework-installer.md) and the approved plan: `version: 1`, `defaults` (`agent_components` + `root_components`), and 5 vendor profiles `claude / antigravity / codex / cursor / gemini-cli` with `bootstrap_strategy`, `bootstrap_file`, `bootstrap_aliases`, `bootstrap_source`, `vendor_dir`, `git_root_required`, `components`.
 
 ### Test scaffold — `tests/installer/`
 

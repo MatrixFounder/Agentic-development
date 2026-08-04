@@ -26,7 +26,38 @@ jobs:
 
       - name: Run tooling regression tests
         run: |
-          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py tests/test_language_independence.py tests/test_inline_efficiency.py tests/test_positional_refs.py tests/test_scratch_hygiene.py tests/test_loop_contract.py .agent/skills/skill-spec-validator/scripts/tests/ -q
+          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py tests/test_language_independence.py tests/test_inline_efficiency.py tests/test_positional_refs.py tests/test_scratch_hygiene.py tests/test_loop_contract.py .agent/skills/skill-spec-validator/scripts/tests/ .agent/tools/test_task_id_tool.py .agent/tools/test_archive_protocol.py .agent/tools/test_rebase_links.py -q
+
+      # The curated unittest suite. It is NOT covered by the pytest list above:
+      # `load_tests` in run_tests.py pulls in the whole of `tests/installer/`
+      # plus the product-skill scripts, and none of that ran in CI. Same class
+      # as the 86 archive-protocol tests found unrun during ARC-1.
+      - name: Run curated unittest suite (incl. installer)
+        run: PYTHONPATH=. python tests/run_tests.py
+
+      # The register scanner's own battery. It is not a pytest module, so it
+      # has to be named explicitly or it runs only by hand.
+      - name: Run artifact-formalizer selftest
+        run: python .agent/skills/artifact-formalizer/scripts/selftest_scan.py
+
+      # Instrument health, and the only part of the register check that GATES.
+      # Findings stay advisory (documentation-standards §4: a gate that fails on
+      # correct documents is how gates get switched off). A DEAD DETECTOR is not
+      # a finding — it is the scanner reporting a clean document while one of its
+      # checks is broken, which is the failure this skill exists to prevent.
+      # Exit 2 fails the build; exit 3 means the command below is mistyped and
+      # also fails, which is why the two codes are distinct.
+      - name: Register scanner — probe every detector
+        run: python .agent/skills/artifact-formalizer/scripts/scan_register.py --probe
+
+      # Advisory sweep of the living artifacts. The scanner exits 0 on any
+      # number of findings, so this step fails ONLY on a broken instrument.
+      # Deliberately no `|| true`: that would swallow the exit-2 signal too.
+      - name: Register scan — living artifacts (advisory)
+        run: |
+          python .agent/skills/artifact-formalizer/scripts/scan_register.py \
+            docs/TASK.md docs/PLAN.md docs/ARCHITECTURE.md \
+            --sections --terms docs/ARCHITECTURE.md
 
   skill-validate:
     name: Skill validate

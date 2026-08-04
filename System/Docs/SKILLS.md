@@ -64,8 +64,28 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-single-task`, `vdd-enhanced` | Planner, Developer |
 | **`tdd-strict`** | **[High Assurance]** Strict TDD with mechanical verification (Fail Reason, Minimalism). Tier 3. | `full-robust` | Developer (Strict Mode) |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol, blast radius of bulk-rewrite commands (§5.1), and **gate verification** (§6.3) — verify with CI's invocation not a narrower one, a pipeline's exit code belongs to its last command, and exit 0 is not evidence that work happened. | `03-develop-single-task`, `base-stub-first` | Developer |
-| **`documentation-standards`** | Standards for docstrings (Google/JSDoc), "The Why" comments, Markdown structure, positional-reference discipline (§4.1/§4.2), and **structural anchors** (§4.3/§4.4) — a machine gate addresses an authored section by `<!-- contract:* -->` anchor, never by its prose, so no gate depends on the language the project writes in. §4.4 is the framework-wide **reserved-anchor registry**: no gate may key on an unregistered anchor. Advisory, diff-scoped resolver `scripts/check_positional_refs.py` resolves `path:line` and adjacent-target `§` ordinals against the working tree. | All Development Workflows | Developer, Code Reviewer |
+| **`artifact-formalizer`** | Register authority for authored prose — two modes, see the note below | Analysis, Architecture, Planning, Review | Analyst, Architect, Planner, Reviewers |
+| **`documentation-standards`** | Docstrings, "The Why" comments, Markdown structure, register rules (§5.5) — see the note below | All Development Workflows | Developer, Code Reviewer |
 | **`testing-best-practices`** | Best practices: E2E/Unit hierarchy, no LLM mocking, realism. | `03-develop-single-task`, `vdd-03-develop` | Developer, Code Reviewer |
+
+### Notes on two rows
+
+**`artifact-formalizer`** — two modes, and the first is loaded before writing, not after.
+
+- **Mode A (authoring)** — `references/authoring-contract.md`: six per-sentence tests and fourteen
+  licensed statement forms. Loaded in every authoring phase by `skill-phase-context`.
+- **Mode B (audit)** — `scripts/scan_register.py` plus a reading pass.
+- Six rules (`documentation-standards` §5.5). All six reach a detector; rules 3, 4 and 6 carry
+  declared recall limits, stated in the skill's SKILL.md §5.
+- Advisory: exit `0` on any findings, `2` on a broken instrument or a dead detector, `3` on a usage
+  error. Every run probe-tests its detectors, so a zero is printed next to what the detector saw.
+- Per-language data (`register-rules/v1`), 128-case selftest. It never changes a document's
+  language.
+
+**`documentation-standards`** — §5.5 holds the normative short form of the register rules and the
+detector-coverage table. §5.1 owns cell shape, §5.2 prose shape, §5.3 line length. The scanner
+surfaces §5.1 findings under that section number rather than under a §5.5 rule.
+
 
 ### Product Management
 | Skill | Description | Used By in Workflows | Used By Agents |

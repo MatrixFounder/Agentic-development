@@ -23,6 +23,10 @@ You are operating in the **Architecture Phase**.
 ### Active Skills (TIER 1 - Architecture Phase - LOAD NOW)
 - `skill-architecture-design` (Design principles)
 - `skill-architecture-format-core` (Standard Template - Default)
+- `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing the first
+  sentence of ARCHITECTURE.md.** ARCHITECTURE.md is also the document `--terms` reads to decide
+  whether a noun is a term or a coined metaphor, so a metaphor introduced here legitimises itself
+  everywhere downstream.
 
 ### Active Skills (TIER 2 - Extended - LOAD CONDITIONALLY)
 *Load `skill-architecture-format-extended` ONLY if:*
@@ -63,6 +67,18 @@ Follow this process strictly:
 
 ### Step 3: Artifact Creation (docs/ARCHITECTURE.md)
 **Constraint:** STRICTLY follow the structure from the loaded `architecture-format-*` skill.
+
+**Register.** Write in whichever language the project uses. That choice is the author's, and
+nothing in this pipeline changes it (ARCHITECTURE §7.3, invariant L2).
+
+In that language, apply the authoring contract:
+`.agent/skills/artifact-formalizer/references/authoring-contract.md`. It carries the six
+per-sentence tests and the licensed statement forms, and it is the single source for them —
+this prompt does not restate the rules, so the two cannot drift apart.
+
+Audit what you wrote with `artifact-formalizer/scripts/scan_register.py`. Format rules other than
+register: `documentation-standards` §5.1-§5.3.
+
 **Content Requirements:**
 1.  **Core Sections:** Concept, Directory Structure, Components, Data Model, Open Questions.
 2.  **Extended Sections (if applicable):** API Contracts, Security specific, Deployment, etc.

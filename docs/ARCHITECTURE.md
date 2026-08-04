@@ -268,6 +268,48 @@ produce them, and every gate keeps its pre-existing prose matcher as a fallback.
 before an anchor existed — including archived artifacts, which are immutable by doctrine, and every
 downstream project's corpus — behave exactly as before.
 
+### 7.3 Register is language-independent; its rules are per-language
+
+L1 (§7.2) removes a gate's dependence on the document's language. It says nothing about how the
+document reads. Measurement across two independently authored corpora (TASK 096 §1.1) found the
+same drift in both: sentences lengthening, and evaluative markers multiplying in a document whose
+purpose is to state checkable requirements.
+
+**Invariant (L2): the framework constrains how an artifact reads, never which language it is
+written in.**
+
+Two consequences follow, and they pull in opposite directions:
+
+| Check kind | Example | Language handling |
+| :--- | :--- | :--- |
+| Structural | sentence length, cell width, emoji as severity marker | One implementation, all languages |
+| Lexical | evaluative and rhetorical markers | One data file per language |
+
+A language with no rule file is not an error. Structural checks still run, lexical checks report
+zero, and the scanner says which language it resolved and that no lexicon backed it. The alternative
+— refusing to scan — would make the tool useless in the projects that most need it.
+
+**Advisory by construction.** Register checks report and never fail a phase. §4 of
+[`documentation-standards`](../.agent/skills/documentation-standards/SKILL.md) already records why:
+a gate that fails on correct documents is how gates get switched off.
+Register rules are heuristic, so a false positive is expected rather than exceptional.
+
+**Where the rules live.** One place per artefact class, so the copies cannot drift:
+
+| Artefact | Holds |
+| :--- | :--- |
+| `documentation-standards` §5.5 | the normative short form and the detector-coverage table |
+| `artifact-formalizer/references/authoring-contract.md` | the six per-sentence tests and the licensed statement forms |
+| `artifact-formalizer/references/formalization-guide.md` | the rewrite pass and the worked example |
+| `artifact-formalizer/data/`, `scripts/` | the per-language lexicons and the scanner |
+
+The three authoring prompts (Analyst, Architect, Planner) and the artefact templates **point at the
+contract and do not restate it**. An earlier revision carried the rules inline in each surface;
+that produced five copies of one rule set, which is five places for it to drift.
+
+`docs/ARCHITECTURE.md` is also what `--terms` reads when deciding whether a noun is a term or a
+coined metaphor, so a metaphor introduced here legitimises itself in every artefact downstream.
+
 ## 8. Skill Architecture & Optimization Standards
 
 > **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).

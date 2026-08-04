@@ -16,6 +16,157 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.24.0 — artifact register: measured rules for how specification prose reads**
+
+Task and plan prose had drifted from specification into essay. Measured across two independently
+authored corpora (~12,200 lines): evaluative-marker density rose **14×** in this framework's tasks
+and **1.75×** in a downstream project's; mean sentence length rose **2.4×** (5.8 → 14.1 words).
+Both signals move the same direction in corpora written by different hands, which is why they
+became rules.
+
+#### **Added**
+- **`artifact-formalizer` (TIER 2, split-tier)** — two modes. **Mode A** is
+  `references/authoring-contract.md`: six per-sentence tests and fourteen licensed statement forms,
+  loaded before the first sentence of an artifact. **Mode B** is the advisory scanner
+  (`scan_register.py`) plus a reading pass. All six register rules reach a detector; rules 3, 4 and
+  6 carry declared recall limits. Every run probe-tests each detector, so a zero is reported next to
+  what the detector saw. Exit 0 on any findings, 2 on a broken instrument or a dead detector, 3 on a
+  usage error. Per-language marker data (`register-rules/v1`, extensible with no code edit) and a
+  128-case selftest.
+- **`documentation-standards` §5.5 "Register"** — the normative short form, 33 lines.
+- **ARCHITECTURE §7.3, invariant L2** — the framework constrains how an artifact reads, never
+  which language it is written in. Structural checks are language-independent; lexical rules are
+  per-language data. A language with no rule file still gets structural checks and says so.
+- The rules are carried inline by **three** authoring prompts (Analyst, Architect, Planner) and both
+  artifact templates, because those roles load neither `documentation-standards` nor the new skill.
+- **Validation Evidence is bounded.** `validate_skill.py` now warns when the section carries an
+  investigation rather than a verdict; the bound is `quality_checks.max_validation_evidence_lines`
+  in both copies of `skill_standards_default.yaml`, with no literal in the code — an absent key
+  means the standard is unconfigured, not that the checker invents a number. Default 12 is twice
+  the repo median of 7. Two existing skills are flagged (`run-feedback` 18, `skill-spec-validator`
+  29) and left for their owners. `skill-creator`, `skill-enhancer` and `SKILL_TEMPLATE.md` state
+  the rule: detail moves to `references/`, nothing is deleted.
+
+#### **Refuted by measurement, and shipped as non-rules**
+Bold density (9.1 vs 30.7 per 100 lines), em-dash density (12.2 vs 22.8) and emoji density
+(0.0 vs 8.7) all **improved** and get no rule. Seven generic AI-writing tells measured **zero** on
+this corpus and were not adopted. Over-wide table cells are real (22% of cells in the newest
+artifact) but already owned by §5.1 — the scanner surfaces that rule rather than adding one.
+
+#### **Fixed — ARC-1 and ARC-2, both closed**
+
+**ARC-1 — a committed task could be silently renumbered.** The id machinery was already correct;
+it was unreachable. `get_parent_archive_ids()` distinguishes a parent archive from planner
+sub-tasks, but only on the `--proposed-id` path, and **every documented invocation omitted it** —
+Step 3 Option A literally showed `generate_task_archive_filename(slug="task-slug")`, and Step 4
+said to set the task's id to whatever the filename got. Step 3 now passes the Meta-block id with
+correction off; Step 4 asserts instead of assigning; `allow_renumber` defaults to `False` in
+`archive_protocol.py` and `tool_runner.py`. Three adjacent defects closed with it: `archive_task()`
+parsed the meta block only when the *slug* was missing (so ARC-1 reproduced through the automated
+path); `parse_task_meta()` keyed on the English literals `Task ID` and `Slug`, filing any
+non-English TASK.md as `untitled`; and Step 5 had **no** collision guard while `SKILL.md` claimed
+one — `shutil.move` silently overwrote a planner sub-task file.
+
+**ARC-2 — archiving broke relative links, in three shapes, not one.** New
+`.agent/tools/rebase_links.py`, invoked from both moves. The rule is arithmetic —
+`relpath(normpath(join(old_dir, target)), new_dir)` — because the `../` → `../../` substitution the
+issue proposed fixes **zero** of the 45 remaining instances, which carry no `../` at all. Existence
+became the guard rather than the trigger: a link broken before the move is never "fixed" by
+guessing, and one that resolves only from the new home is left alone, which is also what makes a
+re-run a no-op.
+
+The sharper half: **a mutable slot is not a file identity.** `**Parent**: [docs/PLAN.md](../PLAN.md)`
+inside `task-063-07` meant *task 063's* plan and resolves today to whatever plan is live. Rebasing
+the path would have preserved the wrong thing and reported success, so the rewriter takes a slot
+map consulted **before** any filesystem probe — which is also the only way it works inside
+`archive_plan()`, where `docs/TASK.md` is already gone.
+
+Corpus: **45 broken links → 4**, plus 19 silent mis-resolutions re-pointed. The 4 survivors are
+broken where they were authored, not by any move, and are reported rather than guessed at.
+
+**The tests protecting all of this ran nowhere.** `framework-gates.yml` lists test files
+explicitly and named neither `test_task_id_tool.py` nor `test_archive_protocol.py` — 59 tests, no
+CI. Both are now in the list, with `test_rebase_links.py` (36 cases). The second review round found
+the same hole one level up: `tests/run_tests.py` was invoked by no job, and its `load_tests` is what
+pulls in the whole of `tests/installer/`. Added as its own step. CI now runs **320** pytest +
+**302** unittest.
+- A `KNOWN_ISSUES.md` entry cited "TASK 096" as having fixed VAL-2; no such task existed. Replaced
+  with the commit that did.
+
+#### **Second review round — what the first pass closed too early**
+
+Re-verified by execution rather than by reading, which is what turned these up.
+
+- **ARC-1 was closed while four of five documented call sites still taught it.** The fix landed in
+  `skill-archive-task` and `tool_runner.py`; `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` and
+  `ORCHESTRATOR.md` still showed the bare `task_id_tool.py <slug>` form — and three of those are
+  read at session start, before the skill loads. Measured: with `task-095-01..03` present and no
+  parent, the bare form returns **096** where the protocol form returns **095**. All four corrected;
+  `02_analyst_prompt.md` now calls the tool instead of eyeballing `docs/tasks/`. Pinned by
+  `TestBareInvocationShadowsTheParentId` — one test per form, so the difference cannot be
+  "simplified" away.
+- **`schemas.py` advertised `allow_correction: default true`** to the model while the dispatcher
+  used `False`, so an agent could omit the argument believing it had enabled the renumbering ARC-1
+  forbids. Now `false`, pinned against the dispatcher.
+- **`rebase_links.py` could not see 3 real links.** Its code-span mask closed a backtick run
+  against the *first character* of a longer one and could span blank lines, so one unbalanced
+  backtick blanked every link after it. The tool would have reported success while leaving them
+  broken — the exact under-fix it exists to prevent. One-line fix; measured to recover exactly
+  those 3 and to keep masking all 13 links that are syntax examples inside code spans. The looser
+  `](target)` regex was **kept**: tightening it changes 2 findings corpus-wide, both `#anchor`
+  targets already dropped as absolute.
+- `.agent/archive/` (rollback backups written by `/framework-upgrade`) is now ignored rather than
+  leaving `git status` dirty after every upgrade.
+
+#### **Third round — closing WI-11, and the HIGH that closing it uncovered**
+
+WI-11 held the MED/LOW tail. Its own closing rule was *execute each entry, do not read it*, and
+that rule paid for itself: **six of ten entries confirmed, four refuted** — and rewriting the
+lowest-stakes entry of all, a stale `Example Flow`, then *running* it exposed a HIGH.
+
+- **Step 5.5 exited `1` — "a link regressed" — on the protocol's own happy path.** The conservation
+  law filesystem-probed every rewritten target including `SLOT_RESOLVED` ones, but a slot map is a
+  **forward reference**: Step 5.5 names `docs/plans/plan-NNN-x.md`, which Step 7 creates
+  afterwards. Read literally, the protocol told the agent to stop on success. `SLOT_RESOLVED` is
+  now exempt from the conservation law — a declared identity is the caller's assertion, not
+  something to police mid-sequence — while a target not yet on disk still prints as
+  `[SLOT_PENDING]`, so a typo'd map stays visible. **This finding was reported in round 1 and
+  refuted in error**: the refutation ran the tool *without* `--slot`, which is not the documented
+  command.
+- **`artifact-formalizer` scanner precision**, each reproduced before being fixed: an escaped pipe
+  hid an over-wide cell entirely; `U+2028` shifted every reported line number, because
+  `str.splitlines()` breaks on separators that editors and `grep -n` do not; the same `--rules`
+  file named twice doubled every finding; a document opening with a **horizontal rule** had its
+  title and first block masked away as frontmatter and scanned to **zero**; and `e.g. Capital`
+  split one sentence into two, halving the measured length at 12 corpus sites.
+- **Refuted, and shipped as pinned non-defects.** "A stray backtick masks the rest of the line" —
+  the pairing is CommonMark-correct and a genuinely unmatched backtick masks nothing. "Decimals
+  split sentences" — `1.5 Beta` has no whitespace after the period, so the rule never fired.
+  `__pycache__` hygiene — already ignored, 0 tracked. Exempting `etc.`/`т.д.` alongside `e.g.` was
+  rejected on measurement: both are 0 here and genuinely end sentences elsewhere, so exempting
+  them would trade a false split for a false glue.
+- `skill-archive-task` → **2.0** (the protocol's mandatory steps changed), and its `Example Flow`
+  rewritten to the real 11-step sequence.
+- `selftest_scan.py` is now a CI step. CI runs **324** pytest + **302** unittest + the selftest.
+
+> **State at time of writing.** Both data files carry the required `probe` field, the scanner
+> probe-tests 18 detectors across two languages on every run, and the CI step is green
+> (`selftest_scan.py` 128/128, `--probe` 18/18). A fresh-context adversarial review of the v2.0
+> candidate returned 65 findings, every one reproduced by execution before it was accepted;
+> `references/measurement-baseline.md` §10 records the four that defeated a headline design claim,
+> including three that produced a silent zero while the run reported every detector live.
+
+The three rounds share one shape: **round 1 shipped a guard that depended on the caller
+remembering it, round 2 verified a fix only where it was written, round 3 found that a refutation
+had measured the wrong command.** Each round ended with every gate green.
+
+#### **Two detector defects, found by measurement**
+The first corpus baseline was **discarded**: sentences were split over the whole file, so runs of
+`- [ ]` lines glued into pseudo-sentences of up to 167 words — it measured the checklist format,
+not the prose. The same defect reappeared for `*Actor:* X. *Main:* Y.`, caught by running the
+scanner against the specification that defined it. Both are pinned as regressions. A silent zero
+and a broken instrument look identical.
+
 ### **v3.23.0 — every retry loop states its own bound, and the gate that checks it can fail**
 
 Design spec 095 Phases 2 and 3. Eleven retry loops across the corpus had **no numeric bound in the

@@ -1,13 +1,13 @@
 # Task 063-09 — Conflict prevention + `install` end-to-end
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — Framework Installer (Task 063)
+**Parent**: [docs/PLAN.md](../plans/plan-063-framework-installer.md) — Framework Installer (Task 063)
 **Stage**: 2 — Core Logic `[LOGIC IMPLEMENTATION]`
 **Predecessor**: Task 063-08
 **Successor**: Task 063-10
 
 ## Goal
 
-Implement the pre-flight conflict classifier and wire the full `install` subcommand end-to-end in `cli.py` — the 10-step algorithm from [TASK.md §Алгоритм install](../TASK.md) / the approved plan. This task makes the installer actually *do something*.
+Implement the pre-flight conflict classifier and wire the full `install` subcommand end-to-end in `cli.py` — the 10-step algorithm from [TASK.md §Алгоритм install](task-063-framework-installer.md) / the approved plan. This task makes the installer actually *do something*.
 
 ## Files to edit / create
 

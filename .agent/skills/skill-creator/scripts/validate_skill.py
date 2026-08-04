@@ -205,6 +205,44 @@ def _has_real_files(directory: str) -> bool:
     return False
 
 
+def _section_body_lines(body: str, title: str) -> list[str]:
+    """Non-blank lines under `title`, up to the next heading of any level."""
+    needle = _normalize_section_title(title)
+    out, inside = [], False
+    for line in body.splitlines():
+        if re.match(r"^#{1,6}\s", line):
+            if inside:
+                break
+            if _normalize_section_title(re.sub(r"^#{1,6}\s+", "", line)).endswith(needle):
+                inside = True
+            continue
+        if inside and line.strip():
+            out.append(line)
+    return out
+
+
+def check_validation_evidence_size(body: str, validation_config: dict) -> list[str]:
+    """Validation Evidence records the verdict, not the investigation.
+
+    The bound lives in `skill_standards_default.yaml`
+    (`quality_checks.max_validation_evidence_lines`), overridable per project via
+    `.agent/rules/skill_standards.yaml`. No literal here: an absent key means the
+    standard is not configured, which is not the same as a number this function
+    invented. Warning only — a long section is verbose, not invalid. The fix is
+    to move detail into `references/` and keep a summary plus a pointer.
+    """
+    limit = validation_config.get("quality_checks", {}).get(
+        "max_validation_evidence_lines")
+    if not isinstance(limit, int) or limit <= 0:
+        return []
+    lines = _section_body_lines(body, "Validation Evidence")
+    if len(lines) > limit:
+        return [f"Validation Evidence is {len(lines)} lines (soft limit {limit}). "
+                f"Keep the verdict and the counts here; move the investigation "
+                f"into references/ and link it."]
+    return []
+
+
 def collect_execution_policy_warnings(
     skill_path: str,
     body: str,
@@ -406,6 +444,9 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
                     body_content,
                     validation_config,
                 )
+            )
+            warnings.extend(
+                check_validation_evidence_size(body_content, validation_config)
             )
 
     # Report

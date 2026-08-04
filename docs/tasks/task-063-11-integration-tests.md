@@ -1,6 +1,6 @@
 # Task 063-11 — Integration E2E suite + bash wrapper smoke test
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — Framework Installer (Task 063)
+**Parent**: [docs/PLAN.md](../plans/plan-063-framework-installer.md) — Framework Installer (Task 063)
 **Stage**: 3 — Integration & Verification
 **Predecessor**: Task 063-10
 **Successor**: none (chain end)

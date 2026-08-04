@@ -127,8 +127,8 @@ TOOLS_SCHEMAS = [
                     },
                     "allow_correction": {
                         "type": "boolean",
-                        "default": True,
-                        "description": "If True, auto-correct to next available ID on conflict. If False, return conflict status."
+                        "default": False,
+                        "description": "If True, silently renumber to the next available ID on conflict. Leave False (ARC-1): an ID already cited by sub-tasks, the plan archive, commits and ledgers is a human decision, so a conflict is reported rather than corrected."
                     }
                 },
                 "required": ["slug"]

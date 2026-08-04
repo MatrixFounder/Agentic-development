@@ -340,5 +340,64 @@ class TestGenerateTaskArchiveFilename:
         assert result["filename"] == "task-031-feature.md"
 
 
+class TestBareInvocationShadowsTheParentId:
+    """ARC-1 is a *documentation* contract, not only a code one.
+
+    `get_parent_archive_ids()` distinguishes sub-tasks from parents, but that
+    machinery is reachable only on the `--proposed-id` path. On the bare
+    auto-generate path sub-task files still occupy their parent's number --
+    which is correct for inventing a *new* id and wrong for archiving a
+    document that already has one.
+
+    These two tests pin the difference that the wording in CLAUDE.md,
+    AGENTS.md, GEMINI.md and ORCHESTRATOR.md exists to prevent. A later
+    edit that "simplifies" those lines back to the bare form turns this red.
+    """
+
+    @staticmethod
+    def _subtasks_without_a_parent(tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        for n in ("01", "02", "03"):
+            (tasks_dir / f"task-095-{n}-x.md").write_text("# sub")
+        return tasks_dir
+
+    def test_bare_form_shadows_the_parent_id(self, tmp_path):
+        """The form the bootstrap files used to document. Returns 096."""
+        tasks_dir = self._subtasks_without_a_parent(tmp_path)
+        result = generate_task_archive_filename(
+            slug="structural-anchors", tasks_dir=str(tasks_dir)
+        )
+        assert result["used_id"] == "096"
+
+    def test_protocol_form_keeps_the_authored_id(self, tmp_path):
+        """The form skill-archive-task Step 3 documents. Returns 095."""
+        tasks_dir = self._subtasks_without_a_parent(tmp_path)
+        result = generate_task_archive_filename(
+            slug="structural-anchors",
+            proposed_id="095",
+            allow_correction=False,
+            tasks_dir=str(tasks_dir),
+        )
+        assert result["used_id"] == "095"
+        assert result["status"] != "conflict"
+
+
+class TestSchemaMatchesTheDispatcher:
+    """The LLM-facing schema is a contract an agent reads and reasons from.
+
+    It advertised `allow_correction: default true` while the dispatcher
+    defaulted it False -- so a model could omit the argument believing it had
+    enabled the renumbering ARC-1 forbids.
+    """
+
+    def test_schema_default_matches_tool_runner_default(self):
+        import schemas
+        spec = next(t for t in schemas.TOOLS_SCHEMAS
+                    if t["function"]["name"] == "generate_task_archive_filename")
+        prop = spec["function"]["parameters"]["properties"]["allow_correction"]
+        assert prop["default"] is False
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

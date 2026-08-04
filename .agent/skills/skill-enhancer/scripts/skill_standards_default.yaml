@@ -44,6 +44,10 @@ validation:
     max_inline_lines_warn: 20
     max_inline_lines_fail: 60
     max_description_words: 70
+    # Validation Evidence records the verdict, not the investigation. Median
+    # across this repo's skills is 7 non-blank lines; 12 is twice that.
+    # Warning only — a long section is verbose, not invalid.
+    max_validation_evidence_lines: 12
     banned_words:
       - "should"
       - "can"

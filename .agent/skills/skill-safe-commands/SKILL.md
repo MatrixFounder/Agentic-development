@@ -23,7 +23,7 @@ This skill defines **all commands that are SAFE TO AUTO-RUN** without user appro
 | **Archiving** | `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...` | Documented, non-destructive moves (TASK/PLAN rotate in lockstep) |
 | **Directory** | `mkdir -p docs/tasks`, `mkdir -p docs/plans`, `mkdir -p docs/architectures`, `mkdir -p .agent/skills/*` | Idempotent operations |
 | **Tool calls** | `generate_task_archive_filename`, `list_directory`, `read_file` | Native tools |
-| **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 System/scripts/doctor.py` | Framework automation |
+| **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/tools/rebase_links.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 System/scripts/doctor.py` | Framework automation |
 | **Testing** | `python -m pytest ...`, `npm test`, `npx jest`, `cargo test` | Tests don't modify source code |
 
 ## Pattern Matching Rules
@@ -61,6 +61,7 @@ Commands are safe if they match these patterns:
 # Framework scripts
 ^python3\s+\.agent/skills/skill-session-state/scripts/update_state\.py
 ^python3\s+\.agent/tools/task_id_tool\.py
+^python3\s+\.agent/tools/rebase_links\.py
 ^python3\s+\.agent/skills/skill-creator/scripts/(validate_skill|init_skill)\.py
 ^python3\s+System/scripts/doctor\.py
 ```

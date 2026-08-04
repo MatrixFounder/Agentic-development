@@ -2,7 +2,7 @@
 name: skill-archive-task
 description: "Complete protocol for archiving TASK.md and PLAN.md (lockstep) with ID generation. Single source of truth for archiving."
 tier: 1
-version: 1.3
+version: 2.0
 ---
 # Task Archiving Protocol
 
@@ -64,36 +64,103 @@ Read from current `docs/TASK.md`:
 
 ### Step 3: Generate Filename
 
+**The ID comes from the DOCUMENT, not from the directory.** Step 2 already read it from the Meta
+block; Step 3 only confirms it is free and turns it into a filename.
+
 **Option A: Use Tool (Preferred)**
-If `generate_task_archive_filename` tool is available:
-```python
-result = generate_task_archive_filename(slug="task-slug")
-filename = result["filename"]
+
+```bash
+python3 .agent/tools/task_id_tool.py "<slug-from-meta>" --proposed-id "<id-from-meta>" --no-correction
 ```
 
+```python
+result = generate_task_archive_filename(
+    slug=slug_from_meta,
+    proposed_id=task_id_from_meta,   # MANDATORY whenever Step 2 found an ID
+    allow_correction=False,          # a cited ID is never renumbered silently
+)
+```
+
+- **`proposed_id` is mandatory whenever Step 2 produced an ID.** Omit it and the tool
+  auto-generates `max(existing)+1`, and that scan counts the task's **own** planner sub-task files
+  (`task-NNN-SubID-slug.md`). A task with sub-tasks and no parent archive is then handed `NNN+1` —
+  a number contradicting its Meta block, its `docs/plans/plan-NNN-*.md`, its sub-tasks and every
+  commit citing it (**ARC-1**).
+- Omit `proposed_id` **only** when Step 2 found no ID. That is the sole case where the tool may
+  choose, and the sole case where Step 4 writes an ID back.
+- Read `result["status"]`: `"generated"` → continue. `"conflict"` → **STOP**, report both paths,
+  the operator decides. `"error"` → STOP.
+- A populated **sub-task namespace is not a conflict** — with `--proposed-id` the tool checks
+  parent archives only.
+
 **Option B: Manual Generation (Fallback)**
-If tool is NOT available:
-1. Construct filename: `task-[ID]-[slug].md` (e.g. `task-033-login-flow.md`)
-2. Ensure no conflict in `docs/tasks/` (check via `ls`).
+1. Filename = `task-<ID-from-Meta>-<slug-from-Meta>.md`. The ID is **copied, never invented**.
+2. Conflict check, parents only:
+   `ls docs/tasks/task-<ID>-*.md` — hits shaped `task-<ID>-<digits>-*` are SUB-TASKS, expected, not
+   conflicts. Any other hit, or any `docs/plans/plan-<ID>-*.md`, is a real conflict → STOP.
+3. Only if Step 2 found no ID: `NNN = max(ID over docs/tasks/ and docs/plans/) + 1`, sub-tasks
+   **included** in that maximum — a populated namespace reserves its parent's number.
 
+### Step 4: Verify the ID — do NOT renumber
 
-### Step 4: Update Task ID
-**BEFORE** moving file, update `docs/TASK.md`:
-- Set Task ID to the ID used in filename
-- Ensure ID in file matches ID in filename
+The Meta-block ID is the identity; the filename follows it. This step **asserts**, it does not
+assign.
+
+```
+ASSERT id_in_filename == id_in_meta_block
+IF they differ: STOP. Do not move the file. Report both values.
+```
+
+Do **not** edit `docs/TASK.md` here. By archiving time the ID is cited outside the Meta row:
+sub-task files, the plan archive, commit messages, `CHANGELOG.md`, ledger records, and the
+document's own H1. Rewriting one row silently falsifies the rest.
+
+**Writing an ID back is legitimate in exactly two cases:**
+
+1. **Meta carries no ID** — nothing is being overwritten.
+2. **The ID was never published** — no sub-tasks, no plan archive, no commit or ledger row cites
+   it, confirmed by the operator. Then it is a rename of a private draft, and it is a
+   **whole-document** edit: Meta row, H1, `Archive name` and every in-body citation move together.
 
 ### Step 5: Archive (Move File)
+
+**Collision guard first.** `mv` overwrites, and Step 3's conflict check sees *parent* archives
+only — a destination shaped like a sub-task (`task-096-01-x.md`) is invisible to it.
+
 ```bash
-mv docs/TASK.md docs/tasks/{filename}
+test -e docs/tasks/{filename} && echo "STOP: target exists" || mv docs/TASK.md docs/tasks/{filename}
 ```
 
 > [!IMPORTANT]
-> This command is **SAFE TO AUTO-RUN**. Do NOT wait for user approval.
+> The `mv` is **SAFE TO AUTO-RUN**. Do NOT wait for user approval.
+
+### Step 5.5: Rebase the moved document's links (MANDATORY)
+
+`docs/tasks/` is one directory **deeper** than `docs/`. Every relative link in the document was
+written against `docs/` and now denotes a different path, or nothing (**ARC-2**).
+
+```bash
+python3 .agent/tools/rebase_links.py docs/tasks/{filename} --from docs --to docs/tasks
+```
+
+- **Do not hand-edit links.** A rule like "replace `../` with `../../`" fixes **zero** of the
+  forms this corpus actually contains — measured. The tool computes what each link denoted from
+  the old directory and re-expresses that same denotation from the new one.
+- **`docs/PLAN.md` is a mutable slot, not an identity.** A link to it inside this task means *this
+  task's* plan, which Step 7 is about to archive. Pass the pairing so the link is written to the
+  archive name rather than to a path that dies seconds later:
+  `--slot docs/PLAN.md=docs/plans/plan-{used_id}-{slug}.md`
+- Exit `0` clean, `3` needs review, `1` a link regressed, `2` could not run. A `3` lists links that
+  were **left alone** — broken before the move, or resolving only by accident. Never "fix" those
+  by guessing; report them.
 
 ### Step 6: Validate
 Verify:
 - [ ] `docs/TASK.md` does NOT exist
 - [ ] `docs/tasks/{filename}` exists
+- [ ] **Every link the document denoted before the move still resolves.** File-arrived is not
+      enough: the move can leave a present file full of dead citations. `rebase_links.py` exits
+      non-zero when a link it rewrote fails to resolve.
 
 **If validation fails:**
 - Check if mv command returned error
@@ -165,11 +232,25 @@ IF exists("docs/plans/{plan_filename}"):
 mv docs/PLAN.md docs/plans/{plan_filename}
 ```
 
+**7.6.5 — Rebase the plan's links** (mirrors Step 5.5):
+
+```bash
+python3 .agent/tools/rebase_links.py docs/plans/{plan_filename} \
+  --from docs --to docs/plans \
+  --slot docs/TASK.md=docs/tasks/task-{used_id}-{slug}.md
+```
+
+The slot is **not optional here**. By this point `docs/TASK.md` is already gone — Step 5 moved it,
+and Step 7 runs only after Step 6 passed. An existence-based rule would see the plan's
+`[docs/TASK.md](TASK.md)` as broken both before and after, leave it dead forever, and report
+nothing. The slot map carries the identity without touching the filesystem.
+
 **7.7 — Validate:**
 
 ```
 ASSERT NOT exists("docs/PLAN.md")
 ASSERT exists("docs/plans/{plan_filename}")
+ASSERT every link denoted before the move still resolves   # rebase_links exit code
 IF validation fails: retry mv once, else notify user.
 ```
 
@@ -221,14 +302,43 @@ This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries
 1. Agent loads `skill-archive-task`.
 2. Checks `docs/TASK.md` exists? → YES (contains `Task {OLD_ID}: {Old Feature}`).
 3. Decision: NEW task (different feature) → Archive.
-4. Extract: Task ID = `{OLD_ID}`, Slug = `{old-slug}`.
-5. Generate filename: try tool; on miss, manual fallback → `task-{OLD_ID}-{old-slug}.md`.
-6. Execute: `mv docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md`.
-7. Validate: `docs/TASK.md` does NOT exist ✓.
-8. PLAN lockstep (Step 7): `docs/PLAN.md` exists? → YES.
-   - `mkdir -p docs/plans`
-   - Reuse `{OLD_ID}` + `{old-slug}` from the TASK archive above.
-   - Execute: `mv docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md`.
-   - Validate: `docs/PLAN.md` does NOT exist ✓.
-9. Create new `docs/TASK.md` for the login feature with ID `{NEW_ID}`.
+4. **Step 2** — read the Meta block: Task ID = `{OLD_ID}`, Slug = `{old-slug}`.
+   The ID comes from the **document**, never from the directory listing.
+5. **Step 3** — confirm the ID is free and turn it into a filename. `--proposed-id` is
+   mandatory here, because Step 2 produced an ID:
+   ```bash
+   python3 .agent/tools/task_id_tool.py "{old-slug}" --proposed-id "{OLD_ID}" --no-correction
+   ```
+   `status: "conflict"` → **STOP**; the operator decides. Sub-task files matching
+   `task-{OLD_ID}-<digits>-*` are **not** a conflict.
+6. **Step 4** — assert `id_in_filename == {OLD_ID}`. This step never assigns.
+7. **Step 5** — collision guard, then move:
+   ```bash
+   test -e docs/tasks/task-{OLD_ID}-{old-slug}.md \
+     && echo "STOP: target exists" \
+     || mv docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md
+   ```
+8. **Step 5.5** — rebase the moved document's links. `docs/tasks/` is one level deeper, so every
+   relative link now denotes something else. `docs/PLAN.md` is a slot, so pass the pairing Step 7
+   is about to create:
+   ```bash
+   python3 .agent/tools/rebase_links.py docs/tasks/task-{OLD_ID}-{old-slug}.md \
+     --from docs --to docs/tasks \
+     --slot docs/PLAN.md=docs/plans/plan-{OLD_ID}-{old-slug}.md
+   ```
+   Exit `3` lists links left alone deliberately — report them, never guess a target.
+9. **Step 6** — validate: `docs/TASK.md` gone ✓, archive present ✓, links still resolve ✓.
+10. **Step 7** — PLAN lockstep. `docs/PLAN.md` exists? → YES.
+    - `mkdir -p docs/plans`, reuse `{OLD_ID}` + `{old-slug}` from the TASK archive above.
+    - Collision guard, then `mv docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md`.
+    - **Step 7.6.5** — rebase, with `docs/TASK.md` mapped to the archive it just became:
+      ```bash
+      python3 .agent/tools/rebase_links.py docs/plans/plan-{OLD_ID}-{old-slug}.md \
+        --from docs --to docs/plans \
+        --slot docs/TASK.md=docs/tasks/task-{OLD_ID}-{old-slug}.md
+      ```
+      The slot map is resolved before any filesystem probe, which is why it still works here —
+      `docs/TASK.md` was moved away in step 7 above.
+    - Validate: `docs/PLAN.md` does NOT exist ✓.
+11. Create new `docs/TASK.md` for the login feature with ID `{NEW_ID}`.
 

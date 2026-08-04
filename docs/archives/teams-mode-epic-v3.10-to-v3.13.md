@@ -27,11 +27,11 @@ Extend `.claude/agents/` with 4 thin Claude Code subagent wrappers for the produ
 
 | Wave | Scope | Release | Task |
 |---|---|---|---|
-| Wave 1 | 3 critics + parallel `/vdd-multi` | v3.10.0 | [docs/tasks/task-058-teams-mode-wave-1.md](tasks/task-058-teams-mode-wave-1.md) |
-| Wave 2 | 9 dev-pipeline wrappers | v3.11.0 | [docs/tasks/task-059-teams-mode-wave-2.md](tasks/task-059-teams-mode-wave-2.md) |
+| Wave 1 | 3 critics + parallel `/vdd-multi` | v3.10.0 | [docs/tasks/task-058-teams-mode-wave-1.md](../tasks/task-058-teams-mode-wave-1.md) |
+| Wave 2 | 9 dev-pipeline wrappers | v3.11.0 | [docs/tasks/task-059-teams-mode-wave-2.md](../tasks/task-059-teams-mode-wave-2.md) |
 | Hardening | Thin-wrapper refactor (842 → 160 lines) + adversarial-review fixes + `task_id_tool.py` CLI main | v3.11.1 | (CHANGELOG only) |
 | Opus upgrade | 8 verifiers → `model: opus` | v3.11.2 | (CHANGELOG only; smoke-verified) |
-| Wave 3 | 4 product-pipeline wrappers | v3.12.0 | [docs/tasks/task-060-teams-mode-wave-3.md](tasks/task-060-teams-mode-wave-3.md) |
+| Wave 3 | 4 product-pipeline wrappers | v3.12.0 | [docs/tasks/task-060-teams-mode-wave-3.md](../tasks/task-060-teams-mode-wave-3.md) |
 | **Wave 4 probe + /vdd-multi params** | **Native Teams runtime probe (documented gotchas); 5 new `/vdd-multi` flags (scope, no-fix, fail-on, output, diff-only). Wave 4 full workflow deferred.** | **v3.13.0** | **(CHANGELOG only)** |
 
 ### Remaining Waves

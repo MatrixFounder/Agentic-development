@@ -27,6 +27,11 @@ The system relies on a modular **Skills System**:
 Use your built-in tools: Read (files), Write (files), Edit (files), Bash (commands, git, tests), Grep (search), Glob (find files).
 - **Priority**: ALWAYS use built-in tools instead of asking the user to run shell commands.
 - For `generate_task_archive_filename`: run `python3 .agent/tools/task_id_tool.py <slug>` via Bash.
+  **When the document already has an ID** (every archiving case), pass it —
+  `... "<slug>" --proposed-id "<id>" --no-correction`. The bare form asks the tool to *invent* an
+  identity, and sub-task files shadow their parent's number on that path: with `task-095-01..03`
+  present and no parent, the bare call returns **096** for task 095 (ARC-1). Authority:
+  `skill-archive-task` Step 3.
 - **Reference**: See `System/Docs/ORCHESTRATOR.md` (if available) for details.
 
 ### TIER 0 Skills (Boot at Session Start) — MANDATORY
@@ -58,15 +63,18 @@ Read these skill files immediately using the Read tool:
 
 **TIER 1 (Load when entering a phase):**
 When transitioning to a pipeline phase, read the corresponding skills:
-- Analysis: `requirements-analysis`, `skill-archive-task`
-- Architecture: `architecture-design`, `architecture-format-core`
-- Planning: `planning-decision-tree`, `tdd-stub-first`
+- Analysis: `requirements-analysis`, `skill-archive-task`, `artifact-formalizer` (contract only)
+- Architecture: `architecture-design`, `architecture-format-core`, `artifact-formalizer` (contract only)
+- Planning: `planning-decision-tree`, `tdd-stub-first`, `artifact-formalizer` (contract only)
 - Development: `developer-guidelines`, `documentation-standards`
 - Review: `code-review-checklist` (or phase-specific checklist)
 
 **TIER 2+ (Load only when explicitly needed):**
 Read these skills only when their functionality is required:
 - `skill-reverse-engineering`, `vdd-adversarial`, `security-audit`, etc.
+- `artifact-formalizer` is **split-tier**: its `references/authoring-contract.md` loads in every
+  authoring phase (Analysis, Architecture, Planning) per `skill-phase-context`; the SKILL.md body
+  and the scanner load only when auditing an artifact that already exists.
 
 ## WORKSPACE WORKFLOWS (Commands)
 Before starting the standard pipeline, check if the user's request matches a workflow.

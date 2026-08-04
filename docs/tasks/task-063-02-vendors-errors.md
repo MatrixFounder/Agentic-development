@@ -1,6 +1,6 @@
 # Task 063-02 — Errors + vendor profile loader & validator
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — Framework Installer (Task 063)
+**Parent**: [docs/PLAN.md](../plans/plan-063-framework-installer.md) — Framework Installer (Task 063)
 **Stage**: 2 — Core Logic `[LOGIC IMPLEMENTATION]`
 **Predecessor**: Task 063-01
 **Successor**: Task 063-03
@@ -23,7 +23,7 @@ Implement the error hierarchy and the `vendors.yaml` loader + per-action schema 
 - `load_vendors(path: Path) -> dict` — parse YAML, return typed dict; raise `ConfigurationError` on malformed YAML or missing `version`/`vendors`.
 - `validate_profile(name: str, profile: dict, framework_root: Path) -> None` — per-action schema validation, raising `ConfigurationError` with the exact offending field path:
   - `bootstrap_strategy` ∈ `{at_import, marker_block, none}`; for `marker_block`, `bootstrap_source` is required.
-  - For each component, validate per the action table in [TASK.md §I1.4](../TASK.md):
+  - For each component, validate per the action table in [TASK.md §I1.4](task-063-framework-installer.md):
     - `link_per_item` / `link_folder` / `copy` → `source` **required** and must resolve to an existing path under `framework_root` (unless `optional: true`); `path` required.
     - `mkdir` → `source` **forbidden**; `path` required.
   - `git_root_required` (if present) must be `bool`.

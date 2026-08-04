@@ -58,6 +58,7 @@ version: 1.3
 - [ ] **Mutation Check:** If you delete a line, does it fail?
 
 ## Criticality Protocol
-- 🔴 **BLOCKING:** Task not done, Test failure, Broken compat, Stub violation (Logic in stub task).
-- 🟡 **MAJOR:** Documentation missing, Duplication, Poor names.
-- 🟢 **MINOR:** Style nits.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5).
+- **BLOCKING:** Task not done, Test failure, Broken compat, Stub violation (Logic in stub task).
+- **MAJOR:** Documentation missing, Duplication, Poor names.
+- **MINOR:** Style nits.

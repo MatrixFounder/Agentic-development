@@ -5,7 +5,7 @@
 
 > [!NOTE]
 > **This is the framework's tool subsystem — *additional to*, and a *fallback for*, your harness's built-in tools.** Two classes of tool live here:
-> - **Framework-unique** — `generate_task_archive_filename` has **no native-harness equivalent**; always use it (run `python3 .agent/tools/task_id_tool.py <slug>`, or via the dispatcher). It backs `skill-archive-task` Step 3 (Option A).
+> - **Framework-unique** — `generate_task_archive_filename` has **no native-harness equivalent**; always use it (run `python3 .agent/tools/task_id_tool.py <slug> --proposed-id "<id>" --no-correction`, or via the dispatcher). It backs `skill-archive-task` Step 3 (Option A). **Omit `--proposed-id` only when the document has no ID**: on the auto-generate path sub-task files shadow their parent's number, so with `task-095-01..03` present and no parent the bare call returns **096** for task 095 (ARC-1).
 > - **Overlap / fallback** — `run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory` mirror native harness capabilities; **prefer your native tools** — these are the fallback for harnesses that lack them.
 >
 > **Status:** the dispatch primitive (`tool_runner.execute_tool`) is implemented and tested, but no LLM loop currently drives it (nothing loads `TOOLS_SCHEMAS`; there is no standalone entrypoint). Native wiring paths exist per vendor — **MCP** (Claude Code / Cursor / Codex / Gemini / Antigravity) and **Gemini CLI `tools.discoveryCommand`**. Inside a full vendor harness, agents use native tools + the repo CLIs directly; this dispatcher is the fallback execution surface.
@@ -281,7 +281,7 @@ print('✅ Integration test passed!')
 
 See the implementation in:
 - **Logic:** `.agent/tools/task_id_tool.py`
-- **Tests:** `.agent/tools/test_task_id_tool.py` (29 tests)
+- **Tests:** `.agent/tools/test_task_id_tool.py` (39 tests)
 - **Schema:** `.agent/tools/schemas.py` (search for `generate_task_archive_filename`)
 
 ## Supported Tools
@@ -396,10 +396,10 @@ result = archive_task(
 ### Running Tests
 
 ```bash
-# All archive protocol tests (15 tests)
+# All archive protocol tests (31 tests)
 cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
-# Full test suite (44 tests)
+# Full test suite (106 tests)
 cd .agent/tools && python -m pytest -v
 
 # With coverage
@@ -455,7 +455,9 @@ cd .agent/tools && python -m pytest --cov=. --cov-report=term-missing
 
 ### Error: "Missing 'slug' argument" (generate_task_archive_filename)
 - **Cause:** The tool requires a `slug` parameter to generate the filename.
-- **Fix:** Provide a slug like `generate_task_archive_filename(slug="my-feature")`.
+- **Fix:** Provide a slug — and, whenever the document already carries an ID, the ID too:
+  `generate_task_archive_filename(slug="my-feature", proposed_id="095", allow_correction=False)`.
+  Slug-only asks the tool to invent an identity (ARC-1).
 
 ---
 
@@ -470,6 +472,7 @@ python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_t
 # Example: List directory
 python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_tool({"name": "list_directory", "arguments": {"path": "."}}))'
 
-# Example: Generate task archive filename
+# Example: Generate task archive filename (slug-only — a smoke test, NOT the archiving call;
+# for archiving pass "proposed_id" as well, see skill-archive-task Step 3)
 python3 -c 'from System.scripts.tool_runner import execute_tool; print(execute_tool({"name": "generate_task_archive_filename", "arguments": {"slug": "my-feature"}}))'
 ```

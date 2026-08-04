@@ -39,9 +39,14 @@ Use this section when mode is `script-first` or `hybrid`.
 - **Optional artifacts**: [whether absence is blocking or non-blocking]
 
 ## 6. Validation Evidence
+<!-- The VERDICT, not the investigation. Bounded by
+     quality_checks.max_validation_evidence_lines in skill_standards_default.yaml.
+     Figures, refuted hypotheses and worked examples go to references/ and are
+     linked from here — SKILL.md loads on every trigger, references/ only on demand. -->
 - **Local verification**: [commands/checks]
 - **Expected evidence**: [files, logs, structured output]
 - **CI signal**: [job/check name if available]
+- **Detail**: [`references/<topic>.md` if the evidence needs more than a few lines]
 
 ## 7. Instructions
 Provide step-by-step instructions. Use graduated language:

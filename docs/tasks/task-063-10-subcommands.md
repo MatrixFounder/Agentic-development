@@ -1,6 +1,6 @@
 # Task 063-10 — Subcommands `switch` / `uninstall` / `update` / `doctor`
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — Framework Installer (Task 063)
+**Parent**: [docs/PLAN.md](../plans/plan-063-framework-installer.md) — Framework Installer (Task 063)
 **Stage**: 2 — Core Logic `[LOGIC IMPLEMENTATION]`
 **Predecessor**: Task 063-09
 **Successor**: Task 063-11

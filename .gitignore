@@ -20,6 +20,12 @@ __pycache__/
 *.tmp.*
 *.md.tmp*
 
+# Rollback backups written by /framework-upgrade before it edits core files
+# (`.agent/archive/<file>.bak`). They are local recovery state for one run — the
+# tracked copy of every one of them is the git history itself. Untracked and
+# un-ignored, they left `git status` dirty after every upgrade.
+.agent/archive/
+
 # Test scratch space. Most tests write to system temp, but a few scripts under test
 # reject paths outside the repository root, so their workspace MUST live in the tree
 # (tests/_scratch.py explains which). The suite sweeps this at session start and end;

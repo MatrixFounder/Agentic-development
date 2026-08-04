@@ -2,7 +2,7 @@
 
 **Parent**: [docs/TASK.md](TASK.md) — VDD Chain Workflow
 **Mode**: VDD (Verification-Driven Development)
-**Architecture impact**: none (composition of existing Layer A / Stage Cycle patterns — see [ARCHITECTURE.md §3, §5.1](ARCHITECTURE.md#3-workflow-logic-v31)).
+**Architecture impact**: none (composition of existing Layer A / Stage Cycle patterns — see [ARCHITECTURE.md §3, §5.1](../ARCHITECTURE.md#3-workflow-logic-v31)).
 
 ## Goal
 
@@ -16,7 +16,7 @@ Decompose TASK.md (3 Epics, 11 Issues) into atomic, verifiable Beads under Stub-
 
 | Task | File | Beads | Test |
 |------|------|-------|------|
-| **Task 061-01** | [tasks/task-061-01-workflow-stubs.md](tasks/task-061-01-workflow-stubs.md) | Scaffold `.agent/workflows/vdd-05-run-full-task.md` (frontmatter + 5 numbered step headings + section placeholders); create `.claude/commands/vdd-develop-all.md` matching the `vdd-develop.md` / `develop-all.md` template. | Files exist, frontmatter parses, 5 step headings present, slash-command template body matches sibling commands verbatim. |
+| **Task 061-01** | [tasks/task-061-01-workflow-stubs.md](../tasks/task-061-01-workflow-stubs.md) | Scaffold `.agent/workflows/vdd-05-run-full-task.md` (frontmatter + 5 numbered step headings + section placeholders); create `.claude/commands/vdd-develop-all.md` matching the `vdd-develop.md` / `develop-all.md` template. | Files exist, frontmatter parses, 5 step headings present, slash-command template body matches sibling commands verbatim. |
 
 ### Stage 2 — Logic (Implementation phase)
 
@@ -24,7 +24,7 @@ Decompose TASK.md (3 Epics, 11 Issues) into atomic, verifiable Beads under Stub-
 
 | Task | File | Beads | Test |
 |------|------|-------|------|
-| **Task 061-02** | [tasks/task-061-02-workflow-impl.md](tasks/task-061-02-workflow-impl.md) | Fill all 5 numbered steps (Plan parsing, Per-task VDD cycle A→D, HITL gate, Session-state persistence, Finalization); add `## Resumability`, `## Fallback`, `## Example invocation`; reference `/vdd-develop` for Sarcasmotron persona (DRY); explicit anti-pattern callouts (no auto-commit, no silent retry, no skip Step B). | All 11 Issue acceptance criteria from TASK.md satisfied (grep-verifiable for each phrase + file structure). |
+| **Task 061-02** | [tasks/task-061-02-workflow-impl.md](../tasks/task-061-02-workflow-impl.md) | Fill all 5 numbered steps (Plan parsing, Per-task VDD cycle A→D, HITL gate, Session-state persistence, Finalization); add `## Resumability`, `## Fallback`, `## Example invocation`; reference `/vdd-develop` for Sarcasmotron persona (DRY); explicit anti-pattern callouts (no auto-commit, no silent retry, no skip Step B). | All 11 Issue acceptance criteria from TASK.md satisfied (grep-verifiable for each phrase + file structure). |
 
 ### Stage 3 — Integration (Cross-links & registry)
 
@@ -32,7 +32,7 @@ Decompose TASK.md (3 Epics, 11 Issues) into atomic, verifiable Beads under Stub-
 
 | Task | File | Beads | Test |
 |------|------|-------|------|
-| **Task 061-03** | [tasks/task-061-03-cross-links.md](tasks/task-061-03-cross-links.md) | Update [CLAUDE.md](../CLAUDE.md) `## WORKSPACE WORKFLOWS` → "Available Commands" list to include `/vdd-develop-all`; append cross-link note at end of [.agent/workflows/vdd-03-develop.md](../.agent/workflows/vdd-03-develop.md). | `grep -c '/vdd-develop-all' CLAUDE.md` ≥ 1; tail of `vdd-03-develop.md` contains the cross-link sentence; sibling workflows untouched (`git diff --stat .agent/workflows/` shows only the two expected files). |
+| **Task 061-03** | [tasks/task-061-03-cross-links.md](../tasks/task-061-03-cross-links.md) | Update [CLAUDE.md](../../CLAUDE.md) `## WORKSPACE WORKFLOWS` → "Available Commands" list to include `/vdd-develop-all`; append cross-link note at end of [.agent/workflows/vdd-03-develop.md](../../.agent/workflows/vdd-03-develop.md). | `grep -c '/vdd-develop-all' CLAUDE.md` ≥ 1; tail of `vdd-03-develop.md` contains the cross-link sentence; sibling workflows untouched (`git diff --stat .agent/workflows/` shows only the two expected files). |
 
 ## Dependency order
 

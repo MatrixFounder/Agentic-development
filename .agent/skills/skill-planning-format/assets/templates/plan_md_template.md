@@ -7,6 +7,14 @@
   Keep them; translate the headings freely. Never invent an unregistered one.
 -->
 
+<!--
+  REGISTER. Write in whichever language the project uses; nothing in this pipeline changes that
+  choice. In that language, apply the authoring contract BEFORE the first sentence:
+  `.agent/skills/artifact-formalizer/references/authoring-contract.md` — six per-sentence tests and
+  the licensed statement forms. It is the single source for them, so this template does not restate
+  the rules. Audit with `artifact-formalizer/scripts/scan_register.py`.
+-->
+
 <!-- contract:sequence -->
 
 ## Task Execution Sequence

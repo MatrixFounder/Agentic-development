@@ -1,9 +1,9 @@
 # Development Plan — Multi-Critic Objective Convergence (Task 066)
 
-**Parent**: [docs/TASK.md](TASK.md) — Multi-Critic Objective Convergence
+**Parent**: [docs/TASK.md](../tasks/task-066-multi-critic-objective-convergence.md) — Multi-Critic Objective Convergence
 **Architecture**: no change (convergence contract lives in critic wrappers + `vdd-multi`/`skill-parallel-orchestration`, not ARCHITECTURE.md).
 **Mode**: Framework Upgrade (`/framework-upgrade`)
-**Meta-Audit (Mode A)**: [docs/reviews/framework-audit-066.md](reviews/framework-audit-066.md) — APPROVED
+**Meta-Audit (Mode A)**: [docs/reviews/framework-audit-066.md](../reviews/framework-audit-066.md) — APPROVED
 
 ## Design Spec
 - **New state:** `hallucinating` → **`bikeshedding-only`**. Definition (reused verbatim): *"no legitimate findings remain in this category — only style/nits; objective bar, NOT 'forced to invent problems'."*

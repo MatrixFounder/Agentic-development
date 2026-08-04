@@ -1,6 +1,6 @@
 # Task 061-01 — Stubs: scaffold workflow file + slash command
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — `/vdd-develop-all` epic
+**Parent**: [docs/PLAN.md](../plans/plan-061-vdd-develop-all.md) — `/vdd-develop-all` epic
 **Stage**: 1 — Structure (Stubs phase per `tdd-stub-first`)
 **Predecessor**: none
 **Successor**: Task 061-02

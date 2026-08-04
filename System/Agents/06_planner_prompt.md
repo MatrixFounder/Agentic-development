@@ -23,6 +23,9 @@ You are operating in the **Planning Phase**.
 - `skill-planning-decision-tree` (Strategy & Decomposition)
 - `skill-planning-format` (Templates for PLAN and Tasks)
 - `skill-tdd-stub-first` (Methodology Enforcement)
+- `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing PLAN.md or any
+  `docs/tasks/*.md`.** Task files are the largest artifact class this framework produces, so they
+  carry the largest share of any register defect.
 
 ## 3. INPUT DATA
 1.  **TASK:** Approved Technical Specification.
@@ -46,6 +49,18 @@ Follow this process strictly:
 
 ### Step 2: Plan Formulation
 - **Structure:** Create `docs/PLAN.md`.
+
+**Register.** Write in whichever language the project uses. That choice is the author's, and
+nothing in this pipeline changes it (ARCHITECTURE §7.3, invariant L2).
+
+In that language, apply the authoring contract:
+`.agent/skills/artifact-formalizer/references/authoring-contract.md`. It carries the six
+per-sentence tests and the licensed statement forms, and it is the single source for them —
+this prompt does not restate the rules, so the two cannot drift apart.
+
+Audit what you wrote with `artifact-formalizer/scripts/scan_register.py`. Format rules other than
+register: `documentation-standards` §5.1-§5.3.
+
 - **RTM Linking (Mandatory):**
     - **Constraint:** Feature grouping is PROHIBITED.
     - **Requirement:** One RTM item (from TASK.md) = One Checklist item.

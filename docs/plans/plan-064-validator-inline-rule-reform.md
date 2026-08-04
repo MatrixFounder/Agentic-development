@@ -1,9 +1,9 @@
 # Development Plan — Skill-Validator Inline-Rule Reform (Task 064)
 
-**Parent**: [docs/TASK.md](TASK.md) — Skill-Validator Inline-Code-Block Rule Reform
-**Architecture**: [docs/ARCHITECTURE.md §8](ARCHITECTURE.md#8-skill-architecture--optimization-standards) — Skill Architecture Standards (Rule 2: Example Separation). No structural change; §8 Rule 2 already cites "50 lines" as the bad case, so the reform aligns the implementation to the existing architecture intent.
+**Parent**: [docs/TASK.md](../tasks/task-064-validator-inline-rule-reform.md) — Skill-Validator Inline-Code-Block Rule Reform
+**Architecture**: [docs/ARCHITECTURE.md §8](../ARCHITECTURE.md#8-skill-architecture--optimization-standards) — Skill Architecture Standards (Rule 2: Example Separation). No structural change; §8 Rule 2 already cites "50 lines" as the bad case, so the reform aligns the implementation to the existing architecture intent.
 **Mode**: Framework Upgrade (`/framework-upgrade`) — meta-operation
-**Meta-Audit**: [docs/reviews/framework-audit-064.md](reviews/framework-audit-064.md) (Mode A PASS)
+**Meta-Audit**: [docs/reviews/framework-audit-064.md](../reviews/framework-audit-064.md) (Mode A PASS)
 
 ## Approved Design Decisions (from Analysis gate)
 - **D1 (Q1)**: Threshold strategy = **fixed line count** (no tokenizer dependency in CI). Token-budget recorded as future work.

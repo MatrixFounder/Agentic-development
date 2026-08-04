@@ -2,7 +2,7 @@
 
 - **Date:** 2026-05-20
 - **Reviewer:** Plan Reviewer Agent ([07_plan_reviewer_prompt](../../System/Agents/07_plan_reviewer_prompt.md), [plan-review-checklist](../../.agent/skills/plan-review-checklist/SKILL.md))
-- **Inputs:** [docs/PLAN.md](../PLAN.md), [docs/TASK.md](../TASK.md), [docs/ARCHITECTURE.md §9](../ARCHITECTURE.md#9-framework-installer-subsystem), 11 × `docs/tasks/task-063-*.md`
+- **Inputs:** [docs/PLAN.md](../plans/plan-063-framework-installer.md), [docs/TASK.md](../tasks/task-063-framework-installer.md), [docs/ARCHITECTURE.md §9](../ARCHITECTURE.md#9-framework-installer-subsystem), 11 × `docs/tasks/task-063-*.md`
 - **Status:** ✅ **APPROVED**
 
 ## 1. RTM / Use-Case Coverage

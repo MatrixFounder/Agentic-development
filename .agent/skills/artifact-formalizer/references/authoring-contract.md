@@ -1,0 +1,170 @@
+# Authoring contract — the register you write in, before the first sentence
+
+Load this **before** writing a specification, not after. Everything below is generative: it gives
+the sentence forms to write *from*. The lexicon in `data/register-*.json` is a backstop that
+measures whether this contract held; it is not the contract.
+
+Applies in the document's own language. This contract constrains how a sentence reads, never which
+language it is written in (`documentation-standards` §5.5, ARCHITECTURE §7.3 invariant L2).
+
+## Why this exists as a contract and not as a review
+
+Two measurements, both from the TASK 096 corpora.
+
+- **A rewrite costs the document twice.** Prose carrying a rule-4 or rule-6 defect measured 5.1% of
+  one corpus's words: 731 of 14,288 across ten task files. Removing it afterwards required reading
+  and editing all 14,288. Writing it in register costs nothing extra. Words are quoted rather than
+  tokens because tokens depend on the tokenizer, and a ratio that changes with the tool is not a
+  measurement.
+- **Register quality otherwise tracks the model, not the project.** The same repository received
+  specifications of visibly different register from different authoring models. A contract in the
+  prompt is what makes the output independent of which model is holding the pen.
+
+A third reason has no number: a reviewer who must re-derive what a sentence claims cannot audit
+conformance against it. That cost is paid once per reader, on every reading.
+
+## The role
+
+You write **checkable requirements**, not an argument for them.
+
+A reader who was not in the discussion takes any sentence and states two things: what would have to
+be true for it to hold, and where to look. A sentence that fails either test is an essay sentence.
+Persuasion, emphasis and memorability are goals of that other genre.
+
+## The six tests — applied per sentence, as it is written
+
+The tests are stated as properties, not as a word list. A property reaches a phrasing the lexicon
+has never seen; a word list does not. The tests are therefore the mechanism, and the word lists are
+a faster detector for the phrasings already known. This is a design intent, not a guarantee — see
+Handoff.
+
+| # | Test | Fails when | Do instead |
+| :--- | :--- | :--- | :--- |
+| T1 | **Verifiable** | the sentence asserts a judgement the reader cannot check | state the condition and the observable outcome |
+| T2 | **Real subject** | the grammatical subject performs an action it cannot perform | name the operation the artefact actually performs |
+| T3 | **Resolvable referent** | a noun resolves only inside this author's documents | use the standard name (termhood test below) |
+| T4 | **One claim** | one sentence carries a requirement **and** its justification | requirement stays; justification moves under `**Why.**` |
+| T5 | **Named severity** | severity is carried by a glyph | use a value from the project's severity vocabulary |
+| T6 | **Budget** | the sentence runs past ~15 words on a single claim | split it |
+
+Failing surfaces, per test. Each is written here as code.
+
+**Why code spans.** The scanner masks them, so a document *about* the register is not reported as a
+document *in* it. That is the convention for citing a marker as an example, and it holds on one
+line only — a code span does not cross a line break.
+
+- **T1** — `наивный`, `неочевиден`, `elegant`, `the main risk`, `a trap`, `unfortunately`.
+- **T2** — a gate `blesses`, a deadline `strikes`, a comment `outlives`, a test `goes red`.
+- **T3** — `шов`, `бусина`, `плечо`, `seam`, `bead`, `leg`, `head/tail`, `in flight`.
+- **T4** — `must … because`, `обязан … потому что`, `должен … иначе`.
+- **T5** — `🔴`, `⚠️`, `🆕`. Replace with `warn`, `SEV-2`, `Critical`.
+- **T6** — 35 words is the failure bound, not the target.
+
+**T6 is gamed by writing to 35 words.** A corpus whose longest sentence is exactly 35 words was
+written for the limit, not to the rule.
+
+Target **under 15 words**. That is the upper end of the five corpus means measured for this skill,
+which run 5.8 to 15.4. The low end belongs to the oldest and tersest corpus and is not proposed as a
+target. The scanner reports the band under the limit so the tail stays visible.
+
+**The termhood test (T3), stated so it can be applied without asking anyone.** A term is established
+if it appears in the project's own `ARCHITECTURE.md`, in a library's public API, or in a standard
+the project cites. If its only occurrences are documents written by the same author, it is a
+metaphor and the standard name for the thing already exists. Run
+`scan_register.py --terms docs/ARCHITECTURE.md` to have the scanner apply this test mechanically.
+
+## Licensed forms — write from these
+
+Choose the form before writing the sentence. No step of the process generates prose and then
+repairs it.
+
+| Statement | Form |
+| :--- | :--- |
+| **Goal** | `<verb> <object> so that <observable state> holds` — one sentence, no scope, no risk |
+| **Requirement** | `<subject> <modal> <observable action or state>` |
+| **Prohibition** | `<subject> must not <action>` + the input on which the violation shows |
+| **Scope** | `In scope: <enumeration>. Out of scope: <enumeration> (<who carries it instead>)` |
+| **Definition** | `<term> is <genus> that <differentia>` — no example inside the sentence |
+| **Algorithm / procedure** | a numbered list, one operation per item, each with its own postcondition |
+| **Justification** | `**Why.** <fact> ⇒ <consequence>` — its own block, never inside the requirement |
+| **Risk / failure mode** | `<condition> → <observable outcome> (detected by <test or gate>)` |
+| **Decision** | `<id>, <date>, <owner>: <what was decided>. Rejected: <alternative> — <measurable reason>` |
+| **Open Question** | `<id> — <the question as a question>. Blocks: <what>. Owner: <who decides>` |
+| **Test obligation** | `<test id> — <input> → <asserted outcome>` + `; fails when <mutation>` where the test is executable |
+| **Derived number** | `<value> = <derivation>; measured <m>; applied <a>` — and which of the two is a ceiling |
+| **Deviation** | `<artifact> states "<quoted text>"; this document does <what>; recorded in <ADR entry>` |
+| **Table row** | a label per cell: an id, a status, a value, or one clause under 120 characters |
+
+**Notes on three of them.**
+
+- **Test obligation.** The mutation clause is required only where the test is executable. A
+  documentation check has no mutation to name, and demanding one made the form unfollowable for the
+  test cases this framework writes most.
+- **Table row.** §5.1 owns cell shape. A cell that needs a sentence needs a section below the table.
+- **Open Question.** Use it rather than resolving an ambiguity silently. That is the escape hatch
+  the rest of the contract deliberately does not provide.
+
+**A statement kind that is not listed** falls back to tests T1–T6 and to the nearest listed form.
+The list is the common set, not a closed one; a kind you needed twice belongs in it, so amend this
+table under the maintenance rule in SKILL.md §6.
+
+## Worked conversions
+
+Each source sentence is from a real specification and fails a numbered test.
+
+**T1 + T2 — a risk written as a warning.**
+
+> Главная опасность задачи — «доказательство», которое ничего не доказывает.
+
+> **Риск R1** — фейки `makeAdapter` не объявляют `chainSupport`, поэтому после удаления фильтра
+> тест краснеет по причине, не связанной с проверяемым свойством. Обнаруживается шагом 3.
+
+Rewritten as the Risk form: condition → outcome → where it is detected. `Главная опасность` fails
+T1 (a ranking with no scale); `доказательство, которое ничего не доказывает` fails T2 and stands in
+for the rule instead of stating it.
+
+**T3 — a coined metaphor.**
+
+> Шов инъекции строится ровно затем, чтобы проверка стала возможной.
+
+> Параметр `safeFetchImpl` выносится в зависимости эндпоинта — это **точка внедрения зависимости**,
+> без которой контрактный тест H3 наблюдает только путь через лимитер.
+
+`Шов` occurs in no `ARCHITECTURE.md`, no public API and no cited standard for this project, so T3
+resolves it as a metaphor. English `seam` passes the same test — Feathers' legacy-code terminology
+is a citable source — which is why the two languages carry different severities for the same idea.
+
+**T4 — a requirement carrying its own justification.**
+
+> Тест обязан называть адаптеры, потому что список ниоткуда не выводится.
+
+> Тест перечисляет адаптеры поимённо.
+>
+> **Why.** Список не выводится из кода: он и есть решение OD-5.
+
+**T6 — a 34-word sentence that is two claims.**
+
+> Комментарий, дающий одно число, — дефект приёмки, даже если число верное, потому что R-149 делает
+> эти комментарии тем источником, откуда следующая правка кода их копирует.
+
+> Комментарий с одним числом не проходит приёмку.
+>
+> **Why.** R-149 делает комментарий источником, из которого следующая правка копирует значение.
+
+## What stays verbatim
+
+Established domain terminology, numbers, identifiers, file paths, quoted requirements, legal text,
+and every sentence that already conforms. Register changes how a requirement reads, never which
+requirement it is. When a sentence is ambiguous about an obligation, surface the ambiguity as an
+Open Question — resolving it silently is a larger defect than the register one.
+
+## Handoff
+
+Authoring done → run `scan_register.py` on what you wrote. Findings there are the residue this
+contract did not catch, and each one is evidence about the contract:
+
+- a finding the six tests already forbid → the contract held in principle and the author skipped it;
+- a finding no test reaches → **the contract is amended**, not just the word list.
+
+That second rule is what stops `data/register-*.json` from growing into a list of yesterday's
+phrases. Maintenance procedure: SKILL.md §6.

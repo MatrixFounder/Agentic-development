@@ -60,6 +60,12 @@ version: 1.3
 2.  If skill uses `scripts/`, verify `Script Contract` section defines command, inputs, outputs, and exit behavior.
 3.  Verify `Safety Boundaries` section defines scope limits and non-default destructive behavior.
 4.  Verify `Validation Evidence` section defines objective verification outputs.
+4a. **Check its size.** `validate_skill.py` warns past
+    `quality_checks.max_validation_evidence_lines` (`skill_standards_default.yaml`), which means
+    the section is carrying an investigation rather than a verdict. Refactor: keep date, commands,
+    counts and pass/fail in `SKILL.md`; move figures, refuted hypotheses and worked examples into
+    `references/<topic>.md` and link them. This is a gap to fix, not prose to trim arbitrarily —
+    nothing is deleted, it moves.
 5.  Mark missing pieces as migration gaps (warning-first for legacy skills).
 
 ### Phase 1.7: Behavioral Analysis (If Usage Logs Available)

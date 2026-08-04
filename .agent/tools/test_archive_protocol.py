@@ -221,32 +221,65 @@ class TestCoreScenarios:
         assert result["reason"] == "refinement"
         assert existing_task.exists(), "TASK.md should NOT be moved"
     
-    def test_scenario_8_id_conflict_corrected(self, clean_docs_dir, existing_task):
+    def test_scenario_8_id_conflict_stops(self, clean_docs_dir, existing_task):
         """
-        Scenario 8: ID conflict → tool returns corrected ID
-        
+        Scenario 8 (ARC-1): ID conflict → STOP, never a silent renumber.
+
         Given: docs/TASK.md exists with Task 042
         And: docs/tasks/task-042-existing-feature.md already exists
         When: Agent tries to archive
-        Then: Tool corrects ID, archive uses new filename
+        Then: the run stops with a conflict; TASK.md stays put; nothing renamed.
+
+        The id in the meta block is cited by the task's sub-tasks, its plan
+        archive, commits and ledger rows. Choosing a different number for it is
+        a human decision, so archiving reports and refuses.
         """
-        # Create conflict file
         conflict_file = clean_docs_dir / "tasks" / "task-042-existing-feature.md"
         conflict_file.write_text("# Conflict file")
-        
+
         result = archive_task(
             docs_dir=str(clean_docs_dir),
             is_new_task=True,
             current_task_slug="existing-feature",
             current_task_id="042"
         )
-        
+
+        assert result["status"] == "error"
+        assert result["reason"] == "conflict"
+        assert (clean_docs_dir / "TASK.md").exists(), "TASK.md must stay put"
+        assert not (clean_docs_dir / "tasks" / "task-043-existing-feature.md").exists()
+        assert conflict_file.read_text() == "# Conflict file"
+
+    def test_scenario_8b_renumber_is_opt_in(self, clean_docs_dir, existing_task):
+        """The old correcting behaviour survives, but only when asked for."""
+        (clean_docs_dir / "tasks" / "task-042-existing-feature.md").write_text("x")
+
+        result = archive_task(
+            docs_dir=str(clean_docs_dir),
+            is_new_task=True,
+            current_task_slug="existing-feature",
+            current_task_id="042",
+            allow_renumber=True,
+        )
+
         assert result["status"] == "archived"
-        
-        # Should use corrected ID (043)
-        corrected_path = clean_docs_dir / "tasks" / "task-043-existing-feature.md"
-        assert corrected_path.exists(), "Should archive with corrected ID"
-        assert conflict_file.exists(), "Original conflict file should remain"
+        assert result["used_id"] == "043"
+        assert (clean_docs_dir / "tasks" / "task-043-existing-feature.md").exists()
+
+    def test_archive_refuses_to_overwrite_a_subtask_file(self, clean_docs_dir):
+        """A destination shaped like a sub-task is invisible to the id tool's
+        parent-only conflict check, and `shutil.move` overwrites. Step 5 guards it."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Task ID | 096 |\n| Slug | 01-x |\n")
+        victim = clean_docs_dir / "tasks" / "task-096-01-x.md"
+        victim.parent.mkdir(parents=True, exist_ok=True)
+        victim.write_text("# planner sub-task, must survive")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["status"] == "error"
+        assert result["reason"] == "conflict"
+        assert victim.read_text() == "# planner sub-task, must survive"
 
 
 # ============================================================================
@@ -404,6 +437,7 @@ class TestArchivePlanLockstep:
             is_new_task=True,
             current_task_slug="existing-feature",
             current_task_id="042",
+            allow_renumber=True,   # ARC-1: renumbering is now opt-in
         )
         assert task_result["status"] == "archived"
         assert task_result["used_id"] == "043", "TASK ID should be corrected"
@@ -489,3 +523,62 @@ class TestArchivePlanLockstep:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestMetaFallbackStructural:
+    """Regression pins for the language-agnostic meta fallback.
+
+    Adversarial review reproduced two identity-corruption defects in the first
+    version: a `| Дата | 2026 |` row became the Task ID, and a `| Статус |`
+    row became the slug.
+    """
+
+    @staticmethod
+    def _meta(body):
+        return parse_task_meta("<!-- contract:meta -->\n" + body +
+                               "\n<!-- contract:rtm -->")
+
+    def test_date_row_does_not_become_the_id(self):
+        m = self._meta("| Дата | 2026 |\n| Статус | in-progress |\n"
+                       "| ИД задачи | 095 |\n| Слаг | my-task |")
+        assert m["task_id"] == "095"
+        assert m["slug"] == "my-task"
+
+    def test_ambiguous_id_is_refused_not_guessed(self):
+        """Two 3-digit rows -> the table cannot be read structurally."""
+        m = self._meta("| Приоритет | 001 |\n| ИД | 095 |\n| Слаг | x-y |")
+        assert m["task_id"] is None
+        assert m["slug"] is None
+
+    def test_single_word_non_latin_slug_is_transliterated(self):
+        """Requiring a hyphen dropped it to 'untitled' — the WI-30 collision."""
+        m = self._meta("| ИД | 042 |\n| Слаг | реестр |")
+        assert m["task_id"] == "042"
+        assert m["slug"] == "reestr"
+
+    def test_a_date_sitting_where_the_slug_should_be_is_rejected(self):
+        m = self._meta("| ИД | 042 |\n| Дата | 2026-08-04 |")
+        assert m["task_id"] == "042"
+        assert m["slug"] is None
+
+    def test_latin_documents_are_byte_identical(self):
+        """The fallback runs only when the English probes came back empty."""
+        m = parse_task_meta("# Task 042: Existing Feature\n\n"
+                            "## 0. Meta Information\n\n"
+                            "| Task ID | 042 |\n| Slug | existing-feature |")
+        assert m == {"task_id": "042", "slug": "existing-feature",
+                     "has_meta": True}
+
+
+class TestPlanSlotIsConditional:
+    def test_no_plan_means_no_plan_slot_citation(self, clean_docs_dir):
+        """Mapping the PLAN slot unconditionally authors a link to a file
+        Step 7 will never create, and reports success."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Task ID | 077 |\n| Slug | no-plan |\n\n"
+            "See [the plan](PLAN.md).\n")
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+        assert result["status"] == "archived"
+        archived = (clean_docs_dir / "tasks" / "task-077-no-plan.md").read_text()
+        assert "plan-077-no-plan.md" not in archived, \
+            "authored a citation to a plan archive that will never exist"

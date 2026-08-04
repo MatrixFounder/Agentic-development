@@ -1,9 +1,9 @@
 # Development Plan — Reviewers Hardening (Task 065)
 
-**Parent**: [docs/TASK.md](TASK.md) — Reviewers Hardening (provable clean review + objective Sarcasmotron exit, cross-vendor)
-**Architecture**: [docs/ARCHITECTURE.md](ARCHITECTURE.md) — no structural change. The reviewer output contract and Sarcasmotron exit criterion live in prompts/skills, not in ARCHITECTURE.md (only a one-line flow mention at §line 92). No edit required.
+**Parent**: [docs/TASK.md](../tasks/task-065-reviewers-hardening.md) — Reviewers Hardening (provable clean review + objective Sarcasmotron exit, cross-vendor)
+**Architecture**: [docs/ARCHITECTURE.md](../ARCHITECTURE.md) — no structural change. The reviewer output contract and Sarcasmotron exit criterion live in prompts/skills, not in ARCHITECTURE.md (only a one-line flow mention at §line 92). No edit required.
 **Mode**: Framework Upgrade (`/framework-upgrade`) — meta-operation
-**Meta-Audit (Mode A)**: [docs/reviews/framework-audit-065.md](reviews/framework-audit-065.md) — **APPROVED**
+**Meta-Audit (Mode A)**: [docs/reviews/framework-audit-065.md](../reviews/framework-audit-065.md) — **APPROVED**
 
 ## Approved Design Decisions (from Analysis gate)
 - **D1 (Q1)**: "Verified" block = **markdown body only**, conditional on `has_critical_issues = false`. No structured flag.

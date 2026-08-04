@@ -33,7 +33,41 @@ version: 1.1
 - [ ] **Scaling:** Horizontal/Vertical strategy?
 - [ ] **Faults:** Error handling, retries, backups?
 
+## 6. Register (`documentation-standards` §5.5)
+- [ ] **Scan attached:** `artifact-formalizer/scripts/scan_register.py docs/ARCHITECTURE.md
+      docs/architectures/*.md --sections` was run; `DETECTORS` shows none dead.
+- [ ] **Warns resolved:** zero `warn`, or each survivor carries a written reason.
+- [ ] **Terms declared, not assumed:** every noun this document introduces as a term is *defined*
+      here. ARCHITECTURE.md is what `--terms` reads downstream, so a metaphor introduced here
+      legitimises itself in every task file that follows.
+
+## Execution Mode
+- **Mode**: `hybrid`
+- **Rationale**: the checklist items are reviewer judgement; the register scan named in the
+  Script Contract is deterministic and is run, not recalled.
+
+## Script Contract
+- **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/ARCHITECTURE.md docs/architectures/*.md --sections`
+- **Outputs:** findings, a `DETECTORS` probe table, a `DIAGNOSTICS` block, and the
+  per-section worklist. `--json` for the same content as a document.
+- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule
+  file, unreadable input, or a dead detector. A `2` invalidates the run, not the artifact.
+
+## Safety Boundaries
+- **Scope:** read-only. A review reads artifacts and runs the read-only register scan; it never
+  edits the artifact under review. Findings go to the review notes, and the authoring role applies
+  them.
+
+## Validation Evidence
+- **Primary Evidence:** the register scan named in the Register section, attached to the review
+  notes with its `DETECTORS` and `DIAGNOSTICS` blocks intact.
+- **Quality Gate:** no dead detector; zero unresolved `warn`; every checklist item above ticked
+  against the artifact under review rather than against the previous revision.
+
 ## Criticality Protocol
-- 🔴 **BLOCKING:** Data Model error, Security hole, Unmet TASK requirement.
-- 🟡 **MAJOR:** Missing index, Questionable tech choice, Vague interface, Single-file `ARCHITECTURE.md` over 1500 lines (needs Index-Mode split).
-- 🟢 **MINOR:** Description clarity, typos.
+Severity is a named value, never a glyph (§5.5 rule 5).
+- **BLOCKING:** Data Model error, Security hole, Unmet TASK requirement, dead detector in the
+  register scan.
+- **MAJOR:** Missing index, Questionable tech choice, Vague interface, Single-file
+  `ARCHITECTURE.md` over 1500 lines (needs Index-Mode split), unresolved register `warn`.
+- **MINOR:** Description clarity, typos.

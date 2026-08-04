@@ -1,0 +1,422 @@
+{
+  "schema": "register-rules/v1",
+  "thresholds": {
+    "sentence_max_words": 35,
+    "sentence_near_words": 30,
+    "cell_max_chars": 120,
+    "cell_max_sentences": 1
+  },
+  "languages": {
+    "en": {
+      "reasoning": {
+        "modals": [
+          "\\bmust\\b",
+          "\\bshall\\b",
+          "\\bis required to\\b",
+          "\\bmay not\\b",
+          "\\bis forbidden\\b"
+        ],
+        "causals": [
+          "\\bbecause\\b",
+          "\\bsince\\b",
+          "\\botherwise\\b",
+          "\\bfor the reason that\\b",
+          "\\bas a result of\\b",
+          "\\bwhich is why\\b"
+        ],
+        "probe": "The docstring must name the mechanism, because otherwise the reader takes a removed field for a live one."
+      },
+      "categories": [
+        {
+          "name": "evaluative assertions",
+          "entries": [
+            {
+              "marker": "of course",
+              "pattern": "\\bof course\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "Of course the field stays required.",
+              "guidance": "Delete, or state the fact that makes it obvious."
+            },
+            {
+              "marker": "obvious / obviously",
+              "pattern": "\\b(un)?obvious(ly)?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The order is unobvious and the obvious fix is wrong.",
+              "guidance": "Delete, or give the fact it follows from. \"Unobvious\" needs the same treatment: name what the reader will misread.",
+              "note": "Inflected deliberately: a bare `obviously` pattern missed `obvious` and `unobvious` in the corpus."
+            },
+            {
+              "marker": "merely",
+              "pattern": "\\bmerely\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "It is merely a docstring edit.",
+              "guidance": "Delete, or give the measure that makes it small."
+            },
+            {
+              "marker": "indeed",
+              "pattern": "\\bindeed\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The value is indeed unused.",
+              "guidance": "Delete. It adds emphasis, not information."
+            },
+            {
+              "marker": "it is worth noting",
+              "pattern": "\\bit is worth noting\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "It is worth noting that the counter is stale.",
+              "guidance": "Delete the frame and state the observation."
+            },
+            {
+              "marker": "elegant",
+              "pattern": "\\belegant\\w*\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The elegant solution needs no edits.",
+              "guidance": "Replace with the property being praised."
+            },
+            {
+              "marker": "nothing more than",
+              "pattern": "\\bnothing more than\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "It is nothing more than a lookup.",
+              "guidance": "State what it is, without the dismissal."
+            },
+            {
+              "marker": "waste",
+              "pattern": "\\bwaste\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The retry is a waste of budget.",
+              "guidance": "Name the cost instead of judging it.",
+              "note": "Counted in the TASK 096 baseline for the agentic corpus."
+            },
+            {
+              "marker": "naive",
+              "pattern": "\\bna(i|ï)ve(ly)?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The naive variant returns the wrong class.",
+              "guidance": "Name the concrete implementation and the input on which it is wrong."
+            },
+            {
+              "marker": "trap / pitfall",
+              "pattern": "\\b(trap|pitfall)s?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The adjacent row is a trap.",
+              "guidance": "Name the mistake that is made here and the condition that produces it."
+            },
+            {
+              "marker": "unfortunately",
+              "pattern": "\\bunfortunately\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "Unfortunately the key has to be required.",
+              "guidance": "Delete. A constraint is described, not mourned."
+            },
+            {
+              "marker": "the key insight / the whole point",
+              "pattern": "\\b(the key insight|the whole point|the real question)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The key insight is the ordering.",
+              "guidance": "Delete the frame and state the claim."
+            },
+            {
+              "marker": "subtle / subtlety",
+              "pattern": "\\bsubtle(ty|ties)?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "There is a subtlety in the constructor order.",
+              "guidance": "Name the exact condition people get wrong."
+            }
+          ]
+        },
+        {
+          "name": "marketing vocabulary in a specification",
+          "entries": [
+            {
+              "marker": "robust",
+              "pattern": "\\brobust\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The adapter is robust under load.",
+              "guidance": "Name the property: retries N times, survives a restart.",
+              "note": "Marketing register; see references/measurement-baseline.md §4."
+            },
+            {
+              "marker": "seamless",
+              "pattern": "\\bseamless\\w*\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "Migration is seamless for the caller.",
+              "guidance": "Name what the user does not have to do."
+            },
+            {
+              "marker": "crucial",
+              "pattern": "\\bcrucial\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "This check is crucial.",
+              "guidance": "State the consequence of omitting it instead."
+            },
+            {
+              "marker": "pivotal",
+              "pattern": "\\bpivotal\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The registry is pivotal to the design.",
+              "guidance": "State what depends on it."
+            },
+            {
+              "marker": "comprehensive",
+              "pattern": "\\bcomprehensive\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The suite is comprehensive.",
+              "guidance": "Give the coverage figure or the enumerated scope."
+            },
+            {
+              "marker": "leverage",
+              "pattern": "\\bleverag(e|es|ed|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "We leverage the existing cache.",
+              "guidance": "Use \"use\"."
+            },
+            {
+              "marker": "utilize",
+              "pattern": "\\butiliz(e|es|ed|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The gate utilizes the manifest.",
+              "guidance": "Use \"use\"."
+            },
+            {
+              "marker": "delve",
+              "pattern": "\\bdelv(e|es|ed|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "We delve into the resolver.",
+              "guidance": "Use \"examine\" or name the section that covers it."
+            },
+            {
+              "marker": "underscore (figurative)",
+              "pattern": "\\bunderscor(e|es|ed|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The failure underscores the need for a gate.",
+              "guidance": "Cut it. The reader draws the implication."
+            },
+            {
+              "marker": "intricate",
+              "pattern": "\\bintricate\\w*\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The interaction is intricate.",
+              "guidance": "Give the count of parts or interactions."
+            }
+          ]
+        },
+        {
+          "name": "emphasis that may be load-bearing",
+          "entries": [
+            {
+              "marker": "precisely",
+              "pattern": "\\bprecisely\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 2,
+              "probe": "It runs precisely once.",
+              "guidance": "Keep when it names an exact value or location; delete when it only emphasises."
+            },
+            {
+              "marker": "exactly",
+              "pattern": "\\bexactly\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 2,
+              "probe": "Read in exactly one place.",
+              "guidance": "Keep in 'read in exactly one place'; delete in 'this is exactly why'."
+            },
+            {
+              "marker": "simply",
+              "pattern": "\\bsimply\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 2,
+              "probe": "It is simply another field.",
+              "guidance": "Usually deletable. Keep only where it contrasts with a stated alternative."
+            },
+            {
+              "marker": "the very",
+              "pattern": "\\bthe very\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 2,
+              "probe": "That is the very defect it prevents.",
+              "guidance": "Rhetorical intensifier in most uses; keep in 'the very first' style ordinals."
+            }
+          ]
+        },
+        {
+          "name": "rule 4 — a maxim or a personification standing in for a norm",
+          "entries": [
+            {
+              "marker": "cannot fail",
+              "pattern": "\\b(can ?not|could ?n[o']t|will never) fail\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "A check that cannot fail.",
+              "guidance": "That is a diagnosis, not a requirement. Write the requirement: the test must have an input on which it fails, and name that input."
+            },
+            {
+              "marker": "proves nothing / checks nothing",
+              "pattern": "\\b(proves|checks|verifies|asserts) nothing\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "The assertion proves nothing.",
+              "guidance": "Name the claim left uncovered instead of generalising."
+            },
+            {
+              "marker": "always green / forever green",
+              "pattern": "\\b(always|forever|permanently) green\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "The guard stays forever green.",
+              "guidance": "State the observable property: no input exists on which the guard fails."
+            },
+            {
+              "marker": "blesses / rubber-stamps (a gate)",
+              "pattern": "\\b(bless(es|ed)?|rubber-?stamps?)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "The gate blesses the new number.",
+              "guidance": "Personification. Write \"accepts as conforming\"."
+            },
+            {
+              "marker": "bites / bite test",
+              "pattern": "\\bbit(e|es|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "Check that the gate bites.",
+              "guidance": "Write the procedure: introduce violation N, observe test T fail, revert."
+            },
+            {
+              "marker": "outlived / survived its reason",
+              "pattern": "\\b(outliv|outlast)(ed|es|ing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "A comment that outlived its reason.",
+              "guidance": "Personification in the role of a norm. Name what became stale and at which change."
+            },
+            {
+              "marker": "strikes / starves / punishes (a mechanism)",
+              "pattern": "\\b(strikes?|starv(e|es|ing)|punish(es|ing)?)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "The deadline strikes unpaid calls.",
+              "guidance": "Personification. Name the mechanism's action: cancels, rejects, interrupts."
+            },
+            {
+              "marker": "silently",
+              "pattern": "\\bsilent(ly)?\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 4,
+              "probe": "The edit silently breaks the check.",
+              "guidance": "Keep where \"emits no diagnostic\" is a checkable fact; otherwise name WHAT is not emitted and to where."
+            }
+          ]
+        },
+        {
+          "name": "rule 6 — a private metaphor is not a term",
+          "entries": [
+            {
+              "marker": "seam",
+              "pattern": "\\bseams?\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 6,
+              "probe": "The injection seam is built here.",
+              "guidance": "Established in Feathers' legacy-code terminology, so it stays verbatim in English. Confirm this document's readers share that source; if not, use \"dependency injection point\".",
+              "note": "Deliberately NOT the same severity as Russian «шов» (warn): the English term has a cited source, the Russian calque has none. See references/formalization-guide.md."
+            },
+            {
+              "marker": "leg (of a call)",
+              "pattern": "\\blegs?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 6,
+              "probe": "The paid leg runs to completion.",
+              "guidance": "Replace with \"sub-call\" or \"call stage\"."
+            },
+            {
+              "marker": "bead (a plan item)",
+              "pattern": "\\bbeads?\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 6,
+              "probe": "Bead 3.5 requires the bite test.",
+              "guidance": "Replace with \"plan item\" or the work-item identifier."
+            },
+            {
+              "marker": "head / tail (of a call)",
+              "pattern": "\\b(head|tail)s?\\b",
+              "severity": "info",
+              "rule": 6,
+              "probe": "The cancellable head is capped, the tail is not.",
+              "guidance": "If these are parts of a call, use \"cancellable part\" / \"non-cancellable part\". If used literally, keep.",
+              "note": "Case-SENSITIVE deliberately, and the only entry that is: with the `i` flag this matched the git ref `HEAD` on every anchor line in the corpus. info severity because both words also have literal senses."
+            },
+            {
+              "marker": "in flight",
+              "pattern": "\\bin[- ]flight\\b",
+              "flags": "i",
+              "severity": "info",
+              "rule": 6,
+              "probe": "The leader promise is in flight.",
+              "guidance": "Widely used for un-settled requests. Confirm it appears in the project's own ARCHITECTURE.md; otherwise write \"outstanding\" or \"not yet settled\"."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -7,7 +7,7 @@
 
 
 > **Status:** Done
-> **Parent Initiative:** [Product Development Vision v3.2](../Backlog/product_development_vision_v3_2.md)
+> **Parent Initiative:** [Product Development Vision v3.2](../../Backlog/product_development_vision_v3_2.md)
 
 ---
 

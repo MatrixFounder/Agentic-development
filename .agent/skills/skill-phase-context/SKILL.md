@@ -38,9 +38,9 @@ These skills are phase-specific and loaded when entering the corresponding phase
 
 | Phase | Skills to Load | Approx. Tokens |
 |-------|----------------|----------------|
-| **Analysis** | `requirements-analysis`, `skill-task-model`, (`skill-archive-task` if new task) | ~2,000-2,900 |
-| **Architecture** | `architecture-design`, (`architecture-format-core` OR `-extended`) | ~1,750-3,100 |
-| **Planning** | `planning-decision-tree`, `skill-planning-format`, `tdd-stub-first` | ~1,425 |
+| **Analysis** | `requirements-analysis`, `skill-task-model`, `artifact-formalizer` (contract only), (`skill-archive-task` if new task) | ~3,100-4,000 |
+| **Architecture** | `architecture-design`, `artifact-formalizer` (contract only), (`architecture-format-core` OR `-extended`) | ~2,850-4,200 |
+| **Planning** | `planning-decision-tree`, `skill-planning-format`, `tdd-stub-first`, `artifact-formalizer` (contract only) | ~2,525 |
 | **Development** | `developer-guidelines`, `documentation-standards` | ~1,100 |
 | **Review** | Phase-specific `-review-checklist` skill | ~300-400 |
 | **Security** | `security-audit` | ~500 |
@@ -72,6 +72,14 @@ These skills are phase-specific and loaded when entering the corresponding phase
 
 **Review Phase:**
 - Load the appropriate `*-review-checklist` for the current review type
+
+**Every authoring phase (Analysis, Architecture, Planning):**
+- `artifact-formalizer` — load `references/authoring-contract.md` **before** the first sentence of
+  any artifact is written. Load the SKILL.md body and the scanner only when auditing an artifact
+  that already exists.
+- **Why.** The contract is ~1,100 tokens; auditing an artifact afterwards costs a full re-read of
+  that artifact plus the rewrite. Measured cost of the late order:
+  `artifact-formalizer/references/measurement-baseline.md` §5.
 
 ---
 

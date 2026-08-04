@@ -89,7 +89,12 @@ Run `python3 scripts/init_skill.py --help` to see available Tiers. Do NOT guess 
 4. **Execution Mode** — `prompt-first`, `script-first`, or `hybrid`
 5. **Script Contract** — required for script-first/hybrid (command, inputs, outputs, exit codes)
 6. **Safety Boundaries** — explicit scope and exclusions
-7. **Validation Evidence** — objective verification output
+7. **Validation Evidence** — objective verification output. **The verdict, not the
+   investigation**: date, what was run, counts, pass/fail. Size is bounded by
+   `quality_checks.max_validation_evidence_lines` in `skill_standards_default.yaml`
+   (`validate_skill.py` warns past it). Reasoning, per-corpus figures, refuted hypotheses and
+   worked examples belong in `references/`, linked from here. A SKILL.md is loaded into context
+   every time the skill triggers; a reference file is read only when needed.
 8. **Instructions** — step-by-step algorithms
 9. **Examples** — input/output pairs (see `examples/SKILL_EXAMPLE_LEGACY_MIGRATOR.md`)
 

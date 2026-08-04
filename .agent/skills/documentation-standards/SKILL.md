@@ -312,6 +312,54 @@ awk '{n=length($0); if(n>100)c++; if(n>m)m=n} END {print "widest="m, ">100ch="c+
 python3 -c "import re,sys;s=open(sys.argv[1]).read();p=sum(len(m) for m in re.findall(r'  +',s));print(f'padding {100*p/len(s):.0f}%')" FILE.md
 ```
 
+### 5.5. Register — how the prose reads
+
+Applies to authored prose **in whatever language the project writes**. This section constrains how
+a sentence reads, never which language it is written in (ARCHITECTURE §7.3, invariant L2).
+
+**Register is decided while writing, not after.** Load
+`artifact-formalizer/references/authoring-contract.md` **before** the first sentence of any TASK,
+ARCHITECTURE, PLAN or task file. It carries the six per-sentence tests and the licensed statement
+forms. The scanner below measures whether that contract held; it is not the contract.
+
+| # | Rule | Detector | What the detector does NOT reach |
+| :--- | :--- | :--- | :--- |
+| 1 | One claim per sentence | full | counts words, not claims |
+| 2 | No evaluative markers | word list | judgement phrased in unlisted words |
+| 3 | Reasoning separated from requirement | partial | reasoning split across two sentences |
+| 4 | A rule is stated as a rule | partial | a novel aphorism |
+| 5 | Severity is a named value | full | — |
+| 6 | A private metaphor is not a term | partial | a metaphor coined today |
+
+- **1** — over 35 words is the failure bound, not the target; every corpus mean is 5.8–15.4 words.
+- **2** — a word asserting a judgment the reader cannot check: `obviously`, `robust`, `наивный`.
+- **3** — the requirement states what must hold; justification goes under `**Why.**` or into Notes.
+- **4** — no maxim or personification standing in for a norm.
+- **5** — `🔴` is not a severity. `warn`, `SEV-2`, `Critical` are.
+- **6** — established terminology stays verbatim; a metaphor coined for one document does not.
+
+**A partial detector is not a pass.** Rules 3, 4 and 6 ship with declared recall limits, and the
+reading pass owns the remainder — a coined metaphor is indistinguishable from a term until you check
+where else it occurs. `--terms docs/ARCHITECTURE.md` runs the string half of that check. Read the
+scanner's `DETECTORS` and `DIAGNOSTICS` blocks before its findings: a zero from a dead detector is
+not a measurement, and a corpus whose longest sentence equals the limit was written for the gate.
+
+**Thresholds are measured, not chosen.** 35 words sits far above every corpus mean (5.8 oldest,
+14.1–15.4 newest) and catches the ~3.7% tail both newest corpora grew. A failing scan is resolved
+in the prose; moving a threshold to obtain a green scan inverts the rule.
+
+**Advisory by construction.** The scanner reports and never fails a phase, for the reason §4 gives:
+a gate that fails on correct documents is how gates get switched off. Its non-advisory exits are a
+**dead detector** (`2`) and a **usage error** (`3`) — a broken instrument and a mistyped command,
+neither a verdict on the document.
+
+**This section owns register only.** Cell width and cells-as-prose → §5.1 (the scanner surfaces both
+as `cell_width` and `cell_sentences`). Paragraph and list shape → §5.2. Line length → §5.3.
+
+> [!TIP]
+> Authoring contract, rewrite guide, per-language marker data and the scanner:
+> **`artifact-formalizer`**.
+
 ## 6. Artifacts (`.AGENTS.md`)
 Policy: keep `.AGENTS.md` for source-code directories under memory tracking. Missing file should not fail execution; bootstrap when needed.
 > [!TIP]

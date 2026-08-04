@@ -78,6 +78,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-11** [Adversarial-review MED/LOW tail from the ARC-1/ARC-2 changeset](backlog/wi-11-adversarial-review-med-low-tail-arc-1-2.md) — effort `M`, status `done`, opened 2026-08-04 · **done 2026-08-04** (third review round): 6 of 10 entries confirmed and fixed, 4 refuted by measurement; executing them surfaced a HIGH that round 1 had refuted
 - **WI-9** [Extract a shared ledger_core (WI-7 option 3)](backlog/wi-9-extract-a-shared-ledger-core-wi-7-option-3.md) — effort `L`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 094): one `file_record` for both registries; the whole pre-existing suite passed unmodified, and a per-registry guard inventory keeps it closed
 - **WI-8** [Iteration-3 residue (16 recorded findings)](backlog/wi-8-iteration-3-residue-16-recorded-findings.md) — effort `M`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 094): 15 of 16 rows; sec-L-10 accepted and documented (it is how linked worktrees legitimately work)
 - **WI-7** [Residual tail from the vdd-multi hardening (11 items)](backlog/wi-7-residual-tail-from-the-vdd-multi-hardening-11-items.md) — effort `M`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 093): all 11 rows; shared primitives + parameterized tests so the two ledgers cannot diverge again

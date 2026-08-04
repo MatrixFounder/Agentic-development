@@ -1,6 +1,6 @@
 # Task 061-03 — Integration: cross-links and registry
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — `/vdd-develop-all` epic
+**Parent**: [docs/PLAN.md](../plans/plan-061-vdd-develop-all.md) — `/vdd-develop-all` epic
 **Stage**: 3 — Integration
 **Predecessor**: Task 061-02 (workflow body must be complete — otherwise the cross-link in `vdd-03-develop.md` would point at a stub)
 **Successor**: none (final task in chain)

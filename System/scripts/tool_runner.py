@@ -283,7 +283,10 @@ def execute_tool(tool_call) -> Dict[str, Any]:
                 return {"error": "Missing 'slug' argument", "success": False}
 
             proposed_id = args.get("proposed_id")
-            allow_correction = args.get("allow_correction", True)
+            # ARC-1: renumbering a task whose id is already cited in its
+            # sub-tasks, plan archive, commits and ledgers is a human
+            # decision. Opt in explicitly; the default reports a conflict.
+            allow_correction = args.get("allow_correction", False)
             tasks_dir = str(repo_root / "docs" / "tasks")
 
             result = generate_task_archive_filename(

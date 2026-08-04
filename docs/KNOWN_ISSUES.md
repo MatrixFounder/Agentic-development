@@ -35,6 +35,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 | Prefix | Category      | Scope |
 |--------|---------------|-------|
 | `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
+| `ARC-N` | `archiving` | `skill-archive-task` / `task_id_tool.py` defects: ID generation, rotation, lockstep pairing. |
 | `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
 | `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
 | `SS-N` | `session-state` | `skill-session-state` protocol/script defects (state resolution, locking, schema). |
@@ -76,6 +77,11 @@ the matching `## <category>` heading here, in ID order.
 - **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `documented`, opened 2026-04-17
 - **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `documented`, opened 2026-04-17
 
+## archiving
+
+- **ARC-1** [task_id_tool counts sub-task files as occupying the parent ID](issues/arc-1-task-id-tool-counts-sub-task-files-as-occupying-the-parent-id.md) — severity `SEV-3`, status `fixed`, opened 2026-08-03 · **fixed 2026-08-04**: the id machinery was already correct; every documented invocation omitted `--proposed-id`. Protocol Steps 3/4 inverted, renumbering opt-in, meta parsing made language-agnostic, Step 5 collision guard added, 86 archive tests wired into CI
+- **ARC-2** [Archiving moves an artifact one level deeper and breaks every relative link](issues/arc-2-archiving-moves-an-artifact-one-level-deeper-and-breaks-every-relative-link.md) — severity `SEV-3`, status `fixed`, opened 2026-08-03 · **fixed 2026-08-04**: `rebase_links.py` re-expresses each link's denotation and resolves mutable slots to archive identities; corpus 45 broken → 4 pre-broken, 19 mis-resolutions re-pointed
+
 ## feedback
 
 - **RF-1** [doctor reports ready:true on built-in defaults, contradicting its own remediation](issues/rf-1-doctor-reports-ready-true-on-built-in-defaults-contradicting-its-own-remediation.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13 · **fixed 2026-07-30** (TASK 095): `configured` is now a check and part of `ready`; E2E, cli_reference and SKILL.md §7 updated in lockstep
@@ -95,7 +101,7 @@ the matching `## <category>` heading here, in ID order.
 
 - **FW-1** [Spec-validator bypass token matches anywhere in content](issues/validator-bypass-substring.md) — severity `SEV-4`, status `open`, opened 2026-07-20
 - **VAL-1** [validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)](issues/val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13
-- **VAL-2** [run_eval.py trigger probe false-negatives: name competition with installed skill and first-call strictness](issues/val-2-run-eval-py-trigger-probe-false-negatives-name-competition-with-installed-skill-and-first-call-strictness.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13 · **fixed 2026-07-30** (TASK 096): both names counted, exact matching, an 8-call budget across message boundaries; instrument failure now distinguishable from a real non-trigger
+- **VAL-2** [run_eval.py trigger probe false-negatives: name competition with installed skill and first-call strictness](issues/val-2-run-eval-py-trigger-probe-false-negatives-name-competition-with-installed-skill-and-first-call-strictness.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13 · **fixed 2026-07-30** (v3.21.10, `31db854`): both names counted, exact matching, an 8-call budget across message boundaries; instrument failure now distinguishable from a real non-trigger
 
 
 ## wrappers

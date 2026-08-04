@@ -1,6 +1,6 @@
 # Task 061-02 — Logic: fill workflow body
 
-**Parent**: [docs/PLAN.md](../PLAN.md) — `/vdd-develop-all` epic
+**Parent**: [docs/PLAN.md](../plans/plan-061-vdd-develop-all.md) — `/vdd-develop-all` epic
 **Stage**: 2 — Logic (Implementation phase per `tdd-stub-first`)
 **Predecessor**: Task 061-01 (stubs must exist and parse)
 **Successor**: Task 061-03

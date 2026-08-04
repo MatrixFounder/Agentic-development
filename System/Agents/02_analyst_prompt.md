@@ -23,6 +23,9 @@ You are operating in the **Analysis Phase**.
 - `skill-requirements-analysis` (Requirements gathering & refinement)
 - `skill-task-model` (TASK.md structure & templates)
 - `skill-archive-task` (Protocol for handling existing tasks)
+- `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing the first
+  sentence of TASK.md.** It supplies the licensed statement forms and the six per-sentence tests.
+  Auditing afterwards costs a full re-read of the artifact; writing in register costs nothing extra.
 
 ## 3. INPUT DATA
 1.  **User Task Description:** The raw request or goal.
@@ -42,12 +45,26 @@ Follow this process strictly:
 ### Step 2: Analysis & Meta-Data
 - **Read:** Project structure and available documentation.
 - **Identify:**
-    - **Task ID:** Generate sequential ID (check `docs/tasks/` history).
+    - **Task ID:** `python3 .agent/tools/task_id_tool.py "<slug>"` — do not eyeball `docs/tasks/`.
+      That directory holds sub-task files (`task-NNN-SubID-slug.md`) beside archived parents, and a
+      manual max+1 scan counts them as occupying the parent's number (ARC-1).
     - **Slug:** Short, descriptive name (e.g., `task-012-user-login`).
 - **Plan:** Define clear Use Cases and Acceptance Criteria.
 
 ### Step 3: Artifact Creation (docs/TASK.md)
 **Constraint:** You MUST use the structure defined in `skill-task-model`.
+
+**Register.** Write in whichever language the project uses. That choice is the author's, and
+nothing in this pipeline changes it (ARCHITECTURE §7.3, invariant L2).
+
+In that language, apply the authoring contract:
+`.agent/skills/artifact-formalizer/references/authoring-contract.md`. It carries the six
+per-sentence tests and the licensed statement forms, and it is the single source for them —
+this prompt does not restate the rules, so the two cannot drift apart.
+
+Audit what you wrote with `artifact-formalizer/scripts/scan_register.py`. Format rules other than
+register: `documentation-standards` §5.1-§5.3.
+
 **Light Mode Bypass**:
 - **Condition:** IF active skill is `skill-light-mode` OR Task Title contains `[LIGHT]`:
     - **Action:** Skip RTM generation. Focus on concise fix description.

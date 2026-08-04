@@ -1,4 +1,12 @@
 
+<!--
+  REGISTER. Write in whichever language the project uses; nothing in this pipeline changes that
+  choice. In that language, apply the authoring contract BEFORE the first sentence:
+  `.agent/skills/artifact-formalizer/references/authoring-contract.md` — six per-sentence tests and
+  the licensed statement forms. It is the single source for them, so this template does not restate
+  the rules. Audit with `artifact-formalizer/scripts/scan_register.py`.
+-->
+
 ### 0. Meta Information (MANDATORY)
 - **Task ID:** Extract from existing tasks (e.g. 002 if 001 exists) or use 001 for new project. **REQUIRED.**
 - **Slug:** Short kebab-case name (e.g. `user-auth`). **REQUIRED.**

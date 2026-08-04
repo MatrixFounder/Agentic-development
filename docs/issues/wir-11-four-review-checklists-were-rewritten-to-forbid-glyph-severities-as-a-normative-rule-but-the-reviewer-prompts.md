@@ -1,8 +1,10 @@
 ---
 id: WIR-11
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-4
 slug: wir-11-four-review-checklists-were-rewritten-to-forbid-glyph-severities-as-a-normative-rule-but-the-reviewer-prompts

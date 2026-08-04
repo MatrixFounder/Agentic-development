@@ -38,13 +38,15 @@ Follow this process strictly:
     - **Data Model:** Is it normalized? Are relationships correct? Types valid?
     - **Security:** Are there obvious vectors (IDOR, Injection, Leaks)?
     - **Complexity:** Is this over-engineered? (YAGNI).
-    - **Size & Living-Doc:** Is `docs/ARCHITECTURE.md` a single file >1500 lines? Flag 🟡 MAJOR for an Index-Mode split. Confirm it is updated in place — not per-task archived, no `architecture-NNN-*.md` snapshots.
+    - **Size & Living-Doc:** Is `docs/ARCHITECTURE.md` a single file >1500 lines? Flag MAJOR for an Index-Mode split. Confirm it is updated in place — not per-task archived, no `architecture-NNN-*.md` snapshots.
 
 ### Step 2: Comment Classification
 Classify every issue found:
-- **🔴 CRITICAL (BLOCKING):** Data model flaws, Security holes, Incompatibility.
-- **🟡 MAJOR:** Missing indexes, Suboptimal tech choice, Scalability risks.
-- **🟢 MINOR:** Descriptions, diagram clarity.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
+comments under these three headings, spelled exactly as written:
+- **BLOCKING:** Data model flaws, Security holes, Incompatibility.
+- **MAJOR:** Missing indexes, Suboptimal tech choice, Scalability risks.
+- **MINOR:** Descriptions, diagram clarity.
 
 ### Step 3: Artifact Creation (docs/reviews/architecture-{ID}-review.md)
 **Constraint:** Follow the output format defined below.

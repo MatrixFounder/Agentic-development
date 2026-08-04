@@ -16,6 +16,50 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.24.5 — the register commit installed rules and left the callers unwired (WIR batch)**
+
+Nine `WIR-*` defects from the 7-dimension review of `992b3ef`, one class: the commit wrote the
+register rules but not the sites that run them. A direct ledger burn-down, no TASK document.
+
+#### Fixed
+
+- **WIR-1 — the scanner six prompts mandate was not a safe command.** `scan_register.py` and
+  `selftest_scan.py` added to `skill-safe-commands`, table row and regex. All three checklist
+  Primary Commands now match a pattern.
+- **WIR-2, WIR-11 — each reviewer was told both to use and not to use 🔴/🟡/🟢.** The four
+  checklists forbade glyph severities; the prompts and subagent wrappers that own the report format
+  still mandated them. Prompts 03/05/07/09/10 and the three `.claude/agents/` wrappers name
+  BLOCKING/MAJOR/MINOR and cite §5.5 rule 5. No glyph severity remains under `System/Agents/` or
+  `.claude/agents/`.
+- **WIR-3 — the TASK template failed the gate it feeds.** Three ✅ acceptance bullets and one
+  `crucial` marker, so every TASK.md copied from it opened at 4 warn. Template scans `0 warn / 0 info`.
+- **WIR-4 — the canonical "good" exemplar taught seven rule-5 violations.** `good_use_case.md`
+  criteria are plain bullets; the skill's own ✅/❌ example headings are words.
+- **WIR-5 — the architecture Primary Command could not run.** `docs/architectures/*.md` does not
+  exist in the default single-file state: bash forwards the unmatched pattern (exit 3), zsh aborts
+  before the scanner starts. The command scans `docs/ARCHITECTURE.md` alone; the chunk glob is an
+  Index-Mode clause guarded by a directory check.
+- **WIR-6 — the plan Primary Command scanned the archive.** `docs/tasks/*.md` is the permanent
+  sink: 624 warn over 129 files under a gate demanding zero, which no review can pass or fix.
+  Scoped to `docs/tasks/task-<ID>-*.md`.
+- **WIR-7 — the analyst and architect were ordered to run scripts they had no tool for.** Both
+  subagents carry `Bash`, matching `planner`; each wrapper names the scripts the grant covers.
+- **WIR-8 — the MANDATORY archive step stopped for approval.** `.claude/settings.json` allows
+  `rebase_links.py`, `scan_register.py` and `selftest_scan.py`.
+
+#### Also
+
+- The three review checklists documented exit `2` for unreadable input; the scanner returns `3`
+  (`2` is a broken rule file or a dead detector). Same defect WIR-9 closed for CI, still live in the
+  checklists.
+
+#### Verified
+
+- 307 unittest cases exit 0; prompt references 41/41; skills 46/46; workflow smoke; security lint;
+  scanner selftest 191/191; detector probe exit 0.
+- All 11 `WIR-*` records `status: fixed`, frontmatter and index line agreeing on each. Open ledger
+  is `AT-6` and `FW-1`.
+
 ### **v3.24.4 — a count is not an identity (TASK 100)**
 
 TASK 099 pinned what the two register gates COUNT. Five defects from its own adversarial

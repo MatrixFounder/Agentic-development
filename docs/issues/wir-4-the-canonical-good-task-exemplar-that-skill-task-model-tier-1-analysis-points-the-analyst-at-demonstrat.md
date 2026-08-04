@@ -1,8 +1,10 @@
 ---
 id: WIR-4
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-4
 slug: wir-4-the-canonical-good-task-exemplar-that-skill-task-model-tier-1-analysis-points-the-analyst-at-demonstrat

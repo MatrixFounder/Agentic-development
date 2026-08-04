@@ -1,8 +1,10 @@
 ---
 id: WIR-1
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-3
 slug: wir-1-the-commit-added-rebase-links-py-to-the-safe-command-list-but-not-scan-register-py-even-though-six-instru

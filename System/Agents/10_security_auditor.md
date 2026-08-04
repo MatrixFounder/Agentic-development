@@ -56,9 +56,11 @@ Run `run_audit.py --scan-type mcp` (regex floor), then answer explicitly:
 
 ### Step 2: Assessment
 Classify findings:
-- **🔴 CRITICAL:** Exploitable RCE, SQLi, Auth Bypass, Secrets exposed.
-- **🟡 HIGH:** Missing CSRF, Weak crypto, XSS potential.
-- **🟢 MEDIUM/LOW:** Misconfiguration, Best practices.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
+findings under these headings, spelled exactly as written:
+- **CRITICAL:** Exploitable RCE, SQLi, Auth Bypass, Secrets exposed.
+- **HIGH:** Missing CSRF, Weak crypto, XSS potential.
+- **MEDIUM/LOW:** Misconfiguration, Best practices.
 
 ### Step 3: Reporting
 **Action:** Create `docs/audit/security-{ID}.md`.

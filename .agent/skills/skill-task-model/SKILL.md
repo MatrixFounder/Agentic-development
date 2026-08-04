@@ -22,11 +22,13 @@ version: 1.1
 
 ## 3. Examples
 
-### ✅ Example of Good Use Case
+### Example of a Good Use Case
 > [!TIP]
-> See `examples/good_use_case.md` for a complete, structured example.
+> See `examples/good_use_case.md` for a complete, structured example. Its acceptance
+> criteria are plain bullets: severity is a named value, never a glyph
+> (`documentation-standards` §5.5 rule 5).
 
-### ❌ Example of Bad Use Case
+### Example of a Bad Use Case
 > [!TIP]
 > See `examples/bad_use_case.md` for what NOT to do.
 
@@ -34,7 +36,7 @@ version: 1.1
 | Agent Excuse | Reality / Counter-Argument |
 | :--- | :--- |
 | "Writing scenarios takes too long" | Rewriting code because of missed edge cases takes 3x longer. |
-| "It's obvious what happens" | Obvious to *you* now. Not obvious to the Code Reviewer or you in 2 weeks. |
+| "It's obvious what happens" | Not to the Code Reviewer, and not to you in two weeks. |
 
 ## 4. Resources
 - `examples/`: Reference use cases.

@@ -10,7 +10,7 @@
 ### 0. Meta Information (MANDATORY)
 - **Task ID:** Extract from existing tasks (e.g. 002 if 001 exists) or use 001 for new project. **REQUIRED.**
 - **Slug:** Short kebab-case name (e.g. `user-auth`). **REQUIRED.**
-- **WARNING:** Do not skip this section. It is crucial for tracking.
+- **WARNING:** Do not skip this section. Archiving reads the Task ID and Slug from here; without them `skill-archive-task` cannot name the archive file.
 
 ### 1. General Description
 - Brief description of the task based on the general statement from the user
@@ -52,10 +52,10 @@ Description of deviations from the main scenario:
 What must be achieved after successful execution
 
 #### 2.7. Acceptance Criteria
-Specific, verifiable criteria:
-- ✅ Criterion 1
-- ✅ Criterion 2
-- ✅ Criterion 3
+Specific, verifiable criteria. One line each, no severity glyph:
+- Criterion 1
+- Criterion 2
+- Criterion 3
 
 ### 3. Non-functional Requirements (if applicable)
 - Performance

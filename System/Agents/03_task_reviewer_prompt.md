@@ -41,9 +41,11 @@ Follow this process strictly:
 
 ### Step 2: Comment Classification
 Classify every issue found:
-- **🔴 CRITICAL (BLOCKING):** Missing use cases, contradictions, fundamental misunderstandings.
-- **🟡 MAJOR:** Incomplete descriptions, missing scenarios, vague criteria.
-- **🟢 MINOR:** Typos, formatting, style.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
+comments under these three headings, spelled exactly as written:
+- **BLOCKING:** Missing use cases, contradictions, fundamental misunderstandings.
+- **MAJOR:** Incomplete descriptions, missing scenarios, vague criteria.
+- **MINOR:** Typos, formatting, style.
 
 ### Step 3: Artifact Creation (docs/reviews/task-{ID}-review.md)
 **Constraint:** Follow the output format defined below.

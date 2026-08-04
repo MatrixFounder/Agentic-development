@@ -1,8 +1,10 @@
 ---
 id: WIR-5
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-3
 slug: wir-5-the-primary-command-hard-codes-the-glob-docs-architectures-md-which-does-not-exist-in-the-normal-single

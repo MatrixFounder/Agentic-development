@@ -1,8 +1,10 @@
 ---
 id: WIR-2
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-4
 slug: wir-2-the-commit-removed-glyph-severities-from-the-four-review-checklists-and-declared-severity-is-a-named-value-n

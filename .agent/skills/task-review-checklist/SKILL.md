@@ -48,8 +48,9 @@ version: 1.0
 - **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/TASK.md --sections --terms docs/ARCHITECTURE.md`
 - **Outputs:** findings, a `DETECTORS` probe table, a `DIAGNOSTICS` block, and the
   per-section worklist. `--json` for the same content as a document.
-- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule
-  file, unreadable input, or a dead detector. A `2` invalidates the run, not the artifact.
+- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule file or a
+  dead detector; `3` on unreadable or absent input. A `2` or `3` invalidates the run, not the
+  artifact.
 
 ## Safety Boundaries
 - **Scope:** read-only. A review reads artifacts and runs the read-only register scan; it never

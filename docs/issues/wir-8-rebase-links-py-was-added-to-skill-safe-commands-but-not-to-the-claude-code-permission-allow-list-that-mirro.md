@@ -1,8 +1,10 @@
 ---
 id: WIR-8
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-05
+resolved_by: WIR wiring batch 2026-08-05
 category: wiring
 severity: SEV-4
 slug: wir-8-rebase-links-py-was-added-to-skill-safe-commands-but-not-to-the-claude-code-permission-allow-list-that-mirro

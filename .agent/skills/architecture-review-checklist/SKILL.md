@@ -35,7 +35,8 @@ version: 1.1
 
 ## 6. Register (`documentation-standards` §5.5)
 - [ ] **Scan attached:** `artifact-formalizer/scripts/scan_register.py docs/ARCHITECTURE.md
-      docs/architectures/*.md --sections` was run; `DETECTORS` shows none dead.
+      --sections` was run; `DETECTORS` shows none dead. In Index Mode append the chunk paths (see
+      the Script Contract).
 - [ ] **Warns resolved:** zero `warn`, or each survivor carries a written reason.
 - [ ] **Terms declared, not assumed:** every noun this document introduces as a term is *defined*
       here. ARCHITECTURE.md is what `--terms` reads downstream, so a metaphor introduced here
@@ -47,11 +48,17 @@ version: 1.1
   Script Contract is deterministic and is run, not recalled.
 
 ## Script Contract
-- **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/ARCHITECTURE.md docs/architectures/*.md --sections`
+- **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/ARCHITECTURE.md --sections`
+- **Index Mode only:** when `docs/architectures/` exists (ARCHITECTURE.md was split past 1500
+  lines), append the chunks: `... docs/ARCHITECTURE.md docs/architectures/*.md --sections`. Check
+  the directory first — `ls -d docs/architectures`. Do **not** pass the glob when the directory is
+  absent, which is the default single-file state: bash forwards the unmatched pattern as a literal
+  path (exit 3, no findings) and zsh aborts the command before the scanner runs.
 - **Outputs:** findings, a `DETECTORS` probe table, a `DIAGNOSTICS` block, and the
   per-section worklist. `--json` for the same content as a document.
-- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule
-  file, unreadable input, or a dead detector. A `2` invalidates the run, not the artifact.
+- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule file or a
+  dead detector; `3` on unreadable or absent input. A `2` or `3` invalidates the run, not the
+  artifact.
 
 ## Safety Boundaries
 - **Scope:** read-only. A review reads artifacts and runs the read-only register scan; it never

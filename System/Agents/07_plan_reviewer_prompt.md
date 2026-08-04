@@ -46,9 +46,11 @@ Follow this process strictly:
 
 ### Step 2: Comment Classification
 Classify every issue found:
-- **🔴 CRITICAL (BLOCKING):** Missing Use Cases, Missing Task Files, Violation of Stub-First.
-- **🟡 MAJOR:** Vague descriptions, logical gaps, formatting issues.
-- **🟢 MINOR:** Typographical errors, minor style improvements.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
+comments under these three headings, spelled exactly as written:
+- **BLOCKING:** Missing Use Cases, Missing Task Files, Violation of Stub-First.
+- **MAJOR:** Vague descriptions, logical gaps, formatting issues.
+- **MINOR:** Typographical errors, minor style improvements.
 
 ### Step 3: Artifact Creation (docs/reviews/plan-{ID}-review.md)
 **Constraint:** Follow the output format defined below.

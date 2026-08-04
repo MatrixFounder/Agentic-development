@@ -1,8 +1,10 @@
 ---
 id: WIR-3
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-3
 slug: wir-3-the-task-template-the-analyst-is-required-to-follow

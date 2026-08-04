@@ -42,9 +42,11 @@ Follow this process strictly:
 
 ### Step 2: Comment Classification
 Classify every issue found:
-- **🔴 CRITICAL (BLOCKING):** Requirements unmet, Tests failed, Security holes, Broken build.
-- **🟡 MAJOR:** Missing docstrings, Code duplication, Docs not updated.
-- **🟢 MINOR:** Style issues, optimizations.
+Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
+comments under these three headings, spelled exactly as written:
+- **BLOCKING:** Requirements unmet, Tests failed, Security holes, Broken build.
+- **MAJOR:** Missing docstrings, Code duplication, Docs not updated.
+- **MINOR:** Style issues, optimizations.
 
 ### Step 3: Artifact Creation (Review Report)
 **Constraint:** Follow the output format defined below.

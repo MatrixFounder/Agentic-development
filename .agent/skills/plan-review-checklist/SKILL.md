@@ -24,9 +24,11 @@ version: 1.0
 - [ ] **Strict Mode:** Usage of `skill-tdd-strict` specified for critical components/bugs?
 
 ## 4. Register (`documentation-standards` §5.5)
-- [ ] **Scan attached:** `scan_register.py docs/PLAN.md docs/tasks/*.md --sections --terms
-      docs/ARCHITECTURE.md` was run over **every** task file, not a sample; `DETECTORS` shows none
-      dead.
+- [ ] **Scan attached:** `scan_register.py docs/PLAN.md docs/tasks/task-<ID>-*.md --sections
+      --terms docs/ARCHITECTURE.md` was run over **every** task file this plan produced, not a
+      sample; `DETECTORS` shows none dead. `<ID>` is the Task ID from `docs/TASK.md` section 0.
+      Task files carrying an earlier ID are the archive (`skill-archive-task` moves rotated
+      documents into the same directory) and are out of this review's scope.
 - [ ] **Warns resolved:** zero `warn`, or each survivor carries a written reason.
 - [ ] **Reading pass covered:** every section of every task file appears in the worklist and was
       read for rules 3, 4 and 6.
@@ -37,11 +39,15 @@ version: 1.0
   Script Contract is deterministic and is run, not recalled.
 
 ## Script Contract
-- **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/PLAN.md docs/tasks/*.md --sections --terms docs/ARCHITECTURE.md`
+- **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/PLAN.md docs/tasks/task-<ID>-*.md --sections --terms docs/ARCHITECTURE.md`
+- **Scope:** substitute the current Task ID for `<ID>`; `docs/tasks/` is also the permanent
+  archive sink, so the bare glob `docs/tasks/*.md` would put every task ever written under a gate
+  that demands zero `warn` — a gate no review can pass and none can fix.
 - **Outputs:** findings, a `DETECTORS` probe table, a `DIAGNOSTICS` block, and the
   per-section worklist. `--json` for the same content as a document.
-- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule
-  file, unreadable input, or a dead detector. A `2` invalidates the run, not the artifact.
+- **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule file or a
+  dead detector; `3` on unreadable or absent input. A `2` or `3` invalidates the run, not the
+  artifact.
 
 ## Safety Boundaries
 - **Scope:** read-only. A review reads artifacts and runs the read-only register scan; it never

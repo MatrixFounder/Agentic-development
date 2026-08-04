@@ -1,8 +1,10 @@
 ---
 id: WIR-6
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-04
+resolved_by: WIR wiring batch 2026-08-04
 category: wiring
 severity: SEV-3
 slug: wir-6-the-primary-command-scopes-the-register-scan-over-docs-tasks-md-which-is-the-framework-s-permanent-archiv

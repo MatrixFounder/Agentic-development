@@ -1,8 +1,10 @@
 ---
 id: WIR-7
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-08-04
+resolved_at: 2026-08-05
+resolved_by: WIR wiring batch 2026-08-05
 category: wiring
 severity: SEV-4
 slug: wir-7-the-commit-replaced-the-analyst-s-manual-task-id-procedure-with-a-mandatory-shell-command-and-explicitly-forba

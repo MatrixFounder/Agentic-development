@@ -43,10 +43,10 @@
 - User sees page with instruction to check email
 
 **Acceptance Criteria:**
-- ✅ Registration form contains all necessary fields
-- ✅ Email validated according to RFC 5322 standard
-- ✅ Password must be at least 8 characters
-- ✅ System does not allow registering duplicate email
-- ✅ Confirmation email sent within 1 minute
-- ✅ Confirmation code valid for 24 hours
-- ✅ All errors displayed with clear messages
+- Registration form contains the fields email, password and confirm password
+- Email validated according to RFC 5322 standard
+- Password must be at least 8 characters
+- System does not allow registering duplicate email
+- Confirmation email sent within 1 minute
+- Confirmation code valid for 24 hours
+- Each error in A1-A3 names the field it rejected and the value it expected

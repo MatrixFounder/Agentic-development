@@ -78,9 +78,17 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 - Six rules (`documentation-standards` §5.5). All six reach a detector; rules 3, 4 and 6 carry
   declared recall limits, stated in the skill's SKILL.md §5.
 - Advisory: exit `0` on any findings, `2` on a broken instrument or a dead detector, `3` on a usage
-  error. Every run probe-tests its detectors, so a zero is printed next to what the detector saw.
-- Per-language data (`register-rules/v1`), 128-case selftest. It never changes a document's
-  language.
+  error — which now includes a path the scanner cannot read. Every run probe-tests its detectors,
+  so a zero is printed next to what the detector saw.
+- **An input defect is named, not gated.** An unterminated HTML comment and an unpaired backtick are
+  facts about the document; they print as `INPUT DEFECT` lines and exit `0`. `DIAGNOSTICS` carries
+  `letters masked away`, the value that separates a clean document from an unread one (SKILL.md §2).
+- **`--allow-missing`** skips a named absent file instead of exiting 3, for the artifacts this
+  framework archives at every task boundary (`docs/TASK.md`, `docs/PLAN.md`). A present-but-
+  unreadable path, and an input set with nothing readable in it, still exit 3.
+- Per-language data (`register-rules/v1`), 145-case selftest. It never changes a document's
+  language. Rule-3 patterns carry a declared example each, so editing one without its example is
+  rejected at load.
 
 **`documentation-standards`** — §5.5 holds the normative short form of the register rules and the
 detector-coverage table. §5.1 owns cell shape, §5.2 prose shape, §5.3 line length. The scanner

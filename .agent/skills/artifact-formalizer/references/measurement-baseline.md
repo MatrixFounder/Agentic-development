@@ -207,6 +207,47 @@ a `SIGALRM` budget for the shapes that check misses.
 4. an exit-code-only check on the skill's own document;
 5. a `>= 16` count against a shipped 18.
 
+## 10.1 The masking defect, and the numbers that found it (TASK 097)
+
+`mask()` applied four regular expressions in sequence, each over the whole text, with
+`HTML_COMMENT` ahead of `CODE_SPAN` and `re.S` on both. A comment boundary landing inside a code
+span removed one backtick. The survivor paired with a later one, and from that offset prose was
+masked as code and code scanned as prose, to the end of the file.
+
+Found by measurement, like the two defects above it. Every figure is reproducible in this
+repository.
+
+| # | Measurement | Value |
+| :--- | :--- | :--- |
+| E1 | Fixture of valid Markdown: Cyrillic letters surviving `mask()` | 28 of 167 |
+| E2 | Same fixture, findings reported | none; `0 warn`, exit 0 |
+| E3 | Same fixture with the trigger removed | 1 finding, `§5.5 r2` |
+| E4 | Documents with odd backtick parity after `mask()` | 14 of 598 |
+| E5 | `task_md_template.md`: prose reaching rule 1 | 27%, against 50% |
+| E6 | `task_md_template.md`: lines masked away | 42, against 17 |
+| E7 | Prose the corrected pass restores to the rules | +61,889 letters, 169 documents |
+| E8 | Masked-letter share across the corpus | p50 22.1%, p95 63.1%, max 97.3% |
+
+**E8 is why the share is reported and not gated.** A threshold at 60% fires on 26 correct
+documents. Eight of them are fenced by construction, where a high share is the right answer.
+`documentation-standards` §4 forbids a gate that fails on correct documents. The share is therefore
+diagnostic, and `SKILL.md` §2 says how to read it.
+
+**The rule-3 probe exercised 1 pattern of 23.** One declared sentence stood in for the whole
+modal-by-causal cross-product. Replacing `\bshall\b` in `register-en.json` left `--probe` at
+`18/18 detectors live` and the battery at `128/128` while `The installer shall abort because the
+target exists.` lost its finding. Each pattern now carries a declared example and is exercised
+against a known-good partner.
+
+**Deriving the example from the pattern was tried and rejected.** `\bshall\b` reduces to `shall`,
+which matches by construction — so `\bZZZNEVER\b` reduces to `ZZZNEVER` and probes live just as
+happily. A derived example cannot detect the edit it exists to detect. The declared example can,
+through two signatures: an example its pattern no longer matches, and an example left orphaned when
+its pattern was renamed.
+
+**After the fix, over 602 documents:** every one exits 0, odd parity falls from 14 to 13, and 19
+unpaired backticks are named as input defects rather than silently mispaired.
+
 ## 11. Which figures here are reproducible, and which are not
 
 Reproducible in this repository, by the commands in SKILL.md §3: every detector count, the selftest

@@ -77,6 +77,13 @@ prescribes converting such a column rather than widening it.
 - **Measured diagnostics.** A zero is never bare: sentence count, mean, observed maximum against the
   limit, cell counts, active lexicon size. `PRESSED AGAINST THE LIMIT` names a distribution written
   for the gate.
+- **The value that invalidates a scan is `letters masked away`.** Read it before the findings.
+  Masking blanks fenced blocks, comments, link targets and code spans, so a high share is correct in
+  a code-heavy document and suspicious in a prose one. Corpus reference: median 22%, p95 63%. A
+  share far above the p95 in a document with **no fenced block** means the scan measured little of
+  what it was given. `INPUT DEFECT` lines name what stopped it — an unterminated comment, a backtick
+  that never pairs. Both are facts about the document, so they are reported and exit `0`
+  (ARCHITECTURE §7.4).
 - **All six rules reach a detector**, three of them with declared recall limits (§5).
 - **Termhood applied mechanically.** `--terms ARCHITECTURE.md …` downgrades rule-6 findings that
   occur in the declared sources, which is the guide's own test executed rather than remembered.

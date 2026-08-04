@@ -1,7 +1,9 @@
 # Development Plan: [Project Name]
 
 <!--
-  Anchors below (`<!-- contract:* -->`) are how a MACHINE addresses a section:
+  The `contract:*` anchors below are how a MACHINE addresses a section. They are
+  HTML comments; this one does not spell their closing delimiter, because a
+  comment ends at the FIRST one and the rest of the block would render as text.
   a gate must never key on the heading's words, because those are prose and
   prose has a language. Rule + registry: `documentation-standards` §4.3/§4.4.
   Keep them; translate the headings freely. Never invent an unregistered one.

@@ -53,11 +53,19 @@ jobs:
       # Advisory sweep of the living artifacts. The scanner exits 0 on any
       # number of findings, so this step fails ONLY on a broken instrument.
       # Deliberately no `|| true`: that would swallow the exit-2 signal too.
+      #
+      # `--allow-missing` because `docs/TASK.md` and `docs/PLAN.md` are ARCHIVED
+      # at every task boundary, so their absence is a state this framework
+      # produces rather than a fault (TASK 097 D2). Before it, that absence
+      # exited 2 and painted the build red under a comment claiming only a dead
+      # detector could. A path that is present but unreadable still exits 3, and
+      # an input set with nothing readable in it always does — so a mistyped
+      # path is still caught here.
       - name: Register scan — living artifacts (advisory)
         run: |
           python .agent/skills/artifact-formalizer/scripts/scan_register.py \
             docs/TASK.md docs/PLAN.md docs/ARCHITECTURE.md \
-            --sections --terms docs/ARCHITECTURE.md
+            --allow-missing --sections --terms docs/ARCHITECTURE.md
 
   skill-validate:
     name: Skill validate

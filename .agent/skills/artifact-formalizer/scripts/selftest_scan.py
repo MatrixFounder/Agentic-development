@@ -507,8 +507,13 @@ def t_exits():
     code, _, _ = run([doc, "--rules", rf_bad, "--json"])
     check("TC-EXIT-02 malformed rules exit 2", code == 2, f"exit={code}")
 
+    # TASK 097 R16 moved this from 2 to 3. Code 2 claims a dead detector; a
+    # path the operator mistyped says nothing about the instrument. Under 2 the
+    # CI advisory step went red whenever `docs/TASK.md` was archived, which is
+    # a state this framework produces on every task boundary.
     code, _, _ = run([os.path.join(SKILL, "does-not-exist.md"), "--json"])
-    check("TC-EXIT-03 unreadable input exits 2", code == 2, f"exit={code}")
+    check("TC-EXIT-03 unreadable input exits 3, not 2", code == 3,
+          f"exit={code}")
 
 
 # ------------------------------------------------------------------- data ----
@@ -1002,13 +1007,151 @@ def t_reporting_gaps():
           code == 0 and "a\\|b" in out, f"out={out[-90:]!r}")
 
 
+# ------------------------------------------------- TASK 097: masking pins ----
+# The shipped mask() applied four regexes in sequence. A comment boundary
+# landing inside a code span removed one backtick, the survivor paired with a
+# later one, and the code/prose classification inverted to the end of the file.
+# Every case below FAILS against that implementation, which is what makes it a
+# pin rather than a description.
+
+#: TASK 097 E1. Valid Markdown: a marker cited in a code span, then a correct
+#: comment. `Наивный` sits after both and must still be reported.
+#:
+#: The trailing code span is load-bearing. Without a LATER backtick the orphan
+#: left by the comment has nothing to pair with, nothing further is masked, and
+#: the case passes against the defect it is meant to pin.
+F_INVERSION = ("Маркер `<!--` открывает HTML-комментарий.\n\n"
+               "<!-- обычный, корректный комментарий -->\n\n"
+               "Наивный подход здесь неверен.\n"
+               "Ещё предложение с `кодом` внутри.\n")
+
+
+def t_097_masking():
+    src = tmpfile(F_INVERSION)
+    code, rep, _ = scan_json([src])
+    marks = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])]
+    check("TC-097-01 a marker cited in a code span does not blind the scanner",
+          code == 0 and any("аивн" in m for m in marks), f"marks={marks}")
+
+    # The same document without the citation. The finding set must be equal:
+    # that equality is the requirement, not merely "some finding appears".
+    ctl = tmpfile(F_INVERSION.replace("`<!--`", "маркер"))
+    _, rep2, _ = scan_json([ctl])
+    check("TC-097-02 citation changes no finding",
+          sorted(kinds_of(rep)) == sorted(kinds_of(rep2)),
+          f"with={sorted(kinds_of(rep))} without={sorted(kinds_of(rep2))}")
+
+    # A construct may not begin inside another: `naive` inside the fence is
+    # code, the two outside it are prose. Three occurrences, two reported.
+    src = tmpfile("The naive approach is wrong.\n\n"
+                  "```text\n<!-- naive\n```\n\n"
+                  "The naive approach is wrong again.\n")
+    _, rep, _ = scan_json([src])
+    check("TC-097-03 a fence body is not scanned and does not leak",
+          kinds_of(rep).count("marker") == 2, f"kinds={kinds_of(rep)}")
+
+    # CommonMark: a blank line ends the paragraph and closes the span. Two
+    # backticks in separate paragraphs are NOT a span, so the prose between
+    # them stays prose. Under `re.S` without the bound they pair and it does
+    # not.
+    src = tmpfile("A stray ` opens a paragraph.\n\n"
+                  "The naive approach is wrong.\n\n"
+                  "Another paragraph with a stray ` in it.\n")
+    _, rep, _ = scan_json([src])
+    check("TC-097-04 a code span does not cross a blank line",
+          "marker" in kinds_of(rep), f"kinds={kinds_of(rep)}")
+
+
+def t_097_input_defects():
+    src = tmpfile("The naive approach is wrong.\n\n<!-- never terminated\n")
+    code, out, _ = run([src])
+    check("TC-097-05 an unterminated comment is named, and exits 0",
+          code == 0 and "unterminated" in out.lower(), f"exit={code}")
+
+    src = tmpfile("A stray ` backtick.\n\nThe naive approach is wrong.\n")
+    code, out, _ = run([src])
+    check("TC-097-06 an unpaired backtick is named, and exits 0",
+          code == 0 and "unpaired" in out.lower(), f"exit={code}")
+
+    # A zero is never bare: the masked share is what tells a clean document
+    # from an unread one.
+    src = tmpfile("Plain prose with nothing to report.\n")
+    code, rep, _ = scan_json([src])
+    diag = json.dumps(rep.get("diagnostics")) if rep else ""
+    check("TC-097-07 DIAGNOSTICS carries the masked-letter share",
+          "masked_letter_share" in diag, f"diag_keys={diag[:120]}")
+
+
+def t_097_exit_contract():
+    # 2 means the instrument is broken. An unreadable path is an invocation.
+    code, out, err = run(["docs/NOSUCH-097.md"])
+    check("TC-097-08 an unreadable path exits 3, not 2",
+          code == 3, f"exit={code}")
+    check("TC-097-09 the unreadable path is named",
+          "NOSUCH-097" in (out + err), f"out={(out + err)[:120]!r}")
+
+    real = tmpfile("Plain prose.\n")
+    code, _, _ = run([real, "docs/NOSUCH-097.md", "--allow-missing"])
+    check("TC-097-10 --allow-missing tolerates a named absence",
+          code == 0, f"exit={code}")
+
+    code, _, _ = run(["docs/NOSUCH-097.md", "--allow-missing"])
+    check("TC-097-11 --allow-missing with nothing readable still exits 3",
+          code == 3, f"exit={code}")
+
+
+def t_097_probe_coverage():
+    """Every rule-3 pattern is exercised, so killing any one turns it DEAD."""
+    base = json.loads(json.dumps(GOOD_RULES))
+    base["languages"]["en"]["reasoning"] = {
+        "modals": [r"\bmust\b", r"\bshall\b"],
+        "causals": [r"\bbecause\b", r"\bsince\b"],
+        "probes": {r"\bmust\b": "must", r"\bshall\b": "shall",
+                   r"\bbecause\b": "because", r"\bsince\b": "since"},
+        "probe": "The field must be set, because the reader cannot derive it."}
+    code, out, _ = run(["--probe", "--rules", rules_file(base)])
+    check("TC-097-12 a fully live rule-3 vocabulary probes live",
+          code == 0 and "DEAD" not in out, f"exit={code}")
+    check("TC-097-13 the probe detail states what it exercised",
+          "4 exercised of 4" in out, f"out={out[-160:]!r}")
+
+    # Edit a pattern and leave its example. The DECLARED probe sentence still
+    # fires, so an implementation that trusts that one sentence stays green
+    # here — which is the defect (TASK 097 D3).
+    for key, idx, name in (("modals", 1, "shall"), ("causals", 1, "since")):
+        doc = json.loads(json.dumps(base))
+        doc["languages"]["en"]["reasoning"][key][idx] = r"\bZZZNEVERMATCHES\b"
+        code, out, err = run(["--probe", "--rules", rules_file(doc)])
+        check(f"TC-097-14 a rule-3 {name} edited away from its example is "
+              f"rejected",
+              code == 2 and "left behind" in (out + err), f"exit={code}")
+
+    # The other half of the same signature: the pattern kept, the example
+    # changed to something it does not match.
+    doc = json.loads(json.dumps(base))
+    doc["languages"]["en"]["reasoning"]["probes"][r"\bshall\b"] = "zzznever"
+    code, out, err = run(["--probe", "--rules", rules_file(doc)])
+    check("TC-097-16 an example its pattern no longer matches is rejected",
+          code == 2 and "no longer matches its own example" in (out + err),
+          f"exit={code}")
+
+    # Backward compatibility: a rule file written before `probes` existed still
+    # loads, and says plainly that it exercised nothing.
+    doc = json.loads(json.dumps(base))
+    del doc["languages"]["en"]["reasoning"]["probes"]
+    code, out, _ = run(["--probe", "--rules", rules_file(doc)])
+    check("TC-097-15 a reasoning block with no examples loads and says so",
+          code == 0 and "0 exercised of 4" in out, f"exit={code} out={out[-160:]!r}")
+
+
 def main():
     for fn in (t_schema, t_masking, t_structural, t_lexical, t_reasoning,
                t_probe, t_diagnostics, t_sections, t_terms, t_language,
                t_exits, t_data_extensibility, t_shipped, t_false_positives,
                t_precision, t_masking_gaps, t_detector_gaps,
                t_contract_gaps, t_exit_contract, t_rule_authoring_gaps,
-               t_reporting_gaps):
+               t_reporting_gaps, t_097_masking, t_097_input_defects,
+               t_097_exit_contract, t_097_probe_coverage):
         try:
             fn()
         except Exception as exc:                      # noqa: BLE001

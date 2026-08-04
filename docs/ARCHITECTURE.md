@@ -310,6 +310,36 @@ that produced five copies of one rule set, which is five places for it to drift.
 `docs/ARCHITECTURE.md` is also what `--terms` reads when deciding whether a noun is a term or a
 coined metaphor, so a metaphor introduced here legitimises itself in every artefact downstream.
 
+### 7.4 What the scanner masks, and how it reports an input it cannot classify
+
+The scanner measures prose. Fenced blocks, HTML comments, link targets and code spans are blanked
+before any rule runs. That boundary is the measurement's precondition, not a convenience.
+
+**Invariant (L3): masking never changes the classification of text that follows a masked
+construct.**
+
+The scanner makes one left-to-right pass. At each position it opens at most one construct and
+consumes it whole. A construct therefore cannot begin inside another.
+
+An earlier implementation applied four regular expressions in sequence, each over the whole text.
+TASK 097 §1 records what that produced. A comment boundary landing inside a code span removed one
+backtick, and the code/prose classification inverted to the end of the file.
+
+**A code span ends at a blank line**, per CommonMark. The bound also limits how far a residual
+mispairing can travel.
+
+**Exit codes, and what each one claims.**
+
+| Code | Claim | Example |
+| :--- | :--- | :--- |
+| 0 | The scan is a measurement | findings reported, or an input defect named |
+| 2 | The instrument is broken | a detector matched nothing under `--probe` |
+| 3 | The invocation is wrong | an unreadable path |
+
+**An input defect exits 0.** An unterminated comment and an unpaired backtick are facts about the
+document. Naming them stops a zero finding count from reading as a clean document. Failing on them
+would break the advisory rule stated above in §7.3.
+
 ## 8. Skill Architecture & Optimization Standards
 
 > **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).

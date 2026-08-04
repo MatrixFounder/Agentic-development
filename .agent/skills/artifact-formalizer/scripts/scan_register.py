@@ -59,7 +59,10 @@ CYR = re.compile(r"[а-яА-ЯёЁ]")
 RULE_KIND = {2: "marker", 4: "maxim", 6: "metaphor"}
 LEXICAL_RULES = tuple(sorted(RULE_KIND))
 #: Rule 3's vocabularies plus the known-positive its detector must fire on.
-REASONING_KEYS = ("modals", "causals", "probe")
+#: `probes` maps a pattern to a string that matches it, for the patterns that
+#: cannot probe themselves — an alternation or a quantifier reduces to no
+#: literal. Optional: a plain literal derives its own (TASK 097 R19).
+REASONING_KEYS = ("modals", "causals", "probe", "probes")
 REASONING_VOCAB = ("modals", "causals")
 
 #: Findings name the section of `documentation-standards` they violate. Cell
@@ -285,7 +288,48 @@ def _validate_reasoning(lang, block):
         elif not _scan_reasoning(mask(probe + "\n"), block, "<probe>"):
             errors.append(f"{where}.probe {probe!r} does not trigger the rule-3 "
                           f"detector — the vocabulary is dead on arrival")
+    if not errors:
+        vocabulary = set(block.get("modals") or []) | set(block.get("causals")
+                                                          or [])
+        for pat in (block.get("probes") or {}):
+            if pat not in vocabulary:
+                # Editing a pattern ORPHANS its example rather than breaking
+                # it, because `probes` is keyed by the pattern. The orphan is
+                # therefore the detectable signature of the edit, and it is
+                # what makes this check falsifiable (TASK 097 D3).
+                errors.append(
+                    f"{where}.probes: {pat!r} is an example for a pattern that "
+                    f"is not in the vocabulary — the pattern was edited or "
+                    f"removed and its example was left behind")
+        for key in ("modals", "causals"):
+            for pat in block.get(key, []):
+                declared = (block.get("probes") or {}).get(pat)
+                if declared is not None and not re.search(pat, declared, re.I):
+                    # The pattern was edited and its example was not. That is
+                    # the signature of a vocabulary changed away from what it
+                    # was for, and it is the mutation the probe exists to
+                    # catch (TASK 097 R19).
+                    errors.append(
+                        f"{where}.{key}: {pat!r} no longer matches its own "
+                        f"example {declared!r} in {where}.probes — the pattern "
+                        f"was edited away from what it is for")
     return errors
+
+
+def _reasoning_literal(block, pattern):
+    """→ the DECLARED example for `pattern`, or None if it no longer matches.
+
+    Deriving the example from the pattern was tried and rejected: it makes the
+    probe tautological. `\\bshall\\b` reduces to `shall`, which matches by
+    construction, so replacing the pattern with `\\bZZZNEVER\\b` reduces to
+    `ZZZNEVER` and probes live just as happily — the exact mutation the probe
+    exists to catch. A declared example is an independent statement of what the
+    pattern is FOR, so changing the pattern and not the example is detected.
+    """
+    declared = (block.get("probes") or {}).get(pattern)
+    if isinstance(declared, str) and re.search(pattern, declared, re.I):
+        return declared
+    return None
 
 
 def _validate_entry(ew, e):
@@ -389,6 +433,12 @@ def load_rules(paths):
                 # The probe of the first file to declare one; a second file
                 # adding vocabulary does not invalidate the first probe.
                 slot.setdefault("probe", spec["reasoning"]["probe"])
+                # Per-pattern probes travel WITH their patterns. Merging the
+                # vocabulary without them would leave the merged block unable
+                # to exercise a pattern its own source file could.
+                if spec["reasoning"].get("probes"):
+                    slot.setdefault("probes", {}).update(
+                        spec["reasoning"]["probes"])
             for cat in spec["categories"]:
                 for e in cat["entries"]:
                     fl = 0
@@ -496,21 +546,95 @@ def normalize(text):
     return unicodedata.normalize("NFC", text)
 
 
-def mask(text):
-    """Blank every non-prose construct, preserving length and line breaks.
+#: A code span may cross a line ending but never a blank line: the blank line
+#: ends the paragraph, and CommonMark closes the span there. The bound is also
+#: what stops one mispaired backtick from reaching the end of the file.
+BLANK_LINE = re.compile(r"\n[ \t]*\n")
 
-    Order matters: fences are removed before inline spans, so backticks inside
-    a fenced block cannot pair up with prose backticks outside it.
+
+def _blank(s):
+    """Same length, same line breaks, no content."""
+    return re.sub(r"[^\n]", " ", s)
+
+
+def scan_constructs(text):
+    """→ (spans, defects). One left-to-right pass over the document.
+
+    At each offset at most one construct opens, and it is consumed whole, so a
+    construct can never BEGIN INSIDE another one (ARCHITECTURE §7.4, invariant
+    L3). The previous implementation applied four regexes in sequence, each
+    over the whole text, with `HTML_COMMENT` ahead of `CODE_SPAN`. A comment
+    boundary landing inside a code span removed one backtick; the survivor
+    paired with a later one; and from that offset prose was masked as code and
+    code scanned as prose, to the end of the file (TASK 097 §1).
+
+    `defects` are facts about the DOCUMENT, not about this scanner — an
+    unterminated comment, a backtick that never pairs. They are named in the
+    output and exit 0, because a document the project may legitimately hold
+    must not fail a phase (`documentation-standards` §4).
     """
-    def blank(m):
-        return re.sub(r"[^\n]", " ", m.group(0))
+    spans, defects = [], []
+    i, n = 0, len(text)
+    while i < n:
+        m = None
+        if i == 0 or text[i - 1] == "\n":
+            m = FENCE.match(text, i)
+        if m is None and text.startswith("<!--", i):
+            m = HTML_COMMENT.match(text, i)
+            if m is None:
+                defects.append(("unterminated comment",
+                                text.count("\n", 0, i) + 1))
+        if m is None and text.startswith("](", i):
+            m = LINK_TARGET.match(text, i)
+        if m is None and text[i] == "`":
+            m = CODE_SPAN.match(text, i)
+            if m is not None and BLANK_LINE.search(m.group(0)):
+                m = None                  # a span does not cross a paragraph
+            if m is None:
+                defects.append(("unpaired backtick",
+                                text.count("\n", 0, i) + 1))
+        if m is not None and m.end() > m.start():
+            spans.append((m.start(), m.end()))
+            i = m.end()
+        else:
+            i += 1
+    return spans, defects
 
+
+def mask(text):
+    """Blank every non-prose construct, preserving length and line breaks."""
     m = FRONTMATTER_CANDIDATE.match(text)
     if m and all(YAMLISH.match(l) for l in m.group(1).split("\n") if l.strip()):
-        text = blank(m) + text[m.end():]
-    for rx in (FENCE, HTML_COMMENT, LINK_TARGET, CODE_SPAN):
-        text = rx.sub(blank, text)
-    return text
+        text = _blank(m.group(0)) + text[m.end():]
+    out, prev = [], 0
+    for start, end in scan_constructs(text)[0]:
+        out.append(text[prev:start])
+        out.append(_blank(text[start:end]))
+        prev = end
+    out.append(text[prev:])
+    return "".join(out)
+
+
+def input_defects(text):
+    """Document defects the mask pass observed, deduplicated by (kind, line)."""
+    seen, ordered = set(), []
+    for kind, line in scan_constructs(text)[1]:
+        if (kind, line) not in seen:
+            seen.add((kind, line))
+            ordered.append((kind, line))
+    return ordered
+
+
+def masked_letter_share(text):
+    """Share of alphabetic characters the mask removed, 0.0–1.0.
+
+    A zero finding count is only a measurement if the document was read. This
+    is the number that separates the two, and `SKILL.md` §2 names it.
+    """
+    letters = sum(1 for c in text if c.isalpha())
+    if not letters:
+        return 0.0
+    return 1.0 - sum(1 for c in mask(text) if c.isalpha()) / letters
 
 
 #: A row of the unambiguous pipe-delimited form, which needs no delimiter row
@@ -912,11 +1036,50 @@ def verify_detectors(entries, reasoning, thresholds):
                                        else "")))
 
     if reasoning and reasoning.get("probe"):
-        hits = _scan_reasoning(mask(reasoning["probe"] + "\n"), reasoning,
-                               "<probe>")
-        results.append(("reasoning", bool(hits),
-                        f"{len(reasoning['modals'])} modals × "
-                        f"{len(reasoning['causals'])} causals, declared probe"))
+        # One declared sentence exercised the ONE modal and the ONE causal it
+        # happened to contain, while the row advertised the whole cross-product.
+        # Deleting any other pattern left `--probe` at 18/18 and the battery at
+        # 128/128 while real findings vanished (TASK 097 D3). Each pattern is
+        # now exercised against a known-good partner, so killing any one of them
+        # turns this row DEAD.
+        modals = reasoning.get("modals") or []
+        causals = reasoning.get("causals") or []
+        anchor_m = _reasoning_literal(reasoning, modals[0]) if modals else None
+        anchor_c = _reasoning_literal(reasoning, causals[0]) if causals else None
+        dead, unprobed, exercised = [], [], 0
+        if anchor_m and anchor_c:
+            for key, group, partner in (("modal", modals, anchor_c),
+                                        ("causal", causals, anchor_m)):
+                for pat in group:
+                    lit = _reasoning_literal(reasoning, pat)
+                    if lit is None:
+                        # No example in the data. Reported, not fatal: a rule
+                        # file written before `probes` existed still loads.
+                        unprobed.append(pat)
+                        continue
+                    sentence = (f"The field {lit} be set {partner} it holds."
+                                if key == "modal" else
+                                f"The field {partner} be set {lit} it holds.")
+                    exercised += 1
+                    if not _scan_reasoning(mask(sentence + "\n"), reasoning,
+                                           "<probe>"):
+                        dead.append(f"{key} {pat}")
+        else:
+            # Nothing to pair against, so nothing below can be exercised. The
+            # declared sentence is the only evidence left, and it is weak.
+            hits = _scan_reasoning(mask(reasoning["probe"] + "\n"), reasoning,
+                                   "<probe>")
+            total = len(modals) + len(causals)
+            results.append(("reasoning", bool(hits),
+                            f"0 exercised of {total} patterns — no example in "
+                            f"`probes` to pair against; declared probe only"))
+            return results
+        total = len(modals) + len(causals)
+        results.append(("reasoning", not dead,
+                        f"{exercised} exercised of {total} patterns"
+                        + (f"; unprobed: {', '.join(unprobed)}" if unprobed
+                           else "")
+                        + (f"; dead: {', '.join(dead)}" if dead else "")))
     return results
 
 
@@ -961,6 +1124,11 @@ def diagnostics(text, entries, reasoning, thresholds, findings, lang, counts):
         "lines": len(lines),
         "nonblank_lines": nonblank,
         "masked_lines": masked_away,
+        # A zero is only a measurement if the document was read. These two say
+        # how much of it reached the rules, and what stopped the rest.
+        "masked_letter_share": round(masked_letter_share(text), 3),
+        "input_defects": [{"defect": k, "line": n}
+                          for k, n in input_defects(text)],
         "table_lines": len(tables),
         "prose_lines": prose,
         "prose_share_of_nonblank": round(100 * prose / max(1, nonblank)),
@@ -1054,6 +1222,14 @@ def _print_text(warn, info, diag, detectors, secrows):
         print(f"  lines                 : {d['lines']} total, "
               f"{d['nonblank_lines']} non-blank, {d['masked_lines']} masked "
               f"away, {d['table_lines']} table")
+        print(f"  letters masked away   : "
+              f"{round(100 * d['masked_letter_share'])}% "
+              f"(non-prose constructs; a high share with no fenced block is "
+              f"the signal to read next)")
+        for df in d["input_defects"]:
+            # The document, not the instrument: named here and exit 0.
+            print(f"  INPUT DEFECT          : {df['defect']} at line "
+                  f"{df['line']}")
         print(f"  prose reaching rule 1 : {d['prose_lines']} of "
               f"{d['nonblank_lines']} non-blank "
               f"({d['prose_share_of_nonblank']}%)")
@@ -1104,6 +1280,12 @@ def build_parser():
                     help="verify every detector against a known positive and "
                          "exit; 2 if any detector is dead")
     ap.add_argument("--list", nargs="?", const="", default=None, metavar="LANG")
+    ap.add_argument("--allow-missing", action="store_true",
+                    help="an ABSENT file is named and skipped instead of "
+                         "exiting 3. For the artifacts this framework archives "
+                         "(docs/TASK.md, docs/PLAN.md); without it a mistyped "
+                         "path is caught. A present-but-unreadable file still "
+                         "exits 3, and an empty input set always does.")
     return ap
 
 
@@ -1181,7 +1363,12 @@ def main(argv=None):
             print(f"\n{sum(1 for r in rows if r[2])}/{len(rows)} detectors live")
         return 2 if dead else 0
 
-    inputs = []
+    # A path this tool cannot read is an INVOCATION error (3), never a broken
+    # instrument (2). Under 2 the CI advisory step failed whenever docs/TASK.md
+    # was absent — which is this framework's own state between `skill-archive-
+    # task` and the next analysis phase — while its comment claimed it could
+    # fail only on a dead detector (TASK 097 D2).
+    inputs, missing = [], []
     if args.files:
         for fp in args.files:
             try:
@@ -1189,15 +1376,30 @@ def main(argv=None):
                 # distinguishable in a multi-file scan
                 with open(fp, encoding="utf-8") as f:
                     inputs.append((fp, f.read()))
+            except FileNotFoundError as exc:
+                if not args.allow_missing:
+                    _fail(args.json, {"ok": False, "error": f"{fp}: {exc}"})
+                    return 3
+                missing.append(fp)
             except (OSError, ValueError) as exc:
+                # Present but unreadable is never tolerated: --allow-missing
+                # names an absence the framework produces, not a broken file.
                 _fail(args.json, {"ok": False, "error": f"{fp}: {exc}"})
-                return 2
+                return 3
+        if not inputs:
+            # Nothing was scanned, so nothing was measured. Reporting 0 here
+            # would be the bare zero this tool exists to prevent.
+            _fail(args.json, {"ok": False, "missing": missing,
+                              "error": "no readable input"})
+            return 3
+        for fp in missing:
+            print(f"SKIPPED (absent, --allow-missing): {fp}", file=sys.stderr)
     else:
         try:
             inputs.append(("stdin", sys.stdin.read()))
         except (OSError, ValueError) as exc:
             _fail(args.json, {"ok": False, "error": f"stdin: {exc}"})
-            return 2
+            return 3
 
     # A repeated path doubled the findings while collapsing the diagnostics
     # entry, so `counts.warn` and `diagnostics[…]` disagreed in the same

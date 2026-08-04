@@ -144,7 +144,11 @@ ERROR_KINDS = {"UNRESOLVABLE", "AMBIGUOUS", "OUT_OF_RANGE", "ORDINAL_MISSING"}
 
 @dataclass
 class Ref:
-    """A single positional reference discovered in a document.
+    # Raw string: the ``md_link`` note below writes escaped backticks (\`) to show a
+    # literal code span. That is not a valid Python escape — under a plain string it
+    # raises SyntaxWarning on 3.12+ and becomes a SyntaxError in a later version. Raw
+    # keeps the docstring's runtime text byte-identical to what it already was.
+    r"""A single positional reference discovered in a document.
 
     Attributes:
         doc: Repo-relative path of the document containing the reference.

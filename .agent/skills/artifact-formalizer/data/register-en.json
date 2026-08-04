@@ -24,6 +24,19 @@
           "\\bas a result of\\b",
           "\\bwhich is why\\b"
         ],
+        "probes": {
+          "\\bmust\\b": "must",
+          "\\bshall\\b": "shall",
+          "\\bis required to\\b": "is required to",
+          "\\bmay not\\b": "may not",
+          "\\bis forbidden\\b": "is forbidden",
+          "\\bbecause\\b": "because",
+          "\\bsince\\b": "since",
+          "\\botherwise\\b": "otherwise",
+          "\\bfor the reason that\\b": "for the reason that",
+          "\\bas a result of\\b": "as a result of",
+          "\\bwhich is why\\b": "which is why"
+        },
         "probe": "The docstring must name the mechanism, because otherwise the reader takes a removed field for a live one."
       },
       "categories": [

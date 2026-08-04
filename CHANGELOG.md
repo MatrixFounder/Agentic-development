@@ -16,6 +16,39 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.24.1 — the register scanner reads the whole document, and says when it did not**
+
+`mask()` classified prose against code by applying four regular expressions in sequence. A comment
+boundary landing inside a code span removed one backtick; the survivor paired with a later one; and
+from that offset prose was masked as code and code scanned as prose, to the end of the file. The
+scan then reported `0 warn`, exit 0, and `18/18 detectors live`.
+
+#### Fixed
+
+- **Masking is one left-to-right pass.** A construct is consumed whole, so it can never begin inside
+  another. A code span now ends at a blank line, per CommonMark, which bounds how far any residual
+  mispairing travels. Measured: the corrected pass restores **61,889 letters across 169 documents**
+  to the rules. Both shipped planning templates were affected — prose reaching rule 1 had fallen
+  from 50% to 27%.
+- **An unreadable path exits 3, not 2.** Code 2 claims a dead detector. Under 2 the advisory CI step
+  went red whenever `docs/TASK.md` was archived — a state this framework produces at every task
+  boundary — beneath a comment asserting only a broken instrument could fail it. New
+  `--allow-missing` names and skips that absence; a present-but-unreadable path still exits 3.
+- **The rule-3 probe exercised 1 pattern of 23.** One declared sentence stood in for the whole
+  modal-by-causal cross-product: deleting `\bshall\b` left `--probe` at 18/18 and the battery at
+  128/128 while real findings vanished. Every pattern now carries a declared example and is
+  exercised against a known-good partner. Deriving the example from the pattern was tried and
+  rejected — it matches by construction and cannot detect the edit it exists to detect.
+- **The two planning templates rendered a comment body as page text.** Each quoted an anchor's
+  closing delimiter inside a comment, and CommonMark closes the comment at the first one.
+
+#### Added
+
+- `DIAGNOSTICS` carries `letters masked away`, and `INPUT DEFECT` lines name an unterminated comment
+  or an unpaired backtick. Both are facts about the document, so both exit 0.
+- `ARCHITECTURE.md` §7.4 states the masking invariant and what each exit code claims.
+- 17 regression pins, battery 128 → 145. Verified failing before the fix.
+
 ### **v3.24.0 — artifact register: measured rules for how specification prose reads**
 
 Task and plan prose had drifted from specification into essay. Measured across two independently

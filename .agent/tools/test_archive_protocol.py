@@ -562,12 +562,131 @@ class TestMetaFallbackStructural:
         assert m["slug"] is None
 
     def test_latin_documents_are_byte_identical(self):
-        """The fallback runs only when the English probes came back empty."""
+        """The fallback runs only when the English probes came back empty.
+
+        The identity keys are asserted individually rather than by comparing
+        the whole dict: ARC-3 added refusal flags that every document carries,
+        so a whole-dict equality would fail on a shape change instead of on the
+        behaviour this test pins.
+        """
         m = parse_task_meta("# Task 042: Existing Feature\n\n"
                             "## 0. Meta Information\n\n"
                             "| Task ID | 042 |\n| Slug | existing-feature |")
-        assert m == {"task_id": "042", "slug": "existing-feature",
-                     "has_meta": True}
+        assert m["task_id"] == "042"
+        assert m["slug"] == "existing-feature"
+        assert m["has_meta"] is True
+        assert m["id_ambiguous"] is False
+
+
+class TestMetaRefusalStopsTheArchive:
+    """ARC-3. `parse_task_meta` refuses an identity; the caller must stop.
+
+    The comment at archive_protocol.py:116-119 states that returning None
+    "routes to the caller's STOP path instead". No such path existed:
+    `archive_task` turned the missing slug into the literal `untitled` and
+    passed `proposed_id=None`, which auto-generates over a set that counts
+    sub-task files. Measured before the fix: a document whose meta reads 095
+    archived as `task-096-untitled.md` with `status: archived`.
+    """
+
+    def test_an_ambiguous_meta_table_stops_the_archive(self, clean_docs_dir):
+        """Red when `archive_task` has no branch for a refused identity."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Приоритет | 001 |\n"
+            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n")
+        for n in ("01", "02", "03"):
+            (clean_docs_dir / "tasks" / f"task-095-{n}-sub.md").touch()
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["status"] == "error"
+        assert result["reason"] == "meta_unreadable"
+
+    def test_a_refused_identity_moves_no_file(self, clean_docs_dir):
+        """The document stays put, so the operator can repair its meta table."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Приоритет | 001 |\n"
+            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n")
+
+        archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert (clean_docs_dir / "TASK.md").exists()
+        assert not list((clean_docs_dir / "tasks").glob("task-*-untitled.md"))
+
+    def test_a_slug_that_cannot_be_read_stops_the_archive(self, clean_docs_dir):
+        """The milder ARC-3 shape: id found, slug refused -> task-042-untitled."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| ИД | 042 |\n"
+            "| Дата | 2026-08-04 |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["status"] == "error"
+        assert result["reason"] == "meta_unreadable"
+
+    def test_a_meta_block_with_no_id_row_still_archives(self, clean_docs_dir):
+        """Absence is not ambiguity. This is the one legitimate write-back case."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["status"] == "archived"
+        assert result["used_id"] == "001"
+
+
+class TestIdWriteBackIsLanguageAgnostic:
+    """ARC-12. The write-back matched the English literal `Task ID`.
+
+    `parse_task_meta` was made structural in the same commit, so a Russian
+    meta table archived with its ID row still empty and nothing reported it:
+    `if updated != content` swallowed the miss.
+    """
+
+    def test_the_id_is_written_back_under_a_non_english_label(self,
+                                                             clean_docs_dir):
+        """Red while the write-back keys on the literal `Task ID`."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        archived = Path(result["archived_to"]).read_text()
+        assert "| ИД задачи | 001 |" in archived
+
+    def test_the_english_label_keeps_working(self, clean_docs_dir):
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Task ID |  |\n"
+            "| Slug | new-feature |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        archived = Path(result["archived_to"]).read_text()
+        assert "| Task ID | 001 |" in archived
+
+    def test_the_result_reports_the_write_back(self, clean_docs_dir):
+        """A miss must be visible. Before ARC-12 nothing in the dict said so."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["meta_id_written"] is True
+
+    def test_a_document_that_already_carries_its_id_is_not_rewritten(
+            self, clean_docs_dir):
+        """Write-back happens only when the document had no ID (Step 4)."""
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| Task ID | 042 |\n"
+            "| Slug | existing |\n\n<!-- contract:rtm -->\n")
+
+        result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+
+        assert result["used_id"] == "042"
+        assert result["meta_id_written"] is False
 
 
 class TestPlanSlotIsConditional:

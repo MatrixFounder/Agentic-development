@@ -1,8 +1,9 @@
-# Development Plan: TASK 097 — Register scanner masking
+# Development Plan: TASK 098 — Archiving identity, ARC-3…ARC-12
 
-**Target:** `docs/TASK.md` (TASK 097), 16 requirements, audit `docs/reviews/framework-audit-097.md`.
+**Target:** `docs/TASK.md` (TASK 098), 9 requirements, audit `docs/reviews/framework-audit-098.md`.
 **Mode:** Framework Upgrade (Self-Improvement). Stub-First per `tdd-stub-first`.
-**Primary file:** `.agent/skills/artifact-formalizer/scripts/scan_register.py`.
+**Primary files:** `.agent/tools/task_id_tool.py`, `.agent/tools/archive_protocol.py`,
+`.agent/tools/rebase_links.py`, `.agent/skills/skill-archive-task/SKILL.md`.
 
 ## 0. Safety
 
@@ -11,177 +12,193 @@
 ```sh
 mkdir -p .agent/archive
 for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
-for f in .agent/skills/artifact-formalizer/scripts/scan_register.py \
-         .agent/skills/artifact-formalizer/scripts/selftest_scan.py \
-         .agent/skills/artifact-formalizer/SKILL.md \
-         .agent/skills/artifact-formalizer/references/measurement-baseline.md \
-         .agent/skills/skill-planning-format/assets/templates/task_md_template.md \
-         .agent/skills/skill-planning-format/assets/templates/plan_md_template.md; do
+for f in .agent/tools/task_id_tool.py \
+         .agent/tools/archive_protocol.py \
+         .agent/tools/rebase_links.py \
+         .agent/tools/test_task_id_tool.py \
+         .agent/tools/test_archive_protocol.py \
+         .agent/tools/test_rebase_links.py \
+         .agent/skills/skill-archive-task/SKILL.md \
+         .claude/agents/planner.md \
+         System/Docs/ORCHESTRATOR.md \
+         docs/ARCHITECTURE.md; do
   cp "$f" ".agent/archive/$(basename $f).bak"
 done
 ```
 
 `.agent/archive/` is gitignored, so the backups leave `git status` clean.
 
-**0.2 Rollback.** Restore any file from `.agent/archive/<basename>.bak`. The tracked copy is also
-in git history at `992b3ef`, so `git checkout 992b3ef -- <path>` is the second route.
+**0.2 Rollback.** Restore any file from `.agent/archive/<basename>.bak`. The tracked copy is also in
+git history at `5c9da31`, so `git checkout 5c9da31 -- <path>` is the second route.
 
-**0.3 Baseline capture** (Stage 1, before any edit). Recorded so every later claim is a delta:
+**0.3 Baseline** (measured 2026-08-04, before any edit):
 
-```sh
-python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py          # expect 128/128
-python3 .agent/skills/artifact-formalizer/scripts/scan_register.py --probe  # expect 18/18
-python3 .agent/skills/artifact-formalizer/scripts/scan_register.py \
-  docs/TASK.md docs/PLAN.md docs/ARCHITECTURE.md --sections --terms docs/ARCHITECTURE.md
-```
-
-**0.4 Stop condition.** A stage whose verification fails is not carried forward. Restore from 0.1
-and report.
+| Measure | Value |
+| :--- | :--- |
+| `python3 -m pytest .agent/tools/ -q` | 110 passed |
+| `ORCHESTRATOR.md:284` states | `39 tests` |
+| `rebase_links.py` reachable exit codes | 0, 2, 3 |
+| Open `ARC-*` records | 10 |
 
 <!-- contract:sequence -->
 
 ## Task Execution Sequence
 
-### Stage 1: Baseline and corpus harness (Red)
+### Stage 1 — Red: pin every defect before fixing it
 
-1. Run 0.3 and record the three outputs under `docs/reviews/`.
-2. Add `corpus_sweep()` to `selftest_scan.py`: for every `*.md` in the repository, report masked
-   letter fraction, surviving backtick parity, and exit code.
-3. Assert the current numbers: 14 odd-parity documents, 598 documents scanned.
+**[R8] 1.1** Add `TestAllowCorrectionPolarity` to `.agent/tools/test_task_id_tool.py`. Four
+behavioural cases against a temp `tasks_dir` holding one real parent archive:
 
-**Verification.** The sweep reproduces E4 and E8 from TASK 097 §1.1.
-**Stub-First note.** The harness measures before any behaviour changes, so Stage 3 has a baseline
-to be a delta against.
+- schema literal is `False`;
+- `tool_runner.execute_tool` with `allow_correction` omitted returns `conflict`;
+- `generate_task_archive_filename` called without the keyword returns `conflict`;
+- the CLI run as a subprocess with no flag exits 1 and prints `conflict`.
 
-### Stage 2: Tokenizer stub and its failing pins (Red)
+Expected at this stage: cases 3 and 4 fail. Docstring names the revert that turns each red.
 
-1. Add `_scan_constructs(text)` to `scan_register.py`, returning a list of `(start, end)` spans.
-   Stub body raises `NotImplementedError`, with the docstring stating the invariant.
-2. Add fixtures F1–F6 to `selftest_scan.py`, one per test obligation T1–T6.
-3. Run the selftest. F1–F6 fail; the 128 existing cases pass.
+**[R8] 1.2** Add `TestMetaRefusalStopsTheArchive` to `.agent/tools/test_archive_protocol.py`:
 
-**Verification.** Selftest reports 128 passed, 6 failed. A pin that passes here is asserting
-nothing and is rewritten before Stage 3.
+- an ambiguous meta table (two 3-digit values) makes `archive_task` return `status: error`;
+- `docs/TASK.md` still exists after that call;
+- a meta block with an empty ID row archives and writes the ID back under a Russian label.
 
-### Stage 3: Tokenizer and paragraph bound (Green)
+Expected at this stage: all three fail.
 
-1. Implement `_scan_constructs` as one left-to-right pass. At each position try fence, HTML
-   comment, link target, code span, in that order; consume the match whole; advance past it.
-2. Bound the code span at a blank line, per CommonMark.
-3. Rewrite `mask()` to blank the spans `_scan_constructs` returns. Keep the frontmatter step ahead
-   of it, unchanged.
-4. Run the selftest.
+**[R8] 1.3** Add `TestSlotTargetMustExist` to `.agent/tools/test_rebase_links.py`:
 
-**Verification.** 128 existing cases plus F1–F6 pass. `--probe` reports 18/18.
-**Rollback trigger.** Any of the 128 failing means the tokenizer masks differently from the
-sequential loop on a case the corpus already covers. Restore and re-derive.
+- with the existence assertion on, a slot map naming an absent target exits 1;
+- with it off, the same input exits 0 or 3.
 
-### Stage 4: Named input defects (Green)
+Expected at this stage: the first fails.
 
-1. Return input defects from `_scan_constructs`: an unterminated HTML comment, and a backtick left
-   unpaired after the pass.
-2. Print them above `DIAGNOSTICS`, each with its line number.
-3. Add the masked-letter fraction to `DIAGNOSTICS`.
-4. Hold exit 0 for every input defect. Exit 2 stays bound to `--probe`.
+**[R8] 1.4** Amend `test_task_id_tool.py:152` (`test_proposed_id_still_conflicts_with_a_real_parent`)
+to pass `allow_correction=True` explicitly. Its intent is the correction path, and after R1 the
+default no longer supplies it. This runs BEFORE Stage 2 so the suite goes red only on the new tests.
 
-**Verification.** F5 and F6 pass. T7 asserts exit 0 on F1–F6 and exit 2 on a killed detector.
+**Gate 1:** `python3 -m pytest .agent/tools/ -q` reports the new tests failing and no other test
+newly failing.
 
-### Stage 4b: Exit-code contract (D2)
+### Stage 2 — Green: the four groups
 
-1. Route an unreadable path and an unreadable stdin to exit 3, and name the path in the output.
-   Leave rule-file and term-file failures at 2: those are the instrument.
-2. Add `--allow-missing`. A named absent file is reported and skipped; the run exits 0 when at
-   least one file was scanned.
-3. Add `--allow-missing` to the CI advisory step for `docs/TASK.md` and `docs/PLAN.md` only.
+**[R1] 2.1** `.agent/tools/task_id_tool.py:165` — `allow_correction: bool = False`. Update the
+docstring line for the argument.
 
-**Verification.** T15, T16, T17.
-**Why the flag rather than tolerating absence by default.** A typo'd path would otherwise pass CI
-while nothing was scanned. The flag names the one state the framework legitimately produces.
+**[R1] 2.2** `.agent/tools/task_id_tool.py:291-301` — add `--allow-correction` (`store_true`). Keep
+`--no-correction` accepting its now-default value per D1. Compute
+`allow_correction = args.allow_correction and not args.no_correction`.
 
-### Stage 4c: Rule-3 probe covers its vocabulary (D3)
+**[R3] 2.3** `.agent/tools/archive_protocol.py` `parse_task_meta` — return a refusal reason.
+Add `id_ambiguous: bool` set when the structural read finds more than one 3-digit value, and
+`slug_unreadable: bool` set when a meta block is present and no slug row is readable.
 
-1. Replace the single declared probe with one synthesised probe per modal and per causal.
-2. Report the count exercised, not the count declared.
-3. Add a mutation pin: each rule-3 pattern replaced in turn by a non-matching one → exit 2.
+**[R3] 2.4** `.agent/tools/archive_protocol.py:244-249` — add the STOP branch the comment at
+`:116-119` promises. On a refusal return `{"status": "error", "reason": "meta_unreadable", ...}` and
+move no file. A meta block with no ID row is not a refusal and still auto-generates.
 
-**Verification.** T18, T19. The mutation pin is what makes this stage falsifiable.
+**[R4] 2.5** `.agent/tools/archive_protocol.py:286-291` — locate the write-back row inside the meta
+region rather than by the English label `Task ID`. Write only when the region offers exactly one
+empty value cell. Report the outcome in the result dict as `meta_id_written`.
 
-### Stage 5: Case-B template repair
+**[R5] 2.6** `.agent/tools/rebase_links.py` — add `--slot-must-exist`. When set, a `SLOT_RESOLVED`
+record whose target is absent sets `failed`. Retain the conservation probe per D3.
 
-1. Rewrite the Case-B comment in both templates so no comment body contains `-->`.
-2. Assert with `markdown-it` that no comment text renders as page text.
-3. Assert `git diff` is empty over the 20 Case-A files.
+**[R5] 2.7** `.agent/tools/rebase_links.py:43-44` — rewrite the docstring exit table so every listed
+code is reachable, naming the declared-present slot target as the exit-1 condition.
 
-**Verification.** T11 and T11a. Templates keep their meaning; only the citation form changes.
+**Gate 2:** `python3 -m pytest .agent/tools/ -q` — all green, count ≥ 110 plus the new tests.
 
-### Stage 6: Documentation and acceptance
+### Stage 3 — Protocol and cards
 
-1. `SKILL.md` §2: name which `DIAGNOSTICS` value invalidates a scan.
-2. `references/measurement-baseline.md`: record E1–E8.
-3. `System/Docs/SKILLS.md`, `CHANGELOG.md`, `CHANGELOG.ru.md`: state the new behaviour.
-4. Run the full gate set of `.github/workflows/framework-gates.yml`.
-5. Re-run the corpus sweep and record the delta against Stage 1.
+**[R6] 3.1** `.agent/skills/skill-archive-task/SKILL.md:149-152` — state the PLAN-slot condition:
+the pairing is passed only when `docs/PLAN.md` exists. Cite `archive_protocol.py:363-366`.
 
-**Verification.** T8–T14. `git status` clean.
+**[R6] 3.2** `.agent/skills/skill-archive-task/SKILL.md:325-327` (Example Flow) — repeat the same
+condition, so the copyable command and the rule agree.
+
+**[R6] 3.3** `.agent/skills/skill-archive-task/SKILL.md:235-246` (Step 7.6.5) — add
+`--slot-must-exist` to the command. By this point the TASK archive is on disk, so the assertion is
+satisfiable and a mistyped slug is caught.
+
+**[R6] 3.4** `.agent/skills/skill-archive-task/SKILL.md:216-219` (Step 7.4) — replace the
+post-correction rule with the Meta-block rule that Steps 3 and 4 enforce. Name
+`archive_protocol.archive_task(allow_renumber=True)` as the one path where a corrected ID survives.
+
+**[R6] 3.5** `.agent/skills/skill-archive-task/SKILL.md:264` (Edge Cases) — rewrite the
+`Corrected used_id` row to match 3.4.
+
+**[R7] 3.6** `.claude/agents/planner.md:12` — replace the ID-generation instruction. The planner
+reuses the parent TASK Meta ID for every sub-task filename, per `06_planner_prompt.md:40`.
+
+**[R7] 3.7** `docs/ARCHITECTURE.md:169` — remove `(uses task_id_tool.py)` from the `planner` row.
+After 3.6 the planner does not invoke it. `ARCHITECTURE.md` is a LIVING document, edited in place.
+
+**Gate 3:** `grep -n "task_id_tool" .claude/agents/planner.md` returns no generate-an-ID instruction;
+each SKILL.md line cited in A12 reads as specified.
+
+### Stage 4 — Documentation
+
+**[R9] 4.1** `System/Docs/ORCHESTRATOR.md:8` — state the shortest correct invocation. After R1 the
+default refuses a conflict, so `--no-correction` is no longer required to obtain that behaviour.
+
+**[R9] 4.2** `System/Docs/ORCHESTRATOR.md:284` — replace `39 tests` with the count Gate 2 reported.
+
+**[R9] 4.3** `CHANGELOG.md` and `CHANGELOG.ru.md` — one paired entry naming the ten issue IDs.
+
+**Gate 4:** A17 and A18 pass.
+
+### Stage 5 — Ledger flip (last, after Gate 2 passed)
+
+**[R8] 5.1** For each of ARC-3 … ARC-12: set `status: fixed`, add `resolved_at: 2026-08-04` and
+`resolved_by: TASK 098`, and append a resolution blockquote. Existing body text is preserved
+verbatim.
+
+**[R8] 5.2** Update the ten matching index lines in `docs/KNOWN_ISSUES.md` in lockstep.
+
+**Gate 5:** A16 passes; no `ARC-*` line reads `status: open`.
 
 <!-- contract:coverage -->
 
 ## Use Case Coverage
 
-| Use Case | Stages | Verified by |
+| Use Case | Stage | Verified by |
 | :--- | :--- | :--- |
-| UC-1 — author scans a document citing a marker | 2, 3 | T1, T2, T3, T4 |
-| UC-2 — malformed document reaches the scanner | 2, 4 | T5, T6, T7 |
-| UC-3 — operator judges whether a scan is a measurement | 4, 6 | T8, T9 |
+| UC-1 archive against a taken ID | 2.1, 2.2 | A1, A2, A3 |
+| UC-2 ambiguous non-English meta | 2.3, 2.4 | A6 |
+| UC-3 empty ID row, non-English | 2.5 | A7, A8 |
+| UC-4 mistyped slug in the slot map | 2.6, 3.3 | A9 |
+| UC-5 task without a plan | 3.1, 3.2 | A10, A12 |
+| UC-6 planner writes sub-task files | 3.6, 3.7 | A13 |
 
 ## Requirements Coverage (RTM)
 
-| Requirement | Stage | Verified by |
+| Req | Stages | Acceptance |
 | :--- | :--- | :--- |
-| R1 classification never inverts | 3 | T1, T2 |
-| R2 no construct begins inside another | 3 | T3 |
-| R3 code span does not cross a blank line | 3 | T4 |
-| R4 valid Markdown raises no diagnostic | 3 | T1 |
-| R5 unterminated comment is named | 4 | T5 |
-| R6 unpaired backtick is named | 4 | T6 |
-| R7 exit 2 reserved for a dead detector | 4 | T7 |
-| R8 `DIAGNOSTICS` carries the masked fraction | 4 | T8 |
-| R9 `SKILL.md` §2 names the invalidating value | 6 | T8 |
-| R10 128 existing cases pass | 3 | T9 |
-| R11 `--probe` reports 18/18 | 3 | T10 |
-| R12 templates render no comment body | 5 | T11 |
-| R12a Case-A files stay unedited | 5 | T11a |
-| R13 baseline records the defect | 6 | T12 |
-| R14 no exit 2 across the corpus | 6 | T13 |
-| R15 changelogs and `System/Docs` updated | 6 | T14 |
-| R16 unreadable path exits 3 | 4b | T15 |
-| R17 `--allow-missing` exits 0 | 4b | T16 |
-| R18 CI advisory passes in the archived state | 4b | T17 |
-| R19 probe exercises every rule-3 pattern | 4c | T18 |
-| R20 probe detail states what it exercised | 4c | T19 |
+| R1 | 2.1, 2.2 | A1, A2, A3, A4 |
+| R2 | 1.1 | A5 |
+| R3 | 2.3, 2.4 | A6, A7 |
+| R4 | 2.5 | A7, A8 |
+| R5 | 2.6, 2.7 | A9, A10, A11 |
+| R6 | 3.1–3.5 | A12 |
+| R7 | 3.6, 3.7 | A13 |
+| R8 | 1.1–1.4, 5.1, 5.2 | A14, A16 |
+| R9 | 4.1–4.3 | A17, A18 |
 
 ## Ordering constraints
 
-| Before | After | Reason |
-| :--- | :--- | :--- |
-| Stage 1 | Stage 3 | A delta needs a baseline captured first |
-| Stage 2 | Stage 3 | A pin written after the fix cannot be seen to fail |
-| Stage 3 | Stage 4 | Input defects are a product of the tokenizer pass |
-| Stage 3 | Stage 5 | Template repair must not be what makes Stage 3 pass |
-| Stage 5 | Stage 6 | The corpus delta is recorded once the corpus is final |
-
-**Stage 5 is deliberately after Stage 3.** Repairing the templates first would remove the Case-B
-trigger, and Stage 3 would then pass without proving anything about Case A.
+1. Stage 1 precedes Stage 2. A test written after its fix cannot show that the fix was needed.
+2. Step 1.4 precedes 2.1. Without it the suite goes red on an expected change.
+3. Stage 5 follows Gate 2. A ledger row that reads `fixed` before the gate passes misreports.
+4. Step 4.2 follows Gate 2. The count it writes is the count Gate 2 reported.
 
 ## Verification per stage
 
-| Stage | Command | Pass condition |
+| Gate | Command | Pass condition |
 | :--- | :--- | :--- |
-| 1 | `selftest_scan.py`, `--probe`, corpus sweep | 128/128, 18/18, 14 odd-parity |
-| 2 | `selftest_scan.py` | 128 pass, F1–F6 fail |
-| 3 | `selftest_scan.py`, `--probe` | 134 pass, 18/18 |
-| 4 | `selftest_scan.py` | 134 pass, exit codes per T7 |
-| 4b | scan with a missing path, with and without the flag | exit 3, then exit 0 |
-| 4c | each rule-3 pattern mutated in turn | `--probe` exits 2 every time |
-| 5 | `markdown-it` render, `git diff` | no comment text rendered, Case-A diff empty |
-| 6 | full `framework-gates.yml` set | every job exits 0, `git status` clean |
+| 1 | `python3 -m pytest .agent/tools/ -q` | new tests fail, no other test newly fails |
+| 2 | `python3 -m pytest .agent/tools/ -q` | all pass |
+| 2b | manual revert of `tool_runner.py:292` default | the four-surface test turns red |
+| 3 | `grep` per A12, A13 | cited lines read as specified |
+| 4 | `grep` per A17, A18 | both present |
+| 5 | `grep` per A16 | ten records and ten index lines agree |
+| 6 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/TASK.md docs/PLAN.md` | exit 0 |
+| 7 | `git status --porcelain` | only intended paths listed |

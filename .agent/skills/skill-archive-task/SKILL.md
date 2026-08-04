@@ -150,6 +150,11 @@ python3 .agent/tools/rebase_links.py docs/tasks/{filename} --from docs --to docs
   task's* plan, which Step 7 is about to archive. Pass the pairing so the link is written to the
   archive name rather than to a path that dies seconds later:
   `--slot docs/PLAN.md=docs/plans/plan-{used_id}-{slug}.md`
+- **Pass that slot ONLY when `docs/PLAN.md` exists** (ARC-4). A task that reached analysis but not
+  planning has no plan to archive, so Step 7.1 will skip it and the mapped file is never created.
+  Mapping it anyway authors a citation to a path that will not exist and reports success.
+  `archive_protocol.py:363-366` implements the condition; `TestPlanSlotIsConditional` pins it.
+  Without the slot the same link is reported as `UNMAPPED_SLOT` and left alone, which is correct.
 - Exit `0` clean, `3` needs review, `1` a link regressed, `2` could not run. A `3` lists links that
   were **left alone** — broken before the move, or resolving only by accident. Never "fix" those
   by guessing; report them.
@@ -213,10 +218,16 @@ mkdir -p docs/plans
 plan_filename = "plan-{used_id}-{slug}.md"
 ```
 
-`{used_id}` and `{slug}` are REUSED VERBATIM from the TASK.md archive just completed —
-specifically the post-correction `used_id` returned by `generate_task_archive_filename`
-(Step 3), NOT the ID read from TASK.md's Meta block. If the tool corrected a conflicting
-ID (e.g. `100 → 101`), TASK and PLAN must both use the corrected ID to stay paired.
+`{used_id}` and `{slug}` are REUSED VERBATIM from the TASK.md archive just completed — the
+`used_id` returned by `generate_task_archive_filename` in Step 3, which Step 4 already asserted
+equal to the Meta-block ID.
+
+Under this protocol the two values cannot differ (**ARC-10**). Step 3 runs with correction OFF, so
+`status: "corrected"` is unreachable and a collision returns `"conflict"` → STOP. Step 4 then
+asserts `id_in_filename == id_in_meta_block` and stops on a mismatch, before Step 7 is ever
+entered. The one path where a corrected ID survives is the automated mirror called as
+`archive_protocol.archive_task(allow_renumber=True)`; there TASK and PLAN both take the corrected
+ID and stay paired.
 
 **7.5 — Collision guard:**
 
@@ -236,7 +247,7 @@ mv docs/PLAN.md docs/plans/{plan_filename}
 
 ```bash
 python3 .agent/tools/rebase_links.py docs/plans/{plan_filename} \
-  --from docs --to docs/plans \
+  --from docs --to docs/plans --slot-must-exist \
   --slot docs/TASK.md=docs/tasks/task-{used_id}-{slug}.md
 ```
 
@@ -244,6 +255,12 @@ The slot is **not optional here**. By this point `docs/TASK.md` is already gone 
 and Step 7 runs only after Step 6 passed. An existence-based rule would see the plan's
 `[docs/TASK.md](TASK.md)` as broken both before and after, leave it dead forever, and report
 nothing. The slot map carries the identity without touching the filesystem.
+
+`--slot-must-exist` is **required here and forbidden at Step 5.5** (**ARC-6**). Here the TASK
+archive was created in Step 5, so a mistyped `{slug}` names a file that is already absent and the
+tool exits 1. At Step 5.5 the plan archive does not exist yet, so the same assertion would fail the
+protocol's own happy path. Without the flag a one-character slug typo rewrote the citation and
+returned exit 0 with `"ok": true`, and Step 7.7's assertion passed on a dead link.
 
 **7.7 — Validate:**
 
@@ -261,7 +278,7 @@ IF validation fails: retry mv once, else notify user.
 | `docs/PLAN.md` absent | Skip silently (7.1). Not an error — many tasks reach analysis but not planning. |
 | Task refinement (same task) | Step 7.2 returns early. PLAN.md is overwritten in place by the Planner. |
 | `docs/plans/` missing | `mkdir -p` in 7.3 creates it. |
-| Corrected `used_id` | 7.4 uses the corrected ID, so TASK and PLAN stay paired. |
+| Corrected `used_id` | Unreachable under this protocol: Step 3 runs correction OFF and Step 4 stops on a mismatch. Only `archive_task(allow_renumber=True)` reaches it, and there 7.4 keeps TASK and PLAN paired. |
 | **Orphan PLAN.md** (PLAN.md exists, no TASK.md) | Step 1 skipped archiving (no TASK.md) → Step 7 is never reached. The orphan PLAN.md is **left in place**. Warn the user it may be stale. PLAN.md has no independent ID, so it cannot be safely archived alone — this is a deliberate limitation. |
 
 ## Safe Commands (AUTO-RUN)
@@ -320,12 +337,14 @@ This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries
    ```
 8. **Step 5.5** — rebase the moved document's links. `docs/tasks/` is one level deeper, so every
    relative link now denotes something else. `docs/PLAN.md` is a slot, so pass the pairing Step 7
-   is about to create:
+   is about to create — **only because `docs/PLAN.md` exists in this example**:
    ```bash
    python3 .agent/tools/rebase_links.py docs/tasks/task-{OLD_ID}-{old-slug}.md \
      --from docs --to docs/tasks \
      --slot docs/PLAN.md=docs/plans/plan-{OLD_ID}-{old-slug}.md
    ```
+   With no `docs/PLAN.md`, drop the `--slot` line entirely (ARC-4). Do NOT add `--slot-must-exist`
+   here: the plan archive is created in step 10, so this slot is a forward reference.
    Exit `3` lists links left alone deliberately — report them, never guess a target.
 9. **Step 6** — validate: `docs/TASK.md` gone ✓, archive present ✓, links still resolve ✓.
 10. **Step 7** — PLAN lockstep. `docs/PLAN.md` exists? → YES.
@@ -334,11 +353,12 @@ This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries
     - **Step 7.6.5** — rebase, with `docs/TASK.md` mapped to the archive it just became:
       ```bash
       python3 .agent/tools/rebase_links.py docs/plans/plan-{OLD_ID}-{old-slug}.md \
-        --from docs --to docs/plans \
+        --from docs --to docs/plans --slot-must-exist \
         --slot docs/TASK.md=docs/tasks/task-{OLD_ID}-{old-slug}.md
       ```
       The slot map is resolved before any filesystem probe, which is why it still works here —
-      `docs/TASK.md` was moved away in step 7 above.
+      `docs/TASK.md` was moved away in step 7 above. `--slot-must-exist` belongs here and not in
+      step 8: the TASK archive already exists, so a mistyped `{old-slug}` exits 1 (ARC-6).
     - Validate: `docs/PLAN.md` does NOT exist ✓.
 11. Create new `docs/TASK.md` for the login feature with ID `{NEW_ID}`.
 

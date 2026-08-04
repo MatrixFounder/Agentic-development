@@ -9,7 +9,10 @@ Tests cover:
 - Edge cases
 """
 
+import json
 import os
+import subprocess
+import sys
 import tempfile
 import pytest
 
@@ -144,13 +147,18 @@ class TestParentArchiveVsSubTask:
         assert result["filename"] == "task-005-m2-alpha-paid.md"
 
     def test_proposed_id_still_conflicts_with_a_real_parent(self, tmp_path):
-        """The guard must not be loosened into "never conflict"."""
+        """The guard must not be loosened into "never conflict".
+
+        `allow_correction=True` is passed explicitly: this test exercises the
+        correction path, and after ARC-7 the default no longer supplies it.
+        """
         tasks_dir = tmp_path / "tasks"
         tasks_dir.mkdir()
         (tasks_dir / "task-005-m2-alpha-paid.md").touch()
 
         result = generate_task_archive_filename(
-            "other", proposed_id="005", tasks_dir=str(tasks_dir)
+            "other", proposed_id="005", allow_correction=True,
+            tasks_dir=str(tasks_dir)
         )
         assert result["status"] == "corrected"
         assert result["used_id"] != "005"
@@ -397,6 +405,134 @@ class TestSchemaMatchesTheDispatcher:
                     if t["function"]["name"] == "generate_task_archive_filename")
         prop = spec["function"]["parameters"]["properties"]["allow_correction"]
         assert prop["default"] is False
+
+
+class TestAllowCorrectionPolarity:
+    """ARC-7/8/9. One policy, four call surfaces, measured on each.
+
+    ARC-1 decided that an ID already cited elsewhere is reported as a conflict,
+    never renumbered without an explicit instruction. Commit 992b3ef applied
+    that to `schemas.py` and `System/scripts/tool_runner.py` only, so the Python
+    signature and the CLI kept renumbering.
+
+    The class this replaces asserted one schema literal and nothing else:
+    reverting `tool_runner.py` to `args.get("allow_correction", True)` left all
+    39 tests green (measured, ARC-9). Each test below names the revert that
+    turns it red.
+    """
+
+    @staticmethod
+    def _tasks_dir_with_a_real_parent(tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-095-real-parent.md").touch()
+        return tasks_dir
+
+    def test_surface_1_schema_literal_is_false(self):
+        """Red when `schemas.py` sets `"default": True`."""
+        import schemas
+        spec = next(t for t in schemas.TOOLS_SCHEMAS
+                    if t["function"]["name"] == "generate_task_archive_filename")
+        prop = spec["function"]["parameters"]["properties"]["allow_correction"]
+        assert prop["default"] is False
+
+    def test_surface_2_dispatcher_omitting_the_argument_refuses(self, tmp_path,
+                                                               monkeypatch):
+        """Red when `tool_runner.py` reads `args.get("allow_correction", True)`.
+
+        The dispatcher hard-codes `tasks_dir` to the repo's own `docs/tasks`,
+        so the effective argument is observed at the boundary instead of by
+        archiving a real file.
+        """
+        import sys
+        sys.path.insert(0, os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__)))), "System", "scripts"))
+        import task_id_tool
+        import tool_runner
+
+        seen = {}
+
+        def _recorder(slug, proposed_id=None, allow_correction=None,
+                      tasks_dir=None):
+            seen["allow_correction"] = allow_correction
+            return {"filename": None, "used_id": None,
+                    "status": "conflict", "message": "recorded"}
+
+        # The dispatcher binds the name at call time via `from task_id_tool
+        # import ...`, so patching the module attribute is what it will see.
+        monkeypatch.setattr(task_id_tool, "generate_task_archive_filename",
+                            _recorder)
+
+        tool_runner.execute_tool({
+            "name": "generate_task_archive_filename",
+            "arguments": {"slug": "my-feature", "proposed_id": "095"},
+        })
+
+        assert seen["allow_correction"] is False
+
+    def test_surface_3_python_default_refuses(self, tmp_path):
+        """Red when `task_id_tool.py` declares `allow_correction: bool = True`."""
+        tasks_dir = self._tasks_dir_with_a_real_parent(tmp_path)
+
+        result = generate_task_archive_filename(
+            slug="my-feature", proposed_id="095", tasks_dir=str(tasks_dir)
+        )
+
+        assert result["status"] == "conflict"
+        assert result["used_id"] != "096"
+
+    def test_surface_4_cli_without_a_flag_refuses(self, tmp_path):
+        """Red when the CLI computes `allow_correction=not args.no_correction`."""
+        tasks_dir = self._tasks_dir_with_a_real_parent(tmp_path)
+        tool = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "task_id_tool.py")
+
+        proc = subprocess.run(
+            [sys.executable, tool, "my-feature", "--proposed-id", "095",
+             "--tasks-dir", str(tasks_dir)],
+            capture_output=True, text=True,
+        )
+
+        assert json.loads(proc.stdout)["status"] == "conflict"
+        assert proc.returncode == 1
+
+    def test_surface_4_cli_opts_in_explicitly(self, tmp_path):
+        """The opt-in exists, so the CLI can still express both values."""
+        tasks_dir = self._tasks_dir_with_a_real_parent(tmp_path)
+        tool = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "task_id_tool.py")
+
+        proc = subprocess.run(
+            [sys.executable, tool, "my-feature", "--proposed-id", "095",
+             "--tasks-dir", str(tasks_dir), "--allow-correction"],
+            capture_output=True, text=True,
+        )
+
+        assert json.loads(proc.stdout)["status"] == "corrected"
+        assert proc.returncode == 0
+
+    def test_the_bare_new_id_form_is_untouched(self, tmp_path):
+        """D2. Without `--proposed-id` the flag is never read.
+
+        `02_analyst_prompt.md:48` and the planner card use the bare form for a
+        task that has no ID yet. That path returns from the auto-generate branch
+        before `allow_correction` is consulted, so flipping the default must not
+        change it.
+        """
+        tasks_dir = self._tasks_dir_with_a_real_parent(tmp_path)
+        tool = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "task_id_tool.py")
+
+        proc = subprocess.run(
+            [sys.executable, tool, "brand-new", "--tasks-dir", str(tasks_dir)],
+            capture_output=True, text=True,
+        )
+
+        payload = json.loads(proc.stdout)
+        assert payload["status"] == "generated"
+        assert payload["used_id"] == "096"
+        assert proc.returncode == 0
 
 
 if __name__ == "__main__":

@@ -16,6 +16,61 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.24.2 — archiving identity: eleven defects from the ARC-1/ARC-2 review (TASK 098)**
+
+An adversarial review of `992b3ef` — the commit that closed ARC-1 and ARC-2 — filed ten further
+defects in `archiving`. Each was reproduced against the committed tree by an independent verifier,
+and all ten stayed open because `/heal-issues` refuses an issue without an explicit
+`auto_fixable: true`, a component gate, and a fenced `sh` repro. They are closed here through the
+normal pipeline, together with WIR-10, which the first fix below made verified-gone.
+
+#### Fixed
+
+- **`allow_correction` had two values across four call surfaces (ARC-7, ARC-8, ARC-9, WIR-10).** The
+  ARC-1 flip reached `schemas.py` and `tool_runner.py` only. `task_id_tool.py` still declared
+  `allow_correction: bool = True`, and the CLI offered only the opt-out `--no-correction` — so
+  omitting one flag renumbered a cited task and exited 0. The signature now defaults to `False`,
+  the CLI gains `--allow-correction` and keeps accepting `--no-correction`, and the bare
+  new-ID form is untouched (with no `--proposed-id` the flag is never read). The gate that
+  should have caught this asserted one schema literal: reverting the dispatcher left all 39 tests
+  green. It now observes behaviour on each of the four surfaces — measured, each of the three
+  reverts turns it red. WIR-10 recorded the same drift as a CLI-versus-dispatcher divergence and
+  closes with it: its reproduction, re-run verbatim, returns `conflict` with rc 1 on both surfaces
+  where it previously measured `{"used_id": "097", "status": "corrected"}` with rc 0 on one.
+- **A refused identity archived anyway (ARC-3).** `parse_task_meta` returns `None` when the meta
+  table carries two 3-digit values, and its comment said that "routes to the caller's STOP path".
+  No such path existed: `archive_task` turned the missing slug into the literal `untitled` and
+  auto-generated an ID over a set that counts sub-task files. A document reading 095 archived as
+  `task-096-untitled.md` with `status: archived`. Refusals are now reported as `id_ambiguous` /
+  `slug_unreadable` and stop the archive with `reason: meta_unreadable`. A meta block with no ID
+  row is an absence, not a refusal, and still archives.
+- **The ID write-back only spoke English (ARC-12).** It matched the literal `Task ID` while the
+  read above it was language-agnostic, so a Russian meta table archived with its ID row still
+  empty — and `if updated != content` hid the miss. The row is now located structurally, and the
+  outcome is reported as `meta_id_written`. Fixing it surfaced a second gap: the structural slug
+  read was reachable only through a *filled* ID row, so a document awaiting write-back could not
+  have its slug read at all and fell to the shared `untitled` stem.
+- **`rebase_links.py` exit code 1 was unreachable (ARC-5, ARC-6).** The conservation probe
+  re-derives its target by `relpath` from a path whose existence was already proven, so it
+  reconstructs an existing path in every case. Meanwhile `SLOT_RESOLVED` was in neither
+  `ACTIONS_WARN` nor `_CONSERVED`: a one-character slug typo at Step 7.6.5 rewrote the citation
+  and returned exit 0 with `"ok": true`, and the protocol's closing assertion passed on a dead
+  link. New `--slot-must-exist` makes exit 1 reachable and names one condition. The test that
+  claimed to pin exit 1 passed via exit 3 and is now honest about what it exercises.
+- **The shipped protocol contradicted the tested rule (ARC-4, ARC-10).** `skill-archive-task`
+  Step 5.5 passed the PLAN slot unconditionally while `archive_protocol.py` maps it only when
+  `docs/PLAN.md` exists. Step 7.4 still told the agent to prefer a post-correction `used_id` over
+  the Meta block, which Step 4 forbids. Both now state the rule the code implements.
+- **A sixth invocation site told the planner to invent IDs (ARC-11).** `.claude/agents/planner.md`
+  instructed the subagent to run `task_id_tool.py <slug>` "to generate unique IDs", contradicting
+  `06_planner_prompt.md`, which forbids generating one at all. Measured against this repository:
+  the bare call returned `097` while `docs/TASK.md` read `096`.
+
+#### Changed
+
+- `.agent/tools/` test count 110 → 128.
+- `ORCHESTRATOR.md` states the shortest correct invocation and the current test count.
+
 ### **v3.24.1 — the register scanner reads the whole document, and says when it did not**
 
 `mask()` classified prose against code by applying four regular expressions in sequence. A comment

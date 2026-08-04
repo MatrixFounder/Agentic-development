@@ -162,16 +162,21 @@ def find_next_available_id(existing_ids: list[int], start_from: int = 1) -> int:
 def generate_task_archive_filename(
     slug: str,
     proposed_id: Optional[str] = None,
-    allow_correction: bool = True,
+    allow_correction: bool = False,
     tasks_dir: str = "docs/tasks"
 ) -> dict:
     """
     Generate a unique filename for task archival.
-    
+
     Args:
         slug: Short task name in Latin with dashes
         proposed_id: Optional desired ID (e.g., "031" or "31")
-        allow_correction: If True, auto-correct to next available on conflict
+        allow_correction: If True, auto-correct to next available on conflict.
+            Defaults to False: an ID cited in sub-tasks, a plan archive, commits
+            or ledger rows is never renumbered without an explicit instruction
+            (ARC-1). ARC-7 flipped this default, which had disagreed with
+            `schemas.py` and `System/scripts/tool_runner.py` since 992b3ef.
+            Ignored when `proposed_id` is None — that path auto-generates.
         tasks_dir: Path to tasks directory (default: "docs/tasks")
     
     Returns:
@@ -289,16 +294,30 @@ if __name__ == "__main__":
         help="Tasks directory (default: docs/tasks)",
     )
     parser.add_argument(
+        "--allow-correction",
+        action="store_true",
+        help="Opt in to auto-selecting the next available ID on conflict; "
+             "without it a conflict is reported and the exit code is 1",
+    )
+    parser.add_argument(
         "--no-correction",
         action="store_true",
-        help="Error on ID conflict instead of auto-selecting next available",
+        help="Deprecated no-op: refusing to renumber is the default (ARC-8). "
+             "Accepted so the six documented invocation sites keep working",
     )
     args = parser.parse_args()
+
+    # ARC-8. The CLI offered only the opt-OUT `--no-correction`, so an agent
+    # that forgot one flag got a renumbered task and exit 0 -- the polarity the
+    # schema and the dispatcher had already been flipped away from. The two
+    # flags are combined rather than made mutually exclusive because
+    # `--no-correction` now states the default, so passing both is consistent.
+    allow_correction = args.allow_correction and not args.no_correction
 
     result = generate_task_archive_filename(
         slug=args.slug,
         proposed_id=args.proposed_id,
-        allow_correction=not args.no_correction,
+        allow_correction=allow_correction,
         tasks_dir=args.tasks_dir,
     )
     print(json.dumps(result, indent=2))

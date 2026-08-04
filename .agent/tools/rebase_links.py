@@ -40,8 +40,17 @@ Idempotence falls out of the table rather than being bolted on: re-running the
 same (from_dir, to_dir) over an already-rebased file lands in the
 `no / yes` row, which never writes.
 
-Exit codes: 0 clean / 1 rewrite or validation failed / 2 could not run /
-3 completed with warnings.
+Exit codes:
+  0  clean
+  1  a declared-present slot target does not exist (requires --slot-must-exist)
+  2  could not run
+  3  completed with warnings
+
+ARC-5 measured that exit 1 was unreachable before `--slot-must-exist` existed.
+The conservation probe it guarded re-derives its target by `relpath` from a path
+whose existence was already proven, so it reconstructs an existing path in every
+case. That probe is retained as a postcondition on the rewrite arithmetic, but
+it is not the gate that catches a wrong slot map -- `--slot-must-exist` is.
 """
 
 from __future__ import annotations
@@ -308,6 +317,12 @@ def _main(argv=None):
                          "docs/PLAN.md=docs/plans/plan-096-x.md. Repeatable. "
                          "Resolved before any filesystem probe, so it still "
                          "works once the slot file has been moved away.")
+    ap.add_argument("--slot-must-exist", action="store_true",
+                    help="assert every --slot target is already on disk; a "
+                         "missing one exits 1 instead of being reported as "
+                         "pending. Pass it where the target was created BEFORE "
+                         "this call (skill-archive-task Step 7.6.5); omit it "
+                         "for a forward reference (Step 5.5).")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -335,15 +350,20 @@ def _main(argv=None):
 
         # Conservation law: every file denoted before the move is denoted after.
         #
-        # SLOT_RESOLVED is deliberately exempt. A slot map is a FORWARD
+        # SLOT_RESOLVED is exempt BY DEFAULT. A slot map is usually a FORWARD
         # reference -- the caller declares what the slot is becoming, and in the
         # documented archive order that file does not exist yet: Step 5.5 rebases
         # the TASK naming `docs/plans/plan-NNN-x.md`, which Step 7 only creates
-        # afterwards. Probing it here made the protocol's own happy path exit 1
+        # afterwards. Probing it there made the protocol's own happy path exit 1
         # ("a link regressed") and, read literally, told the agent to stop.
-        # Policing the caller's archiving sequence is not this tool's job; the
-        # protocol's closing validation is where a wrong slot map is caught.
-        # A pending target is still surfaced below, just not as a failure.
+        #
+        # ARC-6: that exemption over-covered Step 7.6.5, where the TASK archive
+        # is ALREADY on disk and a mistyped slug is fully detectable. Measured:
+        # `--slot docs/TASK.md=docs/tasks/task-077-logn.md` against an archive
+        # named task-077-login.md rewrote the citation and returned 0 with
+        # `"ok": true`, so the protocol's closing assertion passed on a link the
+        # tool knew was dangling. `--slot-must-exist` is how a caller states
+        # that its slot targets are present tense rather than forward-looking.
         for r in records:
             if r.action in _CONSERVED:
                 target = os.path.normpath(
@@ -357,6 +377,8 @@ def _main(argv=None):
                                  _split_fragment(r.new_target.strip("<>"))[0]))
                 if not os.path.exists(target):
                     pending.append(f"{path}:{r.line} -> {r.new_target}")
+                    if args.slot_must_exist:
+                        failed = True
 
         entry = {"file": path, "changed": changed,
                  "links": [r._asdict() for r in records]}

@@ -36,11 +36,22 @@ def parse_task_meta(content: str) -> dict:
             - task_id: str or None if not found
             - slug: str or None if not found
             - has_meta: bool indicating if Meta section exists
+            - id_ambiguous: bool, True when the meta region carried more than
+              one 3-digit value and the structural read refused to pick one
+            - slug_unreadable: bool, True when a meta region is present and no
+              slug could be read from it
+
+    The last two are the REFUSAL REASONS (ARC-3). Before them the caller could
+    not tell "this document has no ID" from "this document has an ID I refuse
+    to guess at", and both arrived as `task_id=None` -- which archive_task()
+    turned into an auto-generated number over a set that counts sub-task files.
     """
     result = {
         "task_id": None,
         "slug": None,
-        "has_meta": False
+        "has_meta": False,
+        "id_ambiguous": False,
+        "slug_unreadable": False,
     }
     
     # Locate the meta section. The anchor is checked FIRST and in any language;
@@ -101,12 +112,19 @@ def parse_task_meta(content: str) -> dict:
             nxt = rest.find("<!-- contract:")
             region = rest if nxt == -1 else rest[:nxt]
 
+            # EMPTY value cells are kept (ARC-3/ARC-12). Dropping them lost the
+            # positional anchor the slug rule depends on: with `| ИД задачи |  |`
+            # skipped, "the row after the id row" pointed at the wrong row, and a
+            # document whose id is merely awaiting write-back could not have its
+            # slug read at all -- it fell to the shared "untitled" stem (WI-30).
+            # Only the `|:---|:---|` separator is discarded.
             rows = []
-            for _, value in re.findall(r'^\s*\|([^|\n]+)\|([^|\n]+)\|\s*$',
+            for _, value in re.findall(r'^\s*\|([^|\n]+)\|([^|\n]*)\|\s*$',
                                        region, re.MULTILINE):
                 value = value.strip()
-                if value and not set(value) <= set("-: "):
-                    rows.append(value)
+                if value and set(value) <= set("-: "):
+                    continue
+                rows.append(value)
 
             # The id is a value in the framework's own zero-padded form: EXACTLY
             # three digits. A looser `\d{1,6}` matched a `| Дата | 2026 |` row
@@ -118,27 +136,86 @@ def parse_task_meta(content: str) -> dict:
             # first is how a wrong identity gets committed silently. Returning
             # None routes to the caller's STOP path instead.
             ids = [i for i, v in enumerate(rows) if re.fullmatch(r'\d{3}', v)]
+            if result["task_id"] is None and len(ids) > 1:
+                result["id_ambiguous"] = True
             if result["task_id"] is None and len(ids) == 1:
                 result["task_id"] = rows[ids[0]]
 
-                # The slug is the row IMMEDIATELY AFTER the id — the order the
-                # templates emit and every existing artifact follows. Matching
-                # any kebab-shaped value anywhere in the block picked up
-                # `| Статус | in-progress |` instead.
-                # The value may be in any script -- `| Слаг | реестр |` is a
-                # slug and normalize_slug transliterates it. Requiring
-                # `[a-z0-9-]` here would drop it to the shared "untitled",
-                # reopening the WI-30 collision from the other side. The only
-                # shape check is "contains a letter", which rejects a date or a
-                # version number sitting where the slug should be.
-                if result["slug"] is None and ids[0] + 1 < len(rows):
-                    nxt_value = rows[ids[0] + 1]
-                    if any(ch.isalpha() for ch in nxt_value):
-                        normalized = normalize_slug(nxt_value)
-                        if normalized != "untitled":
-                            result["slug"] = normalized
+            # The slug is the row IMMEDIATELY AFTER the id row — the order the
+            # templates emit and every existing artifact follows. Matching any
+            # kebab-shaped value anywhere in the block picked up
+            # `| Статус | in-progress |` instead.
+            # The value may be in any script -- `| Слаг | реестр |` is a slug
+            # and normalize_slug transliterates it. Requiring `[a-z0-9-]` here
+            # would drop it to the shared "untitled", reopening the WI-30
+            # collision from the other side. The only shape check is "contains
+            # a letter", which rejects a date or a version number sitting where
+            # the slug should be.
+            #
+            # ARC-3: the id row is located whether or not it carries a value.
+            # A document awaiting write-back has an EMPTY id row, and anchoring
+            # only on a filled one made its slug unreadable — the same
+            # "untitled" collision, reached from the other side. The empty-cell
+            # anchor is the one `_write_id_into_meta` writes into, so the two
+            # read the same row by construction.
+            anchor = ids[0] if len(ids) == 1 else None
+            if anchor is None:
+                blanks = [i for i, v in enumerate(rows) if v == ""]
+                if len(blanks) == 1:
+                    anchor = blanks[0]
+
+            if result["slug"] is None and anchor is not None \
+                    and anchor + 1 < len(rows):
+                nxt_value = rows[anchor + 1]
+                if any(ch.isalpha() for ch in nxt_value):
+                    normalized = normalize_slug(nxt_value)
+                    if normalized != "untitled":
+                        result["slug"] = normalized
+
+    # ARC-3, the milder shape: an id was read but no slug was. Falling through
+    # left the caller to substitute the literal "untitled", which is the shared
+    # stem two different tasks collide on (WI-30). A meta region that is present
+    # and yields no slug is a refusal, not an absence.
+    if result["has_meta"] and result["slug"] is None:
+        result["slug_unreadable"] = True
 
     return result
+
+
+def _write_id_into_meta(content: str, used_id: str):
+    """Write a generated ID into the meta table's empty value cell (ARC-12).
+
+    The row is addressed by SHAPE, mirroring parse_task_meta: inside the meta
+    region, the target is the single row whose value cell is empty. The label
+    cell is preserved verbatim, so `| ИД задачи |  |` becomes
+    `| ИД задачи | 042 |` and the English table behaves as before.
+
+    Returns:
+        (content, written) -- `written` is False when the region offers no
+        single empty value cell. The caller reports that in its result dict:
+        the old code hid the same case behind `if updated != content`.
+    """
+    start = content.find(META_ANCHOR)
+    if start == -1:
+        for probe in ("## 0. Meta Information", "Meta Information"):
+            start = content.find(probe)
+            if start != -1:
+                break
+    if start == -1:
+        return content, False
+
+    rest = content[start:]
+    nxt = rest.find("<!-- contract:", len(META_ANCHOR))
+    region = rest if nxt == -1 else rest[:nxt]
+
+    empty_rows = [m for m in re.finditer(
+        r'^(\s*\|[^|\n]+\|)(\s*)\|[ \t]*$', region, re.MULTILINE)]
+    if len(empty_rows) != 1:
+        return content, False
+
+    m = empty_rows[0]
+    new_region = region[:m.start()] + f"{m.group(1)} {used_id} |" + region[m.end():]
+    return content[:start] + new_region + rest[len(region):], True
 
 
 def _rebase_moved_document(archived_path, from_dir, to_dir, slot_map) -> list:
@@ -241,8 +318,41 @@ def archive_task(
     # which counts the task's own sub-task files. That IS ARC-1, reached
     # through the automated path (verified: sub-tasks task-095-01..09 present,
     # meta id 095, caller supplies slug only -> archived as task-096).
+    meta_id_written = False
     if current_task_slug is None or current_task_id is None:
         meta = parse_task_meta(task_file.read_text())
+
+        # Step 2.5: the STOP path parse_task_meta's comment promises (ARC-3).
+        #
+        # A refusal is not an absence. `id_ambiguous` means the meta table
+        # carried two 3-digit values, `slug_unreadable` means a meta region is
+        # present and no slug could be read from it. Falling through turned the
+        # first into an auto-generated id over a set that counts the task's own
+        # sub-task files, and the second into the shared "untitled" stem --
+        # measured: a document reading 095 archived as task-096-untitled.md
+        # with status "archived" and no warning.
+        #
+        # A document with NO meta region at all still archives: nothing was
+        # refused there, and Step 4 below writes the generated id back.
+        if meta.get("id_ambiguous") or meta.get("slug_unreadable"):
+            refused = []
+            if meta.get("id_ambiguous"):
+                refused.append("task_id")
+            if meta.get("slug_unreadable"):
+                refused.append("slug")
+            return {
+                "status": "error",
+                "reason": "meta_unreadable",
+                "archived_to": None,
+                "refused": refused,
+                "message": (
+                    "The meta table could not be read structurally: "
+                    + ", ".join(refused)
+                    + ". Repair the meta block or pass the value explicitly; "
+                      "guessing here commits a wrong identity."
+                ),
+            }
+
         if current_task_slug is None:
             current_task_slug = meta.get("slug") or "untitled"
         if current_task_id is None:
@@ -283,11 +393,20 @@ def archive_task(
     # the `Archive name` row and every in-body citation were left stating the
     # old number, so the document contradicted itself. Renumbering a published
     # id is a human decision, not a side effect of archiving.
+    # ARC-12: the row is located by STRUCTURE, not by the English label.
+    # `parse_task_meta` above is language-agnostic by construction, so keying
+    # the write-back on the literal `Task ID` made it a no-op on every
+    # non-English document -- and `if updated != content` swallowed the miss,
+    # leaving the archived document's identity in its filename only.
+    #
+    # Inside the meta region the target is the ONE row whose value cell is
+    # empty. Two such rows mean the table cannot be addressed structurally, so
+    # nothing is written: the same refuse-rather-than-guess rule as above.
     if tool_result["status"] == "generated" and not current_task_id:
         content = task_file.read_text()
-        updated = re.sub(r'(\|\s*Task ID\s*\|\s*)\|',
-                         rf'\g<1>{tool_result["used_id"]} |', content, count=1)
-        if updated != content:
+        updated, meta_id_written = _write_id_into_meta(
+            content, tool_result["used_id"])
+        if meta_id_written:
             task_file.write_text(updated)
 
     # Step 5: Archive (move file)
@@ -382,6 +501,11 @@ def archive_task(
         # Pass these straight to archive_plan() to keep TASK and PLAN paired.
         "used_id": used_id,
         "slug": archived_slug,
+        # ARC-12. False on every document that already carried its id (the
+        # normal case, where Step 4 must NOT write) and on a meta table that
+        # offered no single empty value cell. Reported rather than inferred:
+        # the miss used to be indistinguishable from a successful write.
+        "meta_id_written": meta_id_written,
     }
 
 

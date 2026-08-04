@@ -6,6 +6,7 @@ found in the first design: the mutable-slot case and the indented-continuation
 masking rule.
 """
 
+import json
 import os
 import sys
 
@@ -321,18 +322,25 @@ class TestSlotTargetIsAForwardReference:
         assert code == 0
         assert "](../plans/plan-077-login.md)" in moved.read_text()
 
-    def test_a_real_regression_still_exits_one(self, tmp_path):
-        """The conservation law must still hold for ordinary rewrites."""
+    def test_a_link_broken_before_the_move_is_reported_as_review(self, tmp_path):
+        """ARC-5. This fixture exits 3, not 1 — it never reaches the conservation
+        branch.
+
+        It was named `test_a_real_regression_still_exits_one` and asserted only
+        `code != 0`. Deleting the target BEFORE `main` runs classifies the link
+        PRE_BROKEN, so nothing is rewritten and the run exits 3. The name
+        promised a guarantee the fixture did not exercise. The reachable exit 1
+        is pinned in TestSlotTargetMustExist below.
+        """
         from rebase_links import _main as main
         (tmp_path / "docs" / "tasks").mkdir(parents=True)
         (tmp_path / "docs" / "ARCHITECTURE.md").write_text("# a")
         moved = tmp_path / "docs" / "tasks" / "t.md"
         moved.write_text("[a](ARCHITECTURE.md)\n")
-        # rewrite succeeds, then the target is removed underneath the check
         os.remove(tmp_path / "docs" / "ARCHITECTURE.md")
         code = main([str(moved), "--from", "docs", "--to", "docs/tasks",
                      "--repo-root", str(tmp_path)])
-        assert code != 0
+        assert code == 3
 
     def test_a_wrong_slot_map_is_still_surfaced(self, tmp_path, capsys):
         """Exempting slots from the exit code must not make a typo invisible."""
@@ -352,3 +360,66 @@ class TestSlotTargetIsAForwardReference:
                      "--slot", "docs/PLAN.md=docs/plans/plan-077-login.md"])
         assert code == 0
         assert "SLOT_PENDING" not in capsys.readouterr().out
+
+
+class TestSlotTargetMustExist:
+    """ARC-6. At Step 7.6.5 the slot target is already on disk, so a typo in it
+    is detectable — and was reported as clean.
+
+    `SLOT_RESOLVED` sits in neither ACTIONS_WARN nor _CONSERVED, so a slot map
+    naming an absent file rewrote the link and exited 0 with `"ok": true`.
+    Measured: `--slot docs/TASK.md=docs/tasks/task-077-logn.md` against an
+    archive named `task-077-login.md` rewrote the citation and returned 0.
+
+    The exemption is right at Step 5.5, where the plan archive does not exist
+    yet. `--slot-must-exist` is how the caller states which of the two it is.
+    """
+
+    @staticmethod
+    def _plan_fixture(tmp_path):
+        (tmp_path / "docs" / "tasks").mkdir(parents=True)
+        (tmp_path / "docs" / "plans").mkdir(parents=True)
+        (tmp_path / "docs" / "tasks" / "task-077-login.md").write_text("# t")
+        moved = tmp_path / "docs" / "plans" / "plan-077-login.md"
+        moved.write_text("[t](TASK.md)\n")
+        return moved
+
+    def test_a_mistyped_slot_target_exits_one(self, tmp_path):
+        """Red until `--slot-must-exist` sets the failure flag."""
+        from rebase_links import _main as main
+        moved = self._plan_fixture(tmp_path)
+        code = main([str(moved), "--from", "docs", "--to", "docs/plans",
+                     "--repo-root", str(tmp_path), "--slot-must-exist",
+                     "--slot", "docs/TASK.md=docs/tasks/task-077-logn.md"])
+        assert code == 1
+
+    def test_the_correct_slot_target_exits_zero(self, tmp_path):
+        from rebase_links import _main as main
+        moved = self._plan_fixture(tmp_path)
+        code = main([str(moved), "--from", "docs", "--to", "docs/plans",
+                     "--repo-root", str(tmp_path), "--slot-must-exist",
+                     "--slot", "docs/TASK.md=docs/tasks/task-077-login.md"])
+        assert code == 0
+        assert "](../tasks/task-077-login.md)" in moved.read_text()
+
+    def test_a_forward_reference_stays_exempt_without_the_flag(self, tmp_path):
+        """Step 5.5 must keep exiting 0 — the plan archive is created later."""
+        from rebase_links import _main as main
+        (tmp_path / "docs" / "tasks").mkdir(parents=True)
+        (tmp_path / "docs" / "plans").mkdir(parents=True)
+        moved = tmp_path / "docs" / "tasks" / "task-077-login.md"
+        moved.write_text("[p](PLAN.md)\n")
+        code = main([str(moved), "--from", "docs", "--to", "docs/tasks",
+                     "--repo-root", str(tmp_path),
+                     "--slot", "docs/PLAN.md=docs/plans/plan-077-login.md"])
+        assert code == 0
+
+    def test_json_reports_not_ok_when_the_assertion_fails(self, tmp_path,
+                                                          capsys):
+        """`"ok": true` on a dangling rewrite is what ARC-6 measured."""
+        from rebase_links import _main as main
+        moved = self._plan_fixture(tmp_path)
+        main([str(moved), "--from", "docs", "--to", "docs/plans",
+              "--repo-root", str(tmp_path), "--slot-must-exist", "--json",
+              "--slot", "docs/TASK.md=docs/tasks/task-077-logn.md"])
+        assert json.loads(capsys.readouterr().out)["ok"] is False

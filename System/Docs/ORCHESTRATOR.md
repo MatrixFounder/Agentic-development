@@ -5,7 +5,7 @@
 
 > [!NOTE]
 > **This is the framework's tool subsystem — *additional to*, and a *fallback for*, your harness's built-in tools.** Two classes of tool live here:
-> - **Framework-unique** — `generate_task_archive_filename` has **no native-harness equivalent**; always use it (run `python3 .agent/tools/task_id_tool.py <slug> --proposed-id "<id>" --no-correction`, or via the dispatcher). It backs `skill-archive-task` Step 3 (Option A). **Omit `--proposed-id` only when the document has no ID**: on the auto-generate path sub-task files shadow their parent's number, so with `task-095-01..03` present and no parent the bare call returns **096** for task 095 (ARC-1).
+> - **Framework-unique** — `generate_task_archive_filename` has **no native-harness equivalent**; always use it (run `python3 .agent/tools/task_id_tool.py <slug> --proposed-id "<id>"`, or via the dispatcher). It backs `skill-archive-task` Step 3 (Option A). **Omit `--proposed-id` only when the document has no ID**: on the auto-generate path sub-task files shadow their parent's number, so with `task-095-01..03` present and no parent the bare call returns **096** for task 095 (ARC-1). Refusing to renumber is now the **default** on all four call surfaces (ARC-7/ARC-8), so `--no-correction` is no longer needed to obtain it; it is still accepted. Pass `--allow-correction` to opt IN to renumbering.
 > - **Overlap / fallback** — `run_tests`, `git_status`/`git_add`/`git_commit`, `read_file`/`write_file`/`list_directory` mirror native harness capabilities; **prefer your native tools** — these are the fallback for harnesses that lack them.
 >
 > **Status:** the dispatch primitive (`tool_runner.execute_tool`) is implemented and tested, but no LLM loop currently drives it (nothing loads `TOOLS_SCHEMAS`; there is no standalone entrypoint). Native wiring paths exist per vendor — **MCP** (Claude Code / Cursor / Codex / Gemini / Antigravity) and **Gemini CLI `tools.discoveryCommand`**. Inside a full vendor harness, agents use native tools + the repo CLIs directly; this dispatcher is the fallback execution surface.
@@ -281,7 +281,7 @@ print('✅ Integration test passed!')
 
 See the implementation in:
 - **Logic:** `.agent/tools/task_id_tool.py`
-- **Tests:** `.agent/tools/test_task_id_tool.py` (39 tests)
+- **Tests:** `.agent/tools/test_task_id_tool.py` (45 tests)
 - **Schema:** `.agent/tools/schemas.py` (search for `generate_task_archive_filename`)
 
 ## Supported Tools

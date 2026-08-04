@@ -166,7 +166,7 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 | `task-reviewer` | `System/Agents/03_task_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Analysis→Architecture |
 | `architect` | `System/Agents/04_architect_prompt.md` | Read, Write, Edit, Grep, Glob | sonnet | Produces `docs/ARCHITECTURE.md` |
 | `architecture-reviewer` | `System/Agents/05_architecture_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Architecture→Planning |
-| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | **opus** | Produces `docs/PLAN.md` + `docs/tasks/*.md` (uses `task_id_tool.py`) |
+| `planner` | `System/Agents/06_planner_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | **opus** | Produces `docs/PLAN.md` + `docs/tasks/*.md` (reuses the TASK Meta ID; generates none) |
 | `plan-reviewer` | `System/Agents/07_plan_reviewer_prompt.md` | Read, Grep, Glob | **opus** | Returns review report; gates Planning→Execution |
 | `developer` | `System/Agents/08_developer_prompt.md` | Read, Write, Edit, Grep, Glob, Bash | sonnet | Implements atomic task under Stub-First |
 | `code-reviewer` | `System/Agents/09_code_reviewer_prompt.md` | Read, Grep, Glob, Bash | **opus** | Returns review report; gates Execution→Merge (uses `git diff` to scope) |

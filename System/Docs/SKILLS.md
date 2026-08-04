@@ -72,7 +72,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 
 **`artifact-formalizer`** — two modes, and the first is loaded before writing, not after.
 
-- **Mode A (authoring)** — `references/authoring-contract.md`: six per-sentence tests and fourteen
+- **Mode A (authoring)** — `references/authoring-contract.md`: six per-sentence tests and the
   licensed statement forms. Loaded in every authoring phase by `skill-phase-context`.
 - **Mode B (audit)** — `scripts/scan_register.py` plus a reading pass.
 - Six rules (`documentation-standards` §5.5). All six reach a detector; rules 3, 4 and 6 carry
@@ -86,7 +86,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 - **`--allow-missing`** skips a named absent file instead of exiting 3, for the artifacts this
   framework archives at every task boundary (`docs/TASK.md`, `docs/PLAN.md`). A present-but-
   unreadable path, and an input set with nothing readable in it, still exit 3.
-- Per-language data (`register-rules/v1`), 145-case selftest. It never changes a document's
+- Per-language data (`register-rules/v1`), 174-case selftest. It never changes a document's
   language. Rule-3 patterns carry a declared example each, so editing one without its example is
   rejected at load.
 

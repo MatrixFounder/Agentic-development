@@ -62,7 +62,7 @@ AI-slop.
 | Pattern | Hits | Action |
 | :--- | ---: | :--- |
 | Marketing vocabulary (`robust`, `seamless`, `leverage`, `delve`, `crucial`…) | 3 | **adopted** as `warn` — rule-2 class, near-zero cost |
-| Negative parallelism (`not just X but Y`) | 0 | adopted at `info` in RU only, flagged zero-baseline |
+| Negative parallelism (`не просто X, а Y`, `not just X but Y`) | 0 | not adopted — the RU `просто` entry already reports the surface at `info` |
 | Filler transitions (`Moreover`, `Furthermore`, `In conclusion`) | 0 | not adopted — a rule that never fires is prose read for nothing |
 | `-ing` footers (`…, underscoring the shift`) | 0 | not adopted — its target is rule 3, which has its own detector (§7) |
 | Authoritative truisms (`at its core`, `the reality is`) | 0 | not adopted |
@@ -111,8 +111,13 @@ placed it outside the stated exit criterion.
 Rule 5 admits no judgement: a glyph either carries a severity or it does not. `info` is the class
 for findings the author decides, so it was the wrong class here.
 
-`✓` and `✗` (U+2713/U+2717) remain excluded. They are table **values** throughout this repository,
-not severities.
+`✓` and `✗` (U+2713/U+2717) are excluded everywhere. They are status **values** throughout this
+repository, not severities, and 33 of their 52 occurrences sit outside a table.
+
+`✅`, `❌`, `☑`, `☒` and `☐` are excluded inside a table cell, where §5.1 governs, and are reported
+outside one. Those 671 occurrences are what rule 5's second clause covers. A glyph carrying no
+severity at all is diff metadata, and does not belong in a specification either
+([`formalization-guide.md`](formalization-guide.md) rule 5).
 
 ## 7. Rules 3, 4 and 6 — detectors with declared recall
 
@@ -152,7 +157,7 @@ threshold. Its default band of 30 words covers 4.6% and 3.3% of the two corpora.
 
 ## 9. Selftest coverage
 
-`scripts/selftest_scan.py` — **128 cases**:
+`scripts/selftest_scan.py` covers:
 
 - **Schema** — each case asserts the message fragment it expects, rather than a non-zero exit.
   Rejected inputs:
@@ -235,15 +240,25 @@ diagnostic, and `SKILL.md` §2 says how to read it.
 
 **The rule-3 probe exercised 1 pattern of 23.** One declared sentence stood in for the whole
 modal-by-causal cross-product. Replacing `\bshall\b` in `register-en.json` left `--probe` at
-`18/18 detectors live` and the battery at `128/128` while `The installer shall abort because the
-target exists.` lost its finding. Each pattern now carries a declared example and is exercised
-against a known-good partner.
+`18/18 detectors live` and the battery at `128/128` — the count v3.24.0 shipped — while `The
+installer shall abort because the target exists.` lost its finding. Each pattern now carries a
+declared example and is exercised against a known-good partner.
 
 **Deriving the example from the pattern was tried and rejected.** `\bshall\b` reduces to `shall`,
 which matches by construction — so `\bZZZNEVER\b` reduces to `ZZZNEVER` and probes live just as
 happily. A derived example cannot detect the edit it exists to detect. The declared example can,
 through two signatures: an example its pattern no longer matches, and an example left orphaned when
 its pattern was renamed.
+
+**A declared example is now mandatory (TASK 099).** While it was optional, a pattern carrying none
+was reported `unprobed` and its row still printed live, which is the state that re-opens the defect
+above. A rule file holding a rule-3 pattern that declares no example no longer loads.
+
+**The probe roster is a literal, not a count of what loaded (TASK 099).** It holds nine rows per
+shipped language. Deleting every rule-6 entry of one language printed `17/17 detectors live` and
+exit 0; it now prints `17/18` and exits 2, and deleting `register-ru.json` prints `14/18` rather
+than `9/9`. A class with no detector behind it appends a DEAD row instead of leaving the
+denominator with the numerator.
 
 **After the fix, over 602 documents:** every one exits 0, odd parity falls from 14 to 13, and 19
 unpaired backticks are named as input defects rather than silently mispaired.

@@ -12,6 +12,8 @@ from __future__ import annotations
 import glob
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,16 +24,60 @@ SCANNER = os.path.join(HERE, "scan_register.py")
 
 RESULTS: list[tuple[str, bool, str]] = []
 
+#: Shipped vocabulary sizes, PINNED. Deriving them from the file under test
+#: made the assertion agree with itself after any edit: deleting `of course`
+#: from register-en.json left the whole battery green because both sides of the
+#: comparison shrank together (REG-2).
+SHIPPED_ENTRIES = {
+    "en": {2: 28, 4: 9, 6: 5},
+    "ru": {2: 22, 4: 10, 6: 6},
+}
+#: Shipped rule-3 vocabulary sizes, PINNED -- the same defect one structure
+#: over. SHIPPED_ENTRIES counts CATEGORY entries, so it reaches rules 2, 4 and
+#: 6 only, while the rule-3 patterns live in `languages.<lang>.reasoning` and
+#: nothing pinned them. Measured: 21 of the 24 shipped patterns could each be
+#: deleted with its `probes` key, leaving the battery green and `--probe` at
+#: 18/18 with a real finding lost -- dropping `\bfor the reason that\b` took
+#: `The installer shall abort for the reason that the target exists.` from one
+#: finding to none. The probe row reprints the defect rather than catching it:
+#: `N exercised of M patterns` derives both sides from the file under test
+#: (REG-2, REG-3).
+SHIPPED_REASONING = {
+    "en": {"modals": 5, "causals": 6},
+    "ru": {"modals": 6, "causals": 7},
+}
+#: 5 structural + marker + maxim + metaphor + reasoning, per shipped language.
+SHIPPED_PROBES = 18
+
+#: The total this battery PRINTS, PINNED. The denominator was `len(RESULTS)`,
+#: so deleting a test function from the tuple in `main` printed a
+#: self-consistent `N/N passed` and exited 0, and four documents stated a count
+#: that nothing compared against anything: the drift had already shipped, 128
+#: documented against 145 running (REG-8). `TC-META-01` pins the run against
+#: this number, `TC-SHIP-08` pins the documents against it.
+EXPECTED_CASES = 174
+
 
 def check(name, cond, detail=""):
     RESULTS.append((name, bool(cond), detail))
 
 
-def run(args, text=None):
-    """→ (exit_code, stdout, stderr)"""
-    p = subprocess.run([sys.executable, SCANNER] + args, input=text,
+def run_at(scanner, args, text=None):
+    """→ (exit_code, stdout, stderr) for a scanner at an arbitrary path.
+
+    The roster pin applies only when no `--rules` argument was given (TASK 099
+    D6), so a mutated ruleset cannot be handed to the shipped scanner on the
+    command line: passing `--rules` is precisely what switches the pin off.
+    `skill_copy` builds a throwaway skill root instead, and this runs the copy.
+    """
+    p = subprocess.run([sys.executable, scanner] + args, input=text,
                        capture_output=True, text=True)
     return p.returncode, p.stdout, p.stderr
+
+
+def run(args, text=None):
+    """→ (exit_code, stdout, stderr)"""
+    return run_at(SCANNER, args, text)
 
 
 def scan_json(paths, extra=None):
@@ -51,6 +97,33 @@ def tmpfile(content, suffix=".md"):
 
 def rules_file(doc):
     return tmpfile(json.dumps(doc, ensure_ascii=False), ".json")
+
+
+def shipped_rules(lang):
+    """→ a mutable copy of a shipped rule file."""
+    path = os.path.join(SKILL, "data", f"register-{lang}.json")
+    return json.load(open(path, encoding="utf-8"))
+
+
+def skill_copy(rules):
+    """→ the scanner path inside a throwaway skill root holding `rules`.
+
+    The scanner resolves its data directory as dirname(dirname(__file__)) and
+    globs `data/register-*.json`, so a copy under a fresh root reads the
+    mutated files as if they were shipped -- which is the only way a mutation
+    reaches the strict roster path (see `run_at`). `rules` maps a language to
+    its rule document; an omitted language is a rule file that does not exist.
+    """
+    root = tempfile.mkdtemp()
+    os.makedirs(os.path.join(root, "scripts"))
+    os.makedirs(os.path.join(root, "data"))
+    scanner = os.path.join(root, "scripts", "scan_register.py")
+    shutil.copy(SCANNER, scanner)
+    for lang, doc in rules.items():
+        path = os.path.join(root, "data", f"register-{lang}.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(doc, f, ensure_ascii=False)
+    return scanner
 
 
 def kinds_of(rep):
@@ -113,6 +186,21 @@ def t_schema():
          {"schema": "register-rules/v1",
           "thresholds": {"sentence_max_words": 35, "sentence_near_words": 35},
           "languages": GOOD_RULES["languages"]}, 'must be below'),
+        # The remaining two cross-key invariants were unexercised: deleting
+        # either branch left the battery green (REG-7). The fragments are
+        # load-bearing -- two branches say `must be below`, so keying both on
+        # that phrase would let each case pass against the OTHER branch.
+        ("TC-SCHEMA-16 pressure band at or above the hard limit",
+         {"schema": "register-rules/v1",
+          "thresholds": {"sentence_max_words": 35,
+                         "sentence_pressure_band": 35},
+          "languages": GOOD_RULES["languages"]}, 'sentence_pressure_band'),
+        # `cell_prose_chars == cell_max_chars` is legal (the invariant is `>`),
+        # so 121 against 120 is the smallest rejecting pair.
+        ("TC-SCHEMA-17 cell prose boundary above the width limit",
+         {"schema": "register-rules/v1",
+          "thresholds": {"cell_max_chars": 120, "cell_prose_chars": 121},
+          "languages": GOOD_RULES["languages"]}, 'must not exceed'),
     ]
     doc = tmpfile("plain text\n")
     # Each case names the message fragment it expects. The previous shared
@@ -134,9 +222,13 @@ def t_schema():
           f"exit={code} stderr={err.strip()[:90]}")
 
     # a rule-3 vocabulary that does not fire on its own probe is dead on arrival
+    # `probes` is not what either case is about, but a per-pattern example is
+    # mandatory (TASK 099 D7), so a block without one no longer reaches the
+    # branch these two cases exercise.
     r3 = json.loads(json.dumps(GOOD_RULES))
     r3["languages"]["en"]["reasoning"] = {
         "modals": [r"\bmust\b"], "causals": [r"\bbecause\b"],
+        "probes": {r"\bmust\b": "must", r"\bbecause\b": "because"},
         "probe": "This sentence carries neither."}
     code, _, err = run([doc, "--rules", rules_file(r3), "--json"])
     check("TC-SCHEMA-14 rule-3 probe must trigger the detector", code == 2,
@@ -326,6 +418,7 @@ def t_reasoning():
     doc = json.loads(json.dumps(GOOD_RULES))
     doc["languages"]["en"]["reasoning"] = {
         "modals": [r"\bmust\b"], "causals": [r"\bbecause\b"],
+        "probes": {r"\bmust\b": "must", r"\bbecause\b": "because"},
         "probe": "The field must be set, because the reader cannot derive it."}
     rf = rules_file(doc)
 
@@ -339,17 +432,23 @@ def t_reasoning():
           and hits[0]["rule"] == 3, f"hits={len(hits)}")
 
     # the control: the SAME content, split as the rule prescribes, is silent
+    # Both controls assert the exit code too. `kinds_of(None)` is `[]`, so a
+    # rule file that fails to load satisfies `"reasoning" not in kinds` with no
+    # document read at all -- which is how both passed vacuously once a
+    # per-pattern example became mandatory.
     src = tmpfile("The field must be set.\n\n**Why.** The reader cannot "
                   "derive it.\n")
     code, rep, _ = scan_json([src], ["--rules", rf])
     check("TC-R3-02 control: split into requirement + Why is silent",
-          "reasoning" not in kinds_of(rep), f"kinds={set(kinds_of(rep))}")
+          code == 0 and "reasoning" not in kinds_of(rep),
+          f"exit={code} kinds={set(kinds_of(rep))}")
 
     # a causal with no obligation is prose, not a braided requirement
     src = tmpfile("The counter is stale because the set grew.\n")
     code, rep, _ = scan_json([src], ["--rules", rf])
     check("TC-R3-03 control: a causal without an obligation is silent",
-          "reasoning" not in kinds_of(rep), f"kinds={set(kinds_of(rep))}")
+          code == 0 and "reasoning" not in kinds_of(rep),
+          f"exit={code} kinds={set(kinds_of(rep))}")
 
 
 # ----------------------------------------------------------------- probe ----
@@ -363,19 +462,11 @@ def t_probe():
         rep = json.loads(out)
     except ValueError:
         rep = None
-    # `>= 16` against a shipped 18 stayed green after deleting every rule-6
-    # entry of one language. The expected count is derived from the data.
-    expected = 0
-    for lang in ("en", "ru"):
-        doc = json.load(open(os.path.join(SKILL, "data", f"register-{lang}.json"),
-                             encoding="utf-8"))
-        rules = {e.get("rule", 2) for c in doc["languages"][lang]["categories"]
-                 for e in c["entries"]}
-        expected += 5 + len(rules) + (1 if doc["languages"][lang].get("reasoning")
-                                      else 0)
     check("TC-PROBE-02 --probe --json reports exactly the shipped detectors",
-          code == 0 and rep and rep["ok"] and len(rep["probes"]) == expected,
-          f"exit={code} n={rep and len(rep['probes'])} expected={expected}")
+          code == 0 and rep and rep["ok"]
+          and len(rep["probes"]) == SHIPPED_PROBES,
+          f"exit={code} n={rep and len(rep['probes'])} "
+          f"expected={SHIPPED_PROBES}")
 
     # a threshold that disables a detector is a DEAD detector, not a clean run
     doc = json.loads(json.dumps(GOOD_RULES))
@@ -557,6 +648,21 @@ def t_shipped():
               {2, 4, 6} <= set(rules), f"rules present={sorted(set(rules))}")
         check(f"TC-SHIP-05 {lang} declares a rule-3 vocabulary",
               bool(doc["languages"][lang].get("reasoning")), "")
+        # TC-SHIP-04's membership claim survives deleting all but one entry of
+        # a rule. This is the count, against a literal (REG-2).
+        counts = {r: rules.count(r) for r in sorted(set(rules))}
+        check(f"TC-SHIP-07 {lang} ships the pinned per-rule entry counts",
+              counts == SHIPPED_ENTRIES[lang],
+              f"loaded={counts} pinned={SHIPPED_ENTRIES[lang]}")
+        # TC-SHIP-05 asserts only that a rule-3 block EXISTS, and TC-SHIP-07
+        # never reaches it -- `reasoning` is not a category. That left the
+        # rule-3 lexicon unpinned: a pattern could be deleted with its `probes`
+        # key at 168/168 exit 0 and 18/18 exit 0, losing a real finding (REG-2).
+        block = doc["languages"][lang].get("reasoning") or {}
+        sizes = {k: len(block.get(k) or []) for k in SHIPPED_REASONING[lang]}
+        check(f"TC-SHIP-09 {lang} ships the pinned rule-3 vocabulary sizes",
+              sizes == SHIPPED_REASONING[lang],
+              f"loaded={sizes} pinned={SHIPPED_REASONING[lang]}")
 
     code, out, err = run(["--list"])
     check("TC-SHIP-03 --list renders the shipped rules",
@@ -573,6 +679,122 @@ def t_shipped():
           code == 0 and rep and rep["counts"]["warn"] == 0,
           f"exit={code} warn={rep and rep['counts']['warn']} "
           f"{sorted({(h['kind'], h['where']) for h in (rep['warn'] if rep else [])})}")
+
+    # The documentation half of REG-8. The root is derived from `__file__` -- a
+    # hardcoded path would make the case pass vacuously by skipping when the
+    # skill is checked out anywhere else.
+    repo = os.path.dirname(os.path.dirname(os.path.dirname(SKILL)))
+    sites = [os.path.join(SKILL, "SKILL.md"),
+             os.path.join(repo, "System", "Docs", "SKILLS.md"),
+             # REG-8 removed this file's numeral (D5) and nothing held it
+             # removed: adding a sentence stating a count here left the battery
+             # at 168/168 exit 0. It is a site of the same claim, so it is read
+             # by the same case.
+             os.path.join(SKILL, "references", "measurement-baseline.md")]
+    # A vendored copy of the skill ships without `System/Docs/`. An absent file
+    # is skipped, not failed: nothing there is wrong.
+    present = [p for p in sites if os.path.exists(p)]
+    # A claim naming a RELEASE records what that revision measured rather than
+    # what this run counts: §10.1 states the battery at `128/128` -- the count
+    # v3.24.0 shipped. Pinning that against EXPECTED_CASES would demand a
+    # correct historical figure be falsified on every future edit, so a claim
+    # carrying a release identifier is exempt BY CONSTRUCTION. The exemption
+    # keys on the identifier, never on the file, so a new past-state claim in
+    # any site is covered and a new present-tense claim in the same file is not.
+    # The unit is the blank-line paragraph because these documents are
+    # hard-wrapped and the identifier and the numeral land on different lines of
+    # one claim (§10.1 wraps between `128/128` and `v3.24.0`'s sentence end); a
+    # sentence unit would have to split on the period inside
+    # `The installer shall abort because the target exists.`, a code span in
+    # that same paragraph.
+    release = re.compile(r"\bv\d+\.\d+")
+    stated = [(os.path.basename(p), int(n))
+              for p in present
+              for para in re.split(r"\n[ \t]*\n",
+                                   open(p, encoding="utf-8").read())
+              if not release.search(para)
+              for n in re.findall(r"\b(\d+)[ -]cases?\b", para)]
+    # EVERY match is asserted, not the first: a second, newly-added claim in a
+    # file already covered is then a red run rather than a silent pass. And a
+    # present file that states NO count fails too -- deleting the numeral is
+    # the same defect as letting it drift.
+    check("TC-SHIP-08 every stated case count equals EXPECTED_CASES",
+          not present or (bool(stated)
+                          and all(n == EXPECTED_CASES for _, n in stated)),
+          f"stated={stated} expected={EXPECTED_CASES} absent="
+          f"{[os.path.basename(p) for p in sites if p not in present]}")
+
+    # REG-9. Reverting §4 row `:65` of `measurement-baseline.md` from
+    # `not adopted` back to `adopted at info in RU only` left the battery at
+    # 168/168 exit 0 and the roster at 18/18 exit 0 -- the fix's whole
+    # verification was a reviewer reading it. An `**adopted**` row asserts that
+    # a shipped lexicon entry implements the family, so §4's adopted rows are
+    # checked against the two shipped lexicons.
+    #
+    # The expected surface is a LITERAL per row rather than a string read out of
+    # the row's own cell, because that row decides wrongly in BOTH directions:
+    # its declared surface `не просто X, а Y` carries metavariables no pattern
+    # can contain, and the shipped RU entry `просто` does contain the substring
+    # `просто`. A row marked adopted that this map does not name is a failure --
+    # that is what catches the revert, and it makes adopting a further row a
+    # deliberate edit here rather than prose nothing reads.
+    adopted_surfaces = {
+        "Marketing vocabulary": ("robust", "seamless", "leverage", "delve",
+                                 "crucial"),
+    }
+    base = os.path.join(SKILL, "references", "measurement-baseline.md")
+    sec = re.search(r"^## 4\..*?(?=^## |\Z)",
+                    open(base, encoding="utf-8").read(), re.M | re.S)
+    rows = [[c.strip() for c in ln.strip().strip("|").split("|")]
+            for ln in (sec.group(0).splitlines() if sec else [])
+            if ln.startswith("|")]
+    # The Hits column selects the data rows: the header and the `:---`
+    # separator are the two rows that carry no measurement.
+    rows = [r for r in rows if len(r) == 3 and r[1].isdigit()]
+    # `**adopted**` in the shipped row, bare `adopted` in the row REG-9
+    # replaced. Emphasis is markup, so it is stripped before the verdict is
+    # read; `not adopted` does not begin with `adopted`.
+    claimed = [r[0] for r in rows
+               if r[2].replace("*", "").strip().lower().startswith("adopted")]
+    lex = [f"{e.get('marker', '')} {e.get('pattern', '')}"
+           for lang in ("en", "ru")
+           if os.path.exists(os.path.join(SKILL, "data",
+                                          f"register-{lang}.json"))
+           for c in shipped_rules(lang)["languages"][lang]["categories"]
+           for e in c["entries"]]
+    unnamed = [lab[:44] for lab in claimed
+               if not any(k in lab for k in adopted_surfaces)]
+    unbacked = [(k, s) for k, surfaces in adopted_surfaces.items()
+                for s in surfaces if not any(s in blob for blob in lex)]
+    # A parse that found no table would leave both lists empty and pass
+    # vacuously, so the row this map names must be present AND adopted.
+    missing = [k for k in adopted_surfaces
+               if not any(k in lab for lab in claimed)]
+    check("TC-SHIP-10 every §4 row marked adopted ships the entries it claims",
+          not (unnamed or unbacked or missing),
+          f"rows={len(rows)} adopted-but-unnamed={unnamed} "
+          f"unbacked={unbacked} named-but-not-adopted={missing}")
+
+    # REG-13 removed `thirteen`, `nine` and `fourteen` from the documents that
+    # restated the licensed-form count, because `authoring-contract.md:107`
+    # declares the list open (D4). Restoring any of them left the battery output
+    # byte-identical at exit 0. It reads the same sites as TC-SHIP-08, since a
+    # restated count drifts in whichever document restates it.
+    # The pin is the ABSENCE of a cardinal, and the window is one token:
+    # the defect wrote `thirteen licensed statement forms` and `six tests, nine
+    # licensed forms`, while the wording that replaced it is `six tests, the
+    # licensed forms` -- a wider window, or a bare `\w+`, would report that
+    # correct sentence for the `six` that counts the TESTS.
+    cardinal = (r"\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|"
+                r"twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|"
+                r"nineteen|twenty")
+    counted = re.compile(rf"(?i)\b(?:(?:{cardinal})\s+licensed"
+                         rf"|licensed\s+(?:{cardinal}))\b")
+    stated_forms = [(os.path.basename(p), m.group(0))
+                    for p in present
+                    for m in counted.finditer(open(p, encoding="utf-8").read())]
+    check("TC-SHIP-11 no document states a cardinal for the licensed forms",
+          not stated_forms, f"counted={stated_forms}")
 
 
 def t_false_positives():
@@ -661,6 +883,20 @@ def t_precision():
     check("TC-PREC-06 'e.g. Capital' is not a sentence boundary",
           code == 0 and "sentence_length" in kinds_of(rep),
           f"kinds={set(kinds_of(rep))}")
+
+    # SENT_SPLIT carries four abbreviation lookbehinds and only `e.g.` was
+    # pinned; dropping any of the other three produced silent sentence_length
+    # false negatives with both gates green (REG-6). These run against the
+    # SHIPPED rules -- no `--rules` -- which is what makes them pins on the
+    # real SENT_SPLIT rather than on a fixture.
+    for name, mid in (("TC-PREC-06a 'i.e. Capital'", "i.e. Foo "),
+                      ("TC-PREC-06b 'vs. Capital'", "vs. Foo "),
+                      ("TC-PREC-06c 'см. Capital'", "см. Foo ")):
+        doc = tmpfile(halves(mid))
+        code, rep, _ = scan_json([doc])
+        check(f"{name} is not a sentence boundary",
+              code == 0 and "sentence_length" in kinds_of(rep),
+              f"kinds={set(kinds_of(rep))}")
 
     # --- refuted, and pinned as non-defects ---
     doc = tmpfile(halves("1.5 Foo "))
@@ -762,11 +998,40 @@ def t_detector_gaps():
           code == 0 and "emoji_severity" not in kinds_of(rep),
           f"kinds={set(kinds_of(rep))}")
 
+    doc = tmpfile("| a | b |\n| --- | --- |\n| \u2610 | ok |\n")
+    code, rep, _ = scan_json([doc], ["--rules", rf])
+    check("TC-ADV-12a an empty checkbox in a table cell is a value too",
+          code == 0 and "emoji_severity" not in kinds_of(rep),
+          f"kinds={set(kinds_of(rep))}")
+
+    # `\u2713`/`\u2717` are exempt in EVERY position, not only inside a table (REG-10).
+    # The fixture is the shape at `skill-archive-task/SKILL.md`: a numbered
+    # list item, where the narrowed guard reported both ticks and the guidance
+    # told the author to write `SEV-2` instead. This case is what makes a
+    # re-narrowing to in-table-only detectable.
+    doc = tmpfile("9. **Step 6** \u2014 validate: `docs/TASK.md` gone \u2713, "
+                  "archive present \u2713.\n")
+    code, rep, _ = scan_json([doc], ["--rules", rf])
+    check("TC-ADV-12b a tick in a numbered list is exempt, not a severity",
+          code == 0 and "emoji_severity" not in kinds_of(rep),
+          f"kinds={set(kinds_of(rep))}")
+
     doc = tmpfile("\u2705 The migration is done.\n")
     code, rep, _ = scan_json([doc], ["--rules", rf])
     check("TC-ADV-13 the same glyph in PROSE is still reported",
           code == 0 and "emoji_severity" in kinds_of(rep),
           f"kinds={set(kinds_of(rep))}")
+
+    # The finding above is only useful if its guidance applies to the glyph it
+    # found. One string sent the author of a done/not-done value to `SEV-2`
+    # (REG-10), so the branch is asserted from both sides: a status glyph gets
+    # the status words and must NOT get the severity wording.
+    hit = next((h for h in ((rep["warn"] + rep["info"]) if rep else [])
+                if h["kind"] == "emoji_severity"), None)
+    check("TC-ADV-13a a status glyph gets status-word guidance, not `SEV-2`",
+          hit and "status word" in hit["guidance"]
+          and "SEV-2" not in hit["guidance"],
+          f"guidance={hit and hit['guidance']!r}")
 
     doc = tmpfile("\U0001F44D\U0001F3FD ok\n")
     code, rep, _ = scan_json([doc], ["--rules", rf])
@@ -778,6 +1043,18 @@ def t_detector_gaps():
     code, rep, _ = scan_json([doc], ["--rules", rf])
     check("TC-ADV-15 blockquote prose reaches rule 1",
           code == 0 and "sentence_length" in kinds_of(rep),
+          f"kinds={set(kinds_of(rep))}")
+
+    # The case above does not discriminate: its fixture is blockquote PROSE,
+    # which is prose with or without `dequote`, and the quoted line is still 42
+    # words. The claim `dequote` actually carries is that a TABLE inside a
+    # callout is a table -- PIPE_ROW and DELIM_ROW anchor at `^\s*`, so without
+    # the strip those rows never reach `table_lines` (REG-5).
+    doc = tmpfile("> [!IMPORTANT]\n> | a | b |\n> | --- | --- |\n> | "
+                  + "x" * 130 + " | ok |\n")
+    code, rep, _ = scan_json([doc], ["--rules", rf])
+    check("TC-ADV-15a a table inside a callout is a table, not prose",
+          code == 0 and "cell_width" in kinds_of(rep),
           f"kinds={set(kinds_of(rep))}")
 
     doc = tmpfile("Col A | Col B\n--- | ---\n" + "x" * 130 + " | ok\n")
@@ -1135,13 +1412,228 @@ def t_097_probe_coverage():
           code == 2 and "no longer matches its own example" in (out + err),
           f"exit={code}")
 
-    # Backward compatibility: a rule file written before `probes` existed still
-    # loads, and says plainly that it exercised nothing.
+    # A declared example is MANDATORY (TASK 099 D7). This case previously
+    # pinned the opposite: a block with no `probes` loaded and reported `0
+    # exercised of 4` while the row still printed live. That state is the one
+    # that re-opens TASK 097 D3 -- drop the example, then edit the pattern away,
+    # and every gate stays green.
     doc = json.loads(json.dumps(base))
     del doc["languages"]["en"]["reasoning"]["probes"]
-    code, out, _ = run(["--probe", "--rules", rules_file(doc)])
-    check("TC-097-15 a reasoning block with no examples loads and says so",
-          code == 0 and "0 exercised of 4" in out, f"exit={code} out={out[-160:]!r}")
+    code, out, err = run(["--probe", "--rules", rules_file(doc)])
+    check("TC-097-15 a reasoning block with no examples is rejected at load",
+          code == 2 and "declares no example" in (out + err),
+          f"exit={code} out={(out + err)[-160:]!r}")
+
+
+# ------------------------------- TASK 099: gate honesty and the new entries ----
+# Both CI gates measured themselves against the data under test, so every
+# mutation below was green before the fix: deleting a whole detector class
+# printed `17/17 detectors live` exit 0, and the two-step at TC-099-05 loaded
+# clean at `18/18` exit 0 while its vocabulary reported nothing (REG-3, REG-4).
+
+
+def t_099_roster_pin():
+    """A vanished detector class reports DEAD instead of shrinking the roster.
+
+    These cases cannot pass `--rules`: strictness is keyed on `not args.rules`
+    (TASK 099 D6), so handing the mutation to the scanner on the command line
+    switches off the very pin under test. They mutate a throwaway skill root.
+    """
+    # The control. `skill_copy` is machinery, and machinery that quietly stops
+    # producing a runnable scanner would make the two mutations below "fail"
+    # for the wrong reason -- a green pair of cases testing nothing.
+    scanner = skill_copy({"en": shipped_rules("en"), "ru": shipped_rules("ru")})
+    code, out, err = run_at(scanner, ["--probe"])
+    check("TC-099-01 control: an unmutated skill copy probes 18/18 live",
+          code == 0 and "18/18 detectors live" in out,
+          f"exit={code} tail={out.strip()[-60:]!r} err={err.strip()[:90]}")
+
+    # Every rule-6 entry of one language, removed. A category left with no
+    # entries is rejected by the schema for an unrelated reason, so the empty
+    # category goes with them -- the mutation under test is a MISSING CLASS,
+    # not a malformed file.
+    en = shipped_rules("en")
+    cats = []
+    for cat in en["languages"]["en"]["categories"]:
+        cat["entries"] = [e for e in cat["entries"] if e.get("rule", 2) != 6]
+        if cat["entries"]:
+            cats.append(cat)
+    en["languages"]["en"]["categories"] = cats
+    scanner = skill_copy({"en": en, "ru": shipped_rules("ru")})
+    code, out, _ = run_at(scanner, ["--probe"])
+    check("TC-099-02 a deleted detector class is DEAD, not a smaller roster",
+          code == 2 and "17/18 detectors live" in out
+          and any(l.startswith("DEAD") and "metaphor" in l
+                  for l in out.splitlines()),
+          f"exit={code} tail={out.strip()[-60:]!r}")
+
+    # The language dimension of the same defect: loading only
+    # `register-en.json` printed `9/9 detectors live` exit 0. The denominator
+    # is held by SHIPPED_LANGS, so 18 stays 18. Four rows go DEAD and the five
+    # structural ones stay live -- those are built from thresholds and carry no
+    # language, so calling them dead would state something false.
+    scanner = skill_copy({"en": shipped_rules("en")})
+    code, out, _ = run_at(scanner, ["--probe"])
+    dead = [l for l in out.splitlines() if l.startswith("DEAD")]
+    check("TC-099-03 an absent shipped language holds the denominator at 18",
+          code == 2 and "14/18 detectors live" in out
+          and len(dead) == 4 and all(" ru " in l for l in dead),
+          f"exit={code} dead={len(dead)} tail={out.strip()[-60:]!r}")
+
+
+def t_099_reasoning_examples():
+    """A rule-3 pattern that declares no example does not load (TASK 099 D7).
+
+    Both mutate the SHIPPED English vocabulary rather than a fixture, because
+    the hatch they close was found in the shipped file: TC-099-05's sequence
+    loaded clean, printed `18/18 detectors live`, exited 0 and left the battery
+    at `145/145`, while the document below reported zero findings (REG-3).
+    """
+    SHALL = r"\bshall\b"
+    doc = tmpfile("The installer shall abort because the target exists.\n")
+
+    rules = shipped_rules("en")
+    del rules["languages"]["en"]["reasoning"]["probes"][SHALL]
+    code, _, err = run([doc, "--rules", rules_file(rules), "--json"])
+    check("TC-099-04 a rule-3 pattern with no declared example is rejected",
+          code == 2 and "declares no example" in err,
+          f"exit={code} stderr={err.strip()[:130]}")
+
+    # The TASK 097 D3 two-step. Order is what makes it a hatch: dropping the
+    # example FIRST leaves the orphan check nothing to catch, and the pattern
+    # can then be edited away with no probe noticing.
+    rules = shipped_rules("en")
+    block = rules["languages"]["en"]["reasoning"]
+    del block["probes"][SHALL]
+    block["modals"][block["modals"].index(SHALL)] = r"\bZZZNEVERMATCHES\b"
+    code, _, err = run([doc, "--rules", rules_file(rules), "--json"])
+    check("TC-099-05 the TASK 097 D3 two-step is rejected at load",
+          code == 2 and "declares no example" in err,
+          f"exit={code} stderr={err.strip()[:130]}")
+
+
+def t_099_en_entries():
+    """The two English detectors `authoring-contract.md` names as canonical.
+
+    Both ship in Russian and did not ship in English (REG-11, REG-12). Every
+    case runs against the SHIPPED rules -- no `--rules` -- so it pins the entry
+    in `data/register-en.json` rather than a fixture, and each positive carries
+    the control that kept its members out of the lexicon until they measured.
+    """
+    doc = tmpfile("The gate goes red when the fixture passes, and turns green "
+                  "again after the revert.\n")
+    code, rep, _ = scan_json([doc])
+    hits = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])
+            if h["kind"] == "maxim"]
+    check("TC-099-06 a personified test reports one maxim per verb form",
+          code == 0 and len(hits) == 2, f"exit={code} maxims={hits}")
+
+    doc = tmpfile("The main risk is a proof that proves the wrong "
+                  "property.\n")
+    code, rep, _ = scan_json([doc])
+    hits = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])
+            if h["kind"] == "marker"]
+    check("TC-099-07 an unranked superlative reports one marker",
+          code == 0 and len(hits) == 1, f"exit={code} markers={hits}")
+
+    # The English twin of TC-FP-04: Red-Green-Refactor is terminology, and the
+    # entry matches verb forms only, so the adjectival uses stay silent.
+    doc = tmpfile("Phase 1 leaves the red phase and a green run behind, per "
+                  "Red-Green-Refactor.\n")
+    code, rep, _ = scan_json([doc])
+    check("TC-099-08 control: adjectival red/green is TDD terminology",
+          code == 0 and "maxim" not in kinds_of(rep),
+          f"exit={code} kinds={set(kinds_of(rep))}")
+
+    # `stays forever green` sits within reach of BOTH rule-4 entries. The new
+    # one lists verb forms and no state verb, so the two never claim the same
+    # span: one finding, and it is the pre-existing entry's.
+    doc = tmpfile("The guard stays forever green.\n")
+    code, rep, _ = scan_json([doc])
+    hits = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])
+            if h["kind"] == "maxim"]
+    check("TC-099-09 control: `forever green` is reported once, not twice",
+          code == 0 and hits == ["forever green"], f"exit={code} maxims={hits}")
+
+    # The same claim for rule 2: the ranking entry's noun list excludes
+    # `insight` and `point`, which the entry above it already owns, and `whole`
+    # is not in its adjective set. Two findings, both the older entry's.
+    #
+    # The finding COUNT cannot state that. `_dedupe_spans` collapses an
+    # overlapping span, so extending the ranking noun set with `insight|point`
+    # -- the exact overlap this case denies -- left the count at 2, both
+    # matches and both guidance strings unchanged (the older entry sorts first
+    # and wins the tie) and the battery at 168/168 exit 0. A pin another
+    # mechanism guarantees is REG-3 one level up. So the entry is ISOLATED: the
+    # rules are the shipped ones with every entry but the ranking one removed,
+    # which no dedupe can hide behind, and the fixture must then report nothing.
+    RANKING = "A ranking with no scale is unverifiable."
+    doc = tmpfile("The key insight is the ordering, and the whole point is "
+                  "the same.\n")
+    code, rep, _ = scan_json([doc])
+    hits = [(h["match"], h["guidance"])
+            for h in ((rep["warn"] + rep["info"]) if rep else [])
+            if h["kind"] == "marker"]
+
+    only = shipped_rules("en")
+    cats = []
+    for cat in only["languages"]["en"]["categories"]:
+        cat["entries"] = [e for e in cat["entries"]
+                          if e.get("guidance", "").startswith(RANKING)]
+        if cat["entries"]:                # an empty category fails the schema
+            cats.append(cat)
+    only["languages"]["en"]["categories"] = cats
+    # A selector that matches nothing would make the isolated half pass
+    # vacuously, so the entry count is asserted, not assumed. `guidance` is the
+    # identity: it is what distinguishes the two entries in a report, and
+    # rewording it IS an entry-identity change.
+    kept = sum(len(c["entries"]) for c in cats)
+    code2, rep2, err2 = scan_json([doc], ["--rules", rules_file(only)])
+    alone = [h["match"]
+             for h in ((rep2["warn"] + rep2["info"]) if rep2 else [])]
+    check("TC-099-10 control: the ranking entry does not overlap `key insight`",
+          code == 0 and [m for m, _ in hits] == ["The key insight",
+                                                 "the whole point"]
+          and all(g.startswith("Delete the frame") for _, g in hits)
+          and kept == 1 and code2 == 0 and alone == [],
+          f"exit={code} markers={hits} kept={kept} isolated={alone} "
+          f"exit2={code2} {err2.strip()[:80]}")
+
+    # Cardinality does not pin SURFACE. Each case above asserts only the new
+    # entry's own probe string, so the pattern could be NARROWED with the entry
+    # count and both gates unchanged: narrowing rule 4 to
+    # `\b(goes|turns)\s+(red|green)\b` left 168/168 exit 0 and 18/18 exit 0
+    # while `The gate went red.` and `The check flipped red.` reported nothing,
+    # and narrowing rule 2 to `\bthe main risk\b` silenced `The biggest
+    # problem is the ordering.` the same way. Both forms are enumerated in the
+    # entries' own `note` and in `references/authoring-contract.md`, so these
+    # pin every enumerated surface, one fixture per form, on the SHIPPED rules.
+    missed = []
+    for text, want in (("The gate went red.", "went red"),
+                       ("The check flipped red.", "flipped red"),
+                       ("The suite turns green.", "turns green"),
+                       ("The gate goes red.", "goes red")):
+        code, rep, _ = scan_json([tmpfile(text + "\n")])
+        hits = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])
+                if h["kind"] == "maxim"]
+        if not (code == 0 and hits == [want]):
+            missed.append((want, code, hits))
+    check("TC-099-11 every enumerated rule-4 verb form still fires",
+          not missed, f"missed={missed}")
+
+    missed = []
+    for text, want in (("The biggest problem is the ordering.",
+                        "The biggest problem"),
+                       ("The primary danger is an unreported truncation.",
+                        "The primary danger"),
+                       ("The key risk is a stale cache.", "The key risk")):
+        code, rep, _ = scan_json([tmpfile(text + "\n")])
+        hits = [h["match"] for h in ((rep["warn"] + rep["info"]) if rep else [])
+                if h["kind"] == "marker"]
+        if not (code == 0 and hits == [want]):
+            missed.append((want, code, hits))
+    check("TC-099-12 every enumerated rule-2 ranking surface still fires",
+          not missed, f"missed={missed}")
 
 
 def main():
@@ -1151,11 +1643,21 @@ def main():
                t_precision, t_masking_gaps, t_detector_gaps,
                t_contract_gaps, t_exit_contract, t_rule_authoring_gaps,
                t_reporting_gaps, t_097_masking, t_097_input_defects,
-               t_097_exit_contract, t_097_probe_coverage):
+               t_097_exit_contract, t_097_probe_coverage,
+               t_099_roster_pin, t_099_reasoning_examples, t_099_en_entries):
         try:
             fn()
         except Exception as exc:                      # noqa: BLE001
             check(f"{fn.__name__} raised", False, f"{type(exc).__name__}: {exc}")
+
+    # `+ 1` counts this check itself: `check` has not appended it yet, and the
+    # number under test is the one the run PRINTS. Here rather than in the
+    # tuple above, so the synthetic `<fn> raised` rows are inside the total too
+    # -- a function that dies halfway loses its remaining cases and gains one
+    # row, and the same pin catches the difference.
+    total = len(RESULTS) + 1
+    check("TC-META-01 the battery ran every case it declares",
+          total == EXPECTED_CASES, f"ran={total} declared={EXPECTED_CASES}")
 
     failed = [r for r in RESULTS if not r[1]]
     for name, ok, detail in RESULTS:

@@ -154,6 +154,16 @@
               "guidance": "Delete the frame and state the claim."
             },
             {
+              "marker": "the main risk / the biggest problem",
+              "pattern": "\\b(the|a|an|our|its|this)\\s+(main|biggest|largest|primary|key|greatest|central)\\s+(risk|problem|danger|challenge|question|idea|thing)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 2,
+              "probe": "The main risk is a proof that proves the wrong property.",
+              "guidance": "A ranking with no scale is unverifiable. Name the risk and its consequence, and delete the superlative or replace it with a severity value.",
+              "note": "Counterpart of the Russian «главная опасность» entry. The noun list deliberately excludes `insight`, `whole point` and `real question`, which the entry above already owns, so no phrase is reported twice. Members are the ones a corpus measurement produced; `chief`, `principal`, `foremost`, `difficulty`, `concern`, `issue`, `point` and `takeaway` scored zero over 977,960 lines and are left out under the SKILL.md §6 maintenance rule."
+            },
+            {
               "marker": "subtle / subtlety",
               "pattern": "\\bsubtle(ty|ties)?\\b",
               "flags": "i",
@@ -330,6 +340,16 @@
               "rule": 4,
               "probe": "The guard stays forever green.",
               "guidance": "State the observable property: no input exists on which the guard fails."
+            },
+            {
+              "marker": "goes red / turns green (a test)",
+              "pattern": "\\b(go(es|ing)?|went|gone|turn(s|ed|ing)?|flip(s|ped|ping)?)\\s+(back\\s+)?(red|green)\\b",
+              "flags": "i",
+              "severity": "warn",
+              "rule": 4,
+              "probe": "The gate goes red, and later turns green.",
+              "guidance": "Personification. Write \"fails\" / \"passes\" and name the condition that produces it.",
+              "note": "Verb forms only, mirroring the Russian entry: the adjectival Red-Green-Refactor terminology (\"the red phase\", \"a green run\") is a term and is deliberately not matched. State verbs are left to the `always|forever|permanently green` entry above, so the two never report the same span. `\\s+` rather than a single space is deliberate: masking preserves length, so a code span between the verb and the colour becomes blanks, and 2 of 23 corpus matches arrive that way."
             },
             {
               "marker": "blesses / rubber-stamps (a gate)",

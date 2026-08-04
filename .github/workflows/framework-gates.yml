@@ -40,13 +40,19 @@ jobs:
       - name: Run artifact-formalizer selftest
         run: python .agent/skills/artifact-formalizer/scripts/selftest_scan.py
 
-      # Instrument health, and the only part of the register check that GATES.
-      # Findings stay advisory (documentation-standards §4: a gate that fails on
-      # correct documents is how gates get switched off). A DEAD DETECTOR is not
-      # a finding — it is the scanner reporting a clean document while one of its
-      # checks is broken, which is the failure this skill exists to prevent.
+      # Instrument health. Findings stay advisory (documentation-standards §4:
+      # a gate that fails on correct documents is how gates get switched off).
+      # A DEAD DETECTOR is not a finding — it is the scanner reporting a clean
+      # document while one of its checks is broken, which is the failure this
+      # skill exists to prevent.
       # Exit 2 fails the build; exit 3 means the command below is mistyped and
       # also fails, which is why the two codes are distinct.
+      #
+      # This step is the DEDICATED detector gate, no longer the only one: TASK
+      # 099 pinned the roster at 9 rows per shipped language and applies that
+      # pin on the ordinary scan path too, so the advisory step below now exits
+      # 2 on a dead detector as well. Before the pin, a vanished detector class
+      # shrank the denominator and printed `17/17 detectors live` at exit 0.
       - name: Register scanner — probe every detector
         run: python .agent/skills/artifact-formalizer/scripts/scan_register.py --probe
 

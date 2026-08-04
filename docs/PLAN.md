@@ -1,204 +1,114 @@
-# Development Plan: TASK 098 — Archiving identity, ARC-3…ARC-12
+# PLAN 099 — Register scanner: close the REG-2…REG-13 selftest-honesty batch
 
-**Target:** `docs/TASK.md` (TASK 098), 9 requirements, audit `docs/reviews/framework-audit-098.md`.
-**Mode:** Framework Upgrade (Self-Improvement). Stub-First per `tdd-stub-first`.
-**Primary files:** `.agent/tools/task_id_tool.py`, `.agent/tools/archive_protocol.py`,
-`.agent/tools/rebase_links.py`, `.agent/skills/skill-archive-task/SKILL.md`.
+**TASK:** [docs/TASK.md](TASK.md) · **Closes:** REG-2 … REG-13
 
-## 0. Safety
+## Sequencing rule
 
-**0.1 Backup** (before the first edit in Stage 2):
+Five clusters, executed in order. No two clusters edit the same file, and each cluster observes the
+previous one's edits on disk. Counts are read from a run, never computed from arithmetic: the data
+cluster moves the lexicon sizes that cluster C pins, and cluster C moves the case count that
+clusters D and E state.
 
-```sh
-mkdir -p .agent/archive
-for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ] && cp "$f" ".agent/archive/$f.bak"; done
-for f in .agent/tools/task_id_tool.py \
-         .agent/tools/archive_protocol.py \
-         .agent/tools/rebase_links.py \
-         .agent/tools/test_task_id_tool.py \
-         .agent/tools/test_archive_protocol.py \
-         .agent/tools/test_rebase_links.py \
-         .agent/skills/skill-archive-task/SKILL.md \
-         .claude/agents/planner.md \
-         System/Docs/ORCHESTRATOR.md \
-         docs/ARCHITECTURE.md; do
-  cp "$f" ".agent/archive/$(basename $f).bak"
-done
-```
+| Order | Cluster | File(s) | Closes |
+| :--- | :--- | :--- | :--- |
+| A | Rule data | `data/register-en.json` | REG-11, REG-12 |
+| B | Scanner | `scripts/scan_register.py` | REG-3, REG-4, REG-10 (code), REG-9 (docstring) |
+| C | Battery | `scripts/selftest_scan.py` | REG-2, REG-5, REG-6, REG-7 + repairs and new cases from A and B |
+| D | Documents | `SKILL.md`, `references/measurement-baseline.md`, `System/Docs/SKILLS.md` | REG-13, REG-8 (sites), REG-10 (wording), REG-9 (row) |
+| E | Count pin | `scripts/selftest_scan.py` | REG-8 (assertion) |
 
-`.agent/archive/` is gitignored, so the backups leave `git status` clean.
+## Cluster A — rule data
 
-**0.2 Rollback.** Restore any file from `.agent/archive/<basename>.bak`. The tracked copy is also in
-git history at `5c9da31`, so `git checkout 5c9da31 -- <path>` is the second route.
+- [ ] A1. Insert the rule-4 red/green verb entry into `register-en.json`, after the
+      `always green / forever green` entry, per D8 (`\s+` between verb and colour).
+- [ ] A2. Insert the rule-2 ranking entry, after `the key insight / the whole point`, listing only
+      the measured members per D9.
+- [ ] A3. Run `--probe`. Expect `en maxim 9/9`, `en marker 28/28`, `18/18 detectors live`, exit 0.
+- [ ] A4. Record the new-finding delta over `docs/` for the change report.
 
-**0.3 Baseline** (measured 2026-08-04, before any edit):
+**Postcondition.** `--probe` exits 0 and the battery still passes; no document under `.agent/` or
+`System/` gains a finding.
 
-| Measure | Value |
-| :--- | :--- |
-| `python3 -m pytest .agent/tools/ -q` | 110 passed |
-| `ORCHESTRATOR.md:284` states | `39 tests` |
-| `rebase_links.py` reachable exit codes | 0, 2, 3 |
-| Open `ARC-*` records | 10 |
+## Cluster B — scanner
 
-<!-- contract:sequence -->
+- [ ] B1. **REG-4.** Add `STRUCTURAL_KINDS`, `PROBE_ROSTER`, `SHIPPED_LANGS` beside
+      `LEXICAL_RULES`. Add `_pin_roster` and the `strict` parameter to `verify_detectors`, applied
+      on both return paths.
+- [ ] B2. **REG-4.** Key strictness on `not args.rules` in the `--probe` path and the scan path,
+      per D6. Union the loaded languages with `SHIPPED_LANGS` so a missing language reports DEAD.
+- [ ] B3. **REG-3.** Make a declared example mandatory in `_validate_reasoning`, inside the existing
+      `if not errors:` guard.
+- [ ] B4. **REG-3.** Fold `unprobed` into the reasoning row's liveness, and turn the no-anchor
+      branch into a DEAD row.
+- [ ] B5. **REG-10.** Add `TICK_GLYPHS`, add `☐` to `STATUS_GLYPHS`, and rewrite the rule-5 guard so
+      a tick is exempt in every position. Rewrite the narrowing comment: both of its stated
+      premises are refuted by the corpus it cites.
+- [ ] B6. **REG-10.** Branch the guidance string so a status glyph gets status-word advice.
+- [ ] B7. **REG-9.** Restate the `_dedupe_spans` docstring example so it names something the shipped
+      data can produce.
+- [ ] B8. **REG-8.** Add a revision identifier to the `128/128` narrative in the reasoning-row
+      comment.
+- [ ] B9. Run `--probe` (expect `18/18`, exit 0) and the battery. Record which cases fail — the
+      expected set is the three reasoning fixtures cluster C repairs.
 
-## Task Execution Sequence
+**Postcondition.** `--probe` exits 0. The battery's failures are exactly the fixtures named in B9.
 
-### Stage 1 — Red: pin every defect before fixing it
+## Cluster C — battery
 
-**[R8] 1.1** Add `TestAllowCorrectionPolarity` to `.agent/tools/test_task_id_tool.py`. Four
-behavioural cases against a temp `tasks_dir` holding one real parent archive:
+- [ ] C1. Repair the reasoning fixtures B3 invalidated: add `probes` to the rule-file fixtures at
+      `TC-SCHEMA-15` and `TC-R3-01`, and re-pin `TC-097-15` to the mandatory-example contract.
+- [ ] C2. **REG-2.** Add `SHIPPED_ENTRIES` and `SHIPPED_PROBES` literals. Rewrite `TC-PROBE-02`
+      against `SHIPPED_PROBES`. Add `TC-SHIP-07` comparing loaded counts against `SHIPPED_ENTRIES`.
+      The literals carry cluster A's new sizes.
+- [ ] C3. **REG-4.** Add the roster cases. They cannot use `--rules`, so they build a throwaway
+      skill root and run a copy of the scanner. Include the unmutated control.
+- [ ] C4. **REG-3.** Add the mandatory-example case and the TASK 097 D3 two-step case.
+- [ ] C5. **REG-5.** Add the callout-table case for `dequote`.
+- [ ] C6. **REG-6.** Add the `i.e.`, `vs.` and `см.` lookbehind cases.
+- [ ] C7. **REG-7.** Add the two `check_thresholds` rejection cases, keyed on fragments unique to
+      each branch.
+- [ ] C8. **REG-10.** Add the tick-in-a-list case, the `☐`-in-a-table case, and the guidance-wording
+      case.
+- [ ] C9. **REG-11 / REG-12.** Add the two detection cases, the `Red-Green-Refactor` control, the
+      `forever green` no-double-report control, and the `the key insight` collision control.
+- [ ] C10. Run the battery. Record the printed total.
 
-- schema literal is `False`;
-- `tool_runner.execute_tool` with `allow_correction` omitted returns `conflict`;
-- `generate_task_archive_filename` called without the keyword returns `conflict`;
-- the CLI run as a subprocess with no flag exits 1 and prints `conflict`.
+**Postcondition.** The battery exits 0. The printed total is the number clusters D and E state.
 
-Expected at this stage: cases 3 and 4 fail. Docstring names the revert that turns each red.
+## Cluster D — documents
 
-**[R8] 1.2** Add `TestMetaRefusalStopsTheArchive` to `.agent/tools/test_archive_protocol.py`:
+- [ ] D1. **REG-13.** Remove the cardinal from the `SKILL.md` §2 bullet, its §9 Quick Reference
+      row, and the matching sentence in `System/Docs/SKILLS.md`.
+- [ ] D2. **REG-8.** `SKILL.md` §8 states cluster C's measured total and names the case that asserts
+      it. `SKILL.md` §3 and `measurement-baseline.md` §9 drop the numeral.
+- [ ] D3. **REG-8.** Add a revision identifier to the `128/128` narrative in
+      `measurement-baseline.md` §10.1.
+- [ ] D4. **REG-10.** Rewrite the `SKILL.md` §5 rule-5 bullet and `measurement-baseline.md` §6 to name which glyphs
+      are exempt where. Keep the §5 coverage-table row coherent with them.
+- [ ] D5. **REG-9.** Correct §4 row 65 to `not adopted` in the established form, and repair its
+      Pattern cell.
+- [ ] D6. **REG-9.** Re-derive both cardinals in `SKILL.md` §6 item 4 from the current tables.
+- [ ] D7. Record the roster pin and the mandatory-example contract in `SKILL.md` §5/§8 and
+      `measurement-baseline.md` §10.1.
 
-- an ambiguous meta table (two 3-digit values) makes `archive_task` return `status: error`;
-- `docs/TASK.md` still exists after that call;
-- a meta block with an empty ID row archives and writes the ID back under a Russian label.
+**Postcondition.** No live document states a case count other than cluster C's measured total, and
+none states a cardinal adjacent to `licensed`.
 
-Expected at this stage: all three fail.
+## Cluster E — count pin
 
-**[R8] 1.3** Add `TestSlotTargetMustExist` to `.agent/tools/test_rebase_links.py`:
+- [ ] E1. Add the case asserting `SKILL.md` states `EXPECTED_CASES`, scoped to `SKILL.md` and
+      `System/Docs/SKILLS.md`, skipping rather than failing when a file is absent.
+- [ ] E2. Re-run, read the printed total, set `EXPECTED_CASES` to it plus one.
+- [ ] E3. Add `TC-META-01` immediately before `failed = …`, computing the total before `check`
+      appends.
+- [ ] E4. Run the battery. Expect `EXPECTED_CASES` printed, exit 0.
 
-- with the existence assertion on, a slot map naming an absent target exits 1;
-- with it off, the same input exits 0 or 3.
+**Postcondition.** Dropping a test function from the tuple makes `TC-META-01` fail. Changing
+`SKILL.md`'s count makes E1's case fail.
 
-Expected at this stage: the first fails.
+## Verification
 
-**[R8] 1.4** Amend `test_task_id_tool.py:152` (`test_proposed_id_still_conflicts_with_a_real_parent`)
-to pass `allow_correction=True` explicitly. Its intent is the correction path, and after R1 the
-default no longer supplies it. This runs BEFORE Stage 2 so the suite goes red only on the new tests.
-
-**Gate 1:** `python3 -m pytest .agent/tools/ -q` reports the new tests failing and no other test
-newly failing.
-
-### Stage 2 — Green: the four groups
-
-**[R1] 2.1** `.agent/tools/task_id_tool.py:165` — `allow_correction: bool = False`. Update the
-docstring line for the argument.
-
-**[R1] 2.2** `.agent/tools/task_id_tool.py:291-301` — add `--allow-correction` (`store_true`). Keep
-`--no-correction` accepting its now-default value per D1. Compute
-`allow_correction = args.allow_correction and not args.no_correction`.
-
-**[R3] 2.3** `.agent/tools/archive_protocol.py` `parse_task_meta` — return a refusal reason.
-Add `id_ambiguous: bool` set when the structural read finds more than one 3-digit value, and
-`slug_unreadable: bool` set when a meta block is present and no slug row is readable.
-
-**[R3] 2.4** `.agent/tools/archive_protocol.py:244-249` — add the STOP branch the comment at
-`:116-119` promises. On a refusal return `{"status": "error", "reason": "meta_unreadable", ...}` and
-move no file. A meta block with no ID row is not a refusal and still auto-generates.
-
-**[R4] 2.5** `.agent/tools/archive_protocol.py:286-291` — locate the write-back row inside the meta
-region rather than by the English label `Task ID`. Write only when the region offers exactly one
-empty value cell. Report the outcome in the result dict as `meta_id_written`.
-
-**[R5] 2.6** `.agent/tools/rebase_links.py` — add `--slot-must-exist`. When set, a `SLOT_RESOLVED`
-record whose target is absent sets `failed`. Retain the conservation probe per D3.
-
-**[R5] 2.7** `.agent/tools/rebase_links.py:43-44` — rewrite the docstring exit table so every listed
-code is reachable, naming the declared-present slot target as the exit-1 condition.
-
-**Gate 2:** `python3 -m pytest .agent/tools/ -q` — all green, count ≥ 110 plus the new tests.
-
-### Stage 3 — Protocol and cards
-
-**[R6] 3.1** `.agent/skills/skill-archive-task/SKILL.md:149-152` — state the PLAN-slot condition:
-the pairing is passed only when `docs/PLAN.md` exists. Cite `archive_protocol.py:363-366`.
-
-**[R6] 3.2** `.agent/skills/skill-archive-task/SKILL.md:325-327` (Example Flow) — repeat the same
-condition, so the copyable command and the rule agree.
-
-**[R6] 3.3** `.agent/skills/skill-archive-task/SKILL.md:235-246` (Step 7.6.5) — add
-`--slot-must-exist` to the command. By this point the TASK archive is on disk, so the assertion is
-satisfiable and a mistyped slug is caught.
-
-**[R6] 3.4** `.agent/skills/skill-archive-task/SKILL.md:216-219` (Step 7.4) — replace the
-post-correction rule with the Meta-block rule that Steps 3 and 4 enforce. Name
-`archive_protocol.archive_task(allow_renumber=True)` as the one path where a corrected ID survives.
-
-**[R6] 3.5** `.agent/skills/skill-archive-task/SKILL.md:264` (Edge Cases) — rewrite the
-`Corrected used_id` row to match 3.4.
-
-**[R7] 3.6** `.claude/agents/planner.md:12` — replace the ID-generation instruction. The planner
-reuses the parent TASK Meta ID for every sub-task filename, per `06_planner_prompt.md:40`.
-
-**[R7] 3.7** `docs/ARCHITECTURE.md:169` — remove `(uses task_id_tool.py)` from the `planner` row.
-After 3.6 the planner does not invoke it. `ARCHITECTURE.md` is a LIVING document, edited in place.
-
-**Gate 3:** `grep -n "task_id_tool" .claude/agents/planner.md` returns no generate-an-ID instruction;
-each SKILL.md line cited in A12 reads as specified.
-
-### Stage 4 — Documentation
-
-**[R9] 4.1** `System/Docs/ORCHESTRATOR.md:8` — state the shortest correct invocation. After R1 the
-default refuses a conflict, so `--no-correction` is no longer required to obtain that behaviour.
-
-**[R9] 4.2** `System/Docs/ORCHESTRATOR.md:284` — replace `39 tests` with the count Gate 2 reported.
-
-**[R9] 4.3** `CHANGELOG.md` and `CHANGELOG.ru.md` — one paired entry naming the ten issue IDs.
-
-**Gate 4:** A17 and A18 pass.
-
-### Stage 5 — Ledger flip (last, after Gate 2 passed)
-
-**[R8] 5.1** For each of ARC-3 … ARC-12: set `status: fixed`, add `resolved_at: 2026-08-04` and
-`resolved_by: TASK 098`, and append a resolution blockquote. Existing body text is preserved
-verbatim.
-
-**[R8] 5.2** Update the ten matching index lines in `docs/KNOWN_ISSUES.md` in lockstep.
-
-**Gate 5:** A16 passes; no `ARC-*` line reads `status: open`.
-
-<!-- contract:coverage -->
-
-## Use Case Coverage
-
-| Use Case | Stage | Verified by |
-| :--- | :--- | :--- |
-| UC-1 archive against a taken ID | 2.1, 2.2 | A1, A2, A3 |
-| UC-2 ambiguous non-English meta | 2.3, 2.4 | A6 |
-| UC-3 empty ID row, non-English | 2.5 | A7, A8 |
-| UC-4 mistyped slug in the slot map | 2.6, 3.3 | A9 |
-| UC-5 task without a plan | 3.1, 3.2 | A10, A12 |
-| UC-6 planner writes sub-task files | 3.6, 3.7 | A13 |
-
-## Requirements Coverage (RTM)
-
-| Req | Stages | Acceptance |
-| :--- | :--- | :--- |
-| R1 | 2.1, 2.2 | A1, A2, A3, A4 |
-| R2 | 1.1 | A5 |
-| R3 | 2.3, 2.4 | A6, A7 |
-| R4 | 2.5 | A7, A8 |
-| R5 | 2.6, 2.7 | A9, A10, A11 |
-| R6 | 3.1–3.5 | A12 |
-| R7 | 3.6, 3.7 | A13 |
-| R8 | 1.1–1.4, 5.1, 5.2 | A14, A16 |
-| R9 | 4.1–4.3 | A17, A18 |
-
-## Ordering constraints
-
-1. Stage 1 precedes Stage 2. A test written after its fix cannot show that the fix was needed.
-2. Step 1.4 precedes 2.1. Without it the suite goes red on an expected change.
-3. Stage 5 follows Gate 2. A ledger row that reads `fixed` before the gate passes misreports.
-4. Step 4.2 follows Gate 2. The count it writes is the count Gate 2 reported.
-
-## Verification per stage
-
-| Gate | Command | Pass condition |
-| :--- | :--- | :--- |
-| 1 | `python3 -m pytest .agent/tools/ -q` | new tests fail, no other test newly fails |
-| 2 | `python3 -m pytest .agent/tools/ -q` | all pass |
-| 2b | manual revert of `tool_runner.py:292` default | the four-surface test turns red |
-| 3 | `grep` per A12, A13 | cited lines read as specified |
-| 4 | `grep` per A17, A18 | both present |
-| 5 | `grep` per A16 | ten records and ten index lines agree |
-| 6 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/TASK.md docs/PLAN.md` | exit 0 |
-| 7 | `git status --porcelain` | only intended paths listed |
+- [ ] V1. Execute every mutation in TASK §4 (A2–A10) and record the observed result.
+- [ ] V2. Run the five `framework-gates.yml` jobs locally.
+- [ ] V3. Adversarially verify each claimed fix against its issue record's Reproduction.
+- [ ] V4. Flip twelve issue files and twelve `docs/KNOWN_ISSUES.md` index lines in lockstep.

@@ -59,11 +59,38 @@ CYR = re.compile(r"[а-яА-ЯёЁ]")
 RULE_KIND = {2: "marker", 4: "maxim", 6: "metaphor"}
 LEXICAL_RULES = tuple(sorted(RULE_KIND))
 #: Rule 3's vocabularies plus the known-positive its detector must fire on.
-#: `probes` maps a pattern to a string that matches it, for the patterns that
-#: cannot probe themselves — an alternation or a quantifier reduces to no
-#: literal. Optional: a plain literal derives its own (TASK 097 R19).
+#: `probes` maps a pattern to a string that matches it. Every pattern declares
+#: one (TASK 099 D7): while it was optional, a pattern without an example was
+#: reported `unprobed` and its row still printed live, which is exactly the
+#: path that re-opens the TASK 097 D3 defect.
 REASONING_KEYS = ("modals", "causals", "probe", "probes")
 REASONING_VOCAB = ("modals", "causals")
+
+#: The structural detector classes, in the order `_structural_probes` builds
+#: their fixtures. THE TWO ARE COUPLED: a fixture added there without its name
+#: here leaves the roster short, and a name here with no fixture there reports
+#: DEAD on every run.
+STRUCTURAL_KINDS = ("sentence_length", "sentence_near_limit", "cell_width",
+                    "cell_sentences", "emoji_severity")
+#: The roster `--probe` must account for, as a LITERAL rather than a count
+#: derived from the file under test. Deriving it let the denominator shrink
+#: with the numerator: deleting every rule-6 entry of one language printed
+#: `17/17 detectors live` exit 0, and loading only `register-en.json` printed
+#: `9/9` exit 0, with the missing class emitting no row at all (REG-4). A class
+#: with no detector now appends a DEAD row.
+PROBE_ROSTER = (STRUCTURAL_KINDS
+                + tuple(RULE_KIND[r] for r in LEXICAL_RULES)
+                + ("reasoning",))     # 9 rows per fully-configured language
+#: The languages this skill ships, so that a wholly absent rule file still
+#: contributes its nine rows instead of halving the roster: deleting
+#: `register-ru.json` printed `9/9 detectors live` exit 0, and now prints
+#: `14/18` exit 2 — the four lexical and reasoning classes DEAD, the five
+#: structural ones live, since those are built from thresholds and are
+#: language-independent. 9 x 2 is the 18 SKILL.md §5 promises. Applied only
+#: when no `--rules` argument was given (TASK 099 D6): a caller supplying its
+#: own rule file is entitled to a partial one, and the acceptance battery
+#: builds single-language partials by design.
+SHIPPED_LANGS = ("en", "ru")
 
 #: Findings name the section of `documentation-standards` they violate. Cell
 #: shape is §5.1 and is NOT a §5.5 rule; reporting it as "rule 1" claimed an
@@ -304,7 +331,19 @@ def _validate_reasoning(lang, block):
         for key in ("modals", "causals"):
             for pat in block.get(key, []):
                 declared = (block.get("probes") or {}).get(pat)
-                if declared is not None and not re.search(pat, declared, re.I):
+                if declared is None:
+                    # An example is MANDATORY (TASK 099 D7). While it was
+                    # optional, a pattern without one was reported `unprobed`
+                    # and the row still printed live, which is the state that
+                    # re-opens the TASK 097 D3 defect: drop the example for
+                    # `\bshall\b`, replace the pattern with `\bZZZNEVER\b`, and
+                    # the file loads clean at 18/18 exit 0 while `The installer
+                    # shall abort because the target exists.` reports nothing.
+                    errors.append(
+                        f"{where}.{key}: {pat!r} declares no example in "
+                        f"{where}.probes — an unexercised pattern can be "
+                        f"edited away without any probe noticing")
+                elif not re.search(pat, declared, re.I):
                     # The pattern was edited and its example was not. That is
                     # the signature of a vocabulary changed away from what it
                     # was for, and it is the mutation the probe exists to
@@ -529,12 +568,35 @@ _PICTO = "[\U0001F000-\U0001FAFF☀-➿⬀-⯿‼⁉]"
 #: single authored character and was being counted two or three times.
 EMOJI = re.compile(
     _PICTO + r"(?:[︎️\U0001F3FB-\U0001F3FF]|‍" + _PICTO + r")*")
-#: Status values, not severities. Measured: 613 occurrences across 80 files
-#: under `docs/`, every inspected one a table cell meaning done / not done.
-#: They are exempt INSIDE A TABLE CELL, where §5.1 governs, and reported
-#: everywhere else — the earlier blanket exclusion of ✓/✗ also blinded the rule
-#: to a status glyph used as a severity in prose.
-STATUS_GLYPHS = frozenset("✓✗✅❌☑☒")
+#: Status values, not severities. Two exemptions with different scopes, each
+#: measured over the 627 tracked `.md` documents of this repository.
+#:
+#: `✓`/`✗` are exempt in EVERY position (TASK 099 D2). The narrowing this
+#: replaces was justified on two premises and both fail against the corpus it
+#: cited: it claimed every inspected occurrence was a table cell, while 704 of
+#: the 1,042 status glyphs (68%) sit outside a table, and it existed to catch a
+#: status glyph used AS A SEVERITY in prose, a class with no members. Of the
+#: ticks, 33 of 52 are out of a table — `docs/TASK.md gone ✓` in a numbered
+#: list — and exempting them turns no acceptance case red.
+#:
+#: `✅`/`❌`/`☑`/`☒`/`☐` stay exempt only INSIDE A TABLE CELL, where §5.1
+#: governs. Exempting them everywhere would erase the 671 out-of-table findings
+#: that `references/formalization-guide.md:19-21` defends (a glyph carrying no
+#: severity is diff metadata and does not belong in a specification either),
+#: and would turn TC-ADV-13 red. `☐` joins them because all 6 of its
+#: occurrences are table cells; `✔` (U+2714) deliberately stays out, and
+#: TC-ADV-10 requires it to fire.
+TICK_GLYPHS = frozenset("✓✗")
+STATUS_GLYPHS = frozenset("✓✗✅❌☑☒☐")
+#: Rule 5's guidance branches on the glyph. One string told the author of
+#: `docs/TASK.md gone ✓` to replace it with `SEV-2`, which is not advice about
+#: a done/not-done value (REG-10).
+SEVERITY_GUIDANCE = ("Rule 5: severity is a named value. Replace with a word "
+                     "(`warn`, `SEV-2`, `Critical`), or delete the glyph if it "
+                     "carries no severity at all.")
+STATUS_GUIDANCE = ("Rule 5: a status glyph is not a specification value. "
+                   "Replace with the status word (`done`, `pass`, `n/a`), or "
+                   "delete it where the sentence already says so.")
 
 
 def normalize(text):
@@ -862,12 +924,12 @@ def scan_document(text, entries, reasoning, thresholds, origin):
     for i, line in enumerate(lines, 1):
         for m in EMOJI.finditer(line):
             glyph = m.group(0)
-            if i in tables and glyph.strip("︎️") in STATUS_GLYPHS:
-                continue          # a status VALUE in a table cell, not severity
+            key = glyph.strip("︎️")
+            if key in TICK_GLYPHS or (i in tables and key in STATUS_GLYPHS):
+                continue          # a status VALUE, not a severity
             add(i, "emoji_severity", 5, "warn", glyph,
-                "Rule 5: severity is a named value. Replace with a word "
-                "(`warn`, `SEV-2`, `Critical`), or delete the glyph if it "
-                "carries no severity at all.", line, (m.start(), m.end()))
+                STATUS_GUIDANCE if key in STATUS_GLYPHS else SEVERITY_GUIDANCE,
+                line, (m.start(), m.end()))
 
     # --- rules 2, 4 and 6: per-language lexicon over masked text ---
     for i, line in enumerate(lines, 1):
@@ -884,9 +946,17 @@ def scan_document(text, entries, reasoning, thresholds, origin):
 def _dedupe_spans(findings):
     """Drop a finding whose span is contained in another's on the same line.
 
-    Two lexicon entries can cover the same phrase — `просто` sits inside
-    `не просто X, а Y` — and reporting both inflates the count for one defect.
-    The wider span wins; ties keep the first.
+    The case is a broader marker covering a narrower one, so that one defect is
+    reported once: an entry for `not just X but Y` and an entry for `just` both
+    match `It is not just fast but correct.` The wider span wins; ties keep the
+    first.
+
+    The shipped lexicons produce no such pair today — measured at 0 contained
+    spans over the 627 tracked documents of this repository — so the invariant
+    is pinned on a synthetic pair by TC-ADV-43, not on shipped data. The
+    earlier example here named `просто` inside `не просто X, а Y`, which no
+    shipped Russian entry can produce: negative parallelism was measured at a
+    zero baseline and never adopted (REG-9).
     """
     keep, byline = [], {}
     for f in findings:
@@ -994,6 +1064,10 @@ def _structural_probes(thresholds):
 
     Deriving them from the thresholds is what stops a moved threshold from
     leaving a probe behind, still green against a value nobody uses.
+
+    The kinds returned here are `STRUCTURAL_KINDS`, which pins them into
+    `PROBE_ROSTER`: adding a fixture without adding its name there leaves the
+    roster short by one row, and the roster is the number the CI gate states.
     """
     limit = thresholds["sentence_max_words"]
     near = thresholds["sentence_near_words"]
@@ -1009,12 +1083,35 @@ def _structural_probes(thresholds):
     ]
 
 
-def verify_detectors(entries, reasoning, thresholds):
+def _pin_roster(results):
+    """→ the rows ordered by `PROBE_ROSTER`, one DEAD row per absent class.
+
+    A class with no detector used to emit NO ROW, so the gate divided a shrunk
+    numerator by an equally shrunk denominator and reported the survivors as
+    `N/N detectors live`, exit 0 (REG-4). The roster is the contract; a class
+    missing from it is a failure, not a smaller run.
+    """
+    seen = {k for k, _, _ in results}
+    for kind in PROBE_ROSTER:
+        if kind not in seen:
+            results.append((kind, False,
+                            f"no detector for this class in this language "
+                            f"— the roster is {len(PROBE_ROSTER)} per "
+                            f"shipped language"))
+    order = {k: i for i, k in enumerate(PROBE_ROSTER)}
+    return sorted(results, key=lambda r: order.get(r[0], len(order)))
+
+
+def verify_detectors(entries, reasoning, thresholds, strict=False):
     """Probe every detector against a known positive → [(kind, live, detail)].
 
     Structural detectors use synthesised fixtures. Every lexicon entry uses its
     own required `probe` string, so a zero from a marker rule is a measured
     zero rather than an unexercised one.
+
+    Under `strict` the result is pinned to `PROBE_ROSTER`, which is what the
+    shipped data is held to. It defaults off because a caller passing its own
+    `--rules` file is entitled to configure fewer classes than this skill ships.
     """
     results = []
     for kind, fixture in _structural_probes(thresholds):
@@ -1039,9 +1136,10 @@ def verify_detectors(entries, reasoning, thresholds):
         # One declared sentence exercised the ONE modal and the ONE causal it
         # happened to contain, while the row advertised the whole cross-product.
         # Deleting any other pattern left `--probe` at 18/18 and the battery at
-        # 128/128 while real findings vanished (TASK 097 D3). Each pattern is
-        # now exercised against a known-good partner, so killing any one of them
-        # turns this row DEAD.
+        # 128/128 — the count before commit 5c9da31 raised it to 145 — while
+        # real findings vanished (TASK 097 D3). Each pattern is now exercised
+        # against a known-good partner, so killing any one of them turns this
+        # row DEAD.
         modals = reasoning.get("modals") or []
         causals = reasoning.get("causals") or []
         anchor_m = _reasoning_literal(reasoning, modals[0]) if modals else None
@@ -1053,8 +1151,12 @@ def verify_detectors(entries, reasoning, thresholds):
                 for pat in group:
                     lit = _reasoning_literal(reasoning, pat)
                     if lit is None:
-                        # No example in the data. Reported, not fatal: a rule
-                        # file written before `probes` existed still loads.
+                        # No example in the data. `_validate_reasoning` now
+                        # rejects that at load (TASK 099 D7), so this is
+                        # unreachable through the loader — and it counts
+                        # against liveness rather than being merely reported,
+                        # because the reported-and-live state is the one that
+                        # re-opened TASK 097 D3 with every gate green.
                         unprobed.append(pat)
                         continue
                     sentence = (f"The field {lit} be set {partner} it holds."
@@ -1065,22 +1167,26 @@ def verify_detectors(entries, reasoning, thresholds):
                                            "<probe>"):
                         dead.append(f"{key} {pat}")
         else:
-            # Nothing to pair against, so nothing below can be exercised. The
-            # declared sentence is the only evidence left, and it is weak.
-            hits = _scan_reasoning(mask(reasoning["probe"] + "\n"), reasoning,
-                                   "<probe>")
+            # Nothing to pair against, so no pattern below can be exercised.
+            # The previous row reported `bool(hits)` on the declared sentence,
+            # which the loader had already made a precondition — provably True
+            # in every run that reached it, and therefore not a measurement
+            # (REG-3). This branch stands between a future loader regression
+            # and a falsely-live roster, so it reports DEAD rather than
+            # re-asserting what the loader guaranteed.
             total = len(modals) + len(causals)
-            results.append(("reasoning", bool(hits),
+            results.append(("reasoning", False,
                             f"0 exercised of {total} patterns — no example in "
-                            f"`probes` to pair against; declared probe only"))
-            return results
+                            f"`probes` to pair against, so the vocabulary is "
+                            f"not verified by this run"))
+            return _pin_roster(results) if strict else results
         total = len(modals) + len(causals)
-        results.append(("reasoning", not dead,
+        results.append(("reasoning", not dead and not unprobed,
                         f"{exercised} exercised of {total} patterns"
                         + (f"; unprobed: {', '.join(unprobed)}" if unprobed
                            else "")
                         + (f"; dead: {', '.join(dead)}" if dead else "")))
-    return results
+    return _pin_roster(results) if strict else results
 
 
 def diagnostics(text, entries, reasoning, thresholds, findings, lang, counts):
@@ -1348,9 +1454,15 @@ def main(argv=None):
 
     if args.probe:
         rows, dead = [], False
-        for lang in sorted(lex):
+        # The UNION, not the loaded languages: enumerating what was loaded is
+        # how deleting `register-ru.json` printed `9/9 detectors live` exit 0
+        # (REG-4). A shipped language absent from the data now contributes its
+        # nine rows, with every lexical class DEAD.
+        strict_langs = set() if args.rules else set(SHIPPED_LANGS)
+        for lang in sorted(set(lex) | strict_langs):
             for kind, live, detail in verify_detectors(
-                    lex[lang], reasoning.get(lang), thresholds):
+                    lex.get(lang, []), reasoning.get(lang), thresholds,
+                    strict=lang in strict_langs):
                 rows.append((lang, kind, live, detail))
                 dead = dead or not live
         if args.json:
@@ -1429,8 +1541,9 @@ def main(argv=None):
         entries, reason = lex.get(lang, []), reasoning.get(lang)
         if lang not in probed:
             probed.add(lang)
-            for kind, live, detail in verify_detectors(entries, reason,
-                                                       thresholds):
+            for kind, live, detail in verify_detectors(
+                    entries, reason, thresholds,
+                    strict=not args.rules and lang in SHIPPED_LANGS):
                 detectors.append((lang, kind, live, detail))
                 if not live:
                     dead.append(f"{lang}/{kind}: {detail}")

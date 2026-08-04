@@ -67,7 +67,7 @@ prescribes converting such a column rather than widening it.
 
 ## 2. Capabilities
 
-- **Authoring contract.** Six tests applied per sentence and thirteen licensed statement forms.
+- **Authoring contract.** Six tests applied per sentence, and the licensed statement forms.
   The tests are stated as properties rather than as a word list, which is what lets them reach a
   phrasing the lexicon has never seen. That is a design intent, not a guarantee: §6 says what to do
   when a finding escapes all six.
@@ -111,7 +111,7 @@ deterministic. Judging `info` findings and covering the recall gaps in §5 are y
 | `python3 scripts/scan_register.py FILE… [--rules R.json…] [--terms T.md…] [--lang auto\|<lang>] [--sections] [--json]` | validate → probe → scan | 0 findings / 2 broken instrument / 3 usage |
 | `python3 scripts/scan_register.py --probe` | verify every detector against a known positive | 0 all live / 2 any dead |
 | `python3 scripts/scan_register.py --list [LANG]` | render the rule set as a table | 0 / 3 unknown language |
-| `python3 scripts/selftest_scan.py` | acceptance battery, 128 cases | 0 / 1 |
+| `python3 scripts/selftest_scan.py` | acceptance battery | 0 / 1 |
 
 Finding kinds: `sentence_length`, `sentence_near_limit`, `cell_width`, `cell_sentences`,
 `emoji_severity`, `marker`, `reasoning`, `maxim`, `metaphor`.
@@ -166,13 +166,19 @@ and 6 have detectors with declared recall limits, and the reading pass owns the 
 | 2 No evaluative markers | `marker` | judgement phrased in unlisted words |
 | 3 Reasoning separated | `reasoning` | reasoning spread across two sentences |
 | 4 A rule stated as a rule | `maxim` | a novel aphorism |
-| 5 Severity is a named value | `emoji_severity` | nothing — complete for pictographic glyphs |
+| 5 Severity is a named value | `emoji_severity` | nothing beyond the exemptions below — complete for pictographic glyphs |
 | 6 A private metaphor is not a term | `metaphor` + `--terms` | a metaphor coined today |
 
 - **Rule 1** — two claims inside twelve words pass, because the detector counts words.
 - **Rule 3** — the detector needs the obligation and the causal connective in **one** sentence.
+  Each vocabulary pattern declares its example in `probes`; a rule file holding a pattern that
+  declares none does not load.
 - **Rule 4** — it recognises named personifications and maxim templates, nothing beyond them.
-- **Rule 5** — `✓` and `✗` are excluded by design: they are table values in this repository.
+- **Rule 5** — `✓` and `✗` (U+2713/U+2717) are excluded everywhere; `✅`, `❌`, `☑`, `☒` and `☐` are
+  excluded inside a table cell, where §5.1 governs. Outside a cell those five are still reported.
+  Rule 5's second clause is why: a glyph carrying no severity at all is diff metadata, and does not
+  belong in a specification either
+  ([`references/formalization-guide.md`](references/formalization-guide.md) rule 5).
 - **Rule 6** — a candidate list plus a string test against the sources given to `--terms`.
 
 `documentation-standards` §5.1 is surfaced by the same scanner (`cell_width`, `cell_sentences`) and
@@ -189,7 +195,7 @@ A new defective phrase found in the wild is triaged **before** any data file is 
 3. **Every entry ships with a `probe`.** Validation rejects a pattern that cannot match its own
    probe, so a rule can never be added dead.
 4. **A rule ships only when a measurement supports it.** Four properties expected to show drift did
-   not, and seven generic AI-writing tells measured at zero;
+   not, and six generic AI-writing tells measured at zero;
    [`references/measurement-baseline.md`](references/measurement-baseline.md) records them as
    non-rules so nobody re-proposes them from impression.
 
@@ -210,10 +216,14 @@ mistyped.
 
 ## 8. Validation Evidence
 
-- **Selftest**: `python3 scripts/selftest_scan.py` — 128 cases. They cover the schema, masking,
-  every detector, the probe contract, diagnostics, sections, the terms downgrade and every exit
-  code. Each finding of the WI-096 adversarial review carries its own regression pin.
-- **Probe**: `--probe` verifies 18 detectors across both shipped languages on every run.
+- **Selftest**: `python3 scripts/selftest_scan.py` — 174 cases. `TC-META-01` asserts the battery ran
+  that many, and a second case reads this number out of this file. A dropped case is then a red run
+  rather than a smaller self-consistent total. They cover the schema, masking, every detector, the
+  probe contract, diagnostics, sections, the terms downgrade and every exit code. Each finding of
+  the WI-096 adversarial review carries its own regression pin.
+- **Probe**: `--probe` verifies 18 detectors across both shipped languages on every run. The roster
+  is a literal of nine rows per shipped language. A detector class with no rule behind it prints a
+  DEAD row and exits 2, instead of leaving the denominator with the numerator.
 - **Corpus check** and the full baseline, including the two detector defects found by measurement
   and pinned as regressions: [`references/measurement-baseline.md`](references/measurement-baseline.md).
 
@@ -221,7 +231,7 @@ mistyped.
 
 | File | Role |
 |---|---|
-| `references/authoring-contract.md` | Mode A — six tests, nine licensed forms, worked conversions |
+| `references/authoring-contract.md` | Mode A — six tests, the licensed forms, worked conversions |
 | `references/formalization-guide.md` | Mode B — the six rules, before/after, the specification test |
 | `references/measurement-baseline.md` | why each rule exists; refuted and not-adopted candidates |
 | `scripts/scan_register.py` | scanner (validate → probe → mask → scan → diagnose) |

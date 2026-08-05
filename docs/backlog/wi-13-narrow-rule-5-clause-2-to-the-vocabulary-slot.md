@@ -1,7 +1,7 @@
 ---
 id: WI-13
 type: work-item
-status: open
+status: dropped
 opened_at: 2026-08-05
 slug: wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot
 effort: M
@@ -9,9 +9,18 @@ value: 'removes a false-positive class that is 218 of 223 findings in living fra
 source: 'TASK 101 follow-up: operator question "what is wrong with glyphs"'
 provenance: human
 component: artifact-formalizer
+resolved_at: 2026-08-05
+resolved_by: 'the §7.8.3 re-measurement, recorded in §8'
 ---
 
 # WI-13 — narrow rule 5 clause 2 to the vocabulary slot
+
+> **Dropped 2026-08-05, on the re-measurement §7.8.3 made a precondition.** Over the declared scope
+> the keep-class of §3 has zero occurrences, at `b11b709` and at `7708e2f^` alike. P1 and P2 were
+> already not adopted (§7.4, §7.2), and §7.3 blocks §3. §8 records the scope, both commits, the
+> figures and the command. Two parts were carried out of this record instead of dying with it: P4
+> became [WI-14](wi-14-glyph-citation-convention-in-authoring-contract.md) and §7.5 became
+> [WI-15](wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md).
 
 > **Deferred by the operator, 2026-08-05: YAGNI.** Recorded so the measurement is not repeated and
 > so the concept is settled before anyone acts on it. Nothing in this record is applied.
@@ -252,5 +261,70 @@ with contextlib.redirect_stdout(out):
 hits = [w for w in json.loads(out.getvalue())['warn']
         if w['kind'] == 'emoji_severity']
 print(len(hits), collections.Counter(w['match'] for w in hits).most_common())
+EOF
+```
+
+## 8. The re-measurement §7.8.3 made a precondition
+
+Run 2026-08-05. §7.8.3 required a scope and a commit. Both are stated here.
+
+**Scope.** What `documentation-standards` §5.5 declares, plus the two ledgers §7.8.3 names:
+`docs/TASK.md`, `docs/ARCHITECTURE.md`, `docs/PLAN.md`, `docs/tasks/`, `docs/issues/`,
+`docs/backlog/`. §2 measured `.agent/skills/`, `.agent/workflows/`, `System/` and `.claude/`
+instead, which §7.1 records as outside the contract.
+
+**Commits.** `b11b709`, and `ff546d2` as the parent of `7708e2f`.
+
+| Commit | Documents in scope | `emoji_severity` |
+| :--- | ---: | ---: |
+| `b11b709` | 209 | 307 |
+| `ff546d2` (`7708e2f^`) | 206 | 311 |
+
+**What the 307 are**, at `b11b709`. The rows partition the findings.
+
+| Population | Count | §3 verdict |
+| :--- | ---: | :--- |
+| `` `✅` `` / `` `❌` `` as a two-valued opposition | 253 | not a defect |
+| A severity-coloured glyph quoted inside a record about glyph severity | 26 | not a defect; P4 removes it |
+| `` `⚠️` `` as a scaffold banner, `` `⚠️` `` to `` `✅` `` as a graduation state | 13 | not a defect |
+| Other decoration — `` `🔜` `` 9, `` `🧪` `` 2, four single occurrences | 15 | not a defect |
+| **A glyph in place of a value from an ordered, declared vocabulary** | **0** | the class §3 keeps |
+
+The 26 quoted glyphs sit in `wir-11` (12), `wir-2` (10), `task-065` (3) and `wir-4` (1).
+`task-065:29` reads `Preserve tiers (🔴/🟡/🟢)`, which cites the taxonomy and assigns no severity.
+The 13 banners sit in `task-080` (8), `task-081` (4) and `task-040` (1).
+
+**§7.1's correction does not survive the scope change.** §7.1 holds that the zero in §2 is
+survivorship bias, because `7708e2f` removed the taxonomy the day before. Every file that commit
+cleaned of `` `🔴` ``, `` `🟡` `` and `` `🟢` `` lies outside the declared scope — `System/Agents/`,
+`.claude/agents/`, `README*`, `CHANGELOG*` — with three `docs/issues/wir-*` records the exception,
+and those quote the taxonomy rather than use it. That is the four-finding difference in the table.
+The class was real. It was never inside the scope this contract governs.
+
+**Reading.** The narrowing would detect a class with no occurrence in scope, and §7.3 shows the
+class is unreachable where its vocabulary lives. `measurement-baseline.md` §4 declines to adopt a
+rule that never fires. The same standard drops this narrowing.
+
+```sh
+# Re-run at any commit; use `git worktree add --detach <dir> <rev>` for a past one.
+python3 - <<'EOF'
+import collections, contextlib, io, json, os, subprocess, sys
+sys.path.insert(0, '.agent/skills/artifact-formalizer/scripts')
+import scan_register
+tracked = subprocess.run(["git", "ls-files", "-z", "*.md"],
+                         capture_output=True, text=True).stdout
+scope = [f for f in tracked.split("\0")
+         if f in ("docs/TASK.md", "docs/ARCHITECTURE.md", "docs/PLAN.md")
+         or f.startswith(("docs/tasks/", "docs/issues/", "docs/backlog/"))]
+scope = [f for f in scope if os.path.isfile(f)]
+out = io.StringIO()
+with contextlib.redirect_stdout(out):
+    scan_register.main(scope + ["--json"])
+hits = [w for w in json.loads(out.getvalue())["warn"]
+        if w["kind"] == "emoji_severity"]
+print(len(scope), len(hits))
+print(collections.Counter(w["match"] for w in hits).most_common())
+print(collections.Counter(w["where"].split(":")[0] for w in hits
+                          if w["match"] in ("🔴", "🟡", "🟢", "⚠️")).most_common())
 EOF
 ```

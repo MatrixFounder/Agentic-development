@@ -73,12 +73,14 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-13** [Narrow rule 5 clause 2 to the vocabulary slot](backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) — effort `M`, status `open`, opened 2026-08-05: deferred as YAGNI, concept settled
+- **WI-15** [`SKILL.md` §6 has no rule for narrowing a rule](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) — effort `S`, status `open`, opened 2026-08-05: §6 triages under-coverage only, so a removal proposal has no stated bar
+- **WI-14** [State the glyph citation convention in `authoring-contract.md`](backlog/wi-14-glyph-citation-convention-in-authoring-contract.md) — effort `S`, status `open`, opened 2026-08-05: 26 of 307 in-scope findings, no code change
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 
 
 ## Closed
 
+- **WI-13** [Narrow rule 5 clause 2 to the vocabulary slot](backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) — effort `M`, status `dropped`, opened 2026-08-05 · **dropped 2026-08-05** (§8 re-measurement): the keep-class has zero occurrences in scope; P4 to WI-14, §7.5 to WI-15
 - **WI-12** [T6 does not carry the long-sentence tail](backlog/wi-12-t6-does-not-carry-the-long-sentence-tail.md) — effort `M`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 101): the residue was a collision between two licensed forms and the budget; 4 of 6 documents over the bound to 0 of 6
 - **WI-11** [Adversarial-review MED/LOW tail from the ARC-1/ARC-2 changeset](backlog/wi-11-adversarial-review-med-low-tail-arc-1-2.md) — effort `M`, status `done`, opened 2026-08-04 · **done 2026-08-04** (third review round): 6 of 10 entries confirmed and fixed, 4 refuted by measurement; executing them surfaced a HIGH that round 1 had refuted
 - **WI-9** [Extract a shared ledger_core (WI-7 option 3)](backlog/wi-9-extract-a-shared-ledger-core-wi-7-option-3.md) — effort `L`, status `done`, opened 2026-07-30 · **done 2026-07-30** (TASK 094): one `file_record` for both registries; the whole pre-existing suite passed unmodified, and a per-registry guard inventory keeps it closed

@@ -16,6 +16,43 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.26.0 — the RTM gate reads every table, and phases 1–3 gain two obligations**
+
+Closes `RF-6`, `WI-40`, `WI-41`, all measured in one `vdd-enhanced` run and routed here from
+onchain-analytics. Files `WI-16`.
+
+#### Fixed
+
+- **`validate.py` read only the FIRST table under the RTM anchor and printed `Success` about it** —
+  a 23-requirement TASK reported `Found 9`, exit 0, no warning; `--mode plan` shares the locator, so
+  the planning gate would have reported full coverage of the nine it could see. Now the first table
+  fixes the shape, later tables with an **identical header row** are the same RTM continued, and a
+  table with different columns is skipped **and named**. Both obvious repairs were rejected by
+  measurement: "read every table" invents ids out of `task-096`'s `### N.N Details by ID`, and
+  "refuse on more than one table" fails three shipped tasks. **24 of 1127 artifacts across 5
+  projects changed their requirement count, all upward** (`onchain-analytics/task-012` 3 → 26);
+  `compat_diff.py` reports 0 changed verdicts, which is why a count sweep now sits beside it. Suite
+  47 → **57**; the mutation kills 6.
+
+#### Added
+
+- **`skill-parallel-orchestration` §2.4 — a scope block.** The contract binds **every spawn of a
+  role that has no execution tool** — one reviewer or twelve critics, any phase; "teammate" is
+  shorthand for the spawned role, not membership in a parallel batch. Two observable properties, and
+  the four phase-1–3 spawn sites added to the readers table. The narrow reading was measured:
+  `skill-parallel-orchestration` appears in **no** `skill-phase-context` tier table, the orchestrator
+  prompt cites §2.2, and **5 of 23** workflows name the skill — all five phase 4+.
+- **Evidence before the spawn** — `01-start-feature` steps 4/5, `vdd-01-start-feature` 4/5,
+  `02-plan-implementation` 3, `vdd-02-plan` 3. Run what the reviewer's checklist requires, pass the
+  **output** as data, write `NOT RUN (<reason>)` for the rest. Cost of its absence, measured in one
+  run: one unverified checklist section, and one 600 s watchdog kill with a full restart.
+- **Phase-boundary gate** at the end of the same four workflows — a phase editing artifacts **read
+  by checks** ends by running those checks. Phrased as `vdd-enhanced` §3 step 2 does, **naming no
+  command**: the command belongs to the project. Measured: one Architecture phase wrote no source
+  line and left the suite red twice, both times from document edits alone.
+- **`WI-16`** — a claim about code state carries no required referent (routed from onchain-analytics
+  `WI-38`).
+
 ### **v3.25.1 — the citation convention covers glyphs, and §6 gains a bar for narrowing (TASK 102)**
 
 Closes `WI-14` and `WI-15`, both carried out of the dropped `WI-13`.

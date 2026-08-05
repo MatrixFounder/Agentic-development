@@ -21,9 +21,26 @@ contract:
     - **Format**: Nested Markdown list (Epic -> Issue -> **Sub-issue**).
     - **Rule**: A "Bead" must be small enough to be Verified via a single test case.
 3. **Task Creation**: Create `docs/tasks/*.md` corresponding to these atomic units.
+    - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
+      The reviewer is declared without an execution tool, so anything its checklist requires to be
+      RUN (its `Script Contract` — the register scan; the RTM-coverage validator) is yours to run
+      **first**; the brief carries the OUTPUT as data (a file plus its path), never the command.
+      Anything you did not run goes in as `NOT RUN (<reason>)`.
     - **Verification Loop**: Read `System/Agents/07_plan_reviewer_prompt.md`.
     <!-- loop:plan-review -->
     - If the Reviewer requests changes: Update `docs/PLAN.md` and task files, then repeat the review.
     - **Bound: max 3 attempts.** Still rejected after the 3rd: **STOP** and escalate to the user
       with the Reviewer's outstanding objections — do not enter Development.
     - If approved: Proceed.
+4. **Phase-boundary gate — run the checks before leaving this phase.** A phase that edits artifacts
+   **read by checks** must end by running those checks. This phase writes `docs/PLAN.md` and
+   `docs/tasks/*.md`, which in a repository with machine-checked documentation are read by gates just
+   as source is (WI-41).
+    - **Gate:** the **full regression suite passes**. Same gate as `vdd-enhanced` §3 step 2; the
+      command belongs to the project, not to this file. Record the result in the phase-boundary
+      `skill-session-state` update.
+    - **IF RED**: fix here and re-run. Development must not start against a red baseline — once it
+      does, regression cannot be told apart from inherited state.
+    - This is the **orchestrator's** obligation and never a reviewer's — a role declared without a
+      means of execution must not be handed an instruction that requires execution
+      (`skill-parallel-orchestration` §2.4).

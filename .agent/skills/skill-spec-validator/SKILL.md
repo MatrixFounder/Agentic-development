@@ -63,8 +63,11 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   `python3 scripts/validate.py --mode plan <PLAN.md> <TASK.md>`
 - **Exit codes:** `0` conforming (or bypassed) · `1` non-conforming / file missing / usage error
   inside a mode · `2` argparse rejection (unknown `--mode`).
-- **Outputs:** one human line on stdout — `Success: Found N requirements…`,
-  `Success: All N requirements covered…`, `Error: …` naming the uncovered IDs.
+- **Outputs:** one verdict line on stdout — `Success: Found N requirements…`,
+  `Success: All N requirements covered…`, `Error: …` naming the uncovered IDs — preceded by a
+  `Note: …` line whenever the RTM section held more than one table (RF-6): how many tables were
+  read as one RTM, and which tables were **not** read, named by their columns. The verdict may
+  cover part of a section; it may not do so quietly.
 - **Idempotent and read-only**; no dry-run needed because it never writes.
 
 ## Safety Boundaries
@@ -76,13 +79,20 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   state); the corpus tests below exist to make that failure loud.
 
 ## Validation Evidence
-- **Local verification:** `bash scripts/tests/run_tests.sh` — 38 tests, stdlib `unittest`, with a
+- **Local verification:** `bash scripts/tests/run_tests.sh` — 57 tests, stdlib `unittest`, with a
   **zero-test-discovery guard** (a run that executes nothing is a FAILURE, not a green gate) and a
   guard that the corpus tests actually RAN rather than skipped inside this repo.
 - **Coverage:** the 8 RTM heading shapes `docs/tasks/` actually ships (fixtures copied verbatim) +
   negative shapes; table checks; bypass semantics; PLAN ID coverage via step headings and checklist
   bullets; the `R1`-vs-`R10` whole-token boundary and hyphenated ids; the table parser and RTM
-  section slicing; CLI errors.
+  section slicing; multi-table RTM sections (`tests/test_multitable.py`); CLI errors.
+- **Multi-table RTM sections** (`tests/test_multitable.py`, RF-6): the first table fixes the RTM's
+  shape; later tables with an **identical header row** are the same RTM continued and are read;
+  a table with different columns is skipped and named. The rule was chosen **by measurement, not by
+  preference** — "read every table" invents ids like `Bold density` out of `task-096`'s
+  `### N.N Details by ID` subsection, and "refuse on more than one table" fails three shipped tasks;
+  each is a gate broken on the artifacts it governs. Scanning skips a foreign table rather than
+  stopping at it, so an interleaved subsection cannot truncate the RTM.
 - **Anti-drift, corpus-anchored** (`tests/test_corpus.py`): a probe keyed on the `trace*`/`rtm` stems
   — deliberately **wider** than the matcher's required phrase, so a new corpus shape like
   `## Traceability Matrix` fails the test instead of slipping through — finds the RTM-ish headings
@@ -102,6 +112,15 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   verdict across 10 projects`.** Every number in that line is counted by the script; the first
   time this was reported the denominator had been typed by hand into the output string and was
   wrong by 3 (`developer-guidelines` §6.3 rule 4 now names that defect).
+  **Measured for the multi-table change (RF-6), old = `fddf209`: `0 of 1127 artifacts changed
+  verdict across 10 projects`** — and, on the question the verdict cannot answer, **24 of 1127
+  changed their requirement COUNT, every one of them upward**, across 5 projects (e.g.
+  `onchain-analytics/task-012` 3 → 26, `n8n-lazy-loading-skills/task-003` 12 → 24). Those 24 are
+  not a regression, they are the defect's extent: each is an epic-split RTM of which the gate had
+  been reading the first epic and reporting `Success`. Each was checked to be a real requirements
+  table rather than a foreign one. `compat_diff.py` compares **verdicts** and would have called
+  this change clean while it silently altered a quarter-hundred counts — so a count sweep belongs
+  beside it whenever what changes is how much of a document is read, not whether it passes.
 - **Proof the guard bites:** re-injecting each historical regression makes the suite red —
   the pre-TASK-090 `^## Requirements Traceability$` matcher → 28 failures (incl. every corpus test);
   the literal `[**R-1**]` PLAN token → 7 failures. Re-verify with those two edits, not by reading.

@@ -64,6 +64,31 @@ If a repo carries both `CLAUDE.md` and `GEMINI.md` (multi-vendor support), the a
 
 ### 2.4 Execution evidence — the orchestrator runs it, the teammate reads it
 
+> **Scope: every spawn of a role that has no execution tool.** One reviewer or twelve critics; a
+> parallel fan-out or a single gate; any phase of any workflow. The word "teammate" below is
+> shorthand for *the spawned role*, not for membership in a parallel batch. This is stated because
+> the narrow reading was taken and measured: the rule was written for the adversarial phase, read as
+> belonging to it, and phases 1–3 kept briefing their reviewers with commands — costing one
+> unverified checklist section and one 600-second watchdog kill with a full restart, in a single run
+> (WI-40).
+>
+> **The rule, independent of stack, language and repo layout:** a role declared without a means of
+> execution must not be handed an instruction that requires execution. Whatever such a role needs
+> and can only be obtained by running something, the **caller** obtains and passes as **data** — the
+> content, in a file, plus its path — never as the name of a command. An instruction naming a
+> command is read by the role as an obligation to run it, and a role that cannot will either report
+> the gap or spend its turn trying; the first costs coverage, the second costs the turn.
+>
+> Two observable properties follow, and they are what to check:
+>
+> 1. No executable command appears in a read-only role's brief except in the form *already run,
+>    result here*.
+> 2. For every item whose result the role is required to account for, the brief carries either the
+>    result or an honest `NOT RUN (<reason>)` line.
+>
+> Which commands those are is a per-ecosystem question (`git diff`, a build, a scanner, the
+> `Script Contract` of the role's own checklist) and belongs to the instance, not to this rule.
+
 **Teammates are read-only wherever the adapter enforces it** — Claude Code by the `tools:`
 whitelist, Codex by `sandbox_mode="read-only"`, Cursor by `readonly:true`. Two adapters do **not**
 enforce it: Gemini's whitelist is an unverified guess at the live tool registry, and Antigravity's
@@ -126,7 +151,7 @@ against one. When the contract changes it changes **here first**, then in these:
 
 | Half | Readers |
 | :--- | :--- |
-| Orchestrator | `vdd-multi` Step 1.0 + its Phase-3 sequential step 0; `vdd-adversarial` step 2a; `vdd-enhanced` §4 item 8; `references/sequential-fallback.md` |
+| Orchestrator | `vdd-multi` Step 1.0 + its Phase-3 sequential step 0; `vdd-adversarial` step 2a; `vdd-enhanced` §4 item 8; the four phase-1–3 gate spawns — `01-start-feature` steps 4/5, `vdd-01-start-feature` steps 4/5, `02-plan-implementation` step 3, `vdd-02-plan` step 3; `references/sequential-fallback.md` |
 | Teammate | `skill-adversarial-security` §3 + §7; `skill-adversarial-performance` Termination §1; `vdd-adversarial` SKILL §2 convergence bar; `skill-session-state` §3; `security-audit` §2; the 3 `.claude/agents/critic-*` donors + 12 generated scaffolds (via `wrappers_manifest.json`) |
 | Consumers of the resulting status | `full-robust` §3; `security-audit.md` step 2; `.claude/agents/security-auditor.md`'s `scan_status` footer |
 

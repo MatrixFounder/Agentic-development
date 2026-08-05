@@ -98,8 +98,59 @@ def _table_columns(block):
     return []
 
 
+# --- Multi-table RTM sections (RF-6) -----------------------------------------
+#
+# `parse_markdown_table` stops at the first non-table line, so the located
+# block could only ever yield its FIRST table -- and said `Success` about it.
+# A TASK carrying 23 requirements in five per-epic tables reported
+# `Found 9 requirements`, exit 0, no warning that 61% of the document went
+# unread; `validate_plan` shares this locator, so the planning gate would have
+# reported full coverage of the nine it could see. A gate that reports success
+# over part of its subject is worse than no gate: the exit code reads as reach.
+#
+# The obvious repair -- "parse every table in the block" -- is WRONG, and the
+# corpus says so. `_SECTION_END` cuts at the next h2, so an `### N.N Details by
+# ID` subsection stays INSIDE the block by design, and three shipped tasks put
+# non-RTM tables there: `task-096` (a corpus-measurement table and a
+# rejected-candidates table), `task-085` (a prefix legend and an issue index),
+# `task-101` (a derivation table). Reading those as requirements invents ids
+# like `Bold density`; refusing on "more than one table" fails all three. Both
+# variants break a gate on the artifacts it governs.
+#
+# What separates a continuation from a foreign table is its HEADER ROW. An RTM
+# split by epic repeats its columns per epic (`skill-planning-format` encourages
+# the grouping); a `Details by ID` table has different columns because it
+# tabulates something else. So: the first table fixes the shape, every later
+# table with an IDENTICAL header row is the same RTM continued, and anything
+# else is skipped -- BY NAME, never silently, which is the half of RF-6 that
+# refusing would also have satisfied and staying quiet would not.
+#
+# Measured on the corpus at the time of the fix: 3 files carry more than one
+# table in the RTM block, and in all 3 every later table has a different header
+# -- so this rule reads the corpus exactly as before (0 changed counts) while
+# the five-epic case now reports all 23. Scanning continues past a foreign
+# table rather than stopping at it: `RTM-E1 / Details / RTM-E2` must not lose
+# E2 to a subsection someone filed in the middle.
+def _split_tables(block):
+    """Contiguous markdown-table chunks of *block*, in document order.
+
+    Splitting here keeps `parse_markdown_table` untouched -- its stop-at-first-
+    non-table-line behaviour is correct FOR ONE TABLE and is pinned by tests.
+    """
+    chunks, current = [], []
+    for line in block.split('\n'):
+        if line.strip().startswith('|'):
+            current.append(line)
+        elif current:
+            chunks.append('\n'.join(current))
+            current = []
+    if current:
+        chunks.append('\n'.join(current))
+    return chunks
+
+
 def locate_rtm(content, artifact="TASK.md"):
-    """Locate the RTM and extract ``(rows, ids, error)``.
+    """Locate the RTM and extract ``(rows, ids, errors, notes)``.
 
     Shared by both modes so that the two cannot drift apart again — they held
     two copies of this logic, and only one of them got fixed each time.
@@ -107,11 +158,15 @@ def locate_rtm(content, artifact="TASK.md"):
     Anchor present -> the table is read POSITIONALLY: the first column holds
     the requirement id, whatever it is called. Column names are prose.
     Anchor absent  -> the pre-existing English column-name contract, unchanged.
+
+    ``notes`` are non-fatal lines the caller MUST print: they say how much of
+    the section was read (RF-6). A gate is allowed to read part of a document;
+    it is not allowed to do so quietly.
     """
     block, err = _anchor_block(content)
     via_anchor = block is not None
     if err:
-        return None, None, [err]
+        return None, None, [err], []
 
     if not via_anchor:
         if not RTM_HEADER.search(content):
@@ -119,25 +174,26 @@ def locate_rtm(content, artifact="TASK.md"):
                 "Error: '## Requirements Traceability' section missing in %s." % artifact,
                 "Please add the RTM table (a section number and a trailing "
                 "'Matrix' are both fine), or mark it with the "
-                "'<!-- %s -->' anchor — the anchor works in any language." % ANCHOR_NAME]
+                "'<!-- %s -->' anchor — the anchor works in any language." % ANCHOR_NAME], []
         block = _SECTION_END.split(RTM_HEADER.split(content)[1].strip())[0]
 
-    rows = parse_markdown_table(block)
+    chunks = _split_tables(block)
+    rows = parse_markdown_table(chunks[0]) if chunks else []
     if not rows:
         if via_anchor:
             return None, None, [
                 "Error: no requirements table found under the '<!-- %s -->' "
-                "anchor in %s." % (ANCHOR_NAME, artifact)]
+                "anchor in %s." % (ANCHOR_NAME, artifact)], []
         return None, None, [
-            "Error: Requirements Traceability Matrix table is empty or invalid."]
+            "Error: Requirements Traceability Matrix table is empty or invalid."], []
 
     if via_anchor:
-        columns = _table_columns(block)
+        columns = _table_columns(chunks[0])
         if len(columns) < 2:
             return None, None, [
                 "Error: the table under '<!-- %s -->' has %d column(s); an RTM "
                 "needs at least an id column and one more."
-                % (ANCHOR_NAME, len(columns))]
+                % (ANCHOR_NAME, len(columns))], []
         id_column = columns[0]
     else:
         expected_cols = ['ID', 'Requirement']
@@ -146,11 +202,36 @@ def locate_rtm(content, artifact="TASK.md"):
                 "Error: RTM table must contain columns: %s" % expected_cols,
                 "Or mark the table with the '<!-- %s -->' anchor, which reads "
                 "the first column as the id and needs no English column names."
-                % ANCHOR_NAME]
+                % ANCHOR_NAME], []
         id_column = 'ID'
 
+    # An RTM split by epic repeats its header per epic; a `Details by ID`
+    # subsection tabulates something else and does not. Same header -> same
+    # RTM, continued. See the commentary above `_split_tables`.
+    header = _table_columns(chunks[0])
+    read_tables, skipped = 1, []
+    for chunk in chunks[1:]:
+        if _table_columns(chunk) == header:
+            rows.extend(parse_markdown_table(chunk))
+            read_tables += 1
+        else:
+            skipped.append(' | '.join(_table_columns(chunk)))
+
+    notes = []
+    if read_tables > 1:
+        notes.append(
+            "Note: the RTM in %s spans %d tables with identical columns; all "
+            "%d were read." % (artifact, read_tables, read_tables))
+    if skipped:
+        notes.append(
+            "Note: %d further table(s) in the RTM section of %s were NOT read "
+            "as requirements — their columns differ from the RTM's (%s). "
+            "Repeat the RTM's exact header to have a table read as a "
+            "continuation." % (len(skipped), artifact,
+                               '; '.join(repr(s) for s in skipped)))
+
     ids = [r[id_column] for r in rows if id_column in r]
-    return rows, ids, None
+    return rows, ids, None, notes
 
 
 def parse_markdown_table(content):
@@ -215,12 +296,17 @@ def validate_task(task_path):
     # locate_rtm() and shared with validate_plan below. It used to be two
     # copies, and each fix landed in only one of them — which is precisely the
     # half-applied-fix defect this task also closes elsewhere.
-    rows, _ids, errors = locate_rtm(content, artifact="TASK.md")
+    rows, _ids, errors, notes = locate_rtm(content, artifact="TASK.md")
     if errors:
         for line in errors:
             print(line)
         sys.exit(1)
 
+    # Printed BEFORE the verdict: how much of the section was read qualifies
+    # the count that follows, and a qualifier after the word `Success` is read
+    # by nobody (RF-6).
+    for line in notes:
+        print(line)
     print(f"Success: Found {len(rows)} requirements in TASK.md.")
     sys.exit(0)
 
@@ -247,11 +333,16 @@ def validate_plan(plan_path, task_path):
     # `r['ID']` — a dict lookup on the AUTHORED header text — which is a second,
     # independent language coupling: it kept --mode plan dead on a non-English
     # document even after the column-name check in validate_task was fixed.
-    _rows, rtm_ids, errors = locate_rtm(task_content, artifact="TASK.md")
+    _rows, rtm_ids, errors, notes = locate_rtm(task_content, artifact="TASK.md")
     if errors:
         for line in errors:
             print(line)
         sys.exit(1)
+
+    # Same reason as validate_task: the coverage verdict below is a claim about
+    # the ids that were READ, so what was read is stated first (RF-6).
+    for line in notes:
+        print(line)
 
     if not rtm_ids:
         print("Error: No IDs found in RTM table.")

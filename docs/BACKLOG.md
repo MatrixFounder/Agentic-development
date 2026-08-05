@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-16** [A claim about code state carries no required referent](backlog/wi-16-state-claims-carry-no-required-referent.md) — effort `M`, status `open`, opened 2026-08-05
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 
 

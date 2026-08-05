@@ -1,4 +1,4 @@
-# TASK 101 — artifact-formalizer: behavioural evals for Mode A and the §5 recall gaps
+# TASK 102 — artifact-formalizer: the glyph citation convention, and a maintenance rule for narrowing
 
 <!-- contract:meta -->
 
@@ -6,41 +6,51 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 101 |
-| Slug | formalizer-behavioural-evals-mode-a-and-recall-gaps |
+| Task ID | 102 |
+| Slug | formalizer-glyph-citation-and-narrowing-rule |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | Operator request 2026-08-05: build the minimal eval set, two axes, 8–12 cases |
-| Depends on | TASK 096, TASK 097, TASK 099, TASK 100 |
-| Closes | no ledger record; this task opens a measurement, it does not fix a defect |
-| Archive name | `task-101-formalizer-behavioural-evals-mode-a-and-recall-gaps.md` |
+| Source | Operator request 2026-08-05: resolve WI-14 and WI-15 |
+| Depends on | TASK 096, TASK 097, TASK 099, TASK 100, TASK 101 |
+| Closes | [WI-14](backlog/wi-14-glyph-citation-convention-in-authoring-contract.md), [WI-15](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) |
+| Archive name | `task-102-formalizer-glyph-citation-and-narrowing-rule.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-`artifact-formalizer` ships three CI steps and two instruments. All of them measure Mode B.
+Two gaps, both carried out of [WI-13](backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md)
+when that record was dropped. Neither depends on the narrowing WI-13 proposed.
 
-| Instrument | Covers | Evidence today |
-| :--- | :--- | :--- |
-| `selftest_scan.py` | the scanner as a pure function | 191 cases, exit 0 |
-| `scan_register.py --probe` | the detector roster | 18 detectors, exit 0 |
-| Mode A, the authoring contract | what a model writes | none |
-| §5 reading pass (B4) | rules 3, 4 and 6 beyond the detectors | none |
+**Gap 1 — the contract states the citation convention for one surface only.**
+`references/authoring-contract.md` states the code-span convention under "Why code spans". It names
+a **marker**. It does not name a **glyph**. A record that reports glyph severities therefore fires
+rule 5 on every glyph it quotes.
 
-`SKILL.md` §Purpose states the order: "Mode A prevents the defect; Mode B measures what Mode A
-missed." It quotes 5.1% of a corpus's words against reading 14,288 to remove them. The value the
-skill claims is therefore Mode A's, and no number in this repository describes Mode A.
+Measured over the declared scope at `2edf1a2`: 211 documents, 307 `emoji_severity` findings, of
+which 26 are a severity-coloured glyph quoted inside a record about glyph severity. They sit in
+`wir-11` (12), `wir-2` (10), `task-065` (3) and `wir-4` (1). WI-13 §8 classifies all 26 as not a
+defect.
 
-§5 declares a recall limit for three of six rules and assigns the remainder to a reading pass. Step
-B4 instructs that pass over the `--sections` worklist. No measurement states what that pass finds.
+**Gap 2 — `SKILL.md` §6 triages one direction.**
 
-`references/measurement-baseline.md` §11 records the third gap in its own words. Every figure from
-the ten-file downstream corpus is not reproducible here. That section requires a future threshold
-move to be justified from a corpus that ships with the skill. No such corpus ships.
+| Rule | Answers |
+| :--- | :--- |
+| 1 | a test already forbids the phrase — add a faster detector |
+| 2 | no test reaches it — amend the contract first |
+| 3 | every entry ships with a `probe` |
+| 4 | a rule ships only when a measurement supports it |
 
-**Why this is the failure class the skill names.** The gates report `18/18 detectors live` and exit
-0. The claim carrying the skill's stated value stays untested. `measurement-baseline.md` §2 records
-the same shape: a zero and a working instrument differ only in what the instrument was pointed at.
+Rules 1 and 2 route **under**-coverage. Rule 4 gates what a new rule needs before it ships. No rule
+states what a proposal to **remove** coverage must produce.
+
+**Why the gap has a cost.** Two events in this repository, both recorded. WI-13 §7.5 identified the
+gap while proposing a narrowing, then routed itself through rule 2 — the rule for the opposite
+direction. WI-13 §7.2 records P2 as the widening `task-099` D2 had already rejected, re-proposed
+with a sample three times smaller than the measured blast radius. Verified: 584 findings erased,
+battery `188/191`.
+
+`measurement-baseline.md` §4 keeps refuted candidates on record so nobody re-proposes them from
+impression. §6 carries no such record for the widening D2 rejected.
 
 <!-- contract:rtm -->
 
@@ -48,211 +58,146 @@ the same shape: a zero and a working instrument differ only in what the instrume
 
 | ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | An executor produces authored artifacts under two arms that differ only in the contract | Y | A1, A2 |
-| R2 | The grader calls `scan_register.py` and reimplements no threshold or finding rule | Y | A3 |
-| R3 | Axis B fixtures carry planted defects that the scanner does not report | Y | A4 |
-| R4 | The eval instrument carries a selftest that spawns no agent | Y | A5 |
-| R5 | The authored outputs ship as the corpus §11 requires | Y | A6 |
-| R6 | The report states what the run did not cover | Y | A7 |
-| R7 | The eval set holds 8 to 12 cases across both axes | Y | A8 |
+| R1 | `authoring-contract.md` states the code-span convention for a glyph beside the marker it already names | Y | A1, A3 |
+| R2 | The same paragraph names the classes the convention does not reach, and states that rule 5 gains no exemption | Y | A1, A3 |
+| R3 | `SKILL.md` §6 carries a fifth rule stating what a narrowing produces before it ships | Y | A1, A3 |
+| R4 | `measurement-baseline.md` §6 records the widening `task-099` D2 rejected, with its figures | Y | A1, A3 |
+| R5 | The battery reports no `emoji_severity` for a glyph inside a code span | Y | A2 |
+| R6 | Every document stating the battery size states the pinned total | Y | A2 |
+| R7 | No already-filed document is edited to adopt the convention | Y | A5 |
 
 ### 2.1 Sub-features
 
-**R1 — the executor.** `evals/run_authoring.py` runs each Axis A case twice. Both arms receive the
-same task prompt, the same working directory shape and the same model. The `with_contract` arm
-additionally receives the text of `references/authoring-contract.md`. No other input differs.
+**R1 — the convention, stated for glyphs.** The "Why code spans" paragraph of
+`references/authoring-contract.md` states that a marker cited as an example goes in a code span. R1
+extends that sentence to a glyph. The scanner already blanks code spans, so no code changes and no
+rule changes.
 
-**Why one variable.** `skill-creator/references/advanced-eval-patterns.md` §7 attributes a delta to
-a change only when the two arms differ in one input.
+**R2 — the bound.** `known-issues-format` §8 states that a record body is preserved byte-for-byte as
+supplied, and that this is what makes it evidence. A machine-filed record therefore cannot adopt the
+convention after filing. R2 requires the contract to name that class, and to state that rule 5 gains
+no exemption — the scanner still reports those glyphs. A reader of a residual finding then reads a
+recorded reason rather than an oversight.
 
-**Why an isolated working directory.** A run under this repository loads `CLAUDE.md`, which names
-the skill catalogue. The baseline arm would then read the contract that defines the arm. `~/.claude/
-skills/` does not hold `artifact-formalizer`, so a directory outside this repository isolates it.
-The executor asserts the directory holds no `CLAUDE.md`, no `.agent/` and no `.claude/`.
+**R3 — the fifth maintenance rule.** A narrowing proposal produces three items before it ships:
 
-**Why every tool is denied.** The authoring task needs no tool. Denying the file and command tools
-removes the second path to the contract, and it removes the agent's ability to write anywhere. The
-executor records `permission_denials` from the run envelope, so an attempted read is visible rather
-than assumed absent.
+1. the population it removes, measured over the **declared** scope, with the scope and the commit
+   named;
+2. the battery result after the change, since a narrowing that fails a case is a rule the battery
+   still asks for;
+3. the class the narrowed rule keeps, with one occurrence that the narrowed rule still reports.
 
-**R2 — the grader.** `evals/grade_run.py` imports `scan_register` and calls it on each authored
-document. It reads four values from the scanner's JSON and derives no finding of its own.
+**Why point 3.** WI-13 §8 measured zero occurrences of its keep-class over the declared scope, and
+§7.3 recorded that the class is unreachable where its vocabulary lives.
 
-| Value | Derivation | Role |
-| :--- | :--- | :--- |
-| `warn_per_100_lines` | `len(warn) / lines × 100` | outcome |
-| `marker_per_100_lines` | `findings_by_kind.marker / lines × 100` | outcome |
-| `sentence_mean` | `diagnostics.sentence_mean` | outcome |
-| `prose_share_of_nonblank` | `diagnostics.prose_share_of_nonblank` | validity guard |
-| `sentence_pressure` | `diagnostics.sentence_pressure` | outcome |
+**R4 — the rejection on record.** `measurement-baseline.md` §6 states which glyphs rule 5 exempts
+and where. It does not state that exempting `` `✅` ``, `` `❌` ``, `` `☑` `` and `` `☒` `` everywhere
+was proposed and rejected. WI-13 §7.2 records the re-proposal citing §6 as support. R4 adds the
+figures to §6.
 
-**Why per 100 lines.** `measurement-baseline.md` §1 states the corpus baseline in evaluative markers
-per 100 lines. The eval reports the same unit, so the two tables can be read together.
+**R5 — the battery case.** `TC-FP-02` pins a marker inside a code span at zero findings. No case
+pins a glyph. R5 adds one beside it.
 
-**Why the prose share is a guard and not an outcome.** A document padded with fenced blocks lowers
-every per-line rate without changing a sentence. The share names how much of the document reached
-rule 1. `SKILL.md` §2 already assigns it that role.
+**R6 — the case count.** `TC-SHIP-08` asserts every present-tense case count in `SKILL.md`,
+`System/Docs/SKILLS.md` and `measurement-baseline.md` equals `EXPECTED_CASES`. R5 moves that total
+from 191 to 192.
 
-**Why `sentence_pressure` is reported.** T6 states that 35 words is the failure bound and not the
-target. An arm scoring zero `warn` with the distribution pressed against the limit was written for
-the gate; `measurement-baseline.md` §8 measured that shape.
-
-**R3 — the Axis B fixtures.** Each fixture is a specification-shaped document carrying planted
-defects of rules 3, 4 or 6 that the detectors do not reach:
-
-- rule 3 — the obligation and its justification split across two sentences;
-- rule 4 — an aphorism written for this fixture, matching no maxim template;
-- rule 6 — a metaphor coined for this fixture, absent from both candidate lists.
-
-Each fixture ships an answer key naming the planted lines and the rule. One fixture is a **control**
-carrying no planted defect.
-
-**Why a control.** `advanced-eval-patterns.md` §6 states that a positive-only set measures recall
-and is blind to over-firing.
-
-**Why the answer key is the ground truth.** The defects are planted mechanically, so the key is
-objective by construction and carries no author judgement about what a real document meant.
-
-**R4 — the instrument selftest.** `evals/selftest_evals.py` runs without spawning an agent and
-asserts:
-
-1. the grader scores a known-conforming document and a known-defective one, and the second scores
-   higher on every outcome metric;
-2. the Axis B scorer returns recall 1.0 and precision 1.0 for a golden answer, and lower values for
-   an answer that misses one planted defect and invents one;
-3. **the fixture invariant** — `scan_register.py` reports no `warn` on any planted line of any
-   fixture;
-4. the control fixture carries no planted line and no `warn`.
-
-**Why the fixture invariant is an assertion and not a comment.** A fixture whose planted defect the
-scanner reports measures the detector, not the gap. A lexicon entry added later can move a fixture
-into that state without touching the fixture.
-
-**R5 — the corpus.** Every authored document is written under `evals/corpus/<case>/<arm>/` and
-committed with the run metadata that produced it: model, timestamp, prompt hash, contract hash.
-
-**Why the hashes.** A corpus whose inputs are not recorded cannot support the threshold move §11
-requires it to support.
-
-**R6 — the honest report.** `grade_run.py` writes `grading.json` and prints a summary naming the
-number of cases, the number of repetitions per arm, and every case that produced no output. A case
-whose validity guard falls below the declared floor is reported as **not measured** rather than as
-a value.
-
-**R7 — the set size.** Six Axis A cases and four Axis B fixtures, ten in total. The Axis A cases
-span both shipped languages and four artifact kinds.
+**R7 — no retroactive edit.** All four documents holding the 26 quoted glyphs are already filed:
+three are `provenance: machine` records under R2's bound, and
+`docs/tasks/task-065-reviewers-hardening.md` is an archived artifact, immutable per
+ARCHITECTURE §7.2. The convention therefore binds documents written from now on, and removes no
+existing finding. D2 records the reverted attempt.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — a maintainer asks whether the contract changes what a model writes.**
+**UC-1 — an author files a record about glyph severity.**
+*Actor:* any role writing a TASK, an issue record or a work-item record.
+*Precondition:* the author has read `references/authoring-contract.md`.
+*Main:* the author quotes a glyph, wraps it in a code span per the stated convention, and the
+scanner reports no `emoji_severity` for it.
+*Postcondition:* the document is about the register and is not reported as a document in it.
 
-*Actor:* framework maintainer. *Main:* runs `run_authoring.py`, then `grade_run.py`; reads the
-per-arm means. *Postcondition:* a number per metric per arm, and the documents that produced it.
-
-**UC-2 — a maintainer changes a threshold and must justify it.**
-
-*Actor:* framework maintainer. *Main:* scans `evals/corpus/` with the candidate threshold and
-compares against the committed figures. *Postcondition:* the justification §11 requires, from a
-corpus that ships here.
-
-**UC-3 — a maintainer asks what the reading pass finds that the detectors do not.**
-
-*Actor:* framework maintainer. *Main:* runs the Axis B cases; reads recall against the answer keys
-and precision against the control. *Postcondition:* a recall figure for the §5 gaps of rules 3, 4
-and 6.
-
-**UC-4 — a contributor adds a lexicon entry that reaches a planted defect.**
-
-*Actor:* contributor. *Main:* runs `selftest_evals.py`. *Postcondition:* the fixture invariant fails
-and names the fixture, so the fixture is re-planted rather than converted into a detector test with
-no failing case.
-
-**UC-5 — a reviewer asks what the campaign did not measure.**
-
-*Actor:* reviewer. *Main:* reads the report and `evals/README.md`. *Postcondition:* the uncovered
-surfaces are named: triggering, and any case whose validity guard failed.
+**UC-2 — a maintainer proposes removing detector coverage.**
+*Actor:* any role editing `data/register-*.json` or `scan_register.py`.
+*Precondition:* a finding class reads as over-coverage.
+*Main:* the maintainer reads `SKILL.md` §6, finds rule 5, and produces the three items it names.
+*Alternative A1 (at Main):* the keep-class has zero occurrences in scope. The proposal does not
+ship, and the measurement goes on record.
+*Postcondition:* a re-proposal reads the recorded figures before it is written.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance Criteria
 
-| ID | Criterion | Command |
-| :--- | :--- | :--- |
-| A1 | Both arms of one case differ only in the contract input | `selftest_evals.py`, prompt-identity case |
-| A2 | The executor refuses a working directory holding `CLAUDE.md`, `.agent/` or `.claude/` | `selftest_evals.py`, isolation case |
-| A2.1 | The executor denies the file and command tools, and records `permission_denials` per run | `selftest_evals.py`, command-shape case |
-| A3 | The grader imports `scan_register` and declares no threshold of its own | `selftest_evals.py`, no-reimplementation case |
-| A4 | Every planted line of every fixture carries no `warn` | `selftest_evals.py`, fixture invariant |
-| A5 | `python3 evals/selftest_evals.py` exits 0 and spawns no subprocess named `claude` | the run itself |
-| A6 | `evals/corpus/` holds one document per case per arm, each with its metadata file | `ls`, and the selftest's corpus-shape case |
-| A7 | The printed summary names cases, repetitions, empty outputs and unmeasured cases | `selftest_evals.py`, report case |
-| A8 | `evals.json` holds 10 cases: 6 on Axis A, 4 on Axis B | `selftest_evals.py`, set-size case |
-| A9 | The campaign runs and its results are recorded in `measurement-baseline.md` | the committed report |
+| ID | Criterion |
+| :--- | :--- |
+| A1 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py` over `SKILL.md` and `references/*.md` reports 0 `warn`, exit 0 |
+| A2 | `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py` reports 192 of 192, exit 0 |
+| A3 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py --probe` reports 18 detectors live, exit 0 |
+| A4 | `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py` reports 0 errors |
+| A5 | `emoji_severity` over the declared scope stays at 307, and `git diff` shows no already-filed document edited |
+| A6 | `python3 System/scripts/validate_skills.py` reports every skill valid |
+| A7 | `PYTHONPATH=. python3 tests/run_tests.py` reports OK |
+| A8 | `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py` reports 59 of 59, exit 0 |
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ1 — repetitions per arm.** `advanced-eval-patterns.md` §8 asks for several samples per arm when
-a metric jitters. Blocks: the confidence statement in the report. Owner: operator. Default applied:
-one repetition for the first campaign, with `--reps` accepting an odd value, and the report stating
-that a single draw carries no interval.
-
-**OQ2 — the model.** The executor pins a model so a rerun is comparable. Blocks: nothing; the value
-is recorded either way. Owner: operator. Default applied: `claude-opus-5`, recorded per run.
+**OQ1 — none open.** WI-14 §3 step 2 named four documents. D1 and D2 reduce the reachable set to
+zero, and §6 records both reasons. The operator has ruled out new mechanism, so the 26 residual
+findings stay reported and the contract states why.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**D1, 2026-08-05, orchestrator: the grader is `scan_register.py`, called as a module.** Rejected:
-an LLM judge — it costs tokens per grading and is not reproducible, and
-`advanced-eval-patterns.md` §1 assigns structured output to a script grader.
+**D1, 2026-08-05, orchestrator: the three `provenance: machine` records are not edited.**
+`known-issues-format` §8 states that a record body is byte-for-byte what was supplied. That property
+is what makes the body evidence. Git history records the rule: `wir-11`, `wir-2` and
+`wir-4` were created by `5c9da31` and touched again only by `7708e2f`, which changed frontmatter
+status keys and added no body edit. Rejected: wrapping the 23 glyphs in those bodies — it rewrites
+evidence, which WI-2 records this framework declining to do for the same reason.
 
-**D2, 2026-08-05, orchestrator: the headline unit is per 100 lines, with the prose share reported
-beside it.** Rejected: per 100 prose lines — it is not the unit `measurement-baseline.md` §1 states,
-so the two tables would not compare.
+**D2, 2026-08-05, orchestrator: `docs/tasks/task-065-reviewers-hardening.md` is NOT edited.** An
+earlier draft of this task wrapped its three glyphs, on the reasoning that no verbatim rule reaches
+an archived TASK. An adversarial review of that draft produced two facts against it.
 
-**D3, 2026-08-05, orchestrator: the executor captures stdout and writes no file through the agent.**
-Rejected: instructing the agent to use the Write tool — a headless run cannot answer a permission
-prompt, and a denial would be recorded as an empty document.
+1. `docs/ARCHITECTURE.md:273` states that archived artifacts are immutable by doctrine.
+2. `docs/backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md:294` quotes the pre-edit bytes of that line, so the edit falsified a
+   quotation inside a closed record.
 
-**D4, 2026-08-05, orchestrator: no second harness.** `run-feedback/evals` holds roughly 160 KB of
-grading code and five lockstep obligations. This task adds three scripts and reuses the scanner.
-Rejected: copying `grade_run.py` — a second instrument reports a clean run while its own checks are
-broken, and that state is what this skill exists to catch.
+The edit was reverted. Rejected: amending ARCHITECTURE to carve out a register exception — the
+operator has ruled out new mechanism, and the benefit was 3 findings in a population WI-13 §8
+already classes as not a defect.
 
-**D5, 2026-08-05, orchestrator: no pin in this task.** `verify_pin.py` freezes committed numbers.
-Rejected: pinning now — there are no campaign numbers yet, and a pin over an empty campaign asserts
-nothing.
+**D3, 2026-08-05, orchestrator: the convention ships with its exemption stated.** WI-14 §3 proposed
+the convention without a bound. D1 creates a class the convention cannot reach. Rejected: an
+unqualified sentence — a reader of a `wir-*` finding would read it as a document that skipped the
+contract.
 
-**D5.1, 2026-08-05, operator: D5 is reversed once the campaign has numbers.** D5 deferred the pin
-because there was nothing to freeze. The first campaign removed that reason, so `TC-EV-14`
-re-derives the committed `report.json` from the committed corpus and fails on any drift. Rejected:
-`verify_pin.py` — it re-aggregates `grading.json` files under a `benchmark.json` schema this grader
-does not emit, so using it would mean writing a second report shape.
+**D4, 2026-08-05, orchestrator: the rejection record goes in `measurement-baseline.md` §6.** Rule 5
+of `SKILL.md` §6 requires a measurement on record. A record placed where the re-proposal does not
+read it does not stop a re-proposal. WI-13 §7.2 records the author citing §6 as support for the
+option §6's own decision had rejected. Rejected: `docs/backlog/wi-13-*.md` alone — a dropped
+work-item is not in the reading path of a maintainer editing rule 5.
 
-**D5.2, 2026-08-05, operator: repetitions are targeted rather than uniform.** OQ1 asked for an odd
-count per arm. Applied: three repetitions for `A1` and `A5`, one for the rest. **Why.** Those two
-documents carry the whole rule-1 finding of §12.2, and three draws separate a systematic effect
-from a sampling artefact at a quarter of the cost of a uniform three-repetition campaign. The arm
-means therefore rest on documents of unequal repetition count, which `measurement-baseline.md` §12
-states.
-
-**D6, 2026-08-05, orchestrator: Axis B is graded against a planted key, not against the scanner.**
-Rejected: grading the reading pass by comparison with `scan_register.py` output — the pass exists to
-find what the scanner does not, so the scanner cannot be its reference.
+**D5, 2026-08-05, orchestrator: WI-14's `value:` frontmatter line is left in place and superseded
+in the body.** The line claims the change removes 26 of 307 findings; D1 and D2 reduce the removal
+to 0. The resolution blockquote states the measured outcome and names the line it supersedes.
+Rejected: rewriting the `value:` line — a closed record's own claim is what the resolution is
+answering, and overwriting it hides that the estimate was wrong.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-| Excluded | Who carries it instead |
+| Excluded | Carried by |
 | :--- | :--- |
-| Trigger evaluation of the `description:` field | deferred; `skill-phase-context` governs the load path, not description matching |
-| Reproducibility pinning through `verify_pin.py` | a later task, once a campaign has numbers (D5) |
-| Any change to `scan_register.py`, its data files or its thresholds | out of scope by construction; this task measures the skill, it does not move it |
-| An LLM-judge grader | rejected in D1 |
-| Wiring the campaign itself into CI | the selftest is wired; a campaign spawns agents and costs tokens per run |
+| Any change to rule 5's detector, its glyph sets or its thresholds | WI-13, dropped |
+| `--severities` and any vocabulary-slot detector | WI-13 P1, not adopted |
+| Widening the unconditional exemption set | `task-099` D2, rejected; WI-13 P2, not adopted |
+| Editing any `provenance: machine` record body | D1 |
+| `data/register-*.json` | rule 5 has no data-file surface (`scan_register.py:59`) |

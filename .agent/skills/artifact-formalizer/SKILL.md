@@ -186,7 +186,8 @@ remains owned there.
 
 ## 6. Maintenance — how the lexicon stays a backstop instead of a list of yesterday's phrases
 
-A new defective phrase found in the wild is triaged **before** any data file is edited:
+A new defective phrase found in the wild is triaged **before** any data file or detector is edited.
+Rules 1 to 4 govern that direction. Rule 5 governs a proposal to remove coverage.
 
 1. **Does a test T1–T6 already forbid it?** If yes, the contract held and the author skipped it. Add
    the entry as a faster detector, and nothing else changes.
@@ -198,6 +199,34 @@ A new defective phrase found in the wild is triaged **before** any data file is 
    not, and six generic AI-writing tells measured at zero;
    [`references/measurement-baseline.md`](references/measurement-baseline.md) records them as
    non-rules so nobody re-proposes them from impression.
+5. **A narrowing states what it removes.** Rules 1 and 2 route a defect no test reaches. A proposal
+   to narrow a rule runs the other direction, and it ships only with three items:
+   - the population it removes, measured over the **declared** scope, with the scope and the commit
+     named;
+   - the battery result after the change, since a narrowing that fails a case is a rule the battery
+     still asks for;
+   - one occurrence in scope that the narrowed rule still reports.
+
+   A keep-class with no occurrence in scope is what
+   [`references/measurement-baseline.md`](references/measurement-baseline.md) §4 declines to adopt,
+   read from the other end. The figures are recorded there, so the next proposal reads them before
+   it is written.
+
+**Where each register rule is narrowed.** A plan states the surface it edits, and the surface
+differs by rule.
+
+| Register rule | Narrowed by editing |
+| :--- | :--- |
+| 2, 4, 6 | a lexicon entry in `data/register-*.json` (`RULE_KIND`, `scan_register.py:59`) |
+| 3 | the rule-3 vocabulary in the same data files |
+| 1 | `thresholds.sentence_max_words` / `sentence_near_words` in the same data files |
+| 5 | code — `TICK_GLYPHS` and `STATUS_GLYPHS` |
+
+**Rule 5 is the one with no data-file surface.** `_validate_entry` rejects a rule number outside
+`RULE_KIND`, so no entry can carry it. A plan that routes a rule-5 narrowing through
+`data/register-*.json` names a step that cannot be carried out (WI-13 §7.5). Editing the code
+`DEFAULTS` to narrow rule 1 is the mirror error: both shipped data files declare that key, and
+`load_rules` merges the declared value over the default.
 
 ## 7. Safety Boundaries
 
@@ -216,7 +245,7 @@ mistyped.
 
 ## 8. Validation Evidence
 
-- **Selftest**: `python3 scripts/selftest_scan.py` — 191 cases. `TC-META-01` asserts the battery ran
+- **Selftest**: `python3 scripts/selftest_scan.py` — 192 cases. `TC-META-01` asserts the battery ran
   that many, and a second case reads this number out of this file. A dropped case is then a red run
   rather than a smaller self-consistent total. They cover the schema, masking, every detector, the
   probe contract, diagnostics, sections, the terms downgrade and every exit code. Each finding of

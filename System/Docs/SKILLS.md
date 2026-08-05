@@ -86,10 +86,10 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 - **`--allow-missing`** skips a named absent file instead of exiting 3, for the artifacts this
   framework archives at every task boundary (`docs/TASK.md`, `docs/PLAN.md`). A present-but-
   unreadable path, and an input set with nothing readable in it, still exit 3.
-- Per-language data (`register-rules/v1`), 191-case selftest. It never changes a document's
+- Per-language data (`register-rules/v1`), 192-case selftest. It never changes a document's
   language. Rule-3 patterns carry a declared example each, so editing one without its example is
   rejected at load.
-- **Mode C is not a mode — it is what measures the other two** (`evals/`, TASK 101). The 191-case
+- **Mode C is not a mode — it is what measures the other two** (`evals/`, TASK 101). The 192-case
   battery covers the scanner, which is a function. Mode A is a prompt and the §5 residue is a
   reading pass, so neither has a value to pin. `evals/selftest_evals.py` runs 59 cases at zero
   tokens and is wired into CI; `evals/run_authoring.py` spawns the agents a campaign needs and is

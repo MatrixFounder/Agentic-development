@@ -16,6 +16,58 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.25.1 — the citation convention covers glyphs, and §6 gains a bar for narrowing (TASK 102)**
+
+Closes `WI-14` and `WI-15`, both carried out of the dropped `WI-13`.
+
+#### Added
+
+- **`SKILL.md` §6 rule 5 — a narrowing states what it removes.** Rules 1–4 triage a defective
+  phrase found in the wild; rule 5 runs the other direction. Three items before it ships: the
+  removed population
+  measured over the **declared** scope with scope and commit named, the battery result after the
+  change, and one occurrence the narrowed rule still reports.
+- **§6 also names the surface that narrows each register rule.** Rules 2/4/6 a lexicon entry, rule 3
+  its vocabulary, rule 1 `thresholds.sentence_max_words` — all in `data/register-*.json`. Rule 5
+  alone has no data-file surface, so narrowing it is a code change.
+- **`TC-FP-05`** — a glyph cited in a code span is silent, the used glyph on the next line is still
+  `warn`. Battery 191 → **192**.
+
+#### Changed
+
+- **`authoring-contract.md` states the code-span convention for a glyph**, beside the marker it
+  already named, and names the classes it cannot reach: a machine-filed record body is verbatim
+  evidence (`known-issues-format` §8), an archived artifact is immutable by doctrine
+  (ARCHITECTURE §7.2). **Rule 5 gains no exemption** — the 26 in-scope findings stay reported, with
+  the contract stating why. Measured: **0 removed**, against the 26 `WI-14` estimated.
+- **`measurement-baseline.md` §6 records the widening rejected twice** — `task-099` D2, then
+  `WI-13` P2 re-proposing it while citing §6 as support. 584 findings erased, battery `188/191`.
+
+#### Verified
+
+- Battery 192/192; probe 18/18; evals 59/59; pytest 551; unittest 308; skills 46/46; positional
+  refs 63/63; ledger contract sync OK; the skill's own documents 0 `warn`.
+- An adversarial review of this changeset confirmed three defects in it, all fixed before release:
+  a false claim that rule 1 has no data-file surface, an edit to an archived artifact that
+  contradicted ARCHITECTURE §7.2 and falsified a quotation in `WI-13` §8 (reverted), and a cited
+  command that `WI-13` §7.2 does not contain.
+
+### **v3.25.0 — Mode A is measured, not asserted (TASK 101)**
+
+The skill claimed its value came from Mode A — the authoring contract — and every instrument in the
+repository measured Mode B.
+
+#### Added
+
+- **`artifact-formalizer/evals/`** — behavioural evals for the half of the skill that is a prompt.
+  Axis A runs one authoring prompt in two arms differing only in the contract; axis B measures the
+  §5 reading pass against answer keys planted before the run.
+- **`evals/selftest_evals.py`** — 59 instrument cases, zero tokens, zero agents, wired into CI.
+  `run_authoring.py` is the only script that spends tokens, and CI never calls it.
+- First campaign: `warn` **503 → 13** over ten documents per arm, with rule 1 **not** carried;
+  reading-pass recall 6 of 6 and no finding on the control. Caveats and what it does not license:
+  `measurement-baseline.md` §12.
+
 ### **v3.24.5 — the register commit installed rules and left the callers unwired (WIR batch)**
 
 Nine `WIR-*` defects from the 7-dimension review of `992b3ef`, one class: the commit wrote the

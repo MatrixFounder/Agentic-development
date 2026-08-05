@@ -238,7 +238,7 @@ SHIPPED_STATUS_GLYPHS = frozenset("\u2713\u2717\u2705\u274C\u2611\u2612\u2610")
 #: that nothing compared against anything: the drift had already shipped, 128
 #: documented against 145 running (REG-8). `TC-META-01` pins the run against
 #: this number, `TC-SHIP-08` pins the documents against it.
-EXPECTED_CASES = 191
+EXPECTED_CASES = 192
 
 
 def check(name, cond, detail=""):
@@ -1038,6 +1038,23 @@ def t_false_positives():
     check("TC-FP-02 marker inside a code span is silent",
           code == 0 and rep and rep["counts"]["info"] == 0,
           f"counts={rep and rep['counts']}")
+
+    # WI-14. `authoring-contract.md` states the code-span convention for citing
+    # a MARKER, and TC-FP-02 above pins it. The same convention now covers a
+    # GLYPH, and nothing held that: a record reporting glyph severities is a
+    # document ABOUT rule 5 and must not be reported as a document carrying it.
+    # Both positions live in ONE fixture so the case cannot pass by suppressing
+    # rule 5 altogether -- the cited glyph is silent, the used glyph on the next
+    # line is still a warn. Written as an escape so the fixture cannot silently
+    # become a look-alike character.
+    doc = tmpfile("Rule 5 reports `\U0001F534` as a severity glyph.\n\n"
+                  "\U0001F534 Critical: the thing.\n")
+    code, rep, _ = scan_json([doc])
+    hits = [h for h in ((rep["warn"] + rep["info"]) if rep else [])
+            if h["kind"] == "emoji_severity"]
+    check("TC-FP-05 a glyph cited in a code span is silent, the used one is not",
+          code == 0 and len(hits) == 1 and hits[0]["where"].endswith(":3"),
+          f"hits={[(h['where'], h['match']) for h in hits]}")
 
     # the git ref, not the metaphor: the one case-sensitive entry
     doc = tmpfile("Validate the anchors by grep at HEAD before merging.\n")

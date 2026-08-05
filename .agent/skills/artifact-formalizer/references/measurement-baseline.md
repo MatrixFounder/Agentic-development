@@ -119,6 +119,18 @@ outside one. Those 671 occurrences are what rule 5's second clause covers. A gly
 severity at all is diff metadata, and does not belong in a specification either
 ([`formalization-guide.md`](formalization-guide.md) rule 5).
 
+**Excluding those glyphs everywhere was proposed twice and rejected twice.** This paragraph is the
+record SKILL.md §6 rule 5 requires, placed where a third proposal reads it.
+
+| Round | Proposal | Measured | Verdict |
+| :--- | :--- | :--- | :--- |
+| `task-099` D2, 2026-08-04 | exempt every status glyph everywhere | erases 704 of 1050 rule-5 findings; `TC-ADV-13` fails | rejected |
+| WI-13 P2, 2026-08-05 | the same exemption, citing this section as support | 757 findings over 577 documents become 173; 584 erased; battery `188/191` | not adopted |
+
+The second round stated 195 occurrences as its evidence. Verification on a throwaway copy with
+`TICK_GLYPHS` widened to six glyphs put the true population three times higher. Figures: WI-13 §7.2.
+REG-18 exists because this widening erases findings while every gate reports green.
+
 ## 7. Rules 3, 4 and 6 — detectors with declared recall
 
 v1.0 stated that these rules "have no detector and will not get one". That claim is true of *full*

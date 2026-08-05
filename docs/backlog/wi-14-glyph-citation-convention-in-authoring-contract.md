@@ -1,7 +1,7 @@
 ---
 id: WI-14
 type: work-item
-status: open
+status: done
 opened_at: 2026-08-05
 slug: wi-14-glyph-citation-convention-in-authoring-contract
 effort: S
@@ -9,9 +9,29 @@ value: 'removes 26 of 307 in-scope rule-5 findings with no code change; the conv
 source: 'WI-13 P4, carried out of that record when it was dropped'
 provenance: human
 component: artifact-formalizer
+resolved_at: 2026-08-05
+resolved_by: TASK 102
 ---
 
 # WI-14 — state the glyph citation convention in `authoring-contract.md`
+
+> **Done 2026-08-05 (TASK 102), with §3 step 2 dropped and the reason recorded.**
+> `authoring-contract.md` now names a glyph beside the marker it already named, and states the
+> classes the convention does not reach. `TC-FP-05` pins both positions in one fixture: the cited
+> glyph silent, the used glyph still a `warn`.
+>
+> **Step 2 reached none of the four documents.** `wir-11`, `wir-2` and `wir-4` are
+> `provenance: machine` records, and `known-issues-format` §8 preserves a record body byte-for-byte
+> because that property is what makes it evidence. `task-065` is an archived artifact, and
+> `docs/ARCHITECTURE.md:273` states those are immutable by doctrine. Its three glyphs **were**
+> wrapped in a first draft; an adversarial review found that the edit also falsified the quotation
+> of that line in [WI-13](wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) §8, and it was
+> reverted.
+>
+> **Measured, declared scope, 211 documents:** `emoji_severity` stays at 307. The `value` line above
+> claims this removes 26 findings, and is superseded: the count removed is **0**. The convention is
+> an authoring rule, and it binds documents written from here on. The 26 residual findings stay
+> reported, with the contract stating why — no exemption was added to rule 5.
 
 Carried out of [WI-13](wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) §4 (P4), the one
 proposal there that no review finding contradicted. WI-13 was dropped on its §8 re-measurement;

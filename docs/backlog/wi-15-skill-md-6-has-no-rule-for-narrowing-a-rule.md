@@ -1,7 +1,7 @@
 ---
 id: WI-15
 type: work-item
-status: open
+status: done
 opened_at: 2026-08-05
 slug: wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule
 effort: S
@@ -9,12 +9,30 @@ value: 'the maintenance triage covers adding coverage and not removing it, so a 
 source: 'WI-13 §7.5, carried out of that record when it was dropped'
 provenance: human
 component: artifact-formalizer
+resolved_at: 2026-08-05
+resolved_by: TASK 102
 ---
 
 # WI-15 — `SKILL.md` §6 has no rule for narrowing a rule
 
+> **Done 2026-08-05 (TASK 102).** `SKILL.md` §6 carries rule 5 with the three items §3 named. The
+> section intro now states that rules 1 to 4 govern under-coverage and rule 5 the other direction.
+>
+> **The record the rule requires is in `measurement-baseline.md` §6.** A third proposal reads it
+> there. It holds `task-099` D2 and WI-13 P2 as two rounds of one widening, each with its figures.
+> §4 keeps non-rules on record; §6 now keeps this narrowing decision the same way.
+>
+> **§7.5's second finding shipped too.** §6 now carries a table of which surface narrows which
+> register rule, and states that rule 5 alone has no data-file surface. That is the impossible step
+> WI-13 §5 named.
+>
+> **A first draft of that paragraph generalised §7.5 from rule 5 to "rules 1 and 5" and was false.**
+> Rule 1's bound is `thresholds.sentence_max_words`, declared in both shipped data files and merged
+> over the code default. Measured on two throwaway copies: the data-file edit moves the limit from
+> 35 to 100 and the rule-1 finding disappears; the code-`DEFAULTS` edit changes nothing.
+
 Carried out of [WI-13](wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) §7.5. The gap is
-independent of the narrowing WI-13 proposed, and outlived it.
+independent of the narrowing WI-13 proposed. It remained open after that record was dropped.
 
 ## 1. The gap
 

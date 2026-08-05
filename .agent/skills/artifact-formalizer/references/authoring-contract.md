@@ -50,13 +50,20 @@ Handoff.
 Failing surfaces, per test. Each is written here as code.
 
 **Why code spans.** The scanner masks them, so a document *about* the register is not reported as a
-document *in* it. That is the convention for citing a marker as an example. A span holds across a
-line break and stops at a **blank** line, so a citation that must span a paragraph goes in a fenced
-block instead.
+document *in* it. That is the convention for citing a marker **or a glyph** as an example. A span
+holds across a line break and stops at a **blank** line, so a citation that must span a paragraph
+goes in a fenced block instead.
 
 **This sentence said the opposite until 2026-08-05.** It claimed a span does not cross a line break.
 `scan_register.py:526-528` records the fix that made it false, and `mask()` was run in both
 directions to confirm it.
+
+**The convention binds a document being written, and reaches no document already filed.** A ledger
+record body is preserved byte-for-byte as supplied (`known-issues-format` §8), and an archived
+artifact is immutable by doctrine (ARCHITECTURE §7.2). Neither can adopt the convention afterwards.
+The scanner still reports their glyphs, and this paragraph is why — no exemption is added to rule 5.
+Measured 2026-08-05 over the declared scope: 26 quoted glyphs, 23 in three `provenance: machine`
+records and 3 in one archived task.
 
 - **T1** — `наивный`, `неочевиден`, `elegant`, `the main risk`, `a trap`, `unfortunately`.
 - **T2** — a gate `blesses`, a deadline `strikes`, a comment `outlives`, a test `goes red`.

@@ -50,8 +50,13 @@ Handoff.
 Failing surfaces, per test. Each is written here as code.
 
 **Why code spans.** The scanner masks them, so a document *about* the register is not reported as a
-document *in* it. That is the convention for citing a marker as an example, and it holds on one
-line only — a code span does not cross a line break.
+document *in* it. That is the convention for citing a marker as an example. A span holds across a
+line break and stops at a **blank** line, so a citation that must span a paragraph goes in a fenced
+block instead.
+
+**This sentence said the opposite until 2026-08-05.** It claimed a span does not cross a line break.
+`scan_register.py:526-528` records the fix that made it false, and `mask()` was run in both
+directions to confirm it.
 
 - **T1** — `наивный`, `неочевиден`, `elegant`, `the main risk`, `a trap`, `unfortunately`.
 - **T2** — a gate `blesses`, a deadline `strikes`, a comment `outlives`, a test `goes red`.

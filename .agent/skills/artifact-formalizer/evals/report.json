@@ -1,0 +1,745 @@
+{
+ "schema": "formalizer-grading/v1",
+ "prose_floor": 25,
+ "arms": {
+  "baseline": {
+   "warn_per_100_lines": 13.41,
+   "marker_per_100_lines": 1.15,
+   "sentence_mean": 10.96,
+   "documents": 10,
+   "pressed_against_limit": 2,
+   "prose_share_of_nonblank": 48.2,
+   "warn_total": 503,
+   "lines_total": 2819,
+   "sentence_max_worst": 46,
+   "findings_by_kind": {
+    "cell_sentences": 184,
+    "cell_width": 315,
+    "marker": 35,
+    "maxim": 9,
+    "metaphor": 42,
+    "sentence_length": 6,
+    "sentence_near_limit": 25
+   }
+  },
+  "with_contract": {
+   "warn_per_100_lines": 0.6,
+   "marker_per_100_lines": 0.72,
+   "sentence_mean": 9.04,
+   "documents": 10,
+   "pressed_against_limit": 0,
+   "prose_share_of_nonblank": 58.2,
+   "warn_total": 13,
+   "lines_total": 2371,
+   "sentence_max_worst": 52,
+   "findings_by_kind": {
+    "cell_width": 1,
+    "marker": 13,
+    "maxim": 7,
+    "sentence_length": 5,
+    "sentence_near_limit": 3
+   }
+  }
+ },
+ "axis_b": {
+  "seeded_cases": 3,
+  "recall_mean": 1.0,
+  "precision_mean": 1.0,
+  "control_spurious": 0
+ },
+ "empty": [],
+ "unmeasured": [],
+ "cases": [
+  {
+   "path": "corpus/A1/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 17.38,
+   "marker_per_100_lines": 2.06,
+   "sentence_mean": 12.9,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 45,
+   "counts": {
+    "lines": 535,
+    "nonblank_lines": 430,
+    "warn": 93,
+    "marker": 11,
+    "sentences": 163,
+    "sentence_max_observed": 46,
+    "language": "en",
+    "findings_by_kind": {
+     "cell_sentences": 12,
+     "cell_width": 78,
+     "marker": 11,
+     "metaphor": 12,
+     "sentence_length": 3,
+     "sentence_near_limit": 9
+    }
+   },
+   "case_id": "A1",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A1/baseline/rep-2.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 27.32,
+   "marker_per_100_lines": 1.13,
+   "sentence_mean": 10.5,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 50,
+   "counts": {
+    "lines": 355,
+    "nonblank_lines": 288,
+    "warn": 97,
+    "marker": 4,
+    "sentences": 145,
+    "sentence_max_observed": 30,
+    "language": "en",
+    "findings_by_kind": {
+     "cell_sentences": 27,
+     "cell_width": 69,
+     "marker": 4,
+     "metaphor": 17,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A1",
+   "arm": "baseline",
+   "rep": "rep-2.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A1/baseline/rep-3.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 37.4,
+   "marker_per_100_lines": 2.77,
+   "sentence_mean": 9.9,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 38,
+   "counts": {
+    "lines": 361,
+    "nonblank_lines": 295,
+    "warn": 135,
+    "marker": 10,
+    "sentences": 131,
+    "sentence_max_observed": 39,
+    "language": "en",
+    "findings_by_kind": {
+     "cell_sentences": 52,
+     "cell_width": 77,
+     "marker": 10,
+     "maxim": 1,
+     "metaphor": 12,
+     "sentence_length": 1
+    }
+   },
+   "case_id": "A1",
+   "arm": "baseline",
+   "rep": "rep-3.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A1/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.31,
+   "marker_per_100_lines": 0.0,
+   "sentence_mean": 10.4,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 77,
+   "counts": {
+    "lines": 322,
+    "nonblank_lines": 234,
+    "warn": 1,
+    "marker": 0,
+    "sentences": 295,
+    "sentence_max_observed": 36,
+    "language": "en",
+    "findings_by_kind": {
+     "sentence_length": 1,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A1",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A1/with_contract/rep-2.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.66,
+   "marker_per_100_lines": 0.33,
+   "sentence_mean": 11.6,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 69,
+   "counts": {
+    "lines": 305,
+    "nonblank_lines": 173,
+    "warn": 2,
+    "marker": 1,
+    "sentences": 182,
+    "sentence_max_observed": 52,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 1,
+     "sentence_length": 2,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A1",
+   "arm": "with_contract",
+   "rep": "rep-2.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A1/with_contract/rep-3.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.38,
+   "marker_per_100_lines": 0.38,
+   "sentence_mean": 11.5,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 45,
+   "counts": {
+    "lines": 266,
+    "nonblank_lines": 190,
+    "warn": 1,
+    "marker": 1,
+    "sentences": 149,
+    "sentence_max_observed": 47,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 1,
+     "sentence_length": 1
+    }
+   },
+   "case_id": "A1",
+   "arm": "with_contract",
+   "rep": "rep-3.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A2/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 31.02,
+   "marker_per_100_lines": 0.0,
+   "sentence_mean": 9.6,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 27,
+   "counts": {
+    "lines": 432,
+    "nonblank_lines": 331,
+    "warn": 134,
+    "marker": 0,
+    "sentences": 96,
+    "sentence_max_observed": 32,
+    "language": "ru",
+    "findings_by_kind": {
+     "cell_sentences": 52,
+     "cell_width": 88,
+     "maxim": 2,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A2",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A2/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 0.0,
+   "sentence_mean": 7.0,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 71,
+   "counts": {
+    "lines": 359,
+    "nonblank_lines": 276,
+    "warn": 0,
+    "marker": 0,
+    "sentences": 309,
+    "sentence_max_observed": 30,
+    "language": "ru",
+    "findings_by_kind": {
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A2",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "task-spec"
+  },
+  {
+   "path": "corpus/A3/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 0.86,
+   "sentence_mean": 12.1,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 83,
+   "counts": {
+    "lines": 116,
+    "nonblank_lines": 94,
+    "warn": 0,
+    "marker": 1,
+    "sentences": 63,
+    "sentence_max_observed": 32,
+    "language": "ru",
+    "findings_by_kind": {
+     "marker": 1,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A3",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "sub-task"
+  },
+  {
+   "path": "corpus/A3/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 3.03,
+   "sentence_mean": 10.0,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 66,
+   "counts": {
+    "lines": 132,
+    "nonblank_lines": 98,
+    "warn": 0,
+    "marker": 4,
+    "sentences": 75,
+    "sentence_max_observed": 29,
+    "language": "ru",
+    "findings_by_kind": {
+     "marker": 4
+    }
+   },
+   "case_id": "A3",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "sub-task"
+  },
+  {
+   "path": "corpus/A4/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 1.94,
+   "marker_per_100_lines": 1.94,
+   "sentence_mean": 14.7,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 58,
+   "counts": {
+    "lines": 155,
+    "nonblank_lines": 106,
+    "warn": 3,
+    "marker": 3,
+    "sentences": 105,
+    "sentence_max_observed": 46,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 3,
+     "maxim": 4,
+     "sentence_length": 2,
+     "sentence_near_limit": 7
+    }
+   },
+   "case_id": "A4",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "issue-record"
+  },
+  {
+   "path": "corpus/A4/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 0.85,
+   "sentence_mean": 7.4,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 55,
+   "counts": {
+    "lines": 118,
+    "nonblank_lines": 80,
+    "warn": 0,
+    "marker": 1,
+    "sentences": 78,
+    "sentence_max_observed": 20,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 1
+    }
+   },
+   "case_id": "A4",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "issue-record"
+  },
+  {
+   "path": "corpus/A5/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 5.44,
+   "marker_per_100_lines": 0.84,
+   "sentence_mean": 8.5,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 34,
+   "counts": {
+    "lines": 239,
+    "nonblank_lines": 179,
+    "warn": 13,
+    "marker": 2,
+    "sentences": 124,
+    "sentence_max_observed": 29,
+    "language": "ru",
+    "findings_by_kind": {
+     "cell_sentences": 12,
+     "cell_width": 2,
+     "marker": 2
+    }
+   },
+   "case_id": "A5",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A5/baseline/rep-2.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 7.11,
+   "marker_per_100_lines": 0.0,
+   "sentence_mean": 10.9,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 39,
+   "counts": {
+    "lines": 211,
+    "nonblank_lines": 157,
+    "warn": 15,
+    "marker": 0,
+    "sentences": 107,
+    "sentence_max_observed": 32,
+    "language": "ru",
+    "findings_by_kind": {
+     "cell_sentences": 15,
+     "cell_width": 1,
+     "maxim": 1,
+     "metaphor": 1,
+     "sentence_near_limit": 2
+    }
+   },
+   "case_id": "A5",
+   "arm": "baseline",
+   "rep": "rep-2.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A5/baseline/rep-3.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 6.44,
+   "marker_per_100_lines": 0.99,
+   "sentence_mean": 8.9,
+   "sentence_pressure": true,
+   "prose_share_of_nonblank": 34,
+   "counts": {
+    "lines": 202,
+    "nonblank_lines": 148,
+    "warn": 13,
+    "marker": 2,
+    "sentences": 108,
+    "sentence_max_observed": 35,
+    "language": "ru",
+    "findings_by_kind": {
+     "cell_sentences": 14,
+     "marker": 2,
+     "maxim": 1,
+     "sentence_near_limit": 3
+    }
+   },
+   "case_id": "A5",
+   "arm": "baseline",
+   "rep": "rep-3.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A5/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 1.0,
+   "marker_per_100_lines": 0.5,
+   "sentence_mean": 9.4,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 37,
+   "counts": {
+    "lines": 200,
+    "nonblank_lines": 153,
+    "warn": 2,
+    "marker": 1,
+    "sentences": 85,
+    "sentence_max_observed": 47,
+    "language": "ru",
+    "findings_by_kind": {
+     "cell_width": 1,
+     "marker": 1,
+     "sentence_length": 1
+    }
+   },
+   "case_id": "A5",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A5/with_contract/rep-2.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 0.49,
+   "sentence_mean": 7.9,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 59,
+   "counts": {
+    "lines": 204,
+    "nonblank_lines": 154,
+    "warn": 0,
+    "marker": 1,
+    "sentences": 139,
+    "sentence_max_observed": 23,
+    "language": "ru",
+    "findings_by_kind": {
+     "marker": 1
+    }
+   },
+   "case_id": "A5",
+   "arm": "with_contract",
+   "rep": "rep-2.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A5/with_contract/rep-3.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 3.68,
+   "marker_per_100_lines": 0.53,
+   "sentence_mean": 8.2,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 40,
+   "counts": {
+    "lines": 190,
+    "nonblank_lines": 144,
+    "warn": 7,
+    "marker": 1,
+    "sentences": 90,
+    "sentence_max_observed": 23,
+    "language": "ru",
+    "findings_by_kind": {
+     "marker": 1,
+     "maxim": 7
+    }
+   },
+   "case_id": "A5",
+   "arm": "with_contract",
+   "rep": "rep-3.md",
+   "axis": "authoring",
+   "lang": "ru",
+   "artifact_kind": "architecture-section"
+  },
+  {
+   "path": "corpus/A6/baseline/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 0.94,
+   "sentence_mean": 11.6,
+   "sentence_pressure": true,
+   "prose_share_of_nonblank": 74,
+   "counts": {
+    "lines": 213,
+    "nonblank_lines": 148,
+    "warn": 0,
+    "marker": 2,
+    "sentences": 134,
+    "sentence_max_observed": 34,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 2,
+     "sentence_near_limit": 1
+    }
+   },
+   "case_id": "A6",
+   "arm": "baseline",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "plan"
+  },
+  {
+   "path": "corpus/A6/with_contract/rep-1.md",
+   "measured": true,
+   "unmeasured_reason": null,
+   "warn_per_100_lines": 0.0,
+   "marker_per_100_lines": 1.09,
+   "sentence_mean": 7.0,
+   "sentence_pressure": false,
+   "prose_share_of_nonblank": 63,
+   "counts": {
+    "lines": 275,
+    "nonblank_lines": 196,
+    "warn": 0,
+    "marker": 3,
+    "sentences": 219,
+    "sentence_max_observed": 23,
+    "language": "en",
+    "findings_by_kind": {
+     "marker": 3
+    }
+   },
+   "case_id": "A6",
+   "arm": "with_contract",
+   "rep": "rep-1.md",
+   "axis": "authoring",
+   "lang": "en",
+   "artifact_kind": "plan"
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 2,
+   "reported": 2,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 18,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 25,
+     "rule": 3
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "B1",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 3,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 2,
+   "reported": 2,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 26,
+     "rule": 4
+    },
+    {
+     "id": "P2",
+     "line": 31,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "B2",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 4,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 2,
+   "reported": 2,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 18,
+     "rule": 6
+    },
+    {
+     "id": "P2",
+     "line": 26,
+     "rule": 6
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "B3",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 6,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": true,
+   "planted": 0,
+   "reported": 0,
+   "matched": [],
+   "missed": [],
+   "spurious": [],
+   "case_id": "B4",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 0,
+   "control": true
+  }
+ ]
+}

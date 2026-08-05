@@ -1,0 +1,14 @@
+{
+ "findings": [
+  {
+   "line": 26,
+   "rule": 4,
+   "quote": "An archive that no one prunes is an inventory of regrets."
+  },
+  {
+   "line": 31,
+   "rule": 4,
+   "quote": "A retention policy ages faster than the schema it protects."
+  }
+ ]
+}

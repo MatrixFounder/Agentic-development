@@ -1,0 +1,21 @@
+{
+ "case": "A1",
+ "arm": "baseline",
+ "rep": 1,
+ "model": "claude-opus-5",
+ "prompt_sha256_16": "d85f1065db6d26c1",
+ "contract_sha256_16": "d3bdd5d939e525d6",
+ "contract_applied": false,
+ "unwrapped_fence": true,
+ "is_error": false,
+ "error": null,
+ "permission_denials": [],
+ "models_used": [
+  "claude-haiku-4-5-20251001",
+  "claude-opus-5"
+ ],
+ "total_cost_usd": 0.628236,
+ "duration_ms": 304077,
+ "session_id": "c108b9df-8eab-4418-ad15-6c2fed3dea0d",
+ "output_chars": 44226
+}

@@ -1,0 +1,14 @@
+{
+ "findings": [
+  {
+   "line": 18,
+   "rule": 3,
+   "quote": "The importer must reject a row whose currency code is absent from the active set. Otherwise a stale rate reaches the ledger and the month closes on a figure nobody can reproduce."
+  },
+  {
+   "line": 25,
+   "rule": 3,
+   "quote": "The run must print the rejected count to the job log before the commit. The operator decides whether to accept a partial import, and that decision needs the number in front of it."
+  }
+ ]
+}

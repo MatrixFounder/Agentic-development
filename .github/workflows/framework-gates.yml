@@ -40,6 +40,21 @@ jobs:
       - name: Run artifact-formalizer selftest
         run: python .agent/skills/artifact-formalizer/scripts/selftest_scan.py
 
+      # The eval INSTRUMENT, not a campaign. It spawns no agent and costs no
+      # token: `run_authoring.spawn` is replaced with a sentinel that raises,
+      # and TC-EV-12 asserts the sentinel was never reached. `run_authoring.py`
+      # is what spends tokens, and CI never calls it.
+      #
+      # What this step defends: the two properties that keep a campaign
+      # honest. TC-EV-06a compares the two arm prompts byte for byte after
+      # removing the contract block, so the arms cannot silently start
+      # differing in a second input. TC-EV-04 asserts every axis-B fixture
+      # still reports zero findings — a lexicon entry added to
+      # data/register-*.json can reach a planted defect and quietly convert a
+      # recall-gap fixture into a detector test.
+      - name: Run artifact-formalizer eval-instrument selftest
+        run: python .agent/skills/artifact-formalizer/evals/selftest_evals.py
+
       # Instrument health. Findings stay advisory (documentation-standards §4:
       # a gate that fails on correct documents is how gates get switched off).
       # A DEAD DETECTOR is not a finding — it is the scanner reporting a clean

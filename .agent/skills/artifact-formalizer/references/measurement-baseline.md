@@ -277,3 +277,154 @@ not vendored here, and no revision pins it.
 Treat those as the record of a measurement taken once, not as a claim a reader can check. A
 reproducible replacement is the framework's own corpus in §7, and any future threshold move must be
 justified from a corpus that ships with the skill.
+
+**A second shipped corpus now exists**: `evals/corpus/`, 20 documents authored for §12 and committed
+with the inputs that produced them. It is small and drawn once, so it supports the ordering claim
+§12 makes and not a threshold move. §7's corpus remains the larger one.
+
+## 12. The first behavioural campaign — Mode A and the §5 recall gaps (TASK 101)
+
+Every section above measures the scanner. The scanner is Mode B. §Purpose of `SKILL.md` states that
+Mode A carries the value, and until this campaign no figure described Mode A.
+
+**Method.** Six authoring prompts, two arms each, `claude-opus-5`, 2026-08-05. The arms differ in
+one input: `with_contract` is handed `references/authoring-contract.md` and `baseline` is not. Both
+run under `tempfile.mkdtemp()` with every file and command tool denied, so neither can reach this
+repository.
+
+**Repetitions are not uniform.** `A1` and `A5` ran three times per arm. The other four cases and
+axis B ran once.
+
+**Why those two.** They carry the whole rule-1 finding of §12.2, and three draws separate a
+systematic effect from a sampling artefact at a quarter of the cost of a uniform campaign.
+
+26 runs, `$10.80`, 20 authoring documents, none rejected by a validity guard. The corpus ships at
+`evals/corpus/`, each document beside the model, prompt hash and contract hash that produced it.
+
+### 12.1 Axis A — what the contract changed
+
+Findings over the ten documents per arm. The scanner is the grader, so these are its own counts.
+
+| Kind | Severity | baseline | with_contract |
+| :--- | :--- | ---: | ---: |
+| `cell_width` | warn | 315 | 1 |
+| `cell_sentences` | warn | 175 | 0 |
+| `sentence_length` | warn | 6 | 5 |
+| `marker` | warn | 6 | 0 |
+| `maxim` | warn | 1 | **7** |
+| **warn, total** | | **503** | **13** |
+| `metaphor` (rule 6) | info | 42 | 0 |
+| `marker` (rule 2) | info | 29 | 13 |
+| `sentence_near_limit` | info | 25 | 3 |
+| `maxim` (rule 4) | info | 8 | 0 |
+| `cell_sentences` | info | 9 | 0 |
+
+| Metric | baseline | with_contract |
+| :--- | ---: | ---: |
+| `warn_per_100_lines` | 13.41 | 0.60 |
+| `marker_per_100_lines` | 1.15 | 0.72 |
+| `sentence_mean` | 10.96 | 9.04 |
+| `prose_share_of_nonblank` | 48.2% | 58.2% |
+| documents pressed against the limit | 2 | 0 |
+| lines authored | 2819 | 2371 |
+
+**Read the warn column before the rate.** 490 of the 503 baseline `warn` findings are `cell_width`
+and `cell_sentences`, which `documentation-standards` §5.1 owns. The contract's licensed **Table
+row** form removes them. So `warn_per_100_lines` reports table shape first and register second, and
+a reader who quotes the 22× ratio as a register figure is quoting the wrong thing.
+
+**The register classes proper.** `metaphor` falls 42 to 0 and `marker` 35 to 13, both counting warn
+and info together. Those are rules 6 and 2, and they are where the contract does what it claims.
+
+**The two documents pressed against the limit are both baseline.** `A5/baseline/rep-3` stops at
+exactly 35 words and `A6/baseline/rep-1` at 34. §8 names that distribution: written for the gate.
+No contract-arm document shows it.
+
+### 12.2 Rule 1 — the one class the contract did not carry
+
+`sentence_length` is 6 against 5, and the longest sentence in the campaign is 52 words, written by
+the contract arm. Longest sentence per document, against a bound of 35:
+
+| Case / arm | rep-1 | rep-2 | rep-3 | over the bound |
+| :--- | ---: | ---: | ---: | :--- |
+| A1 baseline | 46 | 30 | 39 | 2 of 3 |
+| **A1 with_contract** | 36 | **52** | 47 | **3 of 3** |
+| A5 baseline | 29 | 32 | 35 | 0 of 3 |
+| A5 with_contract | **47** | 23 | 23 | 1 of 3 |
+
+**Three repetitions were run to separate a systematic effect from one draw, and they separate it.**
+On `A1` the contract arm exceeds the bound in every repetition and its worst exceeds the baseline's
+worst. That is not a sampling artefact. On `A5` it is one repetition of three, and the baseline
+never exceeds — though `A5/baseline/rep-3` reaches exactly 35, which §8 counts as the other failure
+of the same rule.
+
+T6 states that 35 words is the failure bound and not the target, and names 15 as the target. The
+mean obeys it (10.96 to 9.04); the tail does not. Filed as **WI-12**.
+
+**What three repetitions still do not settle.** Six prompts. Repetitions reduce sampling noise
+inside a case and do nothing for the diversity of the set, which is what §5 of
+`skill-creator/references/advanced-eval-patterns.md` calls the mirage.
+
+### 12.3 A finding count is not a document count
+
+The contract arm's 7 `maxim` warns are seven occurrences of `краснеет` on seven consecutive lines of
+**one** document, `A5/with_contract/rep-3`, in a list of test obligations. The baseline's single
+`maxim` warn sits in a different document.
+
+Counted by document rather than by finding, rule 4 is 1 contract-arm document against 1 baseline
+document. Counted by finding it is 7 against 1. Both numbers are above; neither alone describes what
+happened. The same caution applies to `cell_width`, where one table contributes a row per cell.
+
+### 12.4 Axis B — the reading pass over the §5 recall gaps
+
+Three seeded fixtures and one control, each reporting `0 warn / 0 info` from the scanner. Six
+planted defects: two rule-3 requirements carrying their justification across a sentence boundary,
+two aphorisms written for the fixture, two nouns coined for the fixture.
+
+| Measure | Value |
+| :--- | ---: |
+| Planted defects found, on the declared line with the declared rule | 6 of 6 |
+| Findings matching no planted defect | 0 |
+| Findings on the control fixture | 0 |
+
+**What this does not establish.** The defects are seeded, so the key is objective by construction
+and carries no author judgement about what a real document meant. Their **difficulty** is not
+calibrated: a defect planted for a fixture may be more conspicuous than one that occurs naturally.
+The prompt also names the three rule classes, which is faithful to step B4 and easier than an
+unprimed audit. Axis B ran **once**, so this figure carries the single-draw caveat §12.2 removed
+from rule 1.
+
+### 12.5 The campaign found a defect in its own grader
+
+Two runs of `A5/baseline` died on a transport error, and `run_authoring.py` wrote the 80-byte string
+the envelope returned. The executor recorded `is_error: true`, printed `FAILED` and exited 1.
+
+The grader read the document and not its metadata. `API Error: Connection closed mid-response.` is
+one line of prose, so it scored `0 warn`, `measured: true`, and a `prose_share_of_nonblank` of 100%,
+and it entered the arm mean as a conforming document. `PROSE_FLOOR` cannot see it: in one line of
+prose the prose share is total.
+
+| Guard | Now | Catches |
+| :--- | :--- | :--- |
+| `is_error` read from `rep-N.meta.json` | the run's own record | any failure the executor already detected |
+| `MIN_LINES = 5` | a shape floor | a corpus placed by hand, where no metadata exists |
+
+Pinned as `TC-EV-10g` and `TC-EV-10h`. Both runs were re-executed and the committed corpus holds no
+errored run.
+
+**Why it belongs in this document.** It is the same shape as §2 and §10: an instrument reporting a
+clean zero over an input it never measured, found by looking at what the zero was computed from.
+
+### 12.6 What is reproducible, and what a rerun would change
+
+Reproducible from this repository: every figure in §12.1 to §12.4, by
+`python3 evals/grade_run.py` over the committed `evals/corpus/`. The grader is a pure function of
+the corpus and the shipped rule files, and `TC-EV-14` asserts that grading the committed corpus
+reproduces the committed `report.json`.
+
+Not reproducible: the corpus itself. Four of the six cases were drawn once, and axis B was drawn
+once. No interval is attached to any arm-level figure.
+
+**What this campaign licenses.** It supports the ordering in §Purpose — Mode A before Mode B — with
+figures from a corpus that ships. It does **not** license a threshold move: §11 requires that from a
+corpus, and this one is 20 documents over six prompts.

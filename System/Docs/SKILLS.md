@@ -89,6 +89,11 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 - Per-language data (`register-rules/v1`), 191-case selftest. It never changes a document's
   language. Rule-3 patterns carry a declared example each, so editing one without its example is
   rejected at load.
+- **Mode C is not a mode — it is what measures the other two** (`evals/`, TASK 101). The 191-case
+  battery covers the scanner, which is a function. Mode A is a prompt and the §5 residue is a
+  reading pass, so neither has a value to pin. `evals/selftest_evals.py` runs 59 cases at zero
+  tokens and is wired into CI; `evals/run_authoring.py` spawns the agents a campaign needs and is
+  not. ARCHITECTURE §7.6 states the invariant; `evals/README.md` states what none of it proves.
 
 **`documentation-standards`** — §5.5 holds the normative short form of the register rules and the
 detector-coverage table. §5.1 owns cell shape, §5.2 prose shape, §5.3 line length. The scanner

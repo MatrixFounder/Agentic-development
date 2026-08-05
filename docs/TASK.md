@@ -1,4 +1,4 @@
-# TASK 100 — Register scanner: close the REG-14…REG-18 mutation-survivor batch
+# TASK 101 — artifact-formalizer: behavioural evals for Mode A and the §5 recall gaps
 
 <!-- contract:meta -->
 
@@ -6,235 +6,253 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 100 |
-| Slug | register-mutation-survivors-surface-and-threshold-pins |
+| Task ID | 101 |
+| Slug | formalizer-behavioural-evals-mode-a-and-recall-gaps |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | Operator request 2026-08-04: close the remaining `REG-*` |
-| Depends on | TASK 096, TASK 097, TASK 099 |
-| Closes | REG-14, REG-15, REG-16, REG-17, REG-18 |
-| Archive name | `task-100-register-mutation-survivors-surface-and-threshold-pins.md` |
+| Source | Operator request 2026-08-05: build the minimal eval set, two axes, 8–12 cases |
+| Depends on | TASK 096, TASK 097, TASK 099, TASK 100 |
+| Closes | no ledger record; this task opens a measurement, it does not fix a defect |
+| Archive name | `task-101-formalizer-behavioural-evals-mode-a-and-recall-gaps.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-`artifact-formalizer` ships two CI gates: the acceptance battery (`selftest_scan.py`) and the
-detector roster (`scan_register.py --probe`). TASK 099 pinned what each gate *counts*. Five filed
-defects state that a count is not an identity: an edit that keeps the count and removes detection
-leaves both gates at exit 0.
+`artifact-formalizer` ships three CI steps and two instruments. All of them measure Mode B.
 
-Six mutations, each applied to a throwaway copy of the skill and measured over the 636 tracked
-`.md` files present on disk. The unmutated copy reports 4,835 findings, `174/174 passed` exit 0,
-and `18/18 detectors live` exit 0.
+| Instrument | Covers | Evidence today |
+| :--- | :--- | :--- |
+| `selftest_scan.py` | the scanner as a pure function | 191 cases, exit 0 |
+| `scan_register.py --probe` | the detector roster | 18 detectors, exit 0 |
+| Mode A, the authoring contract | what a model writes | none |
+| §5 reading pass (B4) | rules 3, 4 and 6 beyond the detectors | none |
 
-| Record | Mutation | Battery | Roster | Detection lost |
-| :--- | :--- | :--- | :--- | :--- |
-| REG-14 | rule-3 `\bfor the reason that\b` replaced, its example moved with it | 174/174 exit 0 | 18/18 exit 0 | the named sentence, 1 → 0 |
-| REG-14 | rule-2 `robust` pattern replaced, its probe moved with it | 174/174 exit 0 | 18/18 exit 0 | `marker` 447 → 406 |
-| REG-15 | `cell_max_chars` 120 → 150 in both rule files | 174/174 exit 0 | 18/18 exit 0 | `cell_width` 811 → 613 |
-| REG-16 | `flags` dropped from the 35 entries no case names | 174/174 exit 0 | 18/18 exit 0 | `marker` 447 → 432 |
-| REG-17 | `[-*+]\s` added to the `SKIP_LINE` alternation | 174/174 exit 0 | 18/18 exit 0 | 4,835 → 4,354 |
-| REG-18 | `TICK_GLYPHS` widened to ten glyphs | 174/174 exit 0 | 18/18 exit 0 | `emoji_severity` 1,012 → 779 |
+`SKILL.md` §Purpose states the order: "Mode A prevents the defect; Mode B measures what Mode A
+missed." It quotes 5.1% of a corpus's words against reading 14,288 to remove them. The value the
+skill claims is therefore Mode A's, and no number in this repository describes Mode A.
 
-The REG-14 rule-3 mutation costs no corpus finding, because `for the reason that` has no corpus
-occurrence. `The installer shall abort for the reason that the target exists.` reports
-`[('reasoning', 'shall … for the reason that')]` before it and `[]` after.
+§5 declares a recall limit for three of six rules and assigns the remainder to a reading pass. Step
+B4 instructs that pass over the `--sections` worklist. No measurement states what that pass finds.
 
-The REG-17 loss splits as `sentence_length` 826 → 546, `sentence_near_limit` 712 → 517 and
-`reasoning` 22 → 16.
+`references/measurement-baseline.md` §11 records the third gap in its own words. Every figure from
+the ten-file downstream corpus is not reproducible here. That section requires a future threshold
+move to be justified from a corpus that ships with the skill. No such corpus ships.
 
-**Why the gates miss all six.** Each gate compares the data under test against itself. `SHIPPED_ENTRIES`
-and `SHIPPED_REASONING` count entries. `verify_detectors` runs each entry against the entry's own
-declared `probe`. `_structural_probes` builds each fixture from the active threshold. A mutation
-that moves both sides of one of those comparisons is invisible to it.
+**Why this is the failure class the skill names.** The gates report `18/18 detectors live` and exit
+0. The claim carrying the skill's stated value stays untested. `measurement-baseline.md` §2 records
+the same shape: a zero and a working instrument differ only in what the instrument was pointed at.
 
 <!-- contract:rtm -->
 
 ## 2. Requirements Traceability Matrix (RTM)
 
-| ID | Requirement | MVP? | Closes |
+| ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | The battery pins which patterns ship, not how many | Y | REG-14 |
-| R2 | The battery pins every threshold the scanner applies | Y | REG-15 |
-| R3 | The pinned surface carries each entry's flags, and the roster verifies they are applied | Y | REG-16 |
-| R4 | The structural fixtures exercise every line form `LIST_MARK` accepts | Y | REG-17 |
-| R5 | The battery pins the membership of both rule-5 glyph sets | Y | REG-18 |
-| R6 | Each fix carries a case that fails when the fix is reverted | Y | all |
+| R1 | An executor produces authored artifacts under two arms that differ only in the contract | Y | A1, A2 |
+| R2 | The grader calls `scan_register.py` and reimplements no threshold or finding rule | Y | A3 |
+| R3 | Axis B fixtures carry planted defects that the scanner does not report | Y | A4 |
+| R4 | The eval instrument carries a selftest that spawns no agent | Y | A5 |
+| R5 | The authored outputs ship as the corpus §11 requires | Y | A6 |
+| R6 | The report states what the run did not cover | Y | A7 |
+| R7 | The eval set holds 8 to 12 cases across both axes | Y | A8 |
 
 ### 2.1 Sub-features
 
-**R1.** `SHIPPED_SURFACES` holds the pattern strings of rules 2, 4 and 6 and of the rule-3 modal
-and causal vocabularies, per language. A case reports the symmetric difference between the pinned
-set and the loaded set. A further case asserts that `SHIPPED_SURFACES` and the TASK 099 count pins
-state the same sizes.
+**R1 — the executor.** `evals/run_authoring.py` runs each Axis A case twice. Both arms receive the
+same task prompt, the same working directory shape and the same model. The `with_contract` arm
+additionally receives the text of `references/authoring-contract.md`. No other input differs.
 
-**Why the pattern and not the marker.** The pattern is what matches a document. A marker is the
-label a finding prints. REG-14's reproduction keeps the marker and replaces the pattern.
+**Why one variable.** `skill-creator/references/advanced-eval-patterns.md` §7 attributes a delta to
+a change only when the two arms differ in one input.
 
-**R2.** `SHIPPED_THRESHOLDS` holds the four keys each rule file declares. `SHIPPED_DEFAULTS` holds
-the six keys of the scanner's `DEFAULTS`, which supply `sentence_pressure_band` and
-`cell_prose_chars`. The battery imports `scan_register` to read the second.
+**Why an isolated working directory.** A run under this repository loads `CLAUDE.md`, which names
+the skill catalogue. The baseline arm would then read the contract that defines the arm. `~/.claude/
+skills/` does not hold `artifact-formalizer`, so a directory outside this repository isolates it.
+The executor asserts the directory holds no `CLAUDE.md`, no `.agent/` and no `.claude/`.
 
-**Why the whole set.** REG-15 names `cell_max_chars`. The same comparison covers the other five
-keys, and `TC-SHIP-02` pinned one of them.
+**Why every tool is denied.** The authoring task needs no tool. Denying the file and command tools
+removes the second path to the contract, and it removes the agent's ability to write anywhere. The
+executor records `permission_denials` from the run envelope, so an attempted read is visible rather
+than assumed absent.
 
-**R3.** `SHIPPED_SURFACES` holds `(pattern, flags)` per entry, so a removed `flags` key fails R1's
-case. `verify_detectors` additionally runs every entry that declares `i` against a case-flipped copy
-of its own probe, and lists an entry that stops matching as case-blind. `load_rules` carries `flags`
-into the loaded entry, which it did not before.
+**R2 — the grader.** `evals/grade_run.py` imports `scan_register` and calls it on each authored
+document. It reads four values from the scanner's JSON and derives no finding of its own.
 
-**Why both.** The two close different mutations. A `flags` key removed from the data moves the
-roster's own input, so no roster check can see it; the pin is a value declared outside the data. A
-flag declared and not applied leaves the data intact, so the pin cannot see it. Measured: the scan
-compiles its regex at a different site from the validator's own compile, and losing the flag at the
-scan site alone left 15 entries reported through their own probes and 63 unreported. With the
-case-flip check all six lexical rows report DEAD and name every entry.
+| Value | Derivation | Role |
+| :--- | :--- | :--- |
+| `warn_per_100_lines` | `len(warn) / lines × 100` | outcome |
+| `marker_per_100_lines` | `findings_by_kind.marker / lines × 100` | outcome |
+| `sentence_mean` | `diagnostics.sentence_mean` | outcome |
+| `prose_share_of_nonblank` | `diagnostics.prose_share_of_nonblank` | validity guard |
+| `sentence_pressure` | `diagnostics.sentence_pressure` | outcome |
 
-**R4.** `_structural_probes` returns one or more line forms per kind. `sentence_length` and
-`sentence_near_limit` carry a bare line, a `- ` list item and a `1. ` ordered item. The reasoning
-row exercises each pattern in all three. The roster stays at nine rows per shipped language.
+**Why per 100 lines.** `measurement-baseline.md` §1 states the corpus baseline in evaluative markers
+per 100 lines. The eval reports the same unit, so the two tables can be read together.
 
-**Why three.** `LIST_MARK` accepts both list forms, and the corpus holds 12,415 bullet lines and
-3,336 ordered-list lines against 34,852 other non-blank lines. With the bullet form alone, widening
-`SKIP_LINE` with `\d+\.\s` instead cost 63 findings at `18/18 detectors live` exit 0.
+**Why the prose share is a guard and not an outcome.** A document padded with fenced blocks lowers
+every per-line rate without changing a sentence. The share names how much of the document reached
+rule 1. `SKILL.md` §2 already assigns it that role.
 
-**Why not a row per form.** The roster size is 18. `SKILL.md`, `System/Docs/SKILLS.md` and
-acceptance criterion A1 of TASK 099 state that number.
+**Why `sentence_pressure` is reported.** T6 states that 35 words is the failure bound and not the
+target. An arm scoring zero `warn` with the distribution pressed against the limit was written for
+the gate; `measurement-baseline.md` §8 measured that shape.
 
-**R5.** `TICK_GLYPHS` and `STATUS_GLYPHS` are compared against literals in the battery, read from
-the imported module. A case reports the symmetric difference.
+**R3 — the Axis B fixtures.** Each fixture is a specification-shaped document carrying planted
+defects of rules 3, 4 or 6 that the detectors do not reach:
 
-**R6.** Each requirement names the mutation that turns its case red. Every mutation is executed and
-recorded before the ledger is flipped.
+- rule 3 — the obligation and its justification split across two sentences;
+- rule 4 — an aphorism written for this fixture, matching no maxim template;
+- rule 6 — a metaphor coined for this fixture, absent from both candidate lists.
+
+Each fixture ships an answer key naming the planted lines and the rule. One fixture is a **control**
+carrying no planted defect.
+
+**Why a control.** `advanced-eval-patterns.md` §6 states that a positive-only set measures recall
+and is blind to over-firing.
+
+**Why the answer key is the ground truth.** The defects are planted mechanically, so the key is
+objective by construction and carries no author judgement about what a real document meant.
+
+**R4 — the instrument selftest.** `evals/selftest_evals.py` runs without spawning an agent and
+asserts:
+
+1. the grader scores a known-conforming document and a known-defective one, and the second scores
+   higher on every outcome metric;
+2. the Axis B scorer returns recall 1.0 and precision 1.0 for a golden answer, and lower values for
+   an answer that misses one planted defect and invents one;
+3. **the fixture invariant** — `scan_register.py` reports no `warn` on any planted line of any
+   fixture;
+4. the control fixture carries no planted line and no `warn`.
+
+**Why the fixture invariant is an assertion and not a comment.** A fixture whose planted defect the
+scanner reports measures the detector, not the gap. A lexicon entry added later can move a fixture
+into that state without touching the fixture.
+
+**R5 — the corpus.** Every authored document is written under `evals/corpus/<case>/<arm>/` and
+committed with the run metadata that produced it: model, timestamp, prompt hash, contract hash.
+
+**Why the hashes.** A corpus whose inputs are not recorded cannot support the threshold move §11
+requires it to support.
+
+**R6 — the honest report.** `grade_run.py` writes `grading.json` and prints a summary naming the
+number of cases, the number of repetitions per arm, and every case that produced no output. A case
+whose validity guard falls below the declared floor is reported as **not measured** rather than as
+a value.
+
+**R7 — the set size.** Six Axis A cases and four Axis B fixtures, ten in total. The Axis A cases
+span both shipped languages and four artifact kinds.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — a maintainer replaces a lexicon pattern in place.**
+**UC-1 — a maintainer asks whether the contract changes what a model writes.**
 
-1. An entry keeps its `marker` and receives a new `pattern` and `probe`.
-2. The battery compares the loaded pattern set against `SHIPPED_SURFACES`.
-3. The case fails and names the pattern added and the pattern removed.
-4. The CI step exits 1.
+*Actor:* framework maintainer. *Main:* runs `run_authoring.py`, then `grade_run.py`; reads the
+per-arm means. *Postcondition:* a number per metric per arm, and the documents that produced it.
 
-**UC-2 — a maintainer raises a threshold.**
+**UC-2 — a maintainer changes a threshold and must justify it.**
 
-1. `cell_max_chars` is set to 150 in both rule files.
-2. The battery compares the loaded thresholds against `SHIPPED_THRESHOLDS`.
-3. The case fails and prints both dicts.
-4. The CI step exits 1.
+*Actor:* framework maintainer. *Main:* scans `evals/corpus/` with the candidate threshold and
+compares against the committed figures. *Postcondition:* the justification §11 requires, from a
+corpus that ships here.
 
-**UC-3 — a maintainer removes a case flag.**
+**UC-3 — a maintainer asks what the reading pass finds that the detectors do not.**
 
-1. `"flags": "i"` is removed from an entry whose own probe still matches without it.
-2. The roster runs that entry against a case-flipped copy of its probe and finds no match.
-3. The `marker` row for that language reports the entry as case-blind and prints DEAD.
-4. The run exits 2, and both register CI steps fail.
+*Actor:* framework maintainer. *Main:* runs the Axis B cases; reads recall against the answer keys
+and precision against the control. *Postcondition:* a recall figure for the §5 gaps of rules 3, 4
+and 6.
 
-**UC-4 — a maintainer widens the line filter.**
+**UC-4 — a contributor adds a lexicon entry that reaches a planted defect.**
 
-1. `SKIP_LINE` gains an alternative that matches a bullet marker or an ordered marker.
-2. The `sentence_length` and `sentence_near_limit` fixtures fire on the bare line and not on the
-   matching list form.
-3. Both rows print DEAD naming the form, and the reasoning row prints DEAD with them.
-4. The run exits 2.
+*Actor:* contributor. *Main:* runs `selftest_evals.py`. *Postcondition:* the fixture invariant fails
+and names the fixture, so the fixture is re-planted rather than converted into a detector test with
+no failing case.
 
-**UC-5 — a maintainer moves a glyph into the exempt set.**
+**UC-5 — a reviewer asks what the campaign did not measure.**
 
-1. `⚠` is added to `TICK_GLYPHS`.
-2. The battery compares the imported set against its literal.
-3. The case fails and names `⚠`.
-4. The CI step exits 1.
-
-**UC-6 — a maintainer adds a lexicon entry on a measurement.**
-
-1. An entry is added under the `SKILL.md` §6 maintenance rule.
-2. The count pin and the surface pin both fail.
-3. The author adds the pattern to `SHIPPED_SURFACES` and raises the count in `SHIPPED_ENTRIES`.
-4. `TC-100-03` fails until the two pins state the same size.
+*Actor:* reviewer. *Main:* reads the report and `evals/README.md`. *Postcondition:* the uncovered
+surfaces are named: triggering, and any case whose validity guard failed.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance Criteria
 
-| ID | Criterion | Verification |
+| ID | Criterion | Command |
 | :--- | :--- | :--- |
-| A1 | `--probe` on the shipped data prints `18/18 detectors live` and exits 0 | `scan_register.py --probe` |
-| A2 | The battery prints `EXPECTED_CASES` and exits 0 | `selftest_scan.py` |
-| A3 | Replacing a rule-2 pattern in place fails a case naming both patterns | mutation, recorded |
-| A4 | Replacing a rule-3 pattern in place fails a case naming both patterns | mutation, recorded |
-| A5 | Raising `cell_max_chars` to 150 fails a case | mutation, recorded |
-| A6 | Changing any key of `DEFAULTS` fails a case | mutation, recorded |
-| A7 | Dropping `flags` from an entry no case names fails a case naming that entry | mutation, recorded |
-| A7a | Losing the flag at the scan-side compile exits 2 with all six lexical rows DEAD | mutation, recorded |
-| A8 | Adding `[-*+]\s` to `SKIP_LINE` exits 2 with DEAD `sentence_length`, `sentence_near_limit` and `reasoning` rows | mutation, recorded |
-| A8a | Adding `\d+\.\s` to `SKIP_LINE` exits 2 with the same three rows DEAD | mutation, recorded |
-| A8b | A lexicon entry duplicated in place fails a case | mutation, recorded |
-| A9 | Adding a glyph to `TICK_GLYPHS` fails a case naming that glyph | mutation, recorded |
-| A10 | Adding a glyph to `STATUS_GLYPHS` fails a case naming that glyph | mutation, recorded |
-| A11 | Raising `SHIPPED_ENTRIES` without adding the pattern to `SHIPPED_SURFACES` fails a case | mutation, recorded |
-| A12 | The two scanners report the same findings over one corpus | both scanners over the 638 `.md` files of `23827c1` |
-| A13 | `SKILL.md` and `System/Docs/SKILLS.md` state the new case count | `TC-SHIP-08` |
-| A14 | All six `framework-gates.yml` jobs pass locally | each job's commands run locally |
-| A15 | Five issue files and five index lines flip in lockstep | `grep -c "REG-1[4-8]" docs/KNOWN_ISSUES.md` |
+| A1 | Both arms of one case differ only in the contract input | `selftest_evals.py`, prompt-identity case |
+| A2 | The executor refuses a working directory holding `CLAUDE.md`, `.agent/` or `.claude/` | `selftest_evals.py`, isolation case |
+| A2.1 | The executor denies the file and command tools, and records `permission_denials` per run | `selftest_evals.py`, command-shape case |
+| A3 | The grader imports `scan_register` and declares no threshold of its own | `selftest_evals.py`, no-reimplementation case |
+| A4 | Every planted line of every fixture carries no `warn` | `selftest_evals.py`, fixture invariant |
+| A5 | `python3 evals/selftest_evals.py` exits 0 and spawns no subprocess named `claude` | the run itself |
+| A6 | `evals/corpus/` holds one document per case per arm, each with its metadata file | `ls`, and the selftest's corpus-shape case |
+| A7 | The printed summary names cases, repetitions, empty outputs and unmeasured cases | `selftest_evals.py`, report case |
+| A8 | `evals.json` holds 10 cases: 6 on Axis A, 4 on Axis B | `selftest_evals.py`, set-size case |
+| A9 | The campaign runs and its results are recorded in `measurement-baseline.md` | the committed report |
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ-1 — the surface pin duplicates the pattern text held in `data/register-*.json`.**
-Blocks: nothing. Owner: operator. Adding an entry then requires two edits: the data file and the
-pin. That cost is the mechanism — a pin an edit does not touch is the defect REG-14 records.
-`TC-100-03` reports the two pins disagreeing, so a partial edit exits 1.
+**OQ1 — repetitions per arm.** `advanced-eval-patterns.md` §8 asks for several samples per arm when
+a metric jitters. Blocks: the confidence statement in the report. Owner: operator. Default applied:
+one repetition for the first campaign, with `--reps` accepting an odd value, and the report stating
+that a single draw carries no interval.
+
+**OQ2 — the model.** The executor pins a model so a rerun is comparable. Blocks: nothing; the value
+is recorded either way. Owner: operator. Default applied: `claude-opus-5`, recorded per run.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**D1, 2026-08-04, orchestrator: the surface pin holds pattern strings rather than a digest.**
-Rejected: a SHA-256 over the canonicalised entries. A digest states that something changed and
-cannot name it, so the maintainer re-pins by copying the printed value, which accepts the mutation
-under review.
+**D1, 2026-08-05, orchestrator: the grader is `scan_register.py`, called as a module.** Rejected:
+an LLM judge — it costs tokens per grading and is not reproducible, and
+`advanced-eval-patterns.md` §1 assigns structured output to a script grader.
 
-**D2, 2026-08-04, orchestrator: REG-16 is closed by the surface pin, and the roster check covers the
-sibling code defect.** Rejected: close it in the roster alone. Measured: a roster check keyed on the
-declared flag is switched off by the edit that removes the flag, so the reproduction stayed at
-`174/174` and `18/18`, both exit 0. Rejected: pin the number of entries declaring `i`. A count
-states that some flag moved and does not name the entry that stopped detecting.
+**D2, 2026-08-05, orchestrator: the headline unit is per 100 lines, with the prose share reported
+beside it.** Rejected: per 100 prose lines — it is not the unit `measurement-baseline.md` §1 states,
+so the two tables would not compare.
 
-**D3, 2026-08-04, orchestrator: REG-17 adds line forms to the existing rows, not new rows.**
-Rejected: one row per line form. The roster size is stated in `SKILL.md` §5, in
-`System/Docs/SKILLS.md` and in TASK 099 acceptance criterion A1, and TASK 099 `TC-099-02` and
-`TC-099-03` assert `17/18` and `14/18` against it.
+**D3, 2026-08-05, orchestrator: the executor captures stdout and writes no file through the agent.**
+Rejected: instructing the agent to use the Write tool — a headless run cannot answer a permission
+prompt, and a denial would be recorded as an empty document.
 
-**D6, 2026-08-04, orchestrator: adversarial verification widened two fixes within their records.**
-Two mutations survived the first implementation and are closed here. A `SKIP_LINE` widened with
-`\d+\.\s` cost 63 findings at exit 0, so the ordered-list form joined `LINE_FORMS`. A lexicon entry
-duplicated in place kept `TC-100-01` green, because two identical surfaces collapse into one set
-member, so the case asserts distinctness alongside the comparison.
+**D4, 2026-08-05, orchestrator: no second harness.** `run-feedback/evals` holds roughly 160 KB of
+grading code and five lockstep obligations. This task adds three scripts and reuses the scanner.
+Rejected: copying `grade_run.py` — a second instrument reports a clean run while its own checks are
+broken, and that state is what this skill exists to catch.
 
-**Why inside the records.** Each is the symptom its record states — a detector removed with both
-gates at exit 0 — rather than a new class, so closing them here does not widen the batch.
+**D5, 2026-08-05, orchestrator: no pin in this task.** `verify_pin.py` freezes committed numbers.
+Rejected: pinning now — there are no campaign numbers yet, and a pin over an empty campaign asserts
+nothing.
 
-**D4, 2026-08-04, orchestrator: the glyph pin imports `scan_register` rather than reading its
-source text.** Rejected: a regex over the source. ARC-9 records a case that asserted a schema
-literal against a test literal without inspecting the code it named. A source regex pins the
-spelling of an assignment, not the value the scanner uses.
+**D5.1, 2026-08-05, operator: D5 is reversed once the campaign has numbers.** D5 deferred the pin
+because there was nothing to freeze. The first campaign removed that reason, so `TC-EV-14`
+re-derives the committed `report.json` from the committed corpus and fails on any drift. Rejected:
+`verify_pin.py` — it re-aggregates `grading.json` files under a `benchmark.json` schema this grader
+does not emit, so using it would mean writing a second report shape.
 
-**D5, 2026-08-04, orchestrator: the case-flip probe applies only to entries declaring `i`.**
-Rejected: flip every probe. `head / tail (of a call)` declares no flag deliberately: with `i` it
-matched the git ref `HEAD` on every anchor line of the corpus. A flipped probe would report that
-entry dead for conforming to its own note.
+**D5.2, 2026-08-05, operator: repetitions are targeted rather than uniform.** OQ1 asked for an odd
+count per arm. Applied: three repetitions for `A1` and `A5`, one for the rest. **Why.** Those two
+documents carry the whole rule-1 finding of §12.2, and three draws separate a systematic effect
+from a sampling artefact at a quarter of the cost of a uniform three-repetition campaign. The arm
+means therefore rest on documents of unequal repetition count, which `measurement-baseline.md` §12
+states.
+
+**D6, 2026-08-05, orchestrator: Axis B is graded against a planted key, not against the scanner.**
+Rejected: grading the reading pass by comparison with `scan_register.py` output — the pass exists to
+find what the scanner does not, so the scanner cannot be its reference.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-In scope: `.agent/skills/artifact-formalizer/scripts/` and the two `System/Docs/` and `SKILL.md`
-sentences that state the battery's case count.
-
-Out of scope: the `WIR-*` batch, `AT-*`, `HK-*`, `WR-*` and `FW-1`, each carried by its own task.
-Out of scope: the lexicon content of `data/register-*.json`, which this task pins and does not
-extend. Out of scope: `CHANGELOG.md`, `docs/tasks/`, `docs/plans/`, `docs/reviews/` and
-`docs/issues/` bodies.
+| Excluded | Who carries it instead |
+| :--- | :--- |
+| Trigger evaluation of the `description:` field | deferred; `skill-phase-context` governs the load path, not description matching |
+| Reproducibility pinning through `verify_pin.py` | a later task, once a campaign has numbers (D5) |
+| Any change to `scan_register.py`, its data files or its thresholds | out of scope by construction; this task measures the skill, it does not move it |
+| An LLM-judge grader | rejected in D1 |
+| Wiring the campaign itself into CI | the selftest is wired; a campaign spawns agents and costs tokens per run |

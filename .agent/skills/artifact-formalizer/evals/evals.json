@@ -1,0 +1,83 @@
+{
+  "schema": "formalizer-evals/v1",
+  "skill": "artifact-formalizer",
+  "task": "101",
+  "note": "Axis A measures Mode A: the same authoring prompt with and without references/authoring-contract.md. Axis B measures the SKILL.md section 5 recall gaps: defects planted where no detector reaches, graded against a key written before the run.",
+  "cases": [
+    {
+      "id": "A1",
+      "axis": "authoring",
+      "lang": "en",
+      "artifact_kind": "task-spec",
+      "prompt_file": "prompts/a1-task-en.md"
+    },
+    {
+      "id": "A2",
+      "axis": "authoring",
+      "lang": "ru",
+      "artifact_kind": "task-spec",
+      "prompt_file": "prompts/a2-task-ru.md"
+    },
+    {
+      "id": "A3",
+      "axis": "authoring",
+      "lang": "ru",
+      "artifact_kind": "sub-task",
+      "prompt_file": "prompts/a3-subtask-ru.md"
+    },
+    {
+      "id": "A4",
+      "axis": "authoring",
+      "lang": "en",
+      "artifact_kind": "issue-record",
+      "prompt_file": "prompts/a4-issue-en.md"
+    },
+    {
+      "id": "A5",
+      "axis": "authoring",
+      "lang": "ru",
+      "artifact_kind": "architecture-section",
+      "prompt_file": "prompts/a5-architecture-ru.md"
+    },
+    {
+      "id": "A6",
+      "axis": "authoring",
+      "lang": "en",
+      "artifact_kind": "plan",
+      "prompt_file": "prompts/a6-plan-en.md"
+    },
+    {
+      "id": "B1",
+      "axis": "recall_gap",
+      "rule": 3,
+      "lang": "en",
+      "fixture": "fixtures/recall-gap-rule3.md",
+      "key": "fixtures/recall-gap-rule3.key.json"
+    },
+    {
+      "id": "B2",
+      "axis": "recall_gap",
+      "rule": 4,
+      "lang": "en",
+      "fixture": "fixtures/recall-gap-rule4.md",
+      "key": "fixtures/recall-gap-rule4.key.json"
+    },
+    {
+      "id": "B3",
+      "axis": "recall_gap",
+      "rule": 6,
+      "lang": "ru",
+      "fixture": "fixtures/recall-gap-rule6.md",
+      "key": "fixtures/recall-gap-rule6.key.json"
+    },
+    {
+      "id": "B4",
+      "axis": "recall_gap",
+      "rule": 0,
+      "lang": "en",
+      "control": true,
+      "fixture": "fixtures/control-conforming.md",
+      "key": "fixtures/control-conforming.key.json"
+    }
+  ]
+}

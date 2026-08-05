@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-12** [T6 does not carry the long-sentence tail](backlog/wi-12-t6-does-not-carry-the-long-sentence-tail.md) — effort `M`, status `open`, opened 2026-08-05: rule 1 is the one class the campaign did not improve
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 
 

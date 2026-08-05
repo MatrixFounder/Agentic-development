@@ -231,6 +231,14 @@ mistyped.
   DEAD row and exits 2, instead of leaving the denominator with the numerator. Each rule-1 and
   rule-3 fixture runs twice: as a bare line, and as a list item. An entry declaring `flags: "i"`
   runs again against a case-flipped copy of its own probe.
+- **Behavioural evals** (TASK 101): `evals/selftest_evals.py` — 59 cases, zero tokens, wired into
+  CI. It covers what the battery above cannot: Mode A, measured as two arms of one prompt differing
+  only in the contract, and the §5 recall gaps, measured against keys planted before the run. First
+  campaign: `warn` 503 → 13 over ten documents per arm, with rule 1 **not** carried — the contract
+  arm exceeds the 35-word bound in 3 repetitions of 3 on one case. Reading-pass recall 6 of 6 and no
+  finding on the control. Figures, caveats and what they do not
+  license: [`references/measurement-baseline.md`](references/measurement-baseline.md) §12. How to
+  run one: [`evals/README.md`](evals/README.md).
 - **Corpus check** and the full baseline, including the two detector defects found by measurement
   and pinned as regressions: [`references/measurement-baseline.md`](references/measurement-baseline.md).
 
@@ -245,3 +253,4 @@ mistyped.
 | `scripts/selftest_scan.py` | acceptance battery |
 | `data/register-ru.json` | RU markers, 5 categories, rules 2/4/6 + rule-3 vocabulary |
 | `data/register-en.json` | EN markers, 5 categories, rules 2/4/6 + rule-3 vocabulary |
+| `evals/` | behavioural evals for Mode A and the §5 recall gaps — see `evals/README.md` |

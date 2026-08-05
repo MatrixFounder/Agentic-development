@@ -26,6 +26,11 @@ This skill defines **all commands that are SAFE TO AUTO-RUN** without user appro
 | **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/tools/rebase_links.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py`, `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py`, `python3 System/scripts/doctor.py` | Framework automation |
 | **Testing** | `python -m pytest ...`, `npm test`, `npx jest`, `cargo test` | Tests don't modify source code |
 
+> [!IMPORTANT]
+> **`artifact-formalizer/evals/run_authoring.py` is deliberately NOT on this list.** The other two
+> eval scripts read files and spawn nothing. `run_authoring.py` spawns `claude -p` once per arm per
+> case and spends tokens, so it requires approval on every invocation.
+
 ## Pattern Matching Rules
 
 Commands are safe if they match these patterns:
@@ -64,6 +69,7 @@ Commands are safe if they match these patterns:
 ^python3\s+\.agent/tools/rebase_links\.py
 ^python3\s+\.agent/skills/skill-creator/scripts/(validate_skill|init_skill)\.py
 ^python3\s+\.agent/skills/artifact-formalizer/scripts/(scan_register|selftest_scan)\.py
+^python3\s+\.agent/skills/artifact-formalizer/evals/(selftest_evals|grade_run)\.py
 ^python3\s+System/scripts/doctor\.py
 ```
 

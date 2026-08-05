@@ -919,12 +919,29 @@ def t_shipped():
     # `The installer shall abort because the target exists.`, a code span in
     # that same paragraph.
     release = re.compile(r"\bv\d+\.\d+")
-    stated = [(os.path.basename(p), int(n))
-              for p in present
-              for para in re.split(r"\n[ \t]*\n",
-                                   open(p, encoding="utf-8").read())
-              if not release.search(para)
-              for n in re.findall(r"\b(\d+)[ -]cases?\b", para)]
+    # TASK 101 added a SECOND battery under `evals/`, and these same documents
+    # now state its size too. Without an exemption every eval-battery count
+    # would be asserted equal to this file's, which is a different instrument
+    # measuring a different thing. Keyed on the identifier and never on the
+    # file, exactly as the release exemption above: a claim naming
+    # `selftest_evals` or `evals/` is a claim about that battery, and a
+    # present-tense claim about THIS battery is still covered.
+    other_battery = re.compile(r"selftest_evals|\bevals/")
+    # The unit is the paragraph, THEN the list item inside it. Both sites state
+    # the two counts as adjacent bullets of one list, which is a single
+    # blank-line paragraph -- so a paragraph-only unit exempted this battery's
+    # own count along with the other one and left `stated` empty. `bool(stated)`
+    # below is what caught that: an exemption wide enough to swallow every claim
+    # fails rather than passing on nothing. Continuation lines stay with their
+    # item, so the hard-wrap reason the release exemption records still holds.
+    stated = []
+    for p in present:
+        for para in re.split(r"\n[ \t]*\n", open(p, encoding="utf-8").read()):
+            for claim in re.split(r"\n(?=[ \t]*[-*+][ \t])", para):
+                if release.search(claim) or other_battery.search(claim):
+                    continue
+                for n in re.findall(r"\b(\d+)[ -]cases?\b", claim):
+                    stated.append((os.path.basename(p), int(n)))
     # EVERY match is asserted, not the first: a second, newly-added claim in a
     # file already covered is then a red run rather than a silent pass. And a
     # present file that states NO count fails too -- deleting the numeral is

@@ -1,0 +1,14 @@
+{
+ "case": "B2",
+ "rep": 1,
+ "model": "claude-opus-5",
+ "fixture": "fixtures/recall-gap-rule4.md",
+ "prompt_sha256_16": "f68155c82119d64b",
+ "is_error": false,
+ "error": null,
+ "permission_denials": [],
+ "parsed": true,
+ "total_cost_usd": 0.21712700000000001,
+ "duration_ms": 27335,
+ "session_id": "738915ad-4f15-41d4-9a61-83b37a5b3d67"
+}

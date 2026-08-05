@@ -88,7 +88,7 @@ exceeds 1500 lines. See `artifact-management`, `skill-archive-task`, and
 6. **Planner** (Agent 06) creates a Task Plan in `docs/PLAN.md` and detailed tasks.
     - *Verification:* **Plan Reviewer** (Agent 07) validates the plan.
 7. **Developer** (Agent 08) executes the plan using Stub-First methodology.
-    - **Crucial Step**: Updates code AND local `.AGENTS.md` (Documentation First).
+    - **Required step**: Updates code AND local `.AGENTS.md` (Documentation First).
     - *Verification:* **Code Reviewer** (Agent 09) checks the code.
 8. **Security Auditor** (Agent 10) performs vulnerability analysis.
 
@@ -184,7 +184,9 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
 
 **Model policy** (v3.11.2 + Wave 3):
-- **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner` (plan decomposition has verifier-like rigor), and `product-director` (Adversarial-VDD gatekeeper of the Product→Technical handoff). Verification is a quality gate — false negatives (missed bugs, vulnerabilities, approved broken architecture, poorly decomposed plans, weak product-market fit judgment) are orders of magnitude more expensive than the extra token cost.
+- **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner`, and `product-director`.
+
+  **Why.** Verification is a quality gate, and a false negative there costs more than the extra tokens. The false negatives are missed bugs, missed vulnerabilities, approved broken architecture, poorly decomposed plans and weak product-market judgement. `planner` sits here because plan decomposition carries verifier-like rigor; `product-director` because it gates the Product to Technical handoff.
 - **Builders → Sonnet** (6 wrappers): `analyst`, `architect`, `developer`, `strategic-analyst`, `product-analyst`, `solution-architect`. Creation tasks are template-driven (follow SOT structure); Sonnet produces equivalent artifact quality at ~5× lower cost and lower latency.
 - **Cost impact**: at `/vdd-multi` smoke, three Opus critics vs three Sonnet critics is ~3–5× token cost per run, but a single missed security or logic bug in production easily exceeds that by orders of magnitude.
 
@@ -207,7 +209,7 @@ Tools note: simple tool names only; Bash sub-command restrictions live in projec
 
 - **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
 - **Source of truth**: methodology lives in `.agent/skills/*/SKILL.md` (critics) and `System/Agents/*.md` (pipeline roles). Wrapper files in `.claude/agents/` are thin adapters, not duplicated content.
-- **Vendor portability**: `.claude/agents/` is Claude Code specific. Other vendors resolve their own native parallel adapter via `skill-parallel-orchestration` §1.1 (Codex, Cursor, Antigravity all have documented — though not yet e2e-validated — parallel primitives); sequential role-switching is the last resort for primitive-less runtimes, documented per workflow under its vendor-dispatch section.
+- **Vendor portability**: `.claude/agents/` is Claude Code specific. Other vendors resolve their own native parallel adapter via `skill-parallel-orchestration` §1.1. Codex, Cursor and Antigravity each have a documented parallel primitive, none of them validated end to end. Sequential role-switching is the last resort for a runtime with no primitive, documented per workflow under its vendor-dispatch section.
 
 ## 6. Key Principles
 - **Modular Skills**: Logic is decoupled from Personas. Agents load `skills` to perform specific tasks.
@@ -239,8 +241,11 @@ quiet one is worse:
 
 | Mode | Example | Consequence |
 | :--- | :--- | :--- |
-| Loud | `validate.py --mode task` exits 1 on a non-English RTM | The author rewrites the document in a language they do not use — or stops running the step, and a skipped gate is indistinguishable from a passed one |
-| Silent | a non-latin slug degrades to `"untitled"` | Two different documents resolve to one filename; nothing reports it |
+| Loud | `validate.py --mode task` exits 1 on a non-English RTM | The author rewrites in a language they do not use, or stops running the step |
+| Silent | a non-latin slug degrades to `"untitled"` | Two different documents resolve to one filename, and nothing reports it |
+
+**Why the loud mode is still a failure.** A step the author stopped running is indistinguishable
+from a step that passed.
 
 **Addressing ladder.** [`documentation-standards` §4.1](../.agent/skills/documentation-standards/SKILL.md)
 already distinguishes *positional* from *nominal* references. L1 adds the missing third rung: a
@@ -367,6 +372,38 @@ A fixture derived from the value it tests is not a declared value. `_structural_
 sentence from the active `sentence_max_words`, so that fixture measures the detector and never the
 threshold; the threshold is pinned separately.
 
+### 7.6 What measures the half of the register skill that is a prompt
+
+§7.5 covers the scanner. The scanner is Mode B, and it is the half of `artifact-formalizer` that a
+declared literal can pin. Mode A is an authoring contract read by a model, and §5 of that skill
+assigns the residue of rules 3, 4 and 6 to a reading pass. Neither is a function, so neither has a
+value to declare.
+
+**Invariant (L5): a claim about what a model produces is measured by two runs differing in one
+input; a claim about what a reading pass finds is measured against a key written before the run.**
+
+| Claim | Reference value | Instrument |
+| :--- | :--- | :--- |
+| The contract changes what a model writes | the other arm of the same case | `evals/run_authoring.py` + `evals/grade_run.py` |
+| The reading pass finds what the detectors do not | a planted answer key | `evals/` fixtures + `evals/grade_run.py` |
+
+**Why the other arm and not a threshold.** A register figure has no absolute pass mark. §5.1 of
+`documentation-standards` and the corpus table in `measurement-baseline.md` §1 both report ranges
+across corpora. A difference between two arms of one prompt is attributable; a single arm against a
+constant is not.
+
+**Why the key is written first.** A key derived after reading the run is the authoring bias L4
+excludes for the scanner, applied one level up.
+
+**A recall-gap fixture is valid only while the scanner stays silent on it.** The fixture exists to
+measure what the detectors do not reach, so a lexicon entry added later can convert it into a
+detector test without touching the fixture. That condition is asserted by
+`evals/selftest_evals.py`, not assumed.
+
+**The grader calls the scanner.** It derives no threshold and no finding of its own, per §2 of
+`skill-creator/references/advanced-eval-patterns.md`. A reimplementation drifts from the production
+rule and keeps reporting against the old one.
+
 ## 8. Skill Architecture & Optimization Standards
 
 > **Critical Requirement:** All new skills MUST adhere to the **O6/O6a Optimization Standards** defined in [System/Docs/SKILLS.md](../System/Docs/SKILLS.md).
@@ -376,13 +413,14 @@ The system relies on a modular **Skills System** ([System/Docs/SKILLS.md](../Sys
 ### Rule 1: Script-First Approach (O6a)
 **Do NOT write complex logic in natural language.**
 If a skill requires analyzing project structure, calculating metrics, or validating files:
-- ❌ **Bad:** "Look at the file, count the lines, then if X..." (Bloats prompt, unreliable).
-- ✅ **Good:** "Run `scripts/analyze_metrics.py`." (Zero-hallucination, deterministic).
+- **Rejected:** "Look at the file, count the lines, then if X..." — bloats the prompt, and the
+  result varies per run.
+- **Required:** "Run `scripts/analyze_metrics.py`." — deterministic, and no value is invented.
 
 ### Rule 2: Example Separation (O6a)
 **Do NOT inline large templates or examples.**
-- ❌ **Bad:** Embedding 50 lines of JSON example in `SKILL.md`.
-- ✅ **Good:** "Refer to `examples/template.json`."
+- **Rejected:** Embedding 50 lines of JSON example in `SKILL.md`.
+- **Required:** "Refer to `examples/template.json`."
 *Why?* Skills are loaded into the context window. Static text wastes tokens.
 *Enforcement:* `validate_skill.py` applies a two-tier inline-block check — a fenced block over 20 lines warns, over 60 lines fails (`mermaid` exempt; `text`/`console`/`output` warn-only). Thresholds are config-driven via `validation.quality_checks.max_inline_lines_warn`/`_fail`.
 

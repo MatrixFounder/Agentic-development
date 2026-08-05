@@ -1442,8 +1442,25 @@ def _print_text(warn, info, diag, detectors, secrows):
                       f"info {r['info']}")
 
 
+class _Parser(argparse.ArgumentParser):
+    """An ArgumentParser whose every usage error reaches `main`'s handler.
+
+    `exit_on_error = False` does NOT cover all of them, and which ones it
+    covers depends on the interpreter. An unrecognized flag routes through
+    `ArgumentParser.error()` on Python 3.11 (CI) — argparse prints its own
+    message and raises `SystemExit(2)` — while on 3.12+ (a maintainer's
+    machine) the same flag raises `ArgumentError` and reaches the handler
+    below. Both exit 3, so the exit contract held on both and only the message
+    diverged: TC-ADV-27 asserts `usage error` in stderr and was green locally,
+    red in CI. Overriding `error()` makes every usage error one code path.
+    """
+
+    def error(self, message):  # noqa: D102 — argparse's own contract
+        raise argparse.ArgumentError(None, message)
+
+
 def build_parser():
-    ap = argparse.ArgumentParser(
+    ap = _Parser(
         description="Scan authored artifacts for register defects "
                     "(advisory: findings never fail the run)")
     ap.add_argument("files", nargs="*", help=".md/.txt, or stdin")

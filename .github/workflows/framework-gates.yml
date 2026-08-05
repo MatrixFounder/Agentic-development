@@ -10,6 +10,29 @@ jobs:
   tooling-tests:
     name: Tooling tests
     runs-on: ubuntu-latest
+
+    # Two interpreters, on either side of the 3.11/3.12 behaviour boundary,
+    # because a single one hid two defects at once. A maintainer runs these
+    # suites on whatever Python is on their machine — 3.14 at the time of
+    # writing — and CI ran only 3.11, so a case could be green in one place and
+    # red in the other with nothing in the repo to say which was right:
+    #
+    #   - `exit_on_error = False` does not cover an unrecognized flag on 3.11,
+    #     where argparse routes it through `error()` instead of raising
+    #     `ArgumentError`. TC-ADV-27 asserts the message, and only CI saw it.
+    #   - 3.12 gave builtin `sum()` compensated summation, moving a mean of
+    #     float rates by one ULP across a rounding boundary. TC-EV-14
+    #     re-derives a committed report from that mean; it would have gone red
+    #     on 3.11 alone while passing everywhere the report was generated.
+    #
+    # Both were already-written tests that simply never ran on both sides.
+    # `fail-fast: false` so a failure on one version still reports the other —
+    # which of the two is red is the whole diagnostic signal here.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,7 +40,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "${{ matrix.python-version }}"
 
       - name: Install dependencies
         run: |

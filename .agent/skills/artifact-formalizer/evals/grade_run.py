@@ -16,6 +16,7 @@ import argparse
 import contextlib
 import io
 import json
+import math
 import os
 import sys
 
@@ -174,8 +175,19 @@ def score_axis_b(reported, key):
 
 
 def _mean(values):
+    """Mean of the measured values, identical on every interpreter.
+
+    `math.fsum`, not `sum`. Python 3.12 gave the builtin `sum` compensated
+    (Neumaier) summation for floats, so the same ten per-document rates add up
+    to a different final ULP before and after that release: the baseline arm
+    summed to 134.04999999999998 on 3.11 and 134.05 on 3.12+, and the mean
+    landed either side of the .405 rounding boundary — 13.4 against the 13.41
+    pinned in `report.json`. TC-EV-14 re-derives that report, so the whole
+    campaign's headline figure depended on which Python graded it. `fsum` is
+    exactly rounded and agrees with the 3.12+ value the report holds.
+    """
     vals = [v for v in values if isinstance(v, (int, float))]
-    return round(sum(vals) / len(vals), 2) if vals else None
+    return round(math.fsum(vals) / len(vals), 2) if vals else None
 
 
 def _load_json(path):

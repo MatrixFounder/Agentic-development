@@ -358,8 +358,56 @@ worst. That is not a sampling artefact. On `A5` it is one repetition of three, a
 never exceeds — though `A5/baseline/rep-3` reaches exactly 35, which §8 counts as the other failure
 of the same rule.
 
-T6 states that 35 words is the failure bound and not the target, and names 15 as the target. The
-mean obeys it (10.96 to 9.04); the tail does not. Filed as **WI-12**.
+**Reading the sentences changed the finding.** Every over-bound sentence was examined rather than
+counted.
+
+| Arm | Over-bound sentences | What they are |
+| :--- | ---: | :--- |
+| baseline | 6 | running prose: subordinate clauses, parenthetical explanation, justification welded into the statement |
+| with_contract | 8 | 5 `In scope` / `Out of scope` enumerations and 3 acceptance criteria — **no running prose at all** |
+
+The contract removed the long *prose* sentence entirely. What remained was a collision inside the
+contract itself: the **Scope** and **Test obligation** forms each produce one sentence whose length
+the **Budget** test forbids, and the contract said nothing about how the two resolve. An author who
+followed it exactly produced a 52-word sentence.
+
+**Closed in `authoring-contract.md`, not in the threshold.** A licensed form that exceeds the budget
+is rendered as a list, one item per line, so each item is its own block. The worked conversion there
+is the 52-word sentence from `evals/corpus/A1/with_contract/rep-2.md`, which the rule takes to a
+longest block of 7 words with nothing added and nothing cut.
+
+### 12.2.1 The amendment was measured, not assumed
+
+Six runs, `A1` and `A5`, `with_contract` only, three repetitions each, same prompts and same model.
+One input changed: the contract text. The baseline arm was not re-drawn — the contract does not
+reach it, so re-running it would spend tokens to reproduce a number the committed corpus holds.
+`$4.15`. The corpus ships at `evals/corpus-wi12/`.
+
+```sh
+python3 evals/run_authoring.py --cases A1 --cases A5 --arm with_contract \
+  --reps 3 --jobs 3 --out-root evals/corpus-wi12
+```
+
+Longest sentence per document, bound 35:
+
+| Case | before r1 | r2 | r3 | after r1 | r2 | r3 |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| A1 | **36** | **52** | **47** | 32 | 32 | 29 |
+| A5 | **47** | 23 | 23 | 26 | 21 | 25 |
+
+Documents over the bound: **4 of 6 → 0 of 6.** `warn` by kind over the same twelve documents:
+
+| Kind | before | after | attributable to the amendment |
+| :--- | ---: | ---: | :--- |
+| `sentence_length` | 5 | **0** | yes — the amendment addresses exactly this construct, and the before side was 3 of 3 on `A1` across repetitions |
+| `maxim` | 7 | 0 | **no** — those seven were one word repeated in one document (§12.3), and the amendment says nothing about rule 4 |
+| `cell_width` | 1 | 1 | unchanged |
+
+No document in either set presses against the limit.
+
+**What the six runs do not establish.** Two cases of six, one campaign per side. The `maxim` row is
+in the table to show which movement is *not* claimed: a metric that fell for a reason the change
+cannot explain is a different draw, not an effect.
 
 **What three repetitions still do not settle.** Six prompts. Repetitions reduce sampling noise
 inside a case and do nothing for the diversity of the set, which is what §5 of

@@ -41,6 +41,16 @@ python3 .agent/skills/artifact-formalizer/evals/grade_run.py --out evals/report.
 
 `--dry-run` prints every command and spawns nothing. `--reps` must be **odd**.
 
+**Measuring a contract change.** It moves one arm, so re-drawing the other spends tokens to
+reproduce a number the committed corpus already holds. Draw the moved arm into its own directory so
+the pinned corpus stays intact:
+
+```sh
+python3 .agent/skills/artifact-formalizer/evals/run_authoring.py \
+  --cases A1 --cases A5 --arm with_contract --reps 3 --jobs 3 \
+  --out-root evals/corpus-wi12
+```
+
 ## The two properties that keep this honest
 
 **The arms differ in one input.** `build_prompt` prepends the contract for `with_contract` and
@@ -83,7 +93,8 @@ arms, and it does not hold this skill.
 | `run_authoring.py` | the executor — the only script here that spends tokens |
 | `grade_run.py` | the deterministic grader; imports `scan_register` |
 | `selftest_evals.py` | the instrument battery, 59 cases, zero tokens |
-| `corpus/` | authored documents plus the metadata that produced them |
+| `corpus/` | the campaign's authored documents plus the metadata that produced them |
+| `corpus-wi12/` | the six-run redraw that verified the WI-12 amendment (`--arm with_contract`) |
 
 ## Deliberately not here
 

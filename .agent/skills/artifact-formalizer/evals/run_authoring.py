@@ -307,7 +307,7 @@ def run_gap_case(case, model, out_root, rep=1, dry_run=False):
             "cost": env.get("total_cost_usd") or 0.0}
 
 
-def plan_runs(evals, axis="both", reps=1, cases=None):
+def plan_runs(evals, axis="both", reps=1, cases=None, arms=None):
     """Return every (label, thunk-arguments) this invocation will execute.
 
     The plan is built before anything spawns, so `--dry-run` prints exactly the
@@ -319,7 +319,7 @@ def plan_runs(evals, axis="both", reps=1, cases=None):
         if wanted and case["id"] not in wanted:
             continue
         if case["axis"] == "authoring" and axis in ("a", "both"):
-            for arm in ARMS:
+            for arm in (arms or ARMS):
                 for rep in range(1, reps + 1):
                     runs.append((f"{case['id']}/{arm}/rep-{rep}",
                                  "authoring", case, arm, rep))
@@ -341,6 +341,10 @@ def main(argv=None):
     ap.add_argument("--axis", choices=("a", "b", "both"), default="both")
     ap.add_argument("--cases", action="append", dest="cases",
                     help="run only these case ids")
+    ap.add_argument("--arm", action="append", dest="arms", choices=ARMS,
+                    help="run only these arms. A contract change moves one arm "
+                         "only, so re-drawing the other spends tokens to "
+                         "reproduce a number the committed corpus already holds")
     ap.add_argument("--jobs", type=int, default=1,
                     help="concurrent agents; each run is an independent "
                          "process writing its own file, so ordering is the "
@@ -367,7 +371,7 @@ def main(argv=None):
 
     with open(args.evals, encoding="utf-8") as fh:
         evals = json.load(fh)
-    runs = plan_runs(evals, args.axis, args.reps, args.cases)
+    runs = plan_runs(evals, args.axis, args.reps, args.cases, args.arms)
     failures, cost = [], 0.0
 
     def execute(entry):

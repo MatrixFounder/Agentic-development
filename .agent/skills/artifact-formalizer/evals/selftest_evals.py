@@ -9,6 +9,7 @@ Exit 0 when every case passes, 1 otherwise.
 """
 
 import contextlib
+import glob
 import io
 import json
 import os
@@ -424,30 +425,32 @@ def t_report_shape():
 
 
 def t_corpus_shape():
-    """Every authored document ships with the metadata that produced it."""
-    root = os.path.join(HERE, "corpus")
-    orphans, docs = [], 0
-    for dirpath, _, files in os.walk(root):
-        for name in files:
-            if name.startswith("rep-") and name.endswith(".md"):
-                docs += 1
-                meta = name[:-3] + ".meta.json"
-                if meta not in files:
-                    orphans.append(os.path.join(dirpath, name))
+    """Every authored document ships with the metadata that produced it.
+
+    Every `corpus*` directory, not only `corpus/`: a verification draw such as
+    `corpus-wi12/` is evidence for a shipped claim and carries the same
+    obligation.
+    """
+    roots = sorted(glob.glob(os.path.join(HERE, "corpus*")))
+    orphans, recorded, docs = [], [], 0
+    for root in roots:
+        for dirpath, _, files in os.walk(root):
+            for name in files:
+                if name.startswith("rep-") and name.endswith(".md"):
+                    docs += 1
+                    if name[:-3] + ".meta.json" not in files:
+                        orphans.append(os.path.join(dirpath, name))
+                elif name.endswith(".meta.json"):
+                    m = json.load(open(os.path.join(dirpath, name),
+                                       encoding="utf-8"))
+                    if not m.get("contract_sha256_16") or not m.get("model"):
+                        recorded.append(os.path.join(dirpath, name))
     check("TC-EV-11a every rep-*.md has its meta.json", not orphans,
           f"orphans={orphans}")
     if docs == 0:
         check("TC-EV-11b the corpus is empty (no campaign has run here)", True,
               "0 documents — this is a statement, not a pass of the campaign")
     else:
-        recorded = []
-        for dirpath, _, files in os.walk(root):
-            for name in files:
-                if name.endswith(".meta.json"):
-                    m = json.load(open(os.path.join(dirpath, name),
-                                       encoding="utf-8"))
-                    if not m.get("contract_sha256_16") or not m.get("model"):
-                        recorded.append(os.path.join(dirpath, name))
         check("TC-EV-11b every meta.json records the model and the contract "
               "hash", not recorded, f"incomplete={recorded}")
 

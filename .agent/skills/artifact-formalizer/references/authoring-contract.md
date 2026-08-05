@@ -58,7 +58,8 @@ line only — a code span does not cross a line break.
 - **T3** — `шов`, `бусина`, `плечо`, `seam`, `bead`, `leg`, `head/tail`, `in flight`.
 - **T4** — `must … because`, `обязан … потому что`, `должен … иначе`.
 - **T5** — `🔴`, `⚠️`, `🆕`. Replace with `warn`, `SEV-2`, `Critical`.
-- **T6** — 35 words is the failure bound, not the target.
+- **T6** — 35 words is the failure bound, not the target. It applies to what a reader reads, so a
+  licensed form is not exempt from it: see the first note under Licensed forms.
 
 **T6 is gamed by writing to 35 words.** A corpus whose longest sentence is exactly 35 words was
 written for the limit, not to the rule.
@@ -83,20 +84,26 @@ repairs it.
 | **Goal** | `<verb> <object> so that <observable state> holds` — one sentence, no scope, no risk |
 | **Requirement** | `<subject> <modal> <observable action or state>` |
 | **Prohibition** | `<subject> must not <action>` + the input on which the violation shows |
-| **Scope** | `In scope: <enumeration>. Out of scope: <enumeration> (<who carries it instead>)` |
+| **Scope** | `In scope: <enumeration>. Out of scope: <enumeration> (<who carries it>)`; past three items, a list |
 | **Definition** | `<term> is <genus> that <differentia>` — no example inside the sentence |
 | **Algorithm / procedure** | a numbered list, one operation per item, each with its own postcondition |
 | **Justification** | `**Why.** <fact> ⇒ <consequence>` — its own block, never inside the requirement |
 | **Risk / failure mode** | `<condition> → <observable outcome> (detected by <test or gate>)` |
 | **Decision** | `<id>, <date>, <owner>: <what was decided>. Rejected: <alternative> — <measurable reason>` |
 | **Open Question** | `<id> — <the question as a question>. Blocks: <what>. Owner: <who decides>` |
-| **Test obligation** | `<test id> — <input> → <asserted outcome>` + `; fails when <mutation>` where the test is executable |
+| **Test obligation** | `<test id> — <input> → <asserted outcome>` + `; fails when <mutation>` where executable; past the budget, the mutation gets its own line |
 | **Derived number** | `<value> = <derivation>; measured <m>; applied <a>` — and which of the two is a ceiling |
 | **Deviation** | `<artifact> states "<quoted text>"; this document does <what>; recorded in <ADR entry>` |
 | **Table row** | a label per cell: an id, a status, a value, or one clause under 120 characters |
 
-**Notes on three of them.**
+**Notes on four of them.**
 
+- **A form that exceeds T6 becomes a list. The budget is not waived** (WI-12). One item per line;
+  each item is then its own block and is measured on its own. Measured: a campaign where the
+  contract removed every long *prose* sentence, and the whole remaining tail was this collision — 5
+  Scope enumerations and 3 acceptance criteria, and no running prose at all
+  ([`measurement-baseline.md`](measurement-baseline.md) §12.2). Before this note the contract
+  licensed both forms and stated a budget none of them could meet.
 - **Test obligation.** The mutation clause is required only where the test is executable. A
   documentation check has no mutation to name, and demanding one made the form unfollowable for the
   test cases this framework writes most.
@@ -141,6 +148,32 @@ is a citable source — which is why the two languages carry different severitie
 > Тест перечисляет адаптеры поимённо.
 >
 > **Why.** Список не выводится из кода: он и есть решение OD-5.
+
+**T6 — a licensed form that outgrew the budget.** Not from a specification this time: from
+`evals/corpus/A1/with_contract/rep-2.md`, written by a model that had this contract in front of it.
+52 words, one sentence, and it follows the Scope form as it was written. It is fenced rather than
+quoted for the reason the code spans above are code spans: this document is *about* the defect and
+must not be reported as a document carrying it.
+
+```text
+**Out of scope:** authentication and API-key issuance (owned by the identity service),
+per-endpoint request weighting (deferred, see D-8), paid quota tiers and billing (owned by
+commerce), L3/L4 volumetric filtering (owned by the edge provider), retry logic inside published
+client SDKs (owned by SDK maintainers), rate limiting of internal service traffic.
+```
+
+> **Out of scope.**
+>
+> - authentication and API-key issuance — identity service
+> - per-endpoint request weighting — deferred, D-8
+> - paid quota tiers and billing — commerce
+> - L3/L4 volumetric filtering — edge provider
+> - retry logic inside published client SDKs — SDK maintainers
+> - rate limiting of internal service traffic
+
+Nothing is added and nothing is cut. The longest block falls from 52 words to 7, and a reader
+looking for one exclusion stops at its line instead of parsing a comma chain. This is the note
+above, applied.
 
 **T6 — a 34-word sentence that is two claims.**
 

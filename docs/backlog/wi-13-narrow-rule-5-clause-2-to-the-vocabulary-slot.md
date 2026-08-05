@@ -155,7 +155,7 @@ from documents no gate reaches.
 
 ### 7.2 P2 is a decision that was already taken, the other way, with larger figures
 
-`docs/tasks/task-099-...md:230-234`:
+`docs/tasks/task-099-register-selftest-honesty-and-detector-coverage.md:230-234`:
 
 > **D2, 2026-08-04, orchestrator: rule 5 exempts `✓`/`✗` everywhere and keeps `✅`/`❌` in-table-only.**
 > Rejected: exempt every status glyph everywhere — erases 704 of 1050 rule-5 findings and turns

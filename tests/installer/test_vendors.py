@@ -4,6 +4,8 @@ Task 063-02. Run: ``python3 -m unittest discover -s tests/installer -v``
 """
 from __future__ import annotations
 
+import subprocess
+
 from _base import FRAMEWORK_ROOT, InstallerTestCase
 from installer.errors import ConfigurationError, InstallerError
 from installer.vendors import (
@@ -167,6 +169,62 @@ class TestResolveProfile(InstallerTestCase):
     def test_unknown_vendor_rejected(self) -> None:
         with self.assertRaises(ConfigurationError):
             resolve_profile(self.data, "emacs-doctor")
+
+
+class TestRealSourcesAreCommitted(InstallerTestCase):
+    """Every manifest source must be IN THE REPOSITORY, not merely on this disk.
+
+    ``validate_component`` asks whether a source *exists*, which an untracked
+    file on the author's machine satisfies. ``.claude/settings.local.json`` was
+    declared a ``copy`` source on exactly that basis: a global gitignore rule
+    (``**/.claude/settings.local.json``) kept it out of every commit, so it
+    existed locally, ``test_all_real_profiles_validate`` was green locally, and
+    every installer test errored on a clean checkout with ``source
+    '.claude/settings.local.json' does not exist in the framework``. The whole
+    Tooling-tests job stayed red while the suite passed for the one person able
+    to run it. This test closes the gap between the two.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.data = load_vendors(VENDORS_YAML)
+
+    def _tracked_paths(self) -> set:
+        """Paths git tracks in the framework; skips the test if git cannot say."""
+        try:
+            proc = subprocess.run(
+                ["git", "-C", str(FRAMEWORK_ROOT), "ls-files", "-z"],
+                capture_output=True, text=True, timeout=60,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:  # no git on PATH
+            self.skipTest(f"git unavailable: {exc}")
+        if proc.returncode != 0:
+            self.skipTest("framework root is not a git repository")
+        tracked = {p for p in proc.stdout.split("\0") if p}
+        if not tracked:
+            self.skipTest("git reports no tracked files")
+        return tracked
+
+    def test_every_source_is_tracked_by_git(self) -> None:
+        tracked = self._tracked_paths()
+        prefixes = {p.rsplit("/", 1)[0] for p in tracked if "/" in p}
+        for name in sorted(_REAL_VENDORS):
+            for comp in resolve_profile(self.data, name)["components"]:
+                source = comp.get("source")
+                if not source or comp.get("optional"):
+                    continue  # mkdir has no source; optional may legitimately be absent
+                with self.subTest(vendor=name, source=source):
+                    is_file = source in tracked
+                    is_dir = any(
+                        p == source or p.startswith(source + "/") for p in prefixes
+                    )
+                    self.assertTrue(
+                        is_file or is_dir,
+                        f"vendor '{name}': component source '{source}' is not tracked by "
+                        f"git — it exists on this machine only, so a clean checkout "
+                        f"cannot install it. Commit it, mark the component "
+                        f"'optional: true', or drop the component.",
+                    )
 
 
 class TestErrors(InstallerTestCase):

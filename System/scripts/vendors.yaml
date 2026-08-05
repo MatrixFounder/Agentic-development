@@ -47,7 +47,12 @@ vendors:
       - { path: ".claude/agents",   action: link_per_item, source: ".claude/agents" }
       - { path: ".claude/hooks",    action: copy,          source: ".claude/hooks" }
       - { path: ".claude/settings.json",       action: copy, source: ".claude/settings.json",       if_missing: true }
-      - { path: ".claude/settings.local.json", action: copy, source: ".claude/settings.local.json", if_missing: true }
+      # No `.claude/settings.local.json` component. That file is per-machine and per-operator:
+      # it is gitignored everywhere, so it is never a framework source, and on a machine where
+      # it happened to exist the copy shipped one operator's permission allow-list — absolute
+      # home paths included — into every target project. `conflict.py` still lists it as
+      # user-owned so an existing one is never clobbered, and `docs/ARCHITECTURE.md` §9.4 has
+      # only ever documented `settings.json` as the copied vendor setting.
 
   # Google Antigravity — reads the shared .agent/ tree natively.
   # Bootstrap: GEMINI.md only (Antigravity's native instruction file).

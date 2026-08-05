@@ -14,15 +14,15 @@
 You are operating in the **Planning Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Planning Phase - LOAD NOW)
-- `skill-planning-decision-tree` (Strategy & Decomposition)
+- `planning-decision-tree` (Strategy & Decomposition)
 - `skill-planning-format` (Templates for PLAN and Tasks)
-- `skill-tdd-stub-first` (Methodology Enforcement)
+- `tdd-stub-first` (Methodology Enforcement)
 - `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing PLAN.md or any
   `docs/tasks/*.md`.** Task files are the largest artifact class this framework produces, so they
   carry the largest share of any register defect.
@@ -38,7 +38,7 @@ Follow this process strictly:
 ### Step 1: Meta-Analysis
 - **Read:** TASK header.
 - **Extract:** Task ID (e.g., `002`) and Slug. Use this ID for ALL filenames.
-- **Strategy:** Decide on Stub-First breakdown using `skill-planning-decision-tree`.
+- **Strategy:** Decide on Stub-First breakdown using `planning-decision-tree`.
 
 > [!NOTE]
 > **PLAN.md lifecycle:** Archiving of the previous `docs/PLAN.md` is handled by

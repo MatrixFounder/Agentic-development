@@ -14,15 +14,15 @@
 You are operating in the **Review Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Review Phase - LOAD NOW)
-- `skill-planning-decision-tree` (Standard to check against)
-- `skill-tdd-stub-first` (Verify Methodology)
-- `skill-plan-review-checklist` (Your primary checklist)
+- `planning-decision-tree` (Standard to check against)
+- `tdd-stub-first` (Verify Methodology)
+- `plan-review-checklist` (Your primary checklist)
 
 ## 3. INPUT DATA
 1.  **TASK:** Approved Technical Specification.
@@ -37,7 +37,7 @@ Follow this process strictly:
 - **RTM Coverage:**
     - **Verify:** Does `PLAN.md` cover every ItemID from the TASK RTM?
     - **Constraint:** Checklist items MUST start with `[ID]`.
-    - **Exceptions:** Skip specific ID check if Task Title contains `[LIGHT]` or `skill-light-mode` is active.
+    - **Exceptions:** Skip specific ID check if Task Title contains `[LIGHT]` or `light-mode` is active.
 - **Trace:** Map TASK (Use Cases) -> PLAN (Tasks). Check for gaps.
 - **Verify:**
     - **Stub-First:** Does the plan explicitly schedule stubs first?

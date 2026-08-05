@@ -14,9 +14,9 @@
 You are operating in the **Orchestration Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability - Auto-Run)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Orchestration - LOAD NOW)

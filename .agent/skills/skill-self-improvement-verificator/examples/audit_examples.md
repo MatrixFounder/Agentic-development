@@ -51,13 +51,13 @@
 | Check | Status | Observation |
 | :--- | :--- | :--- |
 | **Meta-Information** | ✅ Pass | ID present. |
-| **Tier Protection** | ❌ Fail | **CRITICAL:** Plan removes `skill-core-principles` from TIER 0 loading list! |
+| **Tier Protection** | ❌ Fail | **CRITICAL:** Plan removes `core-principles` from TIER 0 loading list! |
 | **Documentation** | ❌ Fail | No updates to `ORCHESTRATOR.md` planned. |
 | **Atomicity** | ❌ Fail | Single step "Rewrite prompt" is too large. |
 | **Rollback Plan** | ❌ Fail | No backup of `01_orchestrator.md` mentioned. |
 
 ## 2. Risk Analysis
-- **Risk 1:** Removing `skill-core-principles` will cause massive hallucinations.
+- **Risk 1:** Removing `core-principles` will cause massive hallucinations.
 - **Risk 2:** Lack of documentation will de-sync the team.
 
 ## 3. Verdict
@@ -72,7 +72,7 @@
 
 ## ⚠️ Bypass Audit (Emergency)
 
-**Context:** Hotfix for a critical bug in `skill-core-principles`.
+**Context:** Hotfix for a critical bug in `core-principles`.
 **Artifact:** `docs/PLAN.md`
 
 ### Critique Output
@@ -97,5 +97,5 @@
 | Check | Status | Observation |
 | :--- | :--- | :--- |
 | **Meta-Information** | ✅ Pass | ID present. |
-| **Tier Protection** | ⚠️ **BYPASS** | Modifying `skill-core-principles`. |
+| **Tier Protection** | ⚠️ **BYPASS** | Modifying `core-principles`. |
 | ... | ... | ... |

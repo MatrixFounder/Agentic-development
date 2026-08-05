@@ -21,7 +21,7 @@ This skill operates in two distinct modes depending on the current Stage.
 **Action**: Verify the Specification.
 
 **Checklist**:
-1. [ ] **Root Integrity**: Does the update respect `skill-core-principles` (Stub-First, Atomicity)?
+1. [ ] **Root Integrity**: Does the update respect `core-principles` (Stub-First, Atomicity)?
 2. [ ] **Skill Compatibility**: Do new Agents/Prompts explicitly load `TIER 0` skills?
 3. [ ] **Documentation**: Does the task include updating `System/Docs/` to reflect changes?
 4. [ ] **Migration**: Does the task describe how to migrate existing sessions (if applicable)?
@@ -47,7 +47,7 @@ This skill is primarily called by the **`/framework-upgrade`** workflow.
 
 ## 4. Failure Conditions (Blocking)
 If ANY of the following are found, **STOP** and return a `CRITICAL` failure:
-- Removing `skill-core-principles` or `skill-safe-commands` from any Agent.
+- Removing `core-principles` or `skill-safe-commands` from any Agent.
 - Modifying `GEMINI.md` without a corresponding update to `System/Docs`.
 - Creating a new Workflow without defining its Trigger in `GEMINI.md`.
 

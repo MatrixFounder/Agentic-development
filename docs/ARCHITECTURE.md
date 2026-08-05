@@ -80,7 +80,7 @@ exceeds 1500 lines. See `artifact-management`, `skill-archive-task`, and
     - If not, it falls back to text-based parsing.
 2. **Agent** (any role) starts by reading relevant local `.AGENTS.md` files...
 3. **Agent** activates **Skills** (dynamically loaded from `.agent/skills`).
-   - *Example:* Analyst loads `skill-requirements-analysis`.
+   - *Example:* Analyst loads `requirements-analysis`.
 4. **Analyst** (Agent 02) creates/updates a Technical Specification (TASK) in `docs/TASK.md`.
     - *Verification:* **Task Reviewer** (Agent 03) validates the TASK.
 5. **Architect** (Agent 04) validates/updates Architecture in `docs/ARCHITECTURE.md`.

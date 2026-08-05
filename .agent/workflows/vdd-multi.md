@@ -250,7 +250,7 @@ If the `Agent` tool + `.claude/agents/` are unavailable, **resolve the runtime**
 **Sequential role-switching — last resort** (primitive-less runtime, deterministic single-session debugging, or 1-slot CI):
 
 0. **Gather execution evidence first** (same contract as Phase 1 Step 1.0): run the test suite and `run_audit.py` once, capture summaries (or honest `tests/scan: NOT RUN (<reason>)` lines), and include the evidence block in **every** persona pass below. Absence of the block → the persona emits "exit-bar condition unverifiable", never clean-pass.
-1. Apply `skill-vdd-adversarial` (role-switch) → fix loop (unless `--no-fix`).
+1. Apply `vdd-adversarial` (role-switch) → fix loop (unless `--no-fix`).
 2. Apply `skill-adversarial-security` (role-switch) → fix loop.
 3. Apply `skill-adversarial-performance` (role-switch) → fix loop.
 

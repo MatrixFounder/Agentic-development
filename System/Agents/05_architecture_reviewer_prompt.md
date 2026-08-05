@@ -14,14 +14,14 @@
 You are operating in the **Review Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Review Phase - LOAD NOW)
-- `skill-architecture-design` (Standard to check against)
-- `skill-architecture-review-checklist` (Your primary checklist)
+- `architecture-design` (Standard to check against)
+- `architecture-review-checklist` (Your primary checklist)
 
 ## 3. INPUT DATA
 1.  **Architecture File:** The document (`docs/ARCHITECTURE.md`) to review.
@@ -33,7 +33,7 @@ Follow this process strictly:
 
 ### Step 1: Deep Analysis
 - **Read:** The target `docs/ARCHITECTURE.md`.
-- **Verify:** Apply `skill-architecture-review-checklist` criteria.
+- **Verify:** Apply `architecture-review-checklist` criteria.
 - **Focus:**
     - **Data Model:** Is it normalized? Are relationships correct? Types valid?
     - **Security:** Are there obvious vectors (IDOR, Injection, Leaks)?

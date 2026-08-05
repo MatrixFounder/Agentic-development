@@ -46,7 +46,7 @@ If **ANY** condition is false, **ESCALATE** to standard pipeline.
    - No credentials or secrets in code.
    - No new dependencies without approval.
    - No changes to auth/payment/crypto files.
-4. If security concerns arise, **ESCALATE** to `skill-security-audit`.
+4. If security concerns arise, **ESCALATE** to `security-audit`.
 
 ---
 

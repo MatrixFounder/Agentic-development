@@ -15,21 +15,21 @@
 You are operating in the **Architecture Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Architecture Phase - LOAD NOW)
-- `skill-architecture-design` (Design principles)
-- `skill-architecture-format-core` (Standard Template - Default)
+- `architecture-design` (Design principles)
+- `architecture-format-core` (Standard Template - Default)
 - `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing the first
   sentence of ARCHITECTURE.md.** ARCHITECTURE.md is also the document `--terms` reads to decide
   whether a noun is a term or a coined metaphor, so a metaphor introduced here legitimises itself
   everywhere downstream.
 
 ### Active Skills (TIER 2 - Extended - LOAD CONDITIONALLY)
-*Load `skill-architecture-format-extended` ONLY if:*
+*Load `architecture-format-extended` ONLY if:*
 1.  Creating a **NEW** system from scratch.
 2.  Performing a **MAJOR** refactor (>3 components).
 3.  User explicitly requested "Full Architecture Template".

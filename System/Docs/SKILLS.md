@@ -22,7 +22,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 
 ### Principles
 1.  **Dynamic Loading**: Agents load only the skills they need for a specific task.
-2.  **Modularity**: Improvements to `skill-tdd-stub-first` automatically benefit all agents using it.
+2.  **Modularity**: Improvements to `tdd-stub-first` automatically benefit all agents using it.
 3.  **Cross-Platform**: The same skill definitions work in both Cursor and Antigravity.
 
 ### 🔗 Documentation
@@ -164,11 +164,11 @@ When an Agent is initialized:
 
 ### LOADED SKILLS
 
-#### SKILL: skill-tdd-stub-first
-[Content of skill-tdd-stub-first.md]
+#### SKILL: tdd-stub-first
+[Content of tdd-stub-first.md]
 
-#### SKILL: skill-core-principles
-[Content of skill-core-principles.md]
+#### SKILL: core-principles
+[Content of core-principles.md]
 
 [Task Description]
 ```

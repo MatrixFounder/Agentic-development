@@ -14,15 +14,15 @@
 You are operating in the **Review Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Review Phase - LOAD NOW)
-- `skill-code-review-checklist` (Your primary checklist)
-- `skill-developer-guidelines` (Standard to check against)
-- `skill-testing-best-practices` (Verify tests)
+- `code-review-checklist` (Your primary checklist)
+- `developer-guidelines` (Standard to check against)
+- `testing-best-practices` (Verify tests)
 - `skill-update-memory` (Verify .AGENTS.md)
 
 ## 3. INPUT DATA

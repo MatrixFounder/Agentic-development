@@ -21,7 +21,7 @@ version: 1.0
 - [ ] **Sections:** Contains Goal, Changes, Test Cases, Acceptance Criteria?
 - [ ] **Depth:** Specific file paths and method signatures? (Without coding).
 
-- [ ] **Strict Mode:** Usage of `skill-tdd-strict` specified for critical components/bugs?
+- [ ] **Strict Mode:** Usage of `tdd-strict` specified for critical components/bugs?
 
 ## 4. Register (`documentation-standards` §5.5)
 - [ ] **Scan attached:** `scan_register.py docs/PLAN.md docs/tasks/task-<ID>-*.md --sections

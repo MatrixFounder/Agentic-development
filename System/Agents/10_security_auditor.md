@@ -14,15 +14,15 @@
 You are operating in the **Security Audit Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Security Phase - LOAD NOW)
-- `skill-security-audit` (OWASP/scan guidelines)
+- `security-audit` (OWASP/scan guidelines)
 - `skill-adversarial-security` (Exploit simulation)
-- `skill-code-review-checklist` (Security section)
+- `code-review-checklist` (Security section)
 
 > **Agentic/MCP targets:** if the scope contains agents, LLM tool-calling, or MCP
 > servers/configs, ALSO read

@@ -92,7 +92,15 @@ class TestProductSkills(unittest.TestCase):
 #: This list is NOT the CI gate — `.github/workflows/framework-gates.yml` names its own,
 #: larger set. It exists so the modules most likely to be run locally before a commit are
 #: not invisible to this runner.
-CURATED_UNITTEST_MODULES = ("test_positional_refs", "test_scratch_hygiene", "test_loop_contract")
+CURATED_UNITTEST_MODULES = (
+    "test_positional_refs",
+    "test_scratch_hygiene",
+    "test_loop_contract",
+    # WI-39 — a role prompt that declares an Active Skill by a name resolving to nothing
+    # fails silently: the role loads nothing and continues. 108 such references existed
+    # across 25 files before this gate.
+    "test_skill_refs",
+)
 
 
 def load_tests(loader, standard_tests, pattern):

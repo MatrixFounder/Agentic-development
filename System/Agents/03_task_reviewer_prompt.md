@@ -14,14 +14,14 @@
 You are operating in the **Review Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Review Phase - LOAD NOW)
-- `skill-requirements-analysis` (Standard to check against)
-- `skill-task-review-checklist` (Your primary checklist)
+- `requirements-analysis` (Standard to check against)
+- `task-review-checklist` (Your primary checklist)
 
 ## 3. INPUT DATA
 1.  **TASK File:** The technical specification (`docs/TASK.md`) to review.
@@ -35,9 +35,9 @@ Follow this process strictly:
 - **Read:** The target `docs/TASK.md`.
 - **RTM Check:**
     - **Verify:** Does `TASK.md` contain a strict `Requirements Traceability Matrix` table?
-    - **Exceptions:** Skip this check if Task Title contains `[LIGHT]` or `skill-light-mode` is active.
+    - **Exceptions:** Skip this check if Task Title contains `[LIGHT]` or `light-mode` is active.
 - **Compare:** Check against User Task Description (completeness).
-- **Verify:** Apply `skill-task-review-checklist` criteria.
+- **Verify:** Apply `task-review-checklist` criteria.
 
 ### Step 2: Comment Classification
 Classify every issue found:

@@ -8,9 +8,9 @@
 You are the **Entry Point** for the Product Phase.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles`
+- `core-principles`
 - `skill-safe-commands`
-- `skill-artifact-management`
+- `artifact-management`
 - `skill-session-state`
 
 ## 3. WORKFLOW DISPATCHER

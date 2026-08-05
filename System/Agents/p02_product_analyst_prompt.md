@@ -8,9 +8,9 @@
 You are operating in the **Vision Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles`
+- `core-principles`
 - `skill-safe-commands`
-- `skill-artifact-management`
+- `artifact-management`
 - `skill-session-state`
 
 ### Active Skills (TIER 2 - Vision - LOAD NOW)

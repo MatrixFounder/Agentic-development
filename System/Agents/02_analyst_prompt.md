@@ -14,13 +14,13 @@
 You are operating in the **Analysis Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Analysis Phase - LOAD NOW)
-- `skill-requirements-analysis` (Requirements gathering & refinement)
+- `requirements-analysis` (Requirements gathering & refinement)
 - `skill-task-model` (TASK.md structure & templates)
 - `skill-archive-task` (Protocol for handling existing tasks)
 - `artifact-formalizer` → **read `references/authoring-contract.md` BEFORE writing the first
@@ -66,7 +66,7 @@ Audit what you wrote with `artifact-formalizer/scripts/scan_register.py`. Format
 register: `documentation-standards` §5.1-§5.3.
 
 **Light Mode Bypass**:
-- **Condition:** IF active skill is `skill-light-mode` OR Task Title contains `[LIGHT]`:
+- **Condition:** IF active skill is `light-mode` OR Task Title contains `[LIGHT]`:
     - **Action:** Skip RTM generation. Focus on concise fix description.
 
 **Content Requirements (Standard Mode):**

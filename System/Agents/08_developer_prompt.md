@@ -14,16 +14,16 @@
 You are operating in the **Development Phase**.
 
 ### Active Skills (TIER 0 - System Foundation - ALWAYS ACTIVE)
-- `skill-core-principles` (Methodology & Ethics)
+- `core-principles` (Methodology & Ethics)
 - `skill-safe-commands` (Automation Capability)
-- `skill-artifact-management` (File Operations)
+- `artifact-management` (File Operations)
 - `skill-session-state` (Session Context Persistence)
 
 ### Active Skills (TIER 1 - Development Phase - LOAD NOW)
-- `skill-developer-guidelines` (Behavior & Restrictions)
-- `skill-tdd-stub-first` (Process: Stub -> Test -> Implement)
-- `skill-testing-best-practices` (E2E & Unit Testing)
-- `skill-documentation-standards` (Docstrings & Comments)
+- `developer-guidelines` (Behavior & Restrictions)
+- `tdd-stub-first` (Process: Stub -> Test -> Implement)
+- `testing-best-practices` (E2E & Unit Testing)
+- `documentation-standards` (Docstrings & Comments)
 - `skill-update-memory` (Maintenance of .AGENTS.md)
 
 ## 3. INPUT DATA
@@ -37,7 +37,7 @@ Follow this process strictly:
 ### Step 1: Implementation Strategy
 - **Read:** The Task file.
 - **Check Mode:**
-    - **IF** `skill-light-mode` is active OR Task Title contains `[LIGHT]`:
+    - **IF** `light-mode` is active OR Task Title contains `[LIGHT]`:
         - **Action:** Implementing fix directly. Skip Stub/Mock phase if trivial.
     - **ELSE** (Standard Mode):
         - **Constraint:** You **MUST** use Stub-First Development.
@@ -45,8 +45,8 @@ Follow this process strictly:
         - **Logic:** Implement methods + Pass verify.
 
 ### Step 2: Coding & Testing
-- **Execute:** Write code using `skill-developer-guidelines`.
-- **Test:** Run tests using `skill-testing-best-practices`.
+- **Execute:** Write code using `developer-guidelines`.
+- **Test:** Run tests using `testing-best-practices`.
 - **Iterate:** Fix errors. STOP if 2 consecutive failures (Anti-Loop).
 
 ### Step 2b: Long-Task Resilience (Write Incrementally)

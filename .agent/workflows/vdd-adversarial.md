@@ -96,6 +96,13 @@ Post-implementation adversarial cycle for zero-slop robustness.
         without convergence → **STOP** and report the remaining findings to the user; an exhausted
         counter is an escalation, never a clean pass.
    c. Terminate on **Objective Convergence** — the full test run has executed, 0 CRITICAL, 0 legitimate logic/security/slop findings, only bikeshedding remains (see `vdd-adversarial` / `vdd-sarcastic` skills). Never approve because the adversary was forced to invent nitpicks.
+3. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed`.
+   It selects documents **citing** the files this change touched; default diff scope
+   selects documents the change *edited*, so a source-only commit checks nothing while
+   being exactly the commit that shifts the cited lines. `REFERENT_MOVED` is repaired
+   mechanically. A coordinate carrying no referent is reported as
+   *not examined* and is **not** a defect (`documentation-standards` §4.1).
+
 3. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-adversarial-<task-slug>"` → exit 6 = nested, SKIP this step;
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers

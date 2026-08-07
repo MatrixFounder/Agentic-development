@@ -42,6 +42,20 @@ version: 1.1
       here. ARCHITECTURE.md is what `--terms` reads downstream, so a metaphor introduced here
       legitimises itself in every task file that follows.
 
+## 7. References (`documentation-standards` §4.1)
+- [ ] **Resolver run:** `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --all docs/ARCHITECTURE.md docs/architectures/`
+      was run, and its `path:line` coverage line is **quoted** in the review — not asserted to
+      have been produced. A checklist cannot prove a command ran; pasted output can.
+- [ ] **Verdicts resolved:** zero `REFERENT_ABSENT` and `REFERENT_AMBIGUOUS`, or each survivor
+      carries a written reason. `REFERENT_MOVED` is repaired by re-running with `--fix`, never
+      argued about — the number is derived from the referent, so no judgement is involved.
+- [ ] **A coordinate carrying no referent is not a defect.** It is reported as *not examined* and
+      is **NOT** required to gain one. This review never demands a migration: most corpora carry
+      no referents at all, and adoption is the project's decision, not the reviewer's.
+- [ ] **Cross-repository coordinates pinned:** a path outside this repository resolves to nothing
+      and reports `UNRESOLVABLE`. It carries `@<rev>` naming the revision measured, which is the
+      form §4.1 already licenses for a claim about another state.
+
 ## Execution Mode
 - **Mode**: `hybrid`
 - **Rationale**: the checklist items are reviewer judgement; the register scan named in the

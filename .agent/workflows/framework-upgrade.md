@@ -67,6 +67,17 @@ contract:
 2. **Registry**: Update `System/Docs/SKILLS.md` and `WORKFLOWS.md`.
 3. **Restart**: Instruct User to restart session if Core Prompts changed.
 
+## 4.5 Reference resolver (gate)
+
+Run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix`.
+
+It selects documents **citing** the files this change touched, which default diff scope
+does not. `REFERENT_MOVED` is repaired mechanically and the repair lands in the same
+commit; a coordinate carrying no referent is reported as *not examined* and is **not** a
+defect (`documentation-standards` §4.1). This position is the one WI-16's §5.1 table
+names for the State-Claim Sweep: when that record lands it inserts **above** this
+section, so neither displaces the other.
+
 ## 5. Fallback
 If the system becomes unstable during upgrade:
 - **Restore every backed-up bootstrap file** (covers Claude Code / Codex·Cursor / Gemini CLI):

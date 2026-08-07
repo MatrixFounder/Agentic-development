@@ -123,6 +123,10 @@ opens PRs, and never commits to the base branch.
      resolution blockquote appended (never edit existing body text), and the matching
      `docs/KNOWN_ISSUES.md` index line updated in lockstep. Never delete the issue file; never
      touch any other ledger entry.
+   - **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix` before staging.
+     A coordinate carrying no referent is *not examined* and is **not** a defect
+     (`documentation-standards` §4.1). This position is the one WI-16's §5.1 table names
+     for the State-Claim Sweep; that record inserts above this line on landing.
    - Commit: `fix(<component>): <ID> <short title> [heal-issues]` — body lists the gates run and
      `Refs: docs/issues/<slug>.md`. Explicit paths only.
    - Write the run report `docs/feedback/heal-reports/<YYYY-MM-DD-HHMM>-<id-lower>.md` ON THE

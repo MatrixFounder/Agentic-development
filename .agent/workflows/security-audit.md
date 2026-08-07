@@ -54,6 +54,13 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
    - Save report as `docs/audit/security-{ID}.md` (consistent with `security-auditor` agent and `skill-archive-task` ID convention).
    - Update `.AGENTS.md` with security notes.
 
+5. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed`.
+   It selects documents **citing** the files this change touched; default diff scope
+   selects documents the change *edited*, so a source-only commit checks nothing while
+   being exactly the commit that shifts the cited lines. `REFERENT_MOVED` is repaired
+   mechanically. A coordinate carrying no referent is reported as
+   *not examined* and is **not** a defect (`documentation-standards` §4.1).
+
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "security-audit-<task-slug>"` → exit 6 = nested, SKIP this step;
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers

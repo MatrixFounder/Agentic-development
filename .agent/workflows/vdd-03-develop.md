@@ -38,6 +38,13 @@ contract:
       is an escalation, not an approval.
     - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> **Merge and Proceed**.
 
+5. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix`.
+   It selects documents **citing** the files this change touched; default diff scope
+   selects documents the change *edited*, so a source-only commit checks nothing while
+   being exactly the commit that shifts the cited lines. `REFERENT_MOVED` is repaired
+   mechanically; the repair lands in the same commit. A coordinate carrying no referent is reported as
+   *not examined* and is **not** a defect (`documentation-standards` §4.1).
+
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-03-develop-<task-slug>"` → exit 6 = nested, SKIP this step;
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers

@@ -1,4 +1,4 @@
-# TASK 103 — A positional reference carries its referent
+# TASK 104 — The reference resolver is invoked by the runs that break references
 
 <!-- contract:meta -->
 
@@ -6,58 +6,35 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 103 |
-| Slug | referent-carrying-positional-references |
+| Task ID | 104 |
+| Slug | resolver-wiring |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | Operator request 2026-08-07; routed from onchain-analytics `docs/backlog/wi-43-line-anchored-citations-in-docs-decay-silently.md` |
-| Depends on | TASK 095 (structural anchors and gate honesty — the tool this task extends) |
-| Closes | WI-17 (filed by this task as the routed record) |
-| Archive name | `task-103-referent-carrying-positional-references.md` |
+| Source | TASK 103 OQ-1, deferred there deliberately; design note `docs/design/104_resolver_wiring.md` |
+| Depends on | TASK 103 (`ed2af74`) — ships the capability this task invokes |
+| Closes | WI-18 (filed by this task) |
+| Archive name | `task-104-resolver-wiring.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-A `path:line` reference in a document is a **claim about state written in the grammar of an
-address**. Nothing observes it going false. `documentation-standards` §4.1 already states the
-adjacent half of this — "prefer nominal over positional" — as a preference, and
-`scripts/check_positional_refs.py` already resolves the address. Neither reaches the case where the
-address resolves, is in range, and points at something else entirely.
+TASK 103 shipped a resolver nobody calls. Measured across `.agent/workflows/`, `System/Agents/` and
+every `SKILL.md` at `ed2af74`: the only file naming `check_positional_refs.py` is
+`documentation-standards` itself. A capability no run exercises is indistinguishable from an absent
+one — and the framework has recorded that equivalence before: `ARCHITECTURE` §7.2 states that a step
+the author stopped running is indistinguishable from a step that passed.
 
-**Measured in onchain-analytics at `e95b909`** (clean worktree; method: `git blame` the citing line
-for the commit that authored it, `git show <sha>:<target>` for the content it then had, compared
-against the content now):
+**The two events that falsify a coordinate are not the same event, and only one of them was ever
+considered.** WI-16 §5.1 derived its wiring from a single trigger — code lands. For a coordinate
+there are two:
 
-| Population | Count |
-| :--- | :--- |
-| `path:line` references in the living corpus (`docs/PLAN.md`, `docs/TASK.md`, `docs/architectures/`) | 182 |
-| of those, resolvable | 142 |
-| of those, pointing at content that is not what it was when written | **26** |
-| references the resolver reports today in that corpus | 40, all `AMBIGUOUS` |
-| of the 26 drifted, reported by the resolver today | **0** |
+| Trigger | Event | How it falsifies |
+| :--- | :--- | :--- |
+| **T1** | code lands | lines shift under coordinates pointing into the file |
+| **T2** | a document carrying coordinates is written | the coordinate can be false at birth |
 
-The 26 are invisible because they are objectively fine on every axis the tool checks: the path
-resolves, the line exists, the document was not edited by the current change.
-
-**The mechanism is structural, not a lapse in care.** Measured over the same corpus, 85 of the 142
-attributable references were written by the Analysis, Architecture and Planning phases — phases that
-by construction run **before** the Development phase edits the files they cite. In task T-013,
-`packages/core/src/adapters/registry.ts` went 950 → 1560 lines across four commits **after** the
-analysis document had recorded 50 coordinates into it.
-
-**§4.1's existing mitigation cannot reach this.** It prescribes that positional references are
-verified LAST, "after the artifact edits are final". A PLAN is a positional-reference-dense document
-that the pipeline requires to be written FIRST. The rule and the pipeline contradict each other, and
-the plan loses.
-
-**The resolver's scope cannot reach it either.** `collect_docs()` returns only changed `*.md`
-files, so a commit that edits sources and no document scans nothing — which is precisely the commit
-that invalidates references.
-
-**An authoring rule alone is refuted, not untried.** `onchain-analytics/docs/architectures/open-questions.md:374@e95b909`
-carries the rule in prose, written by its own author: *"re-measure them, or quote the predicate
-text, whenever this file is touched."* The same paragraph records that `:740`/`:764` had already
-rotted once. Its `:901` has since rotted again — the predicate now sits at `:1511`.
+T2 is the larger population. Measured in onchain-analytics at `e95b909`: **85 of 142** attributable
+references were written by the Analysis, Architecture and Planning phases.
 
 <!-- contract:rtm -->
 
@@ -65,141 +42,92 @@ rotted once. Its `:901` has since rotted again — the predicate now sits at `:1
 
 | ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | `documentation-standards` §4.1 licenses a **referent** adjacent to a positional reference and names what satisfies one | Y | A1, A6 |
-| R2 | A reference **without** a referent is reported as *not examined* — never an error, never a warning | Y | A2, A3 |
-| R3 | The resolver reports four referent outcomes: present on the cited line · found uniquely elsewhere · found several times · absent | Y | A2 |
-| R4 | `--fix` rewrites the **line number** of a uniquely-relocated referent and never rewrites a referent | Y | A2, A4 |
-| R5 | Document selection reaches documents whose **targets** changed, not only documents that changed | Y | A2 |
-| R6 | `--all` accepts files as well as directories, so a project can name its living corpus | Y | A2 |
-| R7 | The coverage line states with a referent / without one / unresolvable counts separately | Y | A2, A3 |
-| R8 | `artifact-formalizer/references/authoring-contract.md` carries one licensed-form row for the reference that carries a referent | Y | A1, A6 |
-| R9 | §4.2 states what the referent layer makes gateable and what stays advisory, without contradicting its own 54-of-84 measurement | Y | A1, A6 |
-| R10 | The routed record exists in `docs/BACKLOG.md` + `docs/backlog/`, and both changelogs carry the change | Y | A5, A7 |
-| R11 | `System/Docs/SKILLS.md` describes the skill as it is after this change — the resolver, its referent layer and its fix mode | Y | A9 |
+| R1 | The four review checklists carry a `References` section keyed on `documentation-standards` §4.1, in the form the existing `Register` section already uses | Y | A1, A4 |
+| R2 | That section states that a coordinate carrying no referent is **not** a defect and that the review never demands a migration | Y | A1 |
+| R3 | The section demands the coverage line be **quoted**, not asserted to have been produced | Y | A1 |
+| R4 | Seven workflows run the resolver at a named site; the site of the open WI-16's sweep is not displaced | Y | A2, A4 |
+| R5 | The two workflows invoking `09_code_reviewer_prompt` gain **no** step — the checklist already covers them | Y | A4 |
+| R6 | A test partitions **every** workflow file into wired or excluded-with-a-reason, so a workflow authored later fails it rather than being silently uncovered | Y | A3 |
+| R7 | No product workflow is wired | Y | A4 |
+| R8 | `docs/BACKLOG.md` + record in lockstep; both changelogs carry the change | Y | A5, A6 |
 
 ### 2.1 Sub-features
 
-**R1 — the referent, defined by adjacency.** A referent is a **code span immediately following the
-reference code span**, separated by nothing but whitespace and at most one comma. Two spellings,
-one rule: a symbol name that appears on the cited line, or an exact substring of it. No new syntax
-is introduced — the form is one authors already write, e.g.
-`onchain-analytics/docs/PLAN.md:196@e95b909`: `` `registry.ts:1083@e95b909`, `if (deadlineHit \|\| …) {` ``.
-Adjacency is an established mechanism in this tool: `SECTION_ORDINAL` already binds an ordinal to
-the target named immediately before it.
+**R1 — the form is copied, not invented.** `task-review-checklist` §6 and `plan-review-checklist` §4
+already put a deterministic script inside a judgement checklist under a
+`Register (documentation-standards §5.5)` heading, with a `Script Contract` naming the command and
+its scoping caveat. The new section is that section's sibling. No new mechanism, no new skill load:
+all four reviewer prompts already declare `documentation-standards` alongside their checklist.
 
-**Comparison is normalized** by collapsing runs of whitespace and by unescaping `\|`. The first is
-required because the target line carries its own indentation while the referent as written does not;
-the second because a quotation inside a Markdown table cell MUST escape the pipe or the cell splits,
-and plans put quotations in table cells. Without both, a correctly-written referent reports as
-broken, and a gate that fails correct documents is switched off.
+**R2 — the item that prevents this task from becoming a migration mandate.** A reviewer reading
+`348 without (not examined)` without this clause demands referents, which is the forced adoption
+103-D1 forbids and which would land in four consumer repositories through a symlink. The clause is
+addressed to the reviewer as a prohibition, not to the author as work.
 
-**103-D9 — the referent sits on the same document line as its reference.** Discovered in
-implementation: `extract_refs()` scans line by line, so a code span wrapped across two document
-lines is not one span. Two directions were possible and one is licensed — a referent **follows** its
-reference, because a line carrying two references and one quotation is otherwise unassignable. The
-cost is stated rather than hidden: a document whose quotation precedes the coordinate, or wraps, is
-**not examined** — it is not reported as broken. That is R2's rule applied to a form the tool cannot
-parse, which is the same guarantee, not an exception to it.
+**R3 — the strongest thing a checklist can do.** A checklist cannot prove a command ran. Demanding
+the coverage line be pasted into the review makes the absence visible; demanding "was run" does not.
 
-**R2 — the blast radius is zero by construction.** Measured across all 17 repositories carrying
-`.agent/skills/`: 11 hold no `path:line` reference at all; the living corpora hold 324 in total
-(onchain-analytics 182, obsidian-llm-wiki 99, Universal-skills 36, agentic-development 6,
-n8n-lazy-loading-skills 1). An reference without a referent must therefore be **unverifiable, not wrong** —
-otherwise this upgrade turns 324 references red in four repositories that did not ask for it. This
-is the same discipline §4.2 already applies: a green run must not overclaim.
+**R4 — seven, and why not nine.** T1's criterion — code lands in the workflow **and** no
+`calls[] kind: invoke` edge hands that code to an already-wired workflow — returns nine, reproducing
+WI-16 §5.1 exactly. Two of the nine drop out under R5. The remaining seven:
+`vdd-03-develop`, `vdd-05-run-full-task`, `vdd-multi`, `vdd-adversarial`, `security-audit`,
+`framework-upgrade`, `heal-issues`.
 
-**R3 — four outcomes, three of which need a human and one that does not.**
+**Site rule against the open WI-16.** Its acceptance fails if a reference sits at a site other than
+the one its table names. Six of the seven are in that table, so the resolver step goes **after** the
+State-Claim Sweep site and **before** the Retro. Nothing WI-16 pins moves.
 
-| Outcome | Kind | Severity | Human needed |
-| :--- | :--- | :--- | :--- |
-| referent is on the cited line | — (pass) | — | no |
-| referent occurs exactly once, on another line | `REFERENT_MOVED` | error | **no** — `--fix` resolves it |
-| referent occurs several times | `REFERENT_AMBIGUOUS` | error | yes — pick one |
-| referent occurs nowhere in the target | `REFERENT_ABSENT` | error | yes — the cited text changed, so the claim about it must be re-read |
+**R5 — measured, and it corrected an earlier draft.** Only `03-develop-single-task` and
+`light-02-develop-task` name `09_code_reviewer_prompt`. `vdd-03-develop` does **not**, and keeps its
+own step. An earlier version of this reasoning named `vdd-03-develop` as covered; it was wrong.
 
-`REFERENT_ABSENT` is the class the tool cannot decide and must not guess: the target line was edited,
-which means the sentence citing it may now be false for reasons no coordinate repair addresses.
+**R6 — the gap WI-16 leaves open, closed here for this protocol.** WI-16 §7 states of its own nine:
+"Nothing verifies the wiring."
 
-**R4 — the fix boundary, inherited from `verify-provenance.mjs`.** That script keeps `--update`
-deliberately outside its gate: re-baselining must be a decision someone takes and a reviewer sees.
-The boundary here falls in a different place **for a stated reason, not as a relaxation**: the
-referent is the claim and is never machine-written; the line number is a value derived from it and may
-be recomputed. `--fix` is therefore permitted to rewrite a number and forbidden to rewrite a
-referent, and it is a separate invocation from the check — the pairing `format:check` / `format`, not
-a gate that mutates the tree it is judging.
+**Only half the criterion is machine-derivable, and the requirement says which half.** The
+delegation half comes out of `calls[]` frontmatter exactly. The "code lands here" half does not:
+measured over all 23 workflows, a grep for commit or staging steps finds them in **two**
+(`light-02-develop-task`, `heal-issues`) — the rest commit implicitly or phrase it differently, so
+any text-derived signal would be wrong for 21 of 23. A first draft of this requirement claimed the
+whole criterion was recomputable; it is not.
 
-**The module docstring moves with the behaviour.** `check_positional_refs.py:17` states "Read-only.
-The tool never writes to the repository" as one of three design constraints. `--fix` breaks it as
-written. R4 therefore requires the constraint restated and narrowed in the same change — the check
-never writes; the separately-invoked fix mode writes a line number and never a referent. Shipping the
-flag against an unamended docstring would leave the file asserting an invariant its own CLI
-contradicts, which is the defect class this whole task exists to close.
+**What makes the test a verification rather than a restatement is exhaustiveness, not derivation.**
+The test enumerates `.agent/workflows/*.md` from disk and asserts every file appears in **exactly
+one** of two sets: wired, or excluded **with a reason string**. A workflow added tomorrow is in
+neither and fails. The delegation half is additionally recomputed from `calls[]`, so an exclusion
+justified as "delegates to a wired workflow" is checked rather than believed.
 
-**R11 — the registry describes what exists.** `System/Docs/SKILLS.md:68` carries the
-`documentation-standards` row and a note at `:98`; neither names the resolver, §4.1 or §4.2. A skill
-that gains a normative rule, four finding kinds, two selection surfaces and a write mode must not be
-described by a row written before any of them.
-
-**R5 — selection by changed target.** The tool gains a third selection mode beside diff-scope and
-`--all`: documents that reference a file the current change touched. `changed_files()` already
-computes the change set; the addition is an index from target path to citing documents, which
-`classify()` effectively builds already when it resolves each reference.
-
-**R6 — `--all` accepts files.** `collect_docs()` rglobs each argument as a directory. A living
-corpus is `docs/PLAN.md docs/TASK.md docs/ARCHITECTURE.md docs/architectures/` — two files and a
-directory — and is not expressible today. Passing `docs` instead pulls in the archives: measured on
-onchain-analytics, `--all docs` reports 223 errors of which 183 are in archived documents whose
-coordinates are correct records of a past state.
-
-**R7 — the denominator travels with the number.** The run already prints checked / skipped / never
-examined for ordinals. The same treatment extends to `path:line`: how many carried a referent, how
-many did not, how many could not be resolved at all. A count without its population is the second
-defect the routed record measured, and this requirement applies its lesson to the tool itself.
-
-**R8 — one contract row.** The precedent is WI-16 §5.3: a normative rule in
-`documentation-standards` plus one row in the licensed-forms table of
-`artifact-formalizer/references/authoring-contract.md`, because the Architecture phase loads the
-formalizer contract and does not load `documentation-standards`. A row pointing at §4.1 alone would
-send that author to a file they do not have.
-
-**R9 — the old measurement is not overturned.** §4.2 rejects a repository-wide gate on evidence: 54
-of 84 resolvable references point into files edited after the citing document was written, and
-nearly all are correct records of their time. That measurement was taken over **archived reviews**
-and stays true. R9 requires §4.2 to state the distinction — the referent layer is gateable over a
-**named living corpus** and stays advisory everywhere else — so the two statements in one file do
-not read as contradiction.
+**R7 — excluded on measurement.** `docs/product/` holds **0** `path:line` references across
+onchain-analytics, obsidian-llm-wiki and Universal-skills.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — a developer moves code that documents cite.**
-*Actor:* Developer in the Execution phase.
-*Precondition:* the living corpus carries references that carry a referent into the file being edited.
-*Main:* the commit inserts lines above a cited coordinate; the pre-commit invocation of `--fix`
-rewrites the affected numbers; the developer sees a one-line diff per reference in the same commit.
-*Postcondition:* no document in the corpus carries a coordinate contradicted by the tree.
+**UC-1 — a planner writes a coordinate that is wrong at birth.**
+*Actor:* Plan Reviewer.
+*Main:* the PLAN cites `registry.ts:944`; the reviewer runs the resolver over `docs/PLAN.md` and the
+task files, quotes the coverage line, and resolves the one `REFERENT_ABSENT` before the phase
+boundary.
+*Postcondition:* the coordinate driving a future mutation protocol was read before it was executed.
 
-**UC-2 — a planner writes a coordinate before the code exists in final form.**
-*Actor:* Planner in the Planning phase.
-*Precondition:* the PLAN cites lines that the Development phase will shift.
-*Main:* the planner writes the coordinate **with** the predicate it means; the Development phase
-shifts the line; UC-1 repairs the number without the planner re-reading anything.
-*Postcondition:* §4.1's "verify LAST" rule is satisfiable for a document written FIRST.
+**UC-2 — a developer shifts lines under documents nobody opened.**
+*Actor:* Developer in `vdd-03-develop`.
+*Main:* the step runs `--targets-changed --fix`; documents citing the edited sources are re-checked
+and their numbers repaired in the same commit.
+*Postcondition:* no commit lands with a coordinate the tree contradicts.
 
-**UC-3 — the cited text is edited, not merely moved.**
-*Actor:* Code Reviewer.
-*Main:* the referent is absent from the target; the tool reports `REFERENT_ABSENT` with the file, the
-number and what now sits there; the reviewer re-reads the sentence, because the claim — not the
-coordinate — is what became doubtful.
-*Postcondition:* the edit is either confirmed against the new text or corrected.
+**UC-3 — a reviewer meets a corpus that adopted nothing.**
+*Actor:* any reviewer in a consumer repository.
+*Main:* the coverage line reports most references as not examined; per R2 the reviewer records the
+number and demands nothing.
+*Postcondition:* the review passes, and the corpus's unverified share is on record.
 
-**UC-4 — a consumer repository upgrades the framework and changes nothing.**
-*Actor:* any of the 16 consumer repositories.
-*Precondition:* its documents carry references without a referent, or none at all.
-*Main:* the upgrade lands; every existing reference is reported as *not examined*; no gate turns
-red; the coverage line states how much of the corpus is unverified.
-*Postcondition:* adoption is a per-project decision, taken later or never.
+**UC-4 — a workflow is authored after this task.**
+*Actor:* whoever adds it.
+*Main:* it lands code, declares `calls: []`, and names no resolver step; R6's test fails and names
+it.
+*Postcondition:* the set cannot silently rot, which is the failure WI-16 §7 declares for its own.
 
 <!-- contract:acceptance -->
 
@@ -207,89 +135,76 @@ red; the coverage line states how much of the corpus is unverified.
 
 | ID | Criterion | Fails when |
 | :--- | :--- | :--- |
-| A1 | §4.1 states the referent rule; §4.2 states the corpus distinction; the contract row exists | any of the three is absent · the row and §4.1 state different obligations |
-| A2 | `pytest tests/test_positional_refs.py` passes with cases pinning R2–R7 | a new case is absent for any of R2, R3 (all four outcomes), R4, R5, R6, R7 |
-| A3 | A corpus of references carrying no referent produces exit 0 and a coverage line naming them as not examined | a reference without a referent produces a finding of any severity |
-| A4 | `--fix` on a moved referent rewrites the number only; on `REFERENT_ABSENT` and `REFERENT_AMBIGUOUS` it changes nothing; the module docstring states the narrowed constraint | the referent text is modified in any run · a non-unique match is repaired by guessing · the docstring still reads "the tool never writes to the repository" unconditionally |
-| A5 | `docs/BACKLOG.md` carries WI-17 in lockstep with `docs/backlog/wi-17-*.md` | index line without record, or record without index line |
-| A6 | `python3 System/scripts/validate_skills.py --root .` passes at the same count as before | the count changes · any skill fails validation |
-| A7 | `CHANGELOG.md` and `CHANGELOG.ru.md` both carry the entry | one is edited and the other is not |
-| A8 | The tool is run against this repository's own living corpus and its output is recorded in the plan's closing step | the change ships without being run on a real corpus |
-| A9 | The `documentation-standards` row in `System/Docs/SKILLS.md` names the resolver, its referent layer and its fix mode | the row is unchanged · it describes a capability the skill does not have |
+| A1 | All four checklists carry the section with its four items, including R2's and R3's | any checklist lacks it · the not-a-defect clause is absent · an item says "was run" instead of demanding the quoted line |
+| A2 | The seven workflows each name the resolver at the site §2.1 states | any of the seven lacks it · any site displaces a WI-16 sweep site |
+| A3 | `pytest tests/test_resolver_wiring.py` passes; it enumerates `.agent/workflows/*.md` from disk and partitions every file into wired or excluded-with-a-reason, and recomputes the delegation half from `calls[]` | a workflow file belongs to neither set and the suite stays green · an exclusion carries no reason · a delegation exclusion is believed rather than checked against `calls[]` |
+| A4 | `03-develop-single-task`, `light-02-develop-task`, the four orchestrators and the three product workflows name no resolver step | any of the nine gains one |
+| A5 | `docs/BACKLOG.md` carries WI-18 in lockstep with its record | index line without record, or the reverse |
+| A6 | Both changelogs carry the entry; `pytest tests/ -q` and `validate_skills.py` at their baselines | one changelog edited and not the other · a gate regresses |
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ-1 — wiring.** No workflow and no agent prompt invokes `check_positional_refs.py` today;
-measured across `.agent/workflows/`, `System/Agents/` and every `SKILL.md`, the only file naming it
-is `documentation-standards` itself. Binding it to phase boundaries is the mechanism WI-16 §5.1
-sizes at nine workflows. **Deliberately out of scope here** (§7); this task ships the capability, not
-its enforcement.
-
-**OQ-2 — referents in source files.** A marker convention in the code (`// ANCHOR: name`) would remove
-line numbers from references altogether. Rejected for this task, reasons in D3; re-openable.
+**OQ-1 — a CI job for both deterministic sections.** Neither the `Register (§5.5)` section nor this
+task's `References (§4.1)` section can prove its command ran. Turning either into a CI job is one
+decision for both. Out of scope here; a checklist that demands quoted output is what this task
+ships.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**103-D1 — a reference without a referent is not examined, not an error.** Any other choice turns 324
-references red across four repositories on upgrade. A rule whose adoption cost is paid by projects
-that did not ask for it is switched off, which is the outcome §4.2 already recorded once.
+**104-D1 — the resolver is wired as a GATE, not as a Global Protocol.** A Global Protocol takes a
+two-part reference — prose blockquote plus step — in every workflow it binds; the Retro carries it in
+17 of 23. A gate is named in the step that runs it, the way `framework-upgrade` §3.3 names
+`skill-spec-validator`. The second genre needs no protocol-registry entry and no blockquote.
 
-**103-D2 — the referent is a code span adjacent to the reference, not new syntax.** 111 of the 182
-references in the routed corpus already carry a backticked identifier or quotation on the same line.
-Licensing the existing form makes the majority of the migration a binding exercise rather than a
-writing exercise, and keeps the register unchanged.
+**104-D2 — T2 is discharged by four checklists, not by seven more workflow edits.** Every authoring
+workflow passes its artifact to a reviewer, and all four reviewer prompts already load
+`documentation-standards`. Rejected: adding a step to `01-start-feature`, `02-plan-implementation`,
+`vdd-01-start-feature`, `vdd-02-plan`, `04-update-docs`, `light-01-start-feature` and
+`iterative-design` — seven edits for coverage four already give.
 
-**103-D3 — no edits to source files.** In-source referents were considered: they would eliminate
-positional references entirely. Rejected on four grounds — they require edits across every package
-of every consumer; a marker that exists for a document is deleted by refactors that do not know
-about it; a second gate is then needed to assert the marker still exists; and prose citing "these
-five lines" still has no name to bind to. The symbol spelling of D2 already recovers most of the
-benefit, because symbols are referents the code declares for its own reasons.
+**104-D3 — no git hook.** One `--targets-changed --fix` at pre-commit would cover T1 and T2 with a
+single edit. Rejected: `.git/hooks/` holds no installed hook, is not versioned, and installation
+would fall to the installer (ARCHITECTURE §9) — a new subsystem, which is the inconsistency this
+task exists to avoid.
 
-**103-D4 — `--fix` may rewrite a number and never a referent.** Stated as a boundary rather than a
-permission: the derived value is recomputable, the claim is not. This is why the rule does not
-contradict `verify-provenance.mjs`, whose invariant *is* the recorded value.
+**104-D5 — no `System/Docs/` edit, recorded rather than assumed.** `framework-upgrade` §4.2 names
+`SKILLS.md` and `WORKFLOWS.md` as a finalization step, so the absence needs a reason. Measured:
+`WORKFLOWS.md` describes workflows at summary granularity — a mermaid graph plus one table row per
+workflow — and `SKILLS.md`'s rows describe what a skill is for, not which sections it contains. A
+step added inside seven workflows and a section added inside four checklists change neither
+statement. TASK 103 edited `SKILLS.md` because the skill gained a CLI surface and a normative rule;
+this task gives no skill a new capability.
 
-**103-D5 — the migration of any corpus is out of scope.** This task ships the mechanism to
-agentic-development. Adding referents to onchain-analytics' 182 references is that project's decision and its
-own commit, per the routed record's §4.
+**104-D6 — the two halves reach consumers by different routes, and that is accepted.** Measured in
+onchain-analytics: `.agent/skills/` holds 47 per-skill symlinks into this repository —
+`task-review-checklist` and `code-review-checklist` among them — while `.agent/workflows/` is a real
+per-repo directory. So the **four checklist edits are live in five consumer repositories at commit
+time**, and the **seven workflow steps reach none of them**. T2 coverage is fleet-wide, T1 coverage
+is local to this repository until each project edits its own workflows. Accepted rather than fixed:
+the checklist half is advisory and, by R2, demands nothing of a corpus that adopted nothing; making
+the workflow half propagate would mean owning per-repo workflow files, which this framework
+deliberately does not.
 
-**103-D7 — the mechanism is called a REFERENT, never an anchor.** The first draft called it an
-anchor and collided with an occupied word: `documentation-standards` §4.3 and §4.4 define an anchor
-as `<!-- contract:<name> -->`, a structural marker addressing a *section*, and ARCHITECTURE §7.2
-builds its addressing ladder on that meaning. One file would then carry two mechanisms under one
-name. "Referent" is the term WI-16 already uses for "the observation that falsifies a claim", which
-is exactly this object.
-
-**103-D8 — the rule extends §4.1 and claims no new section number.** §4.5 is reserved by the open
-WI-16 for the build-state claim rule. A positional reference carrying its referent is a refinement
-of §4.1's own subject, so it lands inside §4.1 and leaves the numbering free.
-
-**103-D6 — `REFERENT_ABSENT` is an error, not a warning.** The tool can distinguish "moved" from
-"changed", and a changed target is the case where the citing sentence may itself be false. Grading it
-a warning would place the only judgement-requiring outcome in the class readers skip.
+**104-D4 — the test derives the set; it does not list it.** A literal list passes forever and
+answers nothing about a workflow added tomorrow. Recomputing from `calls[]` is what makes A3 a
+verification rather than a restatement.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-- **Wiring the tool into workflows** (OQ-1). Nine workflows and a Global Protocol; a separate item.
-- **Migrating any repository's references**, including this one's six (D5).
-- **Semantic verification.** A referent proves the quoted text is present, not that the sentence
-  about it is true. A document calling a cache-warming comment "the narrowing of `matching` routes"
-  passes the referent check if it quotes that comment. Only reading closes this.
-- **Archived documents.** Their coordinates are correct records of a past state; §4.2's 54-of-84
-  measurement is about exactly this population and is not overturned (R9).
-- **In-source referent markers** (OQ-2, D3).
-- **A gate over the rule's own two halves.** R1 writes the rule into `documentation-standards` §4.1
-  and R8 writes the mirroring row into `artifact-formalizer/references/authoring-contract.md`.
-  Nothing compares them after landing — `check_contract_sync.py` reaches only `known-issues-format`
-  and its two seed templates. Drift between the two is uncaught, exactly as WI-16 §5.3 recorded for
-  its own pair. Stated so a reader does not assume a gate exists.
-- **The reporting rule for surveys** — "a survey states its search area with its count". The routed
-  record measures this as a second defect; R7 applies it to this tool's own output and to nothing
-  else.
+- **Migrating any corpus**, including this repository's six references. Unchanged from 103 D5.
+- **A protocol registry with a validator over every terminal workflow** — WI-16 §8 sizes it at L and
+  it answers the wiring question for *all* protocols. R6's test covers this one and does not
+  substitute for that item.
+- **`--strict` anywhere.** The resolver stays advisory; a project wanting a hard gate names its own
+  living corpus and adds the flag itself.
+- **Product workflows** (R7) and **a git hook** (104-D3).
+- **Propagating the workflow half to consumers** (104-D6). Five repositories receive the four
+  checklist edits by symlink and none of the seven workflow steps. Wiring a consumer's own workflows
+  is that project's commit, not this task's.
+- **A CI job for the two deterministic checklist sections** (OQ-1).

@@ -79,6 +79,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-18** [The reference resolver is invoked by nothing](backlog/wi-18-the-reference-resolver-is-invoked-by-nothing.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 104): 4 checklists + 7 workflows + a wiring test that partitions every workflow file; the workflow half does not reach consumers
 - **WI-17** [A positional reference carries no referent](backlog/wi-17-positional-references-carry-no-referent.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 103): the referent layer ships; no corpus migrated and no workflow wired, both stated
 - **WI-15** [`SKILL.md` §6 has no rule for narrowing a rule](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) — effort `S`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 102): §6 gains rule 5 — the three items a narrowing produces
 - **WI-14** [State the glyph citation convention in `authoring-contract.md`](backlog/wi-14-glyph-citation-convention-in-authoring-contract.md) — effort `S`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 102): the contract states it; 0 findings removed, not 26 — every holder is already filed

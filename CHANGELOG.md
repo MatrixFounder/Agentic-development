@@ -16,6 +16,53 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.28.0 — the reference resolver is invoked by the runs that break references**
+
+Closes `WI-18`, opened by TASK 103's own OQ-1. v3.27.0 shipped a resolver nothing called, and a
+capability no run exercises is indistinguishable from an absent one.
+
+#### Added
+
+- **Four review checklists gain a `References (§4.1)` section** — `task-`, `plan-`,
+  `architecture-` and `code-review-checklist`. The form is the `Register (§5.5)` section beside it:
+  a deterministic script inside a judgement checklist, resolved the same way. **Zero new skill
+  loads** — all four reviewer prompts already declare `documentation-standards`. The section demands
+  the coverage line be **quoted** rather than asserted to have been produced, because a checklist
+  cannot prove a command ran but pasted output can. One item is load-bearing and is asserted by a
+  test: *a coordinate carrying no referent is not a defect*. Without it a reviewer reads "348
+  without (not examined)" as a failure and demands referents nobody asked for — a fleet-wide
+  migration through a symlink, which 103-D1 forbids.
+- **Seven workflows run the resolver** — `vdd-03-develop`, `vdd-05-run-full-task`, `vdd-multi`,
+  `vdd-adversarial`, `security-audit`, `framework-upgrade`, `heal-issues` — with
+  `--targets-changed`, plus `--fix` where the workflow commits. Wired as a **gate**, named in the
+  step that runs it the way `framework-upgrade` §3.3 names `skill-spec-validator`, not as a Global
+  Protocol with a two-part reference.
+- **`tests/test_resolver_wiring.py` — the gap WI-16 §7 declares open for its own nine.** Only half
+  the selection criterion is machine-derivable: delegation comes out of `calls:` frontmatter
+  exactly, while "code lands here" does not — measured over all 23 workflows, a grep for commit or
+  staging steps finds them in **two**. So the test enumerates the workflow directory **from disk**
+  and asserts every file is in exactly one of two sets, one carrying a reason per member. A workflow
+  added tomorrow is in neither and fails. Delegation exclusions are checked transitively against
+  `calls:`, not believed.
+
+#### Notes
+
+- **The two halves reach consumers differently, and the task says so.** Measured in
+  onchain-analytics: `.agent/skills/` holds 47 per-skill symlinks into this repository, so the four
+  checklist edits are live in five repositories at commit time; `.agent/workflows/` is a real
+  per-repo directory, so the seven steps reach none. T2 coverage is fleet-wide, T1 coverage is local
+  until each project edits its own workflows.
+- **The set was derived twice and corrected twice.** T1's criterion reproduces WI-16 §5.1's nine
+  exactly — a check on the criterion, not a borrowing. Two drop out because they invoke
+  `09_code_reviewer_prompt`; `vdd-03-develop` does **not** and keeps its step, correcting an earlier
+  draft. Product workflows are excluded on measurement: `docs/product/` holds **0** `path:line`
+  references across three consumer corpora.
+- **Rejected:** a pre-commit hook, which would cover both triggers in one edit —
+  `.git/hooks/` holds no installed hook, is not versioned, and installation would fall to the
+  installer: a new subsystem, which is the inconsistency this change exists to avoid.
+- **Still not shipped:** no corpus migrated, no `--strict` anywhere, and neither deterministic
+  checklist section can prove its command ran. Suite 413 → **422**; skills 46/46.
+
 ### **v3.27.0 — a positional reference carries its referent**
 
 Closes `WI-17`, routed here from onchain-analytics `WI-43`. Ships a mechanism; migrates no corpus

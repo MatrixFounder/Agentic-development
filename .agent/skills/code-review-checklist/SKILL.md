@@ -57,6 +57,17 @@ version: 1.3
 - [ ] **Law of Minimalism:** No dead code? No speculation? (deletion guard: §2)
 - [ ] **Mutation Check:** If you delete a line, does it fail?
 
+## 7. References (`documentation-standards` §4.1)
+- [ ] **Coordinates repaired in THIS commit:** `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed`
+      was run — it selects documents *citing* the files this change touched, which default diff
+      scope does not — and `--fix` landed in the same commit. A coordinate corrected later was
+      false in a commit someone can check out.
+- [ ] **Verdicts resolved:** zero `REFERENT_ABSENT` and `REFERENT_AMBIGUOUS`, or each survivor
+      carries a written reason. `REFERENT_ABSENT` means the cited text was edited, so the sentence
+      citing it needs re-reading — not a new number.
+- [ ] **A coordinate carrying no referent is not a defect.** Reported as *not examined*, and this
+      review never demands one be added.
+
 ## Criticality Protocol
 Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5).
 - **BLOCKING:** Task not done, Test failure, Broken compat, Stub violation (Logic in stub task).

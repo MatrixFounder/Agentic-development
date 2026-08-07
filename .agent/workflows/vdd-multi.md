@@ -213,6 +213,17 @@ Otherwise, for each non-clean category, apply fixes and re-spawn **only that cri
 
 Re-spawns are single-critic, not full parallel triples.
 
+## Reference resolver (gate)
+
+Run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix`.
+
+It selects documents **citing** the files this change touched, which default diff scope
+does not. `REFERENT_MOVED` is repaired mechanically and the repair lands in the same
+commit; a coordinate carrying no referent is reported as *not examined* and is **not** a
+defect (`documentation-standards` §4.1). This position is the one WI-16's §5.1 table
+names for the State-Claim Sweep: when that record lands it inserts **above** this
+section, so neither displaces the other.
+
 ## Retro (Global Protocol)
 
 Apply `run-feedback` SKILL.md §7 "Retro protocol":

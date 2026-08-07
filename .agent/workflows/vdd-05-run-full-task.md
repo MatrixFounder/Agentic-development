@@ -59,6 +59,13 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    - Current `git status` snapshot.
 
    **Auto-commit is forbidden.** Commit/PR decision belongs to the user. This is the load-bearing difference from `/develop-all`.
+6. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix`.
+   It selects documents **citing** the files this change touched; default diff scope
+   selects documents the change *edited*, so a source-only commit checks nothing while
+   being exactly the commit that shifts the cited lines. `REFERENT_MOVED` is repaired
+   mechanically; the repair lands in the same commit. A coordinate carrying no referent is reported as
+   *not examined* and is **not** a defect (`documentation-standards` §4.1).
+
 6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-05-run-full-task-<task-slug>"` → exit 6 = nested, SKIP this step;
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers

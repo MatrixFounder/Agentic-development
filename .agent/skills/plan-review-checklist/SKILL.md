@@ -33,6 +33,23 @@ version: 1.0
 - [ ] **Reading pass covered:** every section of every task file appears in the worklist and was
       read for rules 3, 4 and 6.
 
+## 5. References (`documentation-standards` §4.1)
+- [ ] **Resolver run:** `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --all docs/PLAN.md docs/tasks/task-<ID>-*.md`
+      was run, and its `path:line` coverage line is **quoted** in the review — not asserted to
+      have been produced. A checklist cannot prove a command ran; pasted output can.
+- [ ] **Verdicts resolved:** zero `REFERENT_ABSENT` and `REFERENT_AMBIGUOUS`, or each survivor
+      carries a written reason. `REFERENT_MOVED` is repaired by re-running with `--fix`, never
+      argued about — the number is derived from the referent, so no judgement is involved.
+- [ ] **A coordinate carrying no referent is not a defect.** It is reported as *not examined* and
+      is **NOT** required to gain one. This review never demands a migration: most corpora carry
+      no referents at all, and adoption is the project's decision, not the reviewer's.
+- [ ] **Cross-repository coordinates pinned:** a path outside this repository resolves to nothing
+      and reports `UNRESOLVABLE`. It carries `@<rev>` naming the revision measured, which is the
+      form §4.1 already licenses for a claim about another state.
+> **Scope caveat, the same one this checklist's Script Contract states for the register scan.**
+> `docs/tasks/` is also the permanent archive sink, so the bare glob `docs/tasks/*.md` would put
+> every task ever written under this section. Substitute the current Task ID for `<ID>`.
+
 ## Execution Mode
 - **Mode**: `hybrid`
 - **Rationale**: the checklist items are reviewer judgement; the register scan named in the

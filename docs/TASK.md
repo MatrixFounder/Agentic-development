@@ -106,7 +106,7 @@ onchain-analytics, obsidian-llm-wiki and Universal-skills.
 
 **UC-1 — a planner writes a coordinate that is wrong at birth.**
 *Actor:* Plan Reviewer.
-*Main:* the PLAN cites `registry.ts:944`; the reviewer runs the resolver over `docs/PLAN.md` and the
+*Main:* the PLAN cites `registry.ts:944@deb6502`; the reviewer runs the resolver over `docs/PLAN.md` and the
 task files, quotes the coverage line, and resolves the one `REFERENT_ABSENT` before the phase
 boundary.
 *Postcondition:* the coordinate driving a future mutation protocol was read before it was executed.

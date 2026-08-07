@@ -173,6 +173,22 @@ ERROR_KINDS = {
 #: ``ORDINAL_CONTINUATION`` above carries the same note for the same reason.
 REFERENT_SPAN = re.compile(r"[ \t]*,?[ \t]*`(?P<referent>[^`]+)`")
 
+#: A code span that is itself a COORDINATE, not a quotation: a full ``file.ext:12`` reference or
+#: a bare ``:139`` / ``:55-64`` continuation of the one before it.
+#:
+#: Documents list coordinates comma-separated — ``\`get-token.ts:117\`, \`wallet-balances.ts:92\```
+#: — which is exactly the shape :data:`REFERENT_SPAN` licenses. Reading the second one as the
+#: first one's referent invents a claim the author never made, then reports the document broken
+#: because that "quotation" is nowhere in the target. Measured in a consumer repository: 14 of 14
+#: surviving errors were this, and every one of them was a correct document.
+#:
+#: This is the ``§4.2`` bound applied to the rule's own reader — a gate that fails correct
+#: documents is switched off — so a neighbouring coordinate yields *no referent* (unverifiable,
+#: not examined), never a false verdict.
+REFERENT_IS_A_COORDINATE = re.compile(
+    r"^(?::\d+(?:-\d+)?|[^\s`]+?\.(?:" + _EXT + r"):\d+)"
+)
+
 #: Applied to a referent and to a candidate target line before they are compared.
 _WS_RUN = re.compile(r"\s+")
 
@@ -279,9 +295,15 @@ def extract_referent(line: str, ref_end: int) -> str | None:
     otherwise unassignable, and one line because ``extract_refs`` scans line by line, so a
     span wrapped across two document lines is not one span. A quotation written before its
     coordinate is therefore not examined — not reported as broken.
+
+    A neighbouring COORDINATE is not a referent (:data:`REFERENT_IS_A_COORDINATE`). Comma-separated
+    coordinate lists are ordinary prose and predate this rule; reading the next item as a quotation
+    turns them into confident false verdicts about correct documents.
     """
     match = REFERENT_SPAN.match(line, ref_end)
     if match is None:
+        return None
+    if REFERENT_IS_A_COORDINATE.match(match.group("referent").strip()):
         return None
     referent = normalize_for_match(match.group("referent"))
     return referent or None

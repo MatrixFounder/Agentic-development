@@ -16,6 +16,34 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.28.1 — a neighbouring coordinate is not a referent**
+
+Found while migrating the first consumer corpus (`onchain-analytics` WI-45). The referent rule binds
+"the code span immediately after the reference, separated by nothing but whitespace and at most one
+comma" — which is **exactly the shape of a comma-separated list of coordinates**. So
+`` `get-token.ts:117`, `wallet-balances.ts:92` `` was read as "117 quotes the text
+`wallet-balances.ts:92`", which is nowhere in the target, and the document was reported broken.
+
+This is the §4.2 bound applied to the rule's own reader: **a gate that fails correct documents is
+switched off**. The measurements say it was not a corner case — in the consumer corpus **12 of 12**
+referent-carrying references failed this way; in this repository's own `docs/`, **48** of the
+"referents" the resolver counted were coordinates, and the `--all docs` gate ran at **51 errors**,
+of which **44** were this defect. It now reports **7**, all pre-existing and unrelated.
+
+#### Fixed
+
+- **`REFERENT_IS_A_COORDINATE` in `check_positional_refs.py`** — a code span that is itself a
+  positional reference (`file.ext:12`, or a bare `:139` / `:55-64` continuation of the one before
+  it) is a **neighbour, not a quotation**. `extract_referent()` returns `None` for it, so the
+  reference falls under R2 — *unverifiable, not examined* — instead of producing a confident false
+  verdict. The guard is **anchored** (`^`), so a genuine quotation whose text merely contains
+  `x:1` later still binds.
+- **+6 tests** in `TestCoordinateIsNotAReferent`, including the two that bound the fix from both
+  sides: the last coordinate of a list still takes the quotation that follows it, and a wrong
+  coordinate inside a list is now *silent* rather than caught — the stated cost, since the
+  alternative is a false verdict on a correct document. Mutation-checked: removing the guard turns
+  5 of the 6 red.
+
 ### **v3.28.0 — the reference resolver is invoked by the runs that break references**
 
 Closes `WI-18`, opened by TASK 103's own OQ-1. v3.27.0 shipped a resolver nothing called, and a

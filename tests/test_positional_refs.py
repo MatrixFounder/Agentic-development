@@ -826,6 +826,69 @@ class TestReferentNormalization(ReferentRepo):
         self.assertEqual(report.referent_checked, 0)
 
 
+class TestCoordinateIsNotAReferent(ReferentRepo):
+    """R2 again, on the shape that broke it: a comma-separated LIST of coordinates.
+
+    ``\\`a.ts:1\\`, \\`b.ts:2\\``` is exactly the shape the referent rule licenses, so the second
+    coordinate was read as the first one's quotation and reported absent from the target. The
+    documents were correct and the reader was not — 14 of 14 surviving errors in a consumer
+    corpus. R2 says an unreferenced coordinate is unverifiable, never wrong; these tests pin
+    that a NEIGHBOUR cannot manufacture a verdict.
+    """
+
+    def _second_source(self):
+        """Add and COMMIT a second file. Left untracked it would count as changed, and the
+        assertions below would pass or fail on DRIFT_SUSPECT instead of on referent binding.
+        """
+        (self.root / "src/other.py").write_text("one\ntwo\nthree\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-q", "-m", "second source")
+
+    def test_a_following_full_coordinate_is_not_a_referent(self):
+        self._second_source()
+        self._doc("measured (`src/app.py:1`, `src/other.py:2`)\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_checked, 0)
+
+    def test_a_following_bare_line_continuation_is_not_a_referent(self):
+        self._doc("the two sites (`src/app.py:1`, `:3`)\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_checked, 0)
+
+    def test_a_following_bare_range_continuation_is_not_a_referent(self):
+        self._doc("the block (`src/app.py:1`, `:2-3`)\n")
+        self.assertEqual(self._kinds(self._report()), [])
+
+    def test_a_real_referent_after_a_coordinate_list_still_binds(self):
+        """The narrowing must not cost the rule its reach: the LAST coordinate of a list
+        still takes the quotation that follows it."""
+        self._second_source()
+        self._doc("measured (`src/other.py:1`, `src/app.py:3`, `return handle(x)`)\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_checked, 1)
+
+    def test_a_wrong_coordinate_followed_by_a_coordinate_is_still_silent(self):
+        """The cost, stated: a list member carries no referent, so a WRONG one is not
+        examined rather than caught. That is R2, not a regression — the alternative is a
+        false verdict on a correct document."""
+        self._doc("see (`src/app.py:1`, `src/app.py:2`)\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_missing, 2)
+
+    def test_a_quotation_that_merely_contains_a_colon_number_still_binds(self):
+        """The guard is anchored: a quotation whose text happens to hold `x:1` later is a
+        quotation, not a coordinate."""
+        self.src.write_text("alpha\nlabel = f'{name}:1'\ngamma\n")
+        self._doc("see `src/app.py:2` `label = f'{name}:1'`\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_checked, 1)
+
+
 class TestFixMode(ReferentRepo):
     """R4 — the boundary: a derived number may be rewritten, a claim may not."""
 

@@ -69,6 +69,40 @@ edge case.
 **Prefer nominal over positional** wherever the target has a name. A reference to a symbol survives
 an inserted line; a reference to line 112 does not.
 
+**A coordinate carries its referent.**
+
+> **RULE**: In a **living corpus** an unpinned `path:line` reference carries a **referent** — an
+> observation that survives a shift, written as a code span **immediately after** the reference.
+> Two spellings: a symbol name that appears on the cited line, or an exact substring of it. A
+> reference without one is **not examined** — never an error, never a warning.
+
+```
+`packages/core/src/adapters/registry.ts:1083`, `if (deadlineHit || Date.now() >= deadline) {`
+`packages/core/src/capability-manifest.ts:165` `CapabilityManifest`
+```
+
+**Why the rule is not "verify more carefully".** §4.1's ordering rule — positional references
+verified LAST — is unfollowable for the document that needs it most. A PLAN is dense with
+coordinates and the pipeline requires it to be written FIRST, before the Development phase edits the
+files it cites. Measured in one consumer repository: 85 of 142 attributable references were written
+by the Analysis, Architecture and Planning phases, and one cited file grew 950 → 1560 lines after
+those coordinates were recorded. A referent makes the number **recomputable**, so the ordering rule
+stops being a thing to remember.
+
+**Why not an error.** An unreferenced coordinate is *unverifiable*, not wrong. Measured across the
+17 repositories carrying `.agent/skills/`: 11 hold no `path:line` reference at all, and the living
+corpora hold 324. Grading the absence an error would turn correct documents red in projects that
+adopted nothing — and a gate that fails correct documents is switched off (§4.2). Adoption is
+per-project and incremental; the coverage line states how much of a corpus is verified.
+
+**Two objects, two words.** A **referent** identifies what a *coordinate* points at. An **anchor**
+(§4.3) addresses a *section* of a document. They are not interchangeable, and no rule here licenses
+using one name for the other.
+
+**The bound.** A referent proves the quoted text is present. It does not prove the sentence about it
+is true: a document calling a cache-warming comment "the narrowing of `matching` routes" passes if
+it quotes that comment. Only reading closes that.
+
 **Pinning a deliberate quotation.** A pinned reference is a claim about *that* revision and is
 exempt from re-checking; an unpinned one claims the current state, which is what makes the
 check decidable at all. Two forms:
@@ -123,6 +157,39 @@ python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py -
 | `ORDINAL_MISSING` | error | The target document declares no such `§` section |
 | `DRIFT_SUSPECT` | warning | The target is edited by this same change; the §4.1 case |
 | `ESCAPES_ROOT` | warning | Points outside the repository: refused a read, not verifiable |
+| `REFERENT_MOVED` | error | The referent sits on another line — **repairable with `--fix`** |
+| `REFERENT_AMBIGUOUS` | error | The referent matches several lines; narrow it or pick one |
+| `REFERENT_ABSENT` | error | The referent is nowhere in the target: the cited text was edited |
+
+**What the referent layer changes about the advisory verdict above.** The 54-of-84 measurement was
+taken over **archived reviews**, and it stays as written: those references are correct records of
+their time, and a repository-wide gate over them still fails correct documents. What the referent
+adds is a population where the tool has *direct evidence* instead of suspicion — so the verdict
+splits by corpus rather than being one rule:
+
+| Corpus | Verdict | Why |
+| :--- | :--- | :--- |
+| A **named** living corpus (`--all docs/PLAN.md docs/architectures/`) | gateable | Every reference there is meant to describe the current tree |
+| Everything else, archives included | advisory, unchanged | A coordinate in an archived document is a true statement about a past state |
+
+`REFERENT_ABSENT` is an error rather than a warning on purpose: it is the one verdict the tool
+cannot settle, so grading it a warning would put the only case needing judgement in the class
+readers skip. `REFERENT_MOVED` is an error too — the document asserts a wrong number until repaired
+— but needs no judgement at all, which is what `--fix` is for.
+
+**Two invocations, not one.** The check never writes. `--fix` is a separate run that rewrites the
+line number of a `REFERENT_MOVED` reference and **never** a referent: the referent is the claim, the
+number is derived from it. Pair them as `format:check` / `format` — the check in CI, the fix in a
+pre-commit hook, so the commit that shifts the code corrects the coordinates it shifted.
+
+```bash
+python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed
+python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix
+```
+
+`--targets-changed` selects documents **citing** a file the change touched. Default diff scope
+selects documents the change *edited*, so a commit touching only sources scans nothing — while being
+exactly the commit that shifts the cited lines.
 
 Only `DRIFT_SUSPECT` needs judgement: the tool prints the target line back, and the reviewer
 confirms it still says what the document claims. Pinned references are skipped entirely.

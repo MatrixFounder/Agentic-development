@@ -254,8 +254,20 @@ reference can be nominal and still break, because it names its target **in a lan
 | Rung | Form | Survives renumbering | Survives retitling | Survives translation |
 | :--- | :--- | :--- | :--- | :--- |
 | Positional | `§4.5`, `line 112` | ✗ | ✗ | ✗ |
+| **Positional + referent** | `` `registry.ts:1083@e95b909`, `if (deadlineHit …) {` `` | ✓ — repaired | n/a | ✓ |
 | Nominal-by-prose | `## Requirements Traceability`, `\| Requirement \|` | ✓ | ✗ | ✗ |
 | **Nominal-by-anchor** | `<!-- contract:rtm -->` | ✓ | ✓ | ✓ |
+
+**The second rung is not a fourth kind of name — it is a positional reference carrying the
+observation that falsifies it** (TASK 103). The number stays positional and stays fragile; what
+changes is that its falsity becomes observable, and a machine can recompute the number from the
+referent rather than a human re-measuring it. It survives translation for the same reason the anchor
+rung does and by a different route: the referent is a substring of the **cited artifact** — code, a
+test id, a symbol — so matching it never reads the natural language of the citing document. **L1
+holds by construction, not by care.**
+
+Two rungs, two objects, and the names are kept apart deliberately: an **anchor** addresses a section
+of a document, a **referent** identifies what a coordinate claims to point at.
 
 **Humans address at any rung; machines address at the anchor rung.** Prose headings stay exactly as
 they are — the anchor sits beside them and carries the machine contract, so the two audiences stop

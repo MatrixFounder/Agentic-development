@@ -107,8 +107,9 @@ repairs it.
 | **Derived number** | `<value> = <derivation>; measured <m>; applied <a>` — and which of the two is a ceiling |
 | **Deviation** | `<artifact> states "<quoted text>"; this document does <what>; recorded in <ADR entry>` |
 | **Table row** | a label per cell: an id, a status, a value, or one clause under 120 characters |
+| **Positional reference** | `` `<repo-relative path>:<line>` `` + `` `<symbol or exact substring of that line>` `` |
 
-**Notes on four of them.**
+**Notes on five of them.**
 
 - **A form that exceeds T6 becomes a list. The budget is not waived** (WI-12). One item per line;
   each item is then its own block and is measured on its own. Measured: a campaign where the
@@ -116,6 +117,13 @@ repairs it.
   Scope enumerations and 3 acceptance criteria, and no running prose at all
   ([`measurement-baseline.md`](measurement-baseline.md) §12.2). Before this note the contract
   licensed both forms and stated a budget none of them could meet.
+- **Positional reference.** The second span is the **referent**: what the coordinate claims to point
+  at, written so a machine can check it. It goes **after** the coordinate, on the same line, and a
+  quotation inside a table cell escapes the pipe as `\|`. A reference without a referent is not
+  rejected — it is *unverifiable*, and stays that way. This row exists because the Architecture and
+  Planning phases load this contract and do **not** load `documentation-standards`, where the rule
+  itself lives; the author who most needs the form is the one who cannot reach that file. A
+  **referent** is not an **anchor**: an anchor (`<!-- contract:rtm -->`) addresses a section.
 - **Test obligation.** The mutation clause is required only where the test is executable. A
   documentation check has no mutation to name, and demanding one made the form unfollowable for the
   test cases this framework writes most.

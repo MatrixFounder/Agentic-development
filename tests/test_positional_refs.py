@@ -694,5 +694,263 @@ class TestSafeJoin(unittest.TestCase):
         self.assertIsNone(cpr.safe_join(self.root, "/etc/passwd.py"))
 
 
+class ReferentRepo(unittest.TestCase):
+    """Shared fixture: a repository whose source file documents cite by coordinate."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        _git(self.root, "init", "-q")
+        _git(self.root, "config", "user.email", "t@example.com")
+        _git(self.root, "config", "user.name", "Test")
+        (self.root / "src").mkdir()
+        (self.root / "docs").mkdir()
+        self.src = self.root / "src/app.py"
+        self.src.write_text("alpha\nbeta\n    return handle(x)\ndelta\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-q", "-m", "init")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _doc(self, text, name="docs/note.md"):
+        path = self.root / name
+        path.write_text(text)
+        return path
+
+    def _report(self, **kw):
+        return cpr.run(self.root, "HEAD", ["docs"], **kw)
+
+    def _kinds(self, report):
+        return [f.kind for f in report.findings]
+
+
+class TestReferentNotExamined(ReferentRepo):
+    """R2 — the load-bearing property: no referent means unverifiable, never wrong.
+
+    324 references across four consumer repositories reach this rule by symlink at commit
+    time. If it ever fails, the upgrade turns correct documents red in projects that did
+    not ask for it — which is how a gate gets switched off (`documentation-standards` §4.2).
+    """
+
+    def test_reference_without_referent_produces_no_finding(self):
+        self._doc("see `src/app.py:3` for the call\n")
+        report = self._report()
+        # Assert on the finding list, not the exit code: a warning also exits 0.
+        self.assertEqual(self._kinds(report), [])
+
+    def test_reference_without_referent_is_counted_as_not_examined(self):
+        self._doc("see `src/app.py:3` for the call\n")
+        report = self._report()
+        self.assertEqual(report.referent_missing, 1)
+        self.assertEqual(report.referent_checked, 0)
+
+    def test_wrong_coordinate_without_referent_is_still_not_a_finding(self):
+        """The coordinate is objectively stale and still not reported: with no referent
+        the tool cannot know that, and guessing is what a false positive is made of."""
+        self._doc("see `src/app.py:1` which claims to be the call\n")
+        self.assertEqual(self._kinds(self._report()), [])
+
+
+class TestReferentOutcomes(ReferentRepo):
+    """R3 — the four verdicts."""
+
+    def test_referent_on_the_cited_line_passes(self):
+        self._doc("see `src/app.py:3` `return handle(x)`\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_checked, 1)
+
+    def test_referent_found_uniquely_elsewhere_is_moved(self):
+        self.src.write_text("inserted\ninserted\nalpha\nbeta\n    return handle(x)\ndelta\n")
+        self._doc("see `src/app.py:3` `return handle(x)`\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), ["REFERENT_MOVED"])
+        self.assertEqual(report.findings[0].target_line, 5)
+
+    def test_referent_matching_several_lines_is_ambiguous(self):
+        self.src.write_text("    return handle(x)\nbeta\n    return handle(x)\n")
+        self._doc("see `src/app.py:2` `return handle(x)`\n")
+        report = self._report()
+        self.assertEqual(self._kinds(report), ["REFERENT_AMBIGUOUS"])
+        self.assertEqual(len(report.findings[0].candidates), 2)
+
+    def test_referent_absent_reports_what_is_there_now(self):
+        self.src.write_text("alpha\nbeta\n    return handle(x, ctx)\ndelta\n")
+        report_doc = "see `src/app.py:3` `return handle(x)`\n"
+        self._doc(report_doc)
+        report = self._report()
+        self.assertEqual(self._kinds(report), ["REFERENT_ABSENT"])
+        self.assertIn("handle(x, ctx)", report.findings[0].target_text)
+
+    def test_all_three_verdicts_are_errors(self):
+        for kind in ("REFERENT_MOVED", "REFERENT_AMBIGUOUS", "REFERENT_ABSENT"):
+            self.assertIn(kind, cpr.ERROR_KINDS)
+
+    def test_pinned_reference_is_never_referent_checked(self):
+        """A pin is a claim about a past revision and §4.1 exempts it from re-checking."""
+        self.src.write_text("alpha\nbeta\n    return handle(x, ctx)\ndelta\n")
+        self._doc("see `src/app.py:3@v1.0` `return handle(x)`\n")
+        self.assertEqual(self._kinds(self._report()), [])
+
+
+class TestReferentNormalization(ReferentRepo):
+    """R3 — the two normalizations, each pinned separately because each fails alone."""
+
+    def test_indented_target_line_matches_unindented_referent(self):
+        self._doc("see `src/app.py:3` `return handle(x)`\n")
+        self.assertEqual(self._kinds(self._report()), [])
+
+    def test_escaped_pipe_in_a_table_cell_matches_an_unescaped_target(self):
+        self.src.write_text("alpha\nif (a || b) {\ngamma\n")
+        self._doc(
+            "| ref | note |\n| :-- | :-- |\n"
+            "| `src/app.py:2` `if (a \\|\\| b) {` | the guard |\n"
+        )
+        self.assertEqual(self._kinds(self._report()), [])
+
+    def test_referent_before_the_reference_is_not_examined(self):
+        """103-D9's stated cost. Not examined, NOT reported as broken: the tool licenses
+        one direction, and a form it cannot parse falls under R2, not under a verdict.
+
+        The source is deliberately left unmodified. Editing it would raise DRIFT_SUSPECT —
+        pre-existing §4.1 behaviour that has nothing to do with referents — and the
+        assertion would then pass or fail for the wrong reason.
+        """
+        self._doc("`return handle(x)` appears at `src/app.py:1`\n")
+        report = self._report()
+        # The coordinate is wrong: line 1 is "alpha". Nothing fires, because the quotation
+        # precedes its reference and the tool does not bind it.
+        self.assertEqual(self._kinds(report), [])
+        self.assertEqual(report.referent_missing, 1)
+        self.assertEqual(report.referent_checked, 0)
+
+
+class TestFixMode(ReferentRepo):
+    """R4 — the boundary: a derived number may be rewritten, a claim may not."""
+
+    def _moved(self):
+        self.src.write_text("inserted\ninserted\nalpha\nbeta\n    return handle(x)\ndelta\n")
+        return self._doc("see `src/app.py:3` `return handle(x)`\n")
+
+    def test_fix_rewrites_the_number(self):
+        doc = self._moved()
+        self._report(fix=True)
+        self.assertIn("`src/app.py:5`", doc.read_text())
+
+    def test_fix_leaves_the_referent_byte_identical(self):
+        doc = self._moved()
+        self._report(fix=True)
+        self.assertIn("`return handle(x)`", doc.read_text())
+
+    def test_fix_changes_nothing_else_in_the_document(self):
+        """A rewrite that also normalises line endings, strips trailing whitespace or drops
+        a final newline would pass every other case here while silently editing the corpus
+        it was pointed at."""
+        doc = self._moved()
+        before = doc.read_text()
+        self._report(fix=True)
+        after = doc.read_text()
+        self.assertEqual(before.replace("app.py:3", "app.py:5"), after)
+
+    def test_without_fix_nothing_is_written(self):
+        doc = self._moved()
+        before = doc.read_text()
+        self._report()
+        self.assertEqual(before, doc.read_text())
+
+    def test_fix_does_not_touch_referent_absent(self):
+        self.src.write_text("alpha\nbeta\n    return handle(x, ctx)\ndelta\n")
+        doc = self._doc("see `src/app.py:3` `return handle(x)`\n")
+        before = doc.read_text()
+        self._report(fix=True)
+        self.assertEqual(before, doc.read_text())
+
+    def test_fix_does_not_touch_referent_ambiguous(self):
+        self.src.write_text("    return handle(x)\nbeta\n    return handle(x)\n")
+        doc = self._doc("see `src/app.py:2` `return handle(x)`\n")
+        before = doc.read_text()
+        self._report(fix=True)
+        self.assertEqual(before, doc.read_text())
+
+    def test_docstring_no_longer_claims_the_tool_never_writes(self):
+        """A4: the module asserted 'the tool never writes to the repository' as a design
+        constraint. --fix breaks it, so the sentence moves with the behaviour."""
+        text = SCRIPT.read_text()
+        self.assertNotIn("The tool never writes to the repository.", text)
+        self.assertIn("never writes a referent", text)
+
+
+class TestTargetsChangedScope(ReferentRepo):
+    """R5 — the selection mode that reaches the commit which actually breaks references."""
+
+    def test_source_only_change_selects_the_citing_document(self):
+        self._doc("see `src/app.py:3` `return handle(x)`\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-q", "-m", "doc")
+        # The defect, reproduced: this commit edits no .md at all.
+        self.src.write_text("inserted\nalpha\nbeta\n    return handle(x)\ndelta\n")
+        diff_scoped = cpr.run(self.root, "HEAD", None)
+        self.assertEqual(diff_scoped.doc_count, 0)
+        targeted = cpr.run(self.root, "HEAD", None, targets_changed=True)
+        self.assertEqual(targeted.doc_count, 1)
+        self.assertEqual(self._kinds(targeted), ["REFERENT_MOVED"])
+
+
+class TestAllAcceptsFiles(ReferentRepo):
+    """R6 — a living corpus is named as files and directories, not as one directory."""
+
+    def test_all_accepts_a_file_path(self):
+        self._doc("see `src/app.py:3` `return handle(x)`\n", name="docs/live.md")
+        self._doc("see `src/app.py:900`\n", name="docs/archive.md")
+        report = cpr.run(self.root, "HEAD", ["docs/live.md"])
+        self.assertEqual(report.doc_count, 1)
+        self.assertEqual(self._kinds(report), [])
+
+    def test_all_still_rglobs_a_directory(self):
+        self._doc("a\n", name="docs/one.md")
+        self._doc("b\n", name="docs/two.md")
+        self.assertEqual(cpr.run(self.root, "HEAD", ["docs"]).doc_count, 2)
+
+
+class TestReferentCoverage(ReferentRepo):
+    """R7 — the denominator travels with the number."""
+
+    def test_the_three_counts_partition_the_resolved_references(self):
+        self._doc(
+            "checked `src/app.py:3` `return handle(x)`\n"
+            "bare `src/app.py:2`\n"
+            "missing `src/nope.py:1`\n"
+        )
+        report = self._report()
+        self.assertEqual(report.referent_checked, 1)
+        self.assertEqual(report.referent_missing, 1)
+        self.assertEqual(report.referent_unresolvable, 1)
+        self.assertEqual(
+            report.referent_checked + report.referent_missing + report.referent_unresolvable,
+            report.ref_count,
+        )
+
+    def test_coverage_line_states_all_three(self):
+        self._doc("checked `src/app.py:3` `return handle(x)`\nbare `src/app.py:2`\n")
+        text = cpr.format_text(self._report())
+        self.assertIn("1 with a referent", text)
+        self.assertIn("1 without", text)
+
+    def test_coverage_line_prints_when_there_ARE_findings(self):
+        """The run WITH findings is precisely the one whose reader needs the denominator.
+        Printing coverage only on a clean run is the overclaim R7 exists against — and it
+        shipped once, caught by running the tool on a real corpus rather than by a case."""
+        self._doc("broken `src/app.py:900`\nbare `src/app.py:2`\n")
+        text = cpr.format_text(self._report())
+        self.assertIn("path:line —", text)
+
+    def test_format_text_is_idempotent(self):
+        """It must not mutate the report: the second call once differed from the first."""
+        self._doc("bare `src/app.py:2`\n")
+        report = self._report()
+        self.assertEqual(cpr.format_text(report), cpr.format_text(report))
+
+
 if __name__ == "__main__":
     unittest.main()

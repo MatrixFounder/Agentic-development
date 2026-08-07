@@ -79,6 +79,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-17** [A positional reference carries no referent](backlog/wi-17-positional-references-carry-no-referent.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 103): the referent layer ships; no corpus migrated and no workflow wired, both stated
 - **WI-15** [`SKILL.md` §6 has no rule for narrowing a rule](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) — effort `S`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 102): §6 gains rule 5 — the three items a narrowing produces
 - **WI-14** [State the glyph citation convention in `authoring-contract.md`](backlog/wi-14-glyph-citation-convention-in-authoring-contract.md) — effort `S`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 102): the contract states it; 0 findings removed, not 26 — every holder is already filed
 - **WI-13** [Narrow rule 5 clause 2 to the vocabulary slot](backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md) — effort `M`, status `dropped`, opened 2026-08-05 · **dropped 2026-08-05** (§8 re-measurement): the keep-class has zero occurrences in scope; P4 to WI-14, §7.5 to WI-15

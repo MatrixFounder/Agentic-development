@@ -16,6 +16,61 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.27.0 — a positional reference carries its referent**
+
+Closes `WI-17`, routed here from onchain-analytics `WI-43`. Ships a mechanism; migrates no corpus
+and wires no workflow, both stated rather than implied.
+
+#### Added
+
+- **A `path:line` reference may carry a REFERENT** — a symbol, or an exact substring of the cited
+  line, written as a code span immediately after the coordinate. `documentation-standards` §4.1
+  states the rule; `artifact-formalizer/references/authoring-contract.md` carries the licensed form,
+  because the Architecture phase loads that contract and does **not** load
+  `documentation-standards`. The number becomes a value derived from the referent instead of a claim
+  nothing observes. Measured in one consumer corpus at `e95b909`: of 142 resolvable references, **26
+  pointed at content that is not what it was when written, and the resolver reported none of them** —
+  each was fine on every axis it checked. The cause is structural, not carelessness: 85 of those 142
+  were written by the Analysis, Architecture and Planning phases, which run BEFORE the Development
+  phase edits the files they cite, and one cited file grew 950 → 1560 lines afterwards. §4.1's own
+  mitigation — verify positional references LAST — is unfollowable for a PLAN the pipeline requires
+  to be written FIRST.
+- **Three verdicts, one of them repairable without a human.** `REFERENT_MOVED` (found uniquely
+  elsewhere), `REFERENT_AMBIGUOUS` (several matches), `REFERENT_ABSENT` (gone — the cited text was
+  edited, so the sentence citing it needs re-reading). `--fix` rewrites the line number of the first
+  and **never** a referent: the referent is the claim, the number is derived from it. The check
+  itself never writes — the pairing is `format:check` / `format`, not a gate mutating the tree it
+  judges. The module docstring's "the tool never writes to the repository" moved with the behaviour
+  rather than being left standing as a false invariant.
+- **`--targets-changed`** selects documents *citing* a file the change touched. Default diff scope
+  selects documents the change *edited*, so a commit touching only sources scanned nothing — while
+  being exactly the commit that shifts the cited lines. **`--all` now accepts files** as well as
+  directories, so a project can name its living corpus instead of pointing at a parent directory and
+  pulling in archives.
+- **A `path:line` coverage line** stating how many references carried a referent, how many did not,
+  and how many did not resolve — printed on runs WITH findings too, which is where a reader most
+  needs the denominator.
+- **`ARCHITECTURE.md` §7.2** — the addressing ladder gains the **Positional + referent** rung. It
+  survives translation because the referent is a substring of the cited artifact, so matching it
+  never reads the natural language of the citing document: invariant L1 holds by construction.
+
+#### Changed
+
+- **`documentation-standards` §4.2 splits its verdict by corpus** instead of holding one rule. The
+  54-of-84 measurement that rejected a repository-wide gate was taken over **archived reviews** and
+  stays as written. The referent layer is gateable over a **named** living corpus and stays advisory
+  everywhere else — a coordinate in an archived document is a true statement about a past state.
+
+#### Notes
+
+- **Adoption costs an existing project nothing.** A reference without a referent is reported as *not
+  examined* — never an error, never a warning. Measured across the 17 repositories carrying
+  `.agent/skills/`: 11 hold no `path:line` reference at all, and the living corpora hold 324. No
+  document turns red on upgrade, in any of them.
+- **Not shipped, deliberately:** no corpus migrated, including this repository's own six references;
+  no workflow invokes the resolver. §4.1 and the authoring-contract row are compared by nothing —
+  the same ungated pair `WI-16` §5.3 recorded. Battery 89 → **115**; skills validate 46/46.
+
 ### **v3.26.0 — the RTM gate reads every table, and phases 1–3 gain two obligations**
 
 Closes `RF-6`, `WI-40`, `WI-41`, all measured in one `vdd-enhanced` run and routed here from

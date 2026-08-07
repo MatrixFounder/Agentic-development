@@ -65,7 +65,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`tdd-strict`** | **[High Assurance]** Strict TDD with mechanical verification (Fail Reason, Minimalism). Tier 3. | `full-robust` | Developer (Strict Mode) |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol, blast radius of bulk-rewrite commands (§5.1), and **gate verification** (§6.3) — verify with CI's invocation not a narrower one, a pipeline's exit code belongs to its last command, and exit 0 is not evidence that work happened. | `03-develop-single-task`, `base-stub-first` | Developer |
 | **`artifact-formalizer`** | Register authority for authored prose — two modes, see the note below | Analysis, Architecture, Planning, Review | Analyst, Architect, Planner, Reviewers |
-| **`documentation-standards`** | Docstrings, "The Why" comments, Markdown structure, register rules (§5.5) — see the note below | All Development Workflows | Developer, Code Reviewer |
+| **`documentation-standards`** | Docstrings, "The Why" comments, Markdown structure, register rules (§5.5), and the positional-reference resolver (§4.1–§4.2) — see the note below | All Development Workflows | Developer, Code Reviewer |
 | **`testing-best-practices`** | Best practices: E2E/Unit hierarchy, no LLM mocking, realism. | `03-develop-single-task`, `vdd-03-develop` | Developer, Code Reviewer |
 
 ### Notes on two rows
@@ -98,6 +98,14 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 **`documentation-standards`** — §5.5 holds the normative short form of the register rules and the
 detector-coverage table. §5.1 owns cell shape, §5.2 prose shape, §5.3 line length. The scanner
 surfaces §5.1 findings under that section number rather than under a §5.5 rule.
+
+§4.1 also carries the **referent** rule: an unpinned `path:line` in a living corpus quotes the symbol
+or the exact substring it points at, so its falsity is observable. `scripts/check_positional_refs.py`
+resolves both layers — path (`UNRESOLVABLE`, `AMBIGUOUS`, `OUT_OF_RANGE`) and referent
+(`REFERENT_MOVED`, `REFERENT_AMBIGUOUS`, `REFERENT_ABSENT`). A reference carrying no referent is
+reported as **not examined**, never as a defect, so the rule costs an unadopting project nothing.
+`--targets-changed` selects documents *citing* a changed file; `--fix` rewrites a moved line number
+and never a referent. Advisory by default, gateable over a **named** corpus (TASK 103).
 
 
 ### Product Management

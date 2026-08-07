@@ -14,7 +14,13 @@ Design constraints that shape this tool:
 * **Advisory by default.** Only objectively decidable problems (a path nothing
   resolves to, a line past end-of-file) are errors. Drift suspicion is a warning that
   prints the target line back for a human to judge.
-* **Read-only.** The tool never writes to the repository.
+* **The check never writes; ``--fix`` writes a line number and never writes a referent.** The
+  default invocation is read-only. ``--fix`` is a separate invocation — the ``format:check``
+  / ``format`` pairing, not a gate that mutates the tree it is judging — and its authority
+  is bounded by what the two objects are: a referent is the CLAIM and is never
+  machine-written, a line number is a value DERIVED from it and may be recomputed. It
+  rewrites only ``REFERENT_MOVED``, only inside the reference span, and never the two
+  verdicts a human must settle (TASK 103 D4).
 
 Exit codes:
     0: no errors (warnings may still be present)
@@ -139,7 +145,36 @@ ANY_ORDINAL = re.compile(r"§\s?\d+(?:\.\d+)*")
 #: ``ESCAPES_ROOT`` is deliberately NOT here. A path above the root is refused a read — that
 #: is the security boundary — but it is *unverifiable*, not provably wrong: this corpus holds
 #: genuine cross-repository references. Reporting it as an error would fail correct documents.
-ERROR_KINDS = {"UNRESOLVABLE", "AMBIGUOUS", "OUT_OF_RANGE", "ORDINAL_MISSING"}
+#: The three referent verdicts are errors: each names a coordinate the tree contradicts.
+#: ``REFERENT_MOVED`` is an error even though ``--fix`` repairs it mechanically — the document
+#: asserts a wrong number until it is repaired, and a warning is the class readers skip.
+ERROR_KINDS = {
+    "UNRESOLVABLE",
+    "AMBIGUOUS",
+    "OUT_OF_RANGE",
+    "ORDINAL_MISSING",
+    "REFERENT_MOVED",
+    "REFERENT_AMBIGUOUS",
+    "REFERENT_ABSENT",
+}
+
+#: A REFERENT: the code span immediately following a reference span, separated by nothing
+#: but whitespace and at most one comma.
+#:
+#: This is the form authors already write — ``\`registry.ts:1083\`, \`if (deadlineHit …) {\```
+#: — so licensing it introduces no syntax. Adjacency is the same mechanism ``SECTION_ORDINAL``
+#: uses to bind an ordinal to the target named beside it.
+#:
+#: A referent is NOT an anchor. ``documentation-standards`` §4.3 defines an anchor as
+#: ``<!-- contract:<name> -->``, which addresses a SECTION of a document. A referent identifies
+#: what a COORDINATE claims to point at. Two objects, two names, kept apart on purpose.
+#: No ``^``: this is applied with ``.match(line, pos)``, which anchors at ``pos`` on its own,
+#: while ``^`` would still demand the real start of the string and match nothing.
+#: ``ORDINAL_CONTINUATION`` above carries the same note for the same reason.
+REFERENT_SPAN = re.compile(r"[ \t]*,?[ \t]*`(?P<referent>[^`]+)`")
+
+#: Applied to a referent and to a candidate target line before they are compared.
+_WS_RUN = re.compile(r"\s+")
 
 
 @dataclass
@@ -173,6 +208,16 @@ class Ref:
     pin: str | None = None
     ordinal: str | None = None
     md_link: bool = False
+    #: The referent quoted beside this reference, normalized, or ``None`` when it carries
+    #: none. ``None`` means unverifiable, never wrong — see :func:`extract_referent`.
+    referent: str | None = None
+    #: Column offsets of the line-number token, so ``--fix`` can rewrite exactly it.
+    num_start: int = 0
+    num_end: int = 0
+    #: Column offsets of the WHOLE reference span. ``--fix`` rewrites inside this slice and
+    #: reassembles the line around it untouched, so no other byte of the document can move.
+    span_start: int = 0
+    span_end: int = 0
 
     @property
     def label(self) -> str:
@@ -190,11 +235,56 @@ class Finding:
     target: str | None = None
     target_text: str | None = None
     candidates: list[str] = field(default_factory=list)
+    #: For ``REFERENT_MOVED``: the 1-indexed line the referent actually sits on. This is the
+    #: value ``--fix`` writes, and the only value it is ever permitted to write.
+    target_line: int | None = None
 
     @property
     def severity(self) -> str:
         """Return ``"error"`` for objective defects, ``"warning"`` otherwise."""
         return "error" if self.kind in ERROR_KINDS else "warning"
+
+
+def normalize_for_match(text: str) -> str:
+    """Return ``text`` in the form referent comparison uses.
+
+    Two normalizations, each required by a place documents actually put quotations:
+
+    * **Whitespace runs collapse.** A quotation in prose wraps across document lines, and the
+      target line carries its own indentation. Comparing raw text fails both.
+    * **``\\|`` unescapes to ``|``.** A quotation inside a Markdown table cell MUST escape the
+      pipe or the cell splits. Without this, every referent quoting a boolean-or or a union
+      type fails inside a table — which is exactly where plans put them.
+
+    Without both, a correctly written referent reports as broken, and a gate that fails correct
+    documents is switched off (``documentation-standards`` §4.2).
+    """
+    return _WS_RUN.sub(" ", text.replace("\\|", "|")).strip()
+
+
+def extract_referent(line: str, ref_end: int) -> str | None:
+    """Return the referent following a reference span, or ``None``.
+
+    Args:
+        line: The document line carrying the reference.
+        ref_end: Offset just past the reference's closing backtick.
+
+    Returns:
+        The referent text, normalized by :func:`normalize_for_match`, or ``None`` when the
+        reference carries none. ``None`` is not a defect: an unreferenced coordinate is
+        *unverifiable*, and the caller counts it as not examined.
+
+    A referent FOLLOWS its reference and sits on the SAME document line (TASK 103 D9). One
+    direction is licensed because a line carrying two references and one quotation is
+    otherwise unassignable, and one line because ``extract_refs`` scans line by line, so a
+    span wrapped across two document lines is not one span. A quotation written before its
+    coordinate is therefore not examined — not reported as broken.
+    """
+    match = REFERENT_SPAN.match(line, ref_end)
+    if match is None:
+        return None
+    referent = normalize_for_match(match.group("referent"))
+    return referent or None
 
 
 def prose_pin_for_line(line: str) -> str | None:
@@ -401,6 +491,11 @@ def extract_refs(doc_rel: str, text: str) -> list[Ref]:
                     end=int(end) if end else None,
                     pin=groups.get("pin") or prose_rev,
                     md_link=is_md_link,
+                    referent=extract_referent(line, m.end()),
+                    num_start=m.start("line"),
+                    num_end=m.end("line"),
+                    span_start=m.start(),
+                    span_end=m.end(),
                 )
             )
     return refs
@@ -603,6 +698,58 @@ def classify_ordinal(
     )
 
 
+def classify_referent(ref: Ref, target: str, lines: list[str]) -> Finding | None:
+    """Judge a reference that carries a referent, against the target's current text.
+
+    Args:
+        ref: The reference. ``ref.referent`` is non-empty.
+        target: Repo-relative path of the resolved target.
+        lines: The target's current lines.
+
+    Returns:
+        ``None`` when the referent is present within the cited coordinate — the claim holds.
+        Otherwise the verdict: moved (repairable), ambiguous or absent (both need a human).
+    """
+    last = min(ref.end or ref.line, len(lines))
+    for number in range(ref.line, last + 1):
+        if ref.referent in normalize_for_match(lines[number - 1]):
+            return None
+
+    matches = [
+        number
+        for number, text in enumerate(lines, start=1)
+        if ref.referent in normalize_for_match(text)
+    ]
+    here = lines[ref.line - 1].strip()
+
+    if not matches:
+        return Finding(
+            ref,
+            "REFERENT_ABSENT",
+            "the referent is nowhere in the target — the cited text was edited, so the "
+            "sentence citing it needs re-reading, not a new number",
+            target=target,
+            target_text=here,
+        )
+    if len(matches) > 1:
+        return Finding(
+            ref,
+            "REFERENT_AMBIGUOUS",
+            f"the referent matches {len(matches)} lines; narrow it or pick one",
+            target=target,
+            target_text=here,
+            candidates=[str(number) for number in matches[:5]],
+        )
+    return Finding(
+        ref,
+        "REFERENT_MOVED",
+        f"the referent now sits at line {matches[0]} — repairable with --fix",
+        target=target,
+        target_text=here,
+        target_line=matches[0],
+    )
+
+
 def classify(
     ref: Ref,
     root: Path,
@@ -687,6 +834,12 @@ def classify(
             target=target,
         )
 
+    if ref.referent:
+        # A confirmed referent SETTLES the coordinate, so DRIFT_SUSPECT is not also emitted
+        # even when the target is in this change: the referent is direct evidence, and the
+        # warning exists only where the tool has none.
+        return classify_referent(ref, target, lines)
+
     if target in changed:
         return Finding(
             ref,
@@ -698,25 +851,139 @@ def classify(
     return None
 
 
+#: Inside a reference span only: the code-span numbers, or the Markdown-link ones.
+_SPAN_NUMBERS = re.compile(r":(?P<line>\d+)(?P<range>-\d+)?")
+_SPAN_LINK_NUMBERS = re.compile(r"#L(?P<line>\d+)(?P<range>-L?\d+)?")
+
+
+def repair_document(root: Path, doc: str, findings: list[Finding]) -> int:
+    """Rewrite the line numbers of ``REFERENT_MOVED`` references in one document.
+
+    Args:
+        root: Repository root.
+        doc: Repo-relative path of the citing document.
+        findings: Findings for this document. Only ``REFERENT_MOVED`` is acted on.
+
+    Returns:
+        How many references were repaired.
+
+    The write is bounded three ways, and each bound is a test:
+
+    * Only ``REFERENT_MOVED``. ``REFERENT_ABSENT`` and ``REFERENT_AMBIGUOUS`` are the cases
+      the tool cannot decide, and repairing them would be guessing.
+    * Only inside the reference span. The line is reassembled around that slice, so the
+      referent, the prose and every other reference on the line are byte-identical after.
+    * Only the number. The referent is the claim and is never machine-written (TASK 103 D4);
+      the number is a value derived from it.
+    """
+    movable = [f for f in findings if f.kind == "REFERENT_MOVED" and f.target_line]
+    if not movable:
+        return 0
+
+    path = root / doc
+    text = path.read_text(encoding="utf-8")
+    lines = text.split("\n")
+
+    # Right-to-left within each line: an earlier rewrite would invalidate later offsets.
+    for finding in sorted(movable, key=lambda f: (-f.ref.doc_line, -f.ref.span_start)):
+        ref = finding.ref
+        delta = finding.target_line - ref.line
+        new_line, new_end = ref.line + delta, (ref.end + delta) if ref.end else None
+        original = lines[ref.doc_line - 1]
+        segment = original[ref.span_start : ref.span_end]
+        pattern = _SPAN_LINK_NUMBERS if ref.md_link else _SPAN_NUMBERS
+        separator = "#L" if ref.md_link else ":"
+
+        def rewrite(match: re.Match) -> str:
+            tail = ""
+            if match.group("range"):
+                tail = f"-L{new_end}" if ref.md_link else f"-{new_end}"
+            return f"{separator}{new_line}{tail}"
+
+        lines[ref.doc_line - 1] = (
+            original[: ref.span_start]
+            + pattern.sub(rewrite, segment, count=1)
+            + original[ref.span_end :]
+        )
+
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return len(movable)
+
+
 def collect_docs(root: Path, changed: set[str], scan_all: list[str] | None) -> list[str]:
     """Choose which Markdown documents to inspect.
 
     Args:
         root: Repository root.
         changed: Paths belonging to the current change.
-        scan_all: Roots to scan exhaustively, or ``None`` for diff scope.
+        scan_all: Paths to scan exhaustively — a directory is walked, a file is taken as
+            itself — or ``None`` for diff scope.
 
     Returns:
         Sorted repo-relative Markdown paths.
+
+    A living corpus is normally a mix: ``docs/PLAN.md docs/TASK.md docs/architectures/``.
+    Directories alone cannot express it, and naming the parent instead pulls in the archives,
+    whose coordinates are correct records of a past state (§4.2).
     """
     if scan_all is not None:
         docs: set[str] = set()
         for base in scan_all:
-            for path in (root / base).rglob("*.md"):
+            candidate = root / base
+            if candidate.is_file():
+                if candidate.suffix == ".md":
+                    docs.add(str(candidate.relative_to(root)))
+                continue
+            for path in candidate.rglob("*.md"):
                 if path.is_file():
                     docs.add(str(path.relative_to(root)))
         return sorted(docs)
     return sorted(d for d in changed if d.endswith(".md") and (root / d).is_file())
+
+
+def docs_citing(
+    root: Path,
+    index: dict[str, list[str]],
+    changed: set[str],
+    scan_all: list[str] | None,
+) -> set[str]:
+    """Return documents that CITE a file the current change touched.
+
+    Args:
+        root: Repository root.
+        index: Suffix index built by :func:`build_suffix_index`.
+        changed: Paths belonging to the current change.
+        scan_all: Corpus to search, or ``None`` to search every tracked Markdown file.
+
+    Returns:
+        Repo-relative Markdown paths citing at least one changed file.
+
+    This is the selection the original tool lacked, and the lack is the defect: diff scope
+    returns only documents the change EDITED, so a commit touching sources and no ``.md``
+    scans nothing — while being exactly the commit that shifts the lines those documents
+    cite. Measured in onchain-analytics: one commit in ``registry.ts`` invalidated 25
+    references and no gate opened a single document.
+    """
+    if not changed:
+        return set()
+
+    corpus = collect_docs(root, set(), scan_all if scan_all is not None else ["."])
+    citing: set[str] = set()
+    for doc in corpus:
+        try:
+            text = (root / doc).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for ref in extract_refs(doc, text):
+            if ref.pin:
+                continue
+            candidates = index.get(ref.path, [])
+            if (root / ref.path).is_file():
+                candidates = [os.path.normpath(ref.path)]
+            if len(candidates) == 1 and candidates[0] in changed:
+                citing.add(doc)
+                break
+    return citing
 
 
 @dataclass
@@ -734,6 +1001,13 @@ class Report:
     doc_count: int = 0
     ref_count: int = 0
     pinned_count: int = 0
+    #: R7 — the denominator travels with the number. These three partition every resolved,
+    #: unpinned reference, and the coverage line prints them separately so a green run cannot
+    #: be read as covering references it never examined.
+    referent_checked: int = 0
+    referent_missing: int = 0
+    referent_unresolvable: int = 0
+    fixed_count: int = 0
     ordinal_count: int = 0
     ordinal_outcomes: dict[str, int] = field(default_factory=dict)
     ordinal_out_of_scope: int = 0
@@ -754,13 +1028,29 @@ class Report:
         return self.total_refs - self.pinned_count - self.ordinal_outcomes.get("pinned", 0)
 
 
-def run(root: Path, base: str, scan_all: list[str] | None) -> Report:
+#: Kinds that say the PATH could not be settled. A reference in this state was never
+#: examined for a referent, and counting it as "carries none" would overstate coverage.
+_UNRESOLVED_KINDS = {"UNRESOLVABLE", "AMBIGUOUS", "OUT_OF_RANGE", "ESCAPES_ROOT"}
+
+
+def run(
+    root: Path,
+    base: str,
+    scan_all: list[str] | None,
+    targets_changed: bool = False,
+    fix: bool = False,
+) -> Report:
     """Collect findings for the selected document set.
 
     Args:
         root: Repository root.
         base: Git revision defining the current change.
         scan_all: Roots to scan exhaustively, or ``None`` for diff scope.
+        targets_changed: Select documents CITING a file the change touched, instead of
+            documents the change edited. This is the scope that reaches a source-only
+            commit — the commit that actually invalidates coordinates.
+        fix: Rewrite the line number of every ``REFERENT_MOVED`` reference. Never rewrites
+            a referent, and never touches the two verdicts a human must settle.
 
     Returns:
         A :class:`Report`. Counting happens here, not in the caller, so the printed
@@ -780,10 +1070,13 @@ def run(root: Path, base: str, scan_all: list[str] | None) -> Report:
         report.notes.append("no tracked files: every reference will fail to resolve")
 
     docs = collect_docs(root, changed, scan_all)
+    if targets_changed:
+        docs = sorted(set(docs) | docs_citing(root, index, changed, scan_all))
     report.doc_count = len(docs)
 
     for doc in docs:
         text = (root / doc).read_text(encoding="utf-8", errors="replace")
+        doc_findings: list[Finding] = []
 
         for ref in extract_refs(doc, text):
             report.ref_count += 1
@@ -792,6 +1085,17 @@ def run(root: Path, base: str, scan_all: list[str] | None) -> Report:
             found = classify(ref, root, index, changed, line_cache)
             if found:
                 report.findings.append(found)
+                doc_findings.append(found)
+            if not ref.pin:
+                if found is not None and found.kind in _UNRESOLVED_KINDS:
+                    report.referent_unresolvable += 1
+                elif ref.referent:
+                    report.referent_checked += 1
+                else:
+                    report.referent_missing += 1
+
+        if fix:
+            report.fixed_count += repair_document(root, doc, doc_findings)
 
         for ref in extract_ordinal_refs(doc, text):
             report.ordinal_count += 1
@@ -845,10 +1149,42 @@ def describe_ordinal_scope(outcomes: dict[str, int], failed: int, out_of_scope: 
     return "section ordinals — " + ", ".join(parts)
 
 
+def describe_referent_scope(report: Report) -> str:
+    """State how much of the positional corpus was actually verified.
+
+    A finding count alone implies every coordinate was checked. Most carry no referent and
+    are unverifiable, so a report omitting that repeats the overclaim §4.1 is about — and
+    repeats the second defect the routed record measured: a survey reporting a number
+    without the area it searched. The three counts partition every unpinned reference.
+
+    Args:
+        report: The run being described.
+
+    Returns:
+        A single note line.
+    """
+    parts = [
+        f"{report.referent_checked} with a referent",
+        f"{report.referent_missing} without (not examined)",
+    ]
+    if report.referent_unresolvable:
+        parts.append(f"{report.referent_unresolvable} unresolvable")
+    if report.pinned_count:
+        parts.append(f"{report.pinned_count} pinned")
+    if report.fixed_count:
+        parts.append(f"{report.fixed_count} repaired by --fix")
+    return "path:line — " + ", ".join(parts)
+
+
 def format_text(report: Report) -> str:
     """Render a report as human-readable text."""
     doc_count, findings = report.doc_count, report.findings
-    suffix = "".join(f"\nnote: {n}" for n in report.notes)
+    # Built without mutating the report: format_text must return the same text when called
+    # twice, and appending a note here would make the second call differ from the first.
+    notes = list(report.notes)
+    if report.ref_count:
+        notes.append(describe_referent_scope(report))
+    suffix = "".join(f"\nnote: {n}" for n in notes)
 
     if doc_count == 0:
         # Never phrase an empty scope as a pass: "OK" here would be a verification claim
@@ -857,6 +1193,7 @@ def format_text(report: Report) -> str:
             "NOTHING CHECKED: no Markdown document is in scope. "
             "Nothing was verified." + suffix
         )
+
     if not findings:
         skipped = report.total_refs - report.examined_refs
         tail = f" ({skipped} pinned, not checked)" if skipped else ""
@@ -893,7 +1230,10 @@ def format_text(report: Report) -> str:
             "Warnings are not failures: confirm each line still says what the document "
             "claims, or pin the reference with @<rev>."
         )
-    for note in report.notes:
+    # `notes`, not `report.notes`: the coverage line must print in BOTH branches. Printing it
+    # only when nothing was found is the exact overclaim R7 exists against — a run WITH
+    # findings is precisely the run whose reader needs to know how much went unexamined.
+    for note in notes:
         lines.append(f"note: {note}")
     return "\n".join(lines)
 
@@ -919,6 +1259,23 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Scan these directories exhaustively instead of the diff (default: docs).",
     )
+    parser.add_argument(
+        "--targets-changed",
+        action="store_true",
+        help=(
+            "Select documents citing a file the current change touched, instead of documents "
+            "the change edited. This is the scope that catches a source-only commit shifting "
+            "lines under a document nobody opened."
+        ),
+    )
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help=(
+            "Rewrite the line number of a REFERENT_MOVED reference. Never rewrites a referent, "
+            "and never touches REFERENT_ABSENT or REFERENT_AMBIGUOUS — those need a human."
+        ),
+    )
     parser.add_argument("--json", action="store_true", help="Emit findings as JSON.")
     parser.add_argument(
         "--strict", action="store_true", help="Treat warnings as failures (exit 1)."
@@ -935,7 +1292,13 @@ def main(argv: list[str] | None = None) -> int:
         scan_all = args.all or ["docs"]
 
     try:
-        report = run(root, args.base, scan_all)
+        report = run(
+            root,
+            args.base,
+            scan_all,
+            targets_changed=args.targets_changed,
+            fix=args.fix,
+        )
     except GitError as exc:
         # Exit 2, never 0: a repository the tool could not query has not been checked,
         # and a mistyped --base must not be indistinguishable from a clean review.

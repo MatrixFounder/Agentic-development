@@ -1,4 +1,4 @@
-# TASK 102 — artifact-formalizer: the glyph citation convention, and a maintenance rule for narrowing
+# TASK 103 — A positional reference carries its referent
 
 <!-- contract:meta -->
 
@@ -6,51 +6,58 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 102 |
-| Slug | formalizer-glyph-citation-and-narrowing-rule |
+| Task ID | 103 |
+| Slug | referent-carrying-positional-references |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | Operator request 2026-08-05: resolve WI-14 and WI-15 |
-| Depends on | TASK 096, TASK 097, TASK 099, TASK 100, TASK 101 |
-| Closes | [WI-14](backlog/wi-14-glyph-citation-convention-in-authoring-contract.md), [WI-15](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) |
-| Archive name | `task-102-formalizer-glyph-citation-and-narrowing-rule.md` |
+| Source | Operator request 2026-08-07; routed from onchain-analytics `docs/backlog/wi-43-line-anchored-citations-in-docs-decay-silently.md` |
+| Depends on | TASK 095 (structural anchors and gate honesty — the tool this task extends) |
+| Closes | WI-17 (filed by this task as the routed record) |
+| Archive name | `task-103-referent-carrying-positional-references.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-Two gaps, both carried out of [WI-13](backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md)
-when that record was dropped. Neither depends on the narrowing WI-13 proposed.
+A `path:line` reference in a document is a **claim about state written in the grammar of an
+address**. Nothing observes it going false. `documentation-standards` §4.1 already states the
+adjacent half of this — "prefer nominal over positional" — as a preference, and
+`scripts/check_positional_refs.py` already resolves the address. Neither reaches the case where the
+address resolves, is in range, and points at something else entirely.
 
-**Gap 1 — the contract states the citation convention for one surface only.**
-`references/authoring-contract.md` states the code-span convention under "Why code spans". It names
-a **marker**. It does not name a **glyph**. A record that reports glyph severities therefore fires
-rule 5 on every glyph it quotes.
+**Measured in onchain-analytics at `e95b909`** (clean worktree; method: `git blame` the citing line
+for the commit that authored it, `git show <sha>:<target>` for the content it then had, compared
+against the content now):
 
-Measured over the declared scope at `2edf1a2`: 211 documents, 307 `emoji_severity` findings, of
-which 26 are a severity-coloured glyph quoted inside a record about glyph severity. They sit in
-`wir-11` (12), `wir-2` (10), `task-065` (3) and `wir-4` (1). WI-13 §8 classifies all 26 as not a
-defect.
-
-**Gap 2 — `SKILL.md` §6 triages one direction.**
-
-| Rule | Answers |
+| Population | Count |
 | :--- | :--- |
-| 1 | a test already forbids the phrase — add a faster detector |
-| 2 | no test reaches it — amend the contract first |
-| 3 | every entry ships with a `probe` |
-| 4 | a rule ships only when a measurement supports it |
+| `path:line` references in the living corpus (`docs/PLAN.md`, `docs/TASK.md`, `docs/architectures/`) | 182 |
+| of those, resolvable | 142 |
+| of those, pointing at content that is not what it was when written | **26** |
+| references the resolver reports today in that corpus | 40, all `AMBIGUOUS` |
+| of the 26 drifted, reported by the resolver today | **0** |
 
-Rules 1 and 2 route **under**-coverage. Rule 4 gates what a new rule needs before it ships. No rule
-states what a proposal to **remove** coverage must produce.
+The 26 are invisible because they are objectively fine on every axis the tool checks: the path
+resolves, the line exists, the document was not edited by the current change.
 
-**Why the gap has a cost.** Two events in this repository, both recorded. WI-13 §7.5 identified the
-gap while proposing a narrowing, then routed itself through rule 2 — the rule for the opposite
-direction. WI-13 §7.2 records P2 as the widening `task-099` D2 had already rejected, re-proposed
-with a sample three times smaller than the measured blast radius. Verified: 584 findings erased,
-battery `188/191`.
+**The mechanism is structural, not a lapse in care.** Measured over the same corpus, 85 of the 142
+attributable references were written by the Analysis, Architecture and Planning phases — phases that
+by construction run **before** the Development phase edits the files they cite. In task T-013,
+`packages/core/src/adapters/registry.ts` went 950 → 1560 lines across four commits **after** the
+analysis document had recorded 50 coordinates into it.
 
-`measurement-baseline.md` §4 keeps refuted candidates on record so nobody re-proposes them from
-impression. §6 carries no such record for the widening D2 rejected.
+**§4.1's existing mitigation cannot reach this.** It prescribes that positional references are
+verified LAST, "after the artifact edits are final". A PLAN is a positional-reference-dense document
+that the pipeline requires to be written FIRST. The rule and the pipeline contradict each other, and
+the plan loses.
+
+**The resolver's scope cannot reach it either.** `collect_docs()` returns only changed `*.md`
+files, so a commit that edits sources and no document scans nothing — which is precisely the commit
+that invalidates references.
+
+**An authoring rule alone is refuted, not untried.** `onchain-analytics/docs/architectures/open-questions.md:374@e95b909`
+carries the rule in prose, written by its own author: *"re-measure them, or quote the predicate
+text, whenever this file is touched."* The same paragraph records that `:740`/`:764` had already
+rotted once. Its `:901` has since rotted again — the predicate now sits at `:1511`.
 
 <!-- contract:rtm -->
 
@@ -58,146 +65,231 @@ impression. §6 carries no such record for the widening D2 rejected.
 
 | ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | `authoring-contract.md` states the code-span convention for a glyph beside the marker it already names | Y | A1, A3 |
-| R2 | The same paragraph names the classes the convention does not reach, and states that rule 5 gains no exemption | Y | A1, A3 |
-| R3 | `SKILL.md` §6 carries a fifth rule stating what a narrowing produces before it ships | Y | A1, A3 |
-| R4 | `measurement-baseline.md` §6 records the widening `task-099` D2 rejected, with its figures | Y | A1, A3 |
-| R5 | The battery reports no `emoji_severity` for a glyph inside a code span | Y | A2 |
-| R6 | Every document stating the battery size states the pinned total | Y | A2 |
-| R7 | No already-filed document is edited to adopt the convention | Y | A5 |
+| R1 | `documentation-standards` §4.1 licenses a **referent** adjacent to a positional reference and names what satisfies one | Y | A1, A6 |
+| R2 | A reference **without** a referent is reported as *not examined* — never an error, never a warning | Y | A2, A3 |
+| R3 | The resolver reports four referent outcomes: present on the cited line · found uniquely elsewhere · found several times · absent | Y | A2 |
+| R4 | `--fix` rewrites the **line number** of a uniquely-relocated referent and never rewrites a referent | Y | A2, A4 |
+| R5 | Document selection reaches documents whose **targets** changed, not only documents that changed | Y | A2 |
+| R6 | `--all` accepts files as well as directories, so a project can name its living corpus | Y | A2 |
+| R7 | The coverage line states with a referent / without one / unresolvable counts separately | Y | A2, A3 |
+| R8 | `artifact-formalizer/references/authoring-contract.md` carries one licensed-form row for the reference that carries a referent | Y | A1, A6 |
+| R9 | §4.2 states what the referent layer makes gateable and what stays advisory, without contradicting its own 54-of-84 measurement | Y | A1, A6 |
+| R10 | The routed record exists in `docs/BACKLOG.md` + `docs/backlog/`, and both changelogs carry the change | Y | A5, A7 |
+| R11 | `System/Docs/SKILLS.md` describes the skill as it is after this change — the resolver, its referent layer and its fix mode | Y | A9 |
 
 ### 2.1 Sub-features
 
-**R1 — the convention, stated for glyphs.** The "Why code spans" paragraph of
-`references/authoring-contract.md` states that a marker cited as an example goes in a code span. R1
-extends that sentence to a glyph. The scanner already blanks code spans, so no code changes and no
-rule changes.
+**R1 — the referent, defined by adjacency.** A referent is a **code span immediately following the
+reference code span**, separated by nothing but whitespace and at most one comma. Two spellings,
+one rule: a symbol name that appears on the cited line, or an exact substring of it. No new syntax
+is introduced — the form is one authors already write, e.g.
+`onchain-analytics/docs/PLAN.md:196@e95b909`: `` `registry.ts:1083@e95b909`, `if (deadlineHit \|\| …) {` ``.
+Adjacency is an established mechanism in this tool: `SECTION_ORDINAL` already binds an ordinal to
+the target named immediately before it.
 
-**R2 — the bound.** `known-issues-format` §8 states that a record body is preserved byte-for-byte as
-supplied, and that this is what makes it evidence. A machine-filed record therefore cannot adopt the
-convention after filing. R2 requires the contract to name that class, and to state that rule 5 gains
-no exemption — the scanner still reports those glyphs. A reader of a residual finding then reads a
-recorded reason rather than an oversight.
+**Comparison is normalized** by collapsing runs of whitespace and by unescaping `\|`. The first is
+required because the target line carries its own indentation while the referent as written does not;
+the second because a quotation inside a Markdown table cell MUST escape the pipe or the cell splits,
+and plans put quotations in table cells. Without both, a correctly-written referent reports as
+broken, and a gate that fails correct documents is switched off.
 
-**R3 — the fifth maintenance rule.** A narrowing proposal produces three items before it ships:
+**103-D9 — the referent sits on the same document line as its reference.** Discovered in
+implementation: `extract_refs()` scans line by line, so a code span wrapped across two document
+lines is not one span. Two directions were possible and one is licensed — a referent **follows** its
+reference, because a line carrying two references and one quotation is otherwise unassignable. The
+cost is stated rather than hidden: a document whose quotation precedes the coordinate, or wraps, is
+**not examined** — it is not reported as broken. That is R2's rule applied to a form the tool cannot
+parse, which is the same guarantee, not an exception to it.
 
-1. the population it removes, measured over the **declared** scope, with the scope and the commit
-   named;
-2. the battery result after the change, since a narrowing that fails a case is a rule the battery
-   still asks for;
-3. the class the narrowed rule keeps, with one occurrence that the narrowed rule still reports.
+**R2 — the blast radius is zero by construction.** Measured across all 17 repositories carrying
+`.agent/skills/`: 11 hold no `path:line` reference at all; the living corpora hold 324 in total
+(onchain-analytics 182, obsidian-llm-wiki 99, Universal-skills 36, agentic-development 6,
+n8n-lazy-loading-skills 1). An reference without a referent must therefore be **unverifiable, not wrong** —
+otherwise this upgrade turns 324 references red in four repositories that did not ask for it. This
+is the same discipline §4.2 already applies: a green run must not overclaim.
 
-**Why point 3.** WI-13 §8 measured zero occurrences of its keep-class over the declared scope, and
-§7.3 recorded that the class is unreachable where its vocabulary lives.
+**R3 — four outcomes, three of which need a human and one that does not.**
 
-**R4 — the rejection on record.** `measurement-baseline.md` §6 states which glyphs rule 5 exempts
-and where. It does not state that exempting `` `✅` ``, `` `❌` ``, `` `☑` `` and `` `☒` `` everywhere
-was proposed and rejected. WI-13 §7.2 records the re-proposal citing §6 as support. R4 adds the
-figures to §6.
+| Outcome | Kind | Severity | Human needed |
+| :--- | :--- | :--- | :--- |
+| referent is on the cited line | — (pass) | — | no |
+| referent occurs exactly once, on another line | `REFERENT_MOVED` | error | **no** — `--fix` resolves it |
+| referent occurs several times | `REFERENT_AMBIGUOUS` | error | yes — pick one |
+| referent occurs nowhere in the target | `REFERENT_ABSENT` | error | yes — the cited text changed, so the claim about it must be re-read |
 
-**R5 — the battery case.** `TC-FP-02` pins a marker inside a code span at zero findings. No case
-pins a glyph. R5 adds one beside it.
+`REFERENT_ABSENT` is the class the tool cannot decide and must not guess: the target line was edited,
+which means the sentence citing it may now be false for reasons no coordinate repair addresses.
 
-**R6 — the case count.** `TC-SHIP-08` asserts every present-tense case count in `SKILL.md`,
-`System/Docs/SKILLS.md` and `measurement-baseline.md` equals `EXPECTED_CASES`. R5 moves that total
-from 191 to 192.
+**R4 — the fix boundary, inherited from `verify-provenance.mjs`.** That script keeps `--update`
+deliberately outside its gate: re-baselining must be a decision someone takes and a reviewer sees.
+The boundary here falls in a different place **for a stated reason, not as a relaxation**: the
+referent is the claim and is never machine-written; the line number is a value derived from it and may
+be recomputed. `--fix` is therefore permitted to rewrite a number and forbidden to rewrite a
+referent, and it is a separate invocation from the check — the pairing `format:check` / `format`, not
+a gate that mutates the tree it is judging.
 
-**R7 — no retroactive edit.** All four documents holding the 26 quoted glyphs are already filed:
-three are `provenance: machine` records under R2's bound, and
-`docs/tasks/task-065-reviewers-hardening.md` is an archived artifact, immutable per
-ARCHITECTURE §7.2. The convention therefore binds documents written from now on, and removes no
-existing finding. D2 records the reverted attempt.
+**The module docstring moves with the behaviour.** `check_positional_refs.py:17` states "Read-only.
+The tool never writes to the repository" as one of three design constraints. `--fix` breaks it as
+written. R4 therefore requires the constraint restated and narrowed in the same change — the check
+never writes; the separately-invoked fix mode writes a line number and never a referent. Shipping the
+flag against an unamended docstring would leave the file asserting an invariant its own CLI
+contradicts, which is the defect class this whole task exists to close.
+
+**R11 — the registry describes what exists.** `System/Docs/SKILLS.md:68` carries the
+`documentation-standards` row and a note at `:98`; neither names the resolver, §4.1 or §4.2. A skill
+that gains a normative rule, four finding kinds, two selection surfaces and a write mode must not be
+described by a row written before any of them.
+
+**R5 — selection by changed target.** The tool gains a third selection mode beside diff-scope and
+`--all`: documents that reference a file the current change touched. `changed_files()` already
+computes the change set; the addition is an index from target path to citing documents, which
+`classify()` effectively builds already when it resolves each reference.
+
+**R6 — `--all` accepts files.** `collect_docs()` rglobs each argument as a directory. A living
+corpus is `docs/PLAN.md docs/TASK.md docs/ARCHITECTURE.md docs/architectures/` — two files and a
+directory — and is not expressible today. Passing `docs` instead pulls in the archives: measured on
+onchain-analytics, `--all docs` reports 223 errors of which 183 are in archived documents whose
+coordinates are correct records of a past state.
+
+**R7 — the denominator travels with the number.** The run already prints checked / skipped / never
+examined for ordinals. The same treatment extends to `path:line`: how many carried a referent, how
+many did not, how many could not be resolved at all. A count without its population is the second
+defect the routed record measured, and this requirement applies its lesson to the tool itself.
+
+**R8 — one contract row.** The precedent is WI-16 §5.3: a normative rule in
+`documentation-standards` plus one row in the licensed-forms table of
+`artifact-formalizer/references/authoring-contract.md`, because the Architecture phase loads the
+formalizer contract and does not load `documentation-standards`. A row pointing at §4.1 alone would
+send that author to a file they do not have.
+
+**R9 — the old measurement is not overturned.** §4.2 rejects a repository-wide gate on evidence: 54
+of 84 resolvable references point into files edited after the citing document was written, and
+nearly all are correct records of their time. That measurement was taken over **archived reviews**
+and stays true. R9 requires §4.2 to state the distinction — the referent layer is gateable over a
+**named living corpus** and stays advisory everywhere else — so the two statements in one file do
+not read as contradiction.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — an author files a record about glyph severity.**
-*Actor:* any role writing a TASK, an issue record or a work-item record.
-*Precondition:* the author has read `references/authoring-contract.md`.
-*Main:* the author quotes a glyph, wraps it in a code span per the stated convention, and the
-scanner reports no `emoji_severity` for it.
-*Postcondition:* the document is about the register and is not reported as a document in it.
+**UC-1 — a developer moves code that documents cite.**
+*Actor:* Developer in the Execution phase.
+*Precondition:* the living corpus carries references that carry a referent into the file being edited.
+*Main:* the commit inserts lines above a cited coordinate; the pre-commit invocation of `--fix`
+rewrites the affected numbers; the developer sees a one-line diff per reference in the same commit.
+*Postcondition:* no document in the corpus carries a coordinate contradicted by the tree.
 
-**UC-2 — a maintainer proposes removing detector coverage.**
-*Actor:* any role editing `data/register-*.json` or `scan_register.py`.
-*Precondition:* a finding class reads as over-coverage.
-*Main:* the maintainer reads `SKILL.md` §6, finds rule 5, and produces the three items it names.
-*Alternative A1 (at Main):* the keep-class has zero occurrences in scope. The proposal does not
-ship, and the measurement goes on record.
-*Postcondition:* a re-proposal reads the recorded figures before it is written.
+**UC-2 — a planner writes a coordinate before the code exists in final form.**
+*Actor:* Planner in the Planning phase.
+*Precondition:* the PLAN cites lines that the Development phase will shift.
+*Main:* the planner writes the coordinate **with** the predicate it means; the Development phase
+shifts the line; UC-1 repairs the number without the planner re-reading anything.
+*Postcondition:* §4.1's "verify LAST" rule is satisfiable for a document written FIRST.
+
+**UC-3 — the cited text is edited, not merely moved.**
+*Actor:* Code Reviewer.
+*Main:* the referent is absent from the target; the tool reports `REFERENT_ABSENT` with the file, the
+number and what now sits there; the reviewer re-reads the sentence, because the claim — not the
+coordinate — is what became doubtful.
+*Postcondition:* the edit is either confirmed against the new text or corrected.
+
+**UC-4 — a consumer repository upgrades the framework and changes nothing.**
+*Actor:* any of the 16 consumer repositories.
+*Precondition:* its documents carry references without a referent, or none at all.
+*Main:* the upgrade lands; every existing reference is reported as *not examined*; no gate turns
+red; the coverage line states how much of the corpus is unverified.
+*Postcondition:* adoption is a per-project decision, taken later or never.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance Criteria
 
-| ID | Criterion |
-| :--- | :--- |
-| A1 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py` over `SKILL.md` and `references/*.md` reports 0 `warn`, exit 0 |
-| A2 | `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py` reports 192 of 192, exit 0 |
-| A3 | `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py --probe` reports 18 detectors live, exit 0 |
-| A4 | `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py` reports 0 errors |
-| A5 | `emoji_severity` over the declared scope stays at 307, and `git diff` shows no already-filed document edited |
-| A6 | `python3 System/scripts/validate_skills.py` reports every skill valid |
-| A7 | `PYTHONPATH=. python3 tests/run_tests.py` reports OK |
-| A8 | `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py` reports 59 of 59, exit 0 |
+| ID | Criterion | Fails when |
+| :--- | :--- | :--- |
+| A1 | §4.1 states the referent rule; §4.2 states the corpus distinction; the contract row exists | any of the three is absent · the row and §4.1 state different obligations |
+| A2 | `pytest tests/test_positional_refs.py` passes with cases pinning R2–R7 | a new case is absent for any of R2, R3 (all four outcomes), R4, R5, R6, R7 |
+| A3 | A corpus of references carrying no referent produces exit 0 and a coverage line naming them as not examined | a reference without a referent produces a finding of any severity |
+| A4 | `--fix` on a moved referent rewrites the number only; on `REFERENT_ABSENT` and `REFERENT_AMBIGUOUS` it changes nothing; the module docstring states the narrowed constraint | the referent text is modified in any run · a non-unique match is repaired by guessing · the docstring still reads "the tool never writes to the repository" unconditionally |
+| A5 | `docs/BACKLOG.md` carries WI-17 in lockstep with `docs/backlog/wi-17-*.md` | index line without record, or record without index line |
+| A6 | `python3 System/scripts/validate_skills.py --root .` passes at the same count as before | the count changes · any skill fails validation |
+| A7 | `CHANGELOG.md` and `CHANGELOG.ru.md` both carry the entry | one is edited and the other is not |
+| A8 | The tool is run against this repository's own living corpus and its output is recorded in the plan's closing step | the change ships without being run on a real corpus |
+| A9 | The `documentation-standards` row in `System/Docs/SKILLS.md` names the resolver, its referent layer and its fix mode | the row is unchanged · it describes a capability the skill does not have |
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ1 — none open.** WI-14 §3 step 2 named four documents. D1 and D2 reduce the reachable set to
-zero, and §6 records both reasons. The operator has ruled out new mechanism, so the 26 residual
-findings stay reported and the contract states why.
+**OQ-1 — wiring.** No workflow and no agent prompt invokes `check_positional_refs.py` today;
+measured across `.agent/workflows/`, `System/Agents/` and every `SKILL.md`, the only file naming it
+is `documentation-standards` itself. Binding it to phase boundaries is the mechanism WI-16 §5.1
+sizes at nine workflows. **Deliberately out of scope here** (§7); this task ships the capability, not
+its enforcement.
+
+**OQ-2 — referents in source files.** A marker convention in the code (`// ANCHOR: name`) would remove
+line numbers from references altogether. Rejected for this task, reasons in D3; re-openable.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**D1, 2026-08-05, orchestrator: the three `provenance: machine` records are not edited.**
-`known-issues-format` §8 states that a record body is byte-for-byte what was supplied. That property
-is what makes the body evidence. Git history records the rule: `wir-11`, `wir-2` and
-`wir-4` were created by `5c9da31` and touched again only by `7708e2f`, which changed frontmatter
-status keys and added no body edit. Rejected: wrapping the 23 glyphs in those bodies — it rewrites
-evidence, which WI-2 records this framework declining to do for the same reason.
+**103-D1 — a reference without a referent is not examined, not an error.** Any other choice turns 324
+references red across four repositories on upgrade. A rule whose adoption cost is paid by projects
+that did not ask for it is switched off, which is the outcome §4.2 already recorded once.
 
-**D2, 2026-08-05, orchestrator: `docs/tasks/task-065-reviewers-hardening.md` is NOT edited.** An
-earlier draft of this task wrapped its three glyphs, on the reasoning that no verbatim rule reaches
-an archived TASK. An adversarial review of that draft produced two facts against it.
+**103-D2 — the referent is a code span adjacent to the reference, not new syntax.** 111 of the 182
+references in the routed corpus already carry a backticked identifier or quotation on the same line.
+Licensing the existing form makes the majority of the migration a binding exercise rather than a
+writing exercise, and keeps the register unchanged.
 
-1. `docs/ARCHITECTURE.md:273` states that archived artifacts are immutable by doctrine.
-2. `docs/backlog/wi-13-narrow-rule-5-clause-2-to-the-vocabulary-slot.md:294` quotes the pre-edit bytes of that line, so the edit falsified a
-   quotation inside a closed record.
+**103-D3 — no edits to source files.** In-source referents were considered: they would eliminate
+positional references entirely. Rejected on four grounds — they require edits across every package
+of every consumer; a marker that exists for a document is deleted by refactors that do not know
+about it; a second gate is then needed to assert the marker still exists; and prose citing "these
+five lines" still has no name to bind to. The symbol spelling of D2 already recovers most of the
+benefit, because symbols are referents the code declares for its own reasons.
 
-The edit was reverted. Rejected: amending ARCHITECTURE to carve out a register exception — the
-operator has ruled out new mechanism, and the benefit was 3 findings in a population WI-13 §8
-already classes as not a defect.
+**103-D4 — `--fix` may rewrite a number and never a referent.** Stated as a boundary rather than a
+permission: the derived value is recomputable, the claim is not. This is why the rule does not
+contradict `verify-provenance.mjs`, whose invariant *is* the recorded value.
 
-**D3, 2026-08-05, orchestrator: the convention ships with its exemption stated.** WI-14 §3 proposed
-the convention without a bound. D1 creates a class the convention cannot reach. Rejected: an
-unqualified sentence — a reader of a `wir-*` finding would read it as a document that skipped the
-contract.
+**103-D5 — the migration of any corpus is out of scope.** This task ships the mechanism to
+agentic-development. Adding referents to onchain-analytics' 182 references is that project's decision and its
+own commit, per the routed record's §4.
 
-**D4, 2026-08-05, orchestrator: the rejection record goes in `measurement-baseline.md` §6.** Rule 5
-of `SKILL.md` §6 requires a measurement on record. A record placed where the re-proposal does not
-read it does not stop a re-proposal. WI-13 §7.2 records the author citing §6 as support for the
-option §6's own decision had rejected. Rejected: `docs/backlog/wi-13-*.md` alone — a dropped
-work-item is not in the reading path of a maintainer editing rule 5.
+**103-D7 — the mechanism is called a REFERENT, never an anchor.** The first draft called it an
+anchor and collided with an occupied word: `documentation-standards` §4.3 and §4.4 define an anchor
+as `<!-- contract:<name> -->`, a structural marker addressing a *section*, and ARCHITECTURE §7.2
+builds its addressing ladder on that meaning. One file would then carry two mechanisms under one
+name. "Referent" is the term WI-16 already uses for "the observation that falsifies a claim", which
+is exactly this object.
 
-**D5, 2026-08-05, orchestrator: WI-14's `value:` frontmatter line is left in place and superseded
-in the body.** The line claims the change removes 26 of 307 findings; D1 and D2 reduce the removal
-to 0. The resolution blockquote states the measured outcome and names the line it supersedes.
-Rejected: rewriting the `value:` line — a closed record's own claim is what the resolution is
-answering, and overwriting it hides that the estimate was wrong.
+**103-D8 — the rule extends §4.1 and claims no new section number.** §4.5 is reserved by the open
+WI-16 for the build-state claim rule. A positional reference carrying its referent is a refinement
+of §4.1's own subject, so it lands inside §4.1 and leaves the numbering free.
+
+**103-D6 — `REFERENT_ABSENT` is an error, not a warning.** The tool can distinguish "moved" from
+"changed", and a changed target is the case where the citing sentence may itself be false. Grading it
+a warning would place the only judgement-requiring outcome in the class readers skip.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-| Excluded | Carried by |
-| :--- | :--- |
-| Any change to rule 5's detector, its glyph sets or its thresholds | WI-13, dropped |
-| `--severities` and any vocabulary-slot detector | WI-13 P1, not adopted |
-| Widening the unconditional exemption set | `task-099` D2, rejected; WI-13 P2, not adopted |
-| Editing any `provenance: machine` record body | D1 |
-| `data/register-*.json` | rule 5 has no data-file surface (`scan_register.py:59`) |
+- **Wiring the tool into workflows** (OQ-1). Nine workflows and a Global Protocol; a separate item.
+- **Migrating any repository's references**, including this one's six (D5).
+- **Semantic verification.** A referent proves the quoted text is present, not that the sentence
+  about it is true. A document calling a cache-warming comment "the narrowing of `matching` routes"
+  passes the referent check if it quotes that comment. Only reading closes this.
+- **Archived documents.** Their coordinates are correct records of a past state; §4.2's 54-of-84
+  measurement is about exactly this population and is not overturned (R9).
+- **In-source referent markers** (OQ-2, D3).
+- **A gate over the rule's own two halves.** R1 writes the rule into `documentation-standards` §4.1
+  and R8 writes the mirroring row into `artifact-formalizer/references/authoring-contract.md`.
+  Nothing compares them after landing — `check_contract_sync.py` reaches only `known-issues-format`
+  and its two seed templates. Drift between the two is uncaught, exactly as WI-16 §5.3 recorded for
+  its own pair. Stated so a reader does not assume a gate exists.
+- **The reporting rule for surveys** — "a survey states its search area with its count". The routed
+  record measures this as a second defect; R7 applies it to this tool's own output and to nothing
+  else.

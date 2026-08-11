@@ -147,6 +147,22 @@ contract:
     each in one run of this workflow; for one of them the truncated output shows the turn spent
     trying to launch a scanner its role cannot execute, and both worked normally on a relaunch that
     only told them not to attempt it. The second stall is recorded as observed, not as explained.
+9.  **The tree is frozen while the round reads it, and the brief carries its fingerprint.** Item 8
+    puts you at the keyboard during the cycle; this item bounds what you may do there. Between the
+    spawn and the return of the round's last role you write **nothing** to the reviewed files — no
+    fix, no mutation run to prove test strength, no reformat. Those run before the spawn, or after
+    the last return. Compute a `Tree fingerprint` before spawning, pass it in the evidence block,
+    and recompute it on return. A role **quotes** the value rather than computing one: computing
+    needs an execution tool it does not have. Full rule and the `git` form —
+    `skill-parallel-orchestration` §2.4.1.
+    -   **A mismatch invalidates the cycle rather than annotating it.** Re-take the critique against
+        the frozen tree, or report the mismatch and record no pass. Findings about a state that no
+        longer exists are not findings about this one.
+    -   **Measured (RF-7).** The mutation protocol and a read-only roast ran over one tree with no
+        order between them. The reviewer read `1 failed | 336 passed` and a `git diff --stat` of
+        `35 ++++` where the same command had printed `38 +` ninety seconds earlier. Both came from
+        the caller's own mutation. Cost of the catch: seven extra full suite runs and one HIGH
+        finding. Cost of the miss: a verdict on a tree that was never committed.
 
 ## 5. Retro (Global Protocol)
 Apply `run-feedback` SKILL.md §7 "Retro protocol":

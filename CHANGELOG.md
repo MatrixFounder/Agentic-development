@@ -16,6 +16,70 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.29.0 — a read-only round runs against a frozen tree**
+
+Closes `RF-7`, filed by a `code-reviewer` roast in `onchain-analytics` task 013-3. Two obligations
+of `skill-parallel-orchestration` §2.4 addressed the same working tree and stated no order between
+them: a read-only round assumes the tree stands still, and the caller's own evidence gathering moves
+it. The section bounded when the caller's running *starts* — "before spawning" — and bounded nothing
+after the spawn.
+
+The cost was measured, and the catch is not the defect. The reviewer read `1 failed | 336 passed`
+and a `git diff --stat` of `35 ++++` where the same command had printed `38 +` ninety seconds
+earlier. Both came from the caller's own uncommitted mutation. It filed a HIGH finding against the
+measurement chain and spent seven further full suite runs on determinism. **Uncaught, the same run
+returns a verdict on a tree that was never committed** — inside the mutation window that task had no
+`missingSources` pass-through at all.
+
+The operator picked options 1 and 3 of the four the record lists: ordering, plus a fingerprint as
+the check that ordering held. Option 2 (a separate worktree) stays unbuilt — the record proposes it
+only if serialization becomes expensive, and that cost is not yet measured.
+
+#### Added
+
+- **`skill-parallel-orchestration` §2.4.1 — the freeze rule and the fingerprint.** The orchestrator
+  half gains two obligations:
+  - write nothing to the artifacts under review between the spawn and the round's last return;
+  - fingerprint them before the spawn, carry the value in the evidence block, recompute on return.
+
+  A mismatch **invalidates the round** rather than annotating it.
+- **The role quotes, the caller compares.** Option 3 as filed asked the critic to verify the
+  fingerprint itself. Computing one needs an execution tool a read-only role does not have, and
+  handing it the command is the exact defect §2.4 exists to forbid — measured at a 600-second turn.
+  So the role reports the value it was handed, and the caller recomputes and compares against what
+  the role quoted. The comparison is then anchored to what the role saw, not to what the caller
+  believes it sent.
+- **`tests/test_frozen_tree_contract.py`** — 7 tests.
+  - **TC-01** — the fingerprint line at all 9 caller-side briefs.
+  - **TC-02** — the quote instruction at all 20 role definitions, and no hash command in a read-only one.
+  - **TC-03** — the carriers enumerated **from disk**; each must be a declared caller, a declared
+    role, or an exclusion with a written reason.
+
+  Three mutations were executed: deleting the line from one brief, handing `shasum` to
+  `critic-security`, adding an undeclared workflow. Each turns a different assertion red.
+
+#### Changed
+
+- **30 sites carry the clause.**
+  - §2.4.1 — the declaration.
+  - 8 caller-side briefs — `vdd-multi` Step 1.0/1.1 and its sequential step 0, `vdd-adversarial`
+    step 2a, `vdd-enhanced` §4.9, `sequential-fallback`, the four phase-1–3 gate spawns.
+  - 7 hand-maintained role definitions.
+  - `wrappers_manifest.json` and the 12 wrappers it generates.
+- **The sequential path states its exemption instead of inheriting silence.** One session runs the
+  personas in order, so no write can be outstanding while a persona reads — the hazard is
+  concurrency and there is none. The fingerprint line is still written: the persona's report is
+  still a claim about one tree state.
+- **Three loop markers moved** in `01-start-feature` and `02-plan-implementation`, to the position
+  their `vdd-*` siblings already use. The new bullet pushed the canonical `Max N` line outside the
+  marker's 13-line window and `check_loop_contract.py` failed — caught by the suite, not by review.
+
+#### Known limit
+
+The `git` fingerprint covers `HEAD`, the porcelain listing and the tracked diff. An untracked file
+moves the value by appearing or disappearing, **not** by having its contents edited. Recorded as
+TASK 105 OQ-1 and written beside the example rather than left for a reader to discover.
+
 ### **v3.28.1 — a neighbouring coordinate is not a referent**
 
 Found while migrating the first consumer corpus (`onchain-analytics` WI-45). The referent rule binds

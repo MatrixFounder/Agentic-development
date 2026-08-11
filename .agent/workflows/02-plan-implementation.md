@@ -16,13 +16,19 @@ contract:
    - When re-planning the **SAME** task, overwrite `docs/PLAN.md` in place (no archive).
    - For a NEW task, the previous PLAN.md was already rotated to `docs/plans/` by `skill-archive-task` during the Analysis phase.
 3. Create task files in `docs/tasks/*.md` for each actionable task, following the stub-first strategy.
-    <!-- loop:plan-review -->
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
       The reviewer is declared without an execution tool, so anything its checklist requires to be
       RUN (its `Script Contract` — the register scan; the RTM-coverage validator) is yours to run
       **first**; the brief carries the OUTPUT as data (a file plus its path), never the command.
       Anything you did not run goes in as `NOT RUN (<reason>)`.
+    - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
+      spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
+      after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and
+      compare. Differing values mean the review describes a document that no longer exists, so the
+      round is re-taken rather than annotated. The reviewer **quotes** the value — computing one
+      needs an execution tool its role does not have.
     - **Verification Loop**: Read `System/Agents/07_plan_reviewer_prompt.md`.
+    <!-- loop:plan-review -->
     - If the Reviewer requests changes:
         - Update `docs/PLAN.md` and task files.
         - **Retry (Max 2 attempts)**: Repeat the review.

@@ -21,14 +21,20 @@ contract:
 2. Read `docs/KNOWN_ISSUES.md` to be aware of past problems (skip if absent — created on the first filed issue).
 3. **Archiving**: Apply `skill-archive-task` protocol if `docs/TASK.md` exists. This rotates **both** `docs/TASK.md` → `docs/tasks/` and `docs/PLAN.md` → `docs/plans/` in lockstep (same ID/slug).
 4. Update `docs/TASK.md` with the new feature requirements.
-    <!-- loop:task-review -->
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
       The reviewer is declared without an execution tool, so anything its checklist requires to be
       RUN (its `Script Contract` — the register scan) is yours to run **first**; the brief carries
       the OUTPUT as data (a file plus its path), never the command. Anything you did not run goes in
       as `NOT RUN (<reason>)`. A brief naming a command instead of its result costs a silently
       unverified checklist section, or the whole turn.
+    - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
+      spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
+      after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and
+      compare. Differing values mean the review describes a document that no longer exists, so the
+      round is re-taken rather than annotated. The reviewer **quotes** the value — computing one
+      needs an execution tool its role does not have.
     - **Verification Loop**: Read `System/Agents/03_task_reviewer_prompt.md`.
+    <!-- loop:task-review -->
     - If the Reviewer requests changes:
         - Update `docs/TASK.md`.
         - **Retry (Max 2 attempts)**: Repeat the review.
@@ -36,12 +42,18 @@ contract:
     - If approved: Proceed.
 4. Read `System/Agents/04_architect_prompt.md` to understand the Architecture phase.
 5. Update `docs/ARCHITECTURE.md` in place to reflect any architectural changes (living document — never per-task archived; if it exceeds 1500 lines, apply the Index-Mode split per `architecture-format-core`).
-    <!-- loop:arch-review -->
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
       Same obligation as the TASK gate, plus the change set: this reviewer cannot produce a diff, so
       **write the diff to a file and pass the path**. "Review `git diff` on these files" is an
       instruction to execute, given to a role that cannot — measured at 600 s and a watchdog kill.
+    - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
+      spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
+      after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and
+      compare. Differing values mean the review describes a document that no longer exists, so the
+      round is re-taken rather than annotated. The reviewer **quotes** the value — computing one
+      needs an execution tool its role does not have.
     - **Verification Loop**: Read `System/Agents/05_architecture_reviewer_prompt.md`.
+    <!-- loop:arch-review -->
     - If the Reviewer requests changes:
         - Update `docs/ARCHITECTURE.md`.
         - **Retry (Max 2 attempts)**: Repeat the review.

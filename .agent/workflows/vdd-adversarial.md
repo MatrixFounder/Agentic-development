@@ -48,7 +48,22 @@ Post-implementation adversarial cycle for zero-slop robustness.
         Execution evidence (supplied by the orchestrator — INPUT; do not re-run, do not fabricate):
         - Tests: {command + pass/fail summary (+ failure list) | NOT RUN (<reason>)}
         - Scan (run_audit.py): {summary | NOT RUN (<reason>)}
+        - Tree fingerprint: {value (how it was computed) | NOT COMPUTED (<reason>)}
         ```
+
+        **The tree is frozen for the round, and the fingerprint is how a break shows**
+        (`skill-parallel-orchestration` §2.4.1). The caller writes nothing to the reviewed files
+        between the spawn and the adversary's return — no fix, no mutation run for evidence — and
+        recomputes the fingerprint on return. Quote the tree fingerprint in your report: you cannot
+        compute one, and quoting it is what anchors the comparison to the state you actually read.
+        No fingerprint line → report "tree fingerprint absent — findings are not pinned to a tree
+        state" and do not signal clean-pass. A mismatch on return invalidates the round: re-take the
+        critique against the frozen tree, or name the mismatch and record no pass.
+
+        This was measured (RF-7). A reviewer read a suite run and a `git diff --stat` that both came
+        from the caller's own uncommitted mutation. It could not account for the discrepancy, and
+        spent seven further suite runs and one HIGH finding establishing that its measurements were
+        untrustworthy. Uncaught, the same run returns a verdict on a tree that was never committed.
 
         This block was **missing from this workflow** while its parallel sibling had carried it
         since audit-067 C-13 — and `/vdd` phase 4 enters *here*. The cost was measured: two

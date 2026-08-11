@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.8
+version: 3.9
 ---
 
 # Parallel Orchestration Skill
@@ -109,9 +109,65 @@ migration check) is *your* job:
    verbatim and identically, except lines an instance marks as domain-specific (`vdd-multi` sends
    the scanner summary to `critic-security` only).
 3. A command you did not run is written `NOT RUN (<reason>)` — an honest absence, never an omission.
+4. **Freeze the artifacts under review for the round.** Between the spawn and the return of the
+   round's last role, write nothing to them. Whatever writes — an evidence mutation, an applied fix,
+   a reformat — runs **before** the spawn or **after** the last return.
+5. **Fingerprint the artifacts before the spawn, carry the value in the block, recompute it at the
+   round's return.** Compare the two. Differing values mean the round measured a state that no
+   longer exists.
 
 Evidence is gathered once per iteration. It is ground truth rather than teammate output, so sharing
 it is **not** cross-pollination (§3).
+
+#### 2.4.1 The freeze rule and the fingerprint
+
+Items 1 and 4 are two obligations over one resource. A role that reads assumes the artifacts stand
+still; item 1 obliges the caller to run things, and a fix loop obliges it to write things. Both are
+mandatory, both address the same files, and until this subsection neither stated an order.
+
+**Measured — RF-7, onchain-analytics task 013-3, 2026-08-06.** A reviewer read a suite run of
+`1 failed | 336 passed` and a `git diff --stat` of `35 ++++` where the same command had printed
+`38 +` ninety seconds earlier. Both readings came from the caller's own uncommitted mutation. The
+reviewer could not account for the discrepancy, filed a HIGH finding against the measurement chain,
+and spent seven further suite runs on determinism. Had it not noticed, it would have returned a
+verdict on a tree that was never committed.
+
+**Scope of "under review".** The files the round was pointed at, plus any file the roles were told
+to read. The caller's own output is outside it — the round's report, the session file, a findings
+file. Without that bound the rule forbids the caller from recording anything while a round runs.
+
+**The fingerprint is a property, not a command.** Any value that changes when an artifact under
+review changes. In a git repository:
+
+```sh
+{ git rev-parse HEAD; git status --porcelain; git diff HEAD; } | shasum -a 256 | cut -c1-12
+```
+
+That covers the commit, the porcelain listing and the tracked diff. An untracked file moves the
+value by appearing or disappearing, **not** by having its contents edited; say so beside the value
+when a round depends on untracked content. Outside a repository, any equivalent works — a hash over
+the file list and the file contents.
+
+The line goes in the same block as `Tests:` and `Scan:`:
+
+```
+- Tree fingerprint: <value> (<how it was computed>) | NOT COMPUTED (<reason>)
+```
+
+**The caller compares, the role quotes.** Computing a fingerprint requires an execution tool, and a
+read-only role has none — instructing it to run the hash is the defect this whole section forbids.
+The role reports the value it was handed; the caller recomputes at the round's return and compares
+against the quoted value. The comparison is then anchored to what the role saw, not to what the
+caller believes it sent.
+
+**A mismatch invalidates the round.** Re-take the findings against the frozen artifacts, or name the
+mismatch in the report and record no pass. A finding set describing a state that no longer exists is
+not evidence about the current one.
+
+**The sequential role-switch path (§7) has no concurrency, so the freeze rule is vacuous there.**
+One session runs the personas in order, and no write of the caller's can be outstanding while a
+persona reads. The fingerprint line is still written: the persona's report is still a claim about
+one state.
 
 **Teammate half:**
 
@@ -145,6 +201,12 @@ it is **not** cross-pollination (§3).
   recorded as *observed*, not as explained by this mechanism — see the WI-29 audit.)
 - **Never invent output for a command you did not run.** "Mock the results" is not a fallback; it is
   a fabricated gate, and it is worse than the stall it replaces because nothing downstream can see it.
+- **Quote the tree fingerprint you were given, in your report.** You cannot compute one — that needs
+  an execution tool your role does not have — so reporting the supplied value is the whole
+  obligation. It is what lets the caller detect an edit that landed while you were reading. No
+  fingerprint in the brief → report `tree fingerprint absent — findings are not pinned to a tree
+  state` and do not signal `clean-pass`. Same rule, same reason, as the missing evidence block: an
+  explicit `NOT COMPUTED` is a claim the caller made, an absent line is a claim nobody made.
 
 **Readers of this contract** — the complete list, because "update the instances" is only actionable
 against one. When the contract changes it changes **here first**, then in these:
@@ -159,6 +221,11 @@ A workflow that spawns teammates and defines neither half is the defect this sec
 that states the contract DIFFERENTLY is the second defect — cycle 2 found
 `skill-adversarial-performance` still blessing `NOT RUN` as sufficient two edits after every other
 reader had stopped.
+
+**The reader set is enumerated from disk, not from that table.** `tests/test_frozen_tree_contract.py`
+finds every file carrying this contract and requires each to be a declared caller, a declared role,
+or an exclusion with a written reason. A workflow or wrapper authored later is in none of the three
+and fails there, which is what stopped the table above from being the only inventory.
 
 ---
 
@@ -249,6 +316,20 @@ All universal concepts (§2–§6) — including merge rules and the evidence co
 
 ## 9. History
 
+- **v3.9 (2026-08-11)**: **§2.4.1 the freeze rule and the fingerprint** (TASK 105, RF-7). §2.4
+  bounded when the caller's running *starts* — "before spawning" — and bounded nothing after the
+  spawn. Its own evidence obligation therefore ran concurrently with the round it was gathered for.
+  Measured in onchain-analytics 013-3: a reviewer read a suite run and a `git diff --stat` that both
+  came from the caller's uncommitted mutation. It filed a HIGH finding against the measurement chain
+  and spent seven further suite runs on determinism. Uncaught, the same run returns a verdict on a
+  tree that was never committed. Orchestrator half gains items 4 and 5 (freeze, fingerprint);
+  teammate half gains the quote-it bullet. **The role quotes and the caller compares**, because
+  computing a hash needs an execution tool the role does not have — instructing it to would be the
+  defect §2.4 already forbids. Landed at 30 sites: this section, 8 caller-side briefs
+  (`vdd-multi`, `vdd-adversarial`, `vdd-enhanced`, `sequential-fallback`, the four phase gate
+  spawns), 7 hand-maintained role definitions, `wrappers_manifest.json` and the 12 wrappers it
+  generates. `tests/test_frozen_tree_contract.py` enumerates the set from disk, so a site authored
+  later fails rather than being silently uncovered.
 - **v3.8 (2026-08-03)**: **§2.4 Execution evidence** — the contract §7 had already declared universal
   ("including merge rules and the evidence contract") while it existed only inside `vdd-multi`
   Step 1.0. A claim with no referent: `/vdd` phase 4 runs `vdd-adversarial.md`, which defined neither

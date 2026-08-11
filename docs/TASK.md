@@ -1,4 +1,4 @@
-# TASK 104 — The reference resolver is invoked by the runs that break references
+# TASK 105 — A read-only round runs against a frozen tree, and the brief carries its fingerprint
 
 <!-- contract:meta -->
 
@@ -6,35 +6,43 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 104 |
-| Slug | resolver-wiring |
+| Task ID | 105 |
+| Slug | frozen-tree-fingerprint |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | TASK 103 OQ-1, deferred there deliberately; design note `docs/design/104_resolver_wiring.md` |
-| Depends on | TASK 103 (`ed2af74`) — ships the capability this task invokes |
-| Closes | WI-18 (filed by this task) |
-| Archive name | `task-104-resolver-wiring.md` |
+| Source | RF-7, filed in onchain-analytics: `docs/issues/rf-7-mutation-protocol-and-read-only-roast-run-concurrently-so-the-reviewer-measures-a-tree-that-never-shipped.md` |
+| Operator decision | Option 1 (ordering) and Option 3 (fingerprint) of the four the record lists |
+| Depends on | TASK 074 (`skill-parallel-orchestration` §2.4, the contract this extends) |
+| Closes | RF-7 |
+| Archive name | `task-105-frozen-tree-fingerprint.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-TASK 103 shipped a resolver nobody calls. Measured across `.agent/workflows/`, `System/Agents/` and
-every `SKILL.md` at `ed2af74`: the only file naming `check_positional_refs.py` is
-`documentation-standards` itself. A capability no run exercises is indistinguishable from an absent
-one — and the framework has recorded that equivalence before: `ARCHITECTURE` §7.2 states that a step
-the author stopped running is indistinguishable from a step that passed.
+`skill-parallel-orchestration` §2.4 obliges the caller to run what a Bash-less role cannot. It
+bounds what the caller runs and when the running starts — "before spawning". It bounds nothing
+after the spawn.
 
-**The two events that falsify a coordinate are not the same event, and only one of them was ever
-considered.** WI-16 §5.1 derived its wiring from a single trigger — code lands. For a coordinate
-there are two:
+Two mandatory obligations therefore share one resource with no order between them.
 
-| Trigger | Event | How it falsifies |
-| :--- | :--- | :--- |
-| **T1** | code lands | lines shift under coordinates pointing into the file |
-| **T2** | a document carrying coordinates is written | the coordinate can be false at birth |
+| Obligation | Assumption about the working tree |
+| :--- | :--- |
+| A read-only round (`critic-*`, `code-reviewer`, the three phase reviewers) | it does not move while the round reads |
+| The evidence half of §2.4, and any fix the caller applies | it moves |
 
-T2 is the larger population. Measured in onchain-analytics at `e95b909`: **85 of 142** attributable
-references were written by the Analysis, Architecture and Planning phases.
+**Measured, onchain-analytics task 013-3, 2026-08-06.** `code-reviewer` read a suite run of
+`1 failed | 336 passed` and a `git diff --stat` of `35 ++++` where 90 seconds earlier the same
+command printed `38 +`. Both readings came from one uncommitted mutation of the caller's own
+(`MUT-A`, a deleted `missingSources` pass-through). The reviewer filed a HIGH finding against the
+measurement chain and spent seven additional full suite runs establishing determinism.
+
+**The cost of the catch is not the defect.** Had the reviewer not noticed the discrepancy, it would
+have returned a verdict on a tree that was never committed — inside the mutation window, 013-3 had
+no `missingSources` pass-through.
+
+**Why §2.4 is the site.** §2.4 is what put the caller at the keyboard during the round: the critic
+marked the commands `NOT RUN (no Bash)`, so running them fell to the caller. The section creates the
+conflict and states no order for it.
 
 <!-- contract:rtm -->
 
@@ -42,169 +50,119 @@ references were written by the Analysis, Architecture and Planning phases.
 
 | ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | The four review checklists carry a `References` section keyed on `documentation-standards` §4.1, in the form the existing `Register` section already uses | Y | A1, A4 |
-| R2 | That section states that a coordinate carrying no referent is **not** a defect and that the review never demands a migration | Y | A1 |
-| R3 | The section demands the coverage line be **quoted**, not asserted to have been produced | Y | A1 |
-| R4 | Seven workflows run the resolver at a named site; the site of the open WI-16's sweep is not displaced | Y | A2, A4 |
-| R5 | The two workflows invoking `09_code_reviewer_prompt` gain **no** step — the checklist already covers them | Y | A4 |
-| R6 | A test partitions **every** workflow file into wired or excluded-with-a-reason, so a workflow authored later fails it rather than being silently uncovered | Y | A3 |
-| R7 | No product workflow is wired | Y | A4 |
-| R8 | `docs/BACKLOG.md` + record in lockstep; both changelogs carry the change | Y | A5, A6 |
+| R1 | §2.4 states the freeze rule (defined in §2.1 below) | Y | A1, A3 |
+| R2 | §2.4 states where the writes go instead: before the spawn, or after the last return of the round | Y | A1 |
+| R3 | §2.4 defines the fingerprint (defined in §2.1 below) | Y | A1, A3 |
+| R4 | §2.4 assigns the comparison to the caller and never instructs a role without an execution tool to compute a fingerprint | Y | A1, A2 |
+| R5 | A read-only role quotes the fingerprint it was given in its report, and reports an absent one without signalling `clean-pass` | Y | A1, A2, A3 |
+| R6 | §2.4 states what a mismatch invalidates (§2.1 below) | Y | A1 |
+| R7 | Every caller-side brief in the framework carries a `Tree fingerprint` line beside the existing evidence lines | Y | A3 |
+| R8 | The sequential role-switch path states why the freeze rule is vacuous there rather than omitting it | Y | A1, A3 |
+| R9 | A test enumerates the site set from disk and fails on a site added later without the clause | Y | A3, A4 |
+| R10 | Both changelogs carry the change; RF-7 is closed in its own repository with the four-edit closure | Y | A5, A6 |
 
 ### 2.1 Sub-features
 
-**R1 — the form is copied, not invented.** `task-review-checklist` §6 and `plan-review-checklist` §4
-already put a deterministic script inside a judgement checklist under a
-`Register (documentation-standards §5.5)` heading, with a `Script Contract` naming the command and
-its scoping caveat. The new section is that section's sibling. No new mechanism, no new skill load:
-all four reviewer prompts already declare `documentation-standards` alongside their checklist.
+**R1 — the freeze rule.** Between the spawn of a round and the return of its last role, the caller
+performs no write to the artifacts under review.
 
-**R2 — the item that prevents this task from becoming a migration mandate.** A reviewer reading
-`348 without (not examined)` without this clause demands referents, which is the forced adoption
-103-D1 forbids and which would land in four consumer repositories through a symlink. The clause is
-addressed to the reviewer as a prohibition, not to the author as work.
+Scope of "under review": the files the round was pointed at, plus any file the roles were told to
+read. The caller's own scratch output is outside it — writing the round's report, the session-state
+file, or a findings file is not a violation. Without this bound the rule forbids the caller from
+recording anything while a round runs.
 
-**R3 — the strongest thing a checklist can do.** A checklist cannot prove a command ran. Demanding
-the coverage line be pasted into the review makes the absence visible; demanding "was run" does not.
+**R3 — the fingerprint is defined by its property, not by one command.** The property: a value that
+changes when any artifact under review changes. The caller computes it before the spawn and
+recomputes it at the round's return. `git` supplies one instance; a repository-free target supplies
+another. The contract states the property and gives the `git` form as an example.
 
-**R4 — seven, and why not nine.** T1's criterion — code lands in the workflow **and** no
-`calls[] kind: invoke` edge hands that code to an already-wired workflow — returns nine, reproducing
-WI-16 §5.1 exactly. Two of the nine drop out under R5. The remaining seven:
-`vdd-03-develop`, `vdd-05-run-full-task`, `vdd-multi`, `vdd-adversarial`, `security-audit`,
-`framework-upgrade`, `heal-issues`.
+**R6 — what a mismatch invalidates.** Two differing values mean the round measured a state that no
+longer exists. Its findings are re-taken against the frozen tree, or the report names the mismatch
+and the round does not signal a pass.
 
-**Site rule against the open WI-16.** Its acceptance fails if a reference sits at a site other than
-the one its table names. Six of the seven are in that table, so the resolver step goes **after** the
-State-Claim Sweep site and **before** the Retro. Nothing WI-16 pins moves.
+**R4 — the comparison sits with the caller because the role cannot execute.** Instructing a role
+whose `tools:` line carries no Bash to hash a tree is the exact defect §2.4 already forbids. The
+role carries the value; the caller compares. See decision 105-D1.
 
-**R5 — measured, and it corrected an earlier draft.** Only `03-develop-single-task` and
-`light-02-develop-task` name `09_code_reviewer_prompt`. `vdd-03-develop` does **not**, and keeps its
-own step. An earlier version of this reasoning named `vdd-03-develop` as covered; it was wrong.
-
-**R6 — the gap WI-16 leaves open, closed here for this protocol.** WI-16 §7 states of its own nine:
-"Nothing verifies the wiring."
-
-**Only half the criterion is machine-derivable, and the requirement says which half.** The
-delegation half comes out of `calls[]` frontmatter exactly. The "code lands here" half does not:
-measured over all 23 workflows, a grep for commit or staging steps finds them in **two**
-(`light-02-develop-task`, `heal-issues`) — the rest commit implicitly or phrase it differently, so
-any text-derived signal would be wrong for 21 of 23. A first draft of this requirement claimed the
-whole criterion was recomputable; it is not.
-
-**What makes the test a verification rather than a restatement is exhaustiveness, not derivation.**
-The test enumerates `.agent/workflows/*.md` from disk and asserts every file appears in **exactly
-one** of two sets: wired, or excluded **with a reason string**. A workflow added tomorrow is in
-neither and fails. The delegation half is additionally recomputed from `calls[]`, so an exclusion
-justified as "delegates to a wired workflow" is checked rather than believed.
-
-**R7 — excluded on measurement.** `docs/product/` holds **0** `path:line` references across
-onchain-analytics, obsidian-llm-wiki and Universal-skills.
+**R7 — line form.** `Tree fingerprint: <value> (<how it was computed>)`, in the same block as
+`Tests:` and `Scan:`, with `NOT COMPUTED (<reason>)` as its honest absence — the same third state
+the block already uses.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — a planner writes a coordinate that is wrong at birth.**
-*Actor:* Plan Reviewer.
-*Main:* the PLAN cites `registry.ts:944@deb6502`; the reviewer runs the resolver over `docs/PLAN.md` and the
-task files, quotes the coverage line, and resolves the one `REFERENT_ABSENT` before the phase
-boundary.
-*Postcondition:* the coordinate driving a future mutation protocol was read before it was executed.
+**UC-1 — a roast with no mutation.** The caller computes the fingerprint, spawns the round, waits,
+recomputes. The values match, the round's findings stand, and the report carries the value.
 
-**UC-2 — a developer shifts lines under documents nobody opened.**
-*Actor:* Developer in `vdd-03-develop`.
-*Main:* the step runs `--targets-changed --fix`; documents citing the edited sources are re-checked
-and their numbers repaired in the same commit.
-*Postcondition:* no commit lands with a coordinate the tree contradicts.
+**UC-2 — a mutation lands mid-round.** The caller must run a mutation whose result the round needs.
+It runs it before the spawn. If it runs one anyway, the recomputation at return differs from the
+value the roles quoted, and the round is re-taken.
 
-**UC-3 — a reviewer meets a corpus that adopted nothing.**
-*Actor:* any reviewer in a consumer repository.
-*Main:* the coverage line reports most references as not examined; per R2 the reviewer records the
-number and demands nothing.
-*Postcondition:* the review passes, and the corpus's unverified share is on record.
+**UC-3 — a role receives no fingerprint.** The role reports
+`tree fingerprint absent — findings are not pinned to a tree state` and does not signal
+`clean-pass`. This mirrors the existing treatment of a missing evidence block.
 
-**UC-4 — a workflow is authored after this task.**
-*Actor:* whoever adds it.
-*Main:* it lands code, declares `calls: []`, and names no resolver step; R6's test fails and names
-it.
-*Postcondition:* the set cannot silently rot, which is the failure WI-16 §7 declares for its own.
+**UC-4 — the sequential role-switch path.** One session runs the personas in order, so no write can
+be outstanding while a persona reads. The freeze rule holds by construction; the fingerprint line is
+still written, because the persona's report is still a claim about one tree state.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance Criteria
 
-| ID | Criterion | Fails when |
+| ID | Criterion | How it is checked |
 | :--- | :--- | :--- |
-| A1 | All four checklists carry the section with its four items, including R2's and R3's | any checklist lacks it · the not-a-defect clause is absent · an item says "was run" instead of demanding the quoted line |
-| A2 | The seven workflows each name the resolver at the site §2.1 states | any of the seven lacks it · any site displaces a WI-16 sweep site |
-| A3 | `pytest tests/test_resolver_wiring.py` passes; it enumerates `.agent/workflows/*.md` from disk and partitions every file into wired or excluded-with-a-reason, and recomputes the delegation half from `calls[]` | a workflow file belongs to neither set and the suite stays green · an exclusion carries no reason · a delegation exclusion is believed rather than checked against `calls[]` |
-| A4 | `03-develop-single-task`, `light-02-develop-task`, the four orchestrators and the three product workflows name no resolver step | any of the nine gains one |
-| A5 | `docs/BACKLOG.md` carries WI-18 in lockstep with its record | index line without record, or the reverse |
-| A6 | Both changelogs carry the entry; `pytest tests/ -q` and `validate_skills.py` at their baselines | one changelog edited and not the other · a gate regresses |
+| A1 | `skill-parallel-orchestration` §2.4 carries the freeze rule, the fingerprint definition, the caller-side comparison, and the sequential exemption | Read the section |
+| A2 | No read-only role definition instructs computing a fingerprint; each instructs quoting the supplied one | `tests/test_frozen_tree_contract.py` |
+| A3 | Every declared site carries the clause, and an undeclared carrier fails | `tests/test_frozen_tree_contract.py` |
+| A4 | Deleting the fingerprint line from any one site turns the test red | Executed mutation, recorded in the plan |
+| A5 | `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix` exits clean | Run before staging |
+| A6 | The full suite is green and `generate_wrappers.py --check` reports no drift | Run before staging |
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ-1 — a CI job for both deterministic sections.** Neither the `Register (§5.5)` section nor this
-task's `References (§4.1)` section can prove its command ran. Turning either into a CI job is one
-decision for both. Out of scope here; a checklist that demands quoted output is what this task
-ships.
+**OQ-1 — untracked file contents.** The `git` example fingerprint covers `HEAD`, the porcelain
+status listing and the tracked diff. An untracked file changes the fingerprint when it appears or
+disappears, and not when its contents change. Blocks: nothing — the caveat is written beside the
+example. Owner: the operator, if a run ever depends on untracked content.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**104-D1 — the resolver is wired as a GATE, not as a Global Protocol.** A Global Protocol takes a
-two-part reference — prose blockquote plus step — in every workflow it binds; the Retro carries it in
-17 of 23. A gate is named in the step that runs it, the way `framework-upgrade` §3.3 names
-`skill-spec-validator`. The second genre needs no protocol-registry entry and no blockquote.
+**105-D1, 2026-08-11, orchestrator: the role carries the fingerprint, the caller compares it.**
+RF-7 option 3 says the critic verifies the fingerprint on entry and on exit. A critic's `tools:`
+line has no Bash, so it can compute nothing. The only verification available to it is comparing a
+value in its brief against the same value in its brief.
 
-**104-D2 — T2 is discharged by four checklists, not by seven more workflow edits.** Every authoring
-workflow passes its artifact to a reviewer, and all four reviewer prompts already load
-`documentation-standards`. Rejected: adding a step to `01-start-feature`, `02-plan-implementation`,
-`vdd-01-start-feature`, `vdd-02-plan`, `04-update-docs`, `light-01-start-feature` and
-`iterative-design` — seven edits for coverage four already give.
+The obligation is therefore split. The caller computes before the spawn and recomputes at the
+round's return. The role quotes the value it was given, so the comparison is anchored to what the
+role saw.
+Rejected: instructing the role to run the hash — it is the instruction §2.4 exists to forbid, and
+its measured cost is a 600-second turn.
 
-**104-D3 — no git hook.** One `--targets-changed --fix` at pre-commit would cover T1 and T2 with a
-single edit. Rejected: `.git/hooks/` holds no installed hook, is not versioned, and installation
-would fall to the installer (ARCHITECTURE §9) — a new subsystem, which is the inconsistency this
-task exists to avoid.
+**105-D2, 2026-08-11, orchestrator: the freeze covers the artifacts under review, not the
+repository.** A rule covering every file forbids the caller from writing the round's own report
+while the round runs, and would be violated on every conforming run.
 
-**104-D5 — no `System/Docs/` edit, recorded rather than assumed.** `framework-upgrade` §4.2 names
-`SKILLS.md` and `WORKFLOWS.md` as a finalization step, so the absence needs a reason. Measured:
-`WORKFLOWS.md` describes workflows at summary granularity — a mermaid graph plus one table row per
-workflow — and `SKILLS.md`'s rows describe what a skill is for, not which sections it contains. A
-step added inside seven workflows and a section added inside four checklists change neither
-statement. TASK 103 edited `SKILLS.md` because the skill gained a CLI surface and a normative rule;
-this task gives no skill a new capability.
+**105-D3, 2026-08-11, orchestrator: the sequential path states the exemption rather than
+inheriting silence.** The hazard is concurrency, and the sequential path has none. A reader finding
+no mention cannot tell an exemption from an omission.
 
-**104-D6 — the two halves reach consumers by different routes, and that is accepted.** Measured in
-onchain-analytics: `.agent/skills/` holds 47 per-skill symlinks into this repository —
-`task-review-checklist` and `code-review-checklist` among them — while `.agent/workflows/` is a real
-per-repo directory. So the **four checklist edits are live in five consumer repositories at commit
-time**, and the **seven workflow steps reach none of them**. T2 coverage is fleet-wide, T1 coverage
-is local to this repository until each project edits its own workflows. Accepted rather than fixed:
-the checklist half is advisory and, by R2, demands nothing of a corpus that adopted nothing; making
-the workflow half propagate would mean owning per-repo workflow files, which this framework
-deliberately does not.
-
-**104-D4 — the test derives the set; it does not list it.** A literal list passes forever and
-answers nothing about a workflow added tomorrow. Recomputing from `calls[]` is what makes A3 a
-verification rather than a restatement.
+**105-D4, 2026-08-11, orchestrator: the fingerprint line goes in the evidence block, not beside
+it.** The block is the one structure every caller already writes and every role already reads, and
+§2.4 already defines its absence semantics. A second block would need its own absence rule.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-- **Migrating any corpus**, including this repository's six references. Unchanged from 103 D5.
-- **A protocol registry with a validator over every terminal workflow** — WI-16 §8 sizes it at L and
-  it answers the wiring question for *all* protocols. R6's test covers this one and does not
-  substitute for that item.
-- **`--strict` anywhere.** The resolver stays advisory; a project wanting a hard gate names its own
-  living corpus and adds the flag itself.
-- **Product workflows** (R7) and **a git hook** (104-D3).
-- **Propagating the workflow half to consumers** (104-D6). Five repositories receive the four
-  checklist edits by symlink and none of the seven workflow steps. Wiring a consumer's own workflows
-  is that project's commit, not this task's.
-- **A CI job for the two deterministic checklist sections** (OQ-1).
+- Option 2 of RF-7, isolation in a separate worktree — the record proposes it only if serialization
+  becomes expensive, and the cost is not yet measured.
+- Option 4, no change.
+- A script that computes the fingerprint. The value is one shell pipeline in the example, and
+  `skill-safe-commands` already permits its parts.
+- Any change to what the evidence block reports about tests or scans.

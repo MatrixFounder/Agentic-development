@@ -70,30 +70,44 @@ The teaching below uses the chat idiom for readability; translate to SDK calls m
 0. Orchestrator gathers execution evidence ONCE, before any persona pass
    (vdd-multi Phase 1 contract, audit-067 C-13): run the test suite +
    run_audit.py, capture summaries — or honest `tests/scan: NOT RUN
-   (<reason>)` lines. The identical evidence block goes into every
+   (<reason>)` lines. Capture a Tree fingerprint the same way (parent
+   §2.4.1). The identical evidence block goes into every
    persona message below (ground truth, not critic output — sharing it
    is not cross-pollination). Absent block → persona emits the finding
    "exit-bar condition unverifiable", never clean-pass.
 
+0b. The FREEZE rule (parent §2.4.1) is vacuous on this path and the
+   fingerprint line is written anyway. One session runs the personas in
+   order, so no write of the orchestrator's can be outstanding while a
+   persona reads — the hazard the rule addresses is concurrency, and
+   there is none here. The line is still written because the persona's
+   report is still a claim about one tree state. Between personas the
+   orchestrator MAY write; recompute the fingerprint when it does, so
+   report #2 is not compared against the tree report #1 saw.
+
 1. Orchestrator message: "You are now critic-logic. Read
    .agent/skills/vdd-adversarial/SKILL.md. Review <target> for logic
-   issues. Execution evidence — Tests: <summary | NOT RUN (<reason>)>.
-   Emit structured report. Do NOT fix."
+   issues. Execution evidence — Tests: <summary | NOT RUN (<reason>)>;
+   Tree fingerprint: <value | NOT COMPUTED (<reason>)>. Quote the tree
+   fingerprint in your report. Emit structured report. Do NOT fix."
 
 2. Orchestrator captures report #1 to scratch.
 
 3. Orchestrator message: "Forget the critic-logic persona. You are now
    critic-security. Read .agent/skills/skill-adversarial-security/SKILL.md.
    Review <target> for security issues. Execution evidence — Tests:
-   <summary | NOT RUN>; Scan (run_audit.py): <summary | NOT RUN (<reason>)>.
-   Emit structured report. Do NOT fix."
+   <summary | NOT RUN>; Scan (run_audit.py): <summary | NOT RUN (<reason>)>;
+   Tree fingerprint: <value | NOT COMPUTED (<reason>)>. Quote the tree
+   fingerprint in your report. Emit structured report. Do NOT fix."
 
 4. Orchestrator captures report #2.
 
 5. Orchestrator message: "Forget the critic-security persona. You are
    now critic-performance. Read .agent/skills/skill-adversarial-performance/SKILL.md.
    Review <target> for performance issues. Execution evidence — Tests:
-   <summary | NOT RUN (<reason>)>. Emit structured report. Do NOT fix."
+   <summary | NOT RUN (<reason>)>; Tree fingerprint: <value | NOT
+   COMPUTED (<reason>)>. Quote the tree fingerprint in your report.
+   Emit structured report. Do NOT fix."
 
 6. Orchestrator captures report #3.
 

@@ -33,6 +33,12 @@ contract:
       the OUTPUT as data (a file plus its path), never the command. Anything you did not run goes in
       as `NOT RUN (<reason>)`. A brief naming a command instead of its result costs a silently
       unverified checklist section, or the whole turn.
+    - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
+      spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
+      after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and
+      compare. Differing values mean the review describes a document that no longer exists, so the
+      round is re-taken rather than annotated. The reviewer **quotes** the value — computing one
+      needs an execution tool its role does not have.
     - **Verification Loop**: Read `System/Agents/03_task_reviewer_prompt.md`.
     <!-- loop:task-review -->
     - If the Reviewer requests changes: Update `docs/TASK.md` and repeat the review.
@@ -44,6 +50,12 @@ contract:
       Same obligation as the TASK gate, plus the change set: this reviewer cannot produce a diff, so
       **write the diff to a file and pass the path**. "Review `git diff` on these files" is an
       instruction to execute, given to a role that cannot — measured at 600 s and a watchdog kill.
+    - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
+      spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
+      after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and
+      compare. Differing values mean the review describes a document that no longer exists, so the
+      round is re-taken rather than annotated. The reviewer **quotes** the value — computing one
+      needs an execution tool its role does not have.
     - **Verification Loop**: Read `System/Agents/05_architecture_reviewer_prompt.md`.
     <!-- loop:arch-review -->
     - If the Reviewer requests changes: Update `docs/ARCHITECTURE.md` and repeat the review.

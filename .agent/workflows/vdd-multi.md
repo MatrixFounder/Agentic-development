@@ -110,6 +110,17 @@ vdd-multi
 
 1. **Tests**: if a test suite exists for the target scope, run it and capture `command + pass/fail summary (+ failure list)`. If not run, record the honest line `tests: NOT RUN (<reason>)`.
 2. **Security scan**: run `python3 .agent/skills/security-audit/scripts/run_audit.py <scope> --output summary` (or `json`) and capture the summary. If not run, record `scan: NOT RUN (<reason>)`.
+3. **Tree fingerprint**: capture a value over the reviewed files and put it in the block
+   (`skill-parallel-orchestration` §2.4.1). In a git repository:
+   `{ git rev-parse HEAD; git status --porcelain; git diff HEAD; } | shasum -a 256 | cut -c1-12`.
+
+**Step 1.0b — freeze the tree for the round.** From the spawn until the last critic returns, write
+nothing to the reviewed files: no fix, no mutation run for evidence, no reformat. Recompute the
+fingerprint when the last critic returns and compare it against the value the critics quoted.
+Differing values mean this round measured a state that no longer exists — re-spawn against the
+frozen tree, or record the mismatch and do not report a pass. Measured cost of the missing rule
+(RF-7): a reviewer spent seven extra suite runs and one HIGH finding on the orchestrator's own
+in-flight mutation.
 
 Evidence is gathered **once per iteration** and given to critics verbatim and identically — it is ground truth, not critic output, so sharing it is NOT cross-pollination.
 
@@ -132,6 +143,12 @@ Focus areas: {optional — narrow the scope}
 Execution evidence (supplied by the orchestrator — treat as INPUT; do not re-run or fabricate):
 - Tests: {command + pass/fail summary | NOT RUN (<reason>)}
 - Scan (run_audit.py): {summary | NOT RUN (<reason>)}   ← critic-security only
+- Tree fingerprint: {value (how it was computed) | NOT COMPUTED (<reason>)}
+Quote the tree fingerprint in your report. You cannot compute one — that needs an
+execution tool your role does not have — and quoting it is what lets the orchestrator
+detect an edit that landed while you were reading. No fingerprint line at all: report
+"tree fingerprint absent — findings are not pinned to a tree state" and do not signal
+clean-pass.
 If this evidence block is missing entirely, emit the finding "exit-bar condition
 unverifiable — no execution evidence supplied" and do not signal clean-pass.
 A line reading NOT RUN leaves that condition UNMET too: report "exit-bar condition
@@ -260,7 +277,7 @@ If the `Agent` tool + `.claude/agents/` are unavailable, **resolve the runtime**
 
 **Sequential role-switching — last resort** (primitive-less runtime, deterministic single-session debugging, or 1-slot CI):
 
-0. **Gather execution evidence first** (same contract as Phase 1 Step 1.0): run the test suite and `run_audit.py` once, capture summaries (or honest `tests/scan: NOT RUN (<reason>)` lines), and include the evidence block in **every** persona pass below. Absence of the block → the persona emits "exit-bar condition unverifiable", never clean-pass.
+0. **Gather execution evidence first** (same contract as Phase 1 Step 1.0): run the test suite and `run_audit.py` once, capture summaries (or honest `tests/scan: NOT RUN (<reason>)` lines), and include the evidence block in **every** persona pass below. Absence of the block → the persona emits "exit-bar condition unverifiable", never clean-pass. The `Tree fingerprint` line is written here too; the freeze rule itself is vacuous on this path, because one session runs the personas in order and no write can be outstanding while a persona reads (`skill-parallel-orchestration` §2.4.1).
 1. Apply `vdd-adversarial` (role-switch) → fix loop (unless `--no-fix`).
 2. Apply `skill-adversarial-security` (role-switch) → fix loop.
 3. Apply `skill-adversarial-performance` (role-switch) → fix loop.

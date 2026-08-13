@@ -122,7 +122,7 @@ repairs it.
   quotation inside a table cell escapes the pipe as `\|`. A reference without a referent is not
   rejected — it is *unverifiable*, and stays that way. This row exists because the Architecture and
   Planning phases load this contract and do **not** load `documentation-standards`, where the rule
-  itself lives; the author who most needs the form is the one who cannot reach that file. A
+  itself lives. The author who most needs the form is the one who cannot reach that file. A
   **referent** is not an **anchor**: an anchor (`<!-- contract:rtm -->`) addresses a section.
 - **Test obligation.** The mutation clause is required only where the test is executable. A
   documentation check has no mutation to name, and demanding one made the form unfollowable for the

@@ -16,6 +16,80 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.29.1 — the reference gate is scoped to the living corpus**
+
+CI had been red for six days — three consecutive pushes, `31192587899`, `31212036925`,
+`31502347038`. Two independent failures, both reproducing on a clean `e2ef113`, and **neither
+caused by a broken document**.
+
+The gate failure was named earlier and left standing. The v3.28.1 audit §3 recorded: "the gate ran
+red (exit 1) both before and after… the remainder is real." The remainder was not real — all six
+references are correct records.
+
+#### Fixed
+
+- **The CI step scanned `--all docs`, which §4.2 had already ruled out.** The step dates from
+  `a4ba247`. `ed2af74` (v3.27.0) then split the verdict **by corpus**: a named living corpus is
+  gateable, everything else — archives included — stays advisory. The reason is that a coordinate
+  in an archived document is a true statement about a past state. The step was never narrowed to
+  match. Measured on `e2ef113`: **6 errors, every one of them in `docs/plans/` or
+  `docs/reviews/`**. Three are cross-repository coordinates (`onchain-analytics`) that no local
+  file can satisfy. Three are referents whose target was edited after the review citing it was
+  written. Two of the six are
+  produced by the line that *explains* why the first class is unfixable: `framework-audit-105.md:65`
+  quotes `get-token.ts:117` as the illustration. **A gate that fails correct documents is a gate
+  that gets switched off** — §4.2's own bound, applied to the gate §4.2 governs.
+- **`authoring-contract.md:123` ran 37 words against a 35-word budget**, so `TC-SHIP-06` — "the
+  skill's own documents scan at zero warn" — reported 191/192 and took three later steps down with
+  it in both matrix jobs. The sentence arrived with the **Positional reference** bullet in
+  `ed2af74`. It is now two claims of 22 and 15 words, split by one punctuation mark. **The file's
+  line count is unchanged**, so the six records citing it at `:7-8`, `:54`, `:56-57`, `:81`,
+  `:83-96` and `:107` stay true.
+
+#### Changed
+
+- **Two steps where there was one.** The gate scans `docs/*.md docs/issues docs/backlog` and fails;
+  a second step scans `--all docs` with `continue-on-error` and reports. The boundary is not a list
+  somebody maintains: archiving **moves** a document from the top level of `docs/` into a
+  subdirectory, so the top level *is* the living/archived line. The two ledger record directories
+  are inside the gate because `heal-issues` follows their coordinates to reach a defect, and a
+  shifted one sends a repair run to the wrong line. When a closed record ages into a false red, the
+  answer is to pin it (`path.ext:12@<rev>`, §4.1's licensed form and true of a record), not to widen
+  the scope back.
+
+| Measure | Before | After |
+| :--- | ---: | ---: |
+| Errors in the gate | 6 (exit 1) | **0** (exit 0) |
+| References under the gate | 830 in 327 documents | **156 in 88 documents** |
+| References under advisory | 0 | **830 in 327 documents** |
+
+  **674 references left the gate. None left the report** — which is the difference between a stated
+  coverage boundary and a silent one.
+
+#### Added
+
+- **`tests/test_reference_gate_scope.py`** — 10 tests. The load-bearing one enumerates `docs/`
+  **from disk** and asserts every subdirectory is in exactly one of two sets, the archived one
+  carrying a reason per member: a directory added tomorrow is in neither and fails. The rest parse
+  the workflow YAML — the gate names every living directory, names no archived one, carries its
+  guard; the advisory step scans the whole tree and never fails the run. Four mutations were
+  executed: an undeclared `docs/audit/`, dropping `docs/issues`, re-adding `docs/reviews`, removing
+  `continue-on-error`. Each reddens a different assertion.
+- **A guard against a failure mode this change introduced.** An explicit path list can be mistyped,
+  and the resolver answers a path matching nothing with `NOTHING CHECKED` and **exit 0** — a green
+  gate that verified no document. Before the change the single argument `docs` could not be wrong.
+  The step now fails on that line; verified by execution, not by reading.
+
+#### Notes
+
+- **Open and stated rather than fixed:** **8 test modules execute in neither CI list** — not in
+  `tests/run_tests.py`'s curated set, not in the pytest list in `framework-gates.yml`. They include
+  `test_frozen_tree_contract` (the 7 tests v3.29.0 shipped two days ago) and `test_resolver_wiring`
+  (v3.28.0). Both batteries were written as the proof of a shipped contract, and neither runs in CI.
+  All pass locally. Recorded in `docs/reviews/framework-audit-20260813-reference-gate-scope.md` §7.
+- **No archived document was edited**, which was the constraint the change was given. Suite 435 →
+  **445**; register selftest 191/192 → **192/192**.
+
 ### **v3.29.0 — a read-only round runs against a frozen tree**
 
 Closes `RF-7`, filed by a `code-reviewer` roast in `onchain-analytics` task 013-3. Two obligations

@@ -49,7 +49,7 @@ jobs:
 
       - name: Run tooling regression tests
         run: |
-          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py tests/test_language_independence.py tests/test_inline_efficiency.py tests/test_positional_refs.py tests/test_scratch_hygiene.py tests/test_loop_contract.py .agent/skills/skill-spec-validator/scripts/tests/ .agent/tools/test_task_id_tool.py .agent/tools/test_archive_protocol.py .agent/tools/test_rebase_links.py -q
+          PYTHONPATH=. pytest -p no:cacheprovider tests/test_tool_runner.py tests/test_tool_runner_security_contract.py tests/test_spec_validator.py tests/test_language_independence.py tests/test_inline_efficiency.py tests/test_positional_refs.py tests/test_scratch_hygiene.py tests/test_loop_contract.py tests/test_reference_gate_scope.py .agent/skills/skill-spec-validator/scripts/tests/ .agent/tools/test_task_id_tool.py .agent/tools/test_archive_protocol.py .agent/tools/test_rebase_links.py -q
 
       # The curated unittest suite. It is NOT covered by the pytest list above:
       # `load_tests` in run_tests.py pulls in the whole of `tests/installer/`
@@ -150,12 +150,54 @@ jobs:
       # nothing ever ran the CHECK itself over a document, so 39 unresolvable references
       # accumulated across docs/ before anyone looked.
       #
-      # Whole tree, and deliberately WITHOUT --strict. Errors already exit 1 on their own;
-      # --strict additionally promotes DRIFT_SUSPECT, which fires when a reference points
-      # into a file the same change edits. `docs/TASK.md` is rewritten by every task, so
-      # --strict here would paint a normal pipeline run red for a warning whose own text
-      # is "re-check after the edits are final".
-      - name: Check positional references (docs/)
+      # SCOPE. This step scanned `--all docs` — the whole tree — from a4ba247. v3.27.0
+      # (ed2af74) then split §4.2's verdict BY CORPUS: a named living corpus is gateable,
+      # "everything else, archives included" stays advisory, because a coordinate in an
+      # archived document is a true statement about a past state. The step was never
+      # narrowed to match. Measured on e2ef113: 6 errors, every one of them in `docs/plans/`
+      # or `docs/reviews/`, every one a correct record — three cross-repository coordinates
+      # that no local file can satisfy, and three referents whose target was edited after
+      # the review was written. CI had been red for six days on documents that are right.
+      # A gate that fails correct documents is a gate that gets switched off (§4.2).
+      #
+      # LIVING = every document at the top level of `docs/`, plus the two ledger record
+      # directories. Archiving moves a document INTO a subdirectory, so "top level" is the
+      # living/archived boundary itself rather than a list that rots. `docs/issues/` and
+      # `docs/backlog/` are in because `heal-issues` follows those coordinates to find the
+      # defect: a rotted one sends a repair run to the wrong line. When a closed record
+      # ages into a false red, pin it (`path.ext:12@<rev>` — §4.1's licensed form, and true
+      # of a record) rather than widening this scope back.
+      #
+      # ARCHIVED = every other `docs/` subdirectory. Covered by the advisory step below, so
+      # the narrowing is visible in the log instead of silent.
+      # `tests/test_reference_gate_scope.py` asserts the split is exhaustive against disk.
+      #
+      # Deliberately WITHOUT --strict. Errors already exit 1 on their own; --strict
+      # additionally promotes DRIFT_SUSPECT, which fires when a reference points into a
+      # file the same change edits. `docs/TASK.md` is rewritten by every task, so --strict
+      # here would paint a normal pipeline run red for a warning whose own text is
+      # "re-check after the edits are final".
+      - name: Check positional references (living corpus)
+        run: |
+          set -o pipefail
+          log="${RUNNER_TEMP:-/tmp}/refs-living.log"
+          python .agent/skills/documentation-standards/scripts/check_positional_refs.py \
+            --all docs/*.md docs/issues docs/backlog | tee "$log"
+          # A path that matches nothing makes the resolver print NOTHING CHECKED and exit 0
+          # — a green gate that verified no document. That failure mode arrived with the
+          # explicit path list above; before it, the single argument `docs` could not be
+          # wrong. Fail on it rather than inherit a silent pass.
+          if grep -q "NOTHING CHECKED" "$log"; then
+            echo "::error::the living corpus matched no document — check the paths above"
+            exit 1
+          fi
+
+      # The archived corpus, reported and never failing: §4.2's second row. It exists so the
+      # narrowing above is a stated coverage boundary rather than a silent one — the
+      # coverage line stays in the log, and a NEW class of breakage in the archives is
+      # readable there even though it does not stop a run.
+      - name: Check positional references (archives, advisory)
+        continue-on-error: true
         run: |
           python .agent/skills/documentation-standards/scripts/check_positional_refs.py \
             --all docs

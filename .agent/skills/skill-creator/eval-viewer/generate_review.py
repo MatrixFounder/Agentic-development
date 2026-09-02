@@ -291,6 +291,7 @@ def _kill_port(port: int) -> None:
         result = subprocess.run(
             ["lsof", "-ti", f":{port}"],
             capture_output=True, text=True, timeout=5,
+            encoding="utf-8", errors="replace",
         )
         for pid_str in result.stdout.strip().split("\n"):
             if pid_str.strip():

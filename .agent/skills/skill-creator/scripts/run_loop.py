@@ -8,6 +8,7 @@ overfitting.
 
 import argparse
 import json
+import os
 import random
 import sys
 import tempfile
@@ -25,12 +26,12 @@ try:
     from scripts.generate_report import generate_html
     from scripts.improve_description import improve_description
     from scripts.run_eval import find_project_root, run_eval
-    from scripts.skill_utils import parse_skill_md
+    from scripts.skill_utils import emit_json, install_human_channel, parse_skill_md
 except ImportError:
     from generate_report import generate_html
     from improve_description import improve_description
     from run_eval import find_project_root, run_eval
-    from skill_utils import parse_skill_md
+    from skill_utils import emit_json, install_human_channel, parse_skill_md
 
 
 def split_eval_set(eval_set: list[dict], holdout: float, seed: int = 42) -> tuple[list[dict], list[dict]]:
@@ -259,6 +260,7 @@ def run_loop(
 
 
 def main():
+    install_human_channel()
     parser = argparse.ArgumentParser(description="Run eval + improve loop")
     parser.add_argument("--eval-set", required=True, help="Path to eval set JSON file")
     parser.add_argument("--skill-path", required=True, help="Path to skill directory")
@@ -275,7 +277,7 @@ def main():
     parser.add_argument("--results-dir", default=None, help="Save all outputs (results.json, report.html, log.txt) to a timestamped subdirectory here")
     args = parser.parse_args()
 
-    eval_set = json.loads(Path(args.eval_set).read_text())
+    eval_set = json.loads(Path(args.eval_set).read_text(encoding="utf-8"))
     skill_path = Path(args.skill_path)
 
     if not (skill_path / "SKILL.md").exists():
@@ -325,9 +327,9 @@ def main():
 
     # Save JSON output
     json_output = json.dumps(output, indent=2)
-    print(json_output)
+    emit_json(output)
     if results_dir:
-        (results_dir / "results.json").write_text(json_output)
+        (results_dir / "results.json").write_text(json_output, encoding="utf-8")
 
     # Write final HTML report (without auto-refresh)
     if live_report_path:

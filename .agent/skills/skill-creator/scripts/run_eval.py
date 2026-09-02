@@ -17,9 +17,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 try:
-    from scripts.skill_utils import parse_skill_md
+    from scripts.skill_utils import emit_json, install_human_channel, parse_skill_md
 except ImportError:
-    from skill_utils import parse_skill_md
+    from skill_utils import emit_json, install_human_channel, parse_skill_md
 
 
 def find_project_root() -> Path:
@@ -535,6 +535,7 @@ def run_eval(
 
 
 def main():
+    install_human_channel()
     parser = argparse.ArgumentParser(description="Run trigger evaluation for a skill description")
     parser.add_argument("--eval-set", required=True, help="Path to eval set JSON file")
     parser.add_argument("--skill-path", required=True, help="Path to skill directory")
@@ -547,7 +548,7 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Print progress to stderr")
     args = parser.parse_args()
 
-    eval_set = json.loads(Path(args.eval_set).read_text())
+    eval_set = json.loads(Path(args.eval_set).read_text(encoding="utf-8"))
     skill_path = Path(args.skill_path)
 
     if not (skill_path / "SKILL.md").exists():
@@ -581,7 +582,7 @@ def main():
             rate_str = f"{r['triggers']}/{r['runs']}"
             print(f"  [{status}] rate={rate_str} expected={r['should_trigger']}: {r['query'][:70]}", file=sys.stderr)
 
-    print(json.dumps(output, indent=2))
+    emit_json(output)
 
 
 if __name__ == "__main__":

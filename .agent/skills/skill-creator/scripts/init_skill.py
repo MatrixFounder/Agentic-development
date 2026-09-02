@@ -7,6 +7,7 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 import skill_utils
+from skill_utils import install_human_channel
 
 def create_skill(name, base_path, tier_value, config):
     """
@@ -44,7 +45,7 @@ def create_skill(name, base_path, tier_value, config):
     
     if os.path.exists(template_path):
         try:
-            with open(template_path, 'r') as f:
+            with open(template_path, 'r', encoding='utf-8') as f:
                 template_content = f.read()
             
             # Replace placeholders
@@ -70,18 +71,18 @@ version: 1.0
 TODO: Describe the primary purpose of this skill.
 """
 
-    with open(os.path.join(skill_dir, "SKILL.md"), "w") as f:
+    with open(os.path.join(skill_dir, "SKILL.md"), "w", encoding="utf-8") as f:
         f.write(skill_md_content)
     print("Created SKILL.md template.")
 
     # 3. Create Placeholder Files
-    with open(os.path.join(skill_dir, "scripts", ".keep"), "w") as f:
+    with open(os.path.join(skill_dir, "scripts", ".keep"), "w", encoding="utf-8") as f:
         f.write("")
-    with open(os.path.join(skill_dir, "examples", "usage_example.md"), "w") as f:
+    with open(os.path.join(skill_dir, "examples", "usage_example.md"), "w", encoding="utf-8") as f:
         f.write(f"# Usage Example for {name}\n\nTODO: Add a concrete example of how to use this skill.")
-    with open(os.path.join(skill_dir, "assets", "template.txt"), "w") as f:
+    with open(os.path.join(skill_dir, "assets", "template.txt"), "w", encoding="utf-8") as f:
         f.write("TODO: Add any static templates or assets here (files used for output).")
-    with open(os.path.join(skill_dir, "references", "guidelines.md"), "w") as f:
+    with open(os.path.join(skill_dir, "references", "guidelines.md"), "w", encoding="utf-8") as f:
         f.write("# Guidelines\nTODO: Add domain knowledge, API specs, or rules here.")
 
     print(f"\nSkill '{safe_name}' initialized successfully!")
@@ -106,6 +107,7 @@ TODO: Describe the primary purpose of this skill.
     print("="*60 + "\n")
 
 def main():
+    install_human_channel()
     # 1. Load Configuration
     project_root = os.getcwd() # Assume run from root
     config = skill_utils.load_config(project_root)

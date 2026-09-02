@@ -11,10 +11,19 @@ Example:
 """
 
 import fnmatch
+import os
 import re
 import sys
 import zipfile
 from pathlib import Path
+
+# `say` / `argparse.ArgumentParser`: the human channel must survive the caller's
+# locale. See skill_utils and docs/issues/human-cli-output-locale-class.md.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from scripts.skill_utils import install_human_channel
+except ImportError:
+    from skill_utils import install_human_channel
 
 
 def _quick_validate(skill_path):
@@ -138,6 +147,7 @@ def package_skill(skill_path, output_dir=None):
 
 
 def main():
+    install_human_channel()
     if len(sys.argv) < 2:
         print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
         print("\nExample:")

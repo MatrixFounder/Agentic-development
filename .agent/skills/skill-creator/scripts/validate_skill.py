@@ -8,6 +8,7 @@ import re
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 import skill_utils
+from skill_utils import install_human_channel
 
 def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
                             exempt_fence_langs=None, softcheck_fence_langs=None):
@@ -79,7 +80,7 @@ def extract_frontmatter(file_path):
     Extracts frontmatter string from file.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         lines = content.splitlines()
@@ -420,7 +421,7 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
                 errors.append(f"YAML Parse Error: {str(e)}")
 
             # 5. Check Token Efficiency
-            with open(skill_md_path, 'r') as f:
+            with open(skill_md_path, 'r', encoding='utf-8') as f:
                  raw_content = f.read()
             
             warn_lines = quality_config.get('max_inline_lines_warn', 20)
@@ -474,6 +475,7 @@ def validate_skill(skill_path, config, strict_exec_policy=False):
         return True
 
 def main():
+    install_human_channel()
     parser = argparse.ArgumentParser(description="Validate an Agent Skill (Portable Standard).")
     parser.add_argument("path", help="Path to the skill directory")
     parser.add_argument(

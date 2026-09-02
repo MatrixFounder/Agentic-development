@@ -12,8 +12,17 @@ Usage:
 import argparse
 import html
 import json
+import os
 import sys
 from pathlib import Path
+
+# `say` / `argparse.ArgumentParser`: the human channel must survive the caller's
+# locale. See skill_utils and docs/issues/human-cli-output-locale-class.md.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from scripts.skill_utils import install_human_channel
+except ImportError:
+    from skill_utils import install_human_channel
 
 
 def generate_html(data: dict) -> str:
@@ -150,6 +159,7 @@ def generate_html(data: dict) -> str:
 
 
 def main():
+    install_human_channel()
     parser = argparse.ArgumentParser(description="Generate HTML report from benchmark.json")
     parser.add_argument("input", help="Path to benchmark.json")
     parser.add_argument("-o", "--output", default=None, help="Output HTML file (default: input_base.html)")

@@ -20,8 +20,17 @@ No LLM, no network, no shell — pure recomputation.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+# `say` / `argparse.ArgumentParser`: the human channel must survive the caller's
+# locale. See skill_utils and docs/issues/human-cli-output-locale-class.md.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from scripts.skill_utils import install_human_channel
+except ImportError:
+    from skill_utils import install_human_channel
 
 # Support both `python scripts/verify_pin.py` and `python -m scripts.verify_pin`.
 try:
@@ -93,6 +102,7 @@ def pin_holds(benchmark_dir: Path, committed_path: Path) -> tuple[bool, list[str
 
 
 def main() -> int:
+    install_human_channel()
     parser = argparse.ArgumentParser(description="Verify a benchmark.json pin (no drift).")
     parser.add_argument("benchmark_dir", type=Path, help="Dir with eval-*/<config>/run-*/grading.json")
     parser.add_argument("committed_benchmark", type=Path, help="Committed benchmark.json to compare against")

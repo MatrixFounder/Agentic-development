@@ -2,14 +2,14 @@
 name: artifact-formalizer
 description: >-
   Use BEFORE authoring a specification (TASK, ARCHITECTURE, PLAN, task files,
-  issue records) to write in specification register, and AFTER to audit one that
-  reads as an essay: long sentences, unverifiable evaluative words, maxims,
-  personification, coined metaphors, reasoning inside requirements, emoji as
-  severity. Authoring contract plus a self-probing scanner; never changes the
-  document's language. Triggers: «формализуй задачу», «проверь регистр»,
-  "formalize this spec", "reads like an essay", "write the spec".
+  issue records), a CHANGELOG entry or release notes, and AFTER to audit one
+  that reads as an essay: long sentences, evaluative words, maxims,
+  personification, metaphors, reasoning inside requirements, emoji as severity.
+  Self-probing scanner; never changes the document's language. Triggers:
+  «формализуй задачу», «проверь регистр», «напиши CHANGELOG», "formalize this
+  spec", "reads like an essay", "write the spec", "release notes".
 tier: 2
-version: 2.0
+version: 2.1
 ---
 
 # Artifact formalizer (specification register)

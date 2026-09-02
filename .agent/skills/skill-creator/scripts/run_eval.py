@@ -311,7 +311,7 @@ def run_single_query(
     try:
         project_commands_dir.mkdir(parents=True, exist_ok=True)
         command_content = _build_command_content(skill_name, skill_description)
-        command_file.write_text(command_content)
+        command_file.write_text(command_content, encoding="utf-8")
 
         cmd = [
             "claude",

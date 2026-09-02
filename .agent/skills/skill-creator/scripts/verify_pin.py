@@ -96,7 +96,7 @@ def pin_holds(benchmark_dir: Path, committed_path: Path) -> tuple[bool, list[str
     """Return (holds, diffs). `holds` is True iff re-aggregation reproduces the committed
     benchmark's deterministic metrics."""
     recomputed = generate_benchmark(benchmark_dir)
-    committed = json.loads(Path(committed_path).read_text())
+    committed = json.loads(Path(committed_path).read_text(encoding="utf-8"))
     diffs = _diffs(_comparable(recomputed), _comparable(committed))
     return (not diffs), diffs
 

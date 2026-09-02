@@ -16,6 +16,51 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.31.0 — the two skill gates stop contradicting each other**
+
+`validate_skill.py` and `analyze_gaps.py` gate the same `SKILL.md` and disagreed about
+it. Measured over this repository's 46 skills: `analyze_gaps.py` exited 1 on **44**,
+`validate_skill.py` on **0**. The two agreed on 2 of 46. Both skills are maintained
+jointly with `Universal-skills`, where the same defect was adjudicated rule by rule
+(WI-033 / WI-034); this is that work, synced.
+
+#### Fixed
+
+- **The analyser reported correct documentation as defects.** Prose rules read prose:
+  fenced blocks and inline code spans are masked before they run, so
+  `[--page-size letter|a4|legal]` stays CLI usage notation. The absolute-path rule fires
+  on what a path *names* — one machine or one user's account — not on `/tmp/out.pdf` in
+  a reproducible command. A Windows path needs a drive letter, a UNC share or a filename
+  extension, so `x\_1` and `\alpha\beta\gamma` no longer qualify. A `TODO` marker is
+  `TODO:` or a line that starts with TODO, not the word in a sentence.
+- **Findings named a line that did not resolve.** They were body-relative — short by the
+  length of the frontmatter. Now file-relative, in every rule.
+- **`SKILL.md` was read with the caller's locale codec**, in `package_skill.py`,
+  `verify_pin.py`, `run_eval.py`, `run_loop.py`, `generate_report.py` and
+  `eval-viewer/generate_review.py`. One em dash in a skill's prose was enough to turn a
+  passing command into a traceback under `LC_ALL=C`.
+
+#### Changed
+
+- **A severity tier, in both gates.** `gaps`/`errors` decide the exit code;
+  `advisories`/`warnings` are reported and leave it at 0. `--strict` promotes them, and
+  `--json` now exists on both. Note that `--strict` is per-tool: each promotes its own
+  advisory classes, and those differ by design.
+- **`validation.required_sections` (Red Flags, Rationalization Table) is advisory, in
+  both gates.** It is a house convention, not a structural requirement — a skill may
+  carry the same material under another heading, or none. Making it an error would have
+  flipped **34 of 46** skills here from passing to failing and taken the CI gate from
+  46/46 to 12/46, without a single skill changing.
+- **Nine functions are now duplicated verbatim between the two gates**, not one.
+  `tests/test_inline_efficiency.py` widened from behavioural sampling of
+  `check_inline_efficiency` to byte-identity across all nine, plus an inventory check so
+  a newly duplicated function cannot go unguarded.
+
+Result: `analyze_gaps.py` exits 1 on **24** skills instead of 44, `validate_skill.py`
+still on 0 — the CI gate stays 46/46 — and **no skill anywhere fails a gate it used to
+pass**, verified across `Universal-skills` (22), this repository (46) and
+`obsidian-llm-wiki` (23).
+
 ### **v3.30.0 — locale-safe human output; brainstorming v3.1**
 
 CLI reports and `--help` failed under a locale whose codec cannot encode `—`, `✓`, `→`, `§`.

@@ -171,14 +171,14 @@ def main():
         sys.exit(1)
 
     try:
-        data = json.loads(input_path.read_text())
+        data = json.loads(input_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in {args.input}: {e}", file=sys.stderr)
         sys.exit(1)
     html_output = generate_html(data)
 
     output_path = args.output or input_path.with_suffix(".html")
-    Path(output_path).write_text(html_output)
+    Path(output_path).write_text(html_output, encoding="utf-8")
     print(f"Report written to {output_path}")
 
 

@@ -2,7 +2,7 @@
 name: skill-creator
 description: Use when creating new Agent Skills, upgrading existing skills, running evals to test a skill, benchmarking skill performance, or optimizing a skill's description for better triggering accuracy. Guidelines for Gold Standard skill structures.
 tier: 2
-version: 2.1
+version: 2.2
 ---
 # Skill Creator Guide
 
@@ -20,6 +20,15 @@ Your job is to figure out where the user is in this process and help them progre
 - "The description is descriptive enough" → **WRONG**. CSO triggers are mechanical. Follow the schema.
 - "This skill is too simple for a script" → **WRONG**. If logic > 5 lines, text instructions fail 30% of the time. Use a script.
 - "I'll skip the viewer and evaluate outputs myself" → **WRONG**. Generate the eval viewer BEFORE evaluating — get results in front of the human ASAP.
+
+### Rationalization Table
+| Agent Excuse | Reality / Counter-Argument |
+| :--- | :--- |
+| "The skill worked on my one test prompt" | One prompt is the prompt you wrote the skill against. A skill is judged on prompts nobody wrote it for; that is what the eval set is. |
+| "Baseline runs are a waste of tokens" | Without a baseline you cannot tell a skill that helps from a model that already knew. The comparison IS the result. |
+| "I'll invent the eval queries from the SKILL.md" | Queries derived from the skill test the skill against itself. Derive them from how a user would actually ask, including the phrasings that must NOT trigger it. |
+| "Validation is a formality, I'll run it at the end" | `validate_skill.py` fails on frontmatter and structure — the cheapest failures to fix and the most expensive to discover after the content is written. Run it first. |
+| "A relative `--path` is fine for `init_skill.py`" | It is resolved with `os.path.abspath()` against your current working directory, so the same command lands somewhere different depending on where you ran it. Pass an absolute `--path`. |
 
 ## Purpose
 
@@ -106,12 +115,29 @@ Template: `assets/SKILL_TEMPLATE.md`
 
 ### Script Contract
 - **Primary Commands**:
-  - `python3 scripts/init_skill.py <name> --tier <N>` — generate skill skeleton
-  - `python3 scripts/validate_skill.py <skill-path>` — validate structure and compliance
-  - `python3 scripts/package_skill.py <skill-path>` — package into `.skill` file
+  - `python3 scripts/init_skill.py <name> --tier <N> --path <ABSOLUTE-DIR>` — generate a
+    skill skeleton. Pass `--path` absolute: `init_skill.py:143` resolves it with
+    `os.path.abspath()`, i.e. against the **current working directory**, so the same
+    relative path lands in a different place depending on where you invoked it from —
+    run it from `scripts/` and the skill is scaffolded outside the repository.
+  - `python3 scripts/validate_skill.py <skill-path> [--json] [--strict]` — validate
+    structure and compliance
+  - `python3 scripts/package_skill.py <skill-path> <output-dir>` — package into a `.skill`
+    file. Without the output directory the archive lands in the current directory.
 - **Inputs**: skill name/path, tier, and local policy config.
-- **Outputs**: generated skeletons, validation pass/fail, warnings, `.skill` archives.
-- **Failure Semantics**: non-zero exit code on validation errors.
+- **Outputs**: generated skeletons, `.skill` archives, and a two-list verdict —
+  `errors` (blocking) and `warnings` (reported, non-blocking). `--json` emits it as
+  `{skill, errors, warnings, status}`.
+- **Failure Semantics**: non-zero exit on **errors**. Warnings leave the exit code at 0;
+  `--strict` (alias `--strict-exec-policy`) promotes them. This mirrors
+  `skill-enhancer/scripts/analyze_gaps.py`'s `gaps` / `advisories` split — in the
+  **default mode** the two gates read the same config keys and return the same verdict on
+  any one `SKILL.md` (WI-033), and `tests/test_shared_gate_logic.py` holds them there.
+- **`--strict` is per-tool, and the two do NOT agree under it.** Each promotes its own
+  advisory classes, and those differ by design: `analyze_gaps.py` carries prose rules
+  (`[Language]`) that this gate has no counterpart for. Measured 2026-09-02: 8 of the 22
+  skills exit 1 under `analyze_gaps.py --strict` and 0 under `validate_skill.py --strict`.
+  Use `--strict` to sweep one tool's backlog, never as a shared CI gate.
 
 ### Safety Boundaries
 - Operate only on explicit target skill directories.

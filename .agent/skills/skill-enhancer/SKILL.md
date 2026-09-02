@@ -2,7 +2,7 @@
 name: skill-enhancer
 description: Use when you need to audit, fix, or improve an existing agent skill to meet Gold Standard compliance.
 tier: 2
-version: 1.3
+version: 1.4
 ---
 # Skill Enhancer
 
@@ -17,7 +17,12 @@ version: 1.3
 - "I'll instruct the agent to parse the file line-by-line in text" -> **WRONG**. Use "Script-First".
 
 ## 2. Capabilities
-- **Audit**: Detect gaps (missing Red Flags, inline blocks > 12 lines, poor CSO, weak language) using `analyze_gaps.py`.
+- **Audit**: Detect gaps (missing Red Flags, oversized inline blocks, poor CSO, weak language) using `analyze_gaps.py`.
+- **Rule scoping**: the analyser reads prose, not code. Fenced blocks and inline
+  code spans are masked before the prose rules run, `[--flag VALUE]` is CLI usage
+  notation rather than an unfilled slot, and `/tmp/out.pdf` in a reproducible
+  command is not the absolute-path anti-pattern — only a path naming one machine
+  or one user's account is (WI-033).
 - **Execution Policy Audit**: Detect missing `Execution Mode`, `Script Contract`, `Safety Boundaries`, and `Validation Evidence` sections.
 - **Security Remediation**: Fix vulnerabilities flagged by `skill-validator` (e.g., `curl | bash`, secrets, weak permissions).
 - **Plan**: Propose specific content improvements using `references/refactoring_patterns.md`.
@@ -28,10 +33,18 @@ version: 1.3
 - **Rationale**: gap triage and refactoring decisions are prompt-driven, while gap detection is script-driven.
 
 ## 2.6. Script Contract
-- **Primary Command**: `python3 scripts/analyze_gaps.py <target-skill-path> [--json]`
+- **Primary Command**: `python3 scripts/analyze_gaps.py <target-skill-path> [--json] [--strict]`
 - **Inputs**: target skill path + optional output mode.
-- **Outputs**: structured gap list and pass/fail status.
-- **Failure Semantics**: non-zero exit when gaps exist (for deterministic gate behavior).
+- **Outputs**: two lists and a status — `gaps` (blocking) and `advisories`
+  (reported, non-blocking).
+- **Failure Semantics**: non-zero exit when **blocking gaps** exist (deterministic
+  gate behavior). Advisories are printed and leave the exit code at 0; `--strict`
+  promotes them to blocking. The split mirrors `validate_skill.py`, which already
+  passes a skill that has only warnings — without it the two gates return
+  different verdicts on the same file (WI-033).
+- **Advisory classes**: `[Language]` (the graduated-wording call is per
+  instruction, not mechanical) and `[Execution Policy]` (a declared warning-first
+  migration), plus the minor tier of `[Token Efficiency]`.
 
 ## 2.7. Safety Boundaries
 - **Scope**: apply edits only to explicitly selected target skill.
@@ -94,7 +107,12 @@ If no usage logs are available, skip this phase — it will become relevant afte
     *   **CRITICAL**: Use `replace_file_content` or `multi_replace_file_content`.
     *   **DO NOT** use `write_to_file` to overwrite existing content (Data Loss Risk).
     *   *Tip*: Use `references/refactoring_patterns.md` for the style guide.
-2.  **Verify**: Re-run `analyze_gaps.py`. Expect output "No Gaps Found".
+2.  **Verify**: Re-run `analyze_gaps.py`. Expect "No Gaps Found", or "No blocking
+    gaps" with the advisories listed. An advisory is closed by fixing it or by
+    writing down why it stands — never by editing correct documentation to
+    satisfy a rule that is reading it wrong. If a rule fires on correct content,
+    narrow the rule and pin both halves in `scripts/tests/test_rule_scoping.py`:
+    what it now ignores, and the defect it must still catch.
 
 ### Phase 3.5: Security Repair (If triggered by Validator)
 1.  **Analyze Report**: Read the `skill-validator` JSON output.

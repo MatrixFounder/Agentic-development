@@ -4,6 +4,7 @@ import argparse
 import sys
 import re
 import json
+import subprocess
 
 # Add script directory to path to import skill_utils
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +20,13 @@ except ImportError:
     sys.exit(1)
 
 def extract_frontmatter(file_path):
-    """
-    Extracts frontmatter string and body from file.
+    """Split SKILL.md into (frontmatter, body, error, body_offset).
+
+    `body_offset` is how many file lines precede the body, so a rule that finds
+    something on body line N reports `N + body_offset` -- the line the reader
+    opens the file at. Without it every reported line number is short by the
+    length of the frontmatter, and a finding whose location does not resolve is
+    a finding the reader stops checking.
     """
     try:
         with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -28,28 +34,30 @@ def extract_frontmatter(file_path):
 
         lines = content.splitlines()
         if not lines or lines[0].strip() != '---':
-            return None, content, "Missing YAML frontmatter start (---)"
+            return None, content, "Missing YAML frontmatter start (---)", 0
 
         frontmatter_lines = []
         body_lines = []
         found_end = False
-        
+        body_offset = 0
+
         for i, line in enumerate(lines[1:], 1):
             if not found_end:
                 if line.strip() == '---':
                     found_end = True
+                    body_offset = i + 1  # opening '---' + frontmatter + closing '---'
                     continue
                 frontmatter_lines.append(line)
             else:
                 body_lines.append(line)
 
         if not found_end:
-            return None, content, "Missing YAML frontmatter end (---)"
+            return None, content, "Missing YAML frontmatter end (---)", 0
 
-        return "\n".join(frontmatter_lines), "\n".join(body_lines), None
+        return "\n".join(frontmatter_lines), "\n".join(body_lines), None, body_offset
 
     except Exception as e:
-        return None, "", f"File Error: {str(e)}"
+        return None, "", f"File Error: {str(e)}", 0
 
 
 def _normalize_section_title(value: str) -> str:
@@ -79,6 +87,44 @@ def _has_section(headings: list[str], target: str) -> bool:
     return False
 
 
+def _section_body_lines(body: str, title: str) -> list[str]:
+    """Non-blank lines under `title`, up to the next heading of any level."""
+    needle = _normalize_section_title(title)
+    out, inside = [], False
+    for line in body.splitlines():
+        if re.match(r"^#{1,6}\s", line):
+            if inside:
+                break
+            if _normalize_section_title(re.sub(r"^#{1,6}\s+", "", line)).endswith(needle):
+                inside = True
+            continue
+        if inside and line.strip():
+            out.append(line)
+    return out
+
+
+def check_validation_evidence_size(body: str, validation_config: dict) -> list[str]:
+    """Validation Evidence records the verdict, not the investigation.
+
+    The bound lives in `skill_standards_default.yaml`
+    (`quality_checks.max_validation_evidence_lines`), overridable per project via
+    `.agent/rules/skill_standards.yaml`. No literal here: an absent key means the
+    standard is not configured, which is not the same as a number this function
+    invented. Warning only — a long section is verbose, not invalid. The fix is
+    to move detail into `references/` and keep a summary plus a pointer.
+    """
+    limit = validation_config.get("quality_checks", {}).get(
+        "max_validation_evidence_lines")
+    if not isinstance(limit, int) or limit <= 0:
+        return []
+    lines = _section_body_lines(body, "Validation Evidence")
+    if len(lines) > limit:
+        return [f"Validation Evidence is {len(lines)} lines (soft limit {limit}). "
+                f"Keep the verdict and the counts here; move the investigation "
+                f"into references/ and link it."]
+    return []
+
+
 def _has_real_files(directory: str) -> bool:
     if not os.path.isdir(directory):
         return False
@@ -87,6 +133,263 @@ def _has_real_files(directory: str) -> bool:
             continue
         return True
     return False
+
+# ---------------------------------------------------------------------------
+# Rule scoping (WI-033)
+#
+# Three rules -- weak wording, template placeholders, absolute paths -- used to
+# fire on documentation that is correct as written: CLI usage notation, a
+# reproducible command line, a markdown escape. A report whose findings describe
+# correct content carries no information, and the habit it teaches is to stop
+# reading it. Each rule below states what it targets and what it deliberately
+# leaves alone; `tests/test_rule_scoping.py` pins both halves.
+# ---------------------------------------------------------------------------
+
+_FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
+_INLINE_CODE_RE = re.compile(r"(`+)(?:(?!\1).)*?\1")
+
+
+def mask_code(body: str) -> str:
+    """Blank every fenced block and inline code span, keeping lines and columns.
+
+    The prose rules read English. A documented command line is not English:
+    `[--page-size letter|a4|legal]` is CLI usage notation where the brackets mean
+    "optional argument", and filling it in would make every documented command
+    wrong. Masking with spaces (rather than deleting) keeps every line number and
+    column valid, so a finding still points at the right place.
+
+    Deliberately NOT used by the absolute-path check: a machine-specific path
+    hardcoded inside a command example is exactly the defect that check exists
+    for, so that one narrows on what the path names instead (see
+    `is_machine_specific_path`).
+    """
+    lines = body.splitlines()
+
+    # Which lines belong to a CLOSED fence. An unclosed one is deliberately not
+    # masked: masking it would blank every following line, and a rule that sees
+    # nothing reports nothing. A false positive inside an unterminated fence is
+    # visible and fixable; the silence is neither. `check_inline_efficiency`
+    # reports the unclosed fence itself.
+    fenced = set()
+    fence = None
+    start = 0
+    for i, raw in enumerate(lines):
+        match = _FENCE_RE.match(raw)
+        if fence is None:
+            if match:
+                fence, start = match.group(1), i
+            continue
+        if match and match.group(1)[0] == fence[0] and len(match.group(1)) >= len(fence):
+            fenced.update(range(start, i + 1))
+            fence = None
+
+    out = []
+    for i, raw in enumerate(lines):
+        if i in fenced:
+            out.append(" " * len(raw))
+        else:
+            out.append(_INLINE_CODE_RE.sub(lambda m: " " * len(m.group(0)), raw))
+    return "\n".join(out)
+
+
+# A quoted span never crosses a line. Without the `\n` exclusion, one ordinary
+# apostrophe -- "Don't skip the review step." -- opens a span that runs to the
+# next apostrophe several lines later and blanks everything between. Measured
+# over this repo before the fix: 14.6% of body lines went blank, and a fixture
+# holding both `[Why this is wrong]` and `TODO: finish this section` reported
+# neither. The unscoped pattern is the one HEAD used for the TODO check, where
+# it had the same hole; it became load-bearing when the placeholder rule started
+# reading the stripped body too.
+_QUOTED_RE = re.compile(r'"[^"\n]*"|\'[^\'\n]*\'')
+
+
+def strip_quoted(text: str) -> str:
+    """Blank quoted spans, preserving length and line structure.
+
+    Red Flags quote the agent's excuse verbatim ("I can just read the files
+    manually"); the quote is the specimen, not the skill's own wording.
+    """
+    return _QUOTED_RE.sub(lambda m: " " * len(m.group(0)), text)
+
+
+# Absolute paths whose first segment names one machine or one user's account.
+# `/tmp`, `/dev/null`, `/usr/...` are portable and are how a reproducible command
+# in Validation Evidence is written; `/Users/alice/...` only resolves on the
+# machine that wrote it. (`/tmp` is still absent on Windows -- that portability
+# question is WI-032, not this check.) `srv` and `export` are here because the
+# FHS defines them as data served BY THIS HOST.
+_MACHINE_PATH_ROOTS = {
+    "users", "home", "volumes", "mnt", "media", "root", "srv", "export",
+    "cygdrive",
+}
+
+
+def is_machine_specific_path(hit: str) -> bool:
+    """True when an absolute path names one machine or one user's account.
+
+    Stated false negative: this is a denylist on the FIRST segment, so a
+    machine-specific path rooted anywhere else stays silent -- measured
+    examples are `/opt/homebrew/bin/soffice`,
+    `/Applications/LibreOffice.app/Contents/MacOS/soffice`,
+    `/var/folders/xy/.../T/build.pdf` and `/private/tmp/<session-uuid>/out.pdf`.
+    An allowlist (fire on every root not known to be portable) would catch those
+    and would also fire on `/scratch/...` and `/data/...` in ordinary prose. The
+    denylist is the side that keeps the report readable; the cost is written down
+    here rather than discovered.
+    """
+    segments = [seg for seg in hit.split("/") if seg]
+    return bool(segments) and segments[0].lower() in _MACHINE_PATH_ROOTS
+
+
+# A Windows path is a drive letter, a UNC share, or at least three
+# backslash-separated segments. One backslash between two word characters is a
+# markdown escape (`x\_1`), a LaTeX delimiter (`\(...\)`) or a C escape
+# (`1.1.0\n`) far more often than it is a path.
+# A relative Windows path is only distinguishable from a run of chained escapes
+# by its filename: `\alpha\beta\gamma` is LaTeX, `.\scripts\run.bat` is a path.
+# So the third alternative requires the last segment to carry an extension.
+# Stated cost: an extension-less relative path (`x\y\z`) is not reported.
+_WINDOWS_PATH_RE = re.compile(
+    r"(?:[A-Za-z]:\\[^\s`\"\']+"
+    r"|\\\\[A-Za-z0-9_.\-]+\\[^\s`\"\']+"
+    r"|[%~.\w\-]+\\[%~.\w\-]+(?:\\[%~.\w\-]+)*\\?[\w\-]+\.[A-Za-z0-9]{1,6}\b)"
+)
+
+# `[--flag VALUE]` is CLI usage notation, `[^fn-1]` a pandoc footnote marker.
+# Neither is an unfilled template slot.
+_PLACEHOLDER_NOTATION_RE = re.compile(r"^\s*[-^]")
+
+# A TODO marker is a note to self: `TODO:` / `TODO(owner)` anywhere, or a line
+# whose content STARTS with TODO once list, quote, heading and comment markers
+# are stripped -- `- TODO fix the examples`, `<!-- TODO write this -->`.
+# `TODO` in the middle of a sentence is prose describing something else's output
+# ("a content slide with TODO placeholder", "titles + TODO bullets").
+#
+# The earlier `\bTODO\b(?!\s+[a-z])` did not implement that: `re.IGNORECASE`
+# reaches into the lookahead's character class, so ANY following word killed the
+# match and `- TODO fix the examples` went unreported.
+_TODO_COLON_RE = re.compile(r"\bTODO\s*[:(]", re.IGNORECASE)
+_LINE_MARKER_RE = re.compile(r"^\s*(?:[-*+>]\s*|#{1,6}\s*|\d+[.)]\s*|<!--\s*)*")
+
+
+def has_todo_marker(text: str) -> bool:
+    """True when `text` carries an unfinished-work marker."""
+    if _TODO_COLON_RE.search(text):
+        return True
+    for line in text.splitlines():
+        if _LINE_MARKER_RE.sub("", line).upper().startswith("TODO"):
+            return True
+    return False
+
+# `can't` / `cannot` states an impossibility and `should-trigger` is a compound
+# noun; neither is a weak instruction.
+_WEAK_WORD_SUFFIX_SKIP = "-'"
+
+
+def _is_git_ignored(path: str) -> bool:
+    """True when git is present and deliberately ignoring `path`.
+
+    A gitignored scratch directory is not part of the skill -- it is not
+    committed and it is not in a packaged `.skill` archive -- so reporting it as
+    a structure deviation is reporting the developer's working copy.
+
+    The caller must also check that the SKILL directory itself is not ignored.
+    `git check-ignore` answers yes for anything under an ignored parent, so a
+    skill living under an ignored path (this repo ignores `/.agent/skills/*`)
+    would otherwise have every structure finding silently dropped.
+    """
+    try:
+        # capture_output keeps git's own diagnostics ("not a git repository")
+        # off this tool's stderr, which is a contract channel. `encoding=` is
+        # mandatory with it: text mode without a named codec decodes the CHILD
+        # with the PARENT's locale codec under a strict handler, and a repo
+        # path with non-ASCII in it then raises UnicodeDecodeError from inside
+        # subprocess.communicate. See
+        # docs/issues/subprocess-text-decode-locale-class.md.
+        completed = subprocess.run(
+            ["git", "check-ignore", "-q", "--", path],
+            cwd=os.path.dirname(os.path.abspath(path)) or ".",
+            capture_output=True, text=True,
+            encoding="utf-8", errors="replace",
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return completed.returncode == 0
+
+
+def collect_execution_policy_findings(skill_path, body, validation_config):
+    """One finding per missing execution-policy section, never two.
+
+    Three sub-rules used to fire on top of the "Missing '<section>'" finding
+    rather than instead of it: a populated `scripts/` re-reported the absent
+    Script Contract, mutation wording re-reported the absent Safety Boundaries,
+    and a `scripts/` mention re-reported the absent Validation Evidence. Each
+    fires ONLY when that section is already missing, so each could only ever
+    restate a finding already made -- 7 of the 31 occurrences measured across
+    this repo on 2026-09-02 were such duplicates. They now name the trigger
+    inside the one finding, which is the information they actually carry (WI-034).
+
+    The mutation-marker scan reads the masked body and matches whole words, so
+    a `delete` inside a documented command line and the `remove` in "remove AI
+    patterns" are no longer the same signal as a skill that deletes files. It is
+    still a heuristic over prose -- acceptable now that it only shapes a
+    message, where before it produced a finding of its own.
+
+    The Validation Evidence trigger asks whether the skill SHIPS `scripts/`,
+    not whether the body contains the substring `scripts/`. The substring test
+    fired on `obsidian-cli`, whose only match was a path to another skill's
+    script and which ships no `scripts/` at all.
+    """
+    required_sections = validation_config.get(
+        "execution_policy_sections",
+        [
+            "Execution Mode",
+            "Script Contract",
+            "Safety Boundaries",
+            "Validation Evidence",
+        ],
+    )
+    headings = _collect_markdown_headings(body)
+    missing = [s for s in required_sections if not _has_section(headings, s)]
+    missing_normalized = {_normalize_section_title(s) for s in missing}
+
+    # Script Contract is optional for prompt-first skills unless scripts/ is populated
+    mode_match = re.search(r'\*\*Mode\*\*:\s*`?(prompt-first|script-first|hybrid)`?',
+                           body, re.IGNORECASE)
+    mode = mode_match.group(1).lower() if mode_match else "unknown"
+    scripts_dir = os.path.join(skill_path, "scripts")
+    has_scripts = _has_real_files(scripts_dir)
+
+    masked_lower = mask_code(body).lower()
+    mutation_markers = (
+        "delete", "remove", "overwrite", "rename", "migrate", "truncate",
+        "destructive",
+    )
+    mutation_words = sorted({
+        m for m in mutation_markers
+        if re.search(r"\b" + m + r"(?:s|d|ed|ing)?\b", masked_lower)
+    })
+
+    findings = []
+    for section in missing:
+        normalized = _normalize_section_title(section)
+        trigger = ""
+        if normalized == _normalize_section_title("Script Contract"):
+            if has_scripts:
+                trigger = " — 'scripts/' has executable content"
+            elif mode == "prompt-first":
+                continue  # prompt-first and nothing to contract for
+        elif normalized == _normalize_section_title("Safety Boundaries") and mutation_words:
+            trigger = f" — mutation wording found ({', '.join(mutation_words)})"
+        elif (normalized == _normalize_section_title("Validation Evidence")
+              and has_scripts):
+            trigger = " — the skill ships scripts/"
+        findings.append(
+            f"Missing '{section}' section (warning-first migration target){trigger}."
+        )
+    return findings
+
 
 def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
                             exempt_fence_langs=None, softcheck_fence_langs=None):
@@ -100,7 +403,7 @@ def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
 
     Shared logic — this function is duplicated verbatim in
     skill-creator/scripts/validate_skill.py and skill-enhancer/scripts/analyze_gaps.py;
-    tests/test_inline_efficiency.py asserts the two copies stay behaviourally identical.
+    tests/test_shared_gate_logic.py asserts the two copies stay byte-identical.
     """
     if exempt_fence_langs is None:
         exempt_fence_langs = ["mermaid"]
@@ -153,7 +456,7 @@ def check_inline_efficiency(content, warn_lines=20, fail_lines=60,
         )
     return errors, warnings
 
-def analyze_skill(skill_path, config, json_output=False):
+def analyze_skill(skill_path, config, json_output=False, strict=False):
     """
     Analyzes a skill directory for gaps against the Standards.
     """
@@ -164,19 +467,25 @@ def analyze_skill(skill_path, config, json_output=False):
     validation_config = config.get('validation', {})
     quality_config = validation_config.get('quality_checks', {})
     
+    # `gaps` block the gate; `advisories` are reported and do not. The split
+    # mirrors validate_skill.py, which already passes a skill that has only
+    # warnings -- without it the two gates disagree about the same file, which
+    # is the defect WI-033 was filed for. `--strict` folds advisories back in.
     gaps = []
-    
+    advisories = []
+
     # 1. Check SKILL.md existence
     skill_md_path = os.path.join(skill_path, "SKILL.md")
     if not os.path.exists(skill_md_path):
         msg = f"CRITICAL: Missing SKILL.md in {skill_path}"
         if json_output:
-            skill_utils.emit_json({"gaps": [msg], "status": "critical"})
+            skill_utils.emit_json({"gaps": [msg], "advisories": [],
+                                   "status": "critical"})
             sys.exit(1)
         print(msg)
         return
         
-    fm_str, body, err = extract_frontmatter(skill_md_path)
+    fm_str, body, err, body_offset = extract_frontmatter(skill_md_path)
     if err:
         gaps.append(f"[Structure] {err}")
         meta = {}
@@ -189,16 +498,21 @@ def analyze_skill(skill_path, config, json_output=False):
             meta = {}
 
     body_lower = body.lower()
+    # Prose rules read `masked_body`; code is not prose (see mask_code).
+    masked_body = mask_code(body)
 
     # 2. Check CSO (Description)
     if 'description' in meta:
         desc = meta['description']
-        # Configurable Prefixes
+        # `enforce_cso_prefix` is honoured here for the same reason
+        # validate_skill.py honours it: a project that has turned the prefix rule
+        # off has turned it off for both gates, or the two disagree about one file.
         allowed_prefixes = validation_config.get('allowed_cso_prefixes', ["Use when"])
         # Handle multi-line descriptions by replacing newlines with spaces for prefix matching
         desc_lower_meta = " ".join(desc.split()).lower()
-        if not any(desc_lower_meta.startswith(prefix.lower()) for prefix in allowed_prefixes):
-            gaps.append(f"[CSO] Description should start with one of {allowed_prefixes}")
+        if validation_config.get('enforce_cso_prefix', True):
+            if not any(desc_lower_meta.startswith(prefix.lower()) for prefix in allowed_prefixes):
+                gaps.append(f"[CSO] Description should start with one of {allowed_prefixes}")
         
         max_words = quality_config.get('max_description_words', 50)
         if len(desc.split()) > max_words:
@@ -207,117 +521,91 @@ def analyze_skill(skill_path, config, json_output=False):
         gaps.append("[Critical] Missing 'description' in frontmatter")
 
     # 3. Check Required Sections (Configurable)
+    # Advisory, at the same tier validate_skill.py reports it. These sections
+    # are a house convention rather than a structural requirement: a skill may
+    # carry the same material under another heading, and 45 skills across the
+    # two sibling repositories legitimately do not carry it at all.
     req_sections = validation_config.get('required_sections', [])
     for sec in req_sections:
         if sec.lower() not in body_lower:
-            gaps.append(f"[Resilience] Missing '{sec}' section")
+            advisories.append(f"[Resilience] Missing '{sec}' section")
 
     # 3.5 Execution Policy Checks (warning-first migration path)
-    headings = _collect_markdown_headings(body)
-    execution_sections = validation_config.get(
-        "execution_policy_sections",
-        [
-            "Execution Mode",
-            "Script Contract",
-            "Safety Boundaries",
-            "Validation Evidence",
-        ],
+    #
+    # Shared with validate_skill.py, byte for byte: the same four sections, the
+    # same prompt-first exemption, the same triggers. The two gates disagreeing
+    # about this rule class is 31 of the 97 findings WI-033 measured.
+    advisories.extend(
+        f"[Execution Policy] {msg}" for msg in
+        collect_execution_policy_findings(skill_path, body, validation_config)
     )
-    missing_exec_sections = [
-        section for section in execution_sections if not _has_section(headings, section)
-    ]
-    missing_exec_normalized = {
-        _normalize_section_title(section) for section in missing_exec_sections
-    }
-    # Attempt to extract mode to skip Script Contract for prompt-first
-    mode_match = re.search(r'\*\*Mode\*\*:\s*`?(prompt-first|script-first|hybrid)`?', body, re.IGNORECASE)
-    mode = mode_match.group(1).lower() if mode_match else "unknown"
-
-    for section in missing_exec_sections:
-        normalized_sec = _normalize_section_title(section)
-        # Script Contract is optional for prompt-first skills unless scripts/ is populated
-        if normalized_sec == _normalize_section_title("Script Contract") and mode == "prompt-first":
-            scripts_dir_check = os.path.join(skill_path, "scripts")
-            if not _has_real_files(scripts_dir_check):
-                continue # Skip reporting Script Contract missing if prompt-first and no scripts
-
-        gaps.append(
-            f"[Execution Policy] Missing '{section}' section (warning-first migration target)."
-        )
-
-    scripts_dir = os.path.join(skill_path, "scripts")
-    if _has_real_files(scripts_dir):
-        if _normalize_section_title("Script Contract") in missing_exec_normalized:
-            gaps.append(
-                "[Execution Policy] 'scripts/' has executable content but 'Script Contract' is missing."
-            )
-
-    mutation_markers = (
-        "delete",
-        "remove",
-        "overwrite",
-        "rename",
-        "migrate",
-        "truncate",
-        "destructive",
-    )
-    if any(marker in body_lower for marker in mutation_markers):
-        if _normalize_section_title("Safety Boundaries") in missing_exec_normalized:
-            gaps.append(
-                "[Execution Policy] Mutation/destructive language found but 'Safety Boundaries' is missing."
-            )
-
-    if ("python3 scripts/" in body_lower or "scripts/" in body_lower):
-        if _normalize_section_title("Validation Evidence") in missing_exec_normalized:
-            gaps.append(
-                "[Execution Policy] Script references found but 'Validation Evidence' is missing."
-            )
 
     # 4. Check Deep Logic (Language Review — Graduated Approach)
     passive_keywords = quality_config.get('banned_words', ["should"])
     
-    # Analyze line by line
+    # The rule targets a weak INSTRUCTION ("the script should be bundled"). It is
+    # scoped away from four things that are not instructions at all: code (a
+    # documented command line), a quoted agent excuse in Red Flags, a question in
+    # an interview script, and a hyphenated compound or negation (`should-trigger`,
+    # `can't`). What survives is a judgement call per instruction, which is why
+    # [Language] is advisory rather than blocking -- the graduated-wording policy
+    # is a separate pass (WI-033, Out of scope).
     body_lines = body.splitlines()
+    masked_lines = masked_body.splitlines()
     deep_logic_gaps = []
-    
-    for i, line in enumerate(body_lines, 1):
-        line_lower = line.lower()
-        
+
+    for i, line in enumerate(masked_lines, 1):
+        stripped = line.strip()
+
         # Skip Markdown tables
-        if line.strip().startswith("|"):
+        if stripped.startswith("|"):
+            continue
+        # A question asks; it does not instruct.
+        if stripped.endswith("?"):
             continue
 
-        # Strip quoted strings
-        line_clean = re.sub(r'("[^"]*"|\'[^\']*\')', '', line_lower)
+        line_clean = strip_quoted(line).lower()
 
-        found = [w for w in passive_keywords if re.search(r'\b' + re.escape(w) + r'\b', line_clean)]
+        found = []
+        for w in passive_keywords:
+            for match in re.finditer(r'\b' + re.escape(w) + r'\b', line_clean):
+                start, end = match.span()
+                if start > 0 and line_clean[start - 1] == '-':
+                    continue  # ...-should / mid-compound
+                if end < len(line_clean) and line_clean[end] in _WEAK_WORD_SUFFIX_SKIP:
+                    continue  # should-trigger, can't
+                found.append(w)
         if found:
-            snippet = line.strip()[:60] + "..." if len(line.strip()) > 60 else line.strip()
-            deep_logic_gaps.append(f"Line {i}: Found {found} -> \"{snippet}\"")
-            
+            found = sorted(set(found), key=passive_keywords.index)
+            raw = body_lines[i - 1].strip()
+            snippet = raw[:60] + "..." if len(raw) > 60 else raw
+            deep_logic_gaps.append(
+                f"Line {i + body_offset}: Found {found} -> \"{snippet}\"")
+
     if deep_logic_gaps:
-        gaps.append(f"[Language] Weak wording found. Apply graduated fix (MUST + why for safety, explain-why + imperative for behavioral):\n    " + "\n    ".join(deep_logic_gaps[:5]))
+        advisories.append(f"[Language] Weak wording found. Apply graduated fix (MUST + why for safety, explain-why + imperative for behavioral):\n    " + "\n    ".join(deep_logic_gaps[:5]))
         if len(deep_logic_gaps) > 5:
-            gaps.append(f"    ... and {len(deep_logic_gaps) - 5} more.")
+            advisories.append(f"    ... and {len(deep_logic_gaps) - 5} more.")
 
     # 5. Lazy TODO / Placeholder checks
-    body_clean = re.sub(r'("[^"]*"|\'[^\']*\')', '', body_lower)
-    if "todo" in body_clean:
-        gaps.append("[Lazy] Found 'TODO' placeholder. Finish the skill.")
-    
-    # Check for template placeholders like [Instruction] or [Why this is wrong]
-    # Simple heuristic: Look for [text] where text is > 2 chars and has spaces? 
-    # Or just generic [ ] patterns that look like template artifacts.
-    # We avoid matching markdown links [text](url) by stripping them first or being careful.
-    # Markdown links are [text](url). If we see [text] followed by (, it's a link.
-    # If we see [text] NOT followed by (, it's likely a placeholder.
-    
-    # Detect [Placeholder] 
-    # Regex: \[ ([^\]\n"'{}\\]+) \] (?! \() -> no newlines, quotes, or curly braces inside
-    placeholders = re.findall(r'\[([^\]\n\"\'\{\}\\]+)\](?!\()', body)
-    # Filter out common false positives like " " (checkboxes) or single chars
-    real_placeholders = [p for p in placeholders if len(p) > 3 and " " in p]
-    
+    #
+    # Both run on the masked body: inside code, `[--layout]` is CLI usage notation
+    # and `obsidian tasks todo` is a subcommand name. Neither is unfinished work.
+    body_clean = strip_quoted(mask_code(body))
+    if has_todo_marker(body_clean):
+        gaps.append("[Lazy] Found 'TODO' marker. Finish the skill.")
+
+    # Detect an unfilled template slot -- [Instruction], [Why this is wrong].
+    # Markdown links are [text](url), so a `(` immediately after the bracket
+    # disqualifies. Two shapes are notation rather than a slot and are exempt:
+    # `[--flag VALUE]` (an optional CLI argument) and `[^fn-1]` (a pandoc
+    # footnote marker).
+    placeholders = re.findall(r'\[([^\]\n\"\'\{\}\\]+)\](?!\()', body_clean)
+    real_placeholders = [
+        p for p in placeholders
+        if len(p) > 3 and " " in p and not _PLACEHOLDER_NOTATION_RE.match(p)
+    ]
+
     if real_placeholders:
         gaps.append(f"[Lazy] Found {len(real_placeholders)} bracket placeholders (e.g., '[{real_placeholders[0]}]'). Fill them in.")
 
@@ -329,7 +617,13 @@ def analyze_skill(skill_path, config, json_output=False):
             if item == "resources":
                  gaps.append("[Structure] Found deprecated 'resources/' directory. Migrate contents to 'assets/' (output) or 'references/' (knowledge).")
             elif item not in allowed_dirs and not item.startswith("."):
-                 gaps.append(f"[Structure] Non-standard directory '{item}'. Known directories: {allowed_dirs}")
+                 # Advisory, because validate_skill.py reports the same thing as
+                 # a warning and passes. Blocking here made the two gates
+                 # disagree about `skills/html` whenever `git` was off PATH,
+                 # since the exemption below then could not fire.
+                 if not _is_git_ignored(skill_path) and _is_git_ignored(item_path):
+                     continue  # a scratch directory the repo already excludes
+                 advisories.append(f"[Structure] Non-standard directory '{item}'. Known directories: {allowed_dirs}")
 
     # 6. Check Examples Content
     examples_dir = os.path.join(skill_path, "examples")
@@ -349,27 +643,58 @@ def analyze_skill(skill_path, config, json_output=False):
     softcheck_fence = validation_config.get(
         'inline_softcheck_fence_langs', ['text', 'console', 'output'],
     )
-    eff_errors, eff_warnings = check_inline_efficiency(
-        body, warn_lines, fail_lines, exempt_fence, softcheck_fence,
-    )
+    # `inline_exempt_skills` is honoured here for the same reason
+    # validate_skill.py honours it -- an allowlisted skill must be allowlisted in
+    # both gates or they disagree about the same file.
+    inline_exempt_skills = set(validation_config.get('inline_exempt_skills', []))
+    if skill_name in inline_exempt_skills:
+        eff_errors, eff_warnings = [], []
+    else:
+        # The whole file, not the body: this shared check reports the line it
+        # found the fence on, and every other finding in this report is
+        # file-relative. validate_skill.py passes the raw content for the same
+        # reason. A report that mixes two conventions is a report nobody trusts.
+        with open(skill_md_path, 'r', encoding='utf-8', errors='replace') as fh:
+            raw_content = fh.read()
+        eff_errors, eff_warnings = check_inline_efficiency(
+            raw_content, warn_lines, fail_lines, exempt_fence, softcheck_fence,
+        )
     for msg in eff_errors:
         gaps.append(f"[Token Efficiency] {msg}")
     for msg in eff_warnings:
-        gaps.append(f"[Token Efficiency] (minor) {msg}")
+        # validate_skill.py reports the warn tier as a warning and still passes.
+        advisories.append(f"[Token Efficiency] (minor) {msg}")
+
+    # 7a. Validation Evidence size — advisory in both gates.
+    for msg in check_validation_evidence_size(body, validation_config):
+        advisories.append(f"[Execution Policy] {msg}")
 
     # 7b. Anti-Pattern line checks
+    #
+    # Both are scoped to what actually breaks on another machine. A reproducible
+    # command in Validation Evidence writes `/tmp/invoice.pdf` and a shell
+    # redirect writes `/dev/null`; neither is a defect, and rewriting them
+    # relative would make the documented command wrong.
     for i, line in enumerate(body_lines):
         line = line.strip()
+        win_match = _WINDOWS_PATH_RE.search(line)
+        if win_match:
+             gaps.append(f"[Anti-Pattern] Windows-style path '{win_match.group(0)}' at line {i + 1 + body_offset}. Use forward slashes.")
 
-        # Anti-Patterns Checks
-        if re.search(r'[a-zA-Z0-9_\-]+\\[a-zA-Z0-9_\-]+', line):
-             gaps.append(f"[Anti-Pattern] Potential Windows-style path at line {i+1}. Use forward slashes.")
-
-        abs_match = re.search(r'(?:^|[\s`"\'(\[])(/[\w\-\.]+(?:/[\w\-\.]+)+)', line)
-        if abs_match:
+        # finditer, not search: a documented command routinely names two paths
+        # (`pdf_merge.py /tmp/out.pdf /Users/alice/in.pdf`) and reporting only
+        # the first hides the second. 16 lines in this repo carry more than one.
+        # There is no `"://" not in line` guard: the extraction pattern requires
+        # the path to start at a line start or after whitespace/quote/bracket, so
+        # it never matches inside a URL -- while the guard did suppress a real
+        # machine path on any line that merely mentioned one.
+        seen_on_line = set()
+        for abs_match in re.finditer(r'(?:^|[\s`"\'(\[])(/[\w\-\.]+(?:/[\w\-\.]+)+)', line):
             hit = abs_match.group(1)
-            if "://" not in line: 
-                gaps.append(f"[Anti-Pattern] Potential Absolute Path '{hit}' at line {i+1}. Use relative paths.")
+            if hit in seen_on_line or not is_machine_specific_path(hit):
+                continue
+            seen_on_line.add(hit)
+            gaps.append(f"[Anti-Pattern] Machine-specific absolute path '{hit}' at line {i + 1 + body_offset}. It resolves only on the machine that wrote it -- use a relative path or a portable scratch path.")
 
     # 8. POV Check
     if 'description' in meta:
@@ -382,42 +707,64 @@ def analyze_skill(skill_path, config, json_output=False):
         gaps.append(f"[Naming] Avoid vague names like '{skill_name}'. Use specific action-oriented names.")
 
     # Report
+    #
+    # Exit code is decided by `gaps` alone. `advisories` are printed either way:
+    # they name work that is real but is not this gate's to block on -- the
+    # graduated-wording policy and the warning-first execution-policy migration.
+    # `--strict` promotes them, which is the mode a migration sprint runs in.
+    blocking = gaps + advisories if strict else gaps
     if json_output:
         result = {
             "skill": skill_name,
             "gaps": gaps,
-            "status": "failed" if gaps else "passed"
+            "advisories": advisories,
+            "status": "failed" if blocking else "passed"
         }
         skill_utils.emit_json(result)
-        sys.exit(1 if gaps else 0)
+        sys.exit(1 if blocking else 0)
     else:
         if gaps:
             print(f"⚠️  Gaps Detected for '{skill_name}':")
             for gap in gaps:
                 print(f"  - {gap}")
+        if advisories:
+            label = "promoted by --strict" if strict else "do not fail the gate"
+            print(f"ℹ️  Advisories for '{skill_name}' ({label}):")
+            for advisory in advisories:
+                print(f"  - {advisory}")
+        if blocking:
             print("\nRecommendation: Run 'Execute Improvement Plan' to fix these gaps.")
             sys.exit(1)
+        if advisories:
+            print(f"\n✅ No blocking gaps for '{skill_name}'; "
+                  f"{len(advisories)} advisory item(s) above.")
         else:
             print(f"✅ No Gaps Found for '{skill_name}'. Skill is compliant.")
-            sys.exit(0)
+        sys.exit(0)
 
 def main():
     install_human_channel()
     parser = argparse.ArgumentParser(description="Analyze a skill for Standard compliance gaps.")
     parser.add_argument("path", help="Path to the skill directory.")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
-    
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Treat advisories (Language, Execution Policy, minor Token "
+             "Efficiency) as blocking gaps.",
+    )
+
     args = parser.parse_args()
-    
+
     if not os.path.isdir(args.path):
         print(f"Error: Directory '{args.path}' not found.", file=sys.stderr)
         sys.exit(1)
-    
+
     # Load Config
-    project_root = os.getcwd() 
+    project_root = os.getcwd()
     config = skill_utils.load_config(project_root)
 
-    analyze_skill(args.path, config, json_output=args.json)
+    analyze_skill(args.path, config, json_output=args.json, strict=args.strict)
 
 if __name__ == "__main__":
     main()

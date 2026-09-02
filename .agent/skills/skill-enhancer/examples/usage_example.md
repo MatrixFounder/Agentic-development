@@ -8,15 +8,37 @@
 python3 .agent/skills/skill-enhancer/scripts/analyze_gaps.py .agent/skills/skill-legacy-logger
 ```
 
-**Output:**
+**Output:** two blocks, and the split matters. `gaps` decide the exit code;
+`advisories` are reported and leave it at 0 (`--strict` promotes them).
+
 ```text
 ⚠️  Gaps Detected for 'skill-legacy-logger':
-  - [CSO] Description does not start with 'Use when...'
   - [Resilience] Missing 'Red Flags' section
-  - [Resilience] Missing 'Rationalization Table'
+  - [Resilience] Missing 'Rationalization Table' section
+  - [Richness] Missing or empty 'examples/' directory
+ℹ️  Advisories for 'skill-legacy-logger' (do not fail the gate):
+  - [Execution Policy] Missing 'Execution Mode' section (warning-first migration target).
+  - [Execution Policy] Missing 'Script Contract' section (warning-first migration target).
+  - [Execution Policy] Missing 'Safety Boundaries' section (warning-first migration target).
+  - [Execution Policy] Missing 'Validation Evidence' section (warning-first migration target).
   - [Language] Weak wording found. Apply graduated fix (MUST + why for safety, explain-why + imperative for behavioral):
-    Line 5: Found ['should'] -> "You should use the logger to debug."
+    Line 11: Found ['should'] -> "You should use the logger to debug."
 ```
+
+Three things to read out of that shape:
+
+- **The reported line is the line in `SKILL.md`, frontmatter included.** Open the
+  file at 11 and the sentence is there.
+- **`[Language]` and `[Execution Policy]` are advisory** — reported, exit code
+  still 0 if they were the only findings. An advisory is closed by fixing it or
+  by writing down why it stands, never by editing correct prose to satisfy a
+  rule that is reading it wrong. `--strict` promotes them when you are sweeping
+  that backlog deliberately.
+- **No `[CSO]` line here, and that is the project config talking.** This
+  repository's `.agent/rules/skill_standards.yaml` sets
+  `enforce_cso_prefix: false`, which both gates honour. Under the bundled
+  defaults the same description raises
+  `[CSO] Description should start with one of ['Use when', ...]`.
 
 ## 2. Plan & Execute (Phases 2-3)
 

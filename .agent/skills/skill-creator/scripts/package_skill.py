@@ -32,7 +32,7 @@ def _quick_validate(skill_path):
     skill_md = skill_path / "SKILL.md"
     if not skill_md.exists():
         return False, "SKILL.md not found"
-    content = skill_md.read_text()
+    content = skill_md.read_text(encoding="utf-8")
     if not content.startswith("---"):
         return False, "No YAML frontmatter found"
     match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)

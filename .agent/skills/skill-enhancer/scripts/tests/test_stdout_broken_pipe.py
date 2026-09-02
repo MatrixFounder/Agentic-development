@@ -26,8 +26,17 @@ from pathlib import Path
 
 ANALYZE = Path(__file__).resolve().parent.parent / "analyze_gaps.py"
 
-# One `[Anti-Pattern] Potential Absolute Path` gap per body line. Measured:
-# 860 lines -> ~108 KB (the exit-120 band); 1500 -> ~188 KB (traceback band).
+# One `[Anti-Pattern] Machine-specific absolute path` gap per body line.
+# Measured: 860 lines -> ~145 KB (the exit-120 band); 1500 -> ~253 KB
+# (traceback band).
+#
+# The path root is load-bearing and must stay under `/home` (or another root in
+# `analyze_gaps._MACHINE_PATH_ROOTS`). Before WI-033 this fixture used
+# `/usr/local/lib/...`; that rule now flags only paths that name one machine or
+# one user's account, because `/usr/...` and `/tmp/...` in a documented command
+# are correct content. Under the old path the fixture produced zero gaps and a
+# 632-byte report — too small to reach the pipe buffer, so this test would have
+# been green against broken code.
 MID_BAND_LINES = 860
 LARGE_LINES = 1500
 
@@ -40,7 +49,7 @@ def make_skill(root, n_lines, name):
             "broken-pipe measurement.",
             "version: 1.0.0", "---", "", f"# {name}", ""]
     for i in range(n_lines):
-        body.append(f"Refer to /usr/local/lib/{name}/module_{i:05d}/entry.py "
+        body.append(f"Refer to /home/builder/{name}/module_{i:05d}/entry.py "
                     f"for the details of step {i}.")
     (root / "SKILL.md").write_text("\n".join(body) + "\n")
     return root

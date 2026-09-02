@@ -62,11 +62,14 @@ document's references — so editing a changelog pulls the whole changelog's his
 
 | Class | Count | Where | Why it is not this change's |
 |---|---|---|---|
-| `UNRESOLVABLE` | 6 | `CHANGELOG.md:88-89`, `CHANGELOG.ru.md:86-87` | The **v3.28.1** entry quotes `get-token.ts:117` / `wallet-balances.ts:92` — coordinates in the `onchain-analytics` consumer repo, cited as the illustration of the defect that entry fixed. No such file exists here, and none can. The v3.29.0 entry sits above them at lines 19–81 and is untouched by the finding |
+| `UNRESOLVABLE` | 6 | `CHANGELOG.md:88-89@e2ef113`, `CHANGELOG.ru.md:86-87@e2ef113` | The **v3.28.1** entry quotes `get-token.ts:117` / `wallet-balances.ts:92` — coordinates in the `onchain-analytics` consumer repo, cited as the illustration of the defect that entry fixed. No such file exists here, and none can. The v3.29.0 entry sits above them at lines 19–81 and is untouched by the finding |
 | `REFERENT_ABSENT` | 1 | `docs/reviews/review-095-independent.md:35` → `check_prompt_references.py:21` | Neither file is touched here, so the reference stands exactly as at `7056556`. It is a review artifact — a record of what a reviewer saw — so the coordinate is reported, not rewritten |
 
 **Recorded rather than fixed, deliberately.** Editing the v3.28.1 entry to make the resolver quiet
-would falsify a released changelog; editing the review would falsify a record. The
+would falsify a released changelog; editing the review would falsify a record. The two changelog
+coordinates carry `@e2ef113` — the revision this round actually read — because a later entry
+prepended above them would otherwise silently re-point them at unrelated text. That happened in
+v3.30.0, and the pin is §4.1's licensed form for a coordinate that is true of a past state. The
 `UNRESOLVABLE`-on-a-foreign-repo-coordinate class is a genuine gap in the resolver's scoping, and it
 belongs to that tool's backlog, not to this task.
 

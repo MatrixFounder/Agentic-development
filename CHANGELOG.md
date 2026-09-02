@@ -16,6 +16,82 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.30.0 — locale-safe human output; brainstorming v3.1**
+
+CLI reports and `--help` failed under a locale whose codec cannot encode `—`, `✓`, `→`, `§`.
+Cause: stdout uses the `surrogateescape` error handler (`strict` under an explicit
+`PYTHONIOENCODING`); neither represents an em dash. stderr uses `backslashreplace` and was
+unaffected.
+
+| Command | UTF-8 | `PYTHONIOENCODING=ascii PYTHONUTF8=0 LC_ALL=C` |
+| :--- | ---: | ---: |
+| `scan_register.py <file>` | 1211 B | 0 B, rc 1 |
+| `scan_register.py --list` | 11991 B | 0 B, rc 1 |
+| `check_positional_refs.py --help` | 1253 B | 0 B, rc 1 |
+| `check_positional_refs.py --all docs` | 34726 B | 0 B, rc 1 |
+| `validate_skill.py <skill>` | 698 B | 55 B, rc 1 (truncated) |
+| `analyze_gaps.py <skill>` | 1373 B | 54 B, rc 1 |
+
+#### Fixed
+
+- **`validate_skill.py` returned a wrong verdict, not an error.** `❌ Validation FAILED … 'ascii'
+  codec can't decode byte 0xe2` on a skill that passes, because `SKILL.md` was opened with the
+  caller's locale codec. 13 `open()` sites in `validate_skill.py`, `init_skill.py` and
+  `aggregate_benchmark.py` pinned to UTF-8. Reading a repository file ignores the caller's locale;
+  printing the result obeys it.
+- **`--help` (31 of 102 findings repo-wide).** Written by argparse, not by skill code; its guard
+  catches `AttributeError` and `OSError`, not `UnicodeEncodeError`. Not findable by auditing
+  `print()` call sites.
+- **`⚠️` is U+26A0 + U+FE0F.** The variation selector fell through to `backslashreplace`, producing
+  `!\ufe0f`. Variation selectors are now dropped.
+
+#### Changed
+
+- **Fix applied to the stream, not to call sites.** `codecs.register_error` plus
+  `reconfigure(errors=…, line_buffering=True)`, installed by `install_human_channel()` at the top
+  of each `main()`. Covers `print`, argparse's `file.write`, and direct `sys.stdout.write`.
+- **`reconfigure(errors=)`, not `reconfigure(encoding=)`.** The caller's codec is unchanged; only
+  the unrepresentable-character path differs. Under cp1251 a report keeps Cyrillic and the em dash
+  and degrades only the check mark.
+- **Earlier wrapper implementation replaced.** `say()`, a `HumanArgumentParser` subclass and a
+  stream shim failed open: a `print` added later reintroduced the crash, as mutation testing
+  showed.
+
+| Measure | Wrapper | Stream |
+| :--- | ---: | ---: |
+| Duplicated statements per skill | 52 | 33 |
+| Call sites touched | 209 | 69 |
+| Mechanisms kept in sync | 3 | 1 |
+
+#### Added
+
+- **`tests/test_human_channel.py` in all four skills**, 19–90 tests each. Each walks every CLI in
+  its skill from disk and runs `--help` under an ascii locale, so a command that omits
+  `install_human_channel()` fails the suite.
+- **`brainstorming` v2.1 → v3.1.** Description names its triggers rather than relying on the word
+  *brainstorm*. Adds Red Flags, Capabilities, Execution Mode (`prompt-first`), Safety Boundaries.
+  SKILL.md 81 → 239 lines; demos rewritten (292 lines); `references/ideation_techniques.md` (154
+  lines) specifies each technique as a procedure. Validator: PASSED.
+
+#### Notes
+
+Three defects surfaced during the rewrite:
+
+- `exc.encoding` is the literal `"charmap"` for cp1251/cp1252/latin-1/cp850, not the codec name;
+  escaping through it returns the raw byte (`café` under cp1251 → `b"\xe9"`). The wrapper had the
+  same bug, masked by `errors="replace"`. Escapes now taken against ASCII.
+- Piped stdout is block-buffered, so a dead reader surfaced only in the shutdown flush, where
+  CPython sets the exit status to 120. `line_buffering=True` raises at the write instead.
+- That alone is insufficient — the interpreter flushes the dead fd again after `main()` returns —
+  so `install_human_channel` registers an `atexit` hook that drains stdout and redirects fd 1 to
+  `devnull`.
+
+Mutation battery: 22/22 killed, two inert controls survived, including one "forgot to install"
+mutation per CLI (8/8) and `ensure_ascii` on both `emit_json` and `write_json`.
+
+`skill-creator` and `skill-enhancer` are byte-identical copies from `Universal-skills` (`682b097`),
+which is their source of truth. `artifact-formalizer` and `documentation-standards` exist only here.
+
 ### **v3.29.1 — the reference gate is scoped to the living corpus**
 
 CI had been red for six days — three consecutive pushes, `31192587899`, `31212036925`,

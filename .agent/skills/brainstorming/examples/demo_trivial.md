@@ -2,22 +2,34 @@
 
 **User Request**: "Add a standard logger to the `PaymentService` class."
 
+---
+
 **Agent Thinking** (Internal):
-*   **Complexity**: TRIVIAL. Clear requirement, standard pattern.
-*   **Action**: Fast Path. No deep research needed. Confirm and go.
+- **Complexity**: TRIVIAL. Clear requirement, standard pattern, single component.
+- **Action**: Fast Path. Skip ideation. Confirm pattern and go.
+
+---
 
 **Agent**:
 "I'll add the standard logger to `PaymentService`.
 
-Just to confirm the pattern:
+Quick confirm — I see your project uses Python's built-in `logging`:
 ```python
 import logging
 logger = logging.getLogger(__name__)
 ```
-Is this the correct standard for your project?"
+Is this the correct pattern, or do you use a custom logger?"
 
 **User**:
-"Yes."
+"Yes, that's right."
 
 **Agent**:
-"Great. Proceeding with implementation."
+"Got it. Adding logger to `PaymentService` with `__name__` scope. Proceeding to implementation."
+
+---
+
+**Why this works**:
+- No ideation phase needed — requirement is unambiguous
+- One confirmation question to verify the project convention
+- No Design Doc — chat confirmation is sufficient for TRIVIAL
+- Moves to implementation in 2 exchanges

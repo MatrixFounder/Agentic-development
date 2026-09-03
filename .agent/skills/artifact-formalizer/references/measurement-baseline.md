@@ -74,6 +74,40 @@ AI-slop.
 form: rule 3 moves justification under a `**Why.**` lead-in. The genres differ — user documentation
 optimizes for reading order, a specification for separating a claim from its justification.
 
+### 4.1 Narrative features of AI fiction — out of scope, and not measured here
+
+The verdict class differs from the table above. Those patterns were measured against this corpus
+and scored zero. The class below was **not measured**, because a specification carries no surface
+for it.
+
+Source: *StoryScope: Investigating idiosyncrasies in AI fiction*, [arXiv:2604.03136](https://arxiv.org/abs/2604.03136).
+It reports that discourse-level narrative features separate human from AI fiction at 93.2%
+macro-F1, and that the separation survives stylistic editing (95.5% → 93.9%). The corpus is 61,608
+stories averaging 4,753 words.
+
+Three reasons the class is declined, in the order a proposal meets them.
+
+1. **The measured object is a story.** The 30 core features name plot, subplots, chronology,
+   character introduction, resolution mode and moral polarity. A TASK, an ARCHITECTURE section or
+   an issue record has none of these. There is nothing for a detector to read.
+2. **The human-leaning markers are defects here.** Four of them are elevated in human fiction:
+   direct reader address, fourth-wall permeability, morally ambivalent framing, and chronological
+   discontinuity. In a specification each fails a test this contract already states — T1 for an
+   unverifiable stance, T4 for a claim carrying its own commentary. Adopting them would move the
+   register toward the essay this skill exists to remove.
+3. **The two features that do transfer are already covered.** *Narratorial thematic commentary*
+   is a narrator explaining what events mean. It measures 77% of AI stories against 52% of human
+   ones. Rule 3 owns that surface. Rule 4 owns the maxim it usually arrives as. Both were derived
+   from this corpus in §7, before the study existed. A second rule aimed at the same surface adds
+   a detector and no coverage.
+
+**What would reopen this.** One measurement, over this repository's own `docs/`. It must show a
+narrative feature with a non-zero hit rate that no rule 1–6 reaches.
+
+Then §6 rule 2 applies: the authoring contract is amended first, the lexicon second.
+
+The study is not that measurement. It measured another genre.
+
 ## 5. The measurement that produced version 2.0
 
 A ten-file downstream task set was scanned with v1.0. It returned **0 warn over 2352 lines**, and

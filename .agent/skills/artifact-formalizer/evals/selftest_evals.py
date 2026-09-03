@@ -30,7 +30,7 @@ import scan_register                                          # noqa: E402
 #: run would make the assertion agree with itself after any deletion — the
 #: defect `selftest_scan.py` records as REG-2. `README.md` states the same
 #: number, and TC-EV-13b reads it from there.
-EXPECTED_CASES = 59
+EXPECTED_CASES = 78
 
 RESULTS = []
 
@@ -112,11 +112,24 @@ def t_set_shape():
     cases = ev.get("cases", [])
     authoring = [c for c in cases if c["axis"] == "authoring"]
     gaps = [c for c in cases if c["axis"] == "recall_gap"]
-    check("TC-EV-01a the set holds 10 cases", len(cases) == 10,
+    mixed = [c for c in gaps if c.get("mixed")]
+    check("TC-EV-01a the set holds 14 cases", len(cases) == 14,
           f"n={len(cases)}")
-    check("TC-EV-01b 6 authoring and 4 recall-gap",
-          len(authoring) == 6 and len(gaps) == 4,
-          f"authoring={len(authoring)} gaps={len(gaps)}")
+    check("TC-EV-01b 6 authoring and 8 recall-gap, 4 of them mixed",
+          len(authoring) == 6 and len(gaps) == 8 and len(mixed) == 4,
+          f"authoring={len(authoring)} gaps={len(gaps)} mixed={len(mixed)}")
+    # A mixed case carries all three partly-reachable rules; a single-rule case
+    # carries one. Registry item R10 is decided on the mixed ones, because a
+    # combined pass already scores recall 1.0 on the single-rule ones.
+    bad_mixed = []
+    for c in mixed:
+        key = json.load(open(os.path.join(HERE, c["key"]), encoding="utf-8"))
+        rules = {int(p["rule"]) for p in key["planted"]}
+        if rules != {3, 4, 6} or len(key["planted"]) != 6:
+            bad_mixed.append(f"{c['id']}: rules={sorted(rules)} "
+                             f"planted={len(key['planted'])}")
+    check("TC-EV-01b2 every mixed case plants two defects of each rule",
+          not bad_mixed, f"bad={bad_mixed}")
     check("TC-EV-01c both shipped languages appear on axis A",
           {c["lang"] for c in authoring} == {"en", "ru"},
           f"langs={sorted({c['lang'] for c in authoring})}")
@@ -216,7 +229,15 @@ def t_key_integrity():
             quote = " ".join(p["quote"].split())
             if quote not in block:
                 stale.append(f"{case['id']}/{p['id']}")
-            if int(p["rule"]) != int(key["rule"]):
+            # A MIXED key carries defects of several rules, so it declares
+            # `rule: 0` and each planted entry must instead name one of the
+            # three partly-reachable rules. A single-rule key keeps the
+            # stricter equality.
+            if key.get("mixed"):
+                if int(p["rule"]) not in (3, 4, 6):
+                    stale.append(f"{case['id']}/{p['id']} rule {p['rule']} "
+                                 f"is not partly-reachable")
+            elif int(p["rule"]) != int(key["rule"]):
                 stale.append(f"{case['id']}/{p['id']} rule mismatch")
     check("TC-EV-05 every planted quote occurs on its declared lines",
           not stale, f"stale={stale}")
@@ -306,7 +327,7 @@ def t_command_shape():
     runs = run_authoring.plan_runs(ev, "both", 3)
     gap_runs = [r for r in runs if r[1] == "recall_gap"]
     check("TC-EV-08f the run plan covers both axes at every repetition",
-          len(runs) == 6 * 2 * 3 + 4 * 3 and len(gap_runs) == 12,
+          len(runs) == 6 * 2 * 3 + 8 * 3 and len(gap_runs) == 24,
           f"total={len(runs)} gaps={len(gap_runs)}")
     check("TC-EV-08g concurrency changes ordering and nothing else",
           run_authoring.plan_runs(ev, "both", 1)
@@ -497,12 +518,92 @@ def t_count_pin():
           f"README does not carry {EXPECTED_CASES}")
 
 
+def t_pass_modes():
+    """R10's two arms. The proposal ships only if `split` measures a recall
+    gain, so the comparison has to be clean: identical guide, identical
+    worklist, identical document, identical output shape, and the SAME
+    sentences describing each rule. The only difference is how many of them
+    reach the model at once."""
+    fixture = os.path.join(HERE, "fixtures", "recall-gap-rule3.md")
+
+    check("TC-EV-15 both pass modes are declared",
+          set(run_authoring.PASS_MODES) == {"combined", "split"},
+          f"modes={sorted(run_authoring.PASS_MODES)}")
+    check("TC-EV-15a combined is one call, split is three",
+          len(run_authoring.PASS_MODES["combined"]) == 1
+          and len(run_authoring.PASS_MODES["split"]) == 3,
+          str(run_authoring.PASS_MODES))
+    check("TC-EV-15b the split covers exactly the combined rules, once each",
+          sorted(r for g in run_authoring.PASS_MODES["split"] for r in g)
+          == sorted(run_authoring.PASS_MODES["combined"][0]),
+          "a rule is dropped or duplicated between the arms")
+
+    combined = run_authoring.build_axis_b_prompt(fixture)
+    singles = {r: run_authoring.build_axis_b_prompt(fixture, (r,))
+               for r in (3, 4, 6)}
+
+    # Each rule's sentence must be the SAME text in both arms.
+    same = all(run_authoring.AXIS_B_RULES[r] in combined
+               and run_authoring.AXIS_B_RULES[r] in singles[r]
+               for r in (3, 4, 6))
+    check("TC-EV-15c both arms describe a rule with the same sentence", same,
+          "a split arm phrased differently would measure the rewording")
+
+    # A split prompt names ONE rule and forbids the other two in its schema.
+    leaks = []
+    for r, prompt in singles.items():
+        for other in (3, 4, 6):
+            if other != r and run_authoring.AXIS_B_RULES[other] in prompt:
+                leaks.append((r, other))
+        if f'"rule": <{r}>' not in prompt:
+            leaks.append((r, "schema"))
+    check("TC-EV-15d a split pass names its rule and only its rule",
+          not leaks, f"leaks={leaks}")
+
+    check("TC-EV-15e an unknown rule is refused",
+          _raises(lambda: run_authoring.build_axis_b_prompt(fixture, (9,)),
+                  ValueError),
+          "build_axis_b_prompt accepted a rule that does not exist")
+    check("TC-EV-15f an unknown pass mode is refused",
+          _raises(lambda: run_authoring.run_gap_case(
+              {"id": "X", "fixture": "fixtures/recall-gap-rule3.md"},
+              "m", tempfile.mkdtemp(), 1, True, "sideways"), ValueError),
+          "run_gap_case accepted a mode that does not exist")
+
+    # The combined prompt must still be what step B4 has always emitted: the
+    # recorded 6-of-6 was measured on it, and a reworded control invalidates
+    # the comparison before it starts.
+    check("TC-EV-15g the combined arm still says 'Three rules'",
+          "Three rules are only partly reachable" in combined,
+          "the control arm's wording moved; the recorded axis-B result no "
+          "longer describes it")
+
+    # A finding naming a rule the pass was not asked about is a leak, and
+    # dropping it silently would flatter the split arm.
+    kept = run_authoring._rule_of({"rule": 4})
+    check("TC-EV-15h a reported rule is read as an int", kept == 4, str(kept))
+    check("TC-EV-15i a finding with no rule is not silently kept",
+          run_authoring._rule_of({"line": 3}) is None
+          and run_authoring._rule_of({"rule": "x"}) is None,
+          "a malformed finding would be unioned into the split answer")
+
+
+def _raises(fn, exc_type):
+    try:
+        fn()
+    except exc_type:
+        return True
+    except Exception:                                          # noqa: BLE001
+        return False
+    return False
+
+
 def main():
     for fn in (t_set_shape, t_grader_direction, t_axis_b_scorer,
                t_fixture_invariant, t_key_integrity, t_prompt_identity,
                t_isolation, t_command_shape, t_no_reimplementation,
                t_report_shape, t_corpus_shape, t_report_pin, t_count_pin,
-               t_zero_tokens):
+               t_pass_modes, t_zero_tokens):
         try:
             fn()
         except Exception as exc:                              # noqa: BLE001

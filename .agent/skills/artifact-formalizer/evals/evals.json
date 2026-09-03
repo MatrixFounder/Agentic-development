@@ -2,7 +2,7 @@
   "schema": "formalizer-evals/v1",
   "skill": "artifact-formalizer",
   "task": "101",
-  "note": "Axis A measures Mode A: the same authoring prompt with and without references/authoring-contract.md. Axis B measures the SKILL.md section 5 recall gaps: defects planted where no detector reaches, graded against a key written before the run.",
+  "note": "Axis A measures Mode A: the same authoring prompt with and without references/authoring-contract.md. Axis B measures the SKILL.md section 5 recall gaps: defects planted where no detector reaches, graded against a key written before the run. The M cases are MIXED: each carries two defects of rule 3, two of rule 4 and two of rule 6 at once, spread across sections. They exist for registry item R10, which asks whether B4's single reading pass should become three. The single-rule B cases cannot answer it — a combined pass already scores recall 1.0 on them.",
   "cases": [
     {
       "id": "A1",
@@ -78,6 +78,42 @@
       "control": true,
       "fixture": "fixtures/control-conforming.md",
       "key": "fixtures/control-conforming.key.json"
+    },
+    {
+      "id": "M1",
+      "axis": "recall_gap",
+      "rule": 0,
+      "mixed": true,
+      "lang": "en",
+      "fixture": "fixtures/mixed-recall-gap-1.md",
+      "key": "fixtures/mixed-recall-gap-1.key.json"
+    },
+    {
+      "id": "M2",
+      "axis": "recall_gap",
+      "rule": 0,
+      "mixed": true,
+      "lang": "en",
+      "fixture": "fixtures/mixed-recall-gap-2.md",
+      "key": "fixtures/mixed-recall-gap-2.key.json"
+    },
+    {
+      "id": "M3",
+      "axis": "recall_gap",
+      "rule": 0,
+      "mixed": true,
+      "lang": "ru",
+      "fixture": "fixtures/mixed-recall-gap-3.md",
+      "key": "fixtures/mixed-recall-gap-3.key.json"
+    },
+    {
+      "id": "M4",
+      "axis": "recall_gap",
+      "rule": 0,
+      "mixed": true,
+      "lang": "en",
+      "fixture": "fixtures/mixed-recall-gap-4.md",
+      "key": "fixtures/mixed-recall-gap-4.key.json"
     }
   ]
 }

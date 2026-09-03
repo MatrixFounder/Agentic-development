@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "line": 66,
+   "rule": 3,
+   "quote": "A latency figure with no filter attached does not map onto an index query shape."
+  },
+  {
+   "line": 93,
+   "rule": 6,
+   "quote": "The spillway holds every mutation the index writer rejected, and the replay job drains it every 15 minutes."
+  },
+  {
+   "line": 125,
+   "rule": 4,
+   "quote": "An index that no one has rebuilt from empty is a rumour about the database rather than a copy of it."
+  },
+  {
+   "line": 168,
+   "rule": 3,
+   "quote": "A rollback in week 48 has no other route back to a working console."
+  },
+  {
+   "line": 192,
+   "rule": 6,
+   "quote": "The weathervane reports which store answered each console request, and the regional dashboard groups its output by hour."
+  },
+  {
+   "line": 203,
+   "rule": 4,
+   "quote": "A rollback plan that is first read on the night of the cutover is a description of the damage rather than a remedy."
+  }
+ ]
+}

@@ -368,8 +368,18 @@ def main(argv=None):
     ap.exit_on_error = False
     try:
         args = ap.parse_args(argv)
-    except (argparse.ArgumentError, SystemExit) as exc:
+    # `exit_on_error = False` keeps a usage error from killing the process,
+    # and it also routes argparse's own message into the exception instead
+    # of stderr. Print it: an exit 3 that says nothing sends the caller to
+    # read the source to find out which flag was wrong. Measured: a run
+    # with `--corpus` instead of `--run-dir` exited 3 in silence.
+    except argparse.ArgumentError as exc:
+        print(f"usage error: {exc}", file=sys.stderr)
+        ap.print_usage(sys.stderr)
+        return 3
+    except SystemExit as exc:
         code = getattr(exc, "code", 1)
+        return 0 if code == 0 else 3
         return 0 if code == 0 else 3
 
     if not os.path.isfile(args.evals):

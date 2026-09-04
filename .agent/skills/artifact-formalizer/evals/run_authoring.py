@@ -59,19 +59,26 @@ AXIS_B_HEADER = (
     "You are auditing a specification for register defects. Apply the rules "
     "below.\n\n"
     "=== BEGIN FORMALIZATION GUIDE ===\n")
+#: What each of the three partly-reachable rules asks the reader to find. Held
+#: as one dict so the combined and the split pass are built from the SAME
+#: sentences: a split arm phrased differently would measure the rewording, not
+#: the split.
+AXIS_B_RULES = {
+    3: ("rule 3 — a requirement carrying its own justification, where the "
+        "obligation\n  and the justification sit in SEPARATE sentences;"),
+    4: ("rule 4 — a maxim or an aphorism standing where a norm belongs, "
+        "including one\n  written today that matches no known template;"),
+    6: ("rule 6 — a coined noun standing where a standard term belongs, "
+        "including one\n  invented for this document."),
+}
+
 AXIS_B_MIDDLE = """
 === END FORMALIZATION GUIDE ===
 
 A deterministic scanner has already run on this document and reported ZERO
-findings. Three rules are only partly reachable by any detector, so the
-remainder is yours:
+findings. {preamble}
 
-- rule 3 — a requirement carrying its own justification, where the obligation
-  and the justification sit in SEPARATE sentences;
-- rule 4 — a maxim or an aphorism standing where a norm belongs, including one
-  written today that matches no known template;
-- rule 6 — a coined noun standing where a standard term belongs, including one
-  invented for this document.
+{rules}
 
 Read EVERY section of the worklist below, not only the sections that look
 suspicious.
@@ -86,7 +93,7 @@ suspicious.
 
 Output a JSON object and nothing else, in this exact shape:
 
-{{"findings": [{{"line": <int>, "rule": <3|4|6>, "quote": "<the text>"}}]}}
+{{"findings": [{{"line": <int>, "rule": <{allowed}>, "quote": "<the text>"}}]}}
 
 Report a line only when you can name which rule it violates. An empty findings
 list is a valid answer.
@@ -210,10 +217,39 @@ def number_lines(text):
                      for i, line in enumerate(text.split("\n"), 1))
 
 
-def build_axis_b_prompt(fixture_path):
+def build_axis_b_prompt(fixture_path, rules=(3, 4, 6)):
+    """Build one reading pass over *fixture_path* for *rules*.
+
+    `rules` is the whole difference between the two arms R10 compares. The
+    combined arm passes all three in one call, which is what step B4 of
+    `SKILL.md` currently prescribes. The split arm calls this three times, once
+    per rule, and unions the answers. Everything else -- the guide, the
+    worklist, the document, the output shape -- is identical, so a difference
+    in the result is a difference in the split.
+    """
+    rules = tuple(rules)
+    unknown = set(rules) - set(AXIS_B_RULES)
+    if unknown:
+        raise ValueError(f"unknown axis-B rule(s) {sorted(unknown)}")
+    # The full-set wording is byte-identical to what step B4 has always emitted.
+    # A combined arm phrased even slightly differently would make this a
+    # measurement of the rewording rather than of the split.
+    if rules == (3, 4, 6):
+        preamble = ("Three rules are only partly reachable by any detector, so "
+                    "the\nremainder is yours:")
+    elif len(rules) == 1:
+        preamble = ("One rule is only partly reachable by any detector, so the\n"
+                    "remainder is yours:")
+    else:
+        preamble = (f"{len(rules)} rules are only partly reachable by any "
+                    f"detector, so the\nremainder is yours:")
     return (AXIS_B_HEADER + _read(GUIDE)
-            + AXIS_B_MIDDLE.format(worklist=sections_worklist(fixture_path),
-                                   document=number_lines(_read(fixture_path))))
+            + AXIS_B_MIDDLE.format(
+                preamble=preamble,
+                rules="\n".join(f"- {AXIS_B_RULES[r]}" for r in rules),
+                allowed="|".join(str(r) for r in rules),
+                worklist=sections_worklist(fixture_path),
+                document=number_lines(_read(fixture_path))))
 
 
 def _write_meta(path, payload):
@@ -262,49 +298,118 @@ def run_authoring_case(case, arm, rep, model, out_root, dry_run=False):
             "chars": len(body), "cost": env.get("total_cost_usd") or 0.0}
 
 
-def run_gap_case(case, model, out_root, rep=1, dry_run=False):
-    """Execute one Axis B reading pass and write its answer.
+#: The two reading-pass arms R10 compares. `combined` is what step B4 of
+#: SKILL.md prescribes today: one call naming all three partly-reachable rules.
+#: `split` is the proposal: three calls, one rule each, answers unioned.
+PASS_MODES = {"combined": ((3, 4, 6),), "split": ((3,), (4,), (6,))}
 
-    Repetitions live in their own directory, mirroring axis A. A reading pass
-    is as non-deterministic as an authoring run, and one draw of `6 of 6` says
-    less than three do.
-    """
-    fixture = os.path.join(HERE, case["fixture"])
-    prompt = build_axis_b_prompt(fixture)
+
+def _one_gap_pass(fixture, rules, model, dry_run, label):
+    """Run a single reading pass and return (answer, envelope, prompt)."""
+    prompt = build_axis_b_prompt(fixture, rules)
     if dry_run:
-        print(f"[dry-run] {case['id']}/rep-{rep}: "
-              f"{' '.join(build_command('<prompt>', model))}")
-        return {"dry_run": True}
+        print(f"[dry-run] {label}: "
+              f"{' '.join(build_command('<prompt>', model))}"
+              f"  (rules {'+'.join(str(r) for r in rules)}, "
+              f"prompt {len(prompt)} chars)")
+        return None, None, prompt
 
     workdir = isolated_workdir()
     try:
         env = spawn(prompt, model, workdir)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
-
     body, _ = unwrap(env.get("result", ""))
-    case_dir = os.path.join(out_root, case["id"], f"rep-{rep}")
-    os.makedirs(case_dir, exist_ok=True)
     try:
         answer = json.loads(body)
     except json.JSONDecodeError:
         answer = {"findings": [], "unparsable": body[:4000]}
+    return answer, env, prompt
+
+
+def run_gap_case(case, model, out_root, rep=1, dry_run=False,
+                 pass_mode="combined"):
+    """Execute one Axis B reading pass and write its answer.
+
+    Repetitions live in their own directory, mirroring axis A. A reading pass
+    is as non-deterministic as an authoring run, and one draw of `6 of 6` says
+    less than three do.
+
+    `pass_mode` selects the arm. Under `split` the case costs three calls
+    instead of one and their findings are unioned -- the cost R10 names as its
+    own risk, made visible in the recorded `total_cost_usd`.
+    """
+    if pass_mode not in PASS_MODES:
+        raise ValueError(f"unknown pass mode {pass_mode!r}; "
+                         f"known: {sorted(PASS_MODES)}")
+    fixture = os.path.join(HERE, case["fixture"])
+    groups = PASS_MODES[pass_mode]
+
+    if dry_run:
+        for rules in groups:
+            _one_gap_pass(fixture, rules, model, True,
+                          f"{case['id']}/{pass_mode}/rep-{rep}")
+        return {"dry_run": True}
+
+    findings, passes, cost, errors, unparsable = [], [], 0.0, [], False
+    for rules in groups:
+        answer, env, prompt = _one_gap_pass(fixture, rules, model, False, "")
+        got = answer.get("findings") or []
+        # A split pass may only report the rule it was asked about. A finding
+        # naming another rule is a leak between passes, and dropping it
+        # silently would flatter the arm.
+        kept = [f for f in got if _rule_of(f) in rules]
+        leaked = [f for f in got if _rule_of(f) not in rules]
+        findings.extend(kept)
+        if "unparsable" in answer:
+            unparsable = True
+        if env.get("is_error"):
+            errors.append(env.get("error"))
+        cost += env.get("total_cost_usd") or 0.0
+        passes.append({
+            "rules": list(rules),
+            "prompt_sha256_16": _sha(prompt),
+            "reported": len(got),
+            "kept": len(kept),
+            "leaked_to_other_rules": leaked,
+            "parsed": "unparsable" not in answer,
+            "is_error": bool(env.get("is_error")),
+            "total_cost_usd": env.get("total_cost_usd"),
+            "duration_ms": env.get("duration_ms"),
+            "session_id": env.get("session_id"),
+        })
+
+    answer = {"findings": findings}
+    if unparsable:
+        answer["unparsable"] = True
+    case_dir = os.path.join(out_root, case["id"], f"rep-{rep}")
+    os.makedirs(case_dir, exist_ok=True)
     _write_meta(os.path.join(case_dir, "answer.json"), answer)
     _write_meta(os.path.join(case_dir, "meta.json"), {
         "case": case["id"], "rep": rep, "model": model,
         "fixture": case["fixture"],
-        "prompt_sha256_16": _sha(prompt),
-        "is_error": bool(env.get("is_error")),
-        "error": env.get("error"),
-        "permission_denials": env.get("permission_denials", []),
-        "parsed": "unparsable" not in answer,
-        "total_cost_usd": env.get("total_cost_usd"),
-        "duration_ms": env.get("duration_ms"),
-        "session_id": env.get("session_id"),
+        "pass_mode": pass_mode,
+        "passes": passes,
+        "calls": len(groups),
+        "prompt_sha256_16": passes[0]["prompt_sha256_16"],
+        "is_error": bool(errors),
+        "error": errors or None,
+        "permission_denials": [],
+        "parsed": not unparsable,
+        "total_cost_usd": cost,
+        "duration_ms": sum(p["duration_ms"] or 0 for p in passes),
+        "session_id": passes[0]["session_id"],
     })
-    return {"ok": "unparsable" not in answer,
-            "findings": len(answer.get("findings", [])),
-            "cost": env.get("total_cost_usd") or 0.0}
+    return {"ok": not unparsable and not errors,
+            "findings": len(findings), "cost": cost}
+
+
+def _rule_of(finding):
+    """The rule a reported finding names, or None when it names none."""
+    try:
+        return int(finding["rule"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def plan_runs(evals, axis="both", reps=1, cases=None, arms=None):
@@ -339,6 +444,13 @@ def main(argv=None):
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--reps", type=int, default=1)
     ap.add_argument("--axis", choices=("a", "b", "both"), default="both")
+    ap.add_argument("--pass-mode", choices=sorted(PASS_MODES), default="combined",
+                    help="axis B only. `combined` is what SKILL.md step B4 "
+                         "prescribes: one reading pass naming all three "
+                         "partly-reachable rules. `split` is registry item "
+                         "R10's proposal: three passes, one rule each, unioned. "
+                         "R10 ships only if `split` measures a recall gain, so "
+                         "these are the two arms of that comparison")
     ap.add_argument("--cases", action="append", dest="cases",
                     help="run only these case ids")
     ap.add_argument("--arm", action="append", dest="arms", choices=ARMS,
@@ -354,8 +466,18 @@ def main(argv=None):
     ap.exit_on_error = False
     try:
         args = ap.parse_args(argv)
-    except (argparse.ArgumentError, SystemExit) as exc:
+    # `exit_on_error = False` keeps a usage error from killing the process,
+    # and it also routes argparse's own message into the exception instead
+    # of stderr. Print it: an exit 3 that says nothing sends the caller to
+    # read the source to find out which flag was wrong. Measured: a run
+    # with `--corpus` instead of `--run-dir` exited 3 in silence.
+    except argparse.ArgumentError as exc:
+        print(f"usage error: {exc}", file=sys.stderr)
+        ap.print_usage(sys.stderr)
+        return 3
+    except SystemExit as exc:
         code = getattr(exc, "code", 1)
+        return 0 if code == 0 else 3
         return 0 if code == 0 else 3
 
     if args.reps % 2 == 0:
@@ -380,7 +502,7 @@ def main(argv=None):
             return label, run_authoring_case(case, arm, rep, args.model,
                                              args.out_root, args.dry_run)
         return label, run_gap_case(case, args.model, args.out_root, rep,
-                                   args.dry_run)
+                                   args.dry_run, args.pass_mode)
 
     def record(label, res):
         nonlocal cost

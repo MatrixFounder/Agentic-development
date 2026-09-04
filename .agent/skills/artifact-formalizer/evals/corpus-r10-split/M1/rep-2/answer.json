@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "line": 47,
+   "rule": 3,
+   "quote": "**D4.** A row rejected by the normalizer must keep its `raw_batches` object reference for 30 days. A replay run reads that reference to rebuild the batch, and the incident review has no other source for the original bytes."
+  },
+  {
+   "line": 112,
+   "rule": 3,
+   "quote": "**I1.** The collector must reject a batch whose `declared_count` differs from the length of `rows`. A truncated upload otherwise reaches the loader as a complete batch, and the reconciliation report shows no gap for that hour."
+  },
+  {
+   "line": 90,
+   "rule": 4,
+   "quote": "A stage that logs only its errors teaches its operator to read nothing at all."
+  },
+  {
+   "line": 145,
+   "rule": 4,
+   "quote": "A field added for one release is a field somebody parses for a decade."
+  },
+  {
+   "line": 37,
+   "rule": 6,
+   "quote": "The settling pond holds a normalized row until every dimension key resolves."
+  },
+  {
+   "line": 80,
+   "rule": 6,
+   "quote": "**C3.** The weir admits at most 5,000 rows per second per tenant into the dimension lookup."
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "findings": [
+  {
+   "line": 48,
+   "rule": 3,
+   "quote": "Otherwise the audit record names an action and no cause, and the reviewer rebuilds the intent from chat history."
+  },
+  {
+   "line": 100,
+   "rule": 3,
+   "quote": "Two grants cover an engineer holding an incident and a maintenance window at the same time."
+  },
+  {
+   "line": 109,
+   "rule": 4,
+   "quote": "A permission that travels further than the incident that justified it stops being a permission."
+  },
+  {
+   "line": 127,
+   "rule": 4,
+   "quote": "Every emergency door becomes an ordinary door once enough people know where it is."
+  },
+  {
+   "line": 78,
+   "rule": 6,
+   "quote": "The shutter reads the active grant table every 15 seconds and closes each grant whose expiry has passed."
+  },
+  {
+   "line": 136,
+   "rule": 6,
+   "quote": "Each region is enabled behind its own drawbridge, and no two drawbridges open in the same week."
+  }
+ ]
+}

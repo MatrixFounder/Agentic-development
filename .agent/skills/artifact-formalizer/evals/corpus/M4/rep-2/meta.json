@@ -1,0 +1,34 @@
+{
+ "case": "M4",
+ "rep": 2,
+ "model": "claude-opus-5",
+ "fixture": "fixtures/mixed-recall-gap-4.md",
+ "pass_mode": "combined",
+ "passes": [
+  {
+   "rules": [
+    3,
+    4,
+    6
+   ],
+   "prompt_sha256_16": "4578644b7dc708f0",
+   "reported": 6,
+   "kept": 6,
+   "leaked_to_other_rules": [],
+   "parsed": true,
+   "is_error": false,
+   "total_cost_usd": 0.269656,
+   "duration_ms": 22746,
+   "session_id": "8918d367-fc17-4c2f-889d-6af5777510bf"
+  }
+ ],
+ "calls": 1,
+ "prompt_sha256_16": "4578644b7dc708f0",
+ "is_error": false,
+ "error": null,
+ "permission_denials": [],
+ "parsed": true,
+ "total_cost_usd": 0.269656,
+ "duration_ms": 22746,
+ "session_id": "8918d367-fc17-4c2f-889d-6af5777510bf"
+}

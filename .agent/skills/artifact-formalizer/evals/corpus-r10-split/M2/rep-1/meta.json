@@ -1,0 +1,60 @@
+{
+ "case": "M2",
+ "rep": 1,
+ "model": "claude-opus-5",
+ "fixture": "fixtures/mixed-recall-gap-2.md",
+ "pass_mode": "split",
+ "passes": [
+  {
+   "rules": [
+    3
+   ],
+   "prompt_sha256_16": "8a6503f10aefced7",
+   "reported": 2,
+   "kept": 2,
+   "leaked_to_other_rules": [],
+   "parsed": true,
+   "is_error": false,
+   "total_cost_usd": 0.267059,
+   "duration_ms": 125602,
+   "session_id": "5614cd17-6f3c-4ba9-8ea3-189596f8bf73"
+  },
+  {
+   "rules": [
+    4
+   ],
+   "prompt_sha256_16": "3e69b5e6303f517d",
+   "reported": 2,
+   "kept": 2,
+   "leaked_to_other_rules": [],
+   "parsed": true,
+   "is_error": false,
+   "total_cost_usd": 0.226097,
+   "duration_ms": 10985,
+   "session_id": "cf0accc6-25e8-466d-86dc-bfeeed43cea4"
+  },
+  {
+   "rules": [
+    6
+   ],
+   "prompt_sha256_16": "24cfe911d5ee3c6c",
+   "reported": 2,
+   "kept": 2,
+   "leaked_to_other_rules": [],
+   "parsed": true,
+   "is_error": false,
+   "total_cost_usd": 0.233075,
+   "duration_ms": 16979,
+   "session_id": "b84416ee-a365-4e80-b9da-f5d78b5f255e"
+  }
+ ],
+ "calls": 3,
+ "prompt_sha256_16": "8a6503f10aefced7",
+ "is_error": false,
+ "error": null,
+ "permission_denials": [],
+ "parsed": true,
+ "total_cost_usd": 0.726231,
+ "duration_ms": 153566,
+ "session_id": "5614cd17-6f3c-4ba9-8ea3-189596f8bf73"
+}

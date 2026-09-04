@@ -42,7 +42,7 @@
   }
  },
  "axis_b": {
-  "seeded_cases": 3,
+  "seeded_cases": 15,
   "recall_mean": 1.0,
   "precision_mean": 1.0,
   "control_spurious": 0
@@ -740,6 +740,558 @@
    "rep": "rep-1",
    "rule": 0,
    "control": true
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P5",
+     "line": 37,
+     "rule": 6
+    },
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 80,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 90,
+     "rule": 4
+    },
+    {
+     "id": "P2",
+     "line": 113,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 145,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M1",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P5",
+     "line": 37,
+     "rule": 6
+    },
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 80,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 90,
+     "rule": 4
+    },
+    {
+     "id": "P2",
+     "line": 113,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 145,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M1",
+   "axis": "recall_gap",
+   "rep": "rep-2",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P5",
+     "line": 37,
+     "rule": 6
+    },
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 80,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 90,
+     "rule": 4
+    },
+    {
+     "id": "P2",
+     "line": 113,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 145,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M1",
+   "axis": "recall_gap",
+   "rep": "rep-3",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 78,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 100,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 109,
+     "rule": 4
+    },
+    {
+     "id": "P5",
+     "line": 127,
+     "rule": 4
+    },
+    {
+     "id": "P6",
+     "line": 136,
+     "rule": 6
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M2",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 78,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 100,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 109,
+     "rule": 4
+    },
+    {
+     "id": "P5",
+     "line": 127,
+     "rule": 4
+    },
+    {
+     "id": "P6",
+     "line": 136,
+     "rule": 6
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M2",
+   "axis": "recall_gap",
+   "rep": "rep-2",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 48,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 78,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 100,
+     "rule": 3
+    },
+    {
+     "id": "P4",
+     "line": 109,
+     "rule": 4
+    },
+    {
+     "id": "P5",
+     "line": 127,
+     "rule": 4
+    },
+    {
+     "id": "P6",
+     "line": 136,
+     "rule": 6
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M2",
+   "axis": "recall_gap",
+   "rep": "rep-3",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P2",
+     "line": 62,
+     "rule": 3
+    },
+    {
+     "id": "P1",
+     "line": 56,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 74,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 77,
+     "rule": 6
+    },
+    {
+     "id": "P5",
+     "line": 104,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 119,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M3",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 56,
+     "rule": 6
+    },
+    {
+     "id": "P2",
+     "line": 62,
+     "rule": 3
+    },
+    {
+     "id": "P3",
+     "line": 74,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 77,
+     "rule": 6
+    },
+    {
+     "id": "P5",
+     "line": 104,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 119,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M3",
+   "axis": "recall_gap",
+   "rep": "rep-2",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 56,
+     "rule": 6
+    },
+    {
+     "id": "P2",
+     "line": 62,
+     "rule": 3
+    },
+    {
+     "id": "P3",
+     "line": 74,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 77,
+     "rule": 6
+    },
+    {
+     "id": "P5",
+     "line": 104,
+     "rule": 3
+    },
+    {
+     "id": "P6",
+     "line": 119,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M3",
+   "axis": "recall_gap",
+   "rep": "rep-3",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 66,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 93,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 125,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 168,
+     "rule": 3
+    },
+    {
+     "id": "P5",
+     "line": 192,
+     "rule": 6
+    },
+    {
+     "id": "P6",
+     "line": 203,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M4",
+   "axis": "recall_gap",
+   "rep": "rep-1",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 66,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 93,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 125,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 168,
+     "rule": 3
+    },
+    {
+     "id": "P5",
+     "line": 192,
+     "rule": 6
+    },
+    {
+     "id": "P6",
+     "line": 203,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M4",
+   "axis": "recall_gap",
+   "rep": "rep-2",
+   "rule": 0,
+   "control": false
+  },
+  {
+   "recall": 1.0,
+   "precision": 1.0,
+   "vacuous_recall": false,
+   "planted": 6,
+   "reported": 6,
+   "matched": [
+    {
+     "id": "P1",
+     "line": 66,
+     "rule": 3
+    },
+    {
+     "id": "P2",
+     "line": 93,
+     "rule": 6
+    },
+    {
+     "id": "P3",
+     "line": 125,
+     "rule": 4
+    },
+    {
+     "id": "P4",
+     "line": 168,
+     "rule": 3
+    },
+    {
+     "id": "P5",
+     "line": 192,
+     "rule": 6
+    },
+    {
+     "id": "P6",
+     "line": 203,
+     "rule": 4
+    }
+   ],
+   "missed": [],
+   "spurious": [],
+   "case_id": "M4",
+   "axis": "recall_gap",
+   "rep": "rep-3",
+   "rule": 0,
+   "control": false
   }
  ]
 }

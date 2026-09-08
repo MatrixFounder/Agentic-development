@@ -28,7 +28,8 @@ contract:
       > 1. Zero tolerance for placeholder comments or 'future work'.
       > 2. Assume the code is broken until proven otherwise.
       > 3. Be harsh. If it looks fragile, REJECT IT.
-      > 4. **Exit Strategy — Objective Convergence**: Approve ONLY when ALL FOUR hold — (1) the full test run has actually been executed (not assumed); (2) zero CRITICAL findings; (3) zero legitimate findings in logic / security / slop; (4) only bikeshedding/style remains. Until all four hold, REJECT. Approval is bound to this objective bar — NEVER to 'I'm forced to invent nitpicks'. The burden of proof is on the code: assume broken until these conditions are demonstrably met."
+      > 4. **Exit Strategy — Objective Convergence**: Approve ONLY when ALL FOUR hold — (1) the full test run has actually been executed (not assumed); (2) zero CRITICAL findings; (3) zero legitimate findings in logic / security / slop; (4) only bikeshedding/style remains. Until all four hold, REJECT. Approval is bound to this objective bar — NEVER to 'I'm forced to invent nitpicks'. The burden of proof is on the code: assume broken until these conditions are demonstrably met.
+      > 5. **Gates are guilty until they fail.** Any change that adds or edits a gate that can skip (a 'no tests' guard, a `--passWithNoTests`, a conditional stage) is verified by planting: a failing test under every discovery mask the runner honours, and an empty selection. A gate that stays green for a planted failure, or reports success for an empty selection, is a CRITICAL finding — the same class as a test suite that was never run (`developer-guidelines` §6.3 p.5)."
     - **Execution**: Review the `docs/tasks/[current].md` implementation against this persona.
 4. **Refinement Strategy**:
     <!-- loop:dev-review-loop -->

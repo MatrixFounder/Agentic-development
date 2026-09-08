@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.4
+version: 1.5
 ---
 # Developers Guidelines
 
@@ -55,6 +55,15 @@ version: 1.4
 - **Prefer Native Tools:** ALWAYS use the IDE/agent's native tools (test runners, file operations, git integration) over raw shell commands.
 - **Shell as Fallback:** Use shell commands ONLY when no native tool exists for the required operation.
 - **Verify Availability:** Check which tools are available in the current environment before defaulting to shell.
+- **Project-local toolchains, never machine-wide installs:** everything a project needs beyond the
+  language runtime — a virtualenv, `node_modules/`, linters, formatters, code generators, protoc
+  plugins — is installed **inside the project tree** by the project's own setup target, pinned to a
+  version, and invoked by that path. Never `pip install` outside a venv, `npm install -g` a project
+  tool, or `go install` into a shared `GOBIN`; a machine hosts many projects, and a global install
+  changes what every one of them sees. Runtimes themselves (interpreter, compiler, `node`) belong to
+  a version manager or the OS package manager and are installed only on the user's explicit say-so.
+  A `tools`/`check` target looks for tools at the project-local path — a tool found only on `PATH`
+  is a setup defect, not a fallback.
 
 ### 5.1 Blast Radius — Any Bulk-Rewrite Command (Report Before Write)
 Some commands rewrite many files in one invocation: formatters, auto-fixing linters, codemods,
@@ -142,6 +151,22 @@ so none of them can catch itself — that is what makes them worth a rule.
    disagree and nothing will say so. If a script prints `0 of 1105 changed`, the `1105` must come
    from the same pass that produced the `0`. A literal in a format string is a claim wearing the
    costume of an output.
+5. **A gate that skips on "no tests" reads the runner's discovery rules — it never re-implements
+   them, and it never maps "nothing collected" to success.** Two ways this goes wrong, both seen on
+   one repository skeleton: the guard's own file mask was narrower than the runner's default, so a
+   failing file the runner executed was reported as "no tests — skip"; and the runner's
+   "nothing collected" status was translated into exit 0, so an empty selection passed. Pin
+   discovery in **one** place — the runner's own config — and let the guard read that config, or
+   simply run the runner and report its "nothing collected" status as what it is. Prove it before
+   calling the gate done: plant a failing test under **every** mask the runner honours and an empty
+   selection, and confirm the gate is red for the first and not green for the second.
+
+   | Runner | Default discovery | "Nothing collected" status |
+   |---|---|---|
+   | pytest | `test_*.py` **and** `*_test.py` (`python_files`) | exit 5 |
+   | go test | `*_test.go` only | `[no test files]`, exit 0 |
+   | vitest | `*.test.*`, `*.spec.*` (`include`) | exit 1 unless `--passWithNoTests` |
+   | cargo test | `#[test]` in any compiled target | `running 0 tests`, exit 0 |
 
 State the expected sign **before** running, not after. Chosen afterwards, it is whatever the output
 happened to contain.

@@ -61,6 +61,29 @@ still on 0 — the CI gate stays 46/46 — and **no skill anywhere fails a gate 
 pass**, verified across `Universal-skills` (22), this repository (46) and
 `obsidian-llm-wiki` (23).
 
+#### Added — a gate that skips on "no tests", and two design-time rules
+
+Synced from the first `vdd-03-develop` run on a fresh monorepo skeleton (`vpn-distribution-system`
+task 001.01), where the adversarial loop rejected the same test gate twice.
+
+- **`developer-guidelines` §6.3 rule 5 (v1.4 → v1.5).** A gate that skips on "no tests" reads
+  the runner's own discovery rules and never maps "nothing collected" to success. Round 1: pytest
+  exit 5 was translated to 0. Round 2: the guard's mask (`test_*.py`) was narrower than the
+  runner's default (`test_*.py` **and** `*_test.py`), so a failing file pytest executed was reported
+  as "no tests — skip". Per-runner table (pytest / go test / vitest / cargo test) and the
+  planted-failure proof: red for a planted failure, not green for an empty selection.
+- **"Gates are guilty until they fail"** — Sarcasmotron rule 5 in `vdd-03-develop` Step 3,
+  `vdd-adversarial` §4 item 5 (v1.5 → v1.6), and a **Gates** probe in `09_code_reviewer_prompt`
+  Step 1 + checklist. Green on a planted failure is CRITICAL — the same class as a suite never run.
+- **`developer-guidelines` §5 — project-local toolchains.** Everything beyond the runtime (venv,
+  `node_modules/`, linters, generators) is installed in the project tree by its setup target and
+  invoked by path; a tool found only on `PATH` is a setup defect. One machine hosts many projects,
+  and a global install changes what all of them see.
+- **`04_architect_prompt` Step 2 + checklist — versions verified current on the writing date**,
+  check date recorded, never from training memory. An architecture had pinned PostgreSQL 16 /
+  Redis 7 while 18 / 8 were current, and the implementation reached for Python 3.12 with 3.14
+  out; the user caught both in dialogue.
+
 ### **v3.30.0 — locale-safe human output; brainstorming v3.1**
 
 CLI reports and `--help` failed under a locale whose codec cannot encode `—`, `✓`, `→`, `§`.

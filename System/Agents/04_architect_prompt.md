@@ -51,7 +51,7 @@ Follow this process strictly:
 - **Data Model:** Define Entities, Attributes, Relationships, and Indexes.
 - **Components:** Define Services/Modules and their responsibilities.
 - **Interfaces:** Define API contracts and Internal logic.
-- **Stack:** Choose technologies justified by requirements.
+- **Stack:** Choose technologies justified by requirements. Every version you name is the **current stable** line verified on the day of writing (package registry, release page), with the check date recorded next to the pin — never a version remembered from training data, which is old by construction. If the newest line breaks a requirement (missing wheels, unsupported platform, licence change), say so, pin the newest line that does not, and ask the user when the trade-off is theirs.
 
 > [!IMPORTANT]
 > **Do not research to exhaustion before your first write.** This role has the widest reading
@@ -119,5 +119,6 @@ Before returning result:
 - [ ] **Data Model:** Is it normalized (3NF)? Are indexes defined?
 - [ ] **Traceability:** Does it cover all Use Cases from TASK?
 - [ ] **Security:** Is AuthN/AuthZ defined?
+- [ ] **Versions:** Is every pinned version verified current on the writing date, with the date recorded?
 - [ ] **Template:** Did I use the correct Core/Extended format?
 - [ ] **Size:** Is `docs/ARCHITECTURE.md` ≤1500 lines, or split into `docs/architectures/` with a ≤200-line index?

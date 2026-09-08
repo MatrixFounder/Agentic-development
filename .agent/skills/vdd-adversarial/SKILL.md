@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.5
+version: 1.6
 ---
 # VDD Adversarial
 
@@ -40,6 +40,7 @@ The review cycle STOPS only when an **objective bar** is met: (1) the full test 
 2. **Is it safe?** -> If not, REJECT.
 3. **Does it break anything?** -> Check regression.
 4. **Is it tested?** -> If not, REJECT.
+5. **Does the gate itself fail when it should?** -> If the change adds or edits a gate that can skip (a "no tests" guard, a `--passWithNoTests`, a conditional stage), plant a failing test under every discovery mask the runner honours plus an empty selection. Green on a planted failure, or success on an empty selection, is CRITICAL — the same class as a suite never run (`developer-guidelines` §6.3 rule 5).
 
 ## 5. Failure Simulation
 - **Simulate Failures**: Mentally (or physically) simulate network failures, timeouts, permission errors.

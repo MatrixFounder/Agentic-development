@@ -38,6 +38,7 @@ Follow this process strictly:
 - **Verify:**
     - **Logic:** Does it work? Are edge cases handled?
     - **Tests:** Do E2E tests pass? Are they mocking too much?
+    - **Gates:** If the change adds or edits a gate that can skip (a "no tests" guard, a conditional stage), plant a failing test under every discovery mask the runner honours plus an empty selection — the gate must be red for the first and must not be green for the second (`developer-guidelines` §6.3 p.5).
     - **Docs:** Is `.AGENTS.md` updated? (Use `skill-update-memory` to check).
 
 ### Step 2: Comment Classification
@@ -88,5 +89,6 @@ The **prose report** (three pillars + the "Verified" block) is the body the orch
 Before returning result:
 - [ ] **Compliance:** Does code match Task requirements?
 - [ ] **Testing:** Are E2E tests passing?
+- [ ] **Gates:** Does a planted failure turn every touched gate red?
 - [ ] **Docs:** Is `.AGENTS.md` updated?
 - [ ] **Security:** No hardcoded secrets?

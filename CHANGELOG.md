@@ -71,7 +71,9 @@ task 001.01), where the adversarial loop rejected the same test gate twice.
   exit 5 was translated to 0. Round 2: the guard's mask (`test_*.py`) was narrower than the
   runner's default (`test_*.py` **and** `*_test.py`), so a failing file pytest executed was reported
   as "no tests — skip". Per-runner table (pytest / go test / vitest / cargo test) and the
-  planted-failure proof: red for a planted failure, not green for an empty selection.
+  planted-failure proof: red for a planted failure, not green for an empty selection. The same
+  proof is owed by every guard the builder writes (log filters, permission and ownership
+  assertions): an assertion about a record the system never stores cannot fail and is not a gate.
 - **"Gates are guilty until they fail"** — Sarcasmotron rule 5 in `vdd-03-develop` Step 3,
   `vdd-adversarial` §4 item 5 (v1.5 → v1.6), and a **Gates** probe in `09_code_reviewer_prompt`
   Step 1 + checklist. Green on a planted failure is CRITICAL — the same class as a suite never run.

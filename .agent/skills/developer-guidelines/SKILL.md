@@ -160,6 +160,10 @@ so none of them can catch itself — that is what makes them worth a rule.
    simply run the runner and report its "nothing collected" status as what it is. Prove it before
    calling the gate done: plant a failing test under **every** mask the runner honours and an empty
    selection, and confirm the gate is red for the first and not green for the second.
+   **The same proof is owed by every guard you write** — a log filter, a permission assertion, an
+   ownership check: before trusting it, plant the regression it exists to catch and watch it go
+   red. An assertion about the absence of a record the system never stores (a default ACL,
+   a built-in setting) cannot fail and is not a gate.
 
    | Runner | Default discovery | "Nothing collected" status |
    |---|---|---|

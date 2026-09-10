@@ -61,6 +61,43 @@ still on 0 — the CI gate stays 46/46 — and **no skill anywhere fails a gate 
 pass**, verified across `Universal-skills` (22), this repository (46) and
 `obsidian-llm-wiki` (23).
 
+#### Added — plan review checks for disjoint task scope
+
+Synced from `vpn-distribution-system` task 001.84, which turned out to be a subset of task
+001.14 and was closed with no code.
+
+- **`plan-review-checklist` §2 (v1.0 → v1.1).** No task's "Changes" list may be a subset of
+  another's: the same file and function or route owned twice means one task closes empty.
+
+#### Added — set properties are asserted over the set; `Depends()` reads signatures as HTTP input
+
+Synced from `vpn-distribution-system` task 001.15 (cabinet API stub), Sarcasmotron rounds 1–2.
+
+- **`developer-guidelines` §6.3 rule 7 (v1.6 → v1.7).** A property claimed for a set ("every
+  mutation requires CSRF", "every operation fails closed") is asserted as a loop or parametrization
+  over the inventory kept in one shared module, so a new member falls under the guard by
+  construction. Three hand-written cases out of four stayed green under a planted removal.
+- **`references/security/fastapi.md` edge case 9.** `Depends()` resolves every parameter of the
+  callable like a route parameter: a pydantic-typed parameter with a default on a pool factory
+  became a request body on a `GET`, and the configuration model appeared in `/openapi.json`. Wrap
+  factories that take internal objects; assert body-less operations carry no `requestBody`.
+
+#### Added — numeric tolerances are gates too
+
+Synced from `vpn-distribution-system` task 001.14 (auth logic), where a "responses are
+indistinguishable by time" guard asserted a spread below 100 ms on a request that takes about 2 ms;
+Sarcasmotron planted a 60 ms delay on one branch and the suite stayed green (WI-4 there).
+
+- **`developer-guidelines` §6.3 rule 6 (v1.5 → v1.6).** A guard of the form "differ by less than X"
+  is a gate only once X is calibrated: measure the signal and the noise on the stand the test runs
+  against, set the bound at the noise floor, prefer removing the asymmetry to tolerating it, plant a
+  deviation just above the bound and watch the guard go red, and record the measured numbers next
+  to the bound.
+- **Reviewer probe** — Sarcasmotron rule 5 in `vdd-03-develop` Step 3, `vdd-adversarial` §4 item 5
+  (v1.6 → v1.7) and the **Gates** probe + checklist in `09_code_reviewer_prompt`: for every new
+  numeric tolerance, plant a deviation at half of X on one side; green means the tolerance was never
+  calibrated.
+
 #### Added — a gate that skips on "no tests", and two design-time rules
 
 Synced from the first `vdd-03-develop` run on a fresh monorepo skeleton (`vpn-distribution-system`

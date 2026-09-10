@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.5
+version: 1.7
 ---
 # Developers Guidelines
 
@@ -164,6 +164,22 @@ so none of them can catch itself — that is what makes them worth a rule.
    ownership check: before trusting it, plant the regression it exists to catch and watch it go
    red. An assertion about the absence of a record the system never stores (a default ACL,
    a built-in setting) cannot fail and is not a gate.
+6. **A numeric tolerance is a gate only once it is calibrated.** A guard of the form "A and B
+   differ by less than X" (a response-time spread, a drift, a size or a count) protects nothing
+   while X is chosen from comfort rather than from a measurement: a bound two orders of magnitude
+   wider than the signal reads as a test and catches no regression. Before asserting that two paths
+   are indistinguishable within a tolerance, measure the signal and the noise on the stand the test
+   runs against, set the bound at the noise floor, prefer removing the asymmetry to tolerating it,
+   and plant a deviation just above the bound to watch the guard go red. Record the measured
+   numbers next to the bound so the next reader can tell calibration from guesswork. Seen once: a
+   timing guard with a 100 ms tolerance on a 2 ms request stayed green under a planted 60 ms delay.
+7. **A property claimed for a set is asserted over the set, not over examples.** "Every mutation
+   requires CSRF", "every operation of this section fails closed", "every migration has a
+   rollback": write the guard as a loop or a parametrization over the inventory (the route table,
+   the file list, the operation list in one shared module), so a newly added member falls under
+   the guard by construction. Three hand-written cases out of four are exactly the gap a reviewer
+   plants into. Seen once: CSRF asserted on three of four mutations, fail-closed on one of eight
+   operations — both stayed green under a planted removal.
 
    | Runner | Default discovery | "Nothing collected" status |
    |---|---|---|

@@ -67,6 +67,7 @@ debug=True            # Must not reach production
 6. **Async resource exhaustion** — Unbounded `asyncio.gather()` on user-controlled lists can exhaust memory/connections. Always limit concurrency.
 7. **CORS + cookies** — FastAPI's CORS middleware doesn't handle CSRF. If using cookies for auth, add CSRF protection separately.
 8. **Middleware ordering** — Middleware executes in reverse order of addition. Auth middleware must execute before route handlers.
+9. **`Depends()` reads the callable's signature as HTTP input** — Every parameter of a dependency is resolved like a route parameter: a pydantic-typed parameter (even one with a default, like `settings: Settings | None = None` on a pool factory) becomes a **request body**, and its model lands in `/openapi.json`. Seen once: a `GET` gained a body schema listing the app's configuration field names, and the first request could pick the DSN the process opened its pool with. Wrap factories that take internal objects in a parameterless dependency, and assert in the contract test that body-less operations carry no `requestBody` and that internal models are absent from `components.schemas`.
 
 ## Recommended Audit Order
 

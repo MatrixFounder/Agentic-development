@@ -2,7 +2,7 @@
 name: plan-review-checklist
 description: Detailed checklist for verifying Development Plans.
 tier: 1
-version: 1.0
+version: 1.1
 ---
 # Plan Review Checklist
 
@@ -13,6 +13,10 @@ version: 1.0
 ## 2. Structure & Formalism
 - [ ] **Stub-First:** Every component has specific "Stub" and "Impl" phases/tasks?
 - [ ] **Dependencies:** Task order respects dependencies?
+- [ ] **Disjoint scope:** No task's "Changes" list is a subset of another task's — the same file
+  and the same function or route owned twice means one of the two closes with no code. Seen
+  once: a "sessions, CSRF, login limits" task duplicated the auth-logic task that preceded it in
+  the dependency graph and was closed as already delivered.
 - [ ] **Phasing:** Clear stages (Structure -> Logic -> Test)?
 
 ## 3. Task Descriptions

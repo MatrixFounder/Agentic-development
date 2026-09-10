@@ -61,6 +61,54 @@ still on 0 — the CI gate stays 46/46 — and **no skill anywhere fails a gate 
 pass**, verified across `Universal-skills` (22), this repository (46) and
 `obsidian-llm-wiki` (23).
 
+#### Added — a review that mutates what it certifies; a planting is itself a measurement; limits are gates
+
+Synced from `vpn-distribution-system` task 001.24 (nodes API and enrollment stubs), Sarcasmotron
+round 1 and the plantings that followed it (WI-9, WI-10, WI-11).
+
+- **`vdd-adversarial` §4 item 6, §2.6 (v1.8 → v1.9); Sarcasmotron rule 6 in `vdd-03-develop` Step 3;
+  `09_code_reviewer_prompt` Step 1 and checklist.** Planting stays the reviewer's method, but the
+  artifact under review is not its scratchpad: plant in a copy, or restore in place and prove the
+  restore byte-identical; a check that cannot run without editing the artifact is reported as a
+  *described* planting for the builder. `vdd-adversarial` §2.6 said "no file mutation" while §4 item
+  5 told the reviewer to plant one — the two now say the same thing. Observed: a review agent deleted
+  the reverse-proxy `location` that keeps an unauthenticated enrollment route off the
+  mutually-authenticated port, left it deleted, and reported nothing; it surfaced only because a
+  guard added in the same session went red on it.
+- **`skill-parallel-orchestration` §2.4.1 (v3.9 → v3.10).** The freeze rule already compared a
+  tree fingerprint at a round's return, but named only the caller as the author of a mismatch,
+  so its repair ("re-take the findings against the frozen artifacts") did not fit a role that
+  wrote. The caller half now restores first, re-runs what the round measured against the
+  restored state, and records the round failed; the teammate half gains "leave the artifact as
+  you found it".
+- **`vdd-03-develop` Step 4 — integrity gate.** Before any finding is acted on, the artifact must be
+  byte-identical to what the reviewer was handed; anything attributable to the review is removed and
+  the affected checks re-run. A review that mutated what it certifies has not certified it.
+- **Both Bash-holding review roles and the two critic skills.** `.claude/agents/code-reviewer.md`
+  and `.claude/agents/security-auditor.md` are the only review roles that can write; each now
+  carries the leave-no-mark duty beside its existing bullets. `skill-adversarial-security` §5
+  (v1.5 → v1.6) and `skill-adversarial-performance` termination (v1.4 → v1.5) carry it too —
+  their critics are read-only when spawned, but on the sequential role-switch path the persona
+  runs in the caller's session with the caller's tools.
+- **`vdd-adversarial` stays standalone.** It is the only edited skill published outside the
+  framework (the `Universal-skills` marketplace), where `developer-guidelines` and
+  `skill-parallel-orchestration` do not exist — so §4 item 6 states the planting mechanics and the
+  compare-the-state duty **inline** instead of citing them. Framework-internal sites cite.
+- **`developer-guidelines` §6.3 rule 8 (v1.7 → v1.8).** A planting is a measurement, so the harness
+  performing it is a gate: address files by full path (base-name backups overwrite each other),
+  confirm the edit actually changed the file (a substitution whose pattern no longer matches does
+  nothing — a formatter re-wrapping the line is enough), confirm the restore byte-identical, and
+  report per planting what was *observed*, not a bare "red". Observed: base-name backups swapped two
+  same-named modules and ten of twelve plantings measured an import error while the run read as
+  twelve proven guards.
+- **`developer-guidelines` §6.3 rule 6 (same bump); `vdd-adversarial` §4 item 5;
+  `09_code_reviewer_prompt`.** A declared limit — max size, length, count — is the calibration
+  failure in a different key: while the oversized input is written as "the constant plus one" it
+  grows with the bound and no bound is ever wrong. Fix the input with a literal, pin the constant in
+  its own assertion, ensure nothing but the limit can reject that input, and prove it by moving the
+  limit. Observed: two size guards stayed green when their limit was raised a thousandfold, and
+  their payload was malformed anyway, so they would have passed with the limit removed.
+
 #### Added — plan review checks for disjoint task scope
 
 Synced from `vpn-distribution-system` task 001.84, which turned out to be a subset of task

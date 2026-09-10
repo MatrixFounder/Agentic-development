@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.7
+version: 1.8
 ---
 # Developers Guidelines
 
@@ -173,6 +173,15 @@ so none of them can catch itself — that is what makes them worth a rule.
    and plant a deviation just above the bound to watch the guard go red. Record the measured
    numbers next to the bound so the next reader can tell calibration from guesswork. Seen once: a
    timing guard with a 100 ms tolerance on a 2 ms request stayed green under a planted 60 ms delay.
+   **A declared limit — a maximum size, length or count — is the same gate failing for a different
+   reason: its input is defined in terms of the bound.** An oversized case written as "the limit plus
+   one" grows whenever the limit grows, so no limit is ever wrong and the guard cannot go red. Fix
+   the input with a literal (or a value taken from the requirement), pin the constant's value in its
+   own assertion, and make sure nothing *but* the limit can reject that input — a payload that is
+   also malformed measures the malformation, not the bound. Prove it by moving the limit, never by
+   moving the input. Seen once: two size guards built their oversized payload from the constant they
+   tested and stayed green when the limit was raised a thousandfold — and the payload was invalid
+   anyway, so they would have passed with the limit removed entirely.
 7. **A property claimed for a set is asserted over the set, not over examples.** "Every mutation
    requires CSRF", "every operation of this section fails closed", "every migration has a
    rollback": write the guard as a loop or a parametrization over the inventory (the route table,
@@ -180,6 +189,20 @@ so none of them can catch itself — that is what makes them worth a rule.
    the guard by construction. Three hand-written cases out of four are exactly the gap a reviewer
    plants into. Seen once: CSRF asserted on three of four mutations, fail-closed on one of eight
    operations — both stayed green under a planted removal.
+8. **A planting is a measurement; an unproven edit measures nothing.** The rules above owe their
+   evidence to plantings, so the harness that performs them is itself a gate. Address every file by
+   its full path, never by its base name — two files sharing a name overwrite each other's backup,
+   and every planting after that restores the wrong content. Prove each step instead of assuming it:
+   confirm the edit actually changed the file (a textual substitution whose pattern no longer matches
+   does nothing at all, and a formatter re-wrapping the target line is enough to cause that), and
+   confirm the restore is byte-identical before the next planting runs. A planting whose edit did not
+   apply, or whose restore did not verify, is a **failed measurement** — report it as such, never
+   count it as a proven guard. Record per planting what was *observed*, not a bare "red": an import
+   error where an assertion was expected is the signature of a harness that restored the wrong file.
+   The same duty binds a reviewer who plants, with one addition — the artifact under review is not
+   the scratchpad: plant in a copy, or restore and prove it, so the tree that gets committed carries
+   nothing the review wrote. Seen once: base-name backups swapped two same-named modules and ten of
+   twelve plantings measured an import error, while the run read as twelve proven guards.
 
    | Runner | Default discovery | "Nothing collected" status |
    |---|---|---|

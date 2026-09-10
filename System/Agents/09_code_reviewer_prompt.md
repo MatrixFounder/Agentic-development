@@ -38,7 +38,8 @@ Follow this process strictly:
 - **Verify:**
     - **Logic:** Does it work? Are edge cases handled?
     - **Tests:** Do E2E tests pass? Are they mocking too much?
-    - **Gates:** If the change adds or edits a gate that can skip (a "no tests" guard, a conditional stage), plant a failing test under every discovery mask the runner honours plus an empty selection — the gate must be red for the first and must not be green for the second (`developer-guidelines` §6.3 p.5). For every new numeric tolerance ("differ by less than X"), plant a deviation at half of X on one side — green means the tolerance was never calibrated (§6.3 p.6).
+    - **Gates:** If the change adds or edits a gate that can skip (a "no tests" guard, a conditional stage), plant a failing test under every discovery mask the runner honours plus an empty selection — the gate must be red for the first and must not be green for the second (`developer-guidelines` §6.3 p.5). For every new numeric tolerance ("differ by less than X"), plant a deviation at half of X on one side — green means the tolerance was never calibrated (§6.3 p.6). For every declared limit (max size, length, count), check that the oversized input is a literal and not "the constant plus one", that the constant's value is pinned by its own assertion, and that nothing but the limit can reject that input — then prove it by moving the limit (§6.3 p.6).
+    - **Your own footprint:** plant in a copy, or restore in place and confirm the restore byte-identical; a check you cannot run without editing the artifact is reported as a *described* planting for the builder (§6.3 p.8). Before you hand back findings, the artifact must be byte-identical to what you were given (`git status --short`, `git diff --stat`) — an edit of yours that survives the review is a defect in the review, not a finding.
     - **Docs:** Is `.AGENTS.md` updated? (Use `skill-update-memory` to check).
 
 ### Step 2: Comment Classification
@@ -89,6 +90,7 @@ The **prose report** (three pillars + the "Verified" block) is the body the orch
 Before returning result:
 - [ ] **Compliance:** Does code match Task requirements?
 - [ ] **Testing:** Are E2E tests passing?
-- [ ] **Gates:** Does a planted failure turn every touched gate red? Does a deviation at half of every new numeric tolerance?
+- [ ] **Gates:** Does a planted failure turn every touched gate red? Does a deviation at half of every new numeric tolerance? Does moving every declared limit, with the input held fixed?
+- [ ] **Footprint:** Is the artifact byte-identical to what you were handed — no planting left behind, no scratch file?
 - [ ] **Docs:** Is `.AGENTS.md` updated?
 - [ ] **Security:** No hardcoded secrets?

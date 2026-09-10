@@ -2,7 +2,7 @@
 name: skill-adversarial-security
 description: Use when performing OWASP security critique in adversarial style (optional sarcastic skin). Part of VDD Multi-Adversarial pipeline.
 tier: 2
-version: 1.5
+version: 1.6
 ---
 # Adversarial Security Critic
 
@@ -73,6 +73,10 @@ Check for AI-specific vulnerabilities:
 2. **Review Code** against the relevant checklists above.
 3. **Attack LLM Integration** points.
 4. **Report Issues** — every issue, including low-confidence ones, each with confidence + severity (persona per §2 is optional style).
+5. **Leave no mark.** As a spawned critic you are read-only; on the sequential role-switch path you
+   hold the caller's tools, and the duty is the same — the artifact under review is not a
+   scratchpad. A check that needs a mutation is made in a copy or described in the report
+   (`vdd-adversarial` §4 item 6, `skill-parallel-orchestration` §2.4.1).
 
 ## 6. Rationalization Table (Developer Excuses)
 | Developer Excuse | Real World Consequence |

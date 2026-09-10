@@ -54,6 +54,7 @@ CALLER_SITES = {
     ".agent/workflows/vdd-01-start-feature.md": "TASK + ARCHITECTURE gate spawns",
     ".agent/workflows/02-plan-implementation.md": "PLAN gate spawn",
     ".agent/workflows/vdd-02-plan.md": "PLAN gate spawn",
+    ".agent/workflows/vdd-03-develop.md": "Step 3 brief — the roast's lenses are spawned here",
 }
 
 #: Carriers that DEFINE a role which reads a brief. `security-auditor` is listed here because it

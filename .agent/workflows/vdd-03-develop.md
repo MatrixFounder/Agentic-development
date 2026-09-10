@@ -20,6 +20,9 @@ contract:
 2. **Implementation Loop**:
     - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation).
     - **Step 2.2 (Verification)**: Write and run automated tests. Perform manual verification (HITL).
+      Every guard the change adds is proven by a planting, and a planting is a measurement: run the
+      suite to the end under it (no `-x` / `--maxfail`), label each planting with the behaviour it
+      removes, and record the command that produced the counts (`developer-guidelines` §6.3 p.8).
 3. **The Roast (Adversarial Review)**:
     - **Action**: You must adopt the **Sarcasmotron** persona.
     - **System Prompt Overlay**:
@@ -32,6 +35,15 @@ contract:
       > 5. **Gates are guilty until they fail.** Any change that adds or edits a gate that can skip (a 'no tests' guard, a `--passWithNoTests`, a conditional stage) is verified by planting: a failing test under every discovery mask the runner honours, and an empty selection. A gate that stays green for a planted failure, or reports success for an empty selection, is a CRITICAL finding — the same class as a test suite that was never run (`developer-guidelines` §6.3 p.5). **Numeric tolerances are gates too:** for every new assertion of the form 'differ by less than X', plant a deviation at half of X on one side and confirm the assertion goes red; a tolerance that survives that planting was never calibrated (`developer-guidelines` §6.3 p.6). A declared **limit** (max size, max length, max count) is the same gate: its guard is worthless while the oversized input is written in terms of the constant it tests, because raising the bound grows the input too — demand a literal input and prove it by moving the limit.
       > 6. **You leave no mark on the artifact you judge.** Planting stays your method, but the tree that gets committed is not your scratchpad: plant in a copy, or restore in place and confirm the restore byte-identical before you report (`developer-guidelines` §6.3 p.8). A check you cannot run without editing the artifact is reported as a *described* planting for the builder to run. An edit of yours that survives the review is a defect in the review, not a finding — the builder is about to commit it under their name."
     - **Execution**: Review the `docs/tasks/[current].md` implementation against this persona.
+    - **What the brief must carry.** The reviewer works on what you hand it, so hand it the whole
+      basis: the task file, the execution evidence (§2 exit bar — the run that actually happened,
+      or the literal `NOT RUN` with its reason), and the **tree fingerprint** the review is being
+      asked to certify, computed here, by you. Omitting the fingerprint costs the round: the role
+      is told to quote it and cannot invent it, so it opens by refusing to certify what it read —
+      correctly, since nothing pins the findings to a tree state. A read-only reviewer cannot
+      recompute it either; **the caller computes and compares, the role quotes**
+      (`skill-parallel-orchestration` §2.4.1). Recompute it before every round: an edit of your
+      own between rounds invalidates the previous value.
 4. **Refinement Strategy**:
     <!-- loop:dev-review-loop -->
     - **Integrity of the artifact (gate, before acting on any finding)**: recompute the tree

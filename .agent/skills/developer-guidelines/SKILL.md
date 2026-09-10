@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.8
+version: 1.9
 ---
 # Developers Guidelines
 
@@ -203,6 +203,26 @@ so none of them can catch itself — that is what makes them worth a rule.
    the scratchpad: plant in a copy, or restore and prove it, so the tree that gets committed carries
    nothing the review wrote. Seen once: base-name backups swapped two same-named modules and ten of
    twelve plantings measured an import error, while the run read as twelve proven guards.
+
+   **Run the suite under a planting to the end.** `-x`, `--exitfirst`, `--maxfail` and their
+   equivalents report where the runner stopped, not how many guards fired — and that number reaches
+   the report as a measurement. Drop them, and put the command that produced the count beside it.
+   Seen once: every row of a planting table read `1 failed`; without the early exit the same
+   plantings measured between 1 and 27, and the table's own author had believed it was counting
+   guards.
+
+   **The edit must remove the behaviour its label names, and the label must name it in full.** Two
+   ways a planting reports a verdict about something else: a red result whose failure came from
+   somewhere other than the removed rule — an import error, a type error, a neighbouring
+   assertion — and a green result on an edit that changed bytes without changing behaviour, which
+   is indistinguishable from "no guard". Before believing a green, show the edit was semantically
+   real; before believing a red, know which line of behaviour it removed. Seen once, in one task:
+   a parameter annotation swapped for an equivalent one the framework reads identically; a
+   character class swapped under a flag that governs a different class; and a helper substituted
+   into a module that does not import it, so 27 failures measured a `NameError` while the label
+   claimed they measured a substituted identifier. A label that describes half the edit makes the
+   table unverifiable from its own description, which is how a reviewer comes to doubt a
+   measurement that was in fact correct.
 
    | Runner | Default discovery | "Nothing collected" status |
    |---|---|---|

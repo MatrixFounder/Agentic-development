@@ -108,6 +108,29 @@ round 1 and the plantings that followed it (WI-9, WI-10, WI-11).
   its own assertion, ensure nothing but the limit can reject that input, and prove it by moving the
   limit. Observed: two size guards stayed green when their limit was raised a thousandfold, and
   their payload was malformed anyway, so they would have passed with the limit removed.
+- **`developer-guidelines` §6.3 rule 8 (v1.8 → v1.9); `vdd-03-develop` Step 2.2.** Two more ways a
+  planting reports a verdict about something else. **Run the suite to the end under it:** `-x`,
+  `--exitfirst`, `--maxfail` report where the runner stopped, not how many guards fired, and that
+  number reaches the report as a measurement — so drop them and put the command that produced the
+  count beside it. **And the edit must remove the behaviour its label names, in full:** a red whose
+  failure came from an import, a type or a neighbouring assertion certifies nothing, and a green on
+  an edit that changed bytes without changing behaviour is indistinguishable from "no guard".
+  Observed in one task: every row of a planting table read `1 failed` where the same plantings
+  measured between 1 and 27 without the early exit; and three edits changed nothing the guard could
+  see — an annotation swapped for one the framework reads identically, a character class swapped
+  under a flag governing a different class, and a helper substituted into a module that does not
+  import it, so 27 failures measured a `NameError` while the label claimed a substituted identifier.
+- **`vdd-03-develop` Step 3 — what the brief must carry.** The reviewer works on what it is handed,
+  so the caller hands it the task file, the execution evidence, and the **tree fingerprint** the
+  round is asked to certify. Omitting it costs the round: the role is told to quote the fingerprint
+  and cannot invent it, so it opens by refusing to certify what it read — correctly, since nothing
+  pins the findings to a tree state. A read-only reviewer cannot recompute it either; the caller
+  computes and compares, the role quotes (§2.4.1 already said so; the step that composes the prompt
+  did not). Recompute before every round — an edit of the caller's own invalidates the last value.
+  Observed: six lenses in one round each opened with the same refusal.
+  Deliberately **not** added to `vdd-adversarial`: what to hand a reviewer, and how a builder
+  measures its own plantings, are the caller's duties; the skill ships outside the framework and
+  describes the adversary's work on what it is given.
 
 #### Added — plan review checks for disjoint task scope
 

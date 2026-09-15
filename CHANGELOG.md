@@ -194,6 +194,22 @@ task 001.01), where the adversarial loop rejected the same test gate twice.
   Redis 7 while 18 / 8 were current, and the implementation reached for Python 3.12 with 3.14
   out; the user caught both in dialogue.
 
+#### Fixed — `run-feedback`: an explicit `--slug` lost the id head; retro triage checks the backlog first
+
+- **`file --slug S` wrote `<S>.md` instead of `<prefix>-<n>-<S>.md`.** A derived slug is
+  `normalize_slug("<id>-<title>")`, so a record filed from a title is `wi-22-…`; the explicit slug
+  replaced the whole stem, and twelve work-items plus one defect filed with `--slug` (Cyrillic
+  titles derive an empty slug) landed next to their `wi-N-…` siblings without the head and were
+  renamed by hand (vpn-distribution-system, retro of 001.33). `ids.compose_slug` now builds the
+  stem from the allocated id and the slug tail in both ledgers; a tail that already starts with the
+  ledger's id head (`wi-7-…`) is refused (exit 2) — the id is allocated, never chosen. Tests for
+  both ledgers; `cli_reference.md` states the rule.
+- **Triage protocol step 2 — a lesson is checked against the backlog before it becomes a
+  shared-artifact work-item.** Open and resolved work-items are searched for a rule that already
+  covers it; covered → `--as noise --reason "covered by WI-<n>"`, a sharper special case becomes
+  a sentence in that rule's record. Eighteen retro items of one task restated four landed rules in
+  sixteen ways; landing them all would have grown the guideline by a page per task.
+
 ### **v3.30.0 — locale-safe human output; brainstorming v3.1**
 
 CLI reports and `--help` failed under a locale whose codec cannot encode `—`, `✓`, `→`, `§`.

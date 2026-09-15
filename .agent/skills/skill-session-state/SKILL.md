@@ -2,7 +2,7 @@
 name: skill-session-state
 description: "Persist and restore agent session context (Mode, Task, Summary) to survive resets."
 tier: 0
-version: 1.0
+version: 1.1
 ---
 
 # Session State Management
@@ -53,6 +53,12 @@ python3 .agent/skills/skill-session-state/scripts/update_state.py \
 1.  **Sync**: The arguments passed to the script MUST match the arguments you just passed to `task_boundary`.
 2.  **Atomic**: Always call `task_boundary` first, then `update_state.py`.
 3.  **No Hallucinations**: Do not invent values. Use the exact ones from your current context.
+4.  **Terminal boundary**: a workflow's last phase — acceptance, merge, escalation — is a boundary
+    like any other. Write the terminal status, record the finished task with
+    `--add_completed_task`, clear or set blockers. State that stops at the last *intermediate*
+    status ("escalated", "roast pending") outlives the decision that ended it and is what the next
+    session boots from (§2): one task was accepted and committed while `latest.yaml` still said
+    "escalated, no commit".
 
 ## 4. Task Switching Logic
 If you finish one task and start another **in the same session**:

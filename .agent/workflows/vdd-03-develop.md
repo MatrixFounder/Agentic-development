@@ -62,6 +62,11 @@ contract:
       user with the outstanding findings. Never merge on an exhausted counter — an exhausted bound
       is an escalation, not an approval.
     - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> **Merge and Proceed**.
+    - **The terminal state is written, not left behind.** Both exits of this loop end with
+      `update_state.py` (`skill-session-state` §3 rule 4): on APPROVED — the accepted status, the
+      task under `--add_completed_task`, `--clear_blockers`; on escalation — the escalated status
+      with the outstanding decisions as blockers. A `latest.yaml` still reading "escalated, no
+      commit" after the acceptance commit is what the next session boots from.
 
 5. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed --fix`.
    It selects documents **citing** the files this change touched; default diff scope

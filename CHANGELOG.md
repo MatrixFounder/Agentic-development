@@ -231,6 +231,11 @@ task 001.01), where the adversarial loop rejected the same test gate twice.
   interpreter or compiler version from the project's own pin into the brief, and a reviewer checks
   an unfamiliar form against it before calling it an error. Four lenses once declared a valid
   form a syntax error and, from it, every piece of execution evidence forged.
+- **The terminal state is written, not left behind** (`vdd-03-develop` Step 4,
+  `skill-session-state` §3 rule 4 (v1.0 → v1.1)): acceptance, merge and escalation are session
+  boundaries — the last `update_state.py` call records the terminal status, the finished task and
+  the blockers' fate. A task was accepted and committed while `latest.yaml` still said "escalated,
+  no commit", and the next session booted from that.
 
 ### **v3.30.0 — locale-safe human output; brainstorming v3.1**
 

@@ -164,6 +164,13 @@ thin indexes over record files per `known-issues-format`: defects to `docs/issue
 2. For every dup candidate, open the referenced issue file. Genuinely the same defect → do NOT
    file; dismiss with `--as noise --reason "duplicate of <ID>"` (the fingerprint merge already
    recorded the recurrence).
+   The same check runs against the **backlog** for a lesson: before filing a work-item whose
+   resolution is an edit to a shared artifact (a guideline, a workflow, a skill), search the open
+   AND resolved work-items for a rule that already covers it. Covered → dismiss with
+   `--as noise --reason "covered by WI-<n>"`; a sharper special case of a landed rule goes into
+   that rule's record as a sentence, not into a new record. Eighteen retro items of one task once
+   restated four landed rules in sixteen ways (vpn-distribution-system 001.33): each was true,
+   none was new, and landing them all would have grown the guideline by a page per task.
 3. Classify each remaining finding:
    - **defect** — reproducible wrong behavior with a fix path → issues ledger;
    - **work-item** — enhancement / polish / signal without a broken contract → backlog;

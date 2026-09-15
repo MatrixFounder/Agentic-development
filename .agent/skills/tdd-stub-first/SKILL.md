@@ -2,7 +2,7 @@
 name: tdd-stub-first
 description: Test-Driven Development with Stub-First approach.
 tier: 1
-version: 1.0
+version: 1.1
 ---
 # TDD & Stub-First Strategy
 
@@ -12,6 +12,9 @@ version: 1.0
 3. **Docstrings:** Add detailed docstrings describing future logic.
 4. **E2E Test (Stub):** Write an E2E test that asserts the hardcoded behavior.
    - *Example:* asserting `discount == 100.0` (stubbed value).
+5. **Scope:** the stubbing phase touches the component — its files, classes, tests and fixtures.
+   Proxy or container configuration, resource limits, performance budgets and hardening are not
+   stubs; they are separate tasks reviewed as infrastructure.
 
 ## 2. Implementation Phase
 1. **Verify Stubs:** Ensure E2E test passes on stubs.

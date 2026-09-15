@@ -41,6 +41,8 @@ Follow this process strictly:
 - **Trace:** Map TASK (Use Cases) -> PLAN (Tasks). Check for gaps.
 - **Verify:**
     - **Stub-First:** Does the plan explicitly schedule stubs first?
+    - **Stub scope:** Does no stub task edit infrastructure configuration, performance budgets
+      or hardening? Such work is its own task with its own review bar.
     - **Dependencies:** Is the order logical?
     - **Completeness:** Do all tasks have detailed descriptions?
 
@@ -48,7 +50,7 @@ Follow this process strictly:
 Classify every issue found:
 Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5). Group the
 comments under these three headings, spelled exactly as written:
-- **BLOCKING:** Missing Use Cases, Missing Task Files, Violation of Stub-First.
+- **BLOCKING:** Missing Use Cases, Missing Task Files, Violation of Stub-First, a stub task carrying infrastructure or performance budgets.
 - **MAJOR:** Vague descriptions, logical gaps, formatting issues.
 - **MINOR:** Typographical errors, minor style improvements.
 
@@ -76,5 +78,6 @@ comments under these three headings, spelled exactly as written:
 Before returning result:
 - [ ] **Traceability:** Did I verify every Use Case is covered?
 - [ ] **Stub-First:** Did I verify stubs are planned before logic?
+- [ ] **Stub scope:** Did I verify no stub task carries infrastructure or budgets?
 - [ ] **Completeness:** Did I check all task files exist?
 - [ ] **Output:** Is the review saved locally?

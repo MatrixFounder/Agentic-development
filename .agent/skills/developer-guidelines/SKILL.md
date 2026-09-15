@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.9
+version: 1.10
 ---
 # Developers Guidelines
 
@@ -19,6 +19,7 @@ version: 1.9
 - **Follow Instructions:** Execute the task EXACTLY as described.
 - **No Unsolicited Changes:** NEVER refactor code or add features not explicitly requested.
 - **Scope Control:** LEAVE unrelated code unchanged, even if it looks "bad" (unless it blocks your task).
+- **Scope by task type:** a task that creates stubs owns the interfaces, stubs, fixtures and tests of its component — not the proxy, container or resource configuration it will run under, and not performance budgets or their gates. Meeting such work inside a stub task, hand it to the owning task with the numbers you measured instead of doing it in place: every file touched is reviewed at the bar of what it is, and infrastructure inside a stub task is reviewed as production infrastructure. One stub task that absorbed proxy limits and a latency budget took eight adversarial rounds and was closed by decision, not by review.
 - **Task Traceability:** Every change must serve the current task. Professional implementation choices (refactoring touched code, adding appropriate error handling) are OK. Unrelated drive-by changes to code you didn't need to touch are NOT.
 - **Style Matching:** Match existing code style (quotes, type hints, spacing, boolean patterns) even if you'd do it differently.
 
@@ -34,6 +35,7 @@ version: 1.9
 - **Plan = What, not How:** PLAN.md defines goals and architecture. Implementation details (patterns, abstractions, internal structure) are the Developer's professional judgment.
 - **Two levels of decisions:**
   - **Architectural** (new modules, external interfaces, data models, public API shape) → must come from ARCHITECTURE.md / PLAN.md. If you see a need for an architectural change, RAISE it — do not silently introduce.
+  - **Contract rules you write in a task** (a limit, an ordering, a threshold, a refusal in an API or protocol) pass the architect's four checks before they land in any document: who controls each input, which windowed norms bound it (buffers, queues, timeouts, retention), what state the data model must keep, and how it behaves next to its neighbour rules of the same operation — walk refusal, retry and split with numbers. The trace goes into the task file. Two rules that were each fine and together made an operation unfinishable were caught three review rounds late.
   - **Implementation** (internal abstractions, helper functions, design patterns within a module) → apply professional engineering judgment. Use the right pattern for the job.
 - **Speculative complexity is PROHIBITED:** "just in case" error handling, unused config options, features nobody asked for, dead code paths for hypothetical future use.
 - **Document non-obvious choices:** If you make an implementation decision that wasn't obvious (chose pattern X over Y), briefly note WHY in a code comment or .AGENTS.md.

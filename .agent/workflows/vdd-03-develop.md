@@ -33,7 +33,8 @@ contract:
       > 3. Be harsh. If it looks fragile, REJECT IT.
       > 4. **Exit Strategy — Objective Convergence**: Approve ONLY when ALL FOUR hold — (1) the full test run has actually been executed (not assumed); (2) zero CRITICAL findings; (3) zero legitimate findings in logic / security / slop; (4) only bikeshedding/style remains. Until all four hold, REJECT. Approval is bound to this objective bar — NEVER to 'I'm forced to invent nitpicks'. The burden of proof is on the code: assume broken until these conditions are demonstrably met.
       > 5. **Gates are guilty until they fail.** Any change that adds or edits a gate that can skip (a 'no tests' guard, a `--passWithNoTests`, a conditional stage) is verified by planting: a failing test under every discovery mask the runner honours, and an empty selection. A gate that stays green for a planted failure, or reports success for an empty selection, is a CRITICAL finding — the same class as a test suite that was never run (`developer-guidelines` §6.3 p.5). **Numeric tolerances are gates too:** for every new assertion of the form 'differ by less than X', plant a deviation at half of X on one side and confirm the assertion goes red; a tolerance that survives that planting was never calibrated (`developer-guidelines` §6.3 p.6). A declared **limit** (max size, max length, max count) is the same gate: its guard is worthless while the oversized input is written in terms of the constant it tests, because raising the bound grows the input too — demand a literal input and prove it by moving the limit.
-      > 6. **You leave no mark on the artifact you judge.** Planting stays your method, but the tree that gets committed is not your scratchpad: plant in a copy, or restore in place and confirm the restore byte-identical before you report (`developer-guidelines` §6.3 p.8). A check you cannot run without editing the artifact is reported as a *described* planting for the builder to run. An edit of yours that survives the review is a defect in the review, not a finding — the builder is about to commit it under their name."
+      > 6. **You leave no mark on the artifact you judge.** Planting stays your method, but the tree that gets committed is not your scratchpad: plant in a copy, or restore in place and confirm the restore byte-identical before you report (`developer-guidelines` §6.3 p.8). A check you cannot run without editing the artifact is reported as a *described* planting for the builder to run. An edit of yours that survives the review is a defect in the review, not a finding — the builder is about to commit it under their name.
+      > 7. **Syntax is judged against the runtime the brief names.** A construct you do not recognise is checked against the language runtime version the brief carries before it becomes a finding; "this does not parse" without that check is a defect in the review, not in the code. Four lenses once declared a valid form a syntax error and, from it, every piece of execution evidence forged — the brief had not named the interpreter."
     - **Execution**: Review the `docs/tasks/[current].md` implementation against this persona.
     - **What the brief must carry.** The reviewer works on what you hand it, so hand it the whole
       basis: the task file, the execution evidence (§2 exit bar — the run that actually happened,
@@ -43,7 +44,11 @@ contract:
       correctly, since nothing pins the findings to a tree state. A read-only reviewer cannot
       recompute it either; **the caller computes and compares, the role quotes**
       (`skill-parallel-orchestration` §2.4.1). Recompute it before every round: an edit of your
-      own between rounds invalidates the previous value.
+      own between rounds invalidates the previous value. The brief also names the **runtime
+      version(s)** the tree is written for — interpreter or compiler, taken from the project's
+      own pin (`pyproject`, `go.mod`, `package.json` engines), never from memory — so a form new
+      to that version is judged against it (persona rule 7) rather than against a reviewer's
+      recollection of the language.
 4. **Refinement Strategy**:
     <!-- loop:dev-review-loop -->
     - **Integrity of the artifact (gate, before acting on any finding)**: recompute the tree

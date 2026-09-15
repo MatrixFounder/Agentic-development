@@ -69,6 +69,12 @@ register: `documentation-standards` §5.1-§5.3.
 - **Phasing:**
     - Phase 1: Interfaces, Stubs, E2E Tests (Red -> Green).
     - Phase 2: Logic Implementation (Mock replacement).
+- **Scope of a stub task:** a Phase 1 task carries the component's interfaces, stubs, fixtures
+  and tests — never infrastructure configuration (proxy, containers, resource limits),
+  performance budgets and their gates, or security hardening. Those are separate tasks with their
+  own review bar and their own stand acceptance; a stub task whose Context names such files is
+  split. One stub task that absorbed proxy limits and a latency budget went through eight
+  adversarial review rounds before it was closed by decision.
 - **Dependencies:** Ensure valid execution order.
 
 ### Step 3: Detailed Task Creation
@@ -95,6 +101,7 @@ For EACH task in the plan, create `docs/tasks/task-{ID}-{SubID}-{slug}.md`.
 ## 5. QUALITY CHECKLIST (VDD)
 Before returning result:
 - [ ] **Stub-First:** Did I create separate tasks for Stubs vs Logic?
+- [ ] **Stub scope:** Does any stub task name infrastructure, performance-budget or hardening files? Split it.
 - [ ] **Paths:** Are all file paths RELATIVE?
 - [ ] **Tests:** Does every task include a verification step?
 - [ ] **Completeness:** Did I create a file for EVERY task in the plan?

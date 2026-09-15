@@ -210,6 +210,28 @@ task 001.01), where the adversarial loop rejected the same test gate twice.
   a sentence in that rule's record. Eighteen retro items of one task restated four landed rules in
   sixteen ways; landing them all would have grown the guideline by a page per task.
 
+#### Added — stub tasks stay stubs; contract rules pass four checks; syntax is judged against the named runtime
+
+- **Scope of a stub task** (`06_planner_prompt` Step 2 + checklist, `07_plan_reviewer_prompt`
+  Step 1 + BLOCKING + checklist, `tdd-stub-first` §1 (v1.0 → v1.1), `developer-guidelines` §1):
+  a Phase 1 task carries the component's interfaces, stubs, fixtures and tests — never proxy,
+  container or resource configuration, performance budgets and their gates, or hardening; those
+  are separate tasks with their own review bar and stand acceptance, and a builder who meets such
+  work inside a stub task hands it off with the numbers measured. One stub task that absorbed
+  proxy limits and a latency budget went through eight adversarial rounds and was closed by
+  decision (vpn-distribution-system 001.33).
+- **Four checks before a contract rule is written** (`04_architect_prompt` Step 2 + checklist,
+  `developer-guidelines` §1.6 (v1.9 → v1.10)): who controls each input, which windowed norms bound
+  it, what state the data model must keep, how it behaves next to its neighbour rules of the same
+  operation — walked through one scenario with numbers, trace recorded beside the rule. Two rules
+  that were each fine and together made an operation unfinishable, and a threshold whose only
+  input the untrusted side controlled, had each reached five documents before review caught them.
+- **The brief names the runtime; syntax is judged against it** (`vdd-03-develop` Step 3 — brief
+  contents and persona rule 7; `vdd-adversarial` §3 (v1.9 → v1.10)): the caller writes the
+  interpreter or compiler version from the project's own pin into the brief, and a reviewer checks
+  an unfamiliar form against it before calling it an error. Four lenses once declared a valid
+  form a syntax error and, from it, every piece of execution evidence forged.
+
 ### **v3.30.0 — locale-safe human output; brainstorming v3.1**
 
 CLI reports and `--help` failed under a locale whose codec cannot encode `—`, `✓`, `→`, `§`.

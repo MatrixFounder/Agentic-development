@@ -50,7 +50,16 @@ Follow this process strictly:
 ### Step 2: Architecture Design
 - **Data Model:** Define Entities, Attributes, Relationships, and Indexes.
 - **Components:** Define Services/Modules and their responsibilities.
-- **Interfaces:** Define API contracts and Internal logic.
+- **Interfaces:** Define API contracts and Internal logic. **Every rule of a contract** — a limit, an
+  ordering, a threshold, a refusal — is written down only after four checks: **who controls each
+  input** it reads (an untrusted side can choose a value that voids the rule); **which windowed
+  norms bound it** (buffers, queues, timeouts, retention — the rule must hold at their edges);
+  **what state the data model must keep for it** (running sums, flags, idempotency keys — designed
+  before the rule is documented, not after); **how it behaves next to its neighbour rules of the
+  same operation** (walk refusal, retry and split through one concrete scenario with numbers).
+  Record the trace beside the rule. Two rules that were each fine and together made an operation
+  unfinishable, and a threshold whose only input the untrusted side controlled, were each caught
+  by review rounds after they had been written into five documents.
 - **Stack:** Choose technologies justified by requirements. Every version you name is the **current stable** line verified on the day of writing (package registry, release page), with the check date recorded next to the pin — never a version remembered from training data, which is old by construction. If the newest line breaks a requirement (missing wheels, unsupported platform, licence change), say so, pin the newest line that does not, and ask the user when the trade-off is theirs.
 
 > [!IMPORTANT]
@@ -119,6 +128,7 @@ Before returning result:
 - [ ] **Data Model:** Is it normalized (3NF)? Are indexes defined?
 - [ ] **Traceability:** Does it cover all Use Cases from TASK?
 - [ ] **Security:** Is AuthN/AuthZ defined?
+- [ ] **Contract rules:** For every rule I wrote — input owner, windowed norms, data-model state and the neighbour-rule scenario are recorded beside it?
 - [ ] **Versions:** Is every pinned version verified current on the writing date, with the date recorded?
 - [ ] **Template:** Did I use the correct Core/Extended format?
 - [ ] **Size:** Is `docs/ARCHITECTURE.md` ≤1500 lines, or split into `docs/architectures/` with a ≤200-line index?

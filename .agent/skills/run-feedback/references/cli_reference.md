@@ -45,6 +45,13 @@ file --finding <id|path> --as noise --reason TEXT [--dry-run]
 truncated or redacted, because `known-issues-format` preserves it verbatim as evidence. Unlike
 `collect --excerpt-file`, which redacts and clips.
 
+`--slug S` is the **tail** of the record stem: the allocated id is always the head, so
+`--slug budget-gate` files `wi-<n>-budget-gate.md` / `rf-<n>-budget-gate.md` — the same shape a
+slug derived from the title has (`normalize_slug("<id>-<title>")`). Use it when the title is
+non-latin (a derived slug would be empty → exit 2). A slug that already starts with the ledger's
+id head (`wi-7-…`) is refused (exit 2): the id is allocated, never chosen. Non-ASCII in the tail is
+normalized away like in a title.
+
 `--finding` accepts an id, a filename, or a path — but a bare path must resolve inside
 `inbox_dir`/`filed_dir`/`dismissed_dir`: filing MOVES the record, so an arbitrary path would be
 deleted (exit 2 otherwise).

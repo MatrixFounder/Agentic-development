@@ -138,6 +138,27 @@ def next_number(issues_dir, prefix):
     return highest + 1
 
 
+def compose_slug(record_id, tail):
+    """Record filename stem for an explicit ``--slug``: the allocated id is the
+    head (``<prefix>-<n>-<tail>``), exactly as ``allocate`` derives it from a
+    title. Until this helper existed an explicit slug replaced the whole stem,
+    so twelve work-items filed with ``--slug`` landed as ``<tail>.md`` next to
+    their ``wi-N-<tail>.md`` siblings (vpn-distribution-system, retro of 001.33)
+    and had to be renamed by hand. A tail that already carries this ledger's
+    id head is refused: the id is allocated, not chosen by the caller.
+    """
+    head = normalize_slug(record_id)
+    prefix = head.split("-", 1)[0]
+    if re.match(r"^%s-\d+(?:-|$)" % re.escape(prefix), tail):
+        raise CliError(
+            "--slug %r starts with an id head; the id (%s) is allocated and "
+            "prepended automatically" % (tail, record_id),
+            code=EXIT_USAGE, err_type="UsageError",
+            remediation="pass only the tail, e.g. --slug %s"
+                        % re.sub(r"^%s-\d+-?" % re.escape(prefix), "", tail))
+    return "%s-%s" % (head, tail)
+
+
 def allocate(issues_dir, prefix, title):
     """Return (issue_id, slug) for a new issue; slug must not be empty."""
     number = next_number(issues_dir, prefix)

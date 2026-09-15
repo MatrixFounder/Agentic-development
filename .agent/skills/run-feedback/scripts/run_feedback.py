@@ -293,7 +293,9 @@ def _ledger_identity(args):
     missing or non-conforming category (produced a `## None` section or a
     TypeError traceback, F5).
 
-    Returns the normalized explicit slug, or None when the slug is derived.
+    Returns the normalized explicit slug — the TAIL of the record stem, the
+    allocated id head is prepended by ``ids.compose_slug`` at filing — or None
+    when the slug is derived from the title.
     """
     # Validate and NORMALIZE in one place, then write the normalized values back
     # onto args: the first version checked `.strip()`ed copies while the callers
@@ -543,9 +545,9 @@ def cmd_file(args, cfg):
                                                        cfg.id_prefixes)
             explicit_slug = _ledger_identity(args)
             if explicit_slug:
-                slug = explicit_slug
                 number = ids_mod.next_number(cfg.issues_dir, prefix)
                 issue_id = "%s-%d" % (prefix, number)
+                slug = ids_mod.compose_slug(issue_id, explicit_slug)
             else:
                 issue_id, slug = ids_mod.allocate(cfg.issues_dir, prefix,
                                                   args.title)
@@ -591,9 +593,9 @@ def cmd_file(args, cfg):
             else:
                 prefix = args.prefix or cfg.backlog_prefix
                 if explicit_slug:
-                    slug = explicit_slug
                     item_id = "%s-%d" % (
                         prefix, ids_mod.next_number(cfg.backlog_dir, prefix))
+                    slug = ids_mod.compose_slug(item_id, explicit_slug)
                 else:
                     item_id, slug = ids_mod.allocate(cfg.backlog_dir, prefix,
                                                      args.title)

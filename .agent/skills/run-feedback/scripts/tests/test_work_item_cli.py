@@ -134,7 +134,42 @@ class TestTwoLevelCli(WorkItemCliTestCase):
         self.assertEqual(code, 0, err)
         record = Path(json.loads(out)["filed_as"]["path"])
         self.assertEqual(record.parent.resolve(), self.records.resolve())
-        self.assertEqual(record.name, "etc-pwned.md")
+        self.assertEqual(record.name, "wi-3-etc-pwned.md")
+
+    def test_an_explicit_slug_gets_the_allocated_id_head(self):
+        """An explicit `--slug` is the tail of the record stem, never the whole
+        stem: `--slug budget-gate` files `wi-3-budget-gate.md`, the same shape a
+        derived slug has. Twelve records once landed as `<tail>.md` next to
+        their `wi-N-…` siblings and were renamed by hand (001.33 retro)."""
+        code, out, err = self.file_work_item(
+            "--slug", "Budget Gate, independent literals!", "--json")
+        self.assertEqual(code, 0, err)
+        filed = json.loads(out)["filed_as"]
+        record = Path(filed["path"])
+        self.assertEqual(filed["id"], "WI-3")
+        self.assertEqual(record.name, "wi-3-budget-gate-independent-literals.md")
+        meta = frontmatter.parse(record.read_text(encoding="utf-8"))[0]
+        self.assertEqual(meta["slug"], "wi-3-budget-gate-independent-literals")
+        self.assertIn("(backlog/wi-3-budget-gate-independent-literals.md)",
+                      self.index.read_text(encoding="utf-8"))
+
+    def test_an_explicit_slug_carrying_an_id_head_is_refused(self):
+        """The id is allocated, not chosen: `--slug wi-7-foo` would file
+        `wi-3-wi-7-foo.md` or lie about the number — refused before any write."""
+        index_before = self.index.read_bytes()
+        code, out, err = self.file_work_item("--slug", "wi-7-foo")
+        self.assertEqual(code, 2, out + err)
+        self.assertIn("id head", err)
+        self.assertIn("--slug foo", err)
+        self.assertEqual(self.index.read_bytes(), index_before)
+        self.assertEqual(
+            sorted(p.name for p in self.records.glob("*.md")),
+            ["wi-1-first-item.md", "wi-2-second-item.md"])
+        # a tail that merely looks numeric elsewhere is fine
+        code, out, err = self.file_work_item("--slug", "http-2-streams", "--json")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(Path(json.loads(out)["filed_as"]["path"]).name,
+                         "wi-3-http-2-streams.md")
 
     def test_flags_that_would_be_silently_dropped_are_refused(self):
         """F15 / S-16 — a silently ignored flag is how "we marked it

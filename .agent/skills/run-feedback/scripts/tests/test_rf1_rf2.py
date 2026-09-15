@@ -93,6 +93,25 @@ class TestRF2BodyGate(RepoCase):
                            "--category", "robustness", "--severity", "SEV-3",
                            "--body-file", str(path), *extra])
 
+    def test_an_explicit_slug_gets_the_allocated_id_head_for_defects(self):
+        """Same rule as for work-items: `--slug` is the tail, the allocated
+        `RF-<n>` is the head of the record stem and of the index link."""
+        body = "**Symptom.** x\n\n**Reproduction.**\n\n```sh\nfalse\n```\n"
+        # refused before any write: the id is allocated, not chosen
+        code, _, err = self._file(body, extra=("--slug", "rf-9-again"))
+        self.assertEqual(code, 2, err)
+        self.assertIn("id head", err)
+        self.assertEqual(list((self.root / "docs" / "issues").glob("*.md")), [])
+        code, out, err = self._file(
+            body, extra=("--slug", "Scheduler leadership lock flake", "--json"))
+        self.assertEqual(code, 0, err)
+        filed = json.loads(out)["filed_as"]
+        record = Path(filed["path"])
+        self.assertEqual(record.name,
+                         filed["id"].lower() + "-scheduler-leadership-lock-flake.md")
+        self.assertIn("(issues/%s)" % record.name,
+                      (self.root / "docs" / "KNOWN_ISSUES.md").read_text(encoding="utf-8"))
+
     def test_an_unterminated_fence_is_refused(self):
         """The record's reproduction verbatim: an unterminated ```sh fence used to
         be accepted at exit 0, leaving an unbalanced fence in the ledger — and

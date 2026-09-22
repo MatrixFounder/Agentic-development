@@ -16,6 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.31.1 — the orchestration prompt says which reviewer to reach for, and what it costs**
+
+All three prompts named `vdd-multi` and described how it spawns its three critics, with
+nothing about when to use it or what it costs — which reads as an endorsement. The measured
+positioning lived only in `.agent/workflows/vdd-multi.md`, read after the choice is made.
+
+#### Added
+
+- **Review dispatch rule** (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), from
+  `docs/reviews/ab-experiment-075.md`: the recall default is one reviewer with the plain
+  exhaustive prompt (arm A, 0.931); `vdd-adversarial` is a **precision** tool, not a recall
+  one (−6.9pp recall, FP −16%); `vdd-multi` is the **end-of-development** coverage / CI gate
+  that missed its pre-registered cost bar (3.25× tokens). A bespoke review harness is not to
+  be authored on the agent's own initiative — only when the operator asks for one.
+
+#### Changed
+
+- **Teams Dispatch item 3** is marked as the mechanism, not the recommendation.
+
 ### **v3.31.0 — the two skill gates stop contradicting each other**
 
 `validate_skill.py` and `analyze_gaps.py` gate the same `SKILL.md` and disagreed about

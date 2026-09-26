@@ -68,6 +68,19 @@ debug=True            # Must not reach production
 7. **CORS + cookies** — FastAPI's CORS middleware doesn't handle CSRF. If using cookies for auth, add CSRF protection separately.
 8. **Middleware ordering** — Middleware executes in reverse order of addition. Auth middleware must execute before route handlers.
 9. **`Depends()` reads the callable's signature as HTTP input** — Every parameter of a dependency is resolved like a route parameter: a pydantic-typed parameter (even one with a default, like `settings: Settings | None = None` on a pool factory) becomes a **request body**, and its model lands in `/openapi.json`. Seen once: a `GET` gained a body schema listing the app's configuration field names, and the first request could pick the DSN the process opened its pool with. Wrap factories that take internal objects in a parameterless dependency, and assert in the contract test that body-less operations carry no `requestBody` and that internal models are absent from `components.schemas`.
+10. **Route patterns end in `$`, which matches before a trailing `\n`** — Starlette compiles each
+    route path into a regex ending in `$`, and Python's `$` also matches just before a final
+    newline: `/metrics%0A` (decoded `/metrics\n`) is routed to `/metrics`, and a path parameter's
+    `[^/]+` accepts control characters. A proxy that hides a route with an exact match (`location =
+    /metrics` → 404) lets that spelling through to the route it meant to hide. Refuse decoded paths
+    containing C0 controls or DEL in a pure-ASGI middleware before routing, refuse the same inputs at
+    the proxy, and test on a route WITH a path parameter — a fixed route 404s such paths anyway and
+    proves nothing.
+11. **uvicorn writes request paths outside its access log** — `--no-access-log` stops the access
+    log, but the WebSocket handshake lines are written by the ws protocol through the error logger
+    and carry the path. When a secret travels in the path (a subscription or reset token), run
+    `--ws none` where WebSockets are not served and route the application's own log lines that
+    name a path through a redaction of the secret segment.
 
 ## Recommended Audit Order
 

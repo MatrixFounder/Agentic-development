@@ -8,14 +8,14 @@ contract:
 
 # Product Discovery (Market Only)
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "product-market-only-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "product-market-only-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. **Strategic Analysis (p01)**
    - Agent: `p01_strategic_analyst`
    - Task: "Research the market and competition for [Idea]. Produce `docs/product/MARKET_STRATEGY.md`."
 
 2. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "product-market-only-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "product-market-only-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

@@ -15,7 +15,7 @@ contract:
 
 # Iterative Concept Design Workflow
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "iterative-design-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "iterative-design-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 ## Phase 1: Context & Brainstorming
 1. **Context Loading**: Read all user-provided reference files (e.g., `@idea.md`, `@refs/`).
@@ -58,7 +58,7 @@ contract:
 
 ## Phase 6: Retro (Global Protocol)
 8. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "iterative-design-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "iterative-design-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

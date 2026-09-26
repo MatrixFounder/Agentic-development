@@ -25,7 +25,7 @@ contract:
 
 This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sarcasmotron adversarial loop). Load-bearing differences from `/develop-all`: per-task adversarial review, mandatory inter-task HITL gate, **no auto-commit ever**, hard escalation after 3 consecutive REJECTED iterations, and resumability from `.agent/sessions/latest.yaml`.
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-05-run-full-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-05-run-full-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. **Plan parsing**: Read `docs/PLAN.md`. Extract the ordered task list (`Task X.Y`) with paths to `docs/tasks/task-{ID}-{SubID}-{slug}.md`. Respect Stage 1 / Stage 2 sectioning and dependency order. Apply `skill-spec-validator` for PLAN ↔ TASK conformance before iteration. **Flag `--dry-run`**: if present, print the planned chain (task IDs in dependency order) and exit; no execution, no state writes.
 2. **Per-task VDD cycle** (apply for each task in dependency order):
@@ -67,7 +67,7 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
 6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "vdd-05-run-full-task-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "vdd-05-run-full-task-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

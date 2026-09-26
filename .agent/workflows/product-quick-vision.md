@@ -8,7 +8,7 @@ contract:
 
 # Product Discovery (Quick Mode)
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "product-quick-vision-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "product-quick-vision-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. **Product Vision (p02)**
    - Agent: `p02_product_analyst`
@@ -26,7 +26,7 @@ contract:
    - Execute: `python3 .agent/skills/skill-product-handoff/scripts/trigger_technical.py docs/BRD.md docs/TASK.md`
 
 4. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "product-quick-vision-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "product-quick-vision-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

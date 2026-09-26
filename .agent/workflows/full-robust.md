@@ -52,7 +52,7 @@ explicit escalation path — never loop silently, never proceed past an undefine
 >    `python3 .agent/skills/skill-session-state/scripts/update_state.py ...` — a fresh
 >    session resumes mid-pipeline from `.agent/sessions/latest.yaml`.
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "full-robust-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "full-robust-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 **Steps:**
 
@@ -99,7 +99,7 @@ explicit escalation path — never loop silently, never proceed past an undefine
      the failed sub-step; still failing → STOP and escalate — do not announce `Docs ✓`.
 
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "full-robust-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "full-robust-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

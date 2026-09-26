@@ -30,10 +30,33 @@ positioning lived only in `.agent/workflows/vdd-multi.md`, read after the choice
   one (−6.9pp recall, FP −16%); `vdd-multi` is the **end-of-development** coverage / CI gate
   that missed its pre-registered cost bar (3.25× tokens). A bespoke review harness is not to
   be authored on the agent's own initiative — only when the operator asks for one.
+- **Two deciders, one input** (`security-audit` v3.7 → v3.8, `references/checklists/api_security.md`;
+  `developer-guidelines` v1.10 → v1.11, `references/security/fastapi.md`), from
+  vpn-distribution-system 001.25, where nine review rounds of one boundary kept finding the same
+  class: where a proxy and the application, or a loader and the TLS library that later uses the
+  object, decide the same question about the same input, any difference in parsing, decoding,
+  anchoring or comparison is a bypass or an outage. Ambiguous inputs are refused on every layer
+  before routing, patterns anchor at the absolute end of input, equality is taken on the consumer's
+  canonical form, agreement is tested by running the second decider itself, and a rule that drops
+  or masks records (a log filter) is exact on attacker-controlled input and keys on nothing that
+  another mechanism rewrites later (an internal redirect changes the path the log sees). FastAPI
+  specifics:
+  Starlette route patterns end in `$`, which matches before a trailing newline; uvicorn's WebSocket
+  handshake lines carry the path past `--no-access-log`.
 
 #### Changed
 
 - **Teams Dispatch item 3** is marked as the mechanism, not the recommendation.
+
+#### Fixed
+
+- **A stale retro claim no longer passes for nesting** (`run-feedback` v1.4 → v1.5, §7 Retro step 1
+  and its rationalization row; the claim lines of all 17 terminal workflows;
+  `System/Docs/QUALITY_FEEDBACK_LOOP.md`). Exit 6 names the owner: an owner from this task means
+  nested — skip; an owner from another task is a claim its interrupted session left behind (a claim
+  lives 24 h) — release it with `--force`, journal it, claim again and report the missed retro.
+  Seen once: a paused session kept its task's claim, the next task's claim was denied, and read
+  literally the protocol would have skipped that retro as well.
 
 ### **v3.31.0 — the two skill gates stop contradicting each other**
 

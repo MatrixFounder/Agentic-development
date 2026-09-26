@@ -69,7 +69,7 @@ no venv, runs from anywhere inside the repo (walks up to the root).
 | `journal` | Append `## [ts] <event_type> \| <subject>` (flock+fsync, monthly rotation) | journal |
 | `issues` | Ledger feed for the harness (`--status open --auto-fixable --json`) | — (read-only) |
 | `mine` | Deterministic transcript extractor (tool errors, exit codes, envelopes, retry aggregation; redaction + excerpt caps; incremental byte offsets) | inbox |
-| `claim` / `release` | Retro ownership for nested workflows (exit 6 = you are nested → skip retro) | `.agent/feedback/` |
+| `claim` / `release` | Retro ownership for nested workflows (exit 6 with an owner from this task = you are nested → skip retro; an owner from another task is a stale claim → `release --force`, claim again) | `.agent/feedback/` |
 | `init` | Bootstrap `docs/feedback/` configs from the shipped templates — create-only, seeds `id_prefixes` from the existing ledger, prints the judgement `todo` list | configs (create-only) |
 | `doctor` | Readiness report `{v, ready, checks, remediation}`; unconfigured repo → remediation suggests `init` | — (read-only) |
 
@@ -103,7 +103,7 @@ auto-healable (see Component 3).
 
 | Surface | Portability | Mechanism |
 | :--- | :--- | :--- |
-| **Retro step** (Global Protocol) | Any vendor | Terminal workflows end with: `claim` → gather evidence (session state, failed/retried gates) → ONE question *"Что прошло НЕ гладко?"* → `collect` each signal → triage → file → `release`. Non-blocking by contract: a retro failure NEVER changes the workflow verdict. Nested workflows skip via `claim` exit 6. |
+| **Retro step** (Global Protocol) | Any vendor | Terminal workflows end with: `claim` → gather evidence (session state, failed/retried gates) → ONE question *"Что прошло НЕ гладко?"* → `collect` each signal → triage → file → `release`. Non-blocking by contract: a retro failure NEVER changes the workflow verdict. Nested workflows skip via `claim` exit 6 (an owner from another task is a stale claim, not nesting). |
 | **`/run-feedback`** | Any vendor | Ad-hoc collection in any session (no claim/release); `mine` hint runs the miner first. |
 | **SessionEnd hook + mine-on-end** | Claude Code only, opt-in | `RUN_FEEDBACK_HOOKS=1` → the SessionEnd hook journals a session-end marker; `RUN_FEEDBACK_MINE_ON_END=1` → it also auto-mines the just-ended session's transcript into the inbox. Fail-silent; inbox-only; worktree captures land in the MAIN working tree. This is the **primary automatic capture path**. |
 | **Transcript miner** | Claude Code only | `run_feedback.py mine` over `~/.claude/projects/<derived>/*.jsonl` — historical or scheduled sweeps; same noise policy and fingerprints as the hook path. |

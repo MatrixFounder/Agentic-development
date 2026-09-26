@@ -14,7 +14,7 @@ contract:
 > [!IMPORTANT]
 > **VDD MODE ACTIVE**: Prepare for the **Adversarial Roast**.
 
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-03-develop-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "vdd-03-develop-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. **Developer Prompt**: Read `System/Agents/08_developer_prompt.md`.
 2. **Implementation Loop**:
@@ -76,7 +76,7 @@ contract:
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "vdd-03-develop-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "vdd-03-develop-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

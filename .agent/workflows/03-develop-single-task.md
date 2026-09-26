@@ -11,7 +11,7 @@ contract:
       on_exhaust: escalate_user
   calls: []
 ---
-> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "03-develop-single-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow owns this run's retro — fine, continue).
+> **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "03-develop-single-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. Read `System/Agents/08_developer_prompt.md` to understand the Development phase.
 2. Pick a task from `docs/tasks/`.
@@ -28,7 +28,7 @@ contract:
         - If after 2 retries the review still fails: **STOP** and ask the user for help.
     - If approved: Proceed or Finish.
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
-   `claim --run-id "03-develop-single-task-<task-slug>"` → exit 6 = nested, SKIP this step;
+   `claim --run-id "03-develop-single-task-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures

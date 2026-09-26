@@ -2,7 +2,7 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. NOT for fixing already-filed issues (/heal-issues). Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.4
+version: 1.5
 ---
 # Run Feedback
 
@@ -212,8 +212,13 @@ thin indexes over record files per `known-issues-format`: defects to `docs/issue
 
 ### Retro protocol (Global Protocol — end of every terminal workflow)
 1. **Claim**: at workflow START run
-   `run_feedback.py claim --run-id "<workflow>-<task-slug>"`. Exit 6 → another workflow owns this
-   run's retro → SKIP the retro step entirely (you are nested).
+   `run_feedback.py claim --run-id "<workflow>-<task-slug>"`. Exit 6 names the owner. An owner
+   that is a workflow of **this task** you are running inside → SKIP the retro step entirely (you
+   are nested). An owner from **another task** is a claim its session left behind — the session
+   ended before its retro released it, and a claim lives 24 h: run
+   `release --run-id <owner> --force`, record it with
+   `journal --event-type retro_claim_stale --subject <owner>`, claim again, and name that task's
+   missed retro in your final report. Skipping on a stale claim loses this run's retro too.
 2. At workflow END (owner only), gather evidence — `.agent/sessions/latest.yaml` blockers, gates
    that failed or retried this run, fresh `docs/reviews/coverage-*` artifacts — and ask the user ONE
    question: *"Что прошло НЕ гладко в этом прогоне?"* with the observed candidates pre-listed.
@@ -294,7 +299,7 @@ outside a retro, preserve the file and surface it to the human.
 | "The inbox item is obviously noise, I'll just delete the JSON" | Dismissal is `file --as noise --reason …` — it journals and keeps the audit trail. |
 | "I remember this issue already exists, no need to check" | Run `triage`; fingerprints and title-overlap candidates are computed, not remembered. |
 | "The retro question annoys the user, I'll skip asking" | One question per run, pre-filled — that's the contract. Skipping loses the only human-signal channel. |
-| "Exit 6 from claim is an error I should fix" | Exit 6 = you are NESTED. Skipping the retro is the correct behavior, not a failure. |
+| "Exit 6 from claim is an error I should fix" | Exit 6 with an owner from THIS task = you are NESTED; skipping the retro is the correct behavior. An owner from ANOTHER task is a stale claim (§7 Retro step 1), not nesting — skipping there loses two retros. |
 | "Config is corrupt — Bootstrap says I should repair it" | `init` is create-only; it cannot fix a corrupt file, and retrying it just loops. Inside a retro: one report line, move on. Outside: preserve the file, hand it to the human. |
 | "Filing worked (exit 0), so the repo must be configured" | Built-in defaults make filing "work" in an unconfigured repo — `file` does not gate on configuration. Run `doctor`: `ready: false` / `configured: false` is the answer. Bootstrap comes BEFORE the first real filing. |
 | "I'll file the lesson exactly as it happened — the details make it concrete" | Concrete to THIS stack means wrong on the others. A shared-artifact lesson gets generalized before filing (§7 triage step 4). |

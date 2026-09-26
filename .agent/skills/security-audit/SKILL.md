@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.7
+version: 3.8
 ---
 
-# Security Audit v3.7
+# Security Audit v3.8
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 

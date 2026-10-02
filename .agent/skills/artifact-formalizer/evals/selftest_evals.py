@@ -13,6 +13,7 @@ import glob
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -28,8 +29,9 @@ import scan_register                                          # noqa: E402
 
 #: Total rows this battery prints, PINNED as a literal. Deriving it from the
 #: run would make the assertion agree with itself after any deletion — the
-#: defect `selftest_scan.py` records as REG-2. `README.md` states the same
-#: number, and TC-EV-13b reads it from there.
+#: defect `selftest_scan.py` records as REG-2. `README.md`, `SKILL.md` and
+#: `System/Docs/SKILLS.md` state the same number, and TC-EV-13b reads it from
+#: all three.
 EXPECTED_CASES = 78
 
 RESULTS = []
@@ -506,16 +508,48 @@ def t_report_pin():
           f"accept it — measurement-baseline.md §12 quotes these values")
 
 
+#: A count is `<n> case(s)` following a `selftest_evals.py` mention with no full
+#: stop between them. `TC-SHIP-08` exempts every claim naming this battery, so
+#: this case is the only reader of these sites -- and it read `README.md` alone
+#: while `SKILL.md` and `SKILLS.md` said 59 against a pinned 78 (TASK 106). The
+#: anchor keeps `SKILLS.md`'s `192-case battery`, which precedes the mention in
+#: the same list item, out of reach: that count belongs to the other battery.
+#: Every count inside the span is read, not the first: `78 cases (59 before)`
+#: would otherwise pass. A count spans a line break, so a re-wrap between the
+#: numeral and `cases` is not a deletion. A numeral continuing another number --
+#: `1,078`, `1 078`, `0078` -- is not read as 78; the site then states no count
+#: and fails.
+EVAL_SPAN = re.compile(r"selftest_evals\.py\b([^.]*)")
+EVAL_COUNT = re.compile(r"(?<!\d[,\u00a0 ])\b([1-9]\d*)(?:\s+|-)cases?\b")
+
+
 def t_count_pin():
-    readme = os.path.join(HERE, "README.md")
-    if not os.path.isfile(readme):
-        check("TC-EV-13b README.md states the case count", False,
-              "README.md is absent")
-        return
-    text = open(readme, encoding="utf-8").read()
-    check("TC-EV-13b README.md states the case count",
-          str(EXPECTED_CASES) in text,
-          f"README does not carry {EXPECTED_CASES}")
+    repo = os.path.dirname(os.path.dirname(os.path.dirname(SKILL)))
+    # The registry is skipped only where `System/Docs/` itself is absent: a
+    # vendored copy of the skill ships without it, as `TC-SHIP-08` records. In
+    # a repository that has the directory, a missing registry is a failure.
+    docs = os.path.join(repo, "System", "Docs")
+    sites = [(os.path.join(HERE, "README.md"), True),
+             (os.path.join(SKILL, "SKILL.md"), True),
+             (os.path.join(docs, "SKILLS.md"), os.path.isdir(docs))]
+    stated, missing = [], []
+    for path, required in sites:
+        name = os.path.relpath(path, repo)
+        if not os.path.isfile(path):
+            if required:
+                missing.append(name)
+            continue
+        text = open(path, encoding="utf-8").read()
+        counts = [int(n) for span in EVAL_SPAN.findall(text)
+                  for n in EVAL_COUNT.findall(span)]
+        # A present site stating no count fails: deleting the numeral is the
+        # same defect as letting it drift.
+        stated.append((name, counts))
+    wrong = [(n, c) for n, c in stated
+             if not c or any(x != EXPECTED_CASES for x in c)]
+    check("TC-EV-13b every stated eval-battery count equals EXPECTED_CASES",
+          stated and not missing and not wrong,
+          f"expected={EXPECTED_CASES} wrong={wrong} missing={missing}")
 
 
 def t_pass_modes():

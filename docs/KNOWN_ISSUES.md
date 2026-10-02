@@ -123,6 +123,7 @@ the matching `## <category>` heading here, in ID order.
 - **REG-16** [Dropping the `flags` key from entries no case references removes findings silently](issues/reg-16-dropping-the-flags-key-from-entries-no-case-references-removes-findings-silently.md) — severity `SEV-3`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): `SHIPPED_SURFACES` carries each entry's `flags`, and the roster re-runs every entry declaring `i` against a case-flipped copy of its own probe
 - **REG-17** [Widening `SKIP_LINE` blinds rule 1 to list prose with both gates green](issues/reg-17-widening-skip-line-blinds-rule-1-to-list-prose-with-both-gates-green.md) — severity `SEV-3`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): every rule-1 and rule-3 fixture runs as a bare line and as a list item; the reproduction exits 2 at `12/18` with six DEAD rows
 - **REG-18** [The rule-5 glyph sets are unpinned in size and membership](issues/reg-18-the-rule-5-glyph-sets-are-unpinned-in-size-and-membership.md) — severity `SEV-4`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): the battery imports the scanner and pins both frozensets by membership, printing the symmetric difference
+- **REG-19** [TC-SHIP-08 exempts a whole list item, so SKILLS.md's 192-case count is read by no case](issues/reg-19-tc-ship-08-exempts-a-whole-list-item-so-skills-md-s-192-case-count-is-read-by-no-case.md) — severity `SEV-4`, status `open`, opened 2026-10-02
 
 
 ## session-state

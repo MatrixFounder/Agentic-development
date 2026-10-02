@@ -1,156 +1,135 @@
-# PLAN 105 — A read-only round runs against a frozen tree, and the brief carries its fingerprint
+# PLAN 106 — artifact-formalizer: a test-to-rule map, one name per check, and ASD-STE100 on record
 
-**TASK:** [docs/TASK.md](TASK.md) · **Covers:** R1–R10 · **Acceptance:** A1–A6
+**TASK:** [docs/TASK.md](TASK.md) · **Covers:** R1–R8 · **Acceptance:** A1–A9
 
 ## Sequencing rule
 
-Five clusters. Cluster A backs up and fixes the site set from disk. Cluster B writes the test and
-leaves it **red** — the test is the executable form of the site set, and writing it first is
-Stub-First applied to a task whose product is text. Cluster C edits the source of truth. Cluster D
-edits its readers, caller side then role side. Cluster E runs every gate and is the only cluster in
-which the test may be green.
+Seven clusters in order. Cluster A backs up. Cluster B rewrites the pin and leaves it **failing** on
+the base tree, which states 59 in two sites. That is Stub-First for a task whose product is text:
+the test is the executable form of R1. Cluster C corrects the counts and is the first point where
+the pin passes. Clusters D and E edit the contract and the baseline. Cluster F writes the release,
+and Cluster G runs every gate.
 
-## Site set
+| Order | Cluster | Files | Covers |
+| :--- | :--- | :--- | :--- |
+| A | Backup | `.agent/archive/` | rollback |
+| B | The pin, failing | `evals/selftest_evals.py`, `evals/README.md` | R2 |
+| C | The counts | `SKILL.md`, `System/Docs/SKILLS.md` | R1 |
+| D | Map, label, pointer | `references/authoring-contract.md`, `SKILL.md` | R3, R4, R5 |
+| E | ASD-STE100 record | `references/measurement-baseline.md` | R6 |
+| F | Release | `SKILL.md`, `CHANGELOG.md`, `CHANGELOG.ru.md` | R7 |
+| G | Gates | `docs/reviews/framework-audit-106.md` | R8, A1–A9 |
 
-Derived from `grep -rln "NOT RUN"` over `.agent/`, `.claude/` and the four vendor agent directories,
-partitioned by what the file does with the evidence block.
+Paths under `evals/`, `references/` and the bare `SKILL.md` are relative to
+`.agent/skills/artifact-formalizer/`.
 
-**Caller side — the file instructs someone to WRITE a brief (9 files).**
+**Declared file set (A7).** Nine edited files: the eight in the table above that sit outside
+`docs/`, plus `docs/reviews/framework-audit-106.md`. Also present in the diff: `docs/TASK.md`,
+`docs/PLAN.md`, and the TASK 105 pair archived to `docs/tasks/` and `docs/plans/`. Cluster G may add
+`REFERENT_MOVED` repairs from the resolver's `--fix`. Each repair is listed in the audit.
 
-| # | File | Site |
-| :--- | :--- | :--- |
-| 1 | `.agent/skills/skill-parallel-orchestration/SKILL.md` | §2.4, source of truth |
-| 2 | `.agent/skills/skill-parallel-orchestration/references/sequential-fallback.md` | concrete pattern step 0 |
-| 3 | `.agent/workflows/vdd-multi.md` | Step 1.0, Step 1.1 skeleton, sequential step 0 |
-| 4 | `.agent/workflows/vdd-adversarial.md` | step 2a block |
-| 5 | `.agent/workflows/vdd-enhanced.md` | §4 item 8 |
-| 6 | `.agent/workflows/01-start-feature.md` | steps 4 and 5 |
-| 7 | `.agent/workflows/vdd-01-start-feature.md` | steps 4 and 5 |
-| 8 | `.agent/workflows/02-plan-implementation.md` | step 3 |
-| 9 | `.agent/workflows/vdd-02-plan.md` | step 3 |
+**Architecture.** `docs/ARCHITECTURE.md:319` `the six per-sentence tests and the licensed statement
+forms` stays true. No architecture edit.
 
-**Role side — the file defines a role that READS a brief (19 definitions + the manifest).**
-
-| # | File | Note |
-| :--- | :--- | :--- |
-| 10–12 | `.claude/agents/critic-{logic,security,performance}.md` | donors, hand-maintained |
-| 13–15 | `.claude/agents/{task,plan,architecture}-reviewer.md` | phase gate reviewers |
-| 16 | `.claude/agents/security-auditor.md` | holds Bash; carries the caller-side obligation instead |
-| 17 | `.agent/skills/skill-parallel-orchestration/scripts/wrappers_manifest.json` | one edit regenerates 12 scaffolds |
-
-**Excluded, with the reason recorded in the test.**
-
-| File | Reason |
-| :--- | :--- |
-| `.agent/workflows/full-robust.md` | consumes a verdict; writes no brief and defines no role |
-| `.agent/skills/security-audit/SKILL.md` | methodology read by a role that holds Bash |
-| `.agent/skills/skill-adversarial-{security,performance}/SKILL.md` | persona methodology; the wrapper carries the block contract |
-| `.agent/skills/vdd-adversarial/SKILL.md` | same |
-
-Counted at `7056556`: 9 caller + 20 role + 5 excluded = **34** files carrying the contract token.
-`.agent/archive/` is outside the scan roots — it holds `.bak` copies that would otherwise be
-counted as sites.
+**Rollback.** Every edited path is tracked, and no cluster creates or deletes a skill file.
+Reverting is `git checkout --` on the nine edited paths, or a copy back from `.agent/archive/`.
+The TASK 105 archive move reverts with `git mv` back to `docs/TASK.md` and `docs/PLAN.md`.
 
 ## Cluster A — backup
 
-- [x] **A1** [R1–R10] `mkdir -p .agent/archive` and copy every file in the site set to
-      `.agent/archive/<basename>.bak`. `git status --porcelain` is empty at start, so the working
-      tree is the second rollback layer.
-- [x] **A2** Record the site-set greps and their counts in this plan under Gates.
+- [x] A1. `mkdir -p .agent/archive`.
+- [x] A2. Copy the bootstrap files present: `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ]
+      && cp "$f" ".agent/archive/$f.bak"; done`. None is edited; the copies serve the fallback.
+- [x] A3. Copy each of the eight non-`docs/` files to `.agent/archive/<basename>.bak`.
+      `SKILL.md` and `System/Docs/SKILLS.md` share no basename, so no copy overwrites another.
 
-**Verification:** every backed-up file exists under `.agent/archive/`.
+## Cluster B — the pin, failing (R2)
 
-## Cluster B — the test, red
+- [x] B1. Rewrite `t_count_pin()` in `evals/selftest_evals.py`. Keep one `check()` call per run,
+      named `TC-EV-13b`.
+      1. Sites: `evals/README.md`, `SKILL.md`, `System/Docs/SKILLS.md`.
+      2. Pattern: every `<n> case(s)` in the span from a `selftest_evals.py` mention to the next
+         full stop. Final form after review: TASK D7.
+      3. A missing `System/Docs/SKILLS.md` is skipped only where `System/Docs/` is absent.
+      4. Fails when a present site states no count, or any count differs from `EXPECTED_CASES`.
+      5. The detail names each site with the counts it found.
+- [x] B2. Update the `EXPECTED_CASES` comment: the same number is read from three files.
+- [x] B3. `evals/README.md`, the sentence on `TC-EV-13b`: it reads the number from this file,
+      `SKILL.md` and `System/Docs/SKILLS.md`.
+- [x] B4. Run `python3 evals/selftest_evals.py`. Expected: 77 of 78, exit 1. `TC-EV-13b` names
+      `SKILL.md` [59] and `SKILLS.md` [59].
 
-- [x] **B1** [R9] Create `tests/test_frozen_tree_contract.py` with three assertions.
-      - **TC-01** — every caller-side file carries the fingerprint clause.
-        `TC-01 — the 9 caller files → each contains the fingerprint marker; fails when the marker is
-        deleted from any one of them.`
-      - **TC-02** — every role-side file carries the quote-it instruction and instructs no
-        computation. `TC-02 — the 19 role definitions and the manifest → each contains the quote instruction and no
-        hash command; fails when a wrapper is given a command.`
-      - **TC-03** — partition completeness. `TC-03 — every file under the scanned roots containing
-        the evidence contract → member of exactly one of caller / role / excluded-with-reason;
-        fails when a file is added to none.`
-- [x] **B2** [R9] Run it. It is **red** on TC-01 and TC-02 — no site carries the clause yet.
+**Why the full stop bounds the pattern.** `SKILLS.md` states `192-case battery` and the eval count
+in one list item. The `192-case` claim precedes the `selftest_evals.py` mention, so the anchored
+pattern cannot reach it. Every eval count in the three sites follows its mention within one
+sentence.
 
-**Verification:** `python3 -m pytest tests/test_frozen_tree_contract.py` fails, and the failure
-names TC-01 and TC-02.
+## Cluster C — the counts (R1)
 
-## Cluster C — the source of truth
+- [x] C1. `SKILL.md` §8 "Behavioural evals": `59 cases` → `78 cases`.
+- [x] C2. `System/Docs/SKILLS.md` "Mode C" item: `runs 59 cases` → `runs 78 cases`.
+- [x] C3. Run `python3 evals/selftest_evals.py`. Expected: 78 of 78, exit 0.
+- [x] C4. Execute the A5 mutations from TASK §4, one at a time. Each one: apply, run, record
+      the `TC-EV-13b` detail, revert with the `.bak` or `git checkout --`, re-run green.
 
-- [x] **C1** [R1, R2] `skill-parallel-orchestration` §2.4 — add the freeze rule to the orchestrator
-      half: no write to the artifacts under review between the spawn and the last return; the writes
-      go before or after.
-- [x] **C2** [R3, R6] Same section — define the fingerprint by its property, give the `git` form as
-      an example with the untracked-content caveat (OQ-1), and state what a mismatch invalidates.
-- [x] **C3** [R4] Same section — assign the comparison to the caller and state why: a role with no
-      execution tool must not be handed a command, which is the rule the section already carries.
-- [x] **C4** [R5] Same section, teammate half — add the bullet: quote the supplied fingerprint,
-      report an absent one, do not signal `clean-pass` without it.
-- [x] **C5** [R8] Same section — state that the sequential role-switch path has no concurrency and
-      the freeze rule is therefore vacuous there, while the line is still written.
-- [x] **C6** [R10] Bump `version: 3.8` to `3.9` and add the `## 9. History` entry.
+## Cluster D — map, label, pointer (R3, R4, R5)
 
-**Verification:** `scan_register.py` over the edited file reports no warn; TC-01 now passes for
-file 1 only.
+- [x] D1. `references/authoring-contract.md`, the six-test table: add a `§5.5 rule` column after
+      `Test`. Values for T1–T6: 2, 4, 6, 3, 5, 1.
+- [x] D2. Same file, directly under the table: one paragraph. A finding names its §5.5 rule; the
+      column maps it to the test. `cell_width` and `cell_sentences` carry §5.1 and have no row.
+- [x] D3. Same table, T4 row: `**One claim**` → `**Reasoning separated**`.
+- [x] D4. `SKILL.md` §6 rule 1: add one sentence naming the column D1 adds.
+- [x] D5. Run `grep -rn "One claim" .agent/skills`. Expected: three lines, all rule 1 —
+      `SKILL.md`, `references/formalization-guide.md`, `documentation-standards/SKILL.md`.
+      Cluster E adds a fourth: the §4.2 record of the rename, which is history and not a label.
+- [x] D6. Run `scan_register.py` over `SKILL.md` and `references/*.md`. Expected: 0 `warn`.
 
-## Cluster D — the readers
+## Cluster E — the ASD-STE100 record (R6)
 
-- [x] **D1** [R7] Files 2–5 — add the `Tree fingerprint` line to each evidence block template and
-      the freeze obligation to each caller-side step.
-- [x] **D2** [R7] Files 6–9 — add the freeze obligation and the fingerprint line to the four phase
-      gate spawns. The artifact under review there is a document, not a source tree; the rule is
-      stated over "the artifacts under review" and needs no restatement.
-- [x] **D3** [R5] Files 10–16 — add the quote-it instruction to the seven hand-maintained role
-      definitions. `security-auditor` holds Bash, so it carries the caller-side form.
-- [x] **D4** [R5] File 17 — add the clause to the three `evidence` fields in
-      `wrappers_manifest.json`, then run `generate_wrappers.py` and confirm 12 wrappers changed.
+- [x] E1. Re-run the measurement over `docs/tasks/` with the scanner's `mask()`, `prose_blocks()`
+      and `sentences()`. Record the figures and the base revision.
+- [x] E2. Write `### 4.2` in `references/measurement-baseline.md`, after §4.1 and before `## 5.`.
+      Content per TASK §2.1 R6, items 1–5.
+- [x] E3. Table cells stay one clause under 120 characters; reasons go below the table.
+- [x] E4. The text states no `<n> cases`, and no verdict cell begins with `adopted`.
+- [x] E5. Run `python3 scripts/selftest_scan.py`. Expected: 192 of 192 — `TC-SHIP-06`, `TC-SHIP-08`,
+      `TC-SHIP-10` and `TC-SHIP-11` read this file.
 
-**Verification:** TC-01 and TC-02 pass.
+## Cluster F — release (R7)
 
-## Cluster E — gates and finalization
+- [x] F1. `SKILL.md` frontmatter: `version: 2.1` → `version: 2.2`.
+- [x] F2. `CHANGELOG.md`: a `v3.31.2` entry above `v3.31.1`, sections Fixed and Changed.
+- [x] F3. `CHANGELOG.ru.md`: the same entry in Russian, at the same position.
+- [x] F4. Run `scan_register.py` over both changelogs, compared against their `.bak`. Expected: no
+      new `warn` in the new entry.
 
-- [x] **E1** [A4] Mutation: delete the fingerprint line from `vdd-adversarial.md`, run G1, observe
-      red, restore, observe green. Record both outputs under Gates.
-- [x] **E2** [A6] `python3 -m pytest tests/` — full suite green.
-- [x] **E3** [A6] `generate_wrappers.py --check` — no drift.
-- [x] **E4** [A5] `check_positional_refs.py --targets-changed --fix` — clean.
-- [x] **E5** [R10] `CHANGELOG.md` and `CHANGELOG.ru.md` — v3.29.0 entry in both.
-- [x] **E6** [R10] Close RF-7 in onchain-analytics: frontmatter `status: fixed`, `resolved_at`,
-      `resolved_by`, a resolution blockquote appended without editing the body, and the one index
-      line in `docs/KNOWN_ISSUES.md` — four edits, not three (decision 102-D6).
-- [x] **E7** Fill the Gates table in `docs/reviews/framework-audit-105.md`.
+## Cluster G — gates (R8, A1–A9)
 
-**Verification:** every gate below carries a recorded result.
+- [x] G1. `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py` → 192 of 192 (A1).
+- [x] G2. `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py` → 78 of 78 (A2).
+- [x] G3. `scan_register.py --probe` → 18 of 18 live (A3).
+- [x] G4. `scan_register.py` over `SKILL.md`, `references/*.md`, `docs/TASK.md` → 0 `warn` (A4).
+- [x] G5. `grep -rn "One claim" .agent/skills` → the three rule-1 lines and the §4.2 record (A6).
+- [x] G6. `git status --short` and `git diff --stat` → only the declared file set (A7).
+- [x] G7. `check_positional_refs.py --targets-changed --fix` → every repair listed in the audit
+      (A8).
+- [x] G8. `validate_skills.py --root . --quiet`, `PYTHONPATH=. python3 tests/run_tests.py`,
+      `python3 -m pytest tests/ -q` → all pass (A9).
+- [x] G9. CI parity: `check_prompt_references.py --root .`, `security_lint.py --root .`,
+      `.agent/skills/skill-parallel-orchestration/scripts/generate_wrappers.py --check`.
+- [x] G10. Fill the audit's execution-evidence table with each command's printed result.
+- [x] G11. Review per the Self-Improvement Mode rule: `code-reviewer` and `security-auditor` over
+      the diff, in parallel.
 
-## Gates
+## Review fix loop
 
-| Gate | Command | Result |
-| :--- | :--- | :--- |
-| G1 | `python3 -m pytest tests/test_frozen_tree_contract.py` | 7 passed |
-| G2 | `python3 -m pytest tests/` | 435 passed, 114 subtests |
-| G3 | `generate_wrappers.py --check` | OK, 12 wrappers match the manifest |
-| G4 | `scan_register.py`, each edited file against its `.bak` | 0 new warnings |
-| G5 | `check_positional_refs.py --targets-changed --fix` | exit 0, 2 repaired, 1 pre-existing error out of scope |
-| G6 | three mutations, one per assertion | each reddens a different one |
-| G7 | `System/scripts/check_loop_contract.py` | 25 loops, 0 errors |
+Run after G11 returned, with the tree no longer frozen. TASK D7 lists what was fixed and D8 what
+was deferred.
 
-Full results and the two findings that needed prose — the pre-existing G5 error and the loop-window
-regression this task caused and fixed — are in
-[`docs/reviews/framework-audit-105.md`](reviews/framework-audit-105.md).
-
-## Rollback
-
-Restore from `.agent/archive/<basename>.bak` for any file whose edit must be undone. The working
-tree was clean at start, so `git checkout -- <path>` restores any file that was tracked.
-`tests/test_frozen_tree_contract.py` is new and is removed with `rm`.
-
-## Failure handling
-
-| Failure | Action |
-| :--- | :--- |
-| G1 red after Cluster D | the site set and the test disagree; fix the site, never the assertion |
-| G2 red | an unrelated suite broke; restore from backup and re-apply one cluster at a time |
-| G3 drift | a generated wrapper was hand-edited; re-run the generator |
-| G5 non-zero | a coordinate moved; the resolver repairs it and the repair lands in the same commit |
+- [x] R1. `TC-EV-13b`: span-wide counts, `(?:\s+|-)` between numeral and `cases`, no `1,078` alias,
+      registry required where `System/Docs/` exists. Eight mutations re-executed (TASK A5).
+- [x] R2. `measurement-baseline.md` §4.2: re-measured with `detect_lang()`; reopen bar rewritten as
+      a defect rate; source link pinned to `7d4a135`; sub-headings 4.2.1 and 4.2.2.
+- [x] R3. Contract paragraph and CHANGELOG entries corrected; both changelogs re-scanned.
+- [x] R4. Every gate in Cluster G re-run; the audit records the final figures.

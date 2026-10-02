@@ -16,6 +16,38 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.31.2 — artifact-formalizer: tests map to rules, and ASD-STE100 is on record**
+
+The operator asked whether ASD-STE100 belongs in `artifact-formalizer`. Measured over
+`docs/tasks/`, none of its rules ships; `measurement-baseline.md` §4.2 holds the figures. The same
+review found three defects in the skill itself, fixed here (TASK 106).
+
+#### Changed
+
+- **The contract's test table gains a `§5.5 rule` column** (`artifact-formalizer` v2.1 → v2.2).
+  A scanner finding names a rule, as `§5.5 r3`. `SKILL.md` §6 rule 1 asks which test forbids it.
+  The two orders differ: T1–T6 map to rules 2, 4, 6, 3, 5, 1, and no document stated the map.
+  `SKILL.md` §6 rule 1 now points to the column.
+- **`measurement-baseline.md` §4.2 records ASD-STE100 Issue 9.** Seven rules were assessed, and
+  four were measured over 131 English task files. Sentences over 25 words: 6.3%. Paragraphs over
+  six sentences: 6 of 767. Steps stating the condition after the action: 8 of 425. A passive with
+  no actor: 8.1% of sentences, with the actor recoverable in each of 12 sampled. None is adopted.
+  One principle has no test here, one term per meaning, and it stays a candidate until a
+  measurement exists. The reopen bar is a defect rate read from sampled hits, not a match rate.
+
+#### Fixed
+
+- **Two documents stated the eval-battery size as 59** (`SKILL.md` §8, `System/Docs/SKILLS.md`).
+  The battery pins 78 since `e737c08`. `TC-SHIP-08` exempts every claim naming `selftest_evals` by
+  design, and `TC-EV-13b` read `evals/README.md` alone. `TC-EV-13b` now reads all three sites, and
+  every count after each mention. Eight mutations were executed, and seven fail it naming the
+  site. They are drift in each of the three sites, a deleted numeral, a stale second count, a
+  `1,078` alias and a deleted registry. A re-wrap between the numeral and `cases` passes, as it
+  should. The total stays 78.
+- **`One claim` named two different checks.** It labelled T4 in the authoring contract and rule 1
+  everywhere else. T4 corresponds to rule 3, and rule 1 to T6. T4 is now `Reasoning separated`,
+  rule 3's own name. No test number and no rule number changes.
+
 ### **v3.31.1 — the orchestration prompt says which reviewer to reach for, and what it costs**
 
 All three prompts named `vdd-multi` and described how it spawns its three critics, with

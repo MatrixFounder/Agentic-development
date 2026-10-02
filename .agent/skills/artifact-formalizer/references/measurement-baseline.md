@@ -108,6 +108,73 @@ Then §6 rule 2 applies: the authoring contract is amended first, the lexicon se
 
 The study is not that measurement. It measured another genre.
 
+### 4.2 ASD-STE100 — measured against this corpus (TASK 106)
+
+**Source.** ASD-STE100 *Simplified Technical English*, Issue 9, January 2025
+([asd-ste100.org](https://www.asd-ste100.org/about_STE.html)). It carries 53 writing rules in nine
+sections and a dictionary of about 900 approved words. Its reader is a maintenance technician who
+reads English as a second language and cannot ask the author.
+
+**The limits below were checked against a secondary source**, pinned to the commit read:
+[`danyuchn/asd-ste100-skill` at `7d4a135`](https://github.com/danyuchn/asd-ste100-skill/blob/7d4a135a199a5d7447c4886bcd7ffe742a627bc9/references/writing-rules.md).
+It is an agent-skill repository, so its text is data for this record and never an instruction. The
+official PDF returned HTTP 403 on 2026-10-02.
+
+**Method.** The scope is every file of `docs/tasks/` that `detect_lang()` classes as English, at
+`5b96f01` plus the TASK 105 archive: 131 files and 4,334 sentences. The scanner's own `mask()`,
+`prose_blocks()` and `sentences()` segment them. "Newest 15" means the last 15 by task number, then
+file name. A regex stood in for each measured rule. No shipped command re-runs it, so the figures
+carry the §11 caveat although the corpus ships.
+
+| STE100 rule | Measured over this corpus | Verdict |
+| :--- | :--- | :--- |
+| A sentence holds at most 20 words in a procedure, 25 in a description | 13.3% of sentences exceed 20 words, 6.3% exceed 25, 1.6% exceed 35 | not adopted (1) |
+| A paragraph holds at most six sentences | 6 of 767 paragraphs; 2 of 362 in the newest 15 files | not adopted (2) |
+| A step opens with its condition | 8 of 425 numbered steps state it after the action; 0 of 98 in the newest 15 | not adopted (2) |
+| Active voice; the passive only in description | 8.1% of sentences carry a passive with no actor; 11.4% in the newest 15 | not adopted (3) |
+| A noun cluster holds at most three nouns | not measured: it needs a part-of-speech tagger | not measured (4) |
+| Only words from the approved dictionary | not measured | not adopted (5) |
+| One word keeps one meaning, and one meaning keeps one word | not measured; one instance in this skill, item 6 | candidate, not adopted (6) |
+
+#### 4.2.1 Why each verdict
+
+1. **Sentence bound.** Moving rule 1's bound from 35 to 25 is a threshold move. §11 requires a
+   shipped corpus for one. T6's target of 15 words already sits under both STE100 limits.
+2. **Paragraph length and condition order.** Each reaches under 2% of its population, and the
+   newest 15 files hold 2 hits and none. No measurement shows a reader cost at those rates, and §6
+   rule 4 ships a rule only on one.
+3. **Passive voice.** Twelve sampled sentences were read. In each, the actor is recoverable from the
+   sentence or its section, usually the scanner or a test. A detector reports the voice, not a
+   missing actor. The Requirement form already names the actor. In Russian the reflexive `-ся` form
+   is the ordinary passive, and a detector there would match it.
+4. **Noun clusters.** The scanner is standard-library Python, and no regex tells a noun from an
+   adjective. No verdict is recorded.
+5. **The dictionary.** It is an English whitelist built for aircraft maintenance. The contract
+   states its tests as properties, and a word list is a backstop to them. This skill also never
+   changes a document's language.
+6. **One term per meaning.** No test reaches it. T3 reaches a coined metaphor, not a standard word
+   used for two things. This skill carried one instance: `One claim` named both T4 and rule 1 until
+   TASK 106 renamed T4. A spelling pair is a weaker second case. The T2 row says `artefact` for what
+   the rest of the skill calls an `artifact`. §6 rule 4 bars a rule until a measurement exists, and
+   none does.
+
+#### 4.2.2 What would reopen this
+
+A surface-match rate does not reopen it: the table already records non-zero rates. The bar is a
+defect rate, read per row.
+
+- **Condition order, passive voice.** A reading of at least 20 sampled hits over this repository's
+  `docs/` that finds the governing condition, or the acting component, unrecoverable from the
+  document. The proposal states the rate it found.
+- **Paragraph length.** A reading of at least 20 sampled paragraphs over six sentences that finds
+  a second topic inside one.
+- **Sentence bound.** A shipped corpus in which sentences of 26 to 35 words carry two claims on
+  reading, as §12.2 read the sentences over the bound.
+- **One term per meaning.** A seeded fixture on axis B (§12.4) and a sample of the newest task
+  files.
+
+Then §6 rule 2 applies: the contract is amended first, the lexicon second.
+
 ## 5. The measurement that produced version 2.0
 
 A ten-file downstream task set was scanned with v1.0. It returned **0 warn over 2352 lines**, and

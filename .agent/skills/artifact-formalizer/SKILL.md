@@ -9,7 +9,7 @@ description: >-
   «формализуй задачу», «проверь регистр», «напиши CHANGELOG», "formalize this
   spec", "reads like an essay", "write the spec", "release notes".
 tier: 2
-version: 2.1
+version: 2.2
 ---
 
 # Artifact formalizer (specification register)
@@ -190,7 +190,8 @@ A new defective phrase found in the wild is triaged **before** any data file or 
 Rules 1 to 4 govern that direction. Rule 5 governs a proposal to remove coverage.
 
 1. **Does a test T1–T6 already forbid it?** If yes, the contract held and the author skipped it. Add
-   the entry as a faster detector, and nothing else changes.
+   the entry as a faster detector, and nothing else changes. A finding names a rule, not a test;
+   the `§5.5 rule` column of the contract's test table maps one to the other.
 2. **Does no test reach it?** Then the finding is about the contract. Amend
    `references/authoring-contract.md` first — a test or a licensed form — and add the entry second.
 3. **Every entry ships with a `probe`.** Validation rejects a pattern that cannot match its own
@@ -260,7 +261,7 @@ mistyped.
   DEAD row and exits 2, instead of leaving the denominator with the numerator. Each rule-1 and
   rule-3 fixture runs twice: as a bare line, and as a list item. An entry declaring `flags: "i"`
   runs again against a case-flipped copy of its own probe.
-- **Behavioural evals** (TASK 101): `evals/selftest_evals.py` — 59 cases, zero tokens, wired into
+- **Behavioural evals** (TASK 101): `evals/selftest_evals.py` — 78 cases, zero tokens, wired into
   CI. It covers what the battery above cannot: Mode A, measured as two arms of one prompt differing
   only in the contract, and the §5 recall gaps, measured against keys planted before the run. First
   campaign: `warn` 503 → 13 over ten documents per arm, with rule 1 **not** carried — the contract

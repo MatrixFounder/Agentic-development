@@ -29,7 +29,8 @@ python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py
 78 cases. It spawns no agent: `run_authoring.spawn` is replaced with a sentinel that raises, and
 TC-EV-12 asserts the sentinel was never reached. This is the step wired into CI.
 
-`EXPECTED_CASES` is a literal in the battery, and TC-EV-13b reads the same number out of this file.
+`EXPECTED_CASES` is a literal in the battery. TC-EV-13b reads the same number out of this file,
+`SKILL.md` and `System/Docs/SKILLS.md`, wherever a count follows a `selftest_evals.py` mention.
 A dropped case is then a red run rather than a smaller self-consistent total.
 
 ## Running a campaign (this spends tokens)

@@ -38,14 +38,19 @@ has never seen; a word list does not. The tests are therefore the mechanism, and
 a faster detector for the phrasings already known. This is a design intent, not a guarantee — see
 Handoff.
 
-| # | Test | Fails when | Do instead |
-| :--- | :--- | :--- | :--- |
-| T1 | **Verifiable** | the sentence asserts a judgement the reader cannot check | state the condition and the observable outcome |
-| T2 | **Real subject** | the grammatical subject performs an action it cannot perform | name the operation the artefact actually performs |
-| T3 | **Resolvable referent** | a noun resolves only inside this author's documents | use the standard name (termhood test below) |
-| T4 | **One claim** | one sentence carries a requirement **and** its justification | requirement stays; justification moves under `**Why.**` |
-| T5 | **Named severity** | severity is carried by a glyph | use a value from the project's severity vocabulary |
-| T6 | **Budget** | the sentence runs past ~15 words on a single claim | split it |
+| # | Test | §5.5 rule | Fails when | Do instead |
+| :--- | :--- | :--- | :--- | :--- |
+| T1 | **Verifiable** | 2 | the sentence asserts a judgement the reader cannot check | state the condition and the observable outcome |
+| T2 | **Real subject** | 4 | the grammatical subject performs an action it cannot perform | name the operation the artefact actually performs |
+| T3 | **Resolvable referent** | 6 | a noun resolves only inside this author's documents | use the standard name (termhood test below) |
+| T4 | **Reasoning separated** | 3 | one sentence carries a requirement **and** its justification | requirement stays; justification moves under `**Why.**` |
+| T5 | **Named severity** | 5 | severity is carried by a glyph | use a value from the project's severity vocabulary |
+| T6 | **Budget** | 1 | the sentence runs past ~15 words on a single claim | split it |
+
+**The §5.5 rule column.** A scanner finding names a `documentation-standards` §5.5 rule, as
+`§5.5 r3`. The column names the test that rule falls under. Rule numbers and test numbers pair up
+differently for five of the six tests. `cell_width` and `cell_sentences` carry §5.1 and have no row
+here.
 
 Failing surfaces, per test. Each is written here as code.
 

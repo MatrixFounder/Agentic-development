@@ -167,7 +167,7 @@ class TestWorkflowCarriesGitRollback(unittest.TestCase):
     def test_declaration_sections(self):
         text = _workflow()
         self.assertEqual(_missing(SECTION_2_REQUIRED, _section(text, "2")), [], "§2.2")
-        rollback = next((i for i in _items(_section(text, "3")) if "**Rollback point**" in i), "")
+        rollback = next((i for i in _items(_section(text, "3")) if "**Base check**" in i), "")
         self.assertEqual(_missing(SECTION_3_1_REQUIRED, rollback), [], "§3.1")
         self.assertEqual(_missing(SECTION_4_5_REQUIRED, _section(text, "4.5")), [], "§4.5")
 

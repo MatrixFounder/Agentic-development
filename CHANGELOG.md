@@ -16,6 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.32.1 — term consistency measured, and not adopted (WI-19)**
+
+ASD-STE100's one-term-per-meaning principle was the one candidate TASK 106 left open. It is now
+measured and closed.
+
+#### Changed
+
+- **`artifact-formalizer` `references/measurement-baseline.md` §4.2.** The 12 newest task files,
+  TASK 096 to 107, were read for the principle. They hold 13 instances of one thing under two
+  names, each resolved by its context, and 5 of one word for two things. Of those, 3 can mislead,
+  and all 3 are labels naming two things; 1 sits in the 10 files written before the measuring
+  session. No rule ships, since it would rewrite 13 harmless synonyms to reach one label clash.
+  The reopen bar is label collisions in more than 1 of 10 independently written task files.
+- **WI-19 closed** as measured and not adopted. The paid step, a seeded axis-B fixture, was not run.
+- **`/framework-upgrade` §3.1 renamed "Base check".** The measurement found two steps titled
+  "Rollback point", §0 and §3.1. The first takes the base and keeps the title. The second checks
+  HEAD and the declared paths against it, and now says so. `tests/test_git_rollback_contract.py`
+  follows the new label.
+
 ### **v3.32.0 — framework-upgrade rolls back through git, and writes no copy outside it**
 
 `/framework-upgrade` kept two rollback mechanisms. Git held every path an upgrade edits, and §3.1

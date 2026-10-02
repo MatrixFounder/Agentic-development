@@ -134,7 +134,7 @@ carry the §11 caveat although the corpus ships.
 | Active voice; the passive only in description | 8.1% of sentences carry a passive with no actor; 11.4% in the newest 15 | not adopted (3) |
 | A noun cluster holds at most three nouns | not measured: it needs a part-of-speech tagger | not measured (4) |
 | Only words from the approved dictionary | not measured | not adopted (5) |
-| One word keeps one meaning, and one meaning keeps one word | not measured; one instance in this skill, item 6 | candidate, not adopted (6) |
+| One word keeps one meaning, and one meaning keeps one word | 18 instances over 12 task files; 3 can mislead | not adopted (6) |
 
 #### 4.2.1 Why each verdict
 
@@ -153,10 +153,17 @@ carry the §11 caveat although the corpus ships.
    states its tests as properties, and a word list is a backstop to them. This skill also never
    changes a document's language.
 6. **One term per meaning.** No test reaches it. T3 reaches a coined metaphor, not a standard word
-   used for two things. This skill carried one instance: `One claim` named both T4 and rule 1 until
-   TASK 106 renamed T4. A spelling pair is a weaker second case. The T2 row says `artefact` for what
-   the rest of the skill calls an `artifact`. §6 rule 4 bars a rule until a measurement exists, and
-   none does.
+   used for two things. Measured 2026-10-02 by reading the 12 newest task files, TASK 096 to 107
+   (WI-19):
+   - 13 instances of one thing under two names, every one resolved by its context;
+   - 5 instances of one word for two things, 3 of which can mislead.
+
+   The 3 share one shape, a label naming two things. TASK 102 uses `rule 5` for a register rule
+   and for a §6 maintenance rule in one paragraph. TASK 106 sets review items `Р1` (Cyrillic)
+   beside requirements `R1` (Latin). TASK 107 gives two workflow steps the title `Rollback point`.
+   Of the 10 files written before the measuring session, 1 holds such a case. A rule against
+   synonyms would rewrite 13 harmless pairs to reach it, so none ships. After the measurement, the
+   workflow's §3.1 was renamed `Base check`; §0 keeps `Rollback point`.
 
 #### 4.2.2 What would reopen this
 
@@ -170,8 +177,8 @@ defect rate, read per row.
   a second topic inside one.
 - **Sentence bound.** A shipped corpus in which sentences of 26 to 35 words carry two claims on
   reading, as §12.2 read the sentences over the bound.
-- **One term per meaning.** A seeded fixture on axis B (§12.4) and a sample of the newest task
-  files.
+- **One term per meaning.** Label collisions, read the same way, in more than 1 of 10 task files
+  written outside the measuring session. A synonym alone does not count.
 
 Then §6 rule 2 applies: the contract is amended first, the lexicon second.
 

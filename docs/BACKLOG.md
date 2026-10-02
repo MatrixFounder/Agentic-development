@@ -73,13 +73,13 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-19** [Measure term consistency before the authoring contract gains a rule for it](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md) — effort `M`, status `open`, opened 2026-10-02
 - **WI-16** [A claim about code state carries no required referent](backlog/wi-16-state-claims-carry-no-required-referent.md) — effort `M`, status `open`, opened 2026-08-05
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 
 
 ## Closed
 
+- **WI-19** [Measure term consistency before the authoring contract gains a rule for it](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (measured, not adopted): 12 task files, 13 synonyms all resolvable, 3 of 5 homonyms misleading, all label collisions; 1 in the 10 independent files
 - **WI-20** [framework-upgrade keeps .bak copies beside git; roll back through git instead](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (TASK 107): §0 clean tree + base commit, §5 `git restore`; verificator, template, examples and WORKFLOWS.md follow; a unittest pins it
 - **WI-18** [The reference resolver is invoked by nothing](backlog/wi-18-the-reference-resolver-is-invoked-by-nothing.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 104): 4 checklists + 7 workflows + a wiring test that partitions every workflow file; the workflow half does not reach consumers
 - **WI-17** [A positional reference carries no referent](backlog/wi-17-positional-references-carry-no-referent.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 103): the referent layer ships; no corpus migrated and no workflow wired, both stated

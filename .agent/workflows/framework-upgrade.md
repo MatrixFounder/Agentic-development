@@ -75,7 +75,7 @@ therefore taken here, before §1. Git holds every state this run can return to.
      with the verificator's outstanding findings — do not enter §3 Execution.
 
 ## 3. Execution (Atomic Updates)
-1. **Rollback point**:
+1. **Base check**:
    - `git rev-parse HEAD` still equals the base recorded in §0. The run commits nothing; the
      operator commits the upgrade after §4.5.
    - Every path the PLAN edits passes `git ls-files --error-unmatch -- <path>`. For every path the

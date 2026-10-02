@@ -73,7 +73,6 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-20** [framework-upgrade keeps .bak copies beside git; roll back through git instead](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md) — effort `M`, status `open`, opened 2026-10-02
 - **WI-19** [Measure term consistency before the authoring contract gains a rule for it](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md) — effort `M`, status `open`, opened 2026-10-02
 - **WI-16** [A claim about code state carries no required referent](backlog/wi-16-state-claims-carry-no-required-referent.md) — effort `M`, status `open`, opened 2026-08-05
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
@@ -81,6 +80,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-20** [framework-upgrade keeps .bak copies beside git; roll back through git instead](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (TASK 107): §0 clean tree + base commit, §5 `git restore`; verificator, template, examples and WORKFLOWS.md follow; a unittest pins it
 - **WI-18** [The reference resolver is invoked by nothing](backlog/wi-18-the-reference-resolver-is-invoked-by-nothing.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 104): 4 checklists + 7 workflows + a wiring test that partitions every workflow file; the workflow half does not reach consumers
 - **WI-17** [A positional reference carries no referent](backlog/wi-17-positional-references-carry-no-referent.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 103): the referent layer ships; no corpus migrated and no workflow wired, both stated
 - **WI-15** [`SKILL.md` §6 has no rule for narrowing a rule](backlog/wi-15-skill-md-6-has-no-rule-for-narrowing-a-rule.md) — effort `S`, status `done`, opened 2026-08-05 · **done 2026-08-05** (TASK 102): §6 gains rule 5 — the three items a narrowing produces

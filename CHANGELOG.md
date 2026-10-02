@@ -16,6 +16,48 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.32.0 — framework-upgrade rolls back through git, and writes no copy outside it**
+
+`/framework-upgrade` kept two rollback mechanisms. Git held every path an upgrade edits, and §3.1
+also copied each one to `.agent/archive/<name>.bak`. Measured on 2026-10-02: 60 copies, 1.7M, each
+one's content already among git's objects. Copies were named by basename, so two skills'
+`SKILL.md` could collide, and they kept text the tree had since changed. This clone's copies were
+deleted before the task began; a pull deletes nothing (TASK 107, WI-20).
+
+#### Changed
+
+- **`/framework-upgrade` §0, new: the rollback point, before any edit.** The run happens in the
+  framework repository, from its top level; a tracked-path check stops it inside an installed
+  project. `git status --porcelain --untracked-files=all` prints
+  nothing; a dirty tree stops the run until the operator commits or runs `git stash -u`. The run
+  never stashes, commits or discards the operator's work. The full `git rev-parse HEAD` hash is
+  persisted at once and later carried in the audit header as `Base revision`.
+- **§3.1 "Rollback point" replaces "Backup".** HEAD stays at the base, and the operator commits
+  after §4.5. The PLAN declares every path it edits or creates, and §3.1 checks each one. A PLAN
+  that needs an untracked or ignored path stops the run, and `git add -f` is not used. No copy is
+  written outside version control.
+- **§5 lists before it restores.** It recomputes the top level and checks HEAD against the base.
+  `git status` lists every change, and an entry the PLAN does not declare stops the run. The list
+  is recorded beside the base and shown to the operator; after the reply it is taken again. Then
+  declared new files are removed with `rm -- "${top:?}/…"`, declared tracked paths are restored by
+  name, and a final `git status` must show only the audit. `git reset --hard`, `git clean`,
+  `git checkout` and `git stash` are not used. A committed upgrade is reverted by the operator,
+  with `-m 1` for a merge.
+- **`skill-self-improvement-verificator` v1.0 → v1.1.** Mode B check 2 asks for the base commit,
+  not a copy step. Its audit template and worked examples carry a `Base revision` field and ask the
+  same question, as does `System/Docs/WORKFLOWS.md` §5.
+
+#### Added
+
+- **`tests/test_git_rollback_contract.py`**, in the curated suite CI runs. Four cases:
+  - §0, §2.2, §3.1, §4.5 and §5 carry each control, and §5 keeps its step order;
+  - no instruction file names `.bak`, `.orig`, `.backup`, `.old`, `.agent/archive` or
+    `.agent/backups`, prompts, command wrappers and vendor agent files included;
+  - Mode B check 2 names the base commit;
+  - the workflow names a command that acts on unnamed paths only in a sentence forbidding it.
+
+  41 executed mutations behave as stated: 39 fail the module, and two reflows pass.
+
 ### **v3.31.2 — artifact-formalizer: tests map to rules, and ASD-STE100 is on record**
 
 The operator asked whether ASD-STE100 belongs in `artifact-formalizer`. Measured over

@@ -89,9 +89,8 @@ class TestProductSkills(unittest.TestCase):
 #: discovery is deliberately avoided: several `tests/test_*.py` files use pytest fixtures
 #: and would error under the unittest loader.
 #:
-#: This list is NOT the CI gate — `.github/workflows/framework-gates.yml` names its own,
-#: larger set. It exists so the modules most likely to be run locally before a commit are
-#: not invisible to this runner.
+#: CI runs this runner (`.github/workflows/framework-gates.yml`, the curated unittest step), so
+#: a module listed here is a CI gate. The workflow's pytest step names a separate, larger set.
 CURATED_UNITTEST_MODULES = (
     "test_positional_refs",
     "test_scratch_hygiene",
@@ -100,6 +99,8 @@ CURATED_UNITTEST_MODULES = (
     # fails silently: the role loads nothing and continues. 108 such references existed
     # across 25 files before this gate.
     "test_skill_refs",
+    # TASK 107 — /framework-upgrade rolls back through git; no instruction asks for a copy.
+    "test_git_rollback_contract",
 )
 
 

@@ -30,9 +30,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 #: the site set from disk rather than from this file's own lists.
 CONTRACT_TOKEN = "NOT RUN"
 
-#: Roots scanned for carriers. `.agent/archive/` holds `.bak` rollback copies of these same
-#: files and is excluded by `_is_scanned` — counting a backup as a site makes the partition
-#: fail on a rollback that worked.
+#: Roots scanned for carriers. `.agent/archive/` is excluded by `_is_scanned`: runs before
+#: TASK 107 wrote `.bak` rollback copies of these same files there, and a clone may still hold
+#: them. Counting a copy as a site makes the partition fail on a rollback that worked.
 SCAN_ROOTS = (
     ".agent",
     ".claude/agents",

@@ -2,7 +2,7 @@
 name: skill-self-improvement-verificator
 description: Meta-skill for verifying Framework Upgrades (Gemini Self-Improvement).
 tier: 3
-version: 1.0
+version: 1.1
 ---
 
 # Skill: Self-Improvement Verificator
@@ -32,7 +32,8 @@ This skill operates in two distinct modes depending on the current Stage.
 
 **Checklist**:
 1. [ ] **Verification Step**: Is there an explicit step to run `pytest` or `validation_scripts`?
-2. [ ] **Rollback**: Is there a backup step (e.g., `cp GEMINI.md GEMINI.bak`)?
+2. [ ] **Rollback**: Does the plan record the base commit, and does every edited or created path
+   return to it? The PLAN declares every path it edits or creates; `framework-upgrade` §5 reads it.
 3. [ ] **Atomic Updates**: Are changes broken down into safe, verifiable chunks?
 4. [ ] **Test Coverage**: Does the plan include adding/updating tests for new framework features?
 

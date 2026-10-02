@@ -12,6 +12,7 @@
 **Date:** 2026-02-07
 **Auditor:** Self-Improvement Verificator
 **Target:** `docs/TASK.md`
+**Base revision:** `<40-character hash>`
 **Status:** **APPROVED**
 
 ## 1. Compliance Checklist
@@ -22,7 +23,7 @@
 | **Tier Protection** | ✅ Pass | No core skills deleted. |
 | **Documentation** | ✅ Pass | Includes update to `SKILLS.md`. |
 | **Atomicity** | ✅ Pass | Broken down into Init -> Implement -> Test steps. |
-| **Rollback Plan** | ✅ Pass | Backup of `.agent/skills` specified. |
+| **Rollback Plan** | ✅ Pass | Base commit recorded on a clean tree; the new skill's files are declared as created. |
 
 ## 2. Risk Analysis
 - **Risk 1:** New skill might overlap with `brainstorming`. *Mitigation: Explicit "Use When" clause added.*
@@ -44,6 +45,7 @@
 **Date:** 2026-02-07
 **Auditor:** Self-Improvement Verificator
 **Target:** `docs/PLAN.md`
+**Base revision:** none recorded
 **Status:** **BLOCKED**
 
 ## 1. Compliance Checklist
@@ -54,7 +56,7 @@
 | **Tier Protection** | ❌ Fail | **CRITICAL:** Plan removes `core-principles` from TIER 0 loading list! |
 | **Documentation** | ❌ Fail | No updates to `ORCHESTRATOR.md` planned. |
 | **Atomicity** | ❌ Fail | Single step "Rewrite prompt" is too large. |
-| **Rollback Plan** | ❌ Fail | No backup of `01_orchestrator.md` mentioned. |
+| **Rollback Plan** | ❌ Fail | No base commit; an edit to `01_orchestrator.md` predates the run. |
 
 ## 2. Risk Analysis
 - **Risk 1:** Removing `core-principles` will cause massive hallucinations.
@@ -66,7 +68,8 @@
 **Required Actions:**
 1. **Restore TIER 0**: Do not touch `core-principles`.
 2. **Add Documentation**: Include `System/Docs` updates.
-3. **Backup**: Add `cp 01_orchestrator.md .agent/archive/` step.
+3. **Rollback point**: STOP. §0 was skipped, so the run's edits and an earlier edit to
+   `01_orchestrator.md` share the tree. The operator separates them; the run restarts at §0.
 
 ---
 
@@ -82,6 +85,7 @@
 **Date:** 2026-02-07
 **Auditor:** Self-Improvement Verificator
 **Target:** `docs/PLAN.md`
+**Base revision:** `<40-character hash>`
 **Status:** **APPROVED (WITH OVERRIDE)**
 
 ## 0. Emergency Bypass

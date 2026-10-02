@@ -3,6 +3,7 @@
 **Date:** {DATE}
 **Auditor:** Self-Improvement Verificator
 **Target:** `docs/TASK.md` | `docs/PLAN.md` (Choose one)
+**Base revision:** `{40-character hash from framework-upgrade §0}`
 **Status:** **APPROVED** | **BLOCKED**
 
 ## 0. Emergency Bypass
@@ -22,7 +23,7 @@
 | **Tier Protection** | [ ] Pass / [ ] Fail | *Are Tier 0 skills respected?* |
 | **Documentation** | [ ] Pass / [ ] Fail | *Are Docs/CHANGELOG updates included?* |
 | **Atomicity** | [ ] Pass / [ ] Fail | *Is the plan granular enough?* |
-| **Rollback Plan** | [ ] Pass / [ ] Fail | *Is there a clear backup strategy?* |
+| **Rollback Plan** | [ ] Pass / [ ] Fail | *Is the base commit recorded, and does every edited or created path return to it?* |
 
 ## 2. Risk Analysis
 *Identify potential regressions or side effects.*

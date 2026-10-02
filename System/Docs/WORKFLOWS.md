@@ -448,7 +448,10 @@ graph TD
 1. **Analysis Gate:** Checks `docs/TASK.md` for proper TIER usage and documentation updates.
 2. **Planning Gate:** Checks `docs/PLAN.md` for atomicity and rollback steps.
 3. **Execution Guard:** Changes are applied with the Self-Improvement Verificator active.
-4. **Rollback:** Automatic backup of core files to `.agent/archive/` before changes.
+4. **Rollback:** The run starts on a clean tree and records its base commit. Fallback lists every
+   change and stops on any path the PLAN does not declare. Once the operator confirms, it removes
+   the declared created files, restores the declared paths with `git restore --source=<base>`, and
+   checks that only the audit remains. No copy is written outside version control.
 
 ### ✅ Recommended Strategy
 For critical system updates, follow this **Hybrid Verification Loop**:

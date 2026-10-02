@@ -20,10 +20,10 @@ __pycache__/
 *.tmp.*
 *.md.tmp*
 
-# Rollback backups written by /framework-upgrade before it edits core files
-# (`.agent/archive/<file>.bak`). They are local recovery state for one run — the
-# tracked copy of every one of them is the git history itself. Untracked and
-# un-ignored, they left `git status` dirty after every upgrade.
+# Rollback copies that /framework-upgrade wrote before TASK 107
+# (`.agent/archive/<file>.bak`). The workflow now rolls back through git and writes
+# none. The entry stays so a clone still holding copies from an earlier run keeps a
+# clean `git status`.
 .agent/archive/
 
 # Test scratch space. Most tests write to system temp, but a few scripts under test

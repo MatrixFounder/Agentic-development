@@ -1,135 +1,136 @@
-# PLAN 106 — artifact-formalizer: a test-to-rule map, one name per check, and ASD-STE100 on record
+# PLAN 107 — framework-upgrade rolls back through git, and writes no copy outside it
 
-**TASK:** [docs/TASK.md](TASK.md) · **Covers:** R1–R8 · **Acceptance:** A1–A9
+**TASK:** [docs/TASK.md](TASK.md) · **Covers:** R1–R9 · **Acceptance:** A1–A8
 
 ## Sequencing rule
 
-Seven clusters in order. Cluster A backs up. Cluster B rewrites the pin and leaves it **failing** on
-the base tree, which states 59 in two sites. That is Stub-First for a task whose product is text:
-the test is the executable form of R1. Cluster C corrects the counts and is the first point where
-the pin passes. Clusters D and E edit the contract and the baseline. Cluster F writes the release,
-and Cluster G runs every gate.
+Five clusters in order. Cluster A writes the pin and leaves it **failing** on the base tree, which
+still instructs copies. Cluster B edits the workflow, Cluster C its three readers, and Cluster D the
+two comments. Cluster D is the first point where the pin passes. Cluster E closes WI-20, writes
+the release and runs every gate.
 
 | Order | Cluster | Files | Covers |
 | :--- | :--- | :--- | :--- |
-| A | Backup | `.agent/archive/` | rollback |
-| B | The pin, failing | `evals/selftest_evals.py`, `evals/README.md` | R2 |
-| C | The counts | `SKILL.md`, `System/Docs/SKILLS.md` | R1 |
-| D | Map, label, pointer | `references/authoring-contract.md`, `SKILL.md` | R3, R4, R5 |
-| E | ASD-STE100 record | `references/measurement-baseline.md` | R6 |
-| F | Release | `SKILL.md`, `CHANGELOG.md`, `CHANGELOG.ru.md` | R7 |
-| G | Gates | `docs/reviews/framework-audit-106.md` | R8, A1–A9 |
+| A | The pin, failing | `tests/test_git_rollback_contract.py`, `tests/run_tests.py` | R8 |
+| B | The workflow | `.agent/workflows/framework-upgrade.md` | R1, R2, R3 |
+| C | Its readers | verificator `SKILL.md`, `assets/audit_template.md`, `examples/audit_examples.md`, `System/Docs/WORKFLOWS.md` | R4, R5, R6 |
+| D | Two comments | `.gitignore`, `tests/test_frozen_tree_contract.py` | R7 |
+| E | Closure, release, gates | WI-20, `docs/BACKLOG.md`, both changelogs, `docs/reviews/framework-audit-107.md` | R9, A1–A8 |
 
-Paths under `evals/`, `references/` and the bare `SKILL.md` are relative to
-`.agent/skills/artifact-formalizer/`.
+The verificator lives at `.agent/skills/skill-self-improvement-verificator/`.
 
-**Declared file set (A7).** Nine edited files: the eight in the table above that sit outside
-`docs/`, plus `docs/reviews/framework-audit-106.md`. Also present in the diff: `docs/TASK.md`,
-`docs/PLAN.md`, and the TASK 105 pair archived to `docs/tasks/` and `docs/plans/`. Cluster G may add
-`REFERENT_MOVED` repairs from the resolver's `--fix`. Each repair is listed in the audit.
+**Declared paths (A7, `framework-upgrade` §2.2).** Edited:
 
-**Architecture.** `docs/ARCHITECTURE.md:319` `the six per-sentence tests and the licensed statement
-forms` stays true. No architecture edit.
+- `.agent/workflows/framework-upgrade.md`
+- `.agent/skills/skill-self-improvement-verificator/SKILL.md`
+- `.agent/skills/skill-self-improvement-verificator/assets/audit_template.md`
+- `.agent/skills/skill-self-improvement-verificator/examples/audit_examples.md`
+- `System/Docs/WORKFLOWS.md`
+- `.gitignore`
+- `tests/test_frozen_tree_contract.py`
+- `tests/run_tests.py`
+- `docs/backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md`
+- `docs/BACKLOG.md`
+- `CHANGELOG.md`
+- `CHANGELOG.ru.md`
 
-**Rollback.** Every edited path is tracked, and no cluster creates or deletes a skill file.
-Reverting is `git checkout --` on the nine edited paths, or a copy back from `.agent/archive/`.
-The TASK 105 archive move reverts with `git mv` back to `docs/TASK.md` and `docs/PLAN.md`.
+Created:
 
-## Cluster A — backup
+- `tests/test_git_rollback_contract.py`
+- `docs/reviews/framework-audit-107.md`
 
-- [x] A1. `mkdir -p .agent/archive`.
-- [x] A2. Copy the bootstrap files present: `for f in CLAUDE.md AGENTS.md GEMINI.md; do [ -f "$f" ]
-      && cp "$f" ".agent/archive/$f.bak"; done`. None is edited; the copies serve the fallback.
-- [x] A3. Copy each of the eight non-`docs/` files to `.agent/archive/<basename>.bak`.
-      `SKILL.md` and `System/Docs/SKILLS.md` share no basename, so no copy overwrites another.
+The run's own `docs/TASK.md`, `docs/PLAN.md` and the TASK 106 archive pair are declared by §5.
 
-## Cluster B — the pin, failing (R2)
+**Rollback point.** Base `687d0466e807585b994f2faa479dbbf17024dfb6`, clean at the start of the
+run. No copy is written. Fallback follows `framework-upgrade` §5 over the paths above.
 
-- [x] B1. Rewrite `t_count_pin()` in `evals/selftest_evals.py`. Keep one `check()` call per run,
-      named `TC-EV-13b`.
-      1. Sites: `evals/README.md`, `SKILL.md`, `System/Docs/SKILLS.md`.
-      2. Pattern: every `<n> case(s)` in the span from a `selftest_evals.py` mention to the next
-         full stop. Final form after review: TASK D7.
-      3. A missing `System/Docs/SKILLS.md` is skipped only where `System/Docs/` is absent.
-      4. Fails when a present site states no count, or any count differs from `EXPECTED_CASES`.
-      5. The detail names each site with the counts it found.
-- [x] B2. Update the `EXPECTED_CASES` comment: the same number is read from three files.
-- [x] B3. `evals/README.md`, the sentence on `TC-EV-13b`: it reads the number from this file,
-      `SKILL.md` and `System/Docs/SKILLS.md`.
-- [x] B4. Run `python3 evals/selftest_evals.py`. Expected: 77 of 78, exit 1. `TC-EV-13b` names
-      `SKILL.md` [59] and `SKILLS.md` [59].
+## Cluster A — the pin, failing (R8)
 
-**Why the full stop bounds the pattern.** `SKILLS.md` states `192-case battery` and the eval count
-in one list item. The `192-case` claim precedes the `selftest_evals.py` mention, so the anchored
-pattern cannot reach it. Every eval count in the three sites follows its mention within one
-sentence.
+- [x] A1. Write `tests/test_git_rollback_contract.py`, pure `unittest`. The first version held
+      three cases; the review rounds grew it to four (TASK R8, D6, D8, D9).
+      1. `TC-01` — §0, §2.2, §3.1, §4.5 and §5 carry their controls; §5 keeps its order.
+      2. `TC-02` — no instruction file names a copy. The failure names each file and line.
+      3. `TC-03` — the verificator's Mode B check 2 names the base commit.
+      4. `TC-04` — commands that act on unnamed paths appear only in prohibitions.
+- [x] A2. Add `"test_git_rollback_contract"` to `CURATED_UNITTEST_MODULES` in `tests/run_tests.py`.
+- [x] A3. Run the module. Expected: `TC-01`, `TC-02` and `TC-03` fail on the base tree.
 
-## Cluster C — the counts (R1)
+**Why `TC-02` reads instruction files only.** It reads markdown, the YAML rule files, and the
+vendor TOML and JSON agent files. Scripts such as the installer write their own snapshots under
+`.agent/backups/`, which TASK §7 leaves out of scope.
 
-- [x] C1. `SKILL.md` §8 "Behavioural evals": `59 cases` → `78 cases`.
-- [x] C2. `System/Docs/SKILLS.md` "Mode C" item: `runs 59 cases` → `runs 78 cases`.
-- [x] C3. Run `python3 evals/selftest_evals.py`. Expected: 78 of 78, exit 0.
-- [x] C4. Execute the A5 mutations from TASK §4, one at a time. Each one: apply, run, record
-      the `TC-EV-13b` detail, revert with the `.bak` or `git checkout --`, re-run green.
+## Cluster B — the workflow (R1, R2, R3)
 
-## Cluster D — map, label, pointer (R3, R4, R5)
+- [x] B1. `framework-upgrade.md`: insert `## 0. Rollback point (before any edit)` above §1, per TASK
+      R1. It names the audit header as where the base is recorded.
+- [x] B2. Replace §3.1 "Backup" with "Rollback point", per TASK R2.
+- [x] B3. Replace §5 "Fallback", per TASK R3.
+- [x] B4. Keep both `<!-- loop:… -->` sites and the frontmatter unchanged; run
+      `System/scripts/check_loop_contract.py`. Expected: 0 errors.
+- [x] B5. Run the pin. Expected: `TC-01` passes; `TC-02` still fails on the verificator files and
+      `WORKFLOWS.md`.
 
-- [x] D1. `references/authoring-contract.md`, the six-test table: add a `§5.5 rule` column after
-      `Test`. Values for T1–T6: 2, 4, 6, 3, 5, 1.
-- [x] D2. Same file, directly under the table: one paragraph. A finding names its §5.5 rule; the
-      column maps it to the test. `cell_width` and `cell_sentences` carry §5.1 and have no row.
-- [x] D3. Same table, T4 row: `**One claim**` → `**Reasoning separated**`.
-- [x] D4. `SKILL.md` §6 rule 1: add one sentence naming the column D1 adds.
-- [x] D5. Run `grep -rn "One claim" .agent/skills`. Expected: three lines, all rule 1 —
-      `SKILL.md`, `references/formalization-guide.md`, `documentation-standards/SKILL.md`.
-      Cluster E adds a fourth: the §4.2 record of the rename, which is history and not a label.
-- [x] D6. Run `scan_register.py` over `SKILL.md` and `references/*.md`. Expected: 0 `warn`.
+## Cluster C — the readers (R4, R5, R6)
 
-## Cluster E — the ASD-STE100 record (R6)
+- [x] C1. Verificator `SKILL.md` Mode B check 2: TASK R4's question. Frontmatter `version: 1.1`.
+- [x] C2. `assets/audit_template.md`: the Rollback Plan row asks the same question.
+- [x] C3. `examples/audit_examples.md`: each header carries `Base revision`; the good row declares
+      its created files; the bad row's required action stops the run (final text: TASK D6, D8).
+- [x] C4. `System/Docs/WORKFLOWS.md` §5 Safety Protocol item 4: TASK R6.
+- [x] C5. Run the pin. Expected: every case passes.
 
-- [x] E1. Re-run the measurement over `docs/tasks/` with the scanner's `mask()`, `prose_blocks()`
-      and `sentences()`. Record the figures and the base revision.
-- [x] E2. Write `### 4.2` in `references/measurement-baseline.md`, after §4.1 and before `## 5.`.
-      Content per TASK §2.1 R6, items 1–5.
-- [x] E3. Table cells stay one clause under 120 characters; reasons go below the table.
-- [x] E4. The text states no `<n> cases`, and no verdict cell begins with `adopted`.
-- [x] E5. Run `python3 scripts/selftest_scan.py`. Expected: 192 of 192 — `TC-SHIP-06`, `TC-SHIP-08`,
-      `TC-SHIP-10` and `TC-SHIP-11` read this file.
+## Cluster D — the two comments (R7)
 
-## Cluster F — release (R7)
+- [x] D1. `.gitignore`: the comment above `.agent/archive/` states that no run writes copies now,
+      and that the entry stays for clones holding older ones.
+- [x] D2. `tests/test_frozen_tree_contract.py`: the comment above `SCAN_ROOTS`, the same way.
+      `_is_scanned` is not edited.
+- [x] D3. Run `python3 -m pytest tests/test_frozen_tree_contract.py -q`. Expected: pass.
 
-- [x] F1. `SKILL.md` frontmatter: `version: 2.1` → `version: 2.2`.
-- [x] F2. `CHANGELOG.md`: a `v3.31.2` entry above `v3.31.1`, sections Fixed and Changed.
-- [x] F3. `CHANGELOG.ru.md`: the same entry in Russian, at the same position.
-- [x] F4. Run `scan_register.py` over both changelogs, compared against their `.bak`. Expected: no
-      new `warn` in the new entry.
+## Cluster E — closure, release, gates (R9, A1–A8)
 
-## Cluster G — gates (R8, A1–A9)
+- [x] E1. Execute the A2 mutations from TASK §4, one at a time; the audit records each outcome.
+- [x] E2. Close WI-20: `status: done`, `resolved_at`, `resolved_by: TASK 107`, a resolution
+      blockquote, and the index line moved to `## Closed` in `docs/BACKLOG.md`.
+- [x] E3. `CHANGELOG.md` and `CHANGELOG.ru.md`: a `v3.32.0` entry above `v3.31.2`.
+- [x] E4. `scan_register.py` over every edited markdown file → no new `warn` (A6).
+- [x] E5. `validate_skills.py`, `tests/run_tests.py`, `pytest tests/`, `check_loop_contract.py`,
+      `check_prompt_references.py`, `security_lint.py`, `generate_wrappers.py --check` (A3–A5).
+- [x] E6. CI living-corpus reference check, then `--targets-changed --fix` (A8, workflow §4.5).
+- [x] E7. `git status --short` → the declared file set (A7).
+- [ ] E8. Review per the Self-Improvement Mode rule: `code-reviewer` and `security-auditor` in
+      parallel, over a frozen tree with its fingerprint.
+- [ ] E9. Fill the audit's evidence table.
 
-- [x] G1. `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py` → 192 of 192 (A1).
-- [x] G2. `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py` → 78 of 78 (A2).
-- [x] G3. `scan_register.py --probe` → 18 of 18 live (A3).
-- [x] G4. `scan_register.py` over `SKILL.md`, `references/*.md`, `docs/TASK.md` → 0 `warn` (A4).
-- [x] G5. `grep -rn "One claim" .agent/skills` → the three rule-1 lines and the §4.2 record (A6).
-- [x] G6. `git status --short` and `git diff --stat` → only the declared file set (A7).
-- [x] G7. `check_positional_refs.py --targets-changed --fix` → every repair listed in the audit
-      (A8).
-- [x] G8. `validate_skills.py --root . --quiet`, `PYTHONPATH=. python3 tests/run_tests.py`,
-      `python3 -m pytest tests/ -q` → all pass (A9).
-- [x] G9. CI parity: `check_prompt_references.py --root .`, `security_lint.py --root .`,
-      `.agent/skills/skill-parallel-orchestration/scripts/generate_wrappers.py --check`.
-- [x] G10. Fill the audit's execution-evidence table with each command's printed result.
-- [x] G11. Review per the Self-Improvement Mode rule: `code-reviewer` and `security-auditor` over
-      the diff, in parallel.
+## Review fix loop (round 1 → round 2)
 
-## Review fix loop
+Run after round 1 returned. TASK D6 lists what was fixed and D7 what was left.
 
-Run after G11 returned, with the tree no longer frozen. TASK D7 lists what was fixed and D8 what
-was deferred.
+- [x] F1. Workflow §0, §3.1 and §5 rewritten per TASK R1–R3 as amended.
+- [x] F2. Verificator check 2, template and examples: `Base revision` field; the bad example
+      stops the run.
+- [x] F3. `WORKFLOWS.md` item 4: the operator confirms; only declared files are removed.
+- [x] F4. The pin: sections read separately, prompt and wrapper roots scanned, tokens widened,
+      `TC-04` added. Eleven mutations executed (TASK A2).
+- [x] F5. TASK, both changelogs and the WI-20 resolution re-stated; all scan at 0 warn.
+- [x] F6. Every gate re-run, then round 2 over a new fingerprint.
 
-- [x] R1. `TC-EV-13b`: span-wide counts, `(?:\s+|-)` between numeral and `cases`, no `1,078` alias,
-      registry required where `System/Docs/` exists. Eight mutations re-executed (TASK A5).
-- [x] R2. `measurement-baseline.md` §4.2: re-measured with `detect_lang()`; reopen bar rewritten as
-      a defect rate; source link pinned to `7d4a135`; sub-headings 4.2.1 and 4.2.2.
-- [x] R3. Contract paragraph and CHANGELOG entries corrected; both changelogs re-scanned.
-- [x] R4. Every gate in Cluster G re-run; the audit records the final figures.
+## Review fix loop (round 2 → round 3)
+
+TASK D8 lists what was fixed.
+
+- [x] G1. §5 lists, checks, shows and waits before it restores; it restores by name.
+- [x] G2. §0, §2.2, §3.1 and §4.5 carry the checks the declared set needs.
+- [x] G3. The pin checks each §5 control and its order; `TC-04` reads the whole workflow.
+- [x] G4. 24 mutations executed; the audit lists each outcome.
+- [x] G5. Every gate re-run; round 3 checks that the round-2 findings are closed.
+
+## Review fix loop (round 3)
+
+TASK D9 lists what was fixed.
+
+- [x] H1. §5 sets `top` again, removes before it restores, handles `R` and `C`, and ends on a
+      status check; the confirmed list is recorded and taken again.
+- [x] H2. §2.2 asks for full paths; §3.1 rejects `.git`, `..` and absolute paths.
+- [x] H3. The pin pins the new sentences and catches more destructive spellings; 41 mutations.
+- [x] H4. Every gate re-run; Retro.

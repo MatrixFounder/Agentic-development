@@ -1,4 +1,4 @@
-# TASK 106 — artifact-formalizer: a test-to-rule map, one name per check, and ASD-STE100 on record
+# TASK 107 — framework-upgrade rolls back through git, and writes no copy outside it
 
 <!-- contract:meta -->
 
@@ -6,54 +6,39 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 106 |
-| Slug | formalizer-term-map-and-ste100 |
+| Task ID | 107 |
+| Slug | framework-upgrade-git-rollback |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | Operator review 2026-10-02: "should ASD-STE100 be built into artifact-formalizer?" |
-| Operator decision | Items Р1, Р2, Р3 and Р5 of that review; Р4 (a terminology rule) deferred |
-| Depends on | TASK 101 (eval battery), TASK 102 (§6 rule 5) |
-| Archive name | `task-106-formalizer-term-map-and-ste100.md` |
+| Source | [WI-20](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md), option 1 |
+| Operator decision | 2026-10-02: copies outside version control are not needed in principle |
+| Base revision | `687d0466e807585b994f2faa479dbbf17024dfb6` |
+| Closes | WI-20 |
+| Archive name | `task-107-framework-upgrade-git-rollback.md` |
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-Three defects and one missing record, all found while assessing ASD-STE100 against the skill.
+`/framework-upgrade` carries two rollback mechanisms. Git holds every path an upgrade edits.
+§3.1 also copies the bootstrap files and every edited file to `.agent/archive/<name>.bak`, and
+§5 restores from those copies.
 
-**P1 — the eval-battery size is stated wrong in two documents.**
-`evals/selftest_evals.py` pins `EXPECTED_CASES = 78`. Two documents state 59:
+**What the copies cost, measured 2026-10-02.**
 
-- `.agent/skills/artifact-formalizer/SKILL.md:263@5b96f01` `` `evals/selftest_evals.py` — 59 cases ``
-- `System/Docs/SKILLS.md:94@5b96f01` `runs 59 cases`
+- 60 copies, 1.7M, accumulated in `.agent/archive/`. Each one's content was found among git's
+  objects. The operator had them deleted on that basis before this task's base was taken.
+- Copies are named by basename, so two skills' `SKILL.md` could collide. TASK 106 wrote
+  `SKILL.md.bak` without checking whether a copy of that name existed.
+- A copy keeps text the tree has since changed. A repository grep for the old T4 label found it
+  in two copies after TASK 106.
 
-Commit `e737c08` moved the battery from 59 to 78 and updated `evals/README.md` only.
+**Three readers repeat the copy rule.**
 
-**Why no gate caught it.** `TC-SHIP-08` exempts every claim naming `selftest_evals` by design.
-`TC-EV-13b` reads `evals/README.md` alone, and asserts only that the substring `78` occurs in it.
-
-**P2 — the two numberings of the six checks have no map.**
-`references/authoring-contract.md` numbers the checks as tests T1–T6. The scanner, the guide and
-`documentation-standards` §5.5 number them as rules 1–6. The two orders differ:
-
-| Test | Rule |
-| :--- | :--- |
-| T1 Verifiable | 2 |
-| T2 Real subject | 4 |
-| T3 Resolvable referent | 6 |
-| T4 One claim | 3 |
-| T5 Named severity | 5 |
-| T6 Budget | 1 |
-
-A scanner finding names a rule, as `§5.5 r3`. `SKILL.md` §6 rule 1 then asks whether a test T1–T6
-forbids the finding. No document states which test that is.
-
-**P3 — one name labels two different checks.** `One claim` labels T4 in the contract. `One claim
-per sentence` labels rule 1 in three documents. T4 corresponds to rule 3, and rule 1 corresponds to
-T6. A reader matching by name reaches the wrong test.
-
-**P4 — ASD-STE100 has no record in the measurement baseline.** The operator review measured six
-STE100 rules over `docs/tasks/`. `measurement-baseline.md` §4 exists so that a refuted candidate is
-not re-proposed from impression. The figures currently live only in a chat transcript.
+- `skill-self-improvement-verificator` Mode B check 2 asks for a step such as
+  `cp GEMINI.md GEMINI.bak`. A plan that rolls back through git therefore fails the audit as
+  written.
+- The verificator's audit template and its worked examples ask for a "backup strategy".
+- `System/Docs/WORKFLOWS.md` §5 states the rollback as an automatic copy to `.agent/archive/`.
 
 <!-- contract:rtm -->
 
@@ -61,94 +46,121 @@ not re-proposed from impression. The figures currently live only in a chat trans
 
 | ID | Requirement | MVP? | Verified by |
 | :--- | :--- | :--- | :--- |
-| R1 | `SKILL.md` §8 and `System/Docs/SKILLS.md` state the eval-battery size as 78 | Y | A2, A5 |
-| R2 | `TC-EV-13b` asserts every count stated after a `selftest_evals.py` mention equals `EXPECTED_CASES` | Y | A2, A5 |
-| R3 | The contract's test table carries a column naming the §5.5 rule of each test | Y | A4, A6 |
-| R4 | T4 is labelled `Reasoning separated`; `One claim` labels rule 1 only | Y | A4, A6 |
-| R5 | `SKILL.md` §6 rule 1 points to the R3 column | Y | A4 |
-| R6 | `measurement-baseline.md` §4.2 records ASD-STE100 with its figures and verdicts | Y | A1, A4 |
-| R7 | Both changelogs carry the release; the skill's `version` moves 2.1 → 2.2 | Y | A7 |
-| R8 | No rule number, test number, scanner output, threshold or data file changes | Y | A1, A3, A7 |
+| R1 | `framework-upgrade.md` gains §0: a clean tree before the first edit, and a recorded base commit | Y | A1, A2 |
+| R2 | §3.1 states the rollback point and writes no copy outside version control | Y | A1, A2 |
+| R3 | §5 restores from the base commit and removes created paths by name | Y | A1, A2 |
+| R4 | Verificator Mode B check 2 asks for the base commit, not a copy; version 1.0 → 1.1 | Y | A1, A3 |
+| R5 | The audit template and the worked examples ask the same question | Y | A1, A3 |
+| R6 | `System/Docs/WORKFLOWS.md` §5 states the git rollback | Y | A1 |
+| R7 | `.gitignore` and `tests/test_frozen_tree_contract.py` comments state that no run writes copies now | Y | A6 |
+| R8 | A unittest module pins R1–R6 and runs in the curated suite | Y | A1, A2, A4 |
+| R9 | WI-20 is closed, and both changelogs carry the release | Y | A5, A6 |
 
 ### 2.1 Sub-features
 
-**R1 — two sites.**
+**R1 — §0, before §1.**
 
-1. `SKILL.md` §8, the "Behavioural evals" item: `59 cases` → `78 cases`.
-2. `System/Docs/SKILLS.md`, the "Mode C" item: `runs 59 cases` → `runs 78 cases`.
-3. `CHANGELOG.md:692@5b96f01` `evals 59/59` and `CHANGELOG.ru.md:704@5b96f01` `evals 59/59` stay
-   as written: each states what a past release measured (D6).
+1. The run happens in the framework's own repository, from its top level. §0 checks that
+   `.agent/workflows/framework-upgrade.md` is tracked there; an installed project fails the check.
+2. `git status --porcelain --untracked-files=all` exits 0 and prints nothing. Otherwise the run
+   stops; the operator commits or runs `git stash -u`, and the run restarts at §0. The workflow
+   never stashes, commits or discards the operator's work.
+3. The full `git rev-parse HEAD` hash is the base. §0 persists it through `update_state.py` with
+   every required argument and the task in the entry. From §1.3 on, the audit header is the
+   record §5 reads.
 
-**R2 — the pin.**
+**Why §0 and not §3.1.** §1 already edits the tree: it archives the previous TASK and writes the
+new one. A rollback point taken at §3.1 would miss those edits.
 
-1. Sites: `evals/README.md`, `SKILL.md`, `System/Docs/SKILLS.md`.
-   The `evals/README.md` sentence describing `TC-EV-13b` names all three.
-2. A count is every `<n> case(s)` after a `selftest_evals.py` mention, up to the next full stop.
-   The numeral and `cases` may sit on two lines. A numeral continuing another number, as in
-   `1,078`, is not read as a count.
-3. Every count found equals `EXPECTED_CASES`.
-4. A present site with no count fails, since deleting the numeral is the same defect as drift.
-5. An absent `System/Docs/SKILLS.md` is skipped only where `System/Docs/` is absent, as in a
-   vendored copy. In this repository its absence fails.
-6. The existing `TC-EV-13b` call is changed in place, so the battery total stays 78 (D3).
+**R2 — §3.1 "Rollback point".**
 
-**R3 — the column.** Header `§5.5 rule`, values 2, 4, 6, 3, 5, 1 for T1–T6. One paragraph under
-the table states that a finding names the rule and the column maps it to the test. The map lives
-in the contract only (D2).
+1. `git rev-parse HEAD` still equals the recorded base. The run commits nothing; the operator
+   commits after §4.5.
+2. The PLAN declares every path it edits and creates. §2.2 asks for the full repo-relative path
+   of each, one per list item.
+3. Each edited path passes `git ls-files --error-unmatch`; each created path is not ignored; each
+   declared path matches `[A-Za-z0-9._/-]+`, has no `.git` or `..` segment, and is relative. A
+   failing path stops the run. No `git add -f`.
+4. No path outside this repository is edited during the run.
+5. No copy of any file is written outside version control.
 
-**R4 — the label.** One cell edit at
-`.agent/skills/artifact-formalizer/references/authoring-contract.md:46@5b96f01` `| T4 | **One claim** |`.
-The name repeats rule 3's own
-name, so the label itself states the pairing (D1).
+**R3 — §5 Fallback.** Only the operator's own message confirms it; a subagent never runs it.
+The audit is kept.
 
-**R5 — the pointer.** One sentence in `SKILL.md` §6 rule 1, naming the column R3 adds.
+1. §5 sets `top` again, since shell state does not survive between calls, and checks HEAD against
+   the audit header's base. A mismatch stops the run.
+2. `git status --porcelain=v1 --untracked-files=all` lists every change **before** anything moves.
+   Each path is identical to a declared one: from the PLAN, from §4.5's repair list in the audit,
+   or this run's TASK, PLAN, archive pair or audit. Both paths of an `R` or `C` entry count. Any
+   other entry stops the run.
+3. The list is recorded where the base is recorded and shown to the operator. After the reply it
+   is taken again; a different list stops the run.
+4. `??` entries other than the audit are removed with `rm -- "${top:?}/<path>"`, files only.
+5. The other entries are restored by name from the base.
+6. A final `git status` shows only the audit. Anything else stops the run.
+7. `git reset --hard`, `git clean`, `git checkout` and `git stash` are not used. A committed
+   upgrade is reverted by the operator; a merge needs `git revert -m 1`.
 
-**R6 — the record.** A subsection `### 4.2` after §4.1, in that section's established shape:
+**R4 — Mode B check 2.** "Does the plan record the base commit, and does every edited or created
+path return to it?" Version `1.0` → `1.1`.
 
-1. the source, its issue and date, and its intended reader;
-2. the method and scope, with the §11 reproducibility class stated;
-3. one row per STE100 rule: measured value and verdict;
-4. the one principle carried forward as a candidate, not adopted;
-5. what would reopen the record.
+**R5 — template and examples.**
 
-**Constraints on R6, from the battery.** `TC-SHIP-08` reads `measurement-baseline.md` for
-`<n> cases`. `TC-SHIP-10` parses §4 table rows of three cells whose second cell is digits only.
-The new text states no `<n> cases`, and no row verdict begins with `adopted`.
+1. `assets/audit_template.md`: the header carries `Base revision`; the Rollback Plan row asks
+   R4's question.
+2. `examples/audit_examples.md`: each header carries `Base revision`. The good example declares
+   its created files. The bad example fails on an edit that predates the run; its required action
+   stops the run until the operator commits or stashes.
 
-**R7 — release.** Patch release v3.31.2 in `CHANGELOG.md` and `CHANGELOG.ru.md`. `SKILL.md`
-frontmatter `version: 2.1` → `2.2`.
+**R6 — WORKFLOWS.md.** §5 Safety Protocol item 4 states R1–R3 in one item.
 
-**R8 — what stays.** `scan_register.py`, `data/register-*.json`, every rule number 1–6, every test
-number T1–T6, the scanner's output format and guidance strings, and the count "six tests". The file
-`documentation-standards/SKILL.md` stays unedited.
+**R7 — the two comments.** The `.gitignore` entry for `.agent/archive/` stays. A clone holding
+copies from before this task keeps a clean `git status`. The comment states that. The comment
+above `SCAN_ROOTS` in `tests/test_frozen_tree_contract.py` changes the same way; `_is_scanned`
+keeps its exclusion.
+
+**R8 — the pin.** `tests/test_git_rollback_contract.py`, pure `unittest`:
+
+1. `TC-01` — §0 precedes §1 and carries its commands; its clean-tree item carries its stop. The
+   §2.2, §3.1 and §4.5 texts carry the declaration and its checks. The §5 body carries each
+   control in the order list, confirm, remove, restore, check.
+2. `TC-02` — no markdown file in the instruction roots names a copy. Roots: `.agent/workflows/`,
+   `.agent/skills/` without `evals/corpus*`, `System/Docs/`, `System/Agents/`,
+   `.claude/commands/`, `.claude/agents/`, the vendor agent directories, the bootstrap files.
+   Tokens: `.bak`, `.orig`, `.backup`, `.old`, `.agent/archive`, `.agent/backups`. Vendor roots
+   are read as markdown, TOML and JSON.
+3. `TC-03` — Mode B check 2, read as a whole list item, names the base commit and no copy.
+4. `TC-04` — the workflow names `git reset --hard`, `git clean`, `git stash`, `git checkout`,
+   `git add -f`, `rm -r` or `-delete` only in one of three exact prohibition sentences.
+5. The module is in `CURATED_UNITTEST_MODULES` in `tests/run_tests.py`, which CI runs.
+
+**R9 — closure and release.** WI-20 takes four edits: `status: done`, `resolved_at` and
+`resolved_by`, a resolution blockquote, and its index line moved to `## Closed`. Changelogs:
+`v3.32.0`, since a workflow changes what it runs.
 
 <!-- contract:use-cases -->
 
 ## 3. Use Cases
 
-**UC-1 — an author maps a scanner finding to a test.**
-*Actor:* analyst, architect or planner, with the contract loaded.
-*Precondition:* the scanner reports `§5.5 r1 sentence_length` on a document the actor wrote.
-*Main:* the actor reads the `§5.5 rule` column, finds T6, and applies `SKILL.md` §6 rule 1.
-*Alternative A1 (at Main):* the finding is `cell_width` or `cell_sentences`. It carries `§5.1`, no
-§5.5 rule, so the column has no row for it; `documentation-standards` §5.1 owns it.
-*Postcondition:* the triage names T6, not T1 or T4.
+**UC-1 — an upgrade that completes.**
+*Actor:* the orchestrator running `/framework-upgrade`.
+*Precondition:* the operator's tree is committed.
+*Main:* §0 records the base; §1–§4 edit tracked paths; nothing is written outside git.
+*Postcondition:* `git status` shows the upgrade's changes and nothing else.
 
-**UC-2 — a maintainer changes the eval-battery size.**
-*Actor:* any role editing `evals/selftest_evals.py`.
-*Precondition:* the edit adds or removes a `check()` call, so the battery total moves.
-*Main:* the maintainer moves `EXPECTED_CASES` and updates every site that states it.
-*Alternative A1 (at Main):* one site keeps the old number. `TC-EV-13b` fails and names the site.
-*Postcondition:* every stated count equals the pinned literal.
+**UC-2 — an upgrade that fails mid-way.**
+*Actor:* the orchestrator.
+*Precondition:* §3 left the system unstable.
+*Main:* the operator confirms; §5 restores from the base and removes the declared created files.
+*Alternative A1 (at Main):* an entry the PLAN does not declare remains. §5 stops and asks.
+*Postcondition:* HEAD equals the base; only the audit remains untracked.
 
-**UC-3 — a maintainer proposes an ASD-STE100 rule.**
-*Actor:* any role proposing a register rule.
-*Precondition:* the proposal cites ASD-STE100 or a style guide derived from it.
-*Main:* the maintainer reads §4.2, finds the rule's measured figure, and meets the reopen condition
-before proposing.
-*Alternative A1 (at Main):* the proposed rule has no row in §4.2. `SKILL.md` §6 rules 1–4 apply
-as they do to any new rule.
-*Postcondition:* a re-proposal carries a new measurement, not the old impression.
+**UC-3 — an upgrade started on a dirty tree.**
+*Actor:* the orchestrator.
+*Precondition:* `git status --porcelain` prints at least one line.
+*Main:* §0 stops and asks the operator to commit or stash.
+*Alternative A1 (at Main):* the operator commits. §0 records that commit as the base.
+*Postcondition:* no edit happens before the tree is clean.
 
 <!-- contract:acceptance -->
 
@@ -156,101 +168,127 @@ as they do to any new rule.
 
 | ID | Criterion |
 | :--- | :--- |
-| A1 | `scripts/selftest_scan.py` reports 192 of 192, exit 0 |
-| A2 | `evals/selftest_evals.py` reports 78 of 78, exit 0 |
-| A3 | `scripts/scan_register.py --probe` reports 18 detectors live, exit 0 |
-| A4 | `scan_register.py` over `SKILL.md`, `references/*.md` and `docs/TASK.md` reports 0 `warn` |
-| A5 | Each R2 mutation gives the outcome listed below; every revert restores 78 of 78 |
-| A6 | `grep -rn "One claim" .agent/skills` returns the three rule-1 sites, the §4.2 record, and no T4 label |
-| A7 | `git diff --stat` lists only the files `docs/PLAN.md` declares |
-| A8 | `check_positional_refs.py --targets-changed` reports no `REFERENT_MOVED` left unrepaired |
-| A9 | `System/scripts/validate_skills.py`, `tests/run_tests.py` and `pytest tests/` all pass |
+| A1 | `python3 -m pytest tests/test_git_rollback_contract.py -q` passes |
+| A2 | Each R8 mutation below fails that module; reverting it passes |
+| A3 | `System/scripts/validate_skills.py --root . --quiet` reports every skill valid |
+| A4 | `PYTHONPATH=. python3 tests/run_tests.py` runs the new module and reports OK |
+| A5 | `python3 -m pytest tests/ -q` passes, and `check_loop_contract.py` reports 0 errors |
+| A6 | `scan_register.py` over every edited markdown file reports no new `warn` |
+| A7 | `git status --short` lists only the files `docs/PLAN.md` declares |
+| A8 | The CI living-corpus reference check reports 0 errors |
 
-**A5 mutations.** Each is applied alone, on a working copy, and reverted.
+**A2 mutations.** Each is applied alone and reverted. The audit's mutation table lists all 41
+with their outcomes. They cover five groups:
 
-1. `SKILL.md` count 78 → 59 — drift in one site.
-2. `System/Docs/SKILLS.md` count 78 → 59 — drift in the registry.
-3. `evals/README.md` count after the run command 78 → 77 — drift beside a second, correct count.
-4. `SKILL.md` numeral deleted — a present site that states no count.
-5. `SKILL.md` gains `(59 cases before TASK 106)` after its count — a stale second count.
-6. `SKILL.md` count written as `1,078` — a numeral aliasing 78.
-7. `System/Docs/SKILLS.md` deleted while `System/Docs/` exists — a missing registry.
-8. `SKILL.md` wraps between `78` and `cases` — a legitimate re-wrap.
+1. a copy instruction in each scanned spelling, placed in each kind of instruction file, and in a
+   `corpus*` file outside `evals/`;
+2. a deleted or weakened control in §0, §2.2, §3.1, §4.5 or §5;
+3. a destructive command added: `git reset --hard`, `git clean`, `rm -rf`, `rm -fr`, `rm -R`,
+   `rm --recursive`, a whole-tree `git restore`, an agent-run stash, a restore hidden in a comment;
+4. the §5 order changed: restore before list, or restore before remove;
+5. two legitimate reflows, of check 2 and of a §0 command, which must pass.
 
-Mutations 1–7 fail `TC-EV-13b` and name the site. Mutation 8 passes.
-
-**Why mutation 3 drifts rather than deletes.** `evals/README.md` states the count twice. Deleting
-one leaves the other, so the site still states a correct count and the case stays green.
+Every mutation fails the module except the two reflows.
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-**OQ1 — answered at Retro, 2026-10-02.** The deferred terminology rule (review item Р4) is
-[WI-19](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md).
-Owner: operator.
+**OQ1 — none open.** The operator chose WI-20 option 1 on 2026-10-02.
 
 <!-- contract:decisions -->
 
 ## 6. Decisions
 
-**D1, 2026-10-02, orchestrator: T4 is renamed; rule 1 keeps its name.** T4's label occurs in one
-cell. Rule 1's name occurs in `SKILL.md`, the guide and `documentation-standards` §5.5. The scanner
-guidance `Split into one claim per sentence.` also carries it. Rejected: renaming rule 1 — three
-files and a scanner output string, against one cell.
+**D1, 2026-10-02, orchestrator: the base commit is taken at §0.** §1 edits the tree first, through
+the TASK archive and the new TASK. Rejected: §3.1 — the rollback would miss every §1 and §2 edit.
 
-**D2, 2026-10-02, orchestrator: the test-to-rule map lives in the contract only.** The contract is
-what the authoring phases load, and the map is read during Mode A handoff. Rejected: a second copy
-in `SKILL.md` §5 — REG-13 records a restated value drifting in whichever document restated it.
+**D2, 2026-10-02, orchestrator: a dirty tree stops the run.** The workflow cannot tell the
+operator's uncommitted work from its own. Rejected: an automatic `git stash` — a stash the run
+forgets to pop hides the operator's work with no signal.
 
-**D3, 2026-10-02, orchestrator: `TC-EV-13b` is widened in place.** Rejected: a new case — it moves
-`EXPECTED_CASES` to 79 and with it the three counts R1 corrects.
+**D3, 2026-10-02, orchestrator: created paths are removed by name.** Rejected: `git clean -fd` — it
+removes every untracked path, including one the run did not create.
 
-**D4, 2026-10-02, orchestrator: the STE100 figures carry §11's caveat.** The measuring script is not
-vendored, so no shipped command re-runs it. The corpus ships, and §4.2 states the language test and
-the ordering key, so the figures can be re-derived. Rejected: vendoring the script — a maintained
-file and a battery case for a record whose verdicts are all "not adopted".
+**D4, 2026-10-02, orchestrator: the `.gitignore` entry and the test exclusion stay.** Copies from
+earlier runs may still exist in other clones. Rejected: removing both — such a clone would show its
+old copies in `git status`, and `test_frozen_tree_contract.py` `TC-03` would count them as sites.
 
-**D5, 2026-10-02, operator: no terminology rule ships in this task.** `SKILL.md` §6 rule 4 requires
-a measurement before a rule ships, and none exists. Rejected: a T7 — the tests are applied per
-sentence, and term consistency is a property of the whole document.
+**D5, 2026-10-02, orchestrator: the pin runs in the curated suite, not a new CI line.** CI runs
+`tests/run_tests.py`, which loads `CURATED_UNITTEST_MODULES`. Rejected: editing
+`.github/workflows/framework-gates.yml` — a second registration for the same module.
 
-**D6, 2026-10-02, orchestrator: release-bound counts are not edited.**
-`CHANGELOG.md:692@5b96f01` `evals 59/59` states that count for the release that measured it.
-Rejected: updating it — a correct historical figure would become false.
+**D6, 2026-10-02, orchestrator: the first review round, applied.** Base fingerprint
+`67e0f8050084`. `code-reviewer` returned REQUEST CHANGES. Its blocking finding: §5 removed every
+untracked path it listed, and that list holds paths the run never created. Causes:
+`status.showUntrackedFiles=no` at §0, a run from a subdirectory, a concurrent writer, or HEAD past
+the base. The `security-auditor` round **failed**: its mutation script missed its copy on a
+dangling symlink and wrote into the frozen tree. It also ran `git checkout --` on one file. It
+restored the files, and the caller confirmed the fingerprint and each file unchanged. Its findings
+still entered this loop. Fixed:
 
-**D7, 2026-10-02, orchestrator: the review round's findings, applied.** `code-reviewer` and
-`security-auditor` ran over tree fingerprint `099216ac0488`, and both returned it unchanged. Fixed
-in this task:
+- §0 runs from the top level, checks untracked files too, records the full hash, and persists it;
+- §3.1 leaves commits to the operator, stops on an untracked path, and forbids `git add -f`;
+- §5 needs the operator's confirmation, checks HEAD, restores `:/`, and removes only declared
+  files with `rm --`; it keeps the audit and stops on anything else;
+- `git revert -m 1` for a merge; `git stash -u` for the operator;
+- the template and examples carry `Base revision`; the bad example stops the run;
+- the pin reads §0 and §5 as sections, scans the prompt and wrapper roots, widens the token set,
+  and gains `TC-04`.
 
-- the §4.2 reopen bar, which §4.2's own figures already met, is now a defect rate per rule;
-- the §4.2 corpus is selected by `detect_lang()`, which drops four Russian files the first pass
-  kept;
-- the CHANGELOG states seven rules assessed and four measured;
-- `TC-EV-13b` reads every count in a span, spans a re-wrap, and rejects `1,078`;
-- the registry is required where `System/Docs/` exists;
-- the third-party source link is pinned to commit `7d4a135` and marked as data;
-- three sentences that broke T2 or T4 in the new text are rewritten.
+**D7, 2026-10-02, orchestrator: findings of the first round left as they are.**
 
-**D8, 2026-10-02, orchestrator: three review findings are deferred.**
-
-- `TC-SHIP-10` selects §4 rows by a digit-only second cell, so it cannot read the §4.2 table. The
-  case lives in `scripts/selftest_scan.py`, outside this task's file set. The operator chose not
+- `docs/design/104_resolver_wiring.md:152@687d046` `Back them up to` cites the old §3.1. It is a
+  task's design record, not an instruction surface.
+- `.claude/settings.json` lets `git restore` run without a prompt. Permissions are the operator's;
+  §5 asks for the operator's confirmation instead.
+- The `.cursor/skills` symlink resolves to nothing. It predates this task. The operator chose not
   to file it at Retro.
-- `System/Docs/SKILLS.md` states `192-case` in the list item `TC-SHIP-08` exempts. No case reads
-  it. Filed at Retro as REG-19.
-- A per-site pin on how many counts each site states. Rejected: `TC-SHIP-08` pins values and never
-  counts of claims, and a count pin turns every new mention into a test edit.
+
+**D8, 2026-10-02, orchestrator: the second review round, applied.** Fingerprint `8c8b9095f1f3`;
+both roles wrote nothing in the repository. `code-reviewer` returned REQUEST CHANGES and
+`security-auditor` PASS WITH NOTES. Both found the same defect. §5 read the declared set from a
+PLAN its own restore had just reverted. It also discarded an undeclared tracked edit without
+showing it. Fixed:
+
+- §5 lists every change first and stops on an undeclared one. It shows the list, waits for the
+  operator, and then restores declared paths by name, not `:/`;
+- `rm -- "$top/<path>"`, and declared paths match `[A-Za-z0-9._/-]+`;
+- §0 checks the framework repository by a tracked path, and gives the full `update_state.py` call;
+- §2.2 tells the planner to declare every path; §3.1 names the checks; §4.5 lists its repairs;
+- the pin checks each §5 control and its order, strips comments, scans vendor TOML and JSON, and
+  reads `TC-04` over the whole workflow against exact prohibition sentences.
+
+Left: `check_positional_refs.py --fix` walks ignored files too, so §4.5 can rewrite one. The
+operator chose not to file it at Retro.
+
+**D9, 2026-10-02, orchestrator: the third review round, applied.** Fingerprint `af13d6aafd4d`.
+`code-reviewer` checked closure only, wrote nothing in the repository, and returned APPROVE WITH
+CHANGES. Both round-2 blocking findings are closed, each reproduced in a throwaway repository.
+Fixed from its list:
+
+- `$top` does not survive between shell calls, so §5 sets it again and removes with
+  `rm -- "${top:?}/…"`; an unset variable stops instead of reaching `/`;
+- §5 removes created files before it restores, so a path both untracked and deleted ends at the
+  base; a final `git status` must show only the audit;
+- an `R` or `C` entry needs both paths declared and restored;
+- a declared path may not hold a `.git` or `..` segment or start with `/`;
+- the confirmed list is recorded beside the base and taken again after the reply;
+- §2.2 asks for full repo-relative paths, one per list item;
+- the pin collapses whitespace in §0, scans `.agent/rules/`, pins the new sentences, and catches
+  `rm -fr`, `rm -R`, `rm --recursive` and a whole-tree `git restore`.
+
+Left: empty directories after a fallback (git ignores them), and spellings outside the token set,
+which the pin's docstring names.
 
 <!-- contract:out-of-scope -->
 
 ## 7. Out of scope
 
-| Excluded | Carried by |
+| Excluded | Reason |
 | :--- | :--- |
-| A terminology-consistency test or detector | WI-19 |
-| `TC-SHIP-08` exempting a whole list item that names `selftest_evals` | REG-19 |
-| `TC-SHIP-10` not reading the §4.2 table | not filed; operator decision at Retro |
-| Replacing the workflow's `.bak` backups with git rollback | WI-20 |
+| Installer snapshots under `.agent/backups/` | the target project may hold untracked files, or no git at all |
+| Mutation-planting copies in `developer-guidelines` and `vdd-adversarial` | they run mid-review, on a tree that may carry uncommitted work |
+| `test_frozen_tree_contract.py`, `test_resolver_wiring.py` absent from CI | found here; not filed at Retro, operator decision |
+| Running this workflow inside an installed project | §0 sends it to the framework repository |
 | Any edit to `docs/tasks/`, `docs/plans/` or ledger record bodies | ARCHITECTURE §7.2, immutable |
-| Scanner code, rule files, thresholds | R8 |

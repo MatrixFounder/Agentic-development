@@ -2,7 +2,7 @@
 name: skill-creator
 description: Use when creating new Agent Skills, upgrading existing skills, running evals to test a skill, benchmarking skill performance, or optimizing a skill's description for better triggering accuracy. Guidelines for Gold Standard skill structures.
 tier: 2
-version: 2.3
+version: 2.4
 ---
 # Skill Creator Guide
 
@@ -74,6 +74,8 @@ All subdirectories are optional. Do NOT create `README.md`, `CHANGELOG.md`, or o
   - Behavioral: Explain why + imperative verb
   - Prohibited: `MUST NOT` + consequence
 - **CSO (Search Optimization)**: The `description` field determines if a skill is loaded. Start with `Use when...` (preferred), `Guidelines for...`, `Helps with...`, `Standards for...`, or `Defines...`. Keep under 50 words. Make descriptions "pushy" to prevent under-triggering.
+  - Carry the **user's own words** — the verbs they type, two or three real phrasings quoted. Measured: written that way, a skill was picked up in 9 runs out of 10; described as a capability, 1 out of 10; described in a way that sounds like a refusal, 0 out of 10.
+  - Read those results on the model that will **run** the skill. A small model picks up nothing it is not told to use by name, so descriptions cannot be compared there at all. Method: [`advanced-eval-patterns.md`](references/advanced-eval-patterns.md).
 - **Red Flags**: Every skill MUST include a "Red Flags" section to prevent agent rationalization.
 - **Naming**: Use gerund form `verb-ing-noun` (e.g., `processing-pdfs`). Always lowercase kebab-case.
 
@@ -406,7 +408,7 @@ Direct the user to the resulting `.skill` file.
 - **`validate_skill.py`**: Enforce structure, frontmatter, CSO, execution-policy
 - **`skill_utils.py`**: Config loader (defaults + project overlay) + `parse_skill_md()`
 - **`aggregate_benchmark.py`**: Compute benchmark summary from `grading.json` files. `--bootstrap` adds a seeded confidence interval on the pass-rate delta (multi-rep + interval).
-- **`verify_pin.py`**: Re-aggregate committed run results and assert they match a committed `benchmark.json` — the generic "no silent metric drift" pin for CI (see `references/advanced-eval-patterns.md` §3; full tutorial in-repo at `docs/Manuals/skill-evals_guide.md`, not bundled in the standalone skill).
+- **`verify_pin.py`**: Re-aggregate committed run results and assert they match a committed `benchmark.json` — the generic "no silent metric drift" pin for CI (see `references/advanced-eval-patterns.md` §3).
 - **`generate_report.py`**: Build static HTML report from `benchmark.json`
 - **`run_eval.py`**: Run trigger evaluation queries via CLI
 - **`run_loop.py`**: Main eval + improvement loop for description optimization
@@ -428,7 +430,7 @@ Direct the user to the resulting `.skill` file.
 - `references/workflows.md` — Designing skill-internal workflows
 - `references/persuasion-principles.md` — Psychological principles for instructions
 - `references/testing-skills-with-subagents.md` — TDD methodology for skills
-- `references/advanced-eval-patterns.md` — Production-grade eval patterns: deterministic script-grader, pinning, set diversification ("mirage"), A/B isolation, multi-rep. Full tutorial: `docs/Manuals/skill-evals_guide.md`
+- `references/advanced-eval-patterns.md` — Production-grade eval patterns: deterministic script-grader, pinning, set diversification ("mirage"), A/B isolation, multi-rep.
 - `agents/grader.md` — Evaluate assertions against outputs
 - `agents/comparator.md` — Blind A/B comparison
 - `agents/analyzer.md` — Post-hoc analysis of results

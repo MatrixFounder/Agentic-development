@@ -296,35 +296,47 @@ class TestEveryEntryPointInstallsIt(unittest.TestCase):
 
 class TestTheRealCommands(unittest.TestCase):
     """`--help` above is the cheap half. These run the report paths, where the
-    non-ASCII usually comes from user data rather than a literal."""
+    non-ASCII usually comes from user data rather than a literal.
 
-    CWD = Path(__file__).resolve().parents[4]
-    COMMANDS = {
-        "validate_skill.py": ["skills/skill-creator/scripts/validate_skill.py",
-                              "skills/text-humanizer"],
-        # Second argument is the OUTPUT directory. Without it
-        # `package_skill` writes `text-humanizer.skill` into cwd — the
-        # repository root here, so running the tests littered the
-        # checkout with an untracked 31 KB zip.
-        "package_skill.py": ["skills/skill-creator/scripts/package_skill.py",
-                             "skills/text-humanizer", tempfile.gettempdir()],
-    }
+    The target is a skill this class writes itself, with a Cyrillic name and
+    text. The reports carry non-ASCII from that data, and the test needs no
+    other skill, so it runs in every checkout of skill-creator: the canonical
+    one and its copies alike.
+    """
 
-    def _require(self, argv):
-        """Skip rather than silently test something else.
+    FIXTURE = (
+        "---\n"
+        "name: навык-проба\n"
+        'description: "Use when проверяют отчёт в ASCII-локали: описание и имя на кириллице."\n'
+        "tier: 2\n"
+        "version: 1.0\n"
+        "---\n"
+        "# Навык-проба\n\n"
+        "## Purpose\n"
+        "Проверка того, что отчёт переживает ASCII-локаль.\n\n"
+        "## Red Flags\n"
+        "- «Отчёт и так читается» — проверь в локали C.\n"
+    )
 
-        These skills are consumed through a symlink from other checkouts, where
-        `CWD` resolves somewhere with a different layout. A command whose
-        target is absent there still RUNS — it just takes its own "not found"
-        branch, and every assertion below then passes on that instead of on the
-        report.
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.CWD = Path(cls._tmp.name)
+        skill = cls.CWD / "навык-проба"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text(cls.FIXTURE, encoding="utf-8")
+        out = cls.CWD / "out"
+        out.mkdir()
+        cls.COMMANDS = {
+            "validate_skill.py": [str(SCRIPTS / "validate_skill.py"), str(skill)],
+            # Second argument is the OUTPUT directory. Without it `package_skill`
+            # writes the archive into cwd.
+            "package_skill.py": [str(SCRIPTS / "package_skill.py"), str(skill), str(out)],
+        }
 
-        argv[0] is always the script; beyond it only arguments that LOOK like
-        paths are checked, so a bare value token is not mistaken for a file.
-        """
-        for arg in [argv[0]] + [a for a in argv[1:] if "/" in a]:
-            if not (self.CWD / arg).exists():
-                self.skipTest("%s is absent under %s" % (arg, self.CWD))
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
 
     def _run(self, argv, ascii_locale):
         env = dict(os.environ)
@@ -336,13 +348,19 @@ class TestTheRealCommands(unittest.TestCase):
                               env=env, timeout=180,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    def _utf8_report(self, label, argv):
+        """The UTF-8 run, which must carry non-ASCII, or the test proves nothing."""
+        utf8 = self._run(argv, ascii_locale=False)
+        if utf8.returncode != 0 and not utf8.stdout:
+            self.skipTest("%s does not run in this environment" % label)
+        self.assertTrue(any(byte > 127 for byte in utf8.stdout),
+                        "%s: the report carries no non-ASCII from the fixture" % label)
+        return utf8
+
     def test_every_documented_command_survives_an_ascii_locale(self):
         for label, argv in self.COMMANDS.items():
             with self.subTest(command=label):
-                self._require(argv)
-                utf8 = self._run(argv, ascii_locale=False)
-                if utf8.returncode != 0 and not utf8.stdout:
-                    self.skipTest("%s does not run in this environment" % label)
+                utf8 = self._utf8_report(label, argv)
                 got = self._run(argv, ascii_locale=True)
                 self.assertNotIn(b"UnicodeEncodeError", got.stderr,
                                  "%s still dies on its own prose" % label)
@@ -362,10 +380,7 @@ class TestTheRealCommands(unittest.TestCase):
         """
         for label, argv in self.COMMANDS.items():
             with self.subTest(command=label):
-                self._require(argv)
-                utf8 = self._run(argv, ascii_locale=False)
-                if not utf8.stdout:
-                    self.skipTest("%s produces no report in this environment" % label)
+                utf8 = self._utf8_report(label, argv)
                 got = self._run(argv, ascii_locale=True)
                 self.assertEqual(got.stdout.decode("ascii"),
                                  _degrade(utf8.stdout.decode("utf-8")),

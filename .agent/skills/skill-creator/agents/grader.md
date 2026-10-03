@@ -120,5 +120,4 @@ agent:
 - **Pin it**: commit the raw outputs and assert `grade(raw) == committed grading.json` in
   CI, so the numbers can't move unnoticed (`scripts/verify_pin.py`).
 
-Full patterns and worked examples: `references/advanced-eval-patterns.md` (bundled) and the
-tutorial `docs/Manuals/skill-evals_guide.md` (in-repo; not part of the packaged skill).
+Full patterns and worked examples: `references/advanced-eval-patterns.md` (bundled).

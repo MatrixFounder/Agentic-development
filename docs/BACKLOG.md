@@ -80,7 +80,6 @@ a closed item is the answer to a question someone will ask again.
 - **WI-28** [Simplify mermaid-authoring-guidelines by measured use](backlog/wi-28-simplify-mermaid-authoring-guidelines-by-measured-use.md) — effort `M`, status `open`, opened 2026-10-03
 - **WI-27** [Fix loops hand off a differential replay of the stored corpus](backlog/wi-27-fix-loops-hand-off-a-differential-replay-of-the-stored-corpus.md) — effort `M`, status `open`, opened 2026-10-03
 - **WI-26** [Figure-eval campaign 2: thresholds from a pilot, large cases, keys checked before registration](backlog/wi-26-figure-eval-campaign-2-thresholds-from-a-pilot-large-cases-keys-checked-before-registration.md) — effort `L`, status `open`, opened 2026-10-03
-- **WI-25** [Trigger evaluation of the mermaid skill description](backlog/wi-25-trigger-evaluation-of-the-mermaid-skill-description.md) — effort `S`, status `open`, opened 2026-10-02
 - **WI-24** [Figure rules in wiki-import and the meeting-summary workflow](backlog/wi-24-figure-rules-in-wiki-import-and-the-meeting-summary-workflow.md) — effort `M`, status `open`, opened 2026-10-02
 - **WI-23** [Tool-loop variant, natural cases and ASCII in documents for the figure evals](backlog/wi-23-tool-loop-natural-cases-and-ascii-in-documents-for-the-figure-evals.md) — effort `L`, status `open`, opened 2026-10-02
 - **WI-22** [Plan status tokens for the generated plan chart](backlog/wi-22-plan-status-tokens-for-the-generated-plan-chart.md) — effort `M`, status `open`, opened 2026-10-02
@@ -91,6 +90,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-25** [Trigger evaluation of the mermaid skill description](backlog/wi-25-trigger-evaluation-of-the-mermaid-skill-description.md) — effort `S`, status `dropped`, opened 2026-10-02 · **dropped 2026-10-04** (operator): the description already quotes the user's words; the skill loads by rule
 - **WI-33** [skill-creator scripts target Python 3.14, not 3.9](backlog/wi-33-skill-creator-scripts-target-python-3-14-not-3-9.md) — effort `S`, status `done`, opened 2026-10-03 · **done 2026-10-03** (TASK 109): minimum 3.11, main 3.14; the entry points stop below 3.11
 - **WI-19** [Measure term consistency before the authoring contract gains a rule for it](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (measured, not adopted): 12 task files, 13 synonyms all resolvable, 3 of 5 homonyms misleading, all label collisions; 1 in the 10 independent files
 - **WI-20** [framework-upgrade keeps .bak copies beside git; roll back through git instead](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (TASK 107): §0 clean tree + base commit, §5 `git restore`; verificator, template, examples and WORKFLOWS.md follow; a unittest pins it

@@ -10,6 +10,16 @@ import argparse
 import sys
 from pathlib import Path
 
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"{_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
+
 # Allow `python3 System/scripts/install.py` to import the installer package.
 _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:

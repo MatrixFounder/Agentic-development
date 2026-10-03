@@ -515,3 +515,14 @@ that no verdict of the 66 answers changes.
 - The opening sentence is part of the loading envelope that the `with_skill` arm receives. Its own
   effect is not measured.
 - Effect on grading: none. The prompts of the campaign hold this envelope as registered.
+
+### A Python floor check in three eval scripts (TASK 109)
+
+- Date: 2026-10-03, after the campaign was graded.
+- Instrument: `run_evals.py`, `render_corpus.py` and `selftest_figure_evals.py` check the
+  interpreter after their standard-library imports. Below the framework's minimum, Python 3.11,
+  each one exits 2 before it imports a local module or writes a file.
+- `grade_figures.py` is unchanged. It imports `run_evals` at its top, so the grader stops there
+  too. Its sha256 in `report.json` still matches, and the stored report still re-derives
+  (TC-ME-22).
+- Effect on grading: none. No check, threshold, key or rule changed.

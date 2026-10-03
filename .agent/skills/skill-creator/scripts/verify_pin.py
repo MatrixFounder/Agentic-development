@@ -14,7 +14,8 @@ ignored; only the computed `runs` and `run_summary` are compared.
 Usage:
     python verify_pin.py <benchmark_dir> <committed_benchmark.json>
 
-Exit 0 = pin holds. Exit 1 = drift detected (the differing keys are printed).
+Exit 0 = pin holds. Exit 1 = drift detected (the differing keys are printed). Exit 2 = a usage
+error, or an interpreter below the framework's minimum Python.
 No LLM, no network, no shell — pure recomputation.
 """
 
@@ -23,6 +24,16 @@ import json
 import os
 import sys
 from pathlib import Path
+
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"{_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
 
 # `say` / `argparse.ArgumentParser`: the human channel must survive the caller's
 # locale. See skill_utils and docs/issues/human-cli-output-locale-class.md.

@@ -56,8 +56,9 @@ Exit codes (TASK D20, ARCHITECTURE §7.4)
   3  usage error: bad arguments, `--write` with `--check`, an unreadable plan or document, a
      document that cannot be written or is read-only, an unknown stage in `--stages`
 
-Standard library only; Python 3.9 or newer. No output depends on the interpreter's Unicode
-version: the text cleaning and the width estimate use fixed character tables.
+It needs the standard library only, on the framework's minimum Python (README §3). No output
+depends on the interpreter's Unicode version: the text cleaning and the width estimate use fixed
+character tables.
 """
 
 from __future__ import annotations

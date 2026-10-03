@@ -71,7 +71,8 @@ Exit codes (TASK D20; ARCHITECTURE section 10.5, invariant L6)
   0  every figure has a rendered, parse_error or render_error entry in each headline render
   1  an infra_error remains in a headline render after the retries; run the same command again
   2  not rendered: a headline renderer absent or at another version, or the parse model or the
-     render check unavailable; prints `not rendered: <reason>`
+     render check unavailable; prints `not rendered: <reason>`. Also an interpreter below the
+     framework's minimum Python, before any render
   3  usage error
 
 Standard library only.
@@ -90,6 +91,16 @@ import re
 import sys
 from pathlib import Path
 from typing import Optional
+
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"not rendered: {_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
 
 HERE = Path(__file__).resolve().parent
 SKILL_DIR = HERE.parent

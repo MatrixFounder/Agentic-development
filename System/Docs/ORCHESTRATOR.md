@@ -72,7 +72,7 @@ Tools are enabled automatically if the Orchestrator prompt (`01_orchestrator.md`
 This guide walks through the complete process of adding a new tool to the system.
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.11 or newer; 3.14 is the main version. The policy: README §3, "Supported Python", of the framework repository
 - Understanding of JSON Schema format
 - Familiarity with the tool dispatcher pattern
 

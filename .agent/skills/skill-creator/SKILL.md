@@ -2,7 +2,7 @@
 name: skill-creator
 description: Use when creating new Agent Skills, upgrading existing skills, running evals to test a skill, benchmarking skill performance, or optimizing a skill's description for better triggering accuracy. Guidelines for Gold Standard skill structures.
 tier: 2
-version: 2.2
+version: 2.3
 ---
 # Skill Creator Guide
 

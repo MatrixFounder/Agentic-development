@@ -96,7 +96,8 @@ Exit codes (TASK D20 and ARCHITECTURE section 7.4 for 2 and 3)
      or bound setting (run cap, timeout, retries, reps, CLI version) that differs from the
      campaign's; a served model other than the pinned one; a second executor on the same
      campaign; or a budget lock that is not a regular file of this user, or that another
-     process holds for `BUDGET_LOCK_WAIT_S`
+     process holds for `BUDGET_LOCK_WAIT_S`; or an interpreter below the framework's minimum
+     Python
   3  usage error, a budget, run cap or timeout that is not a finite positive number included
 
 Standard library only.
@@ -124,6 +125,16 @@ import time
 import traceback
 from pathlib import Path
 from typing import Optional
+
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"{_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
 
 HERE = Path(__file__).resolve().parent
 SKILL_DIR = HERE.parent

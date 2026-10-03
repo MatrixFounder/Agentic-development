@@ -58,7 +58,8 @@ rows, pinned as a literal; the last row asserts it.
 Exit codes
   0  every row passed or was skipped with a printed reason
   1  a row failed
-  2  instrument error: a module did not import, or a test function raised
+  2  instrument error: a module did not import, a test function raised, or the interpreter is
+     below the framework's minimum Python
 
 Standard library only.
 """
@@ -81,6 +82,16 @@ import threading
 import time
 import types
 from pathlib import Path
+
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"{_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
 
 HERE = Path(__file__).resolve().parent
 SKILL = HERE.parent

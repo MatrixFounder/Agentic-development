@@ -158,8 +158,8 @@ To use this framework in Codex:
 This framework requires a reproducible Python environment for tool execution, validators, and test automation.
 
 #### Supported Python
-- **Required:** Python `3.11+` (recommended)
-- **Minimum:** Python `3.9+` (legacy compatibility)
+- **Minimum:** Python `3.11`. CI tests it. Below it, the installer and the benchmark scripts of `skill-creator` and of the figure evals stop with a message, and the preflight (`System/scripts/doctor.py`) reports a failure.
+- **Main:** Python `3.14`, the version the framework is developed on. CI tests it too.
 
 #### Virtual Environment (Mandatory)
 ```bash

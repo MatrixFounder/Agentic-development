@@ -1,7 +1,7 @@
 ---
 id: WI-33
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-03
 slug: wi-33-skill-creator-scripts-target-python-3-14-not-3-9
 effort: S
@@ -11,9 +11,18 @@ provenance: machine
 component: '.agent/skills/skill-creator/scripts'
 fingerprint: 8efabf2fe2a418d7
 finding_ref: fnd-20261003-194014-8efabf2f
+resolved_at: 2026-10-03
+resolved_by: TASK 109
 ---
 
 # WI-33 — skill-creator scripts target Python 3.14, not 3.9
+
+> **Resolved 2026-10-03 by TASK 109.** Python 3.11 is the minimum and 3.14 the main version,
+> the operator's choice of 2026-10-03. README §3 states the pair. Below 3.11, `install.sh`,
+> `install.py`, `aggregate_benchmark.py`, `verify_pin.py` and four figure-eval scripts stop with
+> exit 2 and a message that names both versions, before they write anything; `doctor.py` reports
+> FAIL. CI tests 3.11 and 3.14. The 3.9 claim sat in six places, not the three this record names:
+> the README pair and `doctor.py` held it as well. `tests/test_python_floor.py` pins all of it.
 
 > **Operator direction, 2026-10-03.** Added by hand at the TASK 108 hand-off. The scripts target
 > Python 3.14 and are not made to run on 3.9; Python 3.9 reached end of life in October 2025.

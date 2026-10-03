@@ -15,11 +15,12 @@ jobs:
     name: Tooling tests
     runs-on: ubuntu-latest
 
-    # Two interpreters, on either side of the 3.11/3.12 behaviour boundary,
+    # Two interpreters: the minimum, 3.11, and the main version, 3.14 (README §3,
+    # TASK 109). They sit on either side of the 3.11/3.12 behaviour boundary,
     # because a single one hid two defects at once. A maintainer runs these
-    # suites on whatever Python is on their machine — 3.14 at the time of
-    # writing — and CI ran only 3.11, so a case could be green in one place and
-    # red in the other with nothing in the repo to say which was right:
+    # suites on the main version, and CI once ran only 3.11, so a case could be
+    # green in one place and red in the other with nothing in the repo to say
+    # which was right:
     #
     #   - `exit_on_error = False` does not cover an unrecognized flag on 3.11,
     #     where argparse routes it through `error()` instead of raising
@@ -35,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.14"]
 
     steps:
       - name: Checkout

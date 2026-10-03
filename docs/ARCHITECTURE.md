@@ -461,7 +461,7 @@ The installer deploys the agentic-development framework into a clean **target pr
 
 ```text
 agentic-development/                              # framework repo (source-of-truth)
-├── install.sh                                    # Bash wrapper (minimal: BASH_VERSION guard + exec python3)
+├── install.sh                                    # Bash wrapper: checks bash, python3, the minimum Python (README §3) and PyYAML, then exec python3
 └── System/scripts/
     ├── install.py                                # argparse entry-point (subcommands: install/switch/update/uninstall/doctor)
     ├── vendors.yaml                              # Vendor profile config (5 profiles + defaults)

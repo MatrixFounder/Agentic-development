@@ -8,8 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-REQUIRED_PYTHON = (3, 9)
-RECOMMENDED_PYTHON = (3, 11)
+# README §3 states both versions; tests/test_python_floor.py holds these equal to it.
+REQUIRED_PYTHON = (3, 11)
+RECOMMENDED_PYTHON = (3, 14)
 REQUIRED_MODULES = [
     ("pytest", "pytest"),
     ("yaml", "PyYAML"),
@@ -31,14 +32,16 @@ def _check_python_version() -> int:
     if current < REQUIRED_PYTHON:
         _status(
             "FAIL",
-            f"Python {current[0]}.{current[1]}.{current[2]} is below required {REQUIRED_PYTHON[0]}.{REQUIRED_PYTHON[1]}",
+            f"Python {current[0]}.{current[1]}.{current[2]} is below the minimum {REQUIRED_PYTHON[0]}.{REQUIRED_PYTHON[1]}; "
+            f"{RECOMMENDED_PYTHON[0]}.{RECOMMENDED_PYTHON[1]} is the main version",
         )
         return 1
 
     if current < RECOMMENDED_PYTHON:
         _status(
             "WARN",
-            f"Python {current[0]}.{current[1]}.{current[2]} meets minimum but recommended is {RECOMMENDED_PYTHON[0]}.{RECOMMENDED_PYTHON[1]}+",
+            f"Python {current[0]}.{current[1]}.{current[2]} meets the minimum {REQUIRED_PYTHON[0]}.{REQUIRED_PYTHON[1]}; "
+            f"{RECOMMENDED_PYTHON[0]}.{RECOMMENDED_PYTHON[1]} is the main version",
         )
         return 0
 
@@ -74,7 +77,9 @@ def _check_files(repo_root: Path) -> int:
 def _check_pytest_command() -> int:
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", "--version"],
+            # -P (3.11+): import nothing from the current directory, which may be a project.
+            [sys.executable, *(["-P"] if sys.version_info >= (3, 11) else []), "-m", "pytest",
+             "--version"],
             check=False,
             capture_output=True,
             text=True,

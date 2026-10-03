@@ -73,7 +73,6 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-33** [skill-creator scripts target Python 3.14, not 3.9](backlog/wi-33-skill-creator-scripts-target-python-3-14-not-3-9.md) — effort `S`, status `open`, opened 2026-10-03
 - **WI-32** [Lint and scanner follow-ups from TASK 108 reviews](backlog/wi-32-lint-and-scanner-follow-ups-from-task-108-reviews.md) — effort `M`, status `open`, opened 2026-10-03
 - **WI-31** [Anchored allow rules, SHA-pinned actions, a full fingerprint and a nested lockfile audit](backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md) — effort `M`, status `open`, opened 2026-10-03
 - **WI-30** [Renderer supply chain: v10 lockfile, mermaid-cli request filter, browser hash](backlog/wi-30-renderer-supply-chain-v10-lockfile-mermaid-cli-request-filter-browser-hash.md) — effort `M`, status `open`, opened 2026-10-03
@@ -92,6 +91,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-33** [skill-creator scripts target Python 3.14, not 3.9](backlog/wi-33-skill-creator-scripts-target-python-3-14-not-3-9.md) — effort `S`, status `done`, opened 2026-10-03 · **done 2026-10-03** (TASK 109): minimum 3.11, main 3.14; the entry points stop below 3.11
 - **WI-19** [Measure term consistency before the authoring contract gains a rule for it](backlog/wi-19-measure-term-consistency-before-the-authoring-contract-gains-a-rule-for-it.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (measured, not adopted): 12 task files, 13 synonyms all resolvable, 3 of 5 homonyms misleading, all label collisions; 1 in the 10 independent files
 - **WI-20** [framework-upgrade keeps .bak copies beside git; roll back through git instead](backlog/wi-20-framework-upgrade-keeps-bak-copies-beside-git-roll-back-through-git-instead.md) — effort `M`, status `done`, opened 2026-10-02 · **done 2026-10-02** (TASK 107): §0 clean tree + base commit, §5 `git restore`; verificator, template, examples and WORKFLOWS.md follow; a unittest pins it
 - **WI-18** [The reference resolver is invoked by nothing](backlog/wi-18-the-reference-resolver-is-invoked-by-nothing.md) — effort `M`, status `done`, opened 2026-08-07 · **done 2026-08-07** (TASK 104): 4 checklists + 7 workflows + a wiring test that partitions every workflow file; the workflow half does not reach consumers

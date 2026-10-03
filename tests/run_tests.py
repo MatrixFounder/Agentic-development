@@ -103,6 +103,8 @@ CURATED_UNITTEST_MODULES = (
     "test_git_rollback_contract",
     # TASK 108 — every R10 surface keeps its pointer to mermaid-authoring-guidelines.
     "test_mermaid_wiring",
+    # TASK 109 — one Python floor, stated in README §3 and enforced at the entry points.
+    "test_python_floor",
 )
 
 

@@ -16,6 +16,37 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.34.0 — Python 3.11 is the minimum and 3.14 the main version (WI-33)**
+
+The framework claimed Python 3.9 in six places. CI tested only 3.11 and 3.13, and five
+`skill-creator` scripts failed at import on 3.9. On 3.9 the figure-eval grader wrote its report,
+skipped the benchmark with a note about a `TypeError`, and exited 0 (TASK 109).
+
+#### Changed
+
+- **README §3 states the pair** in both languages: minimum 3.11, main version 3.14, and CI tests
+  both. `System/Docs/ORCHESTRATOR.md` states the same pair.
+- **Below 3.11 the entry points refuse to run**, with a message that names both versions:
+  - `install.sh` and `System/scripts/install.py` exit 2;
+  - `aggregate_benchmark.py` and `verify_pin.py` of `skill-creator`, and the figure-eval
+    `run_evals.py`, `render_corpus.py`, `selftest_figure_evals.py` and `grade_figures.py`, exit 2
+    before any write, each naming the script that was run;
+  - `System/scripts/doctor.py` reports FAIL, and a WARN on 3.11 to 3.13.
+- **The PyYAML probe of `install.sh` runs with `-P`.** It imported a `yaml.py` from the target
+  project, and on 3.14 a `linecache.py` too.
+- **`skill-creator` 2.2 → 2.3.**
+- **CI tests 3.11 and 3.14.** 3.14 replaces 3.13 in the tooling matrix, and no job runs below 3.11.
+- **`tests/test_python_floor.py`**, in the curated suite, holds every point equal to README §3. It
+  checks that each guard is reachable on 3.9, and runs each guarded script, the grader and the
+  installer under a faked 3.9.6. It fails on a new claim of 3.10 or older. 32 mutations were run,
+  and each one failed it (`docs/reviews/framework-audit-109.md`).
+- **WI-33 closed.**
+
+#### Migration
+
+- On Python 3.9 or 3.10 the installer stops for every subcommand, `uninstall` included, and so do
+  the benchmark scripts named above. Install 3.11 or newer; 3.14 is the main version.
+
 ### **v3.33.0 — mermaid-authoring-guidelines: figures a reader can trace, checked where readers look**
 
 Generated documents carried Mermaid figures that read as a mess of boxes and arrows, and fixing

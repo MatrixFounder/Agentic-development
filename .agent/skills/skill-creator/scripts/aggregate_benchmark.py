@@ -43,6 +43,16 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# The framework's minimum Python, stated in README §3. Checked before anything is imported from
+# this repository or written. Exit 2: this interpreter cannot run the script.
+if sys.version_info < (3, 11):
+    _name = Path(sys.argv[0] if sys.argv and sys.argv[0].endswith(".py") else __file__).name
+    if _name == "__main__.py":  # `python -m <package>`: name this module instead
+        _name = Path(__file__).name
+    sys.stderr.write(f"{_name} needs Python 3.11 or newer (3.14 is the main version); "
+                     f"this is Python {sys.version_info[0]}.{sys.version_info[1]}.\n")
+    sys.exit(2)
+
 # `say` / `argparse.ArgumentParser`: the human channel must survive the caller's
 # locale. See skill_utils and docs/issues/human-cli-output-locale-class.md.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -1,0 +1,593 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d27f0877df60ad7820fe0bb9feace30a3858b2fb5434287df2f0648a61c988bb",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 495.2,
+    "height": 278.0,
+    "nodes": 4,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "bucket",
+       "thumbs"
+      ],
+      "edges": [
+       "thumbs->bucket",
+       "thumbs->bucket#2"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "writes originals",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "writes originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "writes thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Thumbnail service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "CDN",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Media bucket",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join bucket and thumbs: thumbs->bucket, thumbs->bucket#2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "ea9de75383e517c58485c9de4adcc5a77e02518dea527e49312723ffb5fb5b2e",
+   "png_sha256": "ab5206a0637b4ea48f8db8d8451c823576bae856d2816bcc4ce956a7fce1b06d",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 106
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d27f0877df60ad7820fe0bb9feace30a3858b2fb5434287df2f0648a61c988bb",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 495.2,
+    "height": 278.0,
+    "nodes": 4,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "bucket",
+       "thumbs"
+      ],
+      "edges": [
+       "thumbs->bucket",
+       "thumbs->bucket#2"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "writes originals",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "writes originals",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "reads originals",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "writes thumbnails",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "reads thumbnails",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload API",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Thumbnail service",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "CDN",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Media bucket",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join bucket and thumbs: thumbs->bucket, thumbs->bucket#2"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "4 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('writes originals', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "9d000c689e8464112937b80836395b59ffd756c025eaeb07ce15663d8d1564e6",
+   "png_sha256": "77535b55e5fe1036d9409fdf8dd71e81c4534b29cb930d16204b37fb8e451c2d",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 106
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d27f0877df60ad7820fe0bb9feace30a3858b2fb5434287df2f0648a61c988bb",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 450.2,
+    "height": 218.0,
+    "nodes": 4,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "bucket",
+       "thumbs"
+      ],
+      "edges": [
+       "thumbs->bucket",
+       "thumbs->bucket#2"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "writes originals",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "writes originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "writes thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Thumbnail service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "CDN",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Media bucket",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join bucket and thumbs: thumbs->bucket, thumbs->bucket#2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "52ecc72e15d614815341ebcdb5134c31d5d60e6f01fe21c3a17c88ce8983982c",
+   "png_sha256": "74f4f61a15f0e01389c11ac4874a7f7ec8d20d3701c5cdd16ca1b1dcbd87da26",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 106
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "d27f0877df60ad7820fe0bb9feace30a3858b2fb5434287df2f0648a61c988bb",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 540.0,
+    "height": 264.0,
+    "nodes": 4,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [
+     {
+      "a": "label:reads originals",
+      "b": "node:thumbs",
+      "area_px": 152.0,
+      "kind": "label-node"
+     }
+    ],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "bucket",
+       "thumbs"
+      ],
+      "edges": [
+       "thumbs->bucket",
+       "thumbs->bucket#2"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "writes originals",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "writes originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads originals",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "writes thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reads thumbnails",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Thumbnail service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "CDN",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Media bucket",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "label_overlaps",
+     "severity": "fail",
+     "message": "label:reads originals overlaps node:thumbs (152.0 px)"
+    },
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join bucket and thumbs: thumbs->bucket, thumbs->bucket#2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "59ad6cbe45789648efcfc0ebc6244ef9db56478c865beec89bc175db96cfa24e",
+   "png_sha256": "54655831eb7733aab5bb9f0a5f5f2a46ac097236e88811360f5f7cc099b54102",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 106
+    }
+   ]
+  }
+ }
+}

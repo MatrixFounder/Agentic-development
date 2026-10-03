@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 25869,
+ "stop_reason": "end_turn",
+ "session_id": "6ea7522e-beb3-44d3-a217-a86d6e235c6f",
+ "total_cost_usd": 0.0522574,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1237,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 2103,
+  "output_tokens_details": {
+   "thinking_tokens": 1619
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1237,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 2103,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1237,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1237
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 2103,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1237,
+   "webSearchRequests": 0,
+   "costUSD": 0.0522574,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 1619,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "The pipeline is mostly a straight chain, with one point where it splits into two parallel checks and then joins again:\n\n    push to merge request\n      |\n      v\n    lint\n      |\n      v\n    unit tests\n      |\n      v\n    build site\n      |\n      +------------------+\n      |                  |\n      v                  v\n    link check     accessibility check     (run in parallel)\n      |                  |\n      +------------------+\n      |\n      v\n    deploy preview                         (needs BOTH checks passed)\n      |\n      v\n    publish  <-- also needs a maintainer approval comment in the MR\n\nHow the hand-offs work:\n\n- Every push to a merge request starts a new run at lint.\n- A stage starts only after every stage it waits for has passed (PL-1).\n- After build site, the link check and the accessibility check start at the same time and run side by side (PL-2).\n- Deploy preview is the join point. It waits until both checks have passed. One passing is not enough.\n- Publish needs two things: deploy preview has passed, and a maintainer has recorded approval as a comment in the merge request. Until that comment exists, the run sits waiting at publish (PL-4). It does not fail.\n- Any failed stage stops the whole run. There is no resume or retry from the failed stage. The next push starts over from lint (PL-3).\n- The link check is capped at 20 minutes. If it runs longer, it fails, and that stops the run like any other failure (PL-5).\n\nSource: ci/PIPELINE.md, section 3.",
+ "ttft_ms": 25882,
+ "type": "result",
+ "duration_ms": 25890,
+ "uuid": "bdf3a815-94a3-48a8-8e3c-de2f6d6402c8",
+ "ttft_stream_ms": 1289,
+ "time_to_request_ms": 21,
+ "first_content_frame_ms": 1290,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

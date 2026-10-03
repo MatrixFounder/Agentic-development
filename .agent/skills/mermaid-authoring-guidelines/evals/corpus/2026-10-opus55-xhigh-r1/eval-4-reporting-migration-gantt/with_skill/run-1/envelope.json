@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 452761,
+ "stop_reason": "end_turn",
+ "session_id": "e7ea2875-6887-4295-bc09-c8c057c5945e",
+ "total_cost_usd": 1.0886654,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 20573,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 46189,
+  "output_tokens_details": {
+   "thinking_tokens": 44823
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 20573,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 46189,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 20573,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 20573
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 46189,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 20573,
+   "webSearchRequests": 0,
+   "costUSD": 1.0886654,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 44823,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 1.** Reporting warehouse move: the tasks of §2.1 by team, in working days from Monday 2 November 2026.\n\n```mermaid\n%%{init: {\"look\": \"classic\", \"themeVariables\": {\"doneTaskBkgColor\": \"#C8E6C9\", \"doneTaskBorderColor\": \"#2E7D32\", \"activeTaskBkgColor\": \"#FFF3C4\", \"activeTaskBorderColor\": \"#F9A825\", \"taskBkgColor\": \"#FFFFFF\", \"taskBorderColor\": \"#9E9E9E\", \"critBkgColor\": \"#FFFFFF\", \"critBorderColor\": \"#C62828\", \"taskTextColor\": \"#212121\", \"taskTextDarkColor\": \"#212121\"}, \"gantt\": {\"barHeight\": 16, \"barGap\": 4, \"topPadding\": 50, \"fontSize\": 12, \"sectionFontSize\": 12, \"numberSectionStyles\": 2, \"useWidth\": 900}, \"themeCSS\": \".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }\"}}%%\ngantt\n  accTitle: Reporting warehouse move\n  accDescr: The tasks of section 2.1 by team, in working days from Monday 2 November 2026.\n  dateFormat YYYY-MM-DD\n  axisFormat %d %b\n  tickInterval 1week\n  weekday monday\n  excludes weekends\n  todayMarker off\n  section Platform\n    P1 :crit, p1, 2026-11-02, 4d\n    P2 :crit, p2, after p1, 3d\n  section Data\n    D1 :d1, after p2, 2d\n    D2 :crit, d2, after p2, 6d\n  section QA\n    Q1 :crit, q1, after d1 d2, 2d\n  section Release\n    R1 :crit, r1, after q1, 1d\n    R2 :crit, milestone, r2, after r1, 0d\n```\n\n- Label: the task ID in the table of §2.1.\n- Bar: a task, from its first working day to the end of its last.\n- Diamond: the milestone R2, at the end of R1.\n- Red border: the critical path of §2.2.\n- Shaded columns: Saturdays and Sundays, outside every duration.",
+ "ttft_ms": 444538,
+ "type": "result",
+ "duration_ms": 452795,
+ "uuid": "e4249e08-545f-4ca4-83ea-95f129a8ffdb",
+ "ttft_stream_ms": 1265,
+ "time_to_request_ms": 28,
+ "first_content_frame_ms": 1265,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

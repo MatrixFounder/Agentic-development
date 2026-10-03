@@ -1,0 +1,386 @@
+{
+ "expectations": [
+  {
+   "text": "Every Mermaid figure renders in Mermaid 11.17",
+   "passed": true,
+   "evidence": "figure 1: rendered as flowchart-v2"
+  },
+  {
+   "text": "Every Mermaid figure renders in Mermaid 10.9",
+   "passed": true,
+   "evidence": "figure 1: rendered as flowchart-v2"
+  },
+  {
+   "text": "No edge passes through a node other than its endpoints, in Mermaid 11.17 and 10.9",
+   "passed": false,
+   "evidence": "figure 1 v11: edge web->stock runs 54.8 px inside node bff; figure 1 v11: edge bff->stock runs 26.5 px inside node partner; figure 1 v11: edge partner->catalog runs 54.7 px inside node bff; figure 1 v10: edge web->stock runs 32.6 px inside node bff; figure 1 v10: edge partner->catalog runs 32.8 px inside node bff"
+  },
+  {
+   "text": "Edge crossings stay within the allowance, in Mermaid 11.17 and 10.9",
+   "passed": false,
+   "evidence": "figure 1 v11: 7 edge crossings, more than 2; figure 1 v10: 7 edge crossings, more than 2"
+  },
+  {
+   "text": "No edge passes through a group title or another label, and no label or note overflows, in Mermaid 11.17 and 10.9",
+   "passed": true,
+   "evidence": "2 figure render(s) measured in v11, v10"
+  },
+  {
+   "text": "Every Mermaid figure is legible in a 900 px column in Mermaid 11.17 and 10.9; every text whose colour or background the figure sets meets the contrast minimum there and in the dark render of 11.17",
+   "passed": true,
+   "evidence": "3 figure render(s) measured in v11, v10, v11-dark"
+  },
+  {
+   "text": "Every figure stays within the hard budget of its kind",
+   "passed": true,
+   "evidence": "within the hard budget"
+  },
+  {
+   "text": "Every figure shows one concern, of the kind the request names",
+   "passed": true,
+   "evidence": "one concern; forms accepted for the request (flowchart): flowchart, table"
+  },
+  {
+   "text": "Nothing drawn is absent from the document",
+   "passed": true,
+   "evidence": "every drawn relation is stated"
+  },
+  {
+   "text": "Every required relation is drawn, directly or through a stated aggregate",
+   "passed": false,
+   "evidence": "missing: r_adm_cat, r_adm_pri"
+  },
+  {
+   "text": "No number is absent from the document or attached to the wrong subject",
+   "passed": true,
+   "evidence": "every number is stated for its subject"
+  },
+  {
+   "text": "No node, participant, state, task, group or writer is invented",
+   "passed": true,
+   "evidence": "every element maps to the document"
+  },
+  {
+   "text": "A caption sits in the paragraph directly above or directly below the fence, in any wording and not as a heading, and claims nothing the figure does not show",
+   "passed": true,
+   "evidence": "1 caption(s) next to the figure, claims shown"
+  },
+  {
+   "text": "Every figure takes a form the case key accepts, and a terminal reply holds no Mermaid fence and no image",
+   "passed": true,
+   "evidence": "every figure takes a form the key accepts (flowchart, table)"
+  }
+ ],
+ "not_applicable": [
+  {
+   "text": "A figure that uses two or more encodings has a legend directly above or below the fence that names every encoding it uses, one item per encoding",
+   "reason": "no figure uses two or more encodings"
+  },
+  {
+   "text": "Every text-fence figure passes the ASCII lint",
+   "reason": "ascii: only when the answer holds a text fence"
+  },
+  {
+   "text": "Every classDef that sets a fill and a text colour meets the contrast minimum, and no category differs from another by fill alone unless the legend names both",
+   "reason": "no classDef or style sets a fill"
+  }
+ ],
+ "summary": {
+  "passed": 11,
+  "failed": 3,
+  "total": 14,
+  "pass_rate": 0.7857
+ },
+ "contract_checks": [
+  {
+   "text": "Each Mermaid figure starts with the settings line of notation.json for its kind",
+   "passed": false,
+   "evidence": "figure 1: settings differ from notation.json flowchart"
+  },
+  {
+   "text": "The caption sits directly above the fence: a bold label and title, then one sentence",
+   "passed": false,
+   "evidence": "figure 1: no paragraph directly above the fence"
+  },
+  {
+   "text": "Names are written exactly as the document writes them",
+   "passed": true,
+   "evidence": "names as the document writes them"
+  },
+  {
+   "text": "One edge joins any pair of nodes",
+   "passed": true,
+   "evidence": "one edge per node pair"
+  },
+  {
+   "text": "Every figure stays within the soft budget of its kind",
+   "passed": true,
+   "evidence": "within the soft budget"
+  }
+ ],
+ "contract_summary": {
+  "passed": 3,
+  "failed": 2,
+  "total": 5,
+  "pass_rate": 0.6
+ },
+ "h_core": {
+  "passed": 9,
+  "total": 12,
+  "pass_rate": 0.75
+ },
+ "strict_pass": false,
+ "checks": {
+  "Q01": "pass",
+  "Q02": "pass",
+  "Q03": "fail",
+  "Q04": "fail",
+  "Q05": "pass",
+  "Q06": "pass",
+  "Q07": "pass",
+  "Q08": "pass",
+  "Q09": "pass",
+  "Q10": "fail",
+  "Q11": "pass",
+  "Q12": "pass",
+  "Q13": "pass",
+  "Q14": "na",
+  "Q15": "pass",
+  "Q16": "na",
+  "Q17": "na"
+ },
+ "contract": {
+  "K01": "fail",
+  "K02": "na",
+  "K03": "na",
+  "K04": "fail",
+  "K05": "na",
+  "K06": "na",
+  "K07": "pass",
+  "K08": "pass",
+  "K09": "pass"
+ },
+ "fidelity": {
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "mapped": {
+   "1:web": {
+    "text": "Web shop",
+    "entities": [
+     "web"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:bff": {
+    "text": "Mobile BFF",
+    "entities": [
+     "bff"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:partner": {
+    "text": "Partner API",
+    "entities": [
+     "papi"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:catalog": {
+    "text": "Catalog service",
+    "entities": [
+     "cat"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:pricing": {
+    "text": "Pricing service",
+    "entities": [
+     "pri"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:stock": {
+    "text": "Stock service",
+    "entities": [
+     "stk"
+    ],
+    "group": null,
+    "status": "mapped"
+   }
+  },
+  "renamed": [],
+  "invented": [],
+  "unsupported": [],
+  "missing_required": [
+   "r_adm_cat",
+   "r_adm_pri"
+  ],
+  "bad_numbers": [],
+  "decoy_hits": [
+   "t4"
+  ],
+  "decoys": {
+   "t1": {
+    "type": "invented_hub",
+    "hit": false
+   },
+   "t2": {
+    "type": "unstated_relation",
+    "hit": false
+   },
+   "t3": {
+    "type": "number_from_other_rule",
+    "hit": false
+   },
+   "t4": {
+    "type": "k33_core",
+    "hit": true
+   },
+   "t5": {
+    "type": "boundary_edge",
+    "hit": false
+   }
+  },
+  "modelled": true,
+  "diagnostics": []
+ },
+ "geometry": {
+  "fig-1": {
+   "v11": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "flowchart-v2",
+     "width": 474.9,
+     "height": 472.0,
+     "nodes": 6,
+     "edges": 9,
+     "crossings": 7,
+     "font_px": 16.0,
+     "effective_font_px": 16.0,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "crossings",
+      "severity": "fail",
+      "message": "7 edge crossings, more than 2"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge web->stock runs 54.8 px inside node bff"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge bff->stock runs 26.5 px inside node partner"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge partner->catalog runs 54.7 px inside node bff"
+     }
+    ]
+   },
+   "v10": {
+    "status": "rendered",
+    "mermaid": "10.9.8",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "flowchart-v2",
+     "width": 384.9,
+     "height": 400.0,
+     "nodes": 6,
+     "edges": 9,
+     "crossings": 7,
+     "font_px": 16.0,
+     "effective_font_px": 16.0,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "crossings",
+      "severity": "fail",
+      "message": "7 edge crossings, more than 2"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge web->stock runs 32.6 px inside node bff"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge partner->catalog runs 32.8 px inside node bff"
+     }
+    ]
+   },
+   "v11-dark": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "flowchart-v2",
+     "width": 474.9,
+     "height": 472.0,
+     "nodes": 6,
+     "edges": 9,
+     "crossings": 7,
+     "font_px": 16.0,
+     "effective_font_px": 16.0,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "crossings",
+      "severity": "fail",
+      "message": "7 edge crossings, more than 2"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge web->stock runs 54.8 px inside node bff"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge bff->stock runs 26.5 px inside node partner"
+     },
+     {
+      "check": "edges_through_nodes",
+      "severity": "fail",
+      "message": "edge partner->catalog runs 54.7 px inside node bff"
+     }
+    ]
+   }
+  }
+ },
+ "figures": 1,
+ "figure_forms": {
+  "mermaid": 1,
+  "text": 0,
+  "table": 0,
+  "list": 0
+ },
+ "no_figure": false,
+ "tiny_answer": false,
+ "execution_metrics": {
+  "total_tool_calls": 0,
+  "errors_encountered": 0,
+  "output_chars": 763
+ },
+ "grader": {
+  "version": "grade_figures/3",
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "normalize_sha256": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
+ }
+}

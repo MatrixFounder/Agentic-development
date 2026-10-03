@@ -1,0 +1,1261 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "d2db9d09dd2b553563c5440085efd6da1c8145976b12d76858d1531b4f9f6385",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1529.1,
+    "height": 1169.6,
+    "nodes": 11,
+    "edges": 13,
+    "crossings": 2,
+    "crossing_pairs": [
+     [
+      "gw->inv",
+      "slot->bus",
+      1325.6,
+      583.1
+     ],
+     [
+      "pick->bus",
+      "inv->invdb",
+      665.5,
+      820.7
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "pick->pickdb",
+      "node": "invdb",
+      "depth_px": 88.0,
+      "perpendicular_px": 19.1
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [
+     {
+      "a": "label:gRPC reserve stock, synchronous",
+      "b": "label:gRPC print label",
+      "area_px": 345.3,
+      "kind": "label-label"
+     }
+    ],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 9.42,
+    "smallest_font_px": 16.0,
+    "smallest_text": "data zone",
+    "smallest_effective_font_px": 9.42,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "data zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "application zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "DMZ",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSpick tasks and scans",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSstock and pick reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCpick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCreserve stock, synchronous",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCprint label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPpublishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes pick.completed,publishes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams to",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Handheld appAndroid app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Supervisor consoleweb app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Slotting servicePython",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reporting replicaMariaDB, read-only",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge pick->pickdb runs 88.0 px inside node invdb"
+    },
+    {
+     "check": "label_overlaps",
+     "severity": "fail",
+     "message": "label:gRPC reserve stock, synchronous overlaps label:gRPC print label (345.3 px)"
+    },
+    {
+     "check": "legibility",
+     "severity": "fail",
+     "message": "text renders at 9.4 px in a 900 px column (figure 1529 px wide, font 16.0 px); the floor is 10 px"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "2 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "7b170594ad35668567593309c427d0a0a70295ca8a310576f1b5608715eb1f3d",
+   "png_sha256": "c456bc528fe2421593ab15176d36502efa9c147daf68dde4485df4fd559ca895",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 541
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "d2db9d09dd2b553563c5440085efd6da1c8145976b12d76858d1531b4f9f6385",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1529.1,
+    "height": 1169.6,
+    "nodes": 11,
+    "edges": 13,
+    "crossings": 2,
+    "crossing_pairs": [
+     [
+      "gw->inv",
+      "slot->bus",
+      1325.6,
+      583.1
+     ],
+     [
+      "pick->bus",
+      "inv->invdb",
+      665.5,
+      820.7
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "pick->pickdb",
+      "node": "invdb",
+      "depth_px": 88.0,
+      "perpendicular_px": 19.1
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [
+     {
+      "a": "label:gRPC reserve stock, synchronous",
+      "b": "label:gRPC print label",
+      "area_px": 345.3,
+      "kind": "label-label"
+     }
+    ],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 9.42,
+    "smallest_font_px": 16.0,
+    "smallest_text": "data zone",
+    "smallest_effective_font_px": 9.42,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "data zone",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "application zone",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "DMZ",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSpick tasks and scans",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSstock and pick reports",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstock queries",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCpick tasks",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCreserve stock, synchronous",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCprint label",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPpublishes pick.completed",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes pick.completed,publishes stock.changed",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes stock.changed",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstores slot assignments",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "streams to",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Handheld appAndroid app",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Supervisor consoleweb app",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Slotting servicePython",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Reporting replicaMariaDB, read-only",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge pick->pickdb runs 88.0 px inside node invdb"
+    },
+    {
+     "check": "label_overlaps",
+     "severity": "fail",
+     "message": "label:gRPC reserve stock, synchronous overlaps label:gRPC print label (345.3 px)"
+    },
+    {
+     "check": "legibility",
+     "severity": "fail",
+     "message": "text renders at 9.4 px in a 900 px column (figure 1529 px wide, font 16.0 px); the floor is 10 px"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "2 edge crossing(s); allowed 2, aim at 0"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "13 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('HTTPSpick tasks and scans', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "a6ecebd2419380acd1e4ae73adf4a11f7d33c2da41bb71e750feee6bb2c50754",
+   "png_sha256": "3bce83c9aa9965eef49c3fb841aa36e514cca639ac8cf663712e426ee943cd78",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 541
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "d2db9d09dd2b553563c5440085efd6da1c8145976b12d76858d1531b4f9f6385",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1439.1,
+    "height": 999.6,
+    "nodes": 11,
+    "edges": 13,
+    "crossings": 2,
+    "crossing_pairs": [
+     [
+      "gw->inv",
+      "slot->bus",
+      1250.5,
+      469.9
+     ],
+     [
+      "pick->bus",
+      "inv->invdb",
+      641.1,
+      665.5
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "pick->pickdb",
+      "node": "invdb",
+      "depth_px": 84.2,
+      "perpendicular_px": 16.0
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 10.01,
+    "smallest_font_px": 16.0,
+    "smallest_text": "data zone",
+    "smallest_effective_font_px": 10.01,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "data zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "application zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "DMZ",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSpick tasks and scans",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSstock and pick reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCpick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCreserve stock, synchronous",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCprint label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPpublishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes pick.completed,publishes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams to",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reporting replicaMariaDB, read-only",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Slotting servicePython",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Handheld appAndroid app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Supervisor consoleweb app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge pick->pickdb runs 84.2 px inside node invdb"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "2 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "57bd892556cdb2ef49167c050f2ea9f104c2a7ccf2fd1823ce0a44d8832bc1c2",
+   "png_sha256": "efb4f81760c33cfacdb2f0a18dde8aa591761ae7d47051aa419af4ce9bac04fb",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 541
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d2db9d09dd2b553563c5440085efd6da1c8145976b12d76858d1531b4f9f6385",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 871.5,
+    "height": 1775.3,
+    "nodes": 11,
+    "edges": 13,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "slot->bus",
+      "inv->invdb",
+      124.5,
+      964.0
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "data zone",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "data zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "application zone",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "DMZ",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSpick tasks and scans",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTPSstock and pick reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCpick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCreserve stock, synchronous",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCprint label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPpublishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes pick.completed,publishes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "AMQPconsumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "gRPCstores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams to",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Handheld appAndroid app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Supervisor consoleweb app",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Slotting servicePython",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reporting replicaMariaDB, read-only",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "09163268478d7695aa37979019176b1548255fd4a342639f75c7cb5e2a53b2be",
+   "png_sha256": "bc4332919898485f36750f6ffb9b301c33e92608433bc5ef9ab28f4b976b6bc9",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 541
+    }
+   ]
+  }
+ }
+}

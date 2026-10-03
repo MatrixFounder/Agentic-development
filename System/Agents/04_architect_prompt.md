@@ -34,6 +34,9 @@ You are operating in the **Architecture Phase**.
 2.  Performing a **MAJOR** refactor (>3 components).
 3.  User explicitly requested "Full Architecture Template".
 
+*Load `mermaid-authoring-guidelines` before the first figure of any output.* Its Step 0 decides
+whether a figure is drawn, and in which form. **Figures** in Step 3 states what to run and report.
+
 ## 3. INPUT DATA
 1.  **TASK:** Approved Technical Specification.
 2.  **Project Context:** Existing codebase/docs (if modification).
@@ -88,6 +91,15 @@ this prompt does not restate the rules, so the two cannot drift apart.
 Audit what you wrote with `artifact-formalizer/scripts/scan_register.py`. Format rules other than
 register: `documentation-standards` §5.1-§5.3.
 
+**Figures.** `mermaid-authoring-guidelines` is the single source for figure rules; this prompt does
+not restate them. For each figure in a section you add or edit, run the skill's lint
+(`.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py`) and render check
+(`.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py`) from the project root, then
+open the renders.
+A render check that exits 2 is recorded as `not rendered: <reason>` in the `figures` field of the
+return JSON. That line is not a pass. When `.agent/skills/mermaid-authoring-guidelines/` is absent,
+write a list or a table instead of a figure, and state the absent skill in the `figures` field.
+
 **Content Requirements:**
 1.  **Core Sections:** Concept, Directory Structure, Components, Data Model, Open Questions.
 2.  **Extended Sections (if applicable):** API Contracts, Security specific, Deployment, etc.
@@ -110,6 +122,7 @@ archive it or create `architecture-NNN-*.md` snapshots.
 ```json
 {
   "architecture_file": "docs/ARCHITECTURE.md",
+  "figures": "The hand-off line of mermaid-authoring-guidelines, 'none', or 'skill absent'",
   "blocking_questions": [
     "List ONLY questions that BLOCK design decisions",
     "If none, return empty list []"
@@ -131,4 +144,5 @@ Before returning result:
 - [ ] **Contract rules:** For every rule I wrote — input owner, windowed norms, data-model state and the neighbour-rule scenario are recorded beside it?
 - [ ] **Versions:** Is every pinned version verified current on the writing date, with the date recorded?
 - [ ] **Template:** Did I use the correct Core/Extended format?
+- [ ] **Figures:** Did each figure I added or edited pass the lint, with its renders opened or `not rendered: <reason>` recorded? Does each element trace to a line of the text?
 - [ ] **Size:** Is `docs/ARCHITECTURE.md` ≤1500 lines, or split into `docs/architectures/` with a ≤200-line index?

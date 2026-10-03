@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 115429,
+ "stop_reason": "end_turn",
+ "session_id": "bc3b9307-9d72-4af1-aee7-85eab92d9f4f",
+ "total_cost_usd": 0.2517094,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1481,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 11978,
+  "output_tokens_details": {
+   "thinking_tokens": 11436
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1481,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 11978,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1481,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1481
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 11978,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1481,
+   "webSearchRequests": 0,
+   "costUSD": 0.2517094,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 11436,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "The bars below cover calendar days. Weekends are shaded and do not count towards a task's duration. Critical-path tasks are highlighted. R2 is the diamond at the end of Monday 23 November.\n\n```mermaid\ngantt\n    accTitle: Schedule for moving the reporting warehouse to the new cluster\n    accDescr: P1 runs 2 to 5 Nov, P2 6 to 10 Nov, D1 11 to 12 Nov, D2 11 to 18 Nov, Q1 19 to 20 Nov and R1 on 23 Nov 2026. Milestone R2 is at the end of R1 on 23 Nov. The critical path is P1, P2, D2, Q1, R1 and R2. D1 has 4 working days of slack.\n    dateFormat YYYY-MM-DD\n    axisFormat %d %b\n    excludes weekends\n\n    section Platform\n    P1 Provision the new cluster        :crit, p1, 2026-11-02, 4d\n    P2 Configure replication            :crit, p2, 2026-11-06, 3d\n\n    section Data\n    D1 Backfill dimension tables        :d1, 2026-11-11, 2d\n    D2 Backfill fact tables (2019–2025) :crit, d2, 2026-11-11, 6d\n\n    section QA\n    Q1 Reconcile row counts             :crit, q1, 2026-11-19, 2d\n\n    section Release\n    R1 Write freeze                     :crit, r1, 2026-11-23, 1d\n    R2 Switch dashboards                :crit, milestone, r2, 2026-11-24, 0d\n```",
+ "ttft_ms": 115393,
+ "type": "result",
+ "duration_ms": 115453,
+ "uuid": "ec94e1a8-309d-429d-9164-4ea0ab22c053",
+ "ttft_stream_ms": 1216,
+ "time_to_request_ms": 24,
+ "first_content_frame_ms": 1216,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

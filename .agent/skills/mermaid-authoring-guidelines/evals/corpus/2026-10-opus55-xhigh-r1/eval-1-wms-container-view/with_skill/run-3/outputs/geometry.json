@@ -1,0 +1,1013 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "25bbd88bfd0423da04e542934acd490d143105a2cbb8b59f614e816ad4468d45",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1003.4,
+    "height": 924.0,
+    "nodes": 10,
+    "edges": 12,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "INV->IDB",
+      "SLOT->BUS",
+      869.5,
+      583.8
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 14.35,
+    "smallest_font_px": 16.0,
+    "smallest_text": "tasks · scans · reports",
+    "smallest_effective_font_px": 14.35,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "tasks · scans · reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "pick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "print label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reserve stock",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "publishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes · publishes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Client appsHandheld app · Supervisor console",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Reporting replicaMariaDB · read-only",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Slotting servicePython · added by this task",
+       "kind": "node",
+       "fg": "#4a2c00",
+       "bg": "#fff4e0",
+       "ratio": 11.66,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "17745b9dd9d7a1778d97917e2644894b1e878c71e2addfc4c71fc83ff7e61a7f",
+   "png_sha256": "d70c755f9c3a91ad5ff0fb7f683e97f7ff000b72580262167486253b174e0101",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 427
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "25bbd88bfd0423da04e542934acd490d143105a2cbb8b59f614e816ad4468d45",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1003.4,
+    "height": 924.0,
+    "nodes": 10,
+    "edges": 12,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "INV->IDB",
+      "SLOT->BUS",
+      869.5,
+      583.8
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 14.35,
+    "smallest_font_px": 16.0,
+    "smallest_text": "tasks · scans · reports",
+    "smallest_effective_font_px": 14.35,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "tasks · scans · reports",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "pick tasks",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "print label",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "reserve stock",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "publishes pick.completed",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "stock queries",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes · publishes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "streams",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "stores slot assignments",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes stock.changed",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Client appsHandheld app · Supervisor console",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Reporting replicaMariaDB · read-only",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Slotting servicePython · added by this task",
+       "kind": "node",
+       "fg": "#4a2c00",
+       "bg": "#fff4e0",
+       "ratio": 11.66,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "12 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('tasks · scans · reports', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "f58e8b410838b914247b6235d54cd00751edc4e31627fa9bd5caed90698e1af4",
+   "png_sha256": "65b2a304abc7d01bedc022490e3b86a8e9cd93b91aabfd0f1687602296d10ab8",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 427
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "25bbd88bfd0423da04e542934acd490d143105a2cbb8b59f614e816ad4468d45",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 977.1,
+    "height": 809.0,
+    "nodes": 10,
+    "edges": 12,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "INV->IDB",
+      "SLOT->BUS",
+      834.4,
+      489.0
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 14.74,
+    "smallest_font_px": 16.0,
+    "smallest_text": "tasks · scans · reports",
+    "smallest_effective_font_px": 14.74,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "tasks · scans · reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "pick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "print label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reserve stock",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "publishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes · publishes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Client appsHandheld app · Supervisor console",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Reporting replicaMariaDB · read-only",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Slotting servicePython · added by this task",
+       "kind": "node",
+       "fg": "#4a2c00",
+       "bg": "#fff4e0",
+       "ratio": 11.66,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "4178e9831a4906f62fe2ff263d9e7897c4c81cc63fe94e89ae135a2934f099c9",
+   "png_sha256": "f8cb46e27b47689af47733c0613c2e0560f89f6853ec12740bb0df41bfaa7db3",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 427
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "25bbd88bfd0423da04e542934acd490d143105a2cbb8b59f614e816ad4468d45",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 1053.3,
+    "height": 936.2,
+    "nodes": 10,
+    "edges": 12,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "INV->IDB",
+      "SLOT->BUS",
+      920.7,
+      591.7
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 13.67,
+    "smallest_font_px": 16.0,
+    "smallest_text": "tasks · scans · reports",
+    "smallest_effective_font_px": 13.67,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "tasks · scans · reports",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "pick tasks",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "print label",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "reserve stock",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "publishes pick.completed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stock queries",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes · publishes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "owns",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "streams",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "stores slot assignments",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "consumes stock.changed",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Client appsHandheld app · Supervisor console",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "API gatewayKong",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Picking serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Picking DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Label printer bridgeGo",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory serviceJava",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Event busRabbitMQ",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Inventory DBMariaDB",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Reporting replicaMariaDB · read-only",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Slotting servicePython · added by this task",
+       "kind": "node",
+       "fg": "#4a2c00",
+       "bg": "#fff4e0",
+       "ratio": 11.66,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "f63867983004f77854c2214c8a5456e4be4d79949af1181a203ffcf2a6fe0236",
+   "png_sha256": "bff9aef02bb9e54facf2b5b3aa42ea10314875b918e32f10d0b87b6420525653",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 427
+    }
+   ]
+  }
+ }
+}

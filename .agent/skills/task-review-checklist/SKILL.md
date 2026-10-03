@@ -2,7 +2,7 @@
 name: task-review-checklist
 description: Detailed checklist for verifying Technical Specifications (TASK).
 tier: 1
-version: 1.0
+version: 1.1
 ---
 # TASK Review Checklist
 
@@ -53,10 +53,22 @@ version: 1.0
       and reports `UNRESOLVABLE`. It carries `@<rev>` naming the revision measured, which is the
       form §4.1 already licenses for a claim about another state.
 
+## 8. Figures (`documentation-standards` §5.6)
+- [ ] **Fidelity:** a figure in `docs/TASK.md` states only what the TASK text states. Each node,
+      edge, label and number has a line of the text that states it.
+- [ ] **Lint output read:** the brief carries the output of the figure lint in the Script
+      Contract, and it holds no `error`. Without it the figure is reported *not verified*: the
+      review then approves nothing, and `has_critical_issues` is true. Render output is
+      optional; the line `not rendered: <reason>` lets the review conclude and never counts as a
+      passed render.
+- [ ] **No negative marker:** no figure ends with a `%% negative:` line. Such a line in a project
+      document fails FIG-25 of the skill's review checklist. The lint reports the line as
+      MA-NEG-03, an error. It also counts every finding of that fence.
+
 ## Execution Mode
 - **Mode**: `hybrid`
-- **Rationale**: the checklist items are reviewer judgement; the register scan named in the
-  Script Contract is deterministic and is run, not recalled.
+- **Rationale**: the checklist items are reviewer judgement; the register scan and the figure lint
+  named in the Script Contract are deterministic and are run, not recalled.
 
 ## Script Contract
 - **Primary Command:** `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py docs/TASK.md --sections --terms docs/ARCHITECTURE.md`
@@ -65,15 +77,26 @@ version: 1.0
 - **Failure Semantics:** `0` on any number of findings (advisory); `2` on a broken rule file or a
   dead detector; `3` on unreadable or absent input. A `2` or `3` invalidates the run, not the
   artifact.
+- **Figure lint (§8), when `docs/TASK.md` holds a figure:**
+  `python3 .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py docs/TASK.md`. Exit
+  `0` no `error`; `1` `error` findings; `2` a broken instrument or a dead rule; `3` usage. A `2`
+  or `3` leaves the figure *not verified*.
+- **Figure render (§8), optional:**
+  `python3 .agent/skills/mermaid-authoring-guidelines/scripts/render_check.py docs/TASK.md`. Exit
+  `0` pass; `1` a figure fails; `2` not rendered, printed as `not rendered: <reason>`; `3` usage.
+  Renders are written outside the repository.
 
 ## Safety Boundaries
 - **Scope:** read-only. A review reads artifacts and runs the read-only register scan; it never
   edits the artifact under review. Findings go to the review notes, and the authoring role applies
-  them.
+  them. Figure lint and render output reach the review as caller-supplied evidence; renders sit
+  outside the repository.
 
 ## Validation Evidence
 - **Primary Evidence:** the register scan named in the Register section, attached to the review
   notes with its `DETECTORS` and `DIAGNOSTICS` blocks intact.
+- **Figure Evidence:** for a TASK that holds a figure, the lint output, and the render output or
+  the `not rendered: <reason>` line.
 - **Quality Gate:** no dead detector; zero unresolved `warn`; every checklist item above ticked
   against the artifact under review rather than against the previous revision.
 
@@ -81,5 +104,6 @@ version: 1.0
 Severity is a named value, never a glyph (§5.5 rule 5).
 - **BLOCKING:** Missing UC, contradiction with User Task, unmitigated critical risk, dead detector
   in the register scan.
-- **MAJOR:** Incomplete scenarios, vague criteria, term mismatches, unresolved register `warn`.
+- **MAJOR:** Incomplete scenarios, vague criteria, term mismatches, unresolved register `warn`, a
+  figure lint `error`, a figure that states what the TASK text does not.
 - **MINOR:** Typos, phrasing.

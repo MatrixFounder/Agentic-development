@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 96342,
+ "stop_reason": "end_turn",
+ "session_id": "579ad7ab-5f63-4594-909e-9efe9e11451f",
+ "total_cost_usd": 0.5328614,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 41405,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 10066,
+  "output_tokens_details": {
+   "thinking_tokens": 9527
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 41405,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 10066,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 41405,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 41405
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 10066,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 41405,
+   "webSearchRequests": 0,
+   "costUSD": 0.5328614,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 9527,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 2.4.** Front-end calls: each front-end calls each of the three domain services.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%\nflowchart TB\n  accTitle: Front-end calls\n  accDescr: Each of the three front-ends calls one node that stands for the three domain services.\n  WEB(\"Web shop<br/><small>storefront · server-rendered pages</small>\")\n  BFF(\"Mobile BFF<br/><small>backend of the iOS and Android apps</small>\")\n  PAPI(\"Partner API<br/><small>public REST · marketplace partners</small>\")\n  DOM(\"Domain services<br/><small>Catalog · Pricing · Stock</small>\")\n  WEB --> DOM\n  BFF --> DOM\n  PAPI --> DOM\n  class WEB,BFF,PAPI,DOM wf\n  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47\n```\n\nLegend:\n- rounded box in the top row = a front-end. The box below stands for Catalog service, Pricing service and Stock service, drawn as one node.\n- arrow = the front-end calls each of the three services directly over HTTP/JSON. No API gateway sits between them (FS-1, FS-2, decision D-7).\n- not drawn: the calls from Stock service to Pricing service (FS-3), the Admin console (FS-4) and the Warehouse feed (FS-5).",
+ "ttft_ms": 92842,
+ "type": "result",
+ "duration_ms": 96370,
+ "uuid": "b9aa277a-8027-42b5-9e99-7264baa58a20",
+ "ttft_stream_ms": 1283,
+ "time_to_request_ms": 23,
+ "first_content_frame_ms": 1283,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

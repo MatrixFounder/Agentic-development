@@ -1,0 +1,592 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "96c90045c31252704867076a4abe44a3ffd1a1d0ed0e290dd916d4c4bac256c1",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 572.6,
+    "height": 307.2,
+    "nodes": 5,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Media bucket",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Media bucket",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload APIGo service",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnail servicePython worker",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "CDNmanaged edge cache",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Originals prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnails prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "a8c16c4414ea52ce81929baa82d779afd1320caa7f05941d4a1ec3ea07fb068e",
+   "png_sha256": "a6301c9b05d48002632ba2db47bfa411713514c073b8bb2c5dfad3af532d742c",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 134
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "96c90045c31252704867076a4abe44a3ffd1a1d0ed0e290dd916d4c4bac256c1",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 572.6,
+    "height": 307.2,
+    "nodes": 5,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Media bucket",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "Media bucket",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#13171c",
+       "ratio": 17.79,
+       "scope": "author"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload APIGo service",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnail servicePython worker",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "CDNmanaged edge cache",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Originals prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnails prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "4 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('write', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "260bbf8f0c2db6da3e3ce7e196b32789f5f9b6b796b865889243ec7f2e6b8313",
+   "png_sha256": "fbcd6f322754f4fd2dea3d35f4d179ac1c6d3bddc7b7bd4a1d98c3ef3c7692da",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 134
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "96c90045c31252704867076a4abe44a3ffd1a1d0ed0e290dd916d4c4bac256c1",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 505.1,
+    "height": 272.2,
+    "nodes": 5,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [
+     {
+      "edge": "TH->THUMB",
+      "title": "Media bucket",
+      "cluster": "MB",
+      "near_miss": true,
+      "inside_px": 0.0
+     }
+    ],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Media bucket",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Media bucket",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Originals prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnails prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Upload APIGo service",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnail servicePython worker",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "CDNmanaged edge cache",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "title_near_miss",
+     "severity": "warn",
+     "message": "edge TH->THUMB passes within the box reserved for the title 'Media bucket'"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "bc6acfc3d1594e21516cbf37d9c91f7643cdcd9de9f7a4e1c54af5ac33a1aec1",
+   "png_sha256": "125529453dcb839801e6ee79fcaeeb1f4452f5f1c694afc9fa8ef692069bba4d",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 134
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "96c90045c31252704867076a4abe44a3ffd1a1d0ed0e290dd916d4c4bac256c1",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 601.9,
+    "height": 307.2,
+    "nodes": 5,
+    "edges": 4,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Media bucket",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Media bucket",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "write",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "read",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Upload APIGo service",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnail servicePython worker",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "CDNmanaged edge cache",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Originals prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Thumbnails prefix",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "30264d463a66a4f1c20d62224e8f75fad60fcd46e96112877a13742d646d253c",
+   "png_sha256": "4855e92fd97e5780ccc6e1458ec8c5f003cf86dfc1c6b45cd58d5216300e01f4",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 134
+    }
+   ]
+  }
+ }
+}

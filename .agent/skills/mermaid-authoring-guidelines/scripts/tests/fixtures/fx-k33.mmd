@@ -1,0 +1,11 @@
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  P1["Producer 1"] --> C1["Consumer 1"]
+  P1 --> C2["Consumer 2"]
+  P1 --> C3["Consumer 3"]
+  P2["Producer 2"] --> C1
+  P2 --> C2
+  P2 --> C3
+  P3["Producer 3"] --> C1
+  P3 --> C2
+  P3 --> C3

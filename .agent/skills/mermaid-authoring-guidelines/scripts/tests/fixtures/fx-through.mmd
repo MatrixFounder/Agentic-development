@@ -1,0 +1,10 @@
+%%{init: {"flowchart": {"curve": "cardinal", "nodeSpacing": 8, "rankSpacing": 25}}}%%
+flowchart LR
+  A("Alpha") --> B("Beta")
+  B --> C("Gamma")
+  C --> D("Delta")
+  A --> D
+  A --> C
+  B --> D
+  X("Xray") --> C
+  Y("Yankee") --> B

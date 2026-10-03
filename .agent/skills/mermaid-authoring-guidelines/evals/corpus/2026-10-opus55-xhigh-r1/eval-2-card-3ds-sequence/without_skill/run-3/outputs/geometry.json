@@ -1,0 +1,1413 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f62074568e3a01220434dc8767ae3829e6ae1a0d7488d095465fd66af140fa68",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1344.0,
+    "height": 953.0,
+    "nodes": 5,
+    "edges": 12,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 10.71,
+    "smallest_font_px": 16.0,
+    "smallest_text": "External",
+    "smallest_effective_font_px": 10.71,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "CP",
+      "OA",
+      "PS",
+      "PSP",
+      "ACS"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      325.0,
+      359.0,
+      200.0
+     ],
+     "median_gap_px": 262.5,
+     "widest_message_px": 310.2,
+     "widest_message": "3. Create a payment intent (wait up to 8 s)",
+     "width_source": "measure",
+     "messages": 12,
+     "lifeline_through_label": [
+      {
+       "message": "7. Open the challenge",
+       "from": "CP",
+       "to": "ACS",
+       "lifelines": [
+        "PS"
+       ]
+      },
+      {
+       "message": "8. Send the browser back to return_url",
+       "from": "ACS",
+       "to": "CP",
+       "lifelines": [
+        "PS"
+       ]
+      }
+     ],
+     "lifeline_label_crossings": 2
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "External",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Brightwater store",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "On a network error, repeat step 3 up to 2 times",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "with the same idempotency_key",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "alt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[authorized]",
+       "kind": "section",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Mark the order as paid",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "1. Send the order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2. POST /payments (fields of Table 4.3)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3. Create a payment intent (wait up to 8 s)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4. challenge_required with redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7. Open the challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8. Send the browser back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "authorized (steps 4 to 8 are skipped)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9. Webhook payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10. HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11. Publish payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '7. Open the challenge' of CP -> ACS; another participant order or a shorter label may avoid it"
+    },
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '8. Send the browser back to return_url' of ACS -> CP; another participant order or a shorter label may avoid it"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "00b9485468d9aa3181631204af510105cf40eb65f730d3de33513af0f740ad34",
+   "png_sha256": "b8bd6512552fff7e29d7817594f0d036fff7327a0dc5693e512b4750ad82b35c",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 609
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f62074568e3a01220434dc8767ae3829e6ae1a0d7488d095465fd66af140fa68",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1344.0,
+    "height": 953.0,
+    "nodes": 5,
+    "edges": 12,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 10.71,
+    "smallest_font_px": 16.0,
+    "smallest_text": "External",
+    "smallest_effective_font_px": 10.71,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "CP",
+      "OA",
+      "PS",
+      "PSP",
+      "ACS"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      325.0,
+      359.0,
+      200.0
+     ],
+     "median_gap_px": 262.5,
+     "widest_message_px": 310.2,
+     "widest_message": "3. Create a payment intent (wait up to 8 s)",
+     "width_source": "measure",
+     "messages": 12,
+     "lifeline_through_label": [
+      {
+       "message": "7. Open the challenge",
+       "from": "CP",
+       "to": "ACS",
+       "lifelines": [
+        "PS"
+       ]
+      },
+      {
+       "message": "8. Send the browser back to return_url",
+       "from": "ACS",
+       "to": "CP",
+       "lifelines": [
+        "PS"
+       ]
+      }
+     ],
+     "lifeline_label_crossings": 2
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "External",
+       "kind": "other",
+       "fg": "#cccccc",
+       "bg": "#0d1117",
+       "ratio": 11.78,
+       "scope": "theme"
+      },
+      {
+       "text": "Brightwater store",
+       "kind": "other",
+       "fg": "#cccccc",
+       "bg": "#0d1117",
+       "ratio": 11.78,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "On a network error, repeat step 3 up to 2 times",
+       "kind": "note",
+       "fg": "#b8b6b6",
+       "bg": "#474949",
+       "ratio": 4.49,
+       "scope": "theme"
+      },
+      {
+       "text": "with the same idempotency_key",
+       "kind": "note",
+       "fg": "#b8b6b6",
+       "bg": "#474949",
+       "ratio": 4.49,
+       "scope": "theme"
+      },
+      {
+       "text": "alt",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "[authorized]",
+       "kind": "section",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "Mark the order as paid",
+       "kind": "note",
+       "fg": "#b8b6b6",
+       "bg": "#474949",
+       "ratio": 4.49,
+       "scope": "theme"
+      },
+      {
+       "text": "1. Send the order",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "2. POST /payments (fields of Table 4.3)",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "3. Create a payment intent (wait up to 8 s)",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "4. challenge_required with redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "5. redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "6. redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "7. Open the challenge",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "8. Send the browser back to return_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "authorized (steps 4 to 8 are skipped)",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "9. Webhook payment.succeeded",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "10. HTTP 200",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "11. Publish payment.confirmed",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '7. Open the challenge' of CP -> ACS; another participant order or a shorter label may avoid it"
+    },
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '8. Send the browser back to return_url' of ACS -> CP; another participant order or a shorter label may avoid it"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "3 note text(s) in the viewer's theme colours below 4.5:1, lowest 4.49:1 ('On a network error, repeat step 3 up to 2 times', #b8b6b6 on #474949); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "4a44a0d62d2f4990d2a9f676bda2503e82841add4b163331338f170fa355e8ee",
+   "png_sha256": "5b15744f837c919f362141735c79194b1acf4371502210e3da85098ab62ba7d2",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 609
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f62074568e3a01220434dc8767ae3829e6ae1a0d7488d095465fd66af140fa68",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1344.0,
+    "height": 953.0,
+    "nodes": 5,
+    "edges": 12,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 10.71,
+    "smallest_font_px": 16.0,
+    "smallest_text": "External",
+    "smallest_effective_font_px": 10.71,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "CP",
+      "OA",
+      "PS",
+      "PSP",
+      "ACS"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      325.0,
+      359.0,
+      200.0
+     ],
+     "median_gap_px": 262.5,
+     "widest_message_px": 310.2,
+     "widest_message": "3. Create a payment intent (wait up to 8 s)",
+     "width_source": "measure",
+     "messages": 12,
+     "lifeline_through_label": [
+      {
+       "message": "7. Open the challenge",
+       "from": "CP",
+       "to": "ACS",
+       "lifelines": [
+        "PS"
+       ]
+      },
+      {
+       "message": "8. Send the browser back to return_url",
+       "from": "ACS",
+       "to": "CP",
+       "lifelines": [
+        "PS"
+       ]
+      }
+     ],
+     "lifeline_label_crossings": 2
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "External",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Brightwater store",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "On a network error, repeat step 3 up to 2 times",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "with the same idempotency_key",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "alt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[authorized]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Mark the order as paid",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "1. Send the order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2. POST /payments (fields of Table 4.3)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3. Create a payment intent (wait up to 8 s)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4. challenge_required with redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7. Open the challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8. Send the browser back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "authorized (steps 4 to 8 are skipped)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9. Webhook payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10. HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11. Publish payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '7. Open the challenge' of CP -> ACS; another participant order or a shorter label may avoid it"
+    },
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '8. Send the browser back to return_url' of ACS -> CP; another participant order or a shorter label may avoid it"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "ff08a98bbcccb87d2bd888702595ffb8626bb1876ec0655719eaf7ff1f7a5737",
+   "png_sha256": "dd6d837407abf6e62b9cefac62bc0ca207270385ee6b198ef688689ae9b99a70",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 609
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f62074568e3a01220434dc8767ae3829e6ae1a0d7488d095465fd66af140fa68",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1344.0,
+    "height": 999.0,
+    "nodes": 5,
+    "edges": 12,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 10.71,
+    "smallest_font_px": 16.0,
+    "smallest_text": "External",
+    "smallest_effective_font_px": 10.71,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "CP",
+      "OA",
+      "PS",
+      "PSP",
+      "ACS"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      325.0,
+      359.0,
+      200.0
+     ],
+     "median_gap_px": 262.5,
+     "widest_message_px": 310.2,
+     "widest_message": "3. Create a payment intent (wait up to 8 s)",
+     "width_source": "measure",
+     "messages": 12,
+     "lifeline_through_label": [
+      {
+       "message": "7. Open the challenge",
+       "from": "CP",
+       "to": "ACS",
+       "lifelines": [
+        "PS"
+       ]
+      },
+      {
+       "message": "8. Send the browser back to return_url",
+       "from": "ACS",
+       "to": "CP",
+       "lifelines": [
+        "PS"
+       ]
+      }
+     ],
+     "lifeline_label_crossings": 2
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "External",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Brightwater store",
+       "kind": "other",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "On a network error, repeat step 3 up to 2 times",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "with the same idempotency_key",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "alt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[authorized]",
+       "kind": "section",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Mark the order as paid",
+       "kind": "note",
+       "fg": "#000000",
+       "bg": "#fff5ad",
+       "ratio": 18.91,
+       "scope": "theme"
+      },
+      {
+       "text": "1. Send the order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2. POST /payments (fields of Table 4.3)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3. Create a payment intent (wait up to 8 s)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4. challenge_required with redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6. redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7. Open the challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8. Send the browser back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "authorized (steps 4 to 8 are skipped)",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9. Webhook payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10. HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11. Publish payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '7. Open the challenge' of CP -> ACS; another participant order or a shorter label may avoid it"
+    },
+    {
+     "check": "lifeline_through_label",
+     "severity": "warn",
+     "message": "the lifeline of PS runs through the label '8. Send the browser back to return_url' of ACS -> CP; another participant order or a shorter label may avoid it"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "f940882ab4b0069956bd467a879a9176ea183f103fbaf0ab76589bdff9d0303e",
+   "png_sha256": "de6fdf8f2ae096b525559d321ccbd5e1758b4b0ffc5de26a81596c34986b8c37",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 609
+    }
+   ]
+  }
+ }
+}

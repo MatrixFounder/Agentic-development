@@ -1,0 +1,965 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f67303e468fd560853ecce5f6e564030df332995e58976f7845dc595f661b77a",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 682.5,
+    "height": 714.0,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "returned",
+       "review"
+      ],
+      "edges": [
+       "review->returned",
+       "returned->review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата окончания",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join returned and review: review->returned, returned->review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "d5d33cb1dd29a87f9bf4ed6e0b68c97735866243e788ac0c45e6edee8e5552cd",
+   "png_sha256": "7b21c4f6555b5291d390e921ad6b37d272c368c50106f05f79b4495f0b0d1f2f",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 231
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f67303e468fd560853ecce5f6e564030df332995e58976f7845dc595f661b77a",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 682.5,
+    "height": 714.0,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "returned",
+       "review"
+      ],
+      "edges": [
+       "review->returned",
+       "returned->review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "hr_schedule()",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата начала",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата окончания",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join returned and review: review->returned, returned->review"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "11 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('сотрудник', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "ff908594197fa4067068c1a3b31b2d55ab8f9e3581300d1098e32815c3da18d3",
+   "png_sha256": "8f1725ad294aa4232ebbd670a265e4c52273487ba1164d47e3db12163e3d6c6e",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 231
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f67303e468fd560853ecce5f6e564030df332995e58976f7845dc595f661b77a",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 681.3,
+    "height": 648.0,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "returned",
+       "review"
+      ],
+      "edges": [
+       "review->returned",
+       "returned->review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата окончания",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join returned and review: review->returned, returned->review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "3b0b135fbc34d5ff8d753c125ce2e25736a324fdb8c3b4f8cee9f07453cd3643",
+   "png_sha256": "2fcd05f79c74e4fd4ad90c377a69ba7ae1fc12389523640c4e159d744289f0cf",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 231
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "f67303e468fd560853ecce5f6e564030df332995e58976f7845dc595f661b77a",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 734.5,
+    "height": 738.0,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "returned",
+       "review"
+      ],
+      "edges": [
+       "review->returned",
+       "returned->review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "наступила дата окончания",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#eceff1",
+       "ratio": 11.39,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join returned and review: review->returned, returned->review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "e544a8de387602cd87680480495b651954d58b671a1e806951df99033d5093b4",
+   "png_sha256": "48db6ce99a110b5dd7418e8b7af300bc6e86c267f7fdc4094c1b70ec91f8b131",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 231
+    }
+   ]
+  }
+ }
+}

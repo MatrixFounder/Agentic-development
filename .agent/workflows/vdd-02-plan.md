@@ -22,10 +22,11 @@ contract:
     - **Rule**: A "Bead" must be small enough to be Verified via a single test case.
 3. **Task Creation**: Create `docs/tasks/*.md` corresponding to these atomic units.
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
-      The reviewer is declared without an execution tool, so anything its checklist requires to be
-      RUN (its `Script Contract` — the register scan; the RTM-coverage validator) is yours to run
-      **first**; the brief carries the OUTPUT as data (a file plus its path), never the command.
-      Anything you did not run goes in as `NOT RUN (<reason>)`.
+      The reviewer is declared without an execution tool. Anything its checklist requires to be RUN
+      (its `Script Contract` — the register scan; the RTM-coverage validator;
+      `plan_gantt.py --check`; the figure lint for a hand-drawn figure) is yours to run **first**.
+      The brief carries the OUTPUT as data (a file plus its path), never the command. Anything you
+      did not run goes in as `NOT RUN (<reason>)`.
     - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
       spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
       after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and

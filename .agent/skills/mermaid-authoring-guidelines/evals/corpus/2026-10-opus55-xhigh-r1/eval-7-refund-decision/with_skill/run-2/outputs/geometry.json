@@ -1,0 +1,1538 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "092d3732b5c551ca19444afdb8aebc6f23e5d729e952650bb05b8b0d0e81d9c0",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 593.3,
+    "height": 1716.4,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "refund request",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "refund request",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no · above $50",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customerasks in the support portal",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Reported as defective?R6.1 · any age",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Within 30 days of delivery?R6.1",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Digital good?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Downloaded?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund of $50 or less?R6.3",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Goes to a support agent",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approved automaticallyback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "c7e56f476f23fc896260a2fd79ad99c145bb90f22a08312a71fbe9e3b7d60907",
+   "png_sha256": "c0d1d2db0076ad38f0c87358619c6b039532f1952de244d340fc3945ca050ab6",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 298
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "092d3732b5c551ca19444afdb8aebc6f23e5d729e952650bb05b8b0d0e81d9c0",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 593.3,
+    "height": 1716.4,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "refund request",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "refund request",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no · above $50",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Customerasks in the support portal",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Reported as defective?R6.1 · any age",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Within 30 days of delivery?R6.1",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Digital good?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Downloaded?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund of $50 or less?R6.3",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Goes to a support agent",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approved automaticallyback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "11 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('refund request', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "26909f3adbc56493e90b6d9995fe632e90946b5075d223de11f0f0ebf3c28241",
+   "png_sha256": "06f65f95af5b14ca6565b46a0cf719ac465b04e25c825ea80e50572fdb810b1f",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 298
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "092d3732b5c551ca19444afdb8aebc6f23e5d729e952650bb05b8b0d0e81d9c0",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 557.0,
+    "height": 1601.4,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "refund request",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "refund request",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no · above $50",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customerasks in the support portal",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Reported as defective?R6.1 · any age",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Within 30 days of delivery?R6.1",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Digital good?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Downloaded?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund of $50 or less?R6.3",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Goes to a support agent",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approved automaticallyback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "650e378fec7571cc049b2d67a1a95d01e7f4493208a989d2a812e15a2a79f267",
+   "png_sha256": "29e8c2fb842d3fec5fd01c6efc7c65a055bc93d5507b1603d73ec0c4b1b49407",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 298
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "092d3732b5c551ca19444afdb8aebc6f23e5d729e952650bb05b8b0d0e81d9c0",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 650.1,
+    "height": 1772.0,
+    "nodes": 9,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "refund request",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "refund request",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no · above $50",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customerasks in the support portal",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Reported as defective?R6.1 · any age",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Within 30 days of delivery?R6.1",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Digital good?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Downloaded?R6.2",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund of $50 or less?R6.3",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Goes to a support agent",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approved automaticallyback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "5d3b8364365a17e6badf23769c6c71d3f19ed9a05709716ed68a2ced7d2cc1be",
+   "png_sha256": "112e440ef7d4c61f87bc34272e39ab9a11f4da140e96b07af209ad13156a5392",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 298
+    }
+   ]
+  }
+ },
+ "fig-2": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d122868e3295e92311bc11cf26ea61cda8ab4ed7a2085c0b44695332b58d2e51",
+   "fence_line": 44,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 457.9,
+    "height": 1162.6,
+    "nodes": 6,
+    "edges": 7,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "yes",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Goes to a support agentR6.1 defective · R6.4 above $50",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Support agent approves?R6.4",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund above $500?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Team lead approves?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approvedback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "ecbae9ef94e61454d30d6b00e19960dae74b2f7cfb38ef09ee6b6923b138bc0e",
+   "png_sha256": "bb9bd8c3f74f5c226090751d20104f7de6a7a75ad8450a3ae1bc2e89905882f5",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 192
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d122868e3295e92311bc11cf26ea61cda8ab4ed7a2085c0b44695332b58d2e51",
+   "fence_line": 44,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 457.9,
+    "height": 1162.6,
+    "nodes": 6,
+    "edges": 7,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "yes",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Goes to a support agentR6.1 defective · R6.4 above $50",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Support agent approves?R6.4",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund above $500?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Team lead approves?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approvedback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "6 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('yes', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "d4cc8101c9f3e44aed4a024a333cd948e3e4d886038fec573d2b6a6895e655b6",
+   "png_sha256": "00ae49e3dd8a3837cb4f9db2e16b607287409d7bf1872fd1e4b13c5914d0fb0b",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 192
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d122868e3295e92311bc11cf26ea61cda8ab4ed7a2085c0b44695332b58d2e51",
+   "fence_line": 44,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 432.9,
+    "height": 1067.6,
+    "nodes": 6,
+    "edges": 7,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "yes",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Goes to a support agentR6.1 defective · R6.4 above $50",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Support agent approves?R6.4",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund above $500?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Team lead approves?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approvedback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "a297b38271c16de3803db0e6bf059637ea0992d952fba6184b57372cffe39a7b",
+   "png_sha256": "dd1440f76be2eb21f2b8abd9600d521f8764192d4e4152af8e87f258cee273e3",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 192
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "d122868e3295e92311bc11cf26ea61cda8ab4ed7a2085c0b44695332b58d2e51",
+   "fence_line": 44,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 486.8,
+    "height": 1162.6,
+    "nodes": 6,
+    "edges": 7,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "yes",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "no",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Goes to a support agentR6.1 defective · R6.4 above $50",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Support agent approves?R6.4",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Refund above $500?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Team lead approves?R6.5",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Approvedback to the original payment method",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "37d0ff594e5aa049729d0e189f646f4cfad47768ef7e303e11ecb4aa86d208c3",
+   "png_sha256": "7b0318cfb50a39fa198e9a7d74661ec463cafd497389f4fa2eea699ac0cd6ff6",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 192
+    }
+   ]
+  }
+ }
+}

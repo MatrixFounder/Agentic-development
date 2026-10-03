@@ -1,0 +1,644 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 9,
+  "name": "ci-stages-terminal",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "terminal",
+  "kind": "none",
+  "acceptable_forms": [
+    "ascii",
+    "list"
+  ],
+  "required_concern": "order",
+  "families": [
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence",
+    "budget": "only when the answer holds a text fence or a Mermaid fence"
+  },
+  "families_not_applicable": {
+    "renders": "the medium is a terminal: no reader sees a render",
+    "geometry": "the medium is a terminal: no reader sees a render",
+    "colour": "the medium is a terminal: no reader sees a render"
+  },
+  "entities": [
+    {
+      "id": "lint",
+      "kind": "stage",
+      "aliases": [
+        "lint",
+        "linting",
+        "lint stage"
+      ],
+      "soft_aliases": [],
+      "lines": [
+        8
+      ],
+      "quote": "| lint |"
+    },
+    {
+      "id": "unit_tests",
+      "kind": "stage",
+      "aliases": [
+        "unit tests",
+        "unit test",
+        "unit-test stage"
+      ],
+      "soft_aliases": [
+        "tests",
+        "test"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "| unit tests |"
+    },
+    {
+      "id": "build_site",
+      "kind": "stage",
+      "aliases": [
+        "build site",
+        "site build",
+        "build the site"
+      ],
+      "soft_aliases": [
+        "build"
+      ],
+      "lines": [
+        10
+      ],
+      "quote": "| build site |"
+    },
+    {
+      "id": "link_check",
+      "kind": "stage",
+      "aliases": [
+        "link check",
+        "link checker",
+        "check links",
+        "links check"
+      ],
+      "soft_aliases": [],
+      "lines": [
+        11
+      ],
+      "quote": "| link check |"
+    },
+    {
+      "id": "accessibility_check",
+      "kind": "stage",
+      "aliases": [
+        "accessibility check",
+        "accessibility checks",
+        "a11y check",
+        "check accessibility"
+      ],
+      "soft_aliases": [
+        "accessibility"
+      ],
+      "lines": [
+        12
+      ],
+      "quote": "| accessibility check |"
+    },
+    {
+      "id": "deploy_preview",
+      "kind": "stage",
+      "aliases": [
+        "deploy preview",
+        "preview deploy",
+        "preview deployment",
+        "deploy to preview"
+      ],
+      "soft_aliases": [
+        "preview"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "| deploy preview |"
+    },
+    {
+      "id": "publish",
+      "kind": "stage",
+      "aliases": [
+        "publish",
+        "publishing",
+        "publish stage"
+      ],
+      "soft_aliases": [],
+      "lines": [
+        14
+      ],
+      "quote": "| publish |"
+    },
+    {
+      "id": "approval",
+      "kind": "condition",
+      "condition_of": "publish",
+      "aliases": [
+        "maintainer approval",
+        "approval",
+        "approved"
+      ],
+      "note": "a condition of publish, recorded in the merge request; not a stage",
+      "lines": [
+        19
+      ],
+      "quote": "Publish also needs a maintainer approval"
+    },
+    {
+      "id": "push",
+      "kind": "trigger",
+      "optional": true,
+      "aliases": [
+        "push",
+        "a push",
+        "git push"
+      ],
+      "lines": [
+        3
+      ],
+      "quote": "Every push to a merge request"
+    },
+    {
+      "id": "preview_site",
+      "kind": "artifact",
+      "optional": true,
+      "aliases": [
+        "preview site",
+        "preview sites",
+        "previews",
+        "preview address"
+      ],
+      "lines": [
+        25
+      ],
+      "quote": "Preview sites are deleted"
+    },
+    {
+      "id": "merge_request",
+      "kind": "artifact",
+      "optional": true,
+      "aliases": [
+        "merge request",
+        "MR"
+      ],
+      "lines": [
+        19
+      ],
+      "quote": "recorded as a comment in the merge request"
+    },
+    {
+      "id": "public_host",
+      "kind": "artifact",
+      "optional": true,
+      "aliases": [
+        "public host",
+        "public site"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "to the public host"
+    }
+  ],
+  "groups": [
+    {
+      "id": "checks",
+      "kind": "parallel",
+      "parallel": true,
+      "aliases": [
+        "checks",
+        "parallel checks"
+      ],
+      "members": [
+        "link_check",
+        "accessibility_check"
+      ],
+      "lines": [
+        17
+      ],
+      "quote": "The link check and the accessibility check run in parallel."
+    }
+  ],
+  "relations": [
+    {
+      "id": "o_push__lint",
+      "kind": "trigger",
+      "from": "push",
+      "to": "lint",
+      "directed": true,
+      "required": false,
+      "concern": "order",
+      "meaning": "a push starts the run at lint",
+      "lines": [
+        8
+      ],
+      "quote": "| lint | the push |"
+    },
+    {
+      "id": "o_lint__unit_tests",
+      "kind": "order",
+      "from": "lint",
+      "to": "unit_tests",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "unit_tests starts only after lint has passed",
+      "lines": [
+        9
+      ],
+      "quote": "| unit tests | lint |"
+    },
+    {
+      "id": "o_unit_tests__build_site",
+      "kind": "order",
+      "from": "unit_tests",
+      "to": "build_site",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "build_site starts only after unit_tests has passed",
+      "lines": [
+        10
+      ],
+      "quote": "| build site | unit tests |"
+    },
+    {
+      "id": "o_build_site__link_check",
+      "kind": "order",
+      "from": "build_site",
+      "to": "link_check",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "link_check starts only after build_site has passed",
+      "lines": [
+        11
+      ],
+      "quote": "| link check | build site |"
+    },
+    {
+      "id": "o_build_site__accessibility_check",
+      "kind": "order",
+      "from": "build_site",
+      "to": "accessibility_check",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "accessibility_check starts only after build_site has passed",
+      "lines": [
+        12
+      ],
+      "quote": "| accessibility check | build site |"
+    },
+    {
+      "id": "o_link_check__deploy_preview",
+      "kind": "order",
+      "from": "link_check",
+      "to": "deploy_preview",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "deploy_preview starts only after link_check has passed",
+      "lines": [
+        13
+      ],
+      "quote": "| deploy preview | link check, accessibility check |"
+    },
+    {
+      "id": "o_accessibility_check__deploy_preview",
+      "kind": "order",
+      "from": "accessibility_check",
+      "to": "deploy_preview",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "deploy_preview starts only after accessibility_check has passed",
+      "lines": [
+        13
+      ],
+      "quote": "| deploy preview | link check, accessibility check |"
+    },
+    {
+      "id": "o_deploy_preview__publish",
+      "kind": "order",
+      "from": "deploy_preview",
+      "to": "publish",
+      "directed": true,
+      "required": true,
+      "concern": "order",
+      "meaning": "publish starts only after deploy_preview has passed",
+      "lines": [
+        14
+      ],
+      "quote": "| publish | deploy preview |"
+    },
+    {
+      "id": "c_approval_publish",
+      "kind": "condition",
+      "from": "approval",
+      "to": "publish",
+      "directed": true,
+      "required": false,
+      "concern": "order",
+      "meaning": "publish waits until the approval is recorded; drawn as a note or a condition on publish, never as a stage between deploy preview and publish",
+      "lines": [
+        19
+      ],
+      "quote": "Publish also needs a maintainer approval"
+    },
+    {
+      "id": "x_deploy_preview_site",
+      "kind": "output",
+      "from": "deploy_preview",
+      "to": "preview_site",
+      "directed": true,
+      "required": false,
+      "concern": "order",
+      "lines": [
+        13
+      ],
+      "quote": "uploads the built site to a preview address"
+    },
+    {
+      "id": "x_publish_host",
+      "kind": "output",
+      "from": "publish",
+      "to": "public_host",
+      "directed": true,
+      "required": false,
+      "concern": "order",
+      "lines": [
+        14
+      ],
+      "quote": "copies the previewed site to the public host"
+    }
+  ],
+  "stage_order": {
+    "layers": [
+      [
+        "lint"
+      ],
+      [
+        "unit_tests"
+      ],
+      [
+        "build_site"
+      ],
+      [
+        "link_check",
+        "accessibility_check"
+      ],
+      [
+        "deploy_preview"
+      ],
+      [
+        "publish"
+      ]
+    ],
+    "note": "a numbered list may give both checks one item or two items marked as parallel; two plain consecutive items claim an order the text denies (t6, t7)",
+    "lines": [
+      4
+    ],
+    "quote": "The table lists the stages in the order they run."
+  },
+  "numbers": [
+    {
+      "value": 20,
+      "unit": "min",
+      "unit_aliases": [
+        "min",
+        "mins",
+        "minutes",
+        "minute"
+      ],
+      "subjects": [
+        "link_check"
+      ],
+      "lines": [
+        24
+      ],
+      "quote": "stops after 20 min and fails"
+    },
+    {
+      "value": 7,
+      "unit": "days",
+      "unit_aliases": [
+        "days",
+        "day",
+        "d"
+      ],
+      "subjects": [
+        "preview_site"
+      ],
+      "note": "the retention of preview sites after the merge request closes; no stage lasts or waits 7 days",
+      "lines": [
+        25
+      ],
+      "quote": "deleted 7 days after the merge request closes"
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "3",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "## 3. Pipeline"
+    },
+    {
+      "text": "3.1",
+      "part_of": "section",
+      "lines": [
+        22
+      ],
+      "quote": "### 3.1 Limits"
+    },
+    {
+      "text": "PL-1",
+      "part_of": "requirement",
+      "lines": [
+        16
+      ],
+      "quote": "**PL-1.**"
+    },
+    {
+      "text": "PL-2",
+      "part_of": "requirement",
+      "lines": [
+        17
+      ],
+      "quote": "**PL-2.**"
+    },
+    {
+      "text": "PL-3",
+      "part_of": "requirement",
+      "lines": [
+        18
+      ],
+      "quote": "**PL-3.**"
+    },
+    {
+      "text": "PL-4",
+      "part_of": "requirement",
+      "lines": [
+        19
+      ],
+      "quote": "**PL-4.**"
+    },
+    {
+      "text": "PL-5",
+      "part_of": "requirement",
+      "lines": [
+        24
+      ],
+      "quote": "**PL-5.**"
+    },
+    {
+      "text": "PL-6",
+      "part_of": "requirement",
+      "lines": [
+        25
+      ],
+      "quote": "**PL-6.**"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "wrong_form",
+      "forms": [
+        "mermaid",
+        "image"
+      ],
+      "why": "the reply is printed in a terminal that renders neither Markdown nor diagrams; a Mermaid fence shows as source text"
+    },
+    {
+      "id": "t2",
+      "type": "invented_entity",
+      "kind": "stage",
+      "aliases": [
+        "security scan",
+        "build docker image",
+        "docker build",
+        "integration tests",
+        "e2e tests",
+        "end-to-end tests",
+        "spell check",
+        "smoke test",
+        "staging",
+        "deploy production",
+        "code review",
+        "approval stage"
+      ],
+      "why": "the table lists seven stages and no other"
+    },
+    {
+      "id": "t3",
+      "type": "number_from_other_rule",
+      "value": 7,
+      "unit": "days",
+      "wrong_subjects": [
+        "lint",
+        "unit_tests",
+        "build_site",
+        "link_check",
+        "accessibility_check",
+        "deploy_preview",
+        "publish"
+      ],
+      "why": "7 days is how long preview sites live after the merge request closes, not a property of any stage",
+      "lines": [
+        25
+      ],
+      "quote": "deleted 7 days after the merge request closes"
+    },
+    {
+      "id": "t4",
+      "type": "order_violation",
+      "relation": {
+        "from": "deploy_preview",
+        "to": "link_check"
+      },
+      "why": "deploy preview waits for both checks; it never runs before the link check",
+      "lines": [
+        13
+      ],
+      "quote": "| deploy preview | link check, accessibility check |"
+    },
+    {
+      "id": "t5",
+      "type": "order_violation",
+      "relation": {
+        "from": "deploy_preview",
+        "to": "accessibility_check"
+      },
+      "why": "deploy preview waits for both checks; it never runs before the accessibility check",
+      "lines": [
+        13
+      ],
+      "quote": "| deploy preview | link check, accessibility check |"
+    },
+    {
+      "id": "t6",
+      "type": "order_violation",
+      "relation": {
+        "from": "link_check",
+        "to": "accessibility_check"
+      },
+      "why": "the two checks run in parallel; neither waits for the other",
+      "lines": [
+        17
+      ],
+      "quote": "The link check and the accessibility check run in parallel."
+    },
+    {
+      "id": "t7",
+      "type": "order_violation",
+      "relation": {
+        "from": "accessibility_check",
+        "to": "link_check"
+      },
+      "why": "the two checks run in parallel; neither waits for the other",
+      "lines": [
+        17
+      ],
+      "quote": "The link check and the accessibility check run in parallel."
+    },
+    {
+      "id": "t8",
+      "type": "condition_as_entity",
+      "entity": "approval",
+      "relations": [
+        {
+          "from": "deploy_preview",
+          "to": "approval"
+        },
+        {
+          "from": "approval",
+          "to": "publish",
+          "as": "stage order"
+        }
+      ],
+      "why": "the approval is a condition the run waits for at publish, recorded in the merge request; a stage box between deploy preview and publish invents a stage",
+      "lines": [
+        20
+      ],
+      "quote": "Until the approval is recorded, the run waits at publish."
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "elements": 7
+  }
+}

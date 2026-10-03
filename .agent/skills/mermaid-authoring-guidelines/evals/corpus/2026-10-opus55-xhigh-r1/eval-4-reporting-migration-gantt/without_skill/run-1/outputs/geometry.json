@@ -1,0 +1,1056 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "33cb5bb70618b001b43c4e7e4d68eefdcd4463f6ec7f7091e938fcb911d39a70",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "gantt",
+    "width": 900.0,
+    "height": 268.0,
+    "nodes": 7,
+    "edges": 0,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [
+     {
+      "label": "Q1 Reconcile row counts",
+      "overflow_px": 65.4,
+      "kind": "task",
+      "where": "its box"
+     }
+    ],
+    "duplicate_edges": [],
+    "font_px": 11.0,
+    "effective_font_px": 11.0,
+    "smallest_font_px": 10.0,
+    "smallest_text": "03 Nov",
+    "smallest_effective_font_px": 10.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {
+     "bars": 7,
+     "labels_outside": 4,
+     "overflow": [],
+     "section_overflow": [],
+     "today_marker": true,
+     "chart_width_px": 900.0
+    },
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "03 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "05 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "07 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "09 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "11 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "13 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "15 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "17 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "19 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "21 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "23 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "P1 Provision the new cluster",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#e1e1f0",
+       "ratio": 16.22,
+       "scope": "theme"
+      },
+      {
+       "text": "P2 Configure replication",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "D1 Backfill dimension tables",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "D2 Backfill fact tables (2019–2025)",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "Q1 Reconcile row counts",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#f1efbe",
+       "ratio": 1.17,
+       "scope": "theme"
+      },
+      {
+       "text": "R1 Write freeze",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "R2 Switch dashboards",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "Platform",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#f0f0ff",
+       "ratio": 11.19,
+       "scope": "theme"
+      },
+      {
+       "text": "Data",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "QA",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#fffdcc",
+       "ratio": 12.13,
+       "scope": "theme"
+      },
+      {
+       "text": "Release",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "clipped_labels",
+     "severity": "fail",
+     "message": "text 'Q1 Reconcile row counts' runs 65.4 px past its box"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "3 task text(s) in the viewer's theme colours below 4.5:1, lowest 1.17:1 ('Q1 Reconcile row counts', #ffffff on #f1efbe); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "390f6a9fefc5dcf5ed0bea76cc4e161aaa728b6df09854819251b7a151fd9e5e",
+   "png_sha256": "f59475ec2e12ef1edccafe0a3c99b3bd14710bafecdef4a23a477cc874770e52",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 260
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "33cb5bb70618b001b43c4e7e4d68eefdcd4463f6ec7f7091e938fcb911d39a70",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "gantt",
+    "width": 900.0,
+    "height": 268.0,
+    "nodes": 7,
+    "edges": 0,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [
+     {
+      "label": "Q1 Reconcile row counts",
+      "overflow_px": 65.4,
+      "kind": "task",
+      "where": "its box"
+     }
+    ],
+    "duplicate_edges": [],
+    "font_px": 11.0,
+    "effective_font_px": 11.0,
+    "smallest_font_px": 10.0,
+    "smallest_text": "03 Nov",
+    "smallest_effective_font_px": 10.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {
+     "bars": 7,
+     "labels_outside": 4,
+     "overflow": [],
+     "section_overflow": [],
+     "today_marker": true,
+     "chart_width_px": 900.0
+    },
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "03 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "05 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "07 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "09 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "11 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "13 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "15 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "17 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "19 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "21 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "23 Nov",
+       "kind": "other",
+       "fg": "#a6a7a8",
+       "bg": "#0d1117",
+       "ratio": 7.85,
+       "scope": "theme"
+      },
+      {
+       "text": "P1 Provision the new cluster",
+       "kind": "task",
+       "fg": "#d3d3d3",
+       "bg": "#a39b5e",
+       "ratio": 1.89,
+       "scope": "theme"
+      },
+      {
+       "text": "P2 Configure replication",
+       "kind": "task",
+       "fg": "#e2dcd6",
+       "bg": "#e83737",
+       "ratio": 3.06,
+       "scope": "theme"
+      },
+      {
+       "text": "D1 Backfill dimension tables",
+       "kind": "task",
+       "fg": "#d3d3d3",
+       "bg": "#898351",
+       "ratio": 2.58,
+       "scope": "theme"
+      },
+      {
+       "text": "D2 Backfill fact tables (2019–2025)",
+       "kind": "task",
+       "fg": "#e2dcd6",
+       "bg": "#e83737",
+       "ratio": 3.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Q1 Reconcile row counts",
+       "kind": "task",
+       "fg": "#e2dcd6",
+       "bg": "#aea772",
+       "ratio": 1.8,
+       "scope": "theme"
+      },
+      {
+       "text": "R1 Write freeze",
+       "kind": "task",
+       "fg": "#d3d3d3",
+       "bg": "#898351",
+       "ratio": 2.58,
+       "scope": "theme"
+      },
+      {
+       "text": "R2 Switch dashboards",
+       "kind": "task",
+       "fg": "#d3d3d3",
+       "bg": "#898351",
+       "ratio": 2.58,
+       "scope": "theme"
+      },
+      {
+       "text": "Platform",
+       "kind": "section",
+       "fg": "#f9fffe",
+       "bg": "#2e302a",
+       "ratio": 13.2,
+       "scope": "theme"
+      },
+      {
+       "text": "Data",
+       "kind": "section",
+       "fg": "#f9fffe",
+       "bg": "#15181d",
+       "ratio": 17.59,
+       "scope": "theme"
+      },
+      {
+       "text": "QA",
+       "kind": "section",
+       "fg": "#f9fffe",
+       "bg": "#393c3e",
+       "ratio": 10.98,
+       "scope": "theme"
+      },
+      {
+       "text": "Release",
+       "kind": "section",
+       "fg": "#f9fffe",
+       "bg": "#15181d",
+       "ratio": 17.59,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "clipped_labels",
+     "severity": "fail",
+     "message": "text 'Q1 Reconcile row counts' runs 65.4 px past its box"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "7 task text(s) in the viewer's theme colours below 4.5:1, lowest 1.80:1 ('Q1 Reconcile row counts', #e2dcd6 on #aea772); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "bfb8f4a64002248a92169091a972bd9f0450aa1e00f1af060245337ab111aaec",
+   "png_sha256": "c6cce0f6f099c4e22d928505fac34e3753d9f76c4284e808d7f84d5f54cb8aea",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 260
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "33cb5bb70618b001b43c4e7e4d68eefdcd4463f6ec7f7091e938fcb911d39a70",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "gantt",
+    "width": 900.0,
+    "height": 268.0,
+    "nodes": 7,
+    "edges": 0,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [
+     {
+      "label": "Q1 Reconcile row counts",
+      "overflow_px": 65.4,
+      "kind": "task",
+      "where": "its box"
+     }
+    ],
+    "duplicate_edges": [],
+    "font_px": 11.0,
+    "effective_font_px": 11.0,
+    "smallest_font_px": 10.0,
+    "smallest_text": "03 Nov",
+    "smallest_effective_font_px": 10.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {
+     "bars": 7,
+     "labels_outside": 4,
+     "overflow": [],
+     "section_overflow": [],
+     "today_marker": true,
+     "chart_width_px": 900.0
+    },
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "03 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "05 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "07 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "09 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "11 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "13 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "15 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "17 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "19 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "21 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "23 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "P1 Provision the new cluster",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#e1e1f0",
+       "ratio": 16.22,
+       "scope": "theme"
+      },
+      {
+       "text": "P2 Configure replication",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "D1 Backfill dimension tables",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "D2 Backfill fact tables (2019–2025)",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "Q1 Reconcile row counts",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#f1efbe",
+       "ratio": 1.17,
+       "scope": "theme"
+      },
+      {
+       "text": "R1 Write freeze",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "R2 Switch dashboards",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "Platform",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#f0f0ff",
+       "ratio": 11.19,
+       "scope": "theme"
+      },
+      {
+       "text": "Data",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "QA",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#fffdcc",
+       "ratio": 12.13,
+       "scope": "theme"
+      },
+      {
+       "text": "Release",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "clipped_labels",
+     "severity": "fail",
+     "message": "text 'Q1 Reconcile row counts' runs 65.4 px past its box"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "3 task text(s) in the viewer's theme colours below 4.5:1, lowest 1.17:1 ('Q1 Reconcile row counts', #ffffff on #f1efbe); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "b64aafc60bf534edb3685ac87a2d52dc7f8022fb461a179ada65987a8e66b8ea",
+   "png_sha256": "f59475ec2e12ef1edccafe0a3c99b3bd14710bafecdef4a23a477cc874770e52",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 260
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "33cb5bb70618b001b43c4e7e4d68eefdcd4463f6ec7f7091e938fcb911d39a70",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "gantt",
+    "width": 900.0,
+    "height": 268.0,
+    "nodes": 7,
+    "edges": 0,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [
+     {
+      "label": "Q1 Reconcile row counts",
+      "overflow_px": 65.4,
+      "kind": "task",
+      "where": "its box"
+     }
+    ],
+    "duplicate_edges": [],
+    "font_px": 11.0,
+    "effective_font_px": 11.0,
+    "smallest_font_px": 10.0,
+    "smallest_text": "03 Nov",
+    "smallest_effective_font_px": 10.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {
+     "bars": 7,
+     "labels_outside": 4,
+     "overflow": [],
+     "section_overflow": [],
+     "today_marker": true,
+     "chart_width_px": 900.0
+    },
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "03 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "05 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "07 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "09 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "11 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "13 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "15 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "17 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "19 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "21 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "23 Nov",
+       "kind": "other",
+       "fg": "#5c5c5c",
+       "bg": "#ffffff",
+       "ratio": 6.68,
+       "scope": "theme"
+      },
+      {
+       "text": "P1 Provision the new cluster",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#e1e1f0",
+       "ratio": 16.22,
+       "scope": "theme"
+      },
+      {
+       "text": "P2 Configure replication",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "D1 Backfill dimension tables",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "D2 Backfill fact tables (2019–2025)",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#ff0000",
+       "ratio": 3.99,
+       "scope": "theme"
+      },
+      {
+       "text": "Q1 Reconcile row counts",
+       "kind": "task",
+       "fg": "#ffffff",
+       "bg": "#f1efbe",
+       "ratio": 1.17,
+       "scope": "theme"
+      },
+      {
+       "text": "R1 Write freeze",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "R2 Switch dashboards",
+       "kind": "task",
+       "fg": "#000000",
+       "bg": "#f1f1f1",
+       "ratio": 18.59,
+       "scope": "theme"
+      },
+      {
+       "text": "Platform",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#f0f0ff",
+       "ratio": 11.19,
+       "scope": "theme"
+      },
+      {
+       "text": "Data",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "QA",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#fffdcc",
+       "ratio": 12.13,
+       "scope": "theme"
+      },
+      {
+       "text": "Release",
+       "kind": "section",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "clipped_labels",
+     "severity": "fail",
+     "message": "text 'Q1 Reconcile row counts' runs 65.4 px past its box"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "3 task text(s) in the viewer's theme colours below 4.5:1, lowest 1.17:1 ('Q1 Reconcile row counts', #ffffff on #f1efbe); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "9ea9b38d068bb4ebe2e0468c75eb6a5cc492ac5d10f2282ed73283ed4ba96161",
+   "png_sha256": "f59475ec2e12ef1edccafe0a3c99b3bd14710bafecdef4a23a477cc874770e52",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 260
+    }
+   ]
+  }
+ }
+}

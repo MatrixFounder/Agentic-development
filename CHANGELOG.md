@@ -16,6 +16,77 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.33.0 — mermaid-authoring-guidelines: figures a reader can trace, checked where readers look**
+
+Generated documents carried Mermaid figures that read as a mess of boxes and arrows, and fixing
+them took rounds of improvised prompts. The new skill decides whether a figure is needed at all,
+and picks the simplest form that carries the facts. It checks the figure in the two renderers
+readers run, light and dark: mermaid 11.17 (GitHub, VS Code) and 10.9 (JetBrains IDEs) (TASK 108).
+
+#### Added
+
+- **`mermaid-authoring-guidelines` 1.0** (TIER 2, loaded before the first figure of any output).
+  - Step 0 picks the first sufficient form: no figure, a list or a table, ASCII, Mermaid, an image.
+    A terminal or a log never gets a Mermaid fence.
+  - One concern per figure, within soft and hard budgets, in a layout a reader traces.
+  - One notation per document; every element backed by a line of the text; a caption above and a
+    legend below.
+  - References per kind (flowchart, sequence, state, gantt, other kinds, ASCII), renderer facts
+    measured in 10.9.8, 11.17.2 and 12.1.0, 14 paired examples, and a review checklist.
+- **Scripts.**
+  - `lint_mermaid.py`: 97 rules, each with a probe pair.
+  - `render_check.py`: renders 11.17.2, 10.9.8 and a dark 11.17.2, then measures crossings, edges
+    through nodes, titles and labels, clipped text, legibility at a 900 px column and contrast.
+    The browser keeps its sandbox and resolves no host. Every node process runs inside the install
+    directory, and the install and output directories must be private.
+  - `setup_renderers.sh`: pinned installs from committed lockfiles, with `npm ci --ignore-scripts`.
+  - `plan_gantt.py`: a dependency-scheduled plan chart from a `contract:schedule` block.
+- **Evaluation** in `evals/`: a pre-registered A/B campaign, its renders, the grader and the
+  calibration. Outcome below.
+- `tests/test_mermaid_wiring.py` and four steps in `framework-gates.yml`.
+
+#### Changed
+
+- **Figure surfaces load the skill.** Each carries figure items backed by lint and render output:
+  - `architecture-format-core` 1.2, `architecture-format-extended` 1.2;
+  - `documentation-standards` 1.8, with §5.6 Figures;
+  - `architecture-review-checklist` 1.2, `plan-review-checklist` 1.2, `code-review-checklist` 1.4,
+    `task-review-checklist` 1.1;
+  - the prompts 04 to 07 and the four analysis and planning workflows;
+  - `brainstorming` 3.2, `skill-reverse-engineering` 1.5 and the security-audit threat model.
+- **`skill-planning-format` 1.2:** a plan of 8 or more tasks gets a generated plan chart; the
+  template and `PLAN_EXAMPLE.md` carry the schedule block and the markers.
+- **`skill-phase-context` 1.2:** the skill is condition-loaded. The bootstrap files (CLAUDE.md,
+  AGENTS.md, GEMINI.md) state the medium rule, and the planner returns a `figures` field.
+
+#### Evaluation outcome (TASK 108 D8)
+
+- **Under D8 the campaign is invalid.** 66 runs of `claude-opus-5-5` at `xhigh`, 28.56 USD.
+  Validity criterion V2 is not met on two rare defect types, and neither failure comes from the
+  detector. So the effect criteria decide nothing, and the numbers below are for information.
+- **Δ_H** is 0.084 [0.035, 0.129], against a threshold of 0.25. The baseline already scored 0.883,
+  so the threshold was out of reach. No revision round ran (operator decision D28).
+- **Observed with the skill:** a run passes every headline check in 0.61 of runs against 0.33.
+  No figure exceeds the crossing allowance, cuts through a node or clashes labels, and legends
+  are missing in 2 of 22 figures against 10 of 17. The fidelity checks show no difference, and
+  the calibration found them noisy.
+- **Not measured:** figures past the budgets and the fix loop, where real documents fail most.
+  The backlog holds the next campaign.
+- Full report: `references/eval-results.md`; changes after registration: `evals/AMENDMENTS.md`.
+
+#### Migration
+
+- Run `install.py update`. `.claude/settings.json` reaches a project only when it has none. Add
+  the three allow rules by hand: `lint_mermaid.py *`, `plan_gantt.py --check *` and
+  `plan_gantt.py docs/PLAN.md --check *`.
+- Renderers are optional. `setup_renderers.sh` installs them once into
+  `~/.cache/mermaid-authoring-guidelines`, about 1 GB. Without them the render check reports
+  `not rendered`.
+- The planner returns a non-blocking `figures` field. An absent skill no longer stops a plan.
+- `pie`, `xychart-beta` and `sankey-beta` are kinds to avoid. Hard budgets: sequence participants
+  6, timeline periods 5, journey tasks 5.
+- A `%% negative:` line in a project document is the lint error MA-NEG-03.
+
 ### **v3.32.1 — term consistency measured, and not adopted (WI-19)**
 
 ASD-STE100's one-term-per-meaning principle was the one candidate TASK 106 left open. It is now

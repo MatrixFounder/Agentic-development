@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 79353,
+ "stop_reason": "end_turn",
+ "session_id": "d34632cc-5c6f-497c-89f7-e17b8656ea21",
+ "total_cost_usd": 0.4013414,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 28600,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 8612,
+  "output_tokens_details": {
+   "thinking_tokens": 7707
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 28600,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 8612,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 28600,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 28600
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 8612,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 28600,
+   "webSearchRequests": 0,
+   "costUSD": 0.4013414,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 7707,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Рисунок 2.3.** Состояния заявки на отпуск. Каждый переход подписан исполнителем, а где текст исполнителя не называет, условием.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%\nstateDiagram-v2\n    accTitle: Состояния заявки на отпуск\n    accDescr: Каждый переход подписан исполнителем, а где текст исполнителя не называет, условием.\n    direction TB\n    state \"Черновик\" as draft\n    state \"На согласовании\" as review\n    state \"Согласована\" as approved\n    state \"Возвращена\" as returned\n    state \"Отклонена\" as rejected\n    state \"Запланирована\" as scheduled\n    state \"В отпуске\" as onleave\n    state \"Завершена\" as completed\n    state \"Отменена\" as cancelled\n    [*] --> draft : сотрудник\n    draft --> review : сотрудник\n    review --> approved : руководитель\n    approved --> scheduled : hr_schedule()\n    scheduled --> onleave : дата начала\n    onleave --> completed : дата окончания\n    approved --> cancelled : сотрудник\n    review --> returned : руководитель\n    returned --> review : сотрудник\n    review --> rejected : руководитель\n    classDef hold fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47,stroke-width:2px\n    classDef wait fill:#FFFFFF,stroke:#607D8B,color:#263238\n    classDef final fill:#ECEFF1,stroke:#37474F,color:#263238,stroke-dasharray:4 3\n    class approved,scheduled,onleave hold\n    class draft,review,returned wait\n    class completed,rejected,cancelled final\n```\n\n1. Закрашенный кружок обозначает начало: сотрудник создаёт заявку.\n2. Толстая синяя рамка с голубой заливкой означает резерв дней: дни отпуска списаны с остатка\n   сотрудника.\n3. Тонкая серо-голубая рамка с белой заливкой означает, что резерва дней нет.\n4. Пунктирная тёмно-серая рамка со светло-серой заливкой обозначает итоговое состояние. Из него\n   заявка не выходит.\n5. Подпись перехода называет исполнителя так, как его называет текст. `hr_schedule()` — функция\n   службы кадров. «дата начала» и «дата окончания» — условия: наступает дата начала или дата\n   окончания отпуска.\n6. На рисунке не показан один переход: сотрудник отменяет и запланированную заявку, не позднее чем\n   за 2 дня до начала отпуска.",
+ "ttft_ms": 73623,
+ "type": "result",
+ "duration_ms": 79380,
+ "uuid": "27414eba-6424-4a5f-9dac-8ec865b25091",
+ "ttft_stream_ms": 1370,
+ "time_to_request_ms": 25,
+ "first_content_frame_ms": 1370,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

@@ -1,0 +1,322 @@
+{
+ "expectations": [
+  {
+   "text": "Every Mermaid figure renders in Mermaid 11.17",
+   "passed": true,
+   "evidence": "figure 1: rendered as sequence"
+  },
+  {
+   "text": "Every Mermaid figure renders in Mermaid 10.9",
+   "passed": true,
+   "evidence": "figure 1: rendered as sequence"
+  },
+  {
+   "text": "No edge passes through a group title or another label, and no label or note overflows, in Mermaid 11.17 and 10.9",
+   "passed": true,
+   "evidence": "2 figure render(s) measured in v11, v10"
+  },
+  {
+   "text": "Every Mermaid figure is legible in a 900 px column in Mermaid 11.17 and 10.9; every text whose colour or background the figure sets meets the contrast minimum there and in the dark render of 11.17",
+   "passed": true,
+   "evidence": "3 figure render(s) measured in v11, v10, v11-dark"
+  },
+  {
+   "text": "Every figure stays within the hard budget of its kind",
+   "passed": true,
+   "evidence": "within the hard budget"
+  },
+  {
+   "text": "Every figure shows one concern, of the kind the request names",
+   "passed": true,
+   "evidence": "one concern; forms accepted for the request (sequence): sequence"
+  },
+  {
+   "text": "Nothing drawn is absent from the document",
+   "passed": true,
+   "evidence": "every drawn relation is stated"
+  },
+  {
+   "text": "Every required relation is drawn, directly or through a stated aggregate",
+   "passed": true,
+   "evidence": "every required relation is drawn"
+  },
+  {
+   "text": "No number is absent from the document or attached to the wrong subject",
+   "passed": true,
+   "evidence": "every number is stated for its subject"
+  },
+  {
+   "text": "No node, participant, state, task, group or writer is invented",
+   "passed": true,
+   "evidence": "every element maps to the document"
+  },
+  {
+   "text": "A caption sits in the paragraph directly above or directly below the fence, in any wording and not as a heading, and claims nothing the figure does not show",
+   "passed": true,
+   "evidence": "1 caption(s) next to the figure, claims shown"
+  },
+  {
+   "text": "A figure that uses two or more encodings has a legend directly above or below the fence that names every encoding it uses, one item per encoding",
+   "passed": true,
+   "evidence": "1 legend(s) name the encodings"
+  },
+  {
+   "text": "Every figure takes a form the case key accepts, and a terminal reply holds no Mermaid fence and no image",
+   "passed": true,
+   "evidence": "every figure takes a form the key accepts (sequence)"
+  }
+ ],
+ "not_applicable": [
+  {
+   "text": "No edge passes through a node other than its endpoints, in Mermaid 11.17 and 10.9",
+   "reason": "no rendered figure of a kind this check measures"
+  },
+  {
+   "text": "Edge crossings stay within the allowance, in Mermaid 11.17 and 10.9",
+   "reason": "no rendered figure of a kind this check measures"
+  },
+  {
+   "text": "Every text-fence figure passes the ASCII lint",
+   "reason": "ascii: only when the answer holds a text fence"
+  },
+  {
+   "text": "Every classDef that sets a fill and a text colour meets the contrast minimum, and no category differs from another by fill alone unless the legend names both",
+   "reason": "no classDef or style sets a fill"
+  }
+ ],
+ "summary": {
+  "passed": 13,
+  "failed": 0,
+  "total": 13,
+  "pass_rate": 1.0
+ },
+ "contract_checks": [
+  {
+   "text": "Each Mermaid figure starts with the settings line of notation.json for its kind",
+   "passed": true,
+   "evidence": "the settings line of notation.json"
+  },
+  {
+   "text": "The caption sits directly above the fence: a bold label and title, then one sentence",
+   "passed": true,
+   "evidence": "caption above the fence in the skill's form"
+  },
+  {
+   "text": "The legend sits directly below the fence",
+   "passed": true,
+   "evidence": "legend directly below the fence"
+  },
+  {
+   "text": "Names are written exactly as the document writes them",
+   "passed": true,
+   "evidence": "names as the document writes them"
+  },
+  {
+   "text": "Every figure stays within the soft budget of its kind",
+   "passed": true,
+   "evidence": "within the soft budget"
+  }
+ ],
+ "contract_summary": {
+  "passed": 5,
+  "failed": 0,
+  "total": 5,
+  "pass_rate": 1.0
+ },
+ "h_core": {
+  "passed": 10,
+  "total": 10,
+  "pass_rate": 1.0
+ },
+ "strict_pass": true,
+ "checks": {
+  "Q01": "pass",
+  "Q02": "pass",
+  "Q03": "na",
+  "Q04": "na",
+  "Q05": "pass",
+  "Q06": "pass",
+  "Q07": "pass",
+  "Q08": "pass",
+  "Q09": "pass",
+  "Q10": "pass",
+  "Q11": "pass",
+  "Q12": "pass",
+  "Q13": "pass",
+  "Q14": "pass",
+  "Q15": "pass",
+  "Q16": "na",
+  "Q17": "na"
+ },
+ "contract": {
+  "K01": "pass",
+  "K02": "na",
+  "K03": "na",
+  "K04": "pass",
+  "K05": "pass",
+  "K06": "na",
+  "K07": "pass",
+  "K08": "na",
+  "K09": "pass"
+ },
+ "fidelity": {
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "mapped": {
+   "1:ACS": {
+    "text": "Issuer ACS",
+    "entities": [
+     "acs"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:CP": {
+    "text": "Checkout page",
+    "entities": [
+     "chk"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:OA": {
+    "text": "Orders API",
+    "entities": [
+     "ord"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:PS": {
+    "text": "Payment service",
+    "entities": [
+     "pay"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:PSP": {
+    "text": "Paylane PSP",
+    "entities": [
+     "psp"
+    ],
+    "group": null,
+    "status": "mapped"
+   }
+  },
+  "renamed": [],
+  "invented": [],
+  "unsupported": [],
+  "missing_required": [],
+  "bad_numbers": [],
+  "decoy_hits": [],
+  "decoys": {
+   "t1": {
+    "type": "long_payload",
+    "hit": false
+   },
+   "t2": {
+    "type": "number_from_other_rule",
+    "hit": false
+   },
+   "t3": {
+    "type": "number_from_other_rule",
+    "hit": false
+   },
+   "t4": {
+    "type": "reversed_direction",
+    "hit": false
+   },
+   "t5": {
+    "type": "invented_block",
+    "hit": false
+   },
+   "t6": {
+    "type": "invented_entity",
+    "hit": false
+   },
+   "t7": {
+    "type": "invented_entity",
+    "hit": false
+   }
+  },
+  "modelled": true,
+  "diagnostics": []
+ },
+ "geometry": {
+  "fig-1": {
+   "v11": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "sequence",
+     "width": 1060.0,
+     "height": 889.0,
+     "nodes": 5,
+     "edges": 11,
+     "crossings": 0,
+     "font_px": 16.0,
+     "effective_font_px": 13.58,
+     "measured": true
+    },
+    "findings": []
+   },
+   "v10": {
+    "status": "rendered",
+    "mermaid": "10.9.8",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "sequence",
+     "width": 1060.0,
+     "height": 889.0,
+     "nodes": 5,
+     "edges": 11,
+     "crossings": 0,
+     "font_px": 16.0,
+     "effective_font_px": 13.58,
+     "measured": true
+    },
+    "findings": []
+   },
+   "v11-dark": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "sequence",
+     "width": 1060.0,
+     "height": 889.0,
+     "nodes": 5,
+     "edges": 11,
+     "crossings": 0,
+     "font_px": 16.0,
+     "effective_font_px": 13.58,
+     "measured": true
+    },
+    "findings": []
+   }
+  }
+ },
+ "figures": 1,
+ "figure_forms": {
+  "mermaid": 1,
+  "text": 0,
+  "table": 0,
+  "list": 0
+ },
+ "no_figure": false,
+ "tiny_answer": false,
+ "execution_metrics": {
+  "total_tool_calls": 0,
+  "errors_encountered": 0,
+  "output_chars": 1661
+ },
+ "grader": {
+  "version": "grade_figures/3",
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "normalize_sha256": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
+ }
+}

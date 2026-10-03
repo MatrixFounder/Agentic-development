@@ -1,0 +1,1121 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 7,
+  "name": "refund-decision",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "document",
+  "kind": "flowchart",
+  "acceptable_forms": [
+    "flowchart"
+  ],
+  "required_concern": "decision",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "request",
+      "kind": "start",
+      "aliases": [
+        "Refund request",
+        "refund request",
+        "Request"
+      ],
+      "soft_aliases": [
+        "Start",
+        "Customer request"
+      ],
+      "lines": [
+        3
+      ],
+      "quote": "A customer asks for a refund"
+    },
+    {
+      "id": "defect",
+      "kind": "check",
+      "rule": "R6.1",
+      "aliases": [
+        "reported defective",
+        "defect reported",
+        "defective",
+        "defect"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    },
+    {
+      "id": "age",
+      "kind": "check",
+      "rule": "R6.1",
+      "aliases": [
+        "30 days",
+        "more than 30 days",
+        "over 30 days",
+        "within 30 days",
+        "after delivery",
+        "since delivery",
+        "delivered"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "id": "digital",
+      "kind": "check",
+      "rule": "R6.2",
+      "aliases": [
+        "R6.2",
+        "digital good",
+        "digital",
+        "downloaded"
+      ],
+      "lines": [
+        10
+      ],
+      "quote": "- **R6.2** A digital good is refundable only if it has not been downloaded."
+    },
+    {
+      "id": "amount",
+      "kind": "check",
+      "rule": "R6.3",
+      "aliases": [
+        "R6.3",
+        "$50 or less",
+        "50 or less",
+        "above $50",
+        "$50"
+      ],
+      "lines": [
+        12
+      ],
+      "quote": "- **R6.3** A refund of $50 or less is approved automatically."
+    },
+    {
+      "id": "agent",
+      "kind": "actor",
+      "rule": "R6.4",
+      "aliases": [
+        "Support agent",
+        "support agent",
+        "agent",
+        "R6.4"
+      ],
+      "soft_aliases": [
+        "Support",
+        "Agent review"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+    },
+    {
+      "id": "over500",
+      "kind": "check",
+      "rule": "R6.5",
+      "aliases": [
+        "above $500",
+        "$500",
+        "500"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "lead",
+      "kind": "actor",
+      "rule": "R6.5",
+      "aliases": [
+        "Team lead",
+        "team lead",
+        "R6.5"
+      ],
+      "soft_aliases": [
+        "Lead",
+        "Team leader",
+        "Supervisor"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "The team lead approves or declines it."
+    },
+    {
+      "id": "approved",
+      "kind": "outcome",
+      "aliases": [
+        "Approved",
+        "approved automatically",
+        "Approved automatically",
+        "Refund approved",
+        "original payment method",
+        "Refund to original payment method",
+        "R6.6"
+      ],
+      "soft_aliases": [
+        "Accepted",
+        "Refund issued",
+        "Refund to card",
+        "Payout"
+      ],
+      "note": "R6.6 describes what happens to every approved refund, so it maps to this outcome",
+      "lines": [
+        16
+      ],
+      "quote": "- **R6.6** An approved refund goes back to the original payment method."
+    },
+    {
+      "id": "declined",
+      "kind": "outcome",
+      "aliases": [
+        "Declined",
+        "declined",
+        "Decline",
+        "Refund declined"
+      ],
+      "soft_aliases": [
+        "Rejected",
+        "Reject",
+        "Denied",
+        "Refused"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    }
+  ],
+  "groups": [
+    {
+      "id": "r61",
+      "kind": "rule",
+      "aliases": [
+        "R6.1"
+      ],
+      "members": [
+        "defect",
+        "age"
+      ],
+      "note": "one decision node may stand for R6.1 as a whole",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    }
+  ],
+  "relations": [
+    {
+      "id": "start_r61",
+      "kind": "branch",
+      "from": "request",
+      "to": "r61",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "note": "the start node leads to the first check",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "start_defect",
+      "kind": "branch",
+      "from": "request",
+      "to": "defect",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "start_age",
+      "kind": "branch",
+      "from": "request",
+      "to": "age",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "r61_agent",
+      "kind": "branch",
+      "from": "r61",
+      "to": "agent",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    },
+    {
+      "id": "r61_declined",
+      "kind": "branch",
+      "from": "r61",
+      "to": "declined",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "id": "r61_digital",
+      "kind": "branch",
+      "from": "r61",
+      "to": "digital",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "defect_agent",
+      "kind": "branch",
+      "from": "defect",
+      "to": "agent",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    },
+    {
+      "id": "defect_age",
+      "kind": "branch",
+      "from": "defect",
+      "to": "age",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "note": "not reported defective: the age check follows",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "id": "age_defect",
+      "kind": "branch",
+      "from": "age",
+      "to": "defect",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "note": "older than 30 days: the defect exception is checked",
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    },
+    {
+      "id": "age_declined",
+      "kind": "branch",
+      "from": "age",
+      "to": "declined",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "id": "defect_declined",
+      "kind": "branch",
+      "from": "defect",
+      "to": "declined",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "note": "true only when the defect check follows the age check on the old branch",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "id": "age_digital",
+      "kind": "branch",
+      "from": "age",
+      "to": "digital",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "digital_declined",
+      "kind": "branch",
+      "from": "digital",
+      "to": "declined",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        10
+      ],
+      "quote": "- **R6.2** A digital good is refundable only if it has not been downloaded."
+    },
+    {
+      "id": "digital_amount",
+      "kind": "branch",
+      "from": "digital",
+      "to": "amount",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "note": "a physical good, or a digital good not downloaded, goes on to R6.3",
+      "lines": [
+        11
+      ],
+      "quote": "R6.2 applies to digital goods only."
+    },
+    {
+      "id": "amount_approved",
+      "kind": "branch",
+      "from": "amount",
+      "to": "approved",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        12
+      ],
+      "quote": "- **R6.3** A refund of $50 or less is approved automatically."
+    },
+    {
+      "id": "amount_agent",
+      "kind": "branch",
+      "from": "amount",
+      "to": "agent",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+    },
+    {
+      "id": "agent_declined",
+      "kind": "branch",
+      "from": "agent",
+      "to": "declined",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+    },
+    {
+      "id": "agent_approved",
+      "kind": "branch",
+      "from": "agent",
+      "to": "approved",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "note": "an approval of $500 or less is final",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "agent_over500",
+      "kind": "branch",
+      "from": "agent",
+      "to": "over500",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "agent_lead",
+      "kind": "branch",
+      "from": "agent",
+      "to": "lead",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "over500_lead",
+      "kind": "branch",
+      "from": "over500",
+      "to": "lead",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "over500_approved",
+      "kind": "branch",
+      "from": "over500",
+      "to": "approved",
+      "directed": true,
+      "required": false,
+      "concern": "decision",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "id": "lead_approved",
+      "kind": "branch",
+      "from": "lead",
+      "to": "approved",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        15
+      ],
+      "quote": "The team lead approves or declines it."
+    },
+    {
+      "id": "lead_declined",
+      "kind": "branch",
+      "from": "lead",
+      "to": "declined",
+      "directed": true,
+      "required": true,
+      "concern": "decision",
+      "lines": [
+        15
+      ],
+      "quote": "The team lead approves or declines it."
+    }
+  ],
+  "required_any": [
+    [
+      "r61_agent",
+      "defect_agent"
+    ],
+    [
+      "r61_declined",
+      "age_declined",
+      "defect_declined"
+    ],
+    [
+      "r61_digital",
+      "age_digital"
+    ],
+    [
+      "digital_declined"
+    ],
+    [
+      "digital_amount"
+    ],
+    [
+      "amount_approved"
+    ],
+    [
+      "amount_agent"
+    ],
+    [
+      "agent_declined"
+    ],
+    [
+      "agent_approved",
+      "over500_approved"
+    ],
+    [
+      "agent_lead",
+      "over500_lead"
+    ],
+    [
+      "lead_approved"
+    ],
+    [
+      "lead_declined"
+    ]
+  ],
+  "decisions": [
+    {
+      "id": "r61",
+      "rule": "R6.1",
+      "checks": [
+        "defect",
+        "age"
+      ],
+      "aliases": [
+        "R6.1"
+      ],
+      "branches": [
+        {
+          "order": 1,
+          "when": "the customer reports the item as defective, whatever its age",
+          "to": "agent",
+          "lines": [
+            9
+          ],
+          "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+        },
+        {
+          "order": 2,
+          "when": "not reported defective, more than 30 days after delivery",
+          "to": "declined",
+          "lines": [
+            8
+          ],
+          "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+        },
+        {
+          "order": 3,
+          "when": "not reported defective, 30 days or less after delivery",
+          "to": "r62",
+          "lines": [
+            4
+          ],
+          "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+        }
+      ]
+    },
+    {
+      "id": "r62",
+      "rule": "R6.2",
+      "checks": [
+        "digital"
+      ],
+      "aliases": [
+        "R6.2"
+      ],
+      "branches": [
+        {
+          "order": 1,
+          "when": "a digital good that has been downloaded",
+          "to": "declined",
+          "lines": [
+            10
+          ],
+          "quote": "- **R6.2** A digital good is refundable only if it has not been downloaded."
+        },
+        {
+          "order": 2,
+          "when": "a physical good, or a digital good not downloaded",
+          "to": "r63",
+          "lines": [
+            11
+          ],
+          "quote": "R6.2 applies to digital goods only."
+        }
+      ]
+    },
+    {
+      "id": "r63",
+      "rule": "R6.3 and R6.4",
+      "checks": [
+        "amount"
+      ],
+      "aliases": [
+        "R6.3"
+      ],
+      "branches": [
+        {
+          "order": 1,
+          "when": "$50 or less",
+          "to": "approved",
+          "lines": [
+            12
+          ],
+          "quote": "- **R6.3** A refund of $50 or less is approved automatically."
+        },
+        {
+          "order": 2,
+          "when": "above $50",
+          "to": "agent",
+          "lines": [
+            13
+          ],
+          "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "rule": "R6.4 and R6.5",
+      "checks": [
+        "agent",
+        "over500"
+      ],
+      "actor": "agent",
+      "aliases": [
+        "Support agent",
+        "R6.4"
+      ],
+      "branches": [
+        {
+          "order": 1,
+          "when": "the agent declines",
+          "to": "declined",
+          "lines": [
+            13
+          ],
+          "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+        },
+        {
+          "order": 2,
+          "when": "the agent approves $500 or less",
+          "to": "approved",
+          "lines": [
+            14
+          ],
+          "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+        },
+        {
+          "order": 3,
+          "when": "the agent approves above $500",
+          "to": "lead",
+          "lines": [
+            14
+          ],
+          "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+        }
+      ]
+    },
+    {
+      "id": "lead",
+      "rule": "R6.5",
+      "checks": [
+        "lead"
+      ],
+      "actor": "lead",
+      "aliases": [
+        "Team lead",
+        "R6.5"
+      ],
+      "branches": [
+        {
+          "order": 1,
+          "when": "the team lead approves",
+          "to": "approved",
+          "lines": [
+            15
+          ],
+          "quote": "The team lead approves or declines it."
+        },
+        {
+          "order": 2,
+          "when": "the team lead declines",
+          "to": "declined",
+          "lines": [
+            15
+          ],
+          "quote": "The team lead approves or declines it."
+        }
+      ]
+    }
+  ],
+  "order": [
+    {
+      "first": "r61",
+      "then": "r62",
+      "note": "the age check, with its defect exception, comes before R6.2",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "first": "r62",
+      "then": "r63",
+      "note": "R6.2 comes before the amount check",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    }
+  ],
+  "gaps": [
+    {
+      "what": "a defective digital good that was downloaded",
+      "why": "R6.1 sends a defective item to an agent; R6.2 says nothing about defective goods, so a branch for this case is not stated",
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    }
+  ],
+  "numbers": [
+    {
+      "value": 30,
+      "unit": "days",
+      "unit_aliases": [
+        "d",
+        "days",
+        "day"
+      ],
+      "subjects": [
+        "age",
+        "r61"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1** A request made more than 30 days after delivery is declined."
+    },
+    {
+      "value": 50,
+      "unit": "$",
+      "unit_aliases": [
+        "$",
+        "USD",
+        "dollars"
+      ],
+      "subjects": [
+        "amount",
+        "agent"
+      ],
+      "lines": [
+        12
+      ],
+      "quote": "- **R6.3** A refund of $50 or less is approved automatically."
+    },
+    {
+      "value": 500,
+      "unit": "$",
+      "unit_aliases": [
+        "$",
+        "USD",
+        "dollars"
+      ],
+      "subjects": [
+        "over500",
+        "agent",
+        "lead"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    },
+    {
+      "value": 60,
+      "unit": "days",
+      "unit_aliases": [
+        "d",
+        "days"
+      ],
+      "subjects": [
+        "exchange"
+      ],
+      "lines": [
+        24
+      ],
+      "quote": "| Exchange of an item | within 60 days of delivery | §5 |"
+    },
+    {
+      "value": 200,
+      "unit": "$",
+      "unit_aliases": [
+        "$",
+        "USD"
+      ],
+      "subjects": [
+        "store_credit"
+      ],
+      "lines": [
+        25
+      ],
+      "quote": "| Store credit | up to $200, issued instantly | §7 |"
+    },
+    {
+      "value": 2,
+      "unit": "business days",
+      "unit_aliases": [
+        "business days",
+        "days",
+        "d"
+      ],
+      "subjects": [
+        "agent"
+      ],
+      "note": "answer time, not a decision",
+      "lines": [
+        26
+      ],
+      "quote": "| Answer of a support agent | within 2 business days | §7 |"
+    },
+    {
+      "value": 5,
+      "unit": "business days",
+      "unit_aliases": [
+        "business days",
+        "days",
+        "d"
+      ],
+      "subjects": [
+        "approved",
+        "payout"
+      ],
+      "note": "payout time, not a decision",
+      "lines": [
+        27
+      ],
+      "quote": "| Payout to the customer | within 5 business days | §7 |"
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "R6.1",
+      "part_of": "rule",
+      "lines": [
+        8
+      ],
+      "quote": "- **R6.1**"
+    },
+    {
+      "text": "R6.2",
+      "part_of": "rule",
+      "lines": [
+        10
+      ],
+      "quote": "- **R6.2**"
+    },
+    {
+      "text": "R6.3",
+      "part_of": "rule",
+      "lines": [
+        12
+      ],
+      "quote": "- **R6.3**"
+    },
+    {
+      "text": "R6.4",
+      "part_of": "rule",
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4**"
+    },
+    {
+      "text": "R6.5",
+      "part_of": "rule",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5**"
+    },
+    {
+      "text": "R6.6",
+      "part_of": "rule",
+      "lines": [
+        16
+      ],
+      "quote": "- **R6.6**"
+    },
+    {
+      "text": "6",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "## 6. Refund decision"
+    },
+    {
+      "text": "6.1",
+      "part_of": "section",
+      "lines": [
+        6
+      ],
+      "quote": "### 6.1 Rules"
+    },
+    {
+      "text": "6.2",
+      "part_of": "section",
+      "lines": [
+        20
+      ],
+      "quote": "### 6.2 Limits from other sections"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "number_from_other_rule",
+      "value": 200,
+      "unit": "$",
+      "wrong_subjects": [
+        "amount",
+        "agent",
+        "over500",
+        "lead",
+        "approved",
+        "declined"
+      ],
+      "why": "$200 limits store credit (§7); no refund check uses it",
+      "lines": [
+        25
+      ],
+      "quote": "| Store credit | up to $200, issued instantly | §7 |"
+    },
+    {
+      "id": "t2",
+      "type": "number_from_other_rule",
+      "value": 60,
+      "unit": "days",
+      "wrong_subjects": [
+        "age",
+        "r61"
+      ],
+      "why": "60 days is the exchange window; R6.1 uses 30 days",
+      "lines": [
+        24
+      ],
+      "quote": "| Exchange of an item | within 60 days of delivery | §5 |"
+    },
+    {
+      "id": "t3",
+      "type": "invented_branch",
+      "relation": {
+        "from": "amount",
+        "to": "declined"
+      },
+      "why": "above $50 a request goes to an agent; no rule declines it for its amount",
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+    },
+    {
+      "id": "t4",
+      "type": "invented_branch",
+      "aliases": [
+        "partial refund",
+        "Partial refund",
+        "store credit",
+        "Store credit",
+        "partial",
+        "exchange"
+      ],
+      "why": "an agent approves or declines; no partial refund or credit outcome is stated",
+      "lines": [
+        13
+      ],
+      "quote": "- **R6.4** A refund above $50 goes to a support agent, who approves or declines it."
+    },
+    {
+      "id": "t5",
+      "type": "invented_branch",
+      "relation": {
+        "from": "defect",
+        "to": "digital"
+      },
+      "why": "a branch for a downloaded defective digital good: the text sends defective items to an agent and says nothing more",
+      "lines": [
+        9
+      ],
+      "quote": "An item that the customer reports as defective goes to a support agent, regardless of its age."
+    },
+    {
+      "id": "t6",
+      "type": "order_violation",
+      "before": "amount",
+      "after": "age",
+      "why": "the amount check or the digital check placed before the age check",
+      "lines": [
+        4
+      ],
+      "quote": "The checks R6.1, R6.2 and R6.3 run in this order."
+    },
+    {
+      "id": "t7",
+      "type": "invented_entity",
+      "aliases": [
+        "Finance team",
+        "Finance",
+        "finance approval",
+        "Finance manager",
+        "Manager",
+        "Accounting"
+      ],
+      "why": "above $500 a team lead approves; no finance approver exists",
+      "lines": [
+        14
+      ],
+      "quote": "- **R6.5** A refund above $500 that a support agent approves also needs a team lead."
+    }
+  ],
+  "allowed_generic": [
+    "Start",
+    "End"
+  ],
+  "caption_claim_traps": [],
+  "match_notes": {
+    "outcomes": "several nodes may map to one outcome (one Declined node per branch is faithful)",
+    "decision_nodes": "a node naming R6.1 maps to the group r61; a node naming only the defect or the age check maps to that check",
+    "required_any": "Q10 holds when every inner list has at least one drawn relation",
+    "order": "on every path from the start, the first check of `first` comes before the first check of `then`"
+  },
+  "budget_hint": {
+    "checks": 5,
+    "people": 2,
+    "outcomes": 2,
+    "one_node_per_outcome": [
+      7,
+      12
+    ],
+    "one_outcome_node_per_branch": [
+      11,
+      12
+    ],
+    "r61_as_two_nodes": [
+      8,
+      13
+    ]
+  }
+}

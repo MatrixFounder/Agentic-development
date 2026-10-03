@@ -101,6 +101,8 @@ CURATED_UNITTEST_MODULES = (
     "test_skill_refs",
     # TASK 107 — /framework-upgrade rolls back through git; no instruction asks for a copy.
     "test_git_rollback_contract",
+    # TASK 108 — every R10 surface keeps its pointer to mermaid-authoring-guidelines.
+    "test_mermaid_wiring",
 )
 
 

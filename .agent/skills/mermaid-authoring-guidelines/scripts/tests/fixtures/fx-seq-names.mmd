@@ -1,0 +1,9 @@
+%%{init: {"look": "classic", "themeVariables": {"noteBkgColor": "#FFF8E1", "noteTextColor": "#263238", "noteBorderColor": "#C9A227"}, "sequence": {"wrap": true}}}%%
+sequenceDiagram
+  participant B as Cardholder browser
+  participant A as Access control server
+  participant O as Orders<br/>API
+  B->>A: enter the code
+  A->>O: check the order
+  O-->>A: order found
+  A-->>B: authenticated

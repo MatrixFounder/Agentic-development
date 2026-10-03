@@ -1,0 +1,2540 @@
+{
+ "arms": {
+  "with_skill": {
+   "H": 0.966964,
+   "H_core": 0.967949,
+   "H_runs_mean": 0.949339,
+   "K_cases": 11,
+   "K_rate": 0.934343,
+   "excluded": 0,
+   "figures_mean": 1.060606,
+   "graded": 33,
+   "measured": true,
+   "no_figure_runs": 0,
+   "runs": 33,
+   "strict": 0.606061
+  },
+  "without_skill": {
+   "H": 0.882711,
+   "H_core": 0.891667,
+   "H_runs_mean": 0.895271,
+   "K_cases": 11,
+   "K_rate": 0.484055,
+   "excluded": 0,
+   "figures_mean": 1.0,
+   "graded": 33,
+   "measured": true,
+   "no_figure_runs": 0,
+   "runs": 33,
+   "strict": 0.333333
+  }
+ },
+ "browsers": {
+  "browser": "HeadlessChrome/150.0.7871.24",
+  "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+ },
+ "campaign": {
+  "arms": [
+   "without_skill",
+   "with_skill"
+  ],
+  "budget_usd": 60,
+  "effort": "xhigh",
+  "model": "claude-opus-5-5",
+  "reps": 3
+ },
+ "cases": {
+  "0": {
+   "control": true,
+   "delta_H": -0.222222,
+   "delta_H_core": -0.285714,
+   "delta_strict": -1.0,
+   "name": "control-thumbnails",
+   "with_skill": {
+    "H": 0.777778,
+    "H_core": 0.714286,
+    "H_mean": 0.789352,
+    "H_sd": 0.020047,
+    "runs": 3,
+    "strict": 0.0
+   },
+   "without_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 0.97619,
+    "H_sd": 0.041239,
+    "runs": 3,
+    "strict": 1.0
+   }
+  },
+  "1": {
+   "control": false,
+   "delta_H": 0.266667,
+   "delta_H_core": 0.25,
+   "delta_strict": 1.0,
+   "name": "wms-container-view",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 0.979167,
+    "H_sd": 0.036084,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 0.733333,
+    "H_core": 0.75,
+    "H_mean": 0.755556,
+    "H_sd": 0.03849,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "10": {
+   "control": false,
+   "delta_H": 0.0,
+   "delta_H_core": 0.0,
+   "delta_strict": 0.0,
+   "name": "roles-operations-matrix",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   }
+  },
+  "2": {
+   "control": false,
+   "delta_H": 0.153846,
+   "delta_H_core": 0.0,
+   "delta_strict": 1.0,
+   "name": "card-3ds-sequence",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 0.846154,
+    "H_core": 1.0,
+    "H_mean": 0.871795,
+    "H_sd": 0.044412,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "3": {
+   "control": false,
+   "delta_H": 0.008929,
+   "delta_H_core": 0.083333,
+   "delta_strict": 0.0,
+   "name": "leave-request-lifecycle",
+   "with_skill": {
+    "H": 0.9375,
+    "H_core": 1.0,
+    "H_mean": 0.958333,
+    "H_sd": 0.036084,
+    "runs": 3,
+    "strict": 0.0
+   },
+   "without_skill": {
+    "H": 0.928571,
+    "H_core": 0.916667,
+    "H_mean": 0.930159,
+    "H_sd": 0.002749,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "4": {
+   "control": false,
+   "delta_H": 0.0,
+   "delta_H_core": 0.0,
+   "delta_strict": 0.0,
+   "name": "reporting-migration-gantt",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   }
+  },
+  "5": {
+   "control": false,
+   "delta_H": 0.133333,
+   "delta_H_core": 0.166667,
+   "delta_strict": 1.0,
+   "name": "sales-pipeline-dataflow",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 0.979167,
+    "H_sd": 0.036084,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 0.866667,
+    "H_core": 0.833333,
+    "H_mean": 0.866667,
+    "H_sd": 0.066667,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "6": {
+   "control": false,
+   "delta_H": 0.066667,
+   "delta_H_core": 0.083333,
+   "delta_strict": 1.0,
+   "name": "clinic-deployment",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 0.933333,
+    "H_core": 0.916667,
+    "H_mean": 0.911111,
+    "H_sd": 0.03849,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "7": {
+   "control": false,
+   "delta_H": 0.141667,
+   "delta_H_core": 0.096154,
+   "delta_strict": 0.0,
+   "name": "refund-decision",
+   "with_skill": {
+    "H": 0.875,
+    "H_core": 0.846154,
+    "H_mean": 0.854167,
+    "H_sd": 0.036084,
+    "runs": 3,
+    "strict": 0.0
+   },
+   "without_skill": {
+    "H": 0.733333,
+    "H_core": 0.75,
+    "H_mean": 0.750794,
+    "H_sd": 0.030242,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "8": {
+   "control": false,
+   "delta_H": 0.071429,
+   "delta_H_core": 0.083333,
+   "delta_strict": 0.0,
+   "name": "frontends-services-k33",
+   "with_skill": {
+    "H": 0.857143,
+    "H_core": 0.833333,
+    "H_mean": 0.88254,
+    "H_sd": 0.043989,
+    "runs": 3,
+    "strict": 0.0
+   },
+   "without_skill": {
+    "H": 0.785714,
+    "H_core": 0.75,
+    "H_mean": 0.785714,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 0.0
+   }
+  },
+  "9": {
+   "control": false,
+   "delta_H": 0.0,
+   "delta_H_core": 0.0,
+   "delta_strict": 0.0,
+   "name": "ci-stages-terminal",
+   "with_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   },
+   "without_skill": {
+    "H": 1.0,
+    "H_core": 1.0,
+    "H_mean": 1.0,
+    "H_sd": 0.0,
+    "runs": 3,
+    "strict": 1.0
+   }
+  }
+ },
+ "cost": {
+  "campaign": {
+   "attempts": 127,
+   "budget_usd": 60,
+   "cost_unknown_attempts": 1,
+   "errors": 61,
+   "spent_usd": 28.556317,
+   "within_budget": true
+  },
+  "shared_budget": {
+   "attempts": 127,
+   "budget_usd": 60,
+   "cost_unknown_attempts": 1,
+   "exhausted": false,
+   "exhausted_for": {
+    "with_skill": false,
+    "without_skill": false
+   },
+   "ledgers": 1,
+   "next_run_basis": {
+    "with_skill": "mean of 33 with_skill attempt(s)",
+    "without_skill": "mean of 33 without_skill attempt(s)"
+   },
+   "next_run_usd": {
+    "with_skill": 0.748167,
+    "without_skill": 0.094504
+   },
+   "spent_usd": 28.556317,
+   "zero_cost_attempts": 60
+  },
+  "with_skill": {
+   "attempt_cost_usd_sum": 24.689515,
+   "attempts": 34,
+   "duration_ms_mean": 256434.636364,
+   "run_cost_usd_mean": 0.748167,
+   "run_cost_usd_sum": 24.689515,
+   "tokens_mean": 64354.515152
+  },
+  "without_skill": {
+   "attempt_cost_usd_sum": 3.118635,
+   "attempts": 93,
+   "duration_ms_mean": 44954.818182,
+   "run_cost_usd_mean": 0.094504,
+   "run_cost_usd_sum": 3.118635,
+   "tokens_mean": 7069.818182
+  }
+ },
+ "decision": {
+  "campaign_invalid": true,
+  "claim_holds": false,
+  "criteria": [
+   {
+    "criterion": "no ungraded infrastructure failure; the served model is the pinned one in every run",
+    "group": "validity",
+    "id": "V1",
+    "met": true,
+    "status": "met",
+    "value": {
+     "excluded": 0,
+     "failed_without_run": [],
+     "graded": 66,
+     "served_model_ok": 66
+    }
+   },
+   {
+    "criterion": "detector precision and recall ≥ 0.9 per defect type, and Cohen's κ ≥ 0.8, on the calibration set",
+    "group": "validity",
+    "id": "V2",
+    "met": false,
+    "status": "not met",
+    "value": {
+     "basis": "precision, recall and kappa per defect type come from the random sample; the top-up items carry their type by construction and are reported apart",
+     "corroborated": true,
+     "information_only": {
+      "invented_element": {
+       "detector_positives": 4,
+       "fn": 0,
+       "fp": 4,
+       "kappa": 0.0,
+       "label_positives": 0,
+       "pairs": 26,
+       "precision": 0.0,
+       "recall": null,
+       "tn": 22,
+       "tp": 0
+      },
+      "missing_required_relation": {
+       "detector_positives": 3,
+       "fn": 0,
+       "fp": 2,
+       "kappa": 0.469388,
+       "label_positives": 1,
+       "pairs": 26,
+       "precision": 0.333333,
+       "recall": 1.0,
+       "tn": 23,
+       "tp": 1
+      },
+      "untrue_caption": {
+       "detector_positives": 0,
+       "fn": 2,
+       "fp": 0,
+       "kappa": 0.0,
+       "label_positives": 2,
+       "pairs": 26,
+       "precision": null,
+       "recall": 0.0,
+       "tn": 24,
+       "tp": 0
+      },
+      "wrong_direction": {
+       "detector_positives": 0,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 0,
+       "pairs": 26,
+       "precision": null,
+       "recall": null,
+       "tn": 26,
+       "tp": 0
+      }
+     },
+     "items": 34,
+     "items_total": 39,
+     "labeller": "claude-opus-5-5, two independent read-only labellers per item, blind to the arm, disagreements decided by a third; labelled 2026-10-03 before any grading was read (TASK 108 D16, OQ-C)",
+     "met": false,
+     "note": "the orchestrating model labels the set (TASK D16): corroborated, not independent",
+     "per_type": {
+      "crossings_over_allowance": {
+       "detector_positives": 2,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 2,
+       "met": true,
+       "pairs": 17,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 15,
+       "tp": 2
+      },
+      "dark_contrast": {
+       "detector_positives": 0,
+       "fn": 1,
+       "fp": 0,
+       "kappa": 0.0,
+       "label_positives": 1,
+       "met": false,
+       "note": "no positive in the sample's labels or verdicts: precision or recall undefined; the top-up is reported apart",
+       "pairs": 22,
+       "precision": null,
+       "recall": 0.0,
+       "tn": 21,
+       "tp": 0
+      },
+      "edge_through_node": {
+       "detector_positives": 2,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 2,
+       "met": true,
+       "pairs": 17,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 15,
+       "tp": 2
+      },
+      "form_unfit": {
+       "detector_positives": 1,
+       "fn": 0,
+       "fp": 1,
+       "kappa": 0.0,
+       "label_positives": 0,
+       "met": false,
+       "note": "no positive in the sample's labels or verdicts: precision or recall undefined; the top-up is reported apart",
+       "pairs": 30,
+       "precision": 0.0,
+       "recall": null,
+       "tn": 29,
+       "tp": 0
+      },
+      "illegible_at_column": {
+       "detector_positives": 2,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 2,
+       "met": true,
+       "pairs": 22,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 20,
+       "tp": 2
+      },
+      "label_overlap_or_clip": {
+       "detector_positives": 4,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 4,
+       "met": true,
+       "pairs": 22,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 18,
+       "tp": 4
+      },
+      "title_crossing": {
+       "detector_positives": 2,
+       "fn": 0,
+       "fp": 0,
+       "kappa": 1.0,
+       "label_positives": 2,
+       "met": true,
+       "pairs": 20,
+       "precision": 1.0,
+       "recall": 1.0,
+       "tn": 18,
+       "tp": 2
+      }
+     },
+     "sampled": 30,
+     "scope": "V2 calibrates the detector on the seven defect types of TASK D16 only: crossings_over_allowance, edge_through_node, title_crossing, label_overlap_or_clip, illegible_at_column, dark_contrast, form_unfit. Those are the geometry and form checks; the fidelity checks Q09-Q12, the caption and legend checks Q13-Q14, the concern check Q08, the budget Q07, the ASCII lint Q16 and the colour check Q17 are not calibrated by it.",
+     "seed": 108,
+     "seeded": 4,
+     "status": "not met",
+     "top_up": {
+      "crossings_over_allowance": {
+       "detector": 3,
+       "items": 3,
+       "labelled": 3,
+       "unlabelled": 1
+      },
+      "dark_contrast": {
+       "detector": 0,
+       "items": 0,
+       "labelled": 0,
+       "unlabelled": 0
+      },
+      "edge_through_node": {
+       "detector": 2,
+       "items": 2,
+       "labelled": 2,
+       "unlabelled": 1
+      },
+      "form_unfit": {
+       "detector": 2,
+       "items": 2,
+       "labelled": 2,
+       "unlabelled": 0
+      },
+      "illegible_at_column": {
+       "detector": 0,
+       "items": 0,
+       "labelled": 0,
+       "unlabelled": 2
+      },
+      "label_overlap_or_clip": {
+       "detector": 0,
+       "items": 0,
+       "labelled": 0,
+       "unlabelled": 1
+      },
+      "title_crossing": {
+       "detector": 0,
+       "items": 0,
+       "labelled": 0,
+       "unlabelled": 3
+      }
+     },
+     "unlabelled": {
+      "count": 5,
+      "ids": [
+       "item-19",
+       "item-21",
+       "item-22",
+       "item-25",
+       "item-35"
+      ],
+      "note": "items with no label: they enter neither V2 nor the top-up counts",
+      "sampled": 0,
+      "seeded": 5
+     }
+    }
+   },
+   {
+    "criterion": "control C0: `without_skill` H-core ≥ 0.9",
+    "group": "validity",
+    "id": "V3",
+    "met": true,
+    "status": "met",
+    "value": {
+     "H_core": {
+      "0": 1.0
+     },
+     "missing": []
+    }
+   },
+   {
+    "criterion": "contract-check rate ≥ 0.8 with the skill; the rate without it is reported for information",
+    "group": "validity",
+    "id": "C1",
+    "met": true,
+    "status": "met",
+    "value": {
+     "missing": [],
+     "with_skill": 0.934343,
+     "with_skill_cases": 11,
+     "without_skill_information": 0.484055
+    }
+   },
+   {
+    "criterion": "Δ_H ≥ 0.25 and its 95 % case-cluster lower bound ≥ 0.10",
+    "group": "effect",
+    "id": "H1",
+    "met": false,
+    "status": "not met",
+    "value": {
+     "cases": 10,
+     "ci_high": 0.12869,
+     "ci_low": 0.035381,
+     "delta": 0.084254
+    }
+   },
+   {
+    "criterion": "Δ_H-core ≥ 0.15 and its lower bound > 0",
+    "group": "effect",
+    "id": "H2",
+    "met": false,
+    "status": "not met",
+    "value": {
+     "cases": 10,
+     "ci_high": 0.126282,
+     "ci_low": 0.026667,
+     "delta": 0.076282
+    }
+   },
+   {
+    "criterion": "`with_skill` ahead on 8 or more of the ten cases; behind beyond 0.10 on none, C0 included",
+    "group": "effect",
+    "id": "H3",
+    "met": false,
+    "status": "not met",
+    "value": {
+     "ahead": 7,
+     "behind_beyond_floor": [
+      "0"
+     ],
+     "cases": 10
+    }
+   },
+   {
+    "criterion": "Δ_H > 0 with any one check family left out",
+    "group": "effect",
+    "id": "V4",
+    "met": true,
+    "status": "met",
+    "value": {
+     "ascii": 0.084254,
+     "budget": 0.091722,
+     "colour": 0.083004,
+     "concern": 0.089341,
+     "docs": 0.069048,
+     "fidelity": 0.116768,
+     "form": 0.089341,
+     "geometry": 0.02526,
+     "renders": 0.100416
+    }
+   }
+  ],
+  "order": [
+   "V1",
+   "V2",
+   "V3",
+   "C1",
+   "H1",
+   "H2",
+   "H3",
+   "V4"
+  ],
+  "statement": "the campaign is invalid: V2 not met; the instrument is fixed and the affected runs are run or graded again (TASK UC-5 A2); the effect criteria decide nothing",
+  "validity": "invalid"
+ },
+ "deltas": {
+  "H": {
+   "b": 10000,
+   "case_score": "median",
+   "cases": 10,
+   "ci_high": 0.12869,
+   "ci_low": 0.035381,
+   "delta": 0.084254,
+   "level": 0.95,
+   "seed": 0
+  },
+  "H_core": {
+   "b": 10000,
+   "case_score": "median",
+   "cases": 10,
+   "ci_high": 0.126282,
+   "ci_low": 0.026667,
+   "delta": 0.076282,
+   "level": 0.95,
+   "seed": 0
+  },
+  "strict": {
+   "b": 10000,
+   "case_score": "median",
+   "cases": 10,
+   "ci_high": 0.7,
+   "ci_low": 0.1,
+   "delta": 0.4,
+   "level": 0.95,
+   "seed": 0
+  }
+ },
+ "excluded": [],
+ "graded_runs": 66,
+ "grader": {
+  "decision_rule": {
+   "C1": {
+    "with_min": 0.8
+   },
+   "H1": {
+    "delta_min": 0.25,
+    "lower_min": 0.1
+   },
+   "H2": {
+    "delta_min": 0.15,
+    "lower_above": 0.0
+   },
+   "H3": {
+    "ahead_min": 8,
+    "behind_beyond": 0.1
+   },
+   "V2": {
+    "items_min": 30,
+    "kappa_min": 0.8,
+    "precision_min": 0.9,
+    "recall_min": 0.9
+   },
+   "V3": {
+    "hcore_min": 0.9
+   },
+   "V4": {
+    "delta_above": 0.0
+   },
+   "bootstrap": {
+    "b": 10000,
+    "level": 0.95,
+    "seed": 0
+   },
+   "case_score": "median"
+  },
+  "evals_sha256": "a86c5945919bcd2ce02f01a719cfdfadece41ff8765f905a57de18538b0fd9aa",
+  "evals_sha256_16": "a86c5945919bcd2c",
+  "instrument": {
+   "fidelity.py": "219522d0456bb9450ccd882c3471fbb5c45b4fa2913b5b5c2c7acc84710054d2",
+   "grade_figures.py": "db71d880ec038fd63df354962a293facb7b881b00927c0d0835a217cfd8cfacb",
+   "normalize": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
+  },
+  "keys_sha256": {
+   "0": "3cc409a385dd5ab89bde948a53dd6681e0e3033ac9a194ad87f54b10ac81b20e",
+   "1": "3abb94da7a8d44a0a0ee2ece27e0f45b0c62afc7bf4a905e95f5a0d0baf67b57",
+   "10": "e5ccd14ac8289a86ab4762d029983c5df253f7b695458c807c951d95ad7b25a9",
+   "2": "2f5074840ee249df84ad1cfceb70316ca2a90e42b067e93e6c29d7ffa717462e",
+   "3": "4eca378efb88c859d4ad581156d4ca8b472fc64ed366875582e625d17f381ffb",
+   "4": "7797fbd052f0ef79f0fec748b14aeb5e236a990cc26867da952dffbbeeb80108",
+   "5": "4c6cafae3c81071a242b1b101259592ac1535da07417ff3d96d738f2f85186c4",
+   "6": "0d52c3cf432e46bb177d242e3c36c6fc2a7f7283a2f9814e7661f02a691bc047",
+   "7": "03b6c1ef8185df26e2330bbbd866b6d87d9b5f8124d098cf06b8a64a057695f4",
+   "8": "19feb5c6420e8ca862f29139d436bc5ae9d01a1d67f7694bbb912ce0095dd850",
+   "9": "5b80108cd16c2fbae3f98efe6080d695a3d68df18e204d7945d5996bddb2dae2"
+  },
+  "keys_sha256_16": {
+   "0": "3cc409a385dd5ab8",
+   "1": "3abb94da7a8d44a0",
+   "10": "e5ccd14ac8289a86",
+   "2": "2f5074840ee249df",
+   "3": "4eca378efb88c859",
+   "4": "7797fbd052f0ef79",
+   "5": "4c6cafae3c81071a",
+   "6": "0d52c3cf432e46bb",
+   "7": "03b6c1ef8185df26",
+   "8": "19feb5c6420e8ca8",
+   "9": "5b80108cd16c2fba"
+  },
+  "normalize_sha256": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e",
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "version": "grade_figures/3"
+ },
+ "incomplete": {},
+ "interval": "two-stage case-cluster bootstrap, cases then repetitions within each arm; a case score in a resample is the median of its drawn repetitions; percentile interval",
+ "invocation": {
+  "consistent": true,
+  "differ": [],
+  "values": {
+   "cli_version": [
+    "\"2.1.287 (Claude Code)\""
+   ],
+   "effort": [
+    "\"xhigh\""
+   ],
+   "model": [
+    "\"claude-opus-5-5\""
+   ],
+   "run_cap_usd": [
+    "5.0"
+   ],
+   "timeout_s": [
+    "1200"
+   ]
+  }
+ },
+ "leave_one_family_out": {
+  "ascii": {
+   "delta_H": 0.084254
+  },
+  "budget": {
+   "delta_H": 0.091722
+  },
+  "colour": {
+   "delta_H": 0.083004
+  },
+  "concern": {
+   "delta_H": 0.089341
+  },
+  "docs": {
+   "delta_H": 0.069048
+  },
+  "fidelity": {
+   "delta_H": 0.116768
+  },
+  "form": {
+   "delta_H": 0.089341
+  },
+  "geometry": {
+   "delta_H": 0.02526
+  },
+  "renders": {
+   "delta_H": 0.100416
+  }
+ },
+ "missing": [],
+ "per_check": {
+  "Q01": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 8,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "renders",
+   "with_skill": {
+    "applicable": 23,
+    "passed": 23,
+    "rate": 1.0,
+    "wilson": [
+     0.856883,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 27,
+    "passed": 27,
+    "rate": 1.0,
+    "wilson": [
+     0.875445,
+     1.0
+    ]
+   }
+  },
+  "Q02": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 8,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "renders",
+   "with_skill": {
+    "applicable": 23,
+    "passed": 23,
+    "rate": 1.0,
+    "wilson": [
+     0.856883,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 27,
+    "passed": 27,
+    "rate": 1.0,
+    "wilson": [
+     0.875445,
+     1.0
+    ]
+   }
+  },
+  "Q03": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 6,
+    "ci_high": 0.75,
+    "ci_low": 0.0,
+    "delta": 0.333333,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "geometry",
+   "with_skill": {
+    "applicable": 17,
+    "passed": 17,
+    "rate": 1.0,
+    "wilson": [
+     0.815682,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 21,
+    "passed": 15,
+    "rate": 0.714286,
+    "wilson": [
+     0.500436,
+     0.861861
+    ]
+   }
+  },
+  "Q04": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 6,
+    "ci_high": 0.666667,
+    "ci_low": 0.0,
+    "delta": 0.333333,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "geometry",
+   "with_skill": {
+    "applicable": 17,
+    "passed": 17,
+    "rate": 1.0,
+    "wilson": [
+     0.815682,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 21,
+    "passed": 16,
+    "rate": 0.761905,
+    "wilson": [
+     0.549088,
+     0.89372
+    ]
+   }
+  },
+  "Q05": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 7,
+    "ci_high": 1.0,
+    "ci_low": 0.166667,
+    "delta": 0.571429,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "geometry",
+   "with_skill": {
+    "applicable": 20,
+    "passed": 20,
+    "rate": 1.0,
+    "wilson": [
+     0.838875,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 24,
+    "passed": 13,
+    "rate": 0.541667,
+    "wilson": [
+     0.350749,
+     0.721087
+    ]
+   }
+  },
+  "Q06": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 8,
+    "ci_high": 0.444444,
+    "ci_low": 0.0,
+    "delta": 0.125,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "geometry",
+   "with_skill": {
+    "applicable": 23,
+    "passed": 23,
+    "rate": 1.0,
+    "wilson": [
+     0.856883,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 27,
+    "passed": 23,
+    "rate": 0.851852,
+    "wilson": [
+     0.675213,
+     0.940841
+    ]
+   }
+  },
+  "Q07": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 9,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "budget",
+   "with_skill": {
+    "applicable": 28,
+    "passed": 28,
+    "rate": 1.0,
+    "wilson": [
+     0.879357,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 30,
+    "passed": 30,
+    "rate": 1.0,
+    "wilson": [
+     0.886487,
+     1.0
+    ]
+   }
+  },
+  "Q08": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "concern",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 31,
+    "rate": 0.939394,
+    "wilson": [
+     0.803938,
+     0.983219
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 33,
+    "rate": 1.0,
+    "wilson": [
+     0.89573,
+     1.0
+    ]
+   }
+  },
+  "Q09": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "fidelity",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 29,
+    "rate": 0.878788,
+    "wilson": [
+     0.726745,
+     0.951838
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 30,
+    "rate": 0.909091,
+    "wilson": [
+     0.764274,
+     0.968596
+    ]
+   }
+  },
+  "Q10": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.1,
+    "ci_low": -0.2,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "fidelity",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 27,
+    "rate": 0.818182,
+    "wilson": [
+     0.656118,
+     0.913892
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 29,
+    "rate": 0.878788,
+    "wilson": [
+     0.726745,
+     0.951838
+    ]
+   }
+  },
+  "Q11": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "fidelity",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 33,
+    "rate": 1.0,
+    "wilson": [
+     0.89573,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 33,
+    "rate": 1.0,
+    "wilson": [
+     0.89573,
+     1.0
+    ]
+   }
+  },
+  "Q12": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.3,
+    "ci_low": 0.0,
+    "delta": 0.1,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "fidelity",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 29,
+    "rate": 0.878788,
+    "wilson": [
+     0.726745,
+     0.951838
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 28,
+    "rate": 0.848485,
+    "wilson": [
+     0.690801,
+     0.933495
+    ]
+   }
+  },
+  "Q13": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.1,
+    "ci_low": -0.1,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "docs",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 32,
+    "rate": 0.969697,
+    "wilson": [
+     0.846813,
+     0.994631
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 31,
+    "rate": 0.939394,
+    "wilson": [
+     0.803938,
+     0.983219
+    ]
+   }
+  },
+  "Q14": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 6,
+    "ci_high": 1.0,
+    "ci_low": 0.0,
+    "delta": 0.666667,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "docs",
+   "with_skill": {
+    "applicable": 22,
+    "passed": 20,
+    "rate": 0.909091,
+    "wilson": [
+     0.721851,
+     0.974705
+    ]
+   },
+   "without_skill": {
+    "applicable": 17,
+    "passed": 7,
+    "rate": 0.411765,
+    "wilson": [
+     0.216111,
+     0.639946
+    ]
+   }
+  },
+  "Q15": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 10,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "form",
+   "with_skill": {
+    "applicable": 33,
+    "passed": 31,
+    "rate": 0.939394,
+    "wilson": [
+     0.803938,
+     0.983219
+    ]
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 33,
+    "rate": 1.0,
+    "wilson": [
+     0.89573,
+     1.0
+    ]
+   }
+  },
+  "Q16": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 1,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "ascii",
+   "with_skill": {
+    "applicable": 5,
+    "passed": 5,
+    "rate": 1.0,
+    "wilson": [
+     0.565518,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 3,
+    "passed": 3,
+    "rate": 1.0,
+    "wilson": [
+     0.438503,
+     1.0
+    ]
+   }
+  },
+  "Q17": {
+   "delta": {
+    "b": 10000,
+    "case_score": "median",
+    "cases": 1,
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "delta": 0.0,
+    "level": 0.95,
+    "seed": 0
+   },
+   "family": "colour",
+   "with_skill": {
+    "applicable": 17,
+    "passed": 17,
+    "rate": 1.0,
+    "wilson": [
+     0.815682,
+     1.0
+    ]
+   },
+   "without_skill": {
+    "applicable": 1,
+    "passed": 1,
+    "rate": 1.0,
+    "wilson": [
+     0.206549,
+     1.0
+    ]
+   }
+  }
+ },
+ "per_contract_check": {
+  "K01": {
+   "with_skill": {
+    "applicable": 23,
+    "passed": 23,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 27,
+    "passed": 0,
+    "rate": 0.0
+   }
+  },
+  "K02": {
+   "with_skill": {
+    "applicable": 17,
+    "passed": 17,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 6,
+    "passed": 0,
+    "rate": 0.0
+   }
+  },
+  "K03": {
+   "with_skill": {
+    "applicable": 14,
+    "passed": 14,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 1,
+    "passed": 0,
+    "rate": 0.0
+   }
+  },
+  "K04": {
+   "with_skill": {
+    "applicable": 28,
+    "passed": 24,
+    "rate": 0.857143
+   },
+   "without_skill": {
+    "applicable": 30,
+    "passed": 0,
+    "rate": 0.0
+   }
+  },
+  "K05": {
+   "with_skill": {
+    "applicable": 22,
+    "passed": 22,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 17,
+    "passed": 5,
+    "rate": 0.294118
+   }
+  },
+  "K06": {
+   "with_skill": {
+    "applicable": 9,
+    "passed": 9,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 9,
+    "passed": 8,
+    "rate": 0.888889
+   }
+  },
+  "K07": {
+   "with_skill": {
+    "applicable": 33,
+    "passed": 33,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 33,
+    "passed": 30,
+    "rate": 0.909091
+   }
+  },
+  "K08": {
+   "with_skill": {
+    "applicable": 14,
+    "passed": 14,
+    "rate": 1.0
+   },
+   "without_skill": {
+    "applicable": 18,
+    "passed": 15,
+    "rate": 0.833333
+   }
+  },
+  "K09": {
+   "with_skill": {
+    "applicable": 28,
+    "passed": 25,
+    "rate": 0.892857
+   },
+   "without_skill": {
+    "applicable": 30,
+    "passed": 18,
+    "rate": 0.6
+   }
+  }
+ },
+ "per_decoy": {
+  "1": {
+   "t1": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q08",
+    "type": "dynamics_in_structure",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t8": {
+    "check": null,
+    "type": "boundary_edge",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t9": {
+    "check": null,
+    "type": "aggregation_needed",
+    "with_skill": {
+     "computed": 0,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 0,
+     "hits": 0
+    }
+   }
+  },
+  "10": {
+   "t1": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": null,
+    "type": "wrong_form",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "2": {
+   "t1": {
+    "check": null,
+    "type": "long_payload",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q09",
+    "type": "reversed_direction",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q09",
+    "type": "invented_block",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "3": {
+   "t1": {
+    "check": "Q12",
+    "type": "invented_writer",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q12",
+    "type": "invented_state",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q13",
+    "type": "caption_overclaim",
+    "with_skill": {
+     "computed": 3,
+     "hits": 1
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": null,
+    "type": "cyrillic_labels",
+    "with_skill": {
+     "computed": 0,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 0,
+     "hits": 0
+    }
+   }
+  },
+  "4": {
+   "t1": {
+    "check": "Q09",
+    "type": "invented_dependency",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q12",
+    "type": "excluded_item",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q11",
+    "type": "calendar_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t8": {
+    "check": "Q11",
+    "type": "invented_number",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "5": {
+   "t1": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": null,
+    "type": "aggregation_needed",
+    "with_skill": {
+     "computed": 0,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 0,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": null,
+    "type": "lr_width",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t8": {
+    "check": null,
+    "type": "v11_only_syntax",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "6": {
+   "t1": {
+    "check": null,
+    "type": "v11_only_syntax",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t10": {
+    "check": null,
+    "type": "aggregation_needed",
+    "with_skill": {
+     "computed": 0,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 0,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": null,
+    "type": "boundary_edge",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q12",
+    "type": "invented_group",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t8": {
+    "check": "Q08",
+    "type": "dynamics_in_structure",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t9": {
+    "check": null,
+    "type": "cyrillic_labels",
+    "with_skill": {
+     "computed": 0,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 0,
+     "hits": 0
+    }
+   }
+  },
+  "7": {
+   "t1": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q09",
+    "type": "invented_branch",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q09",
+    "type": "invented_branch",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q09",
+    "type": "invented_branch",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q09",
+    "type": "order_violation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "8": {
+   "t1": {
+    "check": "Q12",
+    "type": "invented_hub",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q09",
+    "type": "unstated_relation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": null,
+    "type": "k33_core",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 3
+    }
+   },
+   "t5": {
+    "check": null,
+    "type": "boundary_edge",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  },
+  "9": {
+   "t1": {
+    "check": null,
+    "type": "wrong_form",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t2": {
+    "check": "Q12",
+    "type": "invented_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t3": {
+    "check": "Q11",
+    "type": "number_from_other_rule",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t4": {
+    "check": "Q09",
+    "type": "order_violation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t5": {
+    "check": "Q09",
+    "type": "order_violation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t6": {
+    "check": "Q09",
+    "type": "order_violation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t7": {
+    "check": "Q09",
+    "type": "order_violation",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   },
+   "t8": {
+    "check": "Q09",
+    "type": "condition_as_entity",
+    "with_skill": {
+     "computed": 3,
+     "hits": 0
+    },
+    "without_skill": {
+     "computed": 3,
+     "hits": 0
+    }
+   }
+  }
+ },
+ "post_hoc": false,
+ "provenance": {
+  "amendment": null,
+  "files": {
+   "evals.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "a86c5945919bcd2ce02f01a719cfdfadece41ff8765f905a57de18538b0fd9aa"
+    },
+    "sha256": "a86c5945919bcd2ce02f01a719cfdfadece41ff8765f905a57de18538b0fd9aa"
+   },
+   "fixtures/c0-control-thumbnails/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "3cc409a385dd5ab89bde948a53dd6681e0e3033ac9a194ad87f54b10ac81b20e"
+    },
+    "sha256": "3cc409a385dd5ab89bde948a53dd6681e0e3033ac9a194ad87f54b10ac81b20e"
+   },
+   "fixtures/c1-wms-container-view/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "3abb94da7a8d44a0a0ee2ece27e0f45b0c62afc7bf4a905e95f5a0d0baf67b57"
+    },
+    "sha256": "3abb94da7a8d44a0a0ee2ece27e0f45b0c62afc7bf4a905e95f5a0d0baf67b57"
+   },
+   "fixtures/c2-card-3ds-sequence/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "2f5074840ee249df84ad1cfceb70316ca2a90e42b067e93e6c29d7ffa717462e"
+    },
+    "sha256": "2f5074840ee249df84ad1cfceb70316ca2a90e42b067e93e6c29d7ffa717462e"
+   },
+   "fixtures/c3-leave-request-lifecycle/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "4eca378efb88c859d4ad581156d4ca8b472fc64ed366875582e625d17f381ffb"
+    },
+    "sha256": "4eca378efb88c859d4ad581156d4ca8b472fc64ed366875582e625d17f381ffb"
+   },
+   "fixtures/c4-reporting-migration-gantt/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "7797fbd052f0ef79f0fec748b14aeb5e236a990cc26867da952dffbbeeb80108"
+    },
+    "sha256": "7797fbd052f0ef79f0fec748b14aeb5e236a990cc26867da952dffbbeeb80108"
+   },
+   "fixtures/c5-sales-pipeline-dataflow/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "4c6cafae3c81071a242b1b101259592ac1535da07417ff3d96d738f2f85186c4"
+    },
+    "sha256": "4c6cafae3c81071a242b1b101259592ac1535da07417ff3d96d738f2f85186c4"
+   },
+   "fixtures/c6-clinic-deployment/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "0d52c3cf432e46bb177d242e3c36c6fc2a7f7283a2f9814e7661f02a691bc047"
+    },
+    "sha256": "0d52c3cf432e46bb177d242e3c36c6fc2a7f7283a2f9814e7661f02a691bc047"
+   },
+   "fixtures/c7-refund-decision/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "03b6c1ef8185df26e2330bbbd866b6d87d9b5f8124d098cf06b8a64a057695f4"
+    },
+    "sha256": "03b6c1ef8185df26e2330bbbd866b6d87d9b5f8124d098cf06b8a64a057695f4"
+   },
+   "fixtures/c8-frontends-services-k33/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "19feb5c6420e8ca862f29139d436bc5ae9d01a1d67f7694bbb912ce0095dd850"
+    },
+    "sha256": "19feb5c6420e8ca862f29139d436bc5ae9d01a1d67f7694bbb912ce0095dd850"
+   },
+   "fixtures/f1-ci-stages-terminal/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "5b80108cd16c2fbae3f98efe6080d695a3d68df18e204d7945d5996bddb2dae2"
+    },
+    "sha256": "5b80108cd16c2fbae3f98efe6080d695a3d68df18e204d7945d5996bddb2dae2"
+   },
+   "fixtures/f2-roles-operations-matrix/key.json": {
+    "amended": false,
+    "registered": {
+     "2026-10-opus55-xhigh-r1": "e5ccd14ac8289a86ab4762d029983c5df253f7b695458c807c951d95ad7b25a9"
+    },
+    "sha256": "e5ccd14ac8289a86ab4762d029983c5df253f7b695458c807c951d95ad7b25a9"
+   }
+  },
+  "instrument": {
+   "campaigns": {
+    "2026-10-opus55-xhigh-r1": {
+     "fidelity.py": null,
+     "grade_figures.py": null,
+     "normalize": null
+    }
+   },
+   "registered": {
+    "fidelity.py": false,
+    "grade_figures.py": false,
+    "normalize": false
+   },
+   "sha256": {
+    "fidelity.py": "219522d0456bb9450ccd882c3471fbb5c45b4fa2913b5b5c2c7acc84710054d2",
+    "grade_figures.py": "db71d880ec038fd63df354962a293facb7b881b00927c0d0835a217cfd8cfacb",
+    "normalize": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
+   },
+   "statement": "the normalisation rule, grade_figures.py, fidelity.py: not registered before the runs of 2026-10-opus55-xhigh-r1. The sha256 is recorded at grading time; a change after the runs shows in it, and nothing refuses it (TASK R11.2; EI-13)."
+  },
+  "post_hoc": false,
+  "sources": {
+   "2026-10-opus55-xhigh-r1": "campaign.json"
+  },
+  "status": "verified"
+ },
+ "repetitions": 3,
+ "round": {
+  "arms_from_baseline": [],
+  "baseline_campaign": null,
+  "label": null
+ },
+ "schema": "mermaid-eval-report/v3",
+ "scores": "H per run; a case's score is the median over its repetitions; Δ is the mean over the ten cases C1-C8, F1, F2 of the arm difference; C0 enters V3 and H3",
+ "sign_test": {
+  "ahead": 7,
+  "behind": 0,
+  "definition": "ahead: a case difference above 0, as the README and H3 define it",
+  "floor": 0.0,
+  "n": 7,
+  "note": "information only (TASK D8); H3 is a breadth criterion",
+  "p_one_sided": 0.007812,
+  "p_two_sided": 0.015625,
+  "sensitivity": {
+   "ahead": 4,
+   "behind": 0,
+   "floor": 0.1,
+   "n": 4,
+   "note": "not registered: a case difference within the floor counts as a tie",
+   "p_one_sided": 0.0625,
+   "p_two_sided": 0.125,
+   "ties": 6
+  },
+  "ties": 3
+ },
+ "v2_scope": "V2 calibrates the detector on the seven defect types of TASK D16 only: crossings_over_allowance, edge_through_node, title_crossing, label_overlap_or_clip, illegible_at_column, dark_contrast, form_unfit. Those are the geometry and form checks; the fidelity checks Q09-Q12, the caption and legend checks Q13-Q14, the concern check Q08, the budget Q07, the ASCII lint Q16 and the colour check Q17 are not calibrated by it."
+}

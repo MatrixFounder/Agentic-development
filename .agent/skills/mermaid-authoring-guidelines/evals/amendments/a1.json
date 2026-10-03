@@ -1,0 +1,46 @@
+{
+  "schema": "mermaid-eval-amendment/v1",
+  "id": "a1",
+  "campaign": "2026-10-opus55-xhigh-r1",
+  "decided_by": "orchestrator of TASK 108 review round 1, fix wave 1b, on findings EI-02, EI-08, EI-09 and EI-27; the operator has not confirmed it",
+  "date": "2026-10-03",
+  "status": "POST-HOC",
+  "reason": "Key gaps found by review round 1 in five registered keys: C0 forms and parts, C5 groups, C6 parts, C7 start wording, C8 required relations. The amendment was made on 2026-10-03, after the 66 runs of the campaign and after reviewers had seen per-case scores, so it is POST-HOC. Its report is a sensitivity analysis beside the pre-registered report, never in its place.",
+  "files": [
+    {
+      "registered": "fixtures/c0-control-thumbnails/key.json",
+      "registered_sha256": "3cc409a385dd5ab89bde948a53dd6681e0e3033ac9a194ad87f54b10ac81b20e",
+      "amended": "amendments/a1/c0-control-thumbnails.key.json",
+      "amended_sha256": "006a238e2542d82e707e3e9d263d7865415edfd129eacff7cdd5d0a67db3711d",
+      "reason": "EI-02: SKILL.md Step 0 takes ASCII in a `text figure` fence first for a tree of at most 8 elements, and the C0 request names no kind, so acceptable_forms becomes [flowchart, ascii]; kind stays flowchart, because the bundle is routed by kind and the prompts are hashed. EI-08: document lines 27 and 28 state the originals prefix and the thumbnails prefix of the Media bucket, so both become optional entities with part_of mb. Made on 2026-10-03, after the runs of the campaign and after reviewers had seen per-case scores: POST-HOC."
+    },
+    {
+      "registered": "fixtures/c5-sales-pipeline-dataflow/key.json",
+      "registered_sha256": "4c6cafae3c81071a242b1b101259592ac1535da07417ff3d96d738f2f85186c4",
+      "amended": "amendments/a1/c5-sales-pipeline-dataflow.key.json",
+      "amended_sha256": "894dd22d8b5994d379dc0e155f13e74f4101c1b10eba98ba84aaca6abbc2be77",
+      "reason": "EI-09: the document heads §5.2 Consumers and names the pipeline of its section on line 3, and the key held only the group sources; the groups consumers (dash, fc, dq) and pipeline (raw, norm, stg, dedup, clean, loader, wh) are added. Made on 2026-10-03, after the runs of the campaign and after reviewers had seen per-case scores: POST-HOC."
+    },
+    {
+      "registered": "fixtures/c6-clinic-deployment/key.json",
+      "registered_sha256": "0d52c3cf432e46bb177d242e3c36c6fc2a7f7283a2f9814e7661f02a691bc047",
+      "amended": "amendments/a1/c6-clinic-deployment.key.json",
+      "amended_sha256": "aef07b1605d781b03ca0b48bddfaf2372d7e1ea09f0478fc10ba5fb82ea00ca6",
+      "reason": "EI-08: document line 14 lists app-01, app-02 and app-03 as the application nodes; the key held them as aliases of the entity app, so a figure that draws one of them claimed all three. They become optional entities with part_of app, and leave the aliases of app. Made on 2026-10-03, after the runs of the campaign and after reviewers had seen per-case scores: POST-HOC."
+    },
+    {
+      "registered": "fixtures/c7-refund-decision/key.json",
+      "registered_sha256": "03b6c1ef8185df26e2330bbbd866b6d87d9b5f8124d098cf06b8a64a057695f4",
+      "amended": "amendments/a1/c7-refund-decision.key.json",
+      "amended_sha256": "8afb45af5d927bec966475d39b2b457f2a295379865ab33a8c3f1383273830df",
+      "reason": "EI-09: document line 3 opens with 'A customer asks for a refund', and every live answer of both arms starts its flow there; the entity request gets the alias 'Customer asks for a refund' and the soft alias 'Customer'. Made on 2026-10-03, after the runs of the campaign and after reviewers had seen per-case scores: POST-HOC."
+    },
+    {
+      "registered": "fixtures/c8-frontends-services-k33/key.json",
+      "registered_sha256": "19feb5c6420e8ca862f29139d436bc5ae9d01a1d67f7694bbb912ce0095dd850",
+      "amended": "amendments/a1/c8-frontends-services-k33.key.json",
+      "amended_sha256": "bb93b2ffd2dd735ec215d708914ab21ab115f1c5cdf9c9543a4034c00e9e5e7c",
+      "reason": "EI-27: the request asks which client-facing component calls which domain service, the key's own group fe ('client-facing components') holds Web shop, Mobile BFF and Partner API only, and its note drops r_stk_pri for the same reason; r_adm_cat and r_adm_pri become required: false. Made on 2026-10-03, after the runs of the campaign and after reviewers had seen per-case scores: POST-HOC."
+    }
+  ]
+}

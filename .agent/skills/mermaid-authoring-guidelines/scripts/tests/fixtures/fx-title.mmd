@@ -1,0 +1,7 @@
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  CLI["Client apps"]
+  subgraph WRK["Conversation workers"]
+    API["Conversation API"]
+  end
+  CLI -->|"list"| API

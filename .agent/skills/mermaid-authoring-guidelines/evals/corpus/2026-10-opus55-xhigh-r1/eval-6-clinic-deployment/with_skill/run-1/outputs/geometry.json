@@ -1,0 +1,898 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "0d71e4e6632e2948ff598be4752a4ef09613f6f321aa9affaa6a8a31545d5116",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 741.9,
+    "height": 1017.4,
+    "nodes": 10,
+    "edges": 8,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "ЦОД-2",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "ЦОД-2",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "ЦОД-1",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "сайт записи · HTTPS",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "распределяет запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "чтение · запись",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "асинхронная репликация",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "копии каждые 6 ч",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "подключение",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Пациенты",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Рабочие места регистратуры",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "WAFединственный вход из Интернета",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "VPN-шлюз",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "БалансировщикHAProxy · пара active/passive",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Узлы приложенияapp-01 · app-02 · app-03",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД основнаяPostgreSQL 15 · данные приложения",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер мониторингаZabbix · опрашивает все узлы",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД резервнаяотставание до 5 с · только чтение",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер резервных копийхранит копии 14 дней",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "3362d988b9381a9d4a35f3b8e5affd49ab418b404eff0354e04c0b4046a66e8b",
+   "png_sha256": "78d138a30247aa1104f2ae26e0f726c7dabc3d490e15110bf3e688a7e60306ef",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 464
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "0d71e4e6632e2948ff598be4752a4ef09613f6f321aa9affaa6a8a31545d5116",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 741.9,
+    "height": 1017.4,
+    "nodes": 10,
+    "edges": 8,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "ЦОД-2",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "ЦОД-2",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#13171c",
+       "ratio": 17.79,
+       "scope": "author"
+      },
+      {
+       "text": "ЦОД-1",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#13171c",
+       "ratio": 17.79,
+       "scope": "author"
+      },
+      {
+       "text": "сайт записи · HTTPS",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "распределяет запросы",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "чтение · запись",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "асинхронная репликация",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "копии каждые 6 ч",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "подключение",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Пациенты",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Рабочие места регистратуры",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "WAFединственный вход из Интернета",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "VPN-шлюз",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "БалансировщикHAProxy · пара active/passive",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Узлы приложенияapp-01 · app-02 · app-03",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД основнаяPostgreSQL 15 · данные приложения",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер мониторингаZabbix · опрашивает все узлы",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД резервнаяотставание до 5 с · только чтение",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер резервных копийхранит копии 14 дней",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "8 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('сайт записи · HTTPS', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "bb96d162dc656bfbb878aa3798ad50e03a9ce086a52901a4ce69acfb38ac076a",
+   "png_sha256": "b899e368bbf308847475415c4a718c5f2e10b81e933cf0a1981183117aed2ac5",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 464
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "0d71e4e6632e2948ff598be4752a4ef09613f6f321aa9affaa6a8a31545d5116",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 700.2,
+    "height": 892.4,
+    "nodes": 10,
+    "edges": 8,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "ЦОД-2",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "ЦОД-2",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "ЦОД-1",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "сайт записи · HTTPS",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "распределяет запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "чтение · запись",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "асинхронная репликация",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "копии каждые 6 ч",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "подключение",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "СУБД резервнаяотставание до 5 с · только чтение",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер резервных копийхранит копии 14 дней",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "WAFединственный вход из Интернета",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "VPN-шлюз",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "БалансировщикHAProxy · пара active/passive",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Узлы приложенияapp-01 · app-02 · app-03",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД основнаяPostgreSQL 15 · данные приложения",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер мониторингаZabbix · опрашивает все узлы",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Пациенты",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Рабочие места регистратуры",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "2326aa8fab1ed9fecff2ea07a494ef8bdb9599268dba94d15146dcb7d9ce5423",
+   "png_sha256": "7c6d1207e235c49528a5a9d315b65d51aa43138e10a315b0bb076494a9a3cc20",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 464
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "0d71e4e6632e2948ff598be4752a4ef09613f6f321aa9affaa6a8a31545d5116",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 741.9,
+    "height": 1017.4,
+    "nodes": 10,
+    "edges": 8,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "ЦОД-2",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "ЦОД-2",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "ЦОД-1",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#f9f9f9",
+       "ratio": 12.0,
+       "scope": "author"
+      },
+      {
+       "text": "сайт записи · HTTPS",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "распределяет запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "чтение · запись",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "асинхронная репликация",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "копии каждые 6 ч",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "подключение",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "запросы",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Пациенты",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "Рабочие места регистратуры",
+       "kind": "node",
+       "fg": "#263238",
+       "bg": "#ffffff",
+       "ratio": 13.15,
+       "scope": "author"
+      },
+      {
+       "text": "WAFединственный вход из Интернета",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "VPN-шлюз",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "БалансировщикHAProxy · пара active/passive",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "Узлы приложенияapp-01 · app-02 · app-03",
+       "kind": "node",
+       "fg": "#0f2a47",
+       "bg": "#e8f0fb",
+       "ratio": 12.67,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД основнаяPostgreSQL 15 · данные приложения",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер мониторингаZabbix · опрашивает все узлы",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      },
+      {
+       "text": "СУБД резервнаяотставание до 5 с · только чтение",
+       "kind": "node",
+       "fg": "#2a1653",
+       "bg": "#f3eef9",
+       "ratio": 13.75,
+       "scope": "author"
+      },
+      {
+       "text": "Сервер резервных копийхранит копии 14 дней",
+       "kind": "node",
+       "fg": "#1f2a30",
+       "bg": "#f5f5f5",
+       "ratio": 13.44,
+       "scope": "author"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "76c2fe31810812dbcbfbaa204fda6bb392f7f753825703179d13d6b4702950d0",
+   "png_sha256": "6662e885f0f9a081ce005a3d3e1afc6d4d88b7966aac8a3acc7df044cdbe9267",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 464
+    }
+   ]
+  }
+ }
+}

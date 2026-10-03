@@ -2,7 +2,7 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.7
+version: 1.8
 ---
 # Documentation Standards
 
@@ -291,6 +291,7 @@ anchor absent from this table is a defect.
 | :--- | :--- | :--- | :--- |
 | `contract:defects` | `known-issues-format` SKILL + `known_issues_md_template.md` | Registry A schema block | `check_contract_sync.py` |
 | `contract:work-items` | `known-issues-format` SKILL + `backlog_md_template.md` | Registry B schema block | `check_contract_sync.py` |
+| `contract:routing` | `mermaid-authoring-guidelines` SKILL | The routing table: figure kind → reference files | `evals/run_evals.py` (`mermaid-authoring-guidelines`) |
 | `feedback:discovered-issues` | `docs/BACKLOG.md` | Index-line insertion point | `feedback_lib/ledger_backlog.py` |
 | `contract:rtm` | `docs/TASK.md` | The RTM table | `skill-spec-validator` (`--mode task` **and** `--mode plan`) |
 | `contract:meta` | `docs/TASK.md` | Meta table (ID, slug, type) | — |
@@ -300,6 +301,9 @@ anchor absent from this table is a defect.
 | `contract:open-questions` | `docs/TASK.md` | Open questions | — |
 | `contract:sequence` | `docs/PLAN.md` | Task execution sequence | — |
 | `contract:coverage` | `docs/PLAN.md` | Use-case coverage table | — |
+| `contract:schedule` | `docs/PLAN.md` | The JSON schedule block (`plan-schedule/v1`) | `plan_gantt.py` (`mermaid-authoring-guidelines`) |
+| `generated:plan-gantt-start` | `docs/PLAN.md` | Start of the generated plan chart | `plan_gantt.py --write`, `--check` |
+| `generated:plan-gantt-end` | `docs/PLAN.md` | End of the generated plan chart | `plan_gantt.py --write`, `--check` |
 | `contract:goal` | `docs/tasks/*.md` | Task goal | — |
 | `contract:changes` | `docs/tasks/*.md` | Changes description | — |
 | `contract:tests` | `docs/tasks/*.md` | Test cases | — |
@@ -309,6 +313,14 @@ anchor absent from this table is a defect.
 > `feedback:discovered-issues` keeps its own namespace: it marks an **insertion point** for a writer,
 > not a contract block for a reader, and it predates this registry. Renaming it would rewrite live
 > ledgers in every consumer project to no benefit.
+>
+> `generated:plan-gantt-start` and `generated:plan-gantt-end` bracket script output, not authored
+> text. `plan_gantt.py --write` replaces the region between them, and a hand edit there is lost on
+> the next write. No prose matcher preceded these markers or `contract:schedule`, so `plan_gantt.py`
+> has no fallback: a plan without the schedule block carries no plan chart. The region's first
+> line may hold `<!-- plan-gantt-groups: ... -->`, the stage groups of a split chart; it is script
+> output, not an anchor. A region that holds a heading, another comment or a fence other than
+> `mermaid` is refused: such text shows that a marker is lost or misplaced.
 
 ## 5. Markdown Structure (CRITICAL)
 
@@ -319,7 +331,8 @@ sooner; it is not the reason the rule exists.
 
 ### 5.1. Table cells are labels, not prose
 
-A cell holds **one short value**: an id, a status, a link, or a single clause.
+A cell holds **one short value**: an id, a status, a link, or a single clause. This rule covers
+Markdown table cells only: a `<br/>` inside a Mermaid label in a fence is outside it (§5.6).
 
 - **Hard limit: ≤ 120 characters and one sentence per cell.**
 - **Never** put inside a cell: `<br/>`, a bulleted list, a multi-sentence explanation,
@@ -422,10 +435,49 @@ neither a verdict on the document.
 
 **This section owns register only.** Cell width and cells-as-prose → §5.1 (the scanner surfaces both
 as `cell_width` and `cell_sentences`). Paragraph and list shape → §5.2. Line length → §5.3.
+Figures → §5.6.
 
 > [!TIP]
 > Authoring contract, rewrite guide, per-language marker data and the scanner:
 > **`artifact-formalizer`**.
+
+### 5.6. Figures
+
+Applies to every figure in a `.md` artifact, in whatever language the project writes. A script
+finds caption and legend by their position next to the fence, never by a word (ARCHITECTURE §7.2,
+invariant L1).
+
+**The form is chosen before the figure is drawn.** Load `mermaid-authoring-guidelines` before the
+first figure of any artifact. Under its Step 0 the author takes the first form that carries the
+information:
+
+1. no figure;
+2. a list or a table;
+3. ASCII in a `text figure` fence;
+4. Mermaid;
+5. an image, for a screenshot or a visual design only.
+
+The skill owns budgets, layout, notation and the render check. This section restates none of them.
+
+- **Caption** — the paragraph directly above the fence. A heading is not a caption.
+- **Legend** — the paragraph or list directly below the fence. It is required only when the figure
+  uses two or more encodings. It names one item per encoding, and only the notation that figure
+  uses.
+- **Fidelity** — a figure restates only what the text states. Each node, edge, label and number
+  has a line of the text that states it.
+- **Plan chart** — `plan_gantt.py` generates it from the `contract:schedule` block into the region
+  between the `generated:plan-gantt-*` markers (§4.4). It is never drawn by hand.
+- **Review evidence** — a review reads the lint output, and the render output where it exists.
+  The line `not rendered: <reason>` lets the review conclude and never counts as a passed render.
+  A figure without lint output is reported *not verified*, and the review does not return APPROVED
+  while one is.
+
+**This section owns figures only.** Caption and legend are prose: §5.2, §5.3 and §5.5 apply to
+them. The fence is a code block, outside §5.1 and §5.3.
+
+> [!TIP]
+> Form choice, notation per figure kind, the lint, the render check and the plan chart generator:
+> **`mermaid-authoring-guidelines`**.
 
 ## 6. Artifacts (`.AGENTS.md`)
 Policy: keep `.AGENTS.md` for source-code directories under memory tracking. Missing file should not fail execution; bootstrap when needed.

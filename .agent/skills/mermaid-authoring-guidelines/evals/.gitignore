@@ -1,0 +1,20 @@
+# Renders are never committed. render_corpus.py writes SVG and PNG files outside the
+# repository and stores geometry JSON in the corpus; a render copied here stays out of git.
+# Fixtures keep theirs.
+*.png
+*.svg
+*.log
+!fixtures/**/*.png
+!fixtures/**/*.svg
+!fixtures/**/*.log
+
+# Scratch of run_evals.py: a run directory before its atomic rename, and the campaign lock.
+.partial-*/
+.executor.lock
+
+# Scratch of render_corpus.py: geometry.json before its atomic replace.
+geometry.json.tmp.*
+
+# Scratch directories of local experiments.
+scratch/
+tmp/

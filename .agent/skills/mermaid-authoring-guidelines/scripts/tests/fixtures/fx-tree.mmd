@@ -1,0 +1,9 @@
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  GW["Gateway"] --> AUTH["Auth service"]
+  GW --> ORD["Orders service"]
+  GW --> CAT["Catalog service"]
+  AUTH --> USERS[("users")]
+  ORD --> ORDERS[("orders")]
+  ORD --> PAY["Payments API"]
+  CAT --> PROD[("products")]

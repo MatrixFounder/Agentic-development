@@ -1,0 +1,621 @@
+{
+  "schema": "svg-geometry-fixtures/v1",
+  "purpose": "Values read off the rendered PNGs of each fixture, one by one, and matched by svg_geometry.analyze_svg on the committed SVG without a browser (TASK 108 R7.5, PLAN C4).",
+  "column_px": 900,
+  "rendered": "2026-10-02 by render_check.py: securityLevel strict, default theme, page width 1800 px, a gantt at the 900 px column",
+  "renderers": {
+    "v10": {
+      "mermaid": "10.9.8",
+      "mermaid_cli": "10.9.1",
+      "browser": "HeadlessChrome/150.0.7871.24"
+    },
+    "v11": {
+      "mermaid": "11.17.2",
+      "mermaid_cli": "11.17.0",
+      "browser": "HeadlessChrome/150.0.7871.24"
+    }
+  },
+  "fixtures": {
+    "fx-tree": {
+      "source": "fx-tree.mmd",
+      "looked_at": "Both PNGs: eight nodes in three ranks, seven edges, no crossing, no edge through a node.",
+      "v10": {
+        "diagram": "flowchart-v2",
+        "width": 540.4,
+        "height": 256.6,
+        "nodes": 8,
+        "edges": 7,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "AUTH->USERS",
+          "CAT->PROD",
+          "GW->AUTH",
+          "GW->CAT",
+          "GW->ORD",
+          "ORD->ORDERS",
+          "ORD->PAY"
+        ]
+      },
+      "v11": {
+        "diagram": "flowchart-v2",
+        "width": 664.1,
+        "height": 301.6,
+        "nodes": 8,
+        "edges": 7,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "AUTH->USERS",
+          "CAT->PROD",
+          "GW->AUTH",
+          "GW->CAT",
+          "GW->ORD",
+          "ORD->ORDERS",
+          "ORD->PAY"
+        ]
+      }
+    },
+    "fx-k33": {
+      "source": "fx-k33.mmd",
+      "looked_at": "10.9: nine crossing pairs (one triple point under the bottom edge of Producer 2); P1->C3 and P3->C1 graze the bottom-left corner of Producer 2. 11.17: five crossings; P1->C3 and P3->C1 run about 60 px inside Producer 2, hidden under its fill.",
+      "v10": {
+        "diagram": "flowchart-v2",
+        "width": 531.6,
+        "height": 139.0,
+        "nodes": 6,
+        "edges": 9,
+        "crossings": 9,
+        "edges_through_nodes": [
+          [
+            "P1->C3",
+            "P2"
+          ],
+          [
+            "P3->C1",
+            "P2"
+          ]
+        ],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "crossings"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast",
+          "edges_through_nodes"
+        ],
+        "edge_names": [
+          "P1->C1",
+          "P1->C2",
+          "P1->C3",
+          "P2->C1",
+          "P2->C2",
+          "P2->C3",
+          "P3->C1",
+          "P3->C2",
+          "P3->C3"
+        ]
+      },
+      "v11": {
+        "diagram": "flowchart-v2",
+        "width": 711.6,
+        "height": 179.0,
+        "nodes": 6,
+        "edges": 9,
+        "crossings": 5,
+        "edges_through_nodes": [
+          [
+            "P1->C3",
+            "P2"
+          ],
+          [
+            "P3->C1",
+            "P2"
+          ]
+        ],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "crossings",
+          "edges_through_nodes"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "P1->C1",
+          "P1->C2",
+          "P1->C3",
+          "P2->C1",
+          "P2->C2",
+          "P2->C3",
+          "P3->C1",
+          "P3->C2",
+          "P3->C3"
+        ]
+      }
+    },
+    "fx-title": {
+      "source": "fx-title.mmd",
+      "looked_at": "Both PNGs: the edge Client apps -> Conversation API strikes the centred title 'Conversation workers'.",
+      "v10": {
+        "diagram": "flowchart-v2",
+        "width": 215.5,
+        "height": 213.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 1,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "title_crossings"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "CLI->API"
+        ]
+      },
+      "v11": {
+        "diagram": "flowchart-v2",
+        "width": 260.5,
+        "height": 258.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 1,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "title_crossings"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "CLI->API"
+        ]
+      }
+    },
+    "fx-through": {
+      "source": "fx-through.mmd",
+      "looked_at": "Both PNGs: Alpha -> Beta loops over Alpha and dives through Xray, so it reads Alpha -> Xray -> Beta; three crossings (the loop with Alpha -> Delta, Alpha -> Gamma with Beta -> Delta and with Yankee -> Beta).",
+      "v10": {
+        "diagram": "flowchart-v2",
+        "width": 326.1,
+        "height": 189.3,
+        "nodes": 6,
+        "edges": 8,
+        "crossings": 3,
+        "edges_through_nodes": [
+          [
+            "A->B",
+            "X"
+          ]
+        ],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "crossings",
+          "edges_through_nodes"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "A->B",
+          "A->C",
+          "A->D",
+          "B->C",
+          "B->D",
+          "C->D",
+          "X->C",
+          "Y->B"
+        ]
+      },
+      "v11": {
+        "diagram": "flowchart-v2",
+        "width": 386.1,
+        "height": 234.0,
+        "nodes": 6,
+        "edges": 8,
+        "crossings": 3,
+        "edges_through_nodes": [
+          [
+            "A->B",
+            "X"
+          ]
+        ],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "crossings",
+          "edges_through_nodes"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "A->B",
+          "A->C",
+          "A->D",
+          "B->C",
+          "B->D",
+          "C->D",
+          "X->C",
+          "Y->B"
+        ]
+      }
+    },
+    "fx-state": {
+      "source": "fx-state.mmd",
+      "looked_at": "Both PNGs: eight states, eleven transitions with [*], no crossing, every label beside its own transition.",
+      "v10": {
+        "diagram": "stateDiagram",
+        "width": 313.8,
+        "height": 693.0,
+        "nodes": 8,
+        "edges": 11,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "Approved->Cancelled",
+          "Approved->Scheduled",
+          "Cancelled->root_end",
+          "Closed->root_end",
+          "Draft->Submitted",
+          "Rejected->Draft",
+          "Scheduled->Taken",
+          "Submitted->Approved",
+          "Submitted->Rejected",
+          "Taken->Closed",
+          "root_start->Draft"
+        ]
+      },
+      "v11": {
+        "diagram": "stateDiagram",
+        "width": 315.6,
+        "height": 754.0,
+        "nodes": 8,
+        "edges": 11,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "edge_names": [
+          "Approved->Cancelled",
+          "Approved->Scheduled",
+          "Cancelled->root_end",
+          "Closed->root_end",
+          "Draft->Submitted",
+          "Rejected->Draft",
+          "Scheduled->Taken",
+          "Submitted->Approved",
+          "Submitted->Rejected",
+          "Taken->Closed",
+          "root_start->Draft"
+        ]
+      }
+    },
+    "fx-seq-long": {
+      "source": "fx-seq-long.mmd",
+      "looked_at": "Both PNGs: four lifelines; the Gateway-Service gap is about 3.4 times the other two, widened by the long reply label.",
+      "v10": {
+        "diagram": "sequence",
+        "width": 1326.0,
+        "height": 435.0,
+        "nodes": 4,
+        "edges": 6,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 10.86,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast",
+          "lifeline_gap"
+        ],
+        "sequence": {
+          "participants": [
+            "C",
+            "G",
+            "S",
+            "D"
+          ],
+          "lifeline_gaps": [
+            200.0,
+            676.0,
+            200.0
+          ],
+          "widest_message_px": 658.9,
+          "lifeline_through_label": []
+        }
+      },
+      "v11": {
+        "diagram": "sequence",
+        "width": 1326.0,
+        "height": 435.0,
+        "nodes": 4,
+        "edges": 6,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 10.86,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast",
+          "lifeline_gap"
+        ],
+        "sequence": {
+          "participants": [
+            "C",
+            "G",
+            "S",
+            "D"
+          ],
+          "lifeline_gaps": [
+            200.0,
+            676.0,
+            200.0
+          ],
+          "widest_message_px": 658.9,
+          "lifeline_through_label": []
+        }
+      },
+      "browser_measure": {
+        "widest_message_px": {
+          "v10": 691.91,
+          "v11": 691.91
+        },
+        "note": "measure_text.mjs on the same SVGs; the SVG-only width above is a Helvetica estimate"
+      }
+    },
+    "fx-gantt": {
+      "source": "fx-gantt.mmd",
+      "looked_at": "Both PNGs at the 900 px column: six bars; the T4 label sits left of its bar; no label past the chart edge or over another bar.",
+      "v10": {
+        "diagram": "gantt",
+        "width": 900.0,
+        "height": 244.0,
+        "nodes": 6,
+        "edges": 0,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 11.0,
+        "effective_font_px": 11.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "gantt": {
+          "bars": 6,
+          "labels_outside": 1,
+          "overflow": 0,
+          "today_marker": false
+        }
+      },
+      "v11": {
+        "diagram": "gantt",
+        "width": 900.0,
+        "height": 244.0,
+        "nodes": 6,
+        "edges": 0,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 11.0,
+        "effective_font_px": 11.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "gantt": {
+          "bars": 6,
+          "labels_outside": 1,
+          "overflow": 0,
+          "today_marker": false
+        }
+      }
+    },
+    "fx-seq-skip": {
+      "source": "fx-seq-skip.mmd",
+      "looked_at": "Both PNGs: the Gateway lifeline runs through the labels 'read status directly' (Client -> Store) and 'status' (Store -> Client); the self-message 'log' sits on its own lifeline, which is its end and not a crossing.",
+      "v10": {
+        "diagram": "sequence",
+        "width": 650.0,
+        "height": 421.0,
+        "nodes": 3,
+        "edges": 5,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast",
+          "lifeline_through_label"
+        ],
+        "sequence": {
+          "participants": [
+            "C",
+            "G",
+            "S"
+          ],
+          "lifeline_gaps": [
+            200.0,
+            200.0
+          ],
+          "widest_message_px": 134.3,
+          "lifeline_through_label": [
+            {
+              "message": "read status directly",
+              "from": "C",
+              "to": "S",
+              "lifelines": [
+                "G"
+              ]
+            },
+            {
+              "message": "status",
+              "from": "S",
+              "to": "C",
+              "lifelines": [
+                "G"
+              ]
+            }
+          ]
+        }
+      },
+      "v11": {
+        "diagram": "sequence",
+        "width": 650.0,
+        "height": 421.0,
+        "nodes": 3,
+        "edges": 5,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast",
+          "lifeline_through_label"
+        ],
+        "sequence": {
+          "participants": [
+            "C",
+            "G",
+            "S"
+          ],
+          "lifeline_gaps": [
+            200.0,
+            200.0
+          ],
+          "widest_message_px": 134.3,
+          "lifeline_through_label": [
+            {
+              "message": "read status directly",
+              "from": "C",
+              "to": "S",
+              "lifelines": [
+                "G"
+              ]
+            },
+            {
+              "message": "status",
+              "from": "S",
+              "to": "C",
+              "lifelines": [
+                "G"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

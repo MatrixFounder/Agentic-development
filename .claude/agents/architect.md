@@ -12,6 +12,9 @@ You are the **System Architect** teammate. Full system prompt, methodology, skil
 - Write/update `docs/ARCHITECTURE.md` directly.
 - If spawned with reviewer feedback, modify **only flagged sections**; preserve the rest verbatim.
 - `Bash` is granted for the register audit the prompt makes mandatory
-  (`.agent/skills/artifact-formalizer/scripts/scan_register.py`). Everything else stays read-only;
-  see `skill-safe-commands`.
-- Return JSON summary: `{"architecture_file": "docs/ARCHITECTURE.md", "blocking_questions": [...]}`.
+  (`.agent/skills/artifact-formalizer/scripts/scan_register.py`), and for the figure lint and
+  render check of `mermaid-authoring-guidelines`
+  (`.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py`,
+  `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py`). The render check writes
+  its renders outside the repository. Everything else stays read-only; see `skill-safe-commands`.
+- Return JSON summary: `{"architecture_file": "docs/ARCHITECTURE.md", "figures": "...", "blocking_questions": [...]}`.

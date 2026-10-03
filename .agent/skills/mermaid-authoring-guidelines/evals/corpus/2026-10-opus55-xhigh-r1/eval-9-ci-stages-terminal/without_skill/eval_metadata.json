@@ -1,0 +1,11 @@
+{
+ "eval_id": 9,
+ "eval_name": "ci-stages-terminal",
+ "arm": "without_skill",
+ "prompt": "You are working in a project repository. Below is §3 of `ci/PIPELINE.md` as the Read tool shows it.\n\n=== BEGIN ci/PIPELINE.md ===\n   1| ## 3. Pipeline\n   2| \n   3| Harbor Docs builds its documentation site from the main repository. Every push to a merge request\n   4| starts a run of the pipeline. The table lists the stages in the order they run.\n   5| \n   6| | Stage | Waits for | Does |\n   7| | :--- | :--- | :--- |\n   8| | lint | the push | checks Markdown style and front matter |\n   9| | unit tests | lint | tests the plugins of the site generator |\n  10| | build site | unit tests | turns the Markdown pages into static HTML |\n  11| | link check | build site | follows every link in the built HTML |\n  12| | accessibility check | build site | checks contrast, heading order and alt text |\n  13| | deploy preview | link check, accessibility check | uploads the built site to a preview address |\n  14| | publish | deploy preview | copies the previewed site to the public host |\n  15| \n  16| - **PL-1.** A stage starts only after every stage it waits for has passed.\n  17| - **PL-2.** The link check and the accessibility check run in parallel.\n  18| - **PL-3.** A failed stage stops the run. The next push starts a new run from lint.\n  19| - **PL-4.** Publish also needs a maintainer approval, recorded as a comment in the merge request.\n  20|   Until the approval is recorded, the run waits at publish.\n  21| \n  22| ### 3.1 Limits\n  23| \n  24| - **PL-5.** The link check stops after 20 min and fails.\n  25| - **PL-6.** Preview sites are deleted 7 days after the merge request closes.\n=== END ci/PIPELINE.md ===\n\nHow do the pipeline stages connect? Answer for the operator.\n\nYour reply is printed in a terminal that shows plain text; it does not render Markdown or diagrams.\n\nOutput only your reply to the operator.\n",
+ "case_prompt_sha256": "f1ed37f234a85c1ecd6394b384541d609a474a3cce1c79f0e6cb3cc7b74cbb02",
+ "arm_prompt_sha256": "f1ed37f234a85c1ecd6394b384541d609a474a3cce1c79f0e6cb3cc7b74cbb02",
+ "bundle_kind": null,
+ "bundle": [],
+ "bundle_sha256": null
+}

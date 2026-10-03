@@ -1,0 +1,1752 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "5198237967866840b2d94924c5efa0524b5fef4ad708669f152e7ea6339522bd",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1058.0,
+    "height": 932.0,
+    "nodes": 5,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 13.61,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Paylane PSP",
+    "smallest_effective_font_px": 13.61,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "ACS",
+      "CP",
+      "OA",
+      "PS",
+      "PSP"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      200.0,
+      200.0,
+      208.0
+     ],
+     "median_gap_px": 200.0,
+     "widest_message_px": 161.8,
+     "widest_message": "create payment intent",
+     "width_source": "measure",
+     "messages": 11,
+     "lifeline_through_label": [],
+     "lifeline_label_crossings": 0
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "loop",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[on network error",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "up to 2",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "repeats]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "opt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "marks the order",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "as paid",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "send order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "1",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "POST /payments",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "create payment intent",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "waits up to 8 s",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "challenge_required",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "open challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "webhook",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "publish",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "b4c5441afbd8619bfc684f89e65331938fa2ec8d81307516337a91fa9be3ac45",
+   "png_sha256": "f6c6fd08b2b43d2ed180ccf591f3225eaa8fea91f2591a5eb2442e566b42e9ba",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 401
+    },
+    {
+     "family": "Arial",
+     "glyphs": 13
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "5198237967866840b2d94924c5efa0524b5fef4ad708669f152e7ea6339522bd",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1058.0,
+    "height": 932.0,
+    "nodes": 5,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 13.61,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Paylane PSP",
+    "smallest_effective_font_px": 13.61,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "ACS",
+      "CP",
+      "OA",
+      "PS",
+      "PSP"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      200.0,
+      200.0,
+      208.0
+     ],
+     "median_gap_px": 200.0,
+     "widest_message_px": 161.8,
+     "widest_message": "create payment intent",
+     "width_source": "measure",
+     "messages": 11,
+     "lifeline_through_label": [],
+     "lifeline_label_crossings": 0
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "loop",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "[on network error",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "up to 2",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "repeats]",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "opt",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#1f2020",
+       "ratio": 10.91,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "marks the order",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "as paid",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "send order",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "1",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "POST /payments",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "2",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "create payment intent",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "waits up to 8 s",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "3",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "challenge_required",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "4",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "5",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "6",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "open challenge",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "7",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "back to return_url",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "8",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "webhook",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.succeeded",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "9",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTP 200",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "10",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      },
+      {
+       "text": "publish",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.confirmed",
+       "kind": "message",
+       "fg": "#d3d3d3",
+       "bg": "#0d1117",
+       "ratio": 12.64,
+       "scope": "theme"
+      },
+      {
+       "text": "11",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#d3d3d3",
+       "ratio": 14.02,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "02bef171142c8f71295ecd8fcffccd709f707890ab3b8e9a3b6bb9b778086c2e",
+   "png_sha256": "9779d2e80646bf3523260ff9ebd6b26acc1fcde94ae4091f0e26cbf4b97e05c0",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 401
+    },
+    {
+     "family": "Arial",
+     "glyphs": 13
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "5198237967866840b2d94924c5efa0524b5fef4ad708669f152e7ea6339522bd",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1058.0,
+    "height": 932.0,
+    "nodes": 5,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 13.61,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Paylane PSP",
+    "smallest_effective_font_px": 13.61,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "ACS",
+      "CP",
+      "OA",
+      "PS",
+      "PSP"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      200.0,
+      200.0,
+      208.0
+     ],
+     "median_gap_px": 200.0,
+     "widest_message_px": 161.8,
+     "widest_message": "create payment intent",
+     "width_source": "measure",
+     "messages": 11,
+     "lifeline_through_label": [],
+     "lifeline_label_crossings": 0
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "loop",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[on network error",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "up to 2",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "repeats]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "opt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "marks the order",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "as paid",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "send order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "1",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "POST /payments",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "create payment intent",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "waits up to 8 s",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "challenge_required",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "open challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "webhook",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "publish",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "46bfd7704cad512deff1426cb40b50204a22a6df4069b73e56fcfca6d29740c3",
+   "png_sha256": "6d4945060f0fa7881d840afa677b6c626e43658a82c3c7203e427a73ebc5d48a",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 401
+    },
+    {
+     "family": "Arial",
+     "glyphs": 13
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "5198237967866840b2d94924c5efa0524b5fef4ad708669f152e7ea6339522bd",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "sequence",
+    "width": 1058.0,
+    "height": 915.0,
+    "nodes": 5,
+    "edges": 11,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 13.61,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Paylane PSP",
+    "smallest_effective_font_px": 13.61,
+    "geometry": "modelled",
+    "sequence": {
+     "participants": [
+      "ACS",
+      "CP",
+      "OA",
+      "PS",
+      "PSP"
+     ],
+     "lifeline_gaps": [
+      200.0,
+      200.0,
+      200.0,
+      208.0
+     ],
+     "median_gap_px": 200.0,
+     "widest_message_px": 161.8,
+     "widest_message": "create payment intent",
+     "width_source": "measure",
+     "messages": 11,
+     "lifeline_through_label": [],
+     "lifeline_label_crossings": 0
+    },
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Paylane PSP",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Payment service",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Orders API",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Checkout page",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "Issuer ACS",
+       "kind": "actor",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "loop",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[on network error",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "up to 2 repeats]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "opt",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ececff",
+       "ratio": 18.0,
+       "scope": "theme"
+      },
+      {
+       "text": "[challenge_required]",
+       "kind": "other",
+       "fg": "#000000",
+       "bg": "#ffffff",
+       "ratio": 21.0,
+       "scope": "theme"
+      },
+      {
+       "text": "marks the order",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "as paid",
+       "kind": "note",
+       "fg": "#263238",
+       "bg": "#fff8e1",
+       "ratio": 12.38,
+       "scope": "author"
+      },
+      {
+       "text": "send order",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "1",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "POST /payments",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "2",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "create payment intent",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "waits up to 8 s",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "3",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "challenge_required",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "4",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "5",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "redirect_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "6",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "open challenge",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "7",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "back to return_url",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "8",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "webhook",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.succeeded",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "9",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "HTTP 200",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "10",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "publish",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "payment.confirmed",
+       "kind": "message",
+       "fg": "#333333",
+       "bg": "#ffffff",
+       "ratio": 12.63,
+       "scope": "theme"
+      },
+      {
+       "text": "11",
+       "kind": "other",
+       "fg": "#ffffff",
+       "bg": "#333333",
+       "ratio": 12.63,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "6352e21af4a909a51b6e7c612573535074ae24400ecc503831cd47d2087df093",
+   "png_sha256": "486e9fa0a3d71da774fd8a90beb6fbe112042c63a8f9f3ce3a26834ea1b23b6b",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 402
+    },
+    {
+     "family": "Arial",
+     "glyphs": 13
+    }
+   ]
+  }
+ }
+}

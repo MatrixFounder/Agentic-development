@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 20784,
+ "stop_reason": "end_turn",
+ "session_id": "6307d8f7-fb3f-4ac3-bcbe-76fda2214dd6",
+ "total_cost_usd": 0.1075934,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 7639,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 2309,
+  "output_tokens_details": {
+   "thinking_tokens": 1620
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 7639,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 2309,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 7639,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 7639
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 2309,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 7639,
+   "webSearchRequests": 0,
+   "costUSD": 0.1075934,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 1620,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Table 4.2.** Permissions: which role may perform which operation under RL-1 to RL-7.\n\n| Operation | Viewer | Editor | Publisher | Admin |\n| :--- | :---: | :---: | :---: | :---: |\n| Read pages | **yes** · RL-1 | **yes** · RL-2 | **yes** · RL-4 | **yes** · RL-6 |\n| Edit drafts | no · RL-1 | **yes** · RL-2 | **yes** · RL-4 | **yes** · RL-6 |\n| Upload media | no · RL-1 | **yes** · RL-2 | no · RL-5 | **yes** · RL-6 |\n| Publish pages | no · RL-1 | no · RL-3 | **yes** · RL-4 | **yes** · RL-6 |\n| Unpublish pages | no · RL-1 | no · RL-3 | **yes** · RL-4 | **yes** · RL-6 |\n| Manage users | no · RL-1 | no · RL-7 | no · RL-7 | **yes** · RL-6 |\n| Change settings | no · RL-1 | no · RL-7 | no · RL-7 | **yes** · RL-6 |\n\n**yes**: the role may perform the operation. no: the server refuses the request before any page or file changes (§4.2.2). Each cell names the rule that decides it.",
+ "ttft_ms": 13286,
+ "type": "result",
+ "duration_ms": 20874,
+ "uuid": "38365465-efa6-4d25-b67e-abbec564c009",
+ "ttft_stream_ms": 1153,
+ "time_to_request_ms": 84,
+ "first_content_frame_ms": 1153,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

@@ -1,0 +1,11 @@
+{
+ "eval_id": 7,
+ "eval_name": "refund-decision",
+ "prompt": "You are working in a project repository. Below is §6 of `docs/specs/support-policy.md` as the Read tool shows it.\n\n=== BEGIN docs/specs/support-policy.md ===\n   1| ## 6. Refund decision\n   2| \n   3| A customer asks for a refund in the support portal of Mossgiel Outfitters.\n   4| This section decides every refund request. The checks R6.1, R6.2 and R6.3 run in this order.\n   5| \n   6| ### 6.1 Rules\n   7| \n   8| - **R6.1** A request made more than 30 days after delivery is declined.\n   9|   An item that the customer reports as defective goes to a support agent, regardless of its age.\n  10| - **R6.2** A digital good is refundable only if it has not been downloaded.\n  11|   R6.2 applies to digital goods only.\n  12| - **R6.3** A refund of $50 or less is approved automatically.\n  13| - **R6.4** A refund above $50 goes to a support agent, who approves or declines it.\n  14| - **R6.5** A refund above $500 that a support agent approves also needs a team lead.\n  15|   The team lead approves or declines it.\n  16| - **R6.6** An approved refund goes back to the original payment method.\n  17| \n  18| The support portal records every decision in the history of the request.\n  19| \n  20| ### 6.2 Limits from other sections\n  21| \n  22| | Subject | Limit | Section |\n  23| | :--- | :--- | :--- |\n  24| | Exchange of an item | within 60 days of delivery | §5 |\n  25| | Store credit | up to $200, issued instantly | §7 |\n  26| | Answer of a support agent | within 2 business days | §7 |\n  27| | Payout to the customer | within 5 business days | §7 |\n  28| \n  29| These limits do not change the refund decision of §6.1.\n=== END docs/specs/support-policy.md ===\n\nAdd a decision-flow figure to §6 that shows how a refund request is decided.\n\nReaders open this document on GitHub and in VS Code and JetBrains Markdown previews; some of those previews run Mermaid 10.9, and some readers use a dark theme.\n\nOutput only the Markdown to insert into the section, and nothing else.\n",
+ "prompt_sha256": "f88d751949f8450bff0ca1eda0cabc9d53d8bab88f46d1178e8b559e6c9ac58a",
+ "figure_kind": "flowchart",
+ "lang": "en",
+ "medium": "document",
+ "concern": "decision",
+ "control": false
+}

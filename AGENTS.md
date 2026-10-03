@@ -78,6 +78,8 @@ Before starting the standard pipeline, check if the user's request matches a wor
 
 ## THE PIPELINE (EXECUTE SEQUENTIALLY)
 
+**Any phase — Load Skills**: `mermaid-authoring-guidelines` (TIER 2) before the first figure of any output, per `skill-phase-context`. It is not loaded for an output with no figure, nor for a plan chart that `plan_gantt.py` generates.
+
 1. **Analysis Phase**:
    - Read `System/Agents/02_analyst_prompt.md`.
    - **Load Skills**: `requirements-analysis`, `skill-archive-task`.
@@ -111,6 +113,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
 - **Context Loading**: When moving to a new phase, explicitly read the prompt file AND the required skills.
 - **File Creation**: Always save intermediate artifacts (TASK, Plan) to files.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user (as per `01_orchestrator.md`).
+- **Figures**: Output for a medium that does not render Mermaid carries no Mermaid fence. Such media are a terminal, a log, an MCP response and a chat without a diagram renderer; the output uses a list, a table or ASCII. When the operator asks for Mermaid source in such a medium, the answer gives the source in a fence and states that this medium does not render it.
 
 ## LIGHT MODE (Fast-Track for Trivial Tasks)
 For trivial tasks (typos, UI tweaks, simple bugfixes), use `/light` workflow:

@@ -73,6 +73,19 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-33** [skill-creator scripts target Python 3.14, not 3.9](backlog/wi-33-skill-creator-scripts-target-python-3-14-not-3-9.md) — effort `S`, status `open`, opened 2026-10-03
+- **WI-32** [Lint and scanner follow-ups from TASK 108 reviews](backlog/wi-32-lint-and-scanner-follow-ups-from-task-108-reviews.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-31** [Anchored allow rules, SHA-pinned actions, a full fingerprint and a nested lockfile audit](backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-30** [Renderer supply chain: v10 lockfile, mermaid-cli request filter, browser hash](backlog/wi-30-renderer-supply-chain-v10-lockfile-mermaid-cli-request-filter-browser-hash.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-29** [Installer leaves declared skill development paths out of copy installs](backlog/wi-29-installer-leaves-declared-skill-development-paths-out-of-copy-installs.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-28** [Simplify mermaid-authoring-guidelines by measured use](backlog/wi-28-simplify-mermaid-authoring-guidelines-by-measured-use.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-27** [Fix loops hand off a differential replay of the stored corpus](backlog/wi-27-fix-loops-hand-off-a-differential-replay-of-the-stored-corpus.md) — effort `M`, status `open`, opened 2026-10-03
+- **WI-26** [Figure-eval campaign 2: thresholds from a pilot, large cases, keys checked before registration](backlog/wi-26-figure-eval-campaign-2-thresholds-from-a-pilot-large-cases-keys-checked-before-registration.md) — effort `L`, status `open`, opened 2026-10-03
+- **WI-25** [Trigger evaluation of the mermaid skill description](backlog/wi-25-trigger-evaluation-of-the-mermaid-skill-description.md) — effort `S`, status `open`, opened 2026-10-02
+- **WI-24** [Figure rules in wiki-import and the meeting-summary workflow](backlog/wi-24-figure-rules-in-wiki-import-and-the-meeting-summary-workflow.md) — effort `M`, status `open`, opened 2026-10-02
+- **WI-23** [Tool-loop variant, natural cases and ASCII in documents for the figure evals](backlog/wi-23-tool-loop-natural-cases-and-ascii-in-documents-for-the-figure-evals.md) — effort `L`, status `open`, opened 2026-10-02
+- **WI-22** [Plan status tokens for the generated plan chart](backlog/wi-22-plan-status-tokens-for-the-generated-plan-chart.md) — effort `M`, status `open`, opened 2026-10-02
+- **WI-21** [Redraw the framework figures under mermaid-authoring-guidelines](backlog/wi-21-redraw-the-framework-figures-under-mermaid-authoring-guidelines.md) — effort `M`, status `open`, opened 2026-10-02
 - **WI-16** [A claim about code state carries no required referent](backlog/wi-16-state-claims-carry-no-required-referent.md) — effort `M`, status `open`, opened 2026-08-05
 - **WI-10** [Trigger evals run on one vendor only](backlog/wi-10-trigger-evals-run-on-one-vendor-only.md) — effort `M`, status `open`, opened 2026-07-30
 

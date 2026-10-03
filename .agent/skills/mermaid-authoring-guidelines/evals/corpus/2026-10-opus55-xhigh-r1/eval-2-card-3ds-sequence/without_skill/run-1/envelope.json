@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 51849,
+ "stop_reason": "end_turn",
+ "session_id": "2b42c38c-7b52-49eb-9ef1-da8140312e2c",
+ "total_cost_usd": 0.12016940000000001,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1796,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 5275,
+  "output_tokens_details": {
+   "thinking_tokens": 4828
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1796,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5275,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1796,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1796
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5275,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1796,
+   "webSearchRequests": 0,
+   "costUSD": 0.12016940000000001,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 4828,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "```mermaid\nsequenceDiagram\n    box Brightwater store\n        participant CP as Checkout page\n        participant OA as Orders API\n        participant PS as Payment service\n    end\n    box External\n        participant PSP as Paylane PSP\n        participant ACS as Issuer ACS\n    end\n\n    CP->>OA: 1. Order\n    OA->>PS: 2. POST /payments (fields of Table 4.3)\n    PS->>PSP: 3. Create payment intent\n    Note over PS,PSP: Waits up to 8 s<br/>On a network error, repeats up to 2 times<br/>with the same idempotency key\n    alt challenge_required\n        PSP-->>PS: 4. challenge_required + redirect_url\n        PS-->>OA: 5. redirect_url\n        OA-->>CP: 6. redirect_url\n        CP->>ACS: 7. Open challenge at redirect_url\n        ACS-->>CP: 8. Send browser back to return_url\n    else authorized\n        PSP-->>PS: authorized (skips steps 4 to 8)\n    end\n    PSP->>PS: 9. Webhook payment.succeeded\n    PS-->>PSP: 10. HTTP 200\n    PS-)OA: 11. Publish payment.confirmed\n    Note over OA: Marks the order as paid\n```",
+ "ttft_ms": 49005,
+ "type": "result",
+ "duration_ms": 51875,
+ "uuid": "e59a5e79-9294-44f1-b21f-63306ac09153",
+ "ttft_stream_ms": 1154,
+ "time_to_request_ms": 25,
+ "first_content_frame_ms": 1154,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

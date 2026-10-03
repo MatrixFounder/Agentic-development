@@ -28,11 +28,12 @@ contract:
     - **Constraint**: You MUST structure the requirements into **Epics** and **Issues**.
     - **Constraint**: Do not accept vague requirements. If ambiguous, ask the user.
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
-      The reviewer is declared without an execution tool, so anything its checklist requires to be
-      RUN (its `Script Contract` — the register scan) is yours to run **first**; the brief carries
-      the OUTPUT as data (a file plus its path), never the command. Anything you did not run goes in
-      as `NOT RUN (<reason>)`. A brief naming a command instead of its result costs a silently
-      unverified checklist section, or the whole turn.
+      The reviewer is declared without an execution tool. Anything its checklist requires to be RUN
+      (its `Script Contract` — the register scan; the figure lint when the artifact holds a figure)
+      is yours to run **first**. The brief carries the OUTPUT as data (a file plus its path), never
+      the command. Anything you did not run goes in as `NOT RUN (<reason>)`. A brief naming a
+      command instead of its result costs a silently unverified checklist section, or the whole
+      turn.
     - **Freeze the artifact for the round** — `skill-parallel-orchestration` §2.4.1. Between the
       spawn and the reviewer's return you write nothing to what it is reading; a revision goes in
       after it returns. Put a `Tree fingerprint` line in the brief, recompute it on return, and

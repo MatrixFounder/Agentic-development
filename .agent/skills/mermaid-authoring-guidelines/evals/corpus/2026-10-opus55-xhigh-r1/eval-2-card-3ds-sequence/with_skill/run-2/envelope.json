@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 155786,
+ "stop_reason": "end_turn",
+ "session_id": "7021c521-2506-4c4b-8532-9bde1e13d98c",
+ "total_cost_usd": 0.5835294,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 30716,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 16875,
+  "output_tokens_details": {
+   "thinking_tokens": 16117
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 30716,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 16875,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 30716,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 30716
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 16875,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 30716,
+   "webSearchRequests": 0,
+   "costUSD": 0.5835294,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 16117,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 4.2.** Card payment with a 3-D Secure challenge — the eleven steps of §4.2.1 between the five parties, numbered as in the list, with the challenge steps 4 to 8 shaded.\n\n```mermaid\n%%{init: {\"look\": \"classic\", \"themeVariables\": {\"noteBkgColor\": \"#FFF8E1\", \"noteTextColor\": \"#263238\", \"noteBorderColor\": \"#C9A227\"}, \"sequence\": {\"wrap\": true}}}%%\nsequenceDiagram\n  accTitle: Card payment with a 3-D Secure challenge\n  accDescr: The eleven steps of §4.2.1 between the five parties, numbered as in the list, with the challenge steps 4 to 8 shaded.\n  autonumber\n  participant ACS as Issuer ACS\n  participant CP as Checkout page\n  participant OA as Orders API\n  participant PS as Payment service\n  participant PSP as Paylane PSP\n  CP->>OA: order\n  OA->>PS: POST /payments\n  PS->>PSP: create payment intent<br/>waits up to 8 s\n  rect rgba(127,127,127,0.10)\n    Note over ACS,PSP: 3-D Secure challenge<br/>skipped when Paylane PSP answers authorized\n    PSP-->>PS: challenge_required<br/>redirect_url\n    PS-->>OA: redirect_url\n    OA-->>CP: redirect_url\n    CP->>ACS: open challenge\n    ACS-->>CP: browser to return_url\n  end\n  PSP->>PS: webhook<br/>payment.succeeded\n  PS-->>PSP: HTTP 200\n  PS-->>OA: publish<br/>payment.confirmed\n  Note over OA: marks the order<br/>as paid\n```\n\nLegend:\n- solid arrow = call; dashed arrow = reply or unwaited message; numbers = the steps of §4.2.1;\n- grey band = the 3-D Secure challenge, named by its first note; the other note states the outcome of step 11.\n\nNot drawn: the repeats of step 3 after a network error, the nine fields of step 2 (Table 4.3), the time limits of §4.2.3 and the boundary of the Brightwater store.",
+ "ttft_ms": 151276,
+ "type": "result",
+ "duration_ms": 155811,
+ "uuid": "1d6ccf4b-86dd-47de-83f8-4799d383e239",
+ "ttft_stream_ms": 1269,
+ "time_to_request_ms": 21,
+ "first_content_frame_ms": 1269,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

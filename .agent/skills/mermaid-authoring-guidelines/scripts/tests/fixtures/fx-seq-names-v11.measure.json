@@ -1,0 +1,449 @@
+{
+ "labels": [
+  {
+   "text": "Orders",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 0,
+   "cls": "actor actor-box",
+   "bbox": [
+    451.33,
+    276,
+    47.34,
+    19
+   ],
+   "box": [
+    400,
+    261,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "O",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "API",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 1,
+   "cls": "actor actor-box",
+   "bbox": [
+    463.59,
+    292,
+    22.81,
+    19
+   ],
+   "box": [
+    400,
+    261,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "O",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "Access control",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 2,
+   "cls": "actor actor-box",
+   "bbox": [
+    223.55,
+    276,
+    102.91,
+    19
+   ],
+   "box": [
+    200,
+    261,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "A",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "server",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 3,
+   "cls": "actor actor-box",
+   "bbox": [
+    252.9,
+    292,
+    44.2,
+    19
+   ],
+   "box": [
+    200,
+    261,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "A",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "Cardholder browser",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 4,
+   "cls": "actor actor-box",
+   "bbox": [
+    4.55,
+    284,
+    140.89,
+    19
+   ],
+   "box": [
+    0,
+    261,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "B",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "Orders",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 5,
+   "cls": "actor actor-box",
+   "bbox": [
+    451.33,
+    15,
+    47.34,
+    19
+   ],
+   "box": [
+    400,
+    0,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "O",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "API",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 6,
+   "cls": "actor actor-box",
+   "bbox": [
+    463.59,
+    31,
+    22.81,
+    19
+   ],
+   "box": [
+    400,
+    0,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "O",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "Access control",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 7,
+   "cls": "actor actor-box",
+   "bbox": [
+    223.55,
+    15,
+    102.91,
+    19
+   ],
+   "box": [
+    200,
+    0,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "A",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "server",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 8,
+   "cls": "actor actor-box",
+   "bbox": [
+    252.9,
+    31,
+    44.2,
+    19
+   ],
+   "box": [
+    200,
+    0,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "A",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "Cardholder browser",
+   "kind": "actor",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 9,
+   "cls": "actor actor-box",
+   "bbox": [
+    4.55,
+    23,
+    140.89,
+    19
+   ],
+   "box": [
+    0,
+    0,
+    150,
+    65
+   ],
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#000000",
+   "bg": "#ececff",
+   "under": [
+    {
+     "role": "actor",
+     "id": "B",
+     "fill": "rgba(236,236,255,1)"
+    }
+   ],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "enter the code",
+   "kind": "message",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 10,
+   "cls": "messageText",
+   "bbox": [
+    120.82,
+    85.19,
+    106.36,
+    19
+   ],
+   "box": null,
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#333333",
+   "bg": "#ffffff",
+   "under": [],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "check the order",
+   "kind": "message",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 11,
+   "cls": "messageText",
+   "bbox": [
+    317.25,
+    129.19,
+    113.5,
+    19
+   ],
+   "box": null,
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#333333",
+   "bg": "#ffffff",
+   "under": [],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "order found",
+   "kind": "message",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 12,
+   "cls": "messageText",
+   "bbox": [
+    334.8,
+    173.19,
+    84.39,
+    19
+   ],
+   "box": null,
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#333333",
+   "bg": "#ffffff",
+   "under": [],
+   "font": "Trebuchet MS"
+  },
+  {
+   "text": "authenticated",
+   "kind": "message",
+   "id": "",
+   "owner": "",
+   "el": "text",
+   "n": 13,
+   "cls": "messageText",
+   "bbox": [
+    126.54,
+    217.19,
+    100.92,
+    19
+   ],
+   "box": null,
+   "clipped_px": 0,
+   "outside_px": 0,
+   "font_px": 16,
+   "fg": "#333333",
+   "bg": "#ffffff",
+   "under": [],
+   "font": "Trebuchet MS"
+  }
+ ],
+ "titles": [],
+ "font_px": 16,
+ "kind": "sequence",
+ "page": "#ffffff",
+ "browser": "HeadlessChrome/150.0.7871.24",
+ "fonts": [
+  {
+   "family": "Trebuchet MS",
+   "glyphs": 147
+  }
+ ],
+ "font_family": "Trebuchet MS",
+ "png": null
+}

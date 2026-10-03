@@ -1,0 +1,86 @@
+{
+ "schema": "plan-gantt-geometry/v1",
+ "source": "plan-example.json",
+ "fence_sha256": "af6f14ff14ce8e25d160174e0ea1c9c6693a917109fc2e87c7a409af331e42a3",
+ "fence_text": "mermaid_model.fence_sha256 of the fence body plan_gantt.py generates from the source: its lines, each ended by LF, in UTF-8; the text render_check.py renders",
+ "rendered": "2026-10-03",
+ "render_check": {
+  "exit": 0,
+  "status": "pass"
+ },
+ "regenerate": "python3 .agent/skills/mermaid-authoring-guidelines/scripts/tests/test_plan_gantt.py --regenerate-geometry <a directory outside the repository>",
+ "renders": [
+  {
+   "tag": "v11",
+   "dark": false,
+   "mermaid": "11.17.2",
+   "mermaid_cli": "11.17.0",
+   "browser": "HeadlessChrome/150.0.7871.24",
+   "status": "ok",
+   "pass": true,
+   "findings": 0,
+   "width": 900,
+   "height": 300,
+   "bars": {
+    "tB1": {"x": 168, "width": 80},
+    "tB2": {"x": 168, "width": 106},
+    "tB3": {"x": 274, "width": 106},
+    "tB4": {"x": 433, "width": 80},
+    "tW1": {"x": 248, "width": 53},
+    "tW2": {"x": 380, "width": 106},
+    "tW3": {"x": 486, "width": 80},
+    "tO1": {"x": 248, "width": 106},
+    "tO2": {"x": 354, "width": 79},
+    "tO3": {"x": 566, "width": 106}
+   }
+  },
+  {
+   "tag": "v11",
+   "dark": true,
+   "mermaid": "11.17.2",
+   "mermaid_cli": "11.17.0",
+   "browser": "HeadlessChrome/150.0.7871.24",
+   "status": "ok",
+   "pass": true,
+   "findings": 0,
+   "width": 900,
+   "height": 300,
+   "bars": {
+    "tB1": {"x": 168, "width": 80},
+    "tB2": {"x": 168, "width": 106},
+    "tB3": {"x": 274, "width": 106},
+    "tB4": {"x": 433, "width": 80},
+    "tW1": {"x": 248, "width": 53},
+    "tW2": {"x": 380, "width": 106},
+    "tW3": {"x": 486, "width": 80},
+    "tO1": {"x": 248, "width": 106},
+    "tO2": {"x": 354, "width": 79},
+    "tO3": {"x": 566, "width": 106}
+   }
+  },
+  {
+   "tag": "v10",
+   "dark": false,
+   "mermaid": "10.9.8",
+   "mermaid_cli": "10.9.1",
+   "browser": "HeadlessChrome/150.0.7871.24",
+   "status": "ok",
+   "pass": true,
+   "findings": 0,
+   "width": 900,
+   "height": 300,
+   "bars": {
+    "tB1": {"x": 168, "width": 80},
+    "tB2": {"x": 168, "width": 106},
+    "tB3": {"x": 274, "width": 106},
+    "tB4": {"x": 433, "width": 80},
+    "tW1": {"x": 248, "width": 53},
+    "tW2": {"x": 380, "width": 106},
+    "tW3": {"x": 486, "width": 80},
+    "tO1": {"x": 248, "width": 106},
+    "tO2": {"x": 354, "width": 79},
+    "tO3": {"x": 566, "width": 106}
+   }
+  }
+ ]
+}

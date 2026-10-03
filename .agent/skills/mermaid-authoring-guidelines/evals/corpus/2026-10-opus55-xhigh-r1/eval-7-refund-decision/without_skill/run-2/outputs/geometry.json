@@ -1,0 +1,1269 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "9b8f1042ffd32bcd30b3c1b43332a095c008812d6cfb997d40373bddea29b136",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 950.7,
+    "height": 2395.7,
+    "nodes": 11,
+    "edges": 17,
+    "crossings": 6,
+    "crossing_pairs": [
+     [
+      "defective->agent",
+      "age->digital",
+      283.3,
+      598.9
+     ],
+     [
+      "defective->agent",
+      "downloaded->declined",
+      283.3,
+      1107.0
+     ],
+     [
+      "digital->amount",
+      "downloaded->amount",
+      534.6,
+      1152.3
+     ],
+     [
+      "amount->approved",
+      "agent->large",
+      563.3,
+      1661.5
+     ],
+     [
+      "amount->approved",
+      "lead->declined",
+      567.5,
+      2202.5
+     ],
+     [
+      "large->approved",
+      "lead->approved",
+      834.7,
+      2244.1
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 15.15,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Yes",
+    "smallest_effective_font_px": 15.15,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customer requests a refund",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reported as defective?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "More than 30 daysafter delivery?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Digital good?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Downloaded?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund of $50or less?(R6.3)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Support agentapproves?(R6.4)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund above $500?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Team leadapproves?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Approved: refund to theoriginal payment method(R6.6)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "6 edge crossings, more than 2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "dd4afbe7f684c59986245c5d4c027219632ea7f21a1a91747658f28d876ca43d",
+   "png_sha256": "5087c8c7b2d6c6855aafef6b9d0a7c6af8cbbc2c3421e1472477abb4d8ab34e4",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 331
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "9b8f1042ffd32bcd30b3c1b43332a095c008812d6cfb997d40373bddea29b136",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 950.7,
+    "height": 2395.7,
+    "nodes": 11,
+    "edges": 17,
+    "crossings": 6,
+    "crossing_pairs": [
+     [
+      "defective->agent",
+      "age->digital",
+      283.3,
+      598.9
+     ],
+     [
+      "defective->agent",
+      "downloaded->declined",
+      283.3,
+      1107.0
+     ],
+     [
+      "digital->amount",
+      "downloaded->amount",
+      534.6,
+      1152.3
+     ],
+     [
+      "amount->approved",
+      "agent->large",
+      563.3,
+      1661.5
+     ],
+     [
+      "amount->approved",
+      "lead->declined",
+      567.5,
+      2202.5
+     ],
+     [
+      "large->approved",
+      "lead->approved",
+      834.7,
+      2244.1
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 15.15,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Yes",
+    "smallest_effective_font_px": 15.15,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Customer requests a refund",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Reported as defective?(R6.1)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "More than 30 daysafter delivery?(R6.1)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Digital good?(R6.2)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Downloaded?(R6.2)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund of $50or less?(R6.3)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Support agentapproves?(R6.4)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund above $500?(R6.5)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Team leadapproves?(R6.5)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Approved: refund to theoriginal payment method(R6.6)",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "6 edge crossings, more than 2"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "16 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('Yes', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "088aa9720e973b153d0bcb5aa8ba51e20023338d92a1648c18fa98431947461d",
+   "png_sha256": "9b951639f5bce3451717b2979bbb2a870339721f902650520e9c4c0d02d3b240",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 331
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "9b8f1042ffd32bcd30b3c1b43332a095c008812d6cfb997d40373bddea29b136",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 910.6,
+    "height": 2235.7,
+    "nodes": 11,
+    "edges": 17,
+    "crossings": 6,
+    "crossing_pairs": [
+     [
+      "defective->agent",
+      "age->digital",
+      260.3,
+      558.8
+     ],
+     [
+      "defective->agent",
+      "downloaded->declined",
+      260.3,
+      1036.4
+     ],
+     [
+      "digital->amount",
+      "downloaded->amount",
+      501.7,
+      1077.0
+     ],
+     [
+      "amount->approved",
+      "agent->large",
+      530.3,
+      1550.8
+     ],
+     [
+      "amount->approved",
+      "lead->declined",
+      534.0,
+      2057.4
+     ],
+     [
+      "large->approved",
+      "lead->approved",
+      787.9,
+      2093.8
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 15.81,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Yes",
+    "smallest_effective_font_px": 15.81,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customer requests a refund",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reported as defective?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "More than 30 daysafter delivery?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Digital good?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Downloaded?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund of $50or less?(R6.3)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Support agentapproves?(R6.4)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund above $500?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Team leadapproves?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Approved: refund to theoriginal payment method(R6.6)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "6 edge crossings, more than 2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "011e729075f734e0ea0ae0e1c8dd473d3a4b769b26577aed907e416737b68a62",
+   "png_sha256": "a9f027acbc753b351b8faae80e79b580194c3dadaf9187ae6b1825efecc3a754",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 331
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": true,
+   "fence_sha256": "9b8f1042ffd32bcd30b3c1b43332a095c008812d6cfb997d40373bddea29b136",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 552.2,
+    "height": 2944.0,
+    "nodes": 11,
+    "edges": 17,
+    "crossings": 2,
+    "crossing_pairs": [
+     [
+      "amount->approved",
+      "agent->declined",
+      400.8,
+      2706.0
+     ],
+     [
+      "amount->approved",
+      "lead->declined",
+      268.7,
+      2746.0
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Yes",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "No",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Yes",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Customer requests a refund",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Reported as defective?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "More than 30 daysafter delivery?(R6.1)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Digital good?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Downloaded?(R6.2)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund of $50or less?(R6.3)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Support agentapproves?(R6.4)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Refund above $500?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Team leadapproves?(R6.5)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Declined",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Approved: refund to theoriginal payment method(R6.6)",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "2 edge crossing(s); allowed 2, aim at 0"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "be0d6a23d5efb5f8c21ee26d9825c85ae218104e6cc1bc2199d7294b734e5a63",
+   "png_sha256": "e4c6327ca8cde8a1fa02f6192489d3c747b25d3140bb1ff0791e2b07f272f933",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 331
+    }
+   ]
+  }
+ }
+}

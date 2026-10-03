@@ -61,6 +61,7 @@ All skills in `.agent/skills/` MUST define a `tier` property in their YAML front
 | `security-audit` | 2 | Security Audit workflow |
 | `skill-product-analysis` | 2 | Product Vision creation |
 | `skill-product-backlog-prioritization` | 2 | Backlog prioritization (WSJF) |
+| `mermaid-authoring-guidelines` | 2 | Before the first figure of any output, in any phase |
 | *(All others)* | 2 | Explicit request |
 
 ## TIER 3: HIGH ASSURANCE

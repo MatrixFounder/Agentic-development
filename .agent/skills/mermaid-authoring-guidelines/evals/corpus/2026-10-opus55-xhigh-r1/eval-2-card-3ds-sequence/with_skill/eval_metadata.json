@@ -1,0 +1,30 @@
+{
+ "eval_id": 2,
+ "eval_name": "card-3ds-sequence",
+ "arm": "with_skill",
+ "prompt": "You are working in a project repository. Below is §4.2 of `docs/specs/payments.md` as the Read tool shows it.\n\n=== BEGIN docs/specs/payments.md ===\n   1| ### 4.2 Card payment with a 3-D Secure challenge\n   2| \n   3| This section describes how the Brightwater store takes a card payment when the card issuer asks\n   4| for a challenge. Five parties take part. The Checkout page, the Orders API and the Payment service\n   5| belong to the Brightwater store. Paylane PSP, the payment provider, and the Issuer ACS, the\n   6| challenge page of the card issuer, are external.\n   7| \n   8| #### 4.2.1 Steps\n   9| \n  10| 1. The Checkout page sends the order to the Orders API.\n  11| 2. The Orders API calls the Payment service with `POST /payments`. The request carries the nine\n  12|    fields of Table 4.3.\n  13| 3. The Payment service asks Paylane PSP to create a payment intent and waits up to 8 s.\n  14| 4. Paylane PSP answers `challenge_required` with a `redirect_url`.\n  15| 5. The Payment service returns the `redirect_url` to the Orders API.\n  16| 6. The Orders API returns the `redirect_url` to the Checkout page.\n  17| 7. The Checkout page opens the challenge at the Issuer ACS.\n  18| 8. The Issuer ACS sends the browser back to the `return_url` of the Checkout page.\n  19| 9. Paylane PSP sends the webhook `payment.succeeded` to the Payment service.\n  20| 10. The Payment service answers the webhook with HTTP 200.\n  21| 11. The Payment service publishes `payment.confirmed`. The Orders API consumes it and marks the\n  22|     order as paid.\n  23| \n  24| When step 3 fails with a network error, the Payment service repeats it up to 2 times with the same\n  25| idempotency key. When Paylane PSP answers `authorized` instead of `challenge_required`, the\n  26| payment skips steps 4 to 8 and continues at step 9.\n  27| \n  28| #### 4.2.2 Table 4.3 — fields of `POST /payments`\n  29| \n  30| | Field | Content |\n  31| | :--- | :--- |\n  32| | `order_id` | the order to pay |\n  33| | `amount_minor` | the amount in minor currency units |\n  34| | `currency` | the currency code |\n  35| | `card_token` | the card, as a token from the payment form |\n  36| | `billing_country` | the country of the billing address |\n  37| | `device_fingerprint` | browser data for the risk check of the issuer |\n  38| | `return_url` | the Checkout page address that the Issuer ACS returns to |\n  39| | `idempotency_key` | one value for a request and all its repeats |\n  40| | `customer_ip` | the IP address of the browser |\n  41| \n  42| #### 4.2.3 Time limits\n  43| \n  44| - The Payment service fails a payment that receives no webhook within 15 min.\n  45| - Paylane PSP repeats an unanswered webhook every 5 min for up to 24 h.\n  46| - The Orders API keeps the stock of an unpaid order reserved for 20 min.\n=== END docs/specs/payments.md ===\n\nAdd a sequence diagram to §4.2 that shows this payment flow, including the 3-D Secure challenge.\n\nReaders open this document on GitHub and in VS Code and JetBrains Markdown previews; some of those previews run Mermaid 10.9, and some readers use a dark theme.\n\nOutput only the Markdown to insert into the section, and nothing else.\n",
+ "case_prompt_sha256": "2ec09b96a48e02b82de93c6dbc56b03bae7070239e5cd228d2d1415cfd1f1d90",
+ "arm_prompt_sha256": "6cd701e133011b4fd73ca8709792b5f8c120ebe6589d585d8a357a91a158e41a",
+ "bundle_kind": "sequence",
+ "bundle": [
+  {
+   "path": "SKILL.md",
+   "bytes": 16435,
+   "words": 2741,
+   "sha256": "852c6ba551c11c4ce8bc66ead2fb8af40f5362cd8151e21cf46f765d3751604d"
+  },
+  {
+   "path": "references/sequence.md",
+   "bytes": 16851,
+   "words": 3042,
+   "sha256": "be03531c66df6a7eeca90d389f160964051f13f9ac47636ca839705fa940e74d"
+  },
+  {
+   "path": "references/paired-examples.md",
+   "bytes": 37731,
+   "words": 5528,
+   "sha256": "236b706514163547e6abed43114b2d99416189dfac0fac18f84580f4440d79a8"
+  }
+ ],
+ "bundle_sha256": "8df6d92e1be5ccee404be4d94bdf81cedaca06e639e1a22b4f3ff820fe3d851e"
+}

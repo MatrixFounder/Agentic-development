@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 39714,
+ "stop_reason": "end_turn",
+ "session_id": "5d25d3fe-7558-4076-ad7e-31eb5b59e614",
+ "total_cost_usd": 0.0903054,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1303,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 3979,
+  "output_tokens_details": {
+   "thinking_tokens": 3469
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1303,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 3979,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1303,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1303
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 3979,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1303,
+   "webSearchRequests": 0,
+   "costUSD": 0.0903054,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 3469,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "Figure 6.1 shows how a refund request is decided. The rules in §6.1 govern if the figure and the rules differ.\n\n```mermaid\nflowchart TD\n    accTitle: Refund decision\n    accDescr: Decision flow for a refund request, following rules R6.1 to R6.6.\n\n    request([\"Customer asks for a refund\"]) --> defective{\"R6.1: Reported<br/>as defective?\"}\n    defective -->|Yes| agent[\"Support agent<br/>approves or declines\"]\n    defective -->|No| age{\"R6.1: More than 30 days<br/>after delivery?\"}\n    age -->|Yes| declined([\"Declined\"])\n    age -->|No| digital{\"R6.2: Digital good?\"}\n    digital -->|Yes| downloaded{\"R6.2: Downloaded?\"}\n    digital -->|No| amount{\"R6.3: $50 or less?\"}\n    downloaded -->|Yes| declined\n    downloaded -->|No| amount\n    amount -->|Yes| approved([\"Approved: refund to the<br/>original payment method (R6.6)\"])\n    amount -->|\"No (R6.4)\"| agent\n    agent -->|Declines| declined\n    agent -->|Approves| large{\"R6.5: Above $500?\"}\n    large -->|No| approved\n    large -->|Yes| lead[\"Team lead<br/>approves or declines\"]\n    lead -->|Declines| declined\n    lead -->|Approves| approved\n```\n\n*Figure 6.1: Refund decision*",
+ "ttft_ms": 36205,
+ "type": "result",
+ "duration_ms": 39743,
+ "uuid": "e817557f-3287-4d98-a63e-b8f64ab2d7ac",
+ "ttft_stream_ms": 1263,
+ "time_to_request_ms": 27,
+ "first_content_frame_ms": 1263,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

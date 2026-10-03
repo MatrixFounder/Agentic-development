@@ -1,0 +1,796 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 2,
+  "name": "card-3ds-sequence",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "document",
+  "kind": "sequence",
+  "acceptable_forms": [
+    "sequence"
+  ],
+  "required_concern": "dynamics",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "chk",
+      "kind": "participant",
+      "aliases": [
+        "Checkout page"
+      ],
+      "soft_aliases": [
+        "Checkout",
+        "Browser",
+        "Checkout page (browser)",
+        "Web checkout",
+        "Checkout UI"
+      ],
+      "lines": [
+        4
+      ],
+      "quote": "The Checkout page, the Orders API and the Payment service"
+    },
+    {
+      "id": "ord",
+      "kind": "participant",
+      "aliases": [
+        "Orders API"
+      ],
+      "soft_aliases": [
+        "Orders",
+        "Order API",
+        "Order service",
+        "Orders service"
+      ],
+      "lines": [
+        4
+      ],
+      "quote": "the Orders API"
+    },
+    {
+      "id": "pay",
+      "kind": "participant",
+      "aliases": [
+        "Payment service"
+      ],
+      "soft_aliases": [
+        "Payments",
+        "Payment API",
+        "Payments service"
+      ],
+      "lines": [
+        4
+      ],
+      "quote": "the Payment service"
+    },
+    {
+      "id": "psp",
+      "kind": "participant",
+      "aliases": [
+        "Paylane PSP",
+        "Paylane"
+      ],
+      "soft_aliases": [
+        "PSP",
+        "Payment provider",
+        "Paylane API"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "Paylane PSP, the payment provider"
+    },
+    {
+      "id": "acs",
+      "kind": "participant",
+      "aliases": [
+        "Issuer ACS"
+      ],
+      "soft_aliases": [
+        "ACS",
+        "Issuer",
+        "Card issuer",
+        "Issuer challenge page",
+        "Challenge page",
+        "3DS server",
+        "3-D Secure"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "the Issuer ACS"
+    }
+  ],
+  "groups": [
+    {
+      "id": "store",
+      "kind": "system",
+      "aliases": [
+        "Brightwater store",
+        "Brightwater"
+      ],
+      "members": [
+        "chk",
+        "ord",
+        "pay"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "belong to the Brightwater store"
+    },
+    {
+      "id": "external",
+      "kind": "category",
+      "aliases": [
+        "external",
+        "external parties",
+        "third parties"
+      ],
+      "members": [
+        "psp",
+        "acs"
+      ],
+      "lines": [
+        6
+      ],
+      "quote": "challenge page of the card issuer, are external."
+    }
+  ],
+  "relations": [],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "chk",
+      "to": "ord",
+      "kind": "call",
+      "reply": false,
+      "step": 1,
+      "required": true,
+      "label_aliases": [
+        "order",
+        "place order",
+        "checkout"
+      ],
+      "lines": [
+        10
+      ],
+      "quote": "1. The Checkout page sends the order to the Orders API."
+    },
+    {
+      "id": "m2",
+      "from": "ord",
+      "to": "pay",
+      "kind": "call",
+      "reply": false,
+      "step": 2,
+      "required": true,
+      "label_aliases": [
+        "POST /payments",
+        "payments",
+        "payment"
+      ],
+      "lines": [
+        11
+      ],
+      "quote": "2. The Orders API calls the Payment service with `POST /payments`."
+    },
+    {
+      "id": "m3",
+      "from": "pay",
+      "to": "psp",
+      "kind": "call",
+      "reply": false,
+      "step": 3,
+      "required": true,
+      "label_aliases": [
+        "payment intent",
+        "intent",
+        "create"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "3. The Payment service asks Paylane PSP to create a payment intent"
+    },
+    {
+      "id": "m4",
+      "from": "psp",
+      "to": "pay",
+      "kind": "reply",
+      "reply": true,
+      "step": 4,
+      "required": true,
+      "label_aliases": [
+        "challenge_required",
+        "redirect_url",
+        "challenge",
+        "answer"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "4. Paylane PSP answers `challenge_required` with a `redirect_url`."
+    },
+    {
+      "id": "m4b",
+      "from": "psp",
+      "to": "pay",
+      "kind": "reply",
+      "reply": true,
+      "step": null,
+      "required": false,
+      "label_aliases": [
+        "authorized"
+      ],
+      "alternative_of": "m4",
+      "lines": [
+        25
+      ],
+      "quote": "When Paylane PSP answers `authorized`"
+    },
+    {
+      "id": "m5",
+      "from": "pay",
+      "to": "ord",
+      "kind": "reply",
+      "reply": true,
+      "step": 5,
+      "required": true,
+      "label_aliases": [
+        "redirect_url",
+        "redirect"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "5. The Payment service returns the `redirect_url` to the Orders API."
+    },
+    {
+      "id": "m6",
+      "from": "ord",
+      "to": "chk",
+      "kind": "reply",
+      "reply": true,
+      "step": 6,
+      "required": true,
+      "label_aliases": [
+        "redirect_url",
+        "redirect"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "6. The Orders API returns the `redirect_url` to the Checkout page."
+    },
+    {
+      "id": "m7",
+      "from": "chk",
+      "to": "acs",
+      "kind": "call",
+      "reply": false,
+      "step": 7,
+      "required": true,
+      "label_aliases": [
+        "challenge",
+        "open challenge",
+        "redirect",
+        "3-D Secure",
+        "3DS"
+      ],
+      "lines": [
+        17
+      ],
+      "quote": "7. The Checkout page opens the challenge at the Issuer ACS."
+    },
+    {
+      "id": "m8",
+      "from": "acs",
+      "to": "chk",
+      "kind": "redirect",
+      "reply": null,
+      "step": 8,
+      "required": true,
+      "label_aliases": [
+        "return_url",
+        "back",
+        "redirect"
+      ],
+      "note": "a redirect back to the page that opened the challenge; drawn as a reply or a call",
+      "lines": [
+        18
+      ],
+      "quote": "8. The Issuer ACS sends the browser back to the `return_url`"
+    },
+    {
+      "id": "m9",
+      "from": "psp",
+      "to": "pay",
+      "kind": "call",
+      "reply": false,
+      "step": 9,
+      "required": true,
+      "label_aliases": [
+        "webhook",
+        "payment.succeeded",
+        "succeeded"
+      ],
+      "note": "a webhook: an HTTP call that Paylane PSP makes and the Payment service answers (m10)",
+      "lines": [
+        19
+      ],
+      "quote": "9. Paylane PSP sends the webhook `payment.succeeded`"
+    },
+    {
+      "id": "m10",
+      "from": "pay",
+      "to": "psp",
+      "kind": "reply",
+      "reply": true,
+      "step": 10,
+      "required": true,
+      "label_aliases": [
+        "HTTP 200",
+        "200",
+        "OK"
+      ],
+      "lines": [
+        20
+      ],
+      "quote": "10. The Payment service answers the webhook with HTTP 200."
+    },
+    {
+      "id": "m11",
+      "from": "pay",
+      "to": "ord",
+      "kind": "event",
+      "reply": null,
+      "step": 11,
+      "required": true,
+      "label_aliases": [
+        "payment.confirmed",
+        "confirmed"
+      ],
+      "note": "published without a named broker; the Orders API consumes it",
+      "lines": [
+        21
+      ],
+      "quote": "11. The Payment service publishes `payment.confirmed`."
+    },
+    {
+      "id": "m12",
+      "from": "ord",
+      "to": "ord",
+      "kind": "self",
+      "reply": null,
+      "step": null,
+      "required": false,
+      "label_aliases": [
+        "paid",
+        "marks the order"
+      ],
+      "note": "a self-message or a note on the Orders API",
+      "lines": [
+        21
+      ],
+      "quote": "The Orders API consumes it and marks the"
+    }
+  ],
+  "order": [
+    [
+      "m1",
+      "m2",
+      "m3",
+      "m4",
+      "m5",
+      "m6",
+      "m7",
+      "m8",
+      "m9",
+      "m10",
+      "m11"
+    ]
+  ],
+  "blocks": [
+    {
+      "id": "b_retry",
+      "kind": "loop",
+      "messages": [
+        "m3"
+      ],
+      "required": false,
+      "lines": [
+        24
+      ],
+      "quote": "When step 3 fails with a network error, the Payment service repeats it up to 2 times"
+    },
+    {
+      "id": "b_challenge",
+      "kind": "alt",
+      "messages": [
+        "m4",
+        "m4b",
+        "m5",
+        "m6",
+        "m7",
+        "m8"
+      ],
+      "required": false,
+      "note": "an alt or opt block around any of these messages, guarded by the challenge_required or the authorized answer",
+      "lines": [
+        26
+      ],
+      "quote": "payment skips steps 4 to 8 and continues at step 9."
+    },
+    {
+      "id": "b_webhook_repeat",
+      "kind": "loop",
+      "messages": [
+        "m9"
+      ],
+      "required": false,
+      "note": "stated in §4.2.3: Paylane PSP repeats an unanswered webhook",
+      "lines": [
+        45
+      ],
+      "quote": "Paylane PSP repeats an unanswered webhook every 5 min for up to 24 h."
+    }
+  ],
+  "numbers": [
+    {
+      "value": 8,
+      "unit": "s",
+      "unit_aliases": [
+        "s",
+        "sec",
+        "seconds"
+      ],
+      "subjects": [
+        "pay",
+        "psp"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "waits up to 8 s"
+    },
+    {
+      "value": 2,
+      "unit": "times",
+      "unit_aliases": [
+        "times",
+        "retries",
+        "tries",
+        "attempts",
+        "x",
+        "×",
+        ""
+      ],
+      "subjects": [
+        "pay",
+        "psp"
+      ],
+      "lines": [
+        24
+      ],
+      "quote": "up to 2 times"
+    },
+    {
+      "value": 200,
+      "unit": "",
+      "unit_aliases": [
+        ""
+      ],
+      "subjects": [
+        "pay",
+        "psp"
+      ],
+      "lines": [
+        20
+      ],
+      "quote": "HTTP 200"
+    },
+    {
+      "value": 9,
+      "unit": "fields",
+      "unit_aliases": [
+        "fields",
+        ""
+      ],
+      "subjects": [
+        "ord",
+        "pay"
+      ],
+      "note": "written as a word in the document",
+      "lines": [
+        11
+      ],
+      "quote": "carries the nine"
+    },
+    {
+      "value": 4.3,
+      "unit": "",
+      "unit_aliases": [
+        ""
+      ],
+      "subjects": [],
+      "note": "the number of a table, not a quantity; allowed on any element",
+      "lines": [
+        12
+      ],
+      "quote": "fields of Table 4.3."
+    },
+    {
+      "value": 15,
+      "unit": "min",
+      "unit_aliases": [
+        "min",
+        "minutes"
+      ],
+      "subjects": [
+        "pay"
+      ],
+      "lines": [
+        44
+      ],
+      "quote": "receives no webhook within 15 min"
+    },
+    {
+      "value": 5,
+      "unit": "min",
+      "unit_aliases": [
+        "min",
+        "minutes"
+      ],
+      "subjects": [
+        "psp"
+      ],
+      "lines": [
+        45
+      ],
+      "quote": "every 5 min"
+    },
+    {
+      "value": 24,
+      "unit": "h",
+      "unit_aliases": [
+        "h",
+        "hours"
+      ],
+      "subjects": [
+        "psp"
+      ],
+      "lines": [
+        45
+      ],
+      "quote": "for up to 24 h"
+    },
+    {
+      "value": 20,
+      "unit": "min",
+      "unit_aliases": [
+        "min",
+        "minutes"
+      ],
+      "subjects": [
+        "ord"
+      ],
+      "lines": [
+        46
+      ],
+      "quote": "reserved for 20 min"
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "4.2",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "### 4.2 Card payment"
+    },
+    {
+      "text": "3-D Secure",
+      "part_of": "name",
+      "note": "the protocol name; also written 3DS",
+      "lines": [
+        1
+      ],
+      "quote": "3-D Secure challenge"
+    },
+    {
+      "text": "4.2.1",
+      "part_of": "section",
+      "lines": [
+        8
+      ],
+      "quote": "#### 4.2.1 Steps"
+    },
+    {
+      "text": "Table 4.3",
+      "part_of": "table",
+      "lines": [
+        12
+      ],
+      "quote": "fields of Table 4.3."
+    },
+    {
+      "text": "step 3",
+      "part_of": "step reference",
+      "lines": [
+        24
+      ],
+      "quote": "When step 3 fails"
+    },
+    {
+      "text": "steps 4 to 8",
+      "part_of": "step reference",
+      "lines": [
+        26
+      ],
+      "quote": "steps 4 to 8"
+    },
+    {
+      "text": "step 9",
+      "part_of": "step reference",
+      "lines": [
+        26
+      ],
+      "quote": "continues at step 9."
+    },
+    {
+      "text": "4.2.2",
+      "part_of": "section",
+      "lines": [
+        28
+      ],
+      "quote": "#### 4.2.2 Table 4.3"
+    },
+    {
+      "text": "4.2.3",
+      "part_of": "section",
+      "lines": [
+        42
+      ],
+      "quote": "#### 4.2.3 Time limits"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "long_payload",
+      "message": "m2",
+      "min": 3,
+      "aliases": [
+        "order_id",
+        "amount_minor",
+        "currency",
+        "card_token",
+        "billing_country",
+        "device_fingerprint",
+        "return_url",
+        "idempotency_key",
+        "customer_ip"
+      ],
+      "why": "the nine fields on one message set the gap between two lifelines for the whole figure; Table 4.3 holds them",
+      "lines": [
+        11
+      ],
+      "quote": "The request carries the nine"
+    },
+    {
+      "id": "t2",
+      "type": "number_from_other_rule",
+      "value": 20,
+      "unit": "min",
+      "wrong_subjects": [
+        "pay",
+        "psp"
+      ],
+      "why": "20 min is how long the Orders API keeps the stock of an unpaid order; the Payment service fails a payment after 15 min without a webhook",
+      "lines": [
+        46
+      ],
+      "quote": "reserved for 20 min"
+    },
+    {
+      "id": "t3",
+      "type": "number_from_other_rule",
+      "value": 24,
+      "unit": "h",
+      "wrong_subjects": [
+        "pay",
+        "ord"
+      ],
+      "why": "24 h is how long Paylane PSP repeats an unanswered webhook",
+      "lines": [
+        45
+      ],
+      "quote": "for up to 24 h"
+    },
+    {
+      "id": "t4",
+      "type": "reversed_direction",
+      "relation": {
+        "from": "pay",
+        "to": "psp"
+      },
+      "aliases": [
+        "redirect_url",
+        "redirect"
+      ],
+      "why": "Paylane PSP returns the redirect_url to the Payment service, not the other way",
+      "lines": [
+        14
+      ],
+      "quote": "4. Paylane PSP answers `challenge_required` with a `redirect_url`."
+    },
+    {
+      "id": "t5",
+      "type": "invented_block",
+      "kind": "loop",
+      "why": "the text repeats step 3 on a network error, and Paylane PSP repeats an unanswered webhook; no other step repeats",
+      "lines": [
+        24
+      ],
+      "quote": "When step 3 fails with a network error"
+    },
+    {
+      "id": "t6",
+      "type": "invented_entity",
+      "aliases": [
+        "Event bus",
+        "Message bus",
+        "Kafka",
+        "Message broker",
+        "Broker",
+        "Message queue",
+        "Queue",
+        "RabbitMQ",
+        "Pub/Sub",
+        "SNS"
+      ],
+      "why": "the text names no broker between the Payment service and the Orders API",
+      "lines": [
+        21
+      ],
+      "quote": "The Payment service publishes `payment.confirmed`."
+    },
+    {
+      "id": "t7",
+      "type": "invented_entity",
+      "aliases": [
+        "Customer",
+        "Shopper",
+        "User",
+        "Cardholder",
+        "Buyer"
+      ],
+      "why": "the text names five parties; the person at the browser is not one of them",
+      "lines": [
+        4
+      ],
+      "quote": "Five parties take part."
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "participants": 5,
+    "messages": 11,
+    "blocks": 2
+  }
+}

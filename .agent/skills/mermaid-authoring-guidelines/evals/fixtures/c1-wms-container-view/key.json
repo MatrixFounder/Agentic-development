@@ -1,0 +1,818 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 1,
+  "name": "wms-container-view",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "document",
+  "kind": "flowchart",
+  "acceptable_forms": [
+    "flowchart"
+  ],
+  "required_concern": "structure",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "hh",
+      "kind": "client_app",
+      "aliases": [
+        "Handheld app"
+      ],
+      "soft_aliases": [
+        "Handheld",
+        "Handheld client",
+        "Android app",
+        "Handheld scanner",
+        "Scanner app"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "| Handheld app |"
+    },
+    {
+      "id": "sc",
+      "kind": "client_app",
+      "aliases": [
+        "Supervisor console"
+      ],
+      "soft_aliases": [
+        "Supervisor UI",
+        "Supervisor web app",
+        "Supervisor dashboard",
+        "Console"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "| Supervisor console |"
+    },
+    {
+      "id": "gw",
+      "kind": "product",
+      "aliases": [
+        "API gateway"
+      ],
+      "soft_aliases": [
+        "Gateway",
+        "Kong",
+        "API gateway (Kong)"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "| API gateway | Kong |"
+    },
+    {
+      "id": "inv",
+      "kind": "service",
+      "aliases": [
+        "Inventory service"
+      ],
+      "soft_aliases": [
+        "Inventory",
+        "Inventory API"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "| Inventory service |"
+    },
+    {
+      "id": "pick",
+      "kind": "service",
+      "aliases": [
+        "Picking service"
+      ],
+      "soft_aliases": [
+        "Picking",
+        "Picking API"
+      ],
+      "lines": [
+        17
+      ],
+      "quote": "| Picking service |"
+    },
+    {
+      "id": "slot",
+      "kind": "service",
+      "aliases": [
+        "Slotting service"
+      ],
+      "soft_aliases": [
+        "Slotting"
+      ],
+      "note": "added by this task (line 4)",
+      "lines": [
+        18
+      ],
+      "quote": "| Slotting service |"
+    },
+    {
+      "id": "lbl",
+      "kind": "service",
+      "aliases": [
+        "Label printer bridge"
+      ],
+      "soft_aliases": [
+        "Label printer",
+        "Printer bridge",
+        "Label bridge",
+        "Label service"
+      ],
+      "lines": [
+        19
+      ],
+      "quote": "| Label printer bridge |"
+    },
+    {
+      "id": "bus",
+      "kind": "product",
+      "aliases": [
+        "Event bus"
+      ],
+      "soft_aliases": [
+        "RabbitMQ",
+        "Message bus",
+        "Message broker",
+        "Event broker",
+        "Broker"
+      ],
+      "lines": [
+        20
+      ],
+      "quote": "| Event bus | RabbitMQ |"
+    },
+    {
+      "id": "idb",
+      "kind": "database",
+      "aliases": [
+        "Inventory DB"
+      ],
+      "soft_aliases": [
+        "Inventory database",
+        "Inventory store"
+      ],
+      "lines": [
+        21
+      ],
+      "quote": "| Inventory DB |"
+    },
+    {
+      "id": "pdb",
+      "kind": "database",
+      "aliases": [
+        "Picking DB"
+      ],
+      "soft_aliases": [
+        "Picking database",
+        "Picking store"
+      ],
+      "lines": [
+        22
+      ],
+      "quote": "| Picking DB |"
+    },
+    {
+      "id": "rep",
+      "kind": "database",
+      "aliases": [
+        "Reporting replica"
+      ],
+      "soft_aliases": [
+        "Replica",
+        "Reporting DB",
+        "Read replica",
+        "Reporting database"
+      ],
+      "lines": [
+        23
+      ],
+      "quote": "| Reporting replica |"
+    },
+    {
+      "id": "op",
+      "kind": "actor",
+      "aliases": [
+        "floor operators",
+        "floor operator"
+      ],
+      "soft_aliases": [
+        "operators",
+        "operator",
+        "warehouse operator"
+      ],
+      "optional": true,
+      "note": "stated as the users of the Handheld app; drawing them is allowed, not required",
+      "lines": [
+        13
+      ],
+      "quote": "used by floor operators"
+    },
+    {
+      "id": "sup",
+      "kind": "actor",
+      "aliases": [
+        "shift supervisors",
+        "shift supervisor"
+      ],
+      "soft_aliases": [
+        "supervisors"
+      ],
+      "optional": true,
+      "note": "stated as the users of the Supervisor console; drawing them is allowed, not required",
+      "lines": [
+        14
+      ],
+      "quote": "used by shift supervisors"
+    }
+  ],
+  "groups": [
+    {
+      "id": "clients",
+      "kind": "category",
+      "aliases": [
+        "client apps",
+        "clients",
+        "client applications"
+      ],
+      "members": [
+        "hh",
+        "sc"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "The two client apps are the Handheld app and the Supervisor console."
+    },
+    {
+      "id": "dmz",
+      "kind": "zone",
+      "aliases": [
+        "DMZ"
+      ],
+      "members": [
+        "gw"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "| DMZ |"
+    },
+    {
+      "id": "appzone",
+      "kind": "zone",
+      "aliases": [
+        "application zone",
+        "app zone"
+      ],
+      "members": [
+        "inv",
+        "pick",
+        "slot",
+        "lbl",
+        "bus"
+      ],
+      "lines": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "quote": "application zone"
+    },
+    {
+      "id": "datazone",
+      "kind": "zone",
+      "aliases": [
+        "data zone"
+      ],
+      "members": [
+        "idb",
+        "pdb",
+        "rep"
+      ],
+      "lines": [
+        21,
+        22,
+        23
+      ],
+      "quote": "data zone"
+    },
+    {
+      "id": "team",
+      "kind": "category",
+      "aliases": [
+        "Larkspur team",
+        "Larkspur services",
+        "services"
+      ],
+      "members": [
+        "inv",
+        "pick",
+        "slot",
+        "lbl"
+      ],
+      "lines": [
+        6
+      ],
+      "quote": "Larkspur team writes the four services"
+    },
+    {
+      "id": "ots",
+      "kind": "category",
+      "aliases": [
+        "off-the-shelf products",
+        "off-the-shelf"
+      ],
+      "members": [
+        "gw",
+        "bus"
+      ],
+      "lines": [
+        6
+      ],
+      "quote": "the API gateway and the Event bus are off-the-shelf"
+    }
+  ],
+  "relations": [
+    {
+      "id": "r_hh_gw",
+      "kind": "call",
+      "from": "hh",
+      "to": "gw",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        31
+      ],
+      "quote": "| Handheld app | API gateway | HTTPS |"
+    },
+    {
+      "id": "r_sc_gw",
+      "kind": "call",
+      "from": "sc",
+      "to": "gw",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        32
+      ],
+      "quote": "| Supervisor console | API gateway | HTTPS |"
+    },
+    {
+      "id": "r_gw_inv",
+      "kind": "call",
+      "from": "gw",
+      "to": "inv",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        33
+      ],
+      "quote": "| API gateway | Inventory service | gRPC |"
+    },
+    {
+      "id": "r_gw_pick",
+      "kind": "call",
+      "from": "gw",
+      "to": "pick",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        34
+      ],
+      "quote": "| API gateway | Picking service | gRPC |"
+    },
+    {
+      "id": "r_pick_inv",
+      "kind": "call",
+      "from": "pick",
+      "to": "inv",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        35
+      ],
+      "quote": "| Picking service | Inventory service | gRPC | reserve stock"
+    },
+    {
+      "id": "r_pick_lbl",
+      "kind": "call",
+      "from": "pick",
+      "to": "lbl",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        36
+      ],
+      "quote": "| Picking service | Label printer bridge | gRPC | print label |"
+    },
+    {
+      "id": "r_pick_bus",
+      "kind": "publish",
+      "from": "pick",
+      "to": "bus",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        37
+      ],
+      "quote": "| Picking service | Event bus | AMQP | publishes `pick.completed` |"
+    },
+    {
+      "id": "r_bus_inv",
+      "kind": "consume",
+      "from": "bus",
+      "to": "inv",
+      "directed": false,
+      "required": true,
+      "concern": "structure",
+      "note": "a consumer may be drawn pulling from the bus or the bus delivering to it",
+      "lines": [
+        38
+      ],
+      "quote": "consumes `pick.completed`"
+    },
+    {
+      "id": "r_inv_bus",
+      "kind": "publish",
+      "from": "inv",
+      "to": "bus",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        38
+      ],
+      "quote": "publishes `stock.changed`"
+    },
+    {
+      "id": "r_bus_slot",
+      "kind": "consume",
+      "from": "bus",
+      "to": "slot",
+      "directed": false,
+      "required": true,
+      "concern": "structure",
+      "note": "a consumer may be drawn pulling from the bus or the bus delivering to it",
+      "lines": [
+        39
+      ],
+      "quote": "| Slotting service | Event bus | AMQP | consumes `stock.changed` |"
+    },
+    {
+      "id": "r_slot_inv",
+      "kind": "call",
+      "from": "slot",
+      "to": "inv",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        40
+      ],
+      "quote": "| Slotting service | Inventory service | gRPC | stores slot assignments |"
+    },
+    {
+      "id": "r_inv_idb",
+      "kind": "owns",
+      "from": "inv",
+      "to": "idb",
+      "directed": false,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        16
+      ],
+      "quote": "| Inventory service | Java service | application zone | Inventory DB |"
+    },
+    {
+      "id": "r_pick_pdb",
+      "kind": "owns",
+      "from": "pick",
+      "to": "pdb",
+      "directed": false,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        17
+      ],
+      "quote": "| Picking service | Java service | application zone | Picking DB |"
+    },
+    {
+      "id": "r_idb_rep",
+      "kind": "replication",
+      "from": "idb",
+      "to": "rep",
+      "directed": true,
+      "required": false,
+      "concern": "structure",
+      "note": "stated; a figure within the soft budget may name it in the legend instead",
+      "lines": [
+        43
+      ],
+      "quote": "The Inventory DB streams to the Reporting replica."
+    },
+    {
+      "id": "r_op_hh",
+      "kind": "uses",
+      "from": "op",
+      "to": "hh",
+      "directed": false,
+      "required": false,
+      "concern": "structure",
+      "lines": [
+        13
+      ],
+      "quote": "used by floor operators"
+    },
+    {
+      "id": "r_sup_sc",
+      "kind": "uses",
+      "from": "sup",
+      "to": "sc",
+      "directed": false,
+      "required": false,
+      "concern": "structure",
+      "lines": [
+        14
+      ],
+      "quote": "used by shift supervisors"
+    }
+  ],
+  "numbers": [
+    {
+      "value": 15,
+      "unit": "s",
+      "unit_aliases": [
+        "s",
+        "sec",
+        "seconds"
+      ],
+      "subjects": [
+        "gw"
+      ],
+      "lines": [
+        58
+      ],
+      "quote": "a client call times out after 15 s"
+    },
+    {
+      "value": 120,
+      "unit": "s",
+      "unit_aliases": [
+        "s",
+        "sec",
+        "seconds"
+      ],
+      "subjects": [
+        "inv"
+      ],
+      "note": "the stock reservation the Picking service makes in the Inventory service (r_pick_inv)",
+      "lines": [
+        59
+      ],
+      "quote": "released after 120 s without a confirmed pick"
+    },
+    {
+      "value": 3,
+      "unit": "times",
+      "unit_aliases": [
+        "times",
+        "tries",
+        "retries",
+        "attempts",
+        "x",
+        "×",
+        ""
+      ],
+      "subjects": [
+        "lbl",
+        "pick"
+      ],
+      "lines": [
+        60
+      ],
+      "quote": "retried 3 times"
+    },
+    {
+      "value": 30,
+      "unit": "s",
+      "unit_aliases": [
+        "s",
+        "sec",
+        "seconds"
+      ],
+      "subjects": [
+        "rep",
+        "idb"
+      ],
+      "lines": [
+        61
+      ],
+      "quote": "an alert fires when the lag exceeds 30 s"
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "3",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "## 3. Containers"
+    },
+    {
+      "text": "3.1",
+      "part_of": "section",
+      "lines": [
+        9
+      ],
+      "quote": "### 3.1 Containers"
+    },
+    {
+      "text": "3.2",
+      "part_of": "section",
+      "lines": [
+        25
+      ],
+      "quote": "### 3.2 Calls"
+    },
+    {
+      "text": "3.3",
+      "part_of": "section",
+      "lines": [
+        45
+      ],
+      "quote": "### 3.3 Pick flow"
+    },
+    {
+      "text": "3.4",
+      "part_of": "section",
+      "lines": [
+        54
+      ],
+      "quote": "### 3.4 Limits"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "slot",
+        "to": "idb"
+      },
+      "why": "Slotting service stores its slot assignments through the Inventory service API and has no database of its own",
+      "lines": [
+        42
+      ],
+      "quote": "through the Inventory service API; it has no database"
+    },
+    {
+      "id": "t2",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "sc",
+        "to": "pick"
+      },
+      "why": "every client call enters through the API gateway; no client calls a service directly",
+      "lines": [
+        27
+      ],
+      "quote": "Every client call enters through the API gateway."
+    },
+    {
+      "id": "t3",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "hh",
+        "to": "pick"
+      },
+      "why": "every client call enters through the API gateway; the pick flow of §3.3 passes through it",
+      "lines": [
+        27
+      ],
+      "quote": "Every client call enters through the API gateway."
+    },
+    {
+      "id": "t4",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "pdb",
+        "to": "rep"
+      },
+      "why": "only the Inventory DB streams to the Reporting replica",
+      "lines": [
+        43
+      ],
+      "quote": "No other database is replicated."
+    },
+    {
+      "id": "t5",
+      "type": "invented_group",
+      "aliases": [
+        "Backend",
+        "Backend services",
+        "Microservices",
+        "Core services",
+        "Application layer",
+        "Business layer",
+        "Middleware"
+      ],
+      "why": "the text groups containers by zone, as client apps, and by who writes them; a box over the gateway and the services spans the DMZ and the application zone",
+      "lines": [
+        11
+      ],
+      "quote": "| Container | Technology | Zone | Owns |"
+    },
+    {
+      "id": "t6",
+      "type": "dynamics_in_structure",
+      "aliases": [
+        "Scan tote",
+        "Scan a tote",
+        "Confirm pick",
+        "Confirm the pick",
+        "Next pick task",
+        "Print shipping label",
+        "Lower stock",
+        "Reserve stock step"
+      ],
+      "why": "§3.3 lists the steps of one pick; numbered edges or step nodes put a scenario into the container view",
+      "lines": [
+        47
+      ],
+      "quote": "1. A floor operator scans a tote with the Handheld app."
+    },
+    {
+      "id": "t7",
+      "type": "number_from_other_rule",
+      "value": 120,
+      "unit": "s",
+      "wrong_subjects": [
+        "gw"
+      ],
+      "why": "the 120 s belong to the stock reservation; the API gateway times out a client call after 15 s",
+      "lines": [
+        59
+      ],
+      "quote": "released after 120 s without a confirmed pick"
+    },
+    {
+      "id": "t8",
+      "type": "boundary_edge",
+      "groups": [
+        "clients",
+        "dmz",
+        "appzone",
+        "datazone"
+      ],
+      "why": "an edge between two zone boxes is drawn from a member the renderer picks, and readers see a relation of that member"
+    },
+    {
+      "id": "t9",
+      "type": "aggregation_needed",
+      "counts": {
+        "named_elements": 13,
+        "stated_relations": 16,
+        "soft_budget": [
+          12,
+          12
+        ]
+      },
+      "why": "13 named elements and 16 stated relations exceed the soft budget; the users fold into the client app nodes and the replica moves to the legend, or the figure splits"
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "named_elements": 13,
+    "stated_relations": 16,
+    "pass": {
+      "nodes": 10,
+      "edges": 12
+    }
+  }
+}

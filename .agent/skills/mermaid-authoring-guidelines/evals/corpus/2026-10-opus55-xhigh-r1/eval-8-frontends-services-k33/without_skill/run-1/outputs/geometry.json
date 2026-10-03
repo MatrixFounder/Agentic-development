@@ -1,0 +1,840 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "2947d210cd6a449caee0459183db64920a0a12412016332f73c5a7ca681449b6",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 474.9,
+    "height": 472.0,
+    "nodes": 6,
+    "edges": 9,
+    "crossings": 7,
+    "crossing_pairs": [
+     [
+      "web->pricing",
+      "bff->catalog",
+      172.7,
+      139.4
+     ],
+     [
+      "web->pricing",
+      "partner->catalog",
+      195.6,
+      141.4
+     ],
+     [
+      "web->stock",
+      "bff->catalog",
+      130.0,
+      197.5
+     ],
+     [
+      "web->stock",
+      "partner->catalog",
+      147.3,
+      238.3
+     ],
+     [
+      "web->stock",
+      "partner->pricing",
+      195.8,
+      340.0
+     ],
+     [
+      "bff->stock",
+      "partner->catalog",
+      130.0,
+      277.4
+     ],
+     [
+      "bff->stock",
+      "partner->pricing",
+      172.8,
+      340.0
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "web->stock",
+      "node": "bff",
+      "depth_px": 54.8,
+      "perpendicular_px": 25.5
+     },
+     {
+      "edge": "bff->catalog",
+      "node": "web",
+      "depth_px": 9.9,
+      "perpendicular_px": 5.1
+     },
+     {
+      "edge": "bff->stock",
+      "node": "partner",
+      "depth_px": 26.5,
+      "perpendicular_px": 11.0
+     },
+     {
+      "edge": "partner->catalog",
+      "node": "bff",
+      "depth_px": 54.7,
+      "perpendicular_px": 24.1
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Domain services",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Domain services",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Front-ends",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Web shop",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Mobile BFF",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Partner API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Catalog service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Pricing service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Stock service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "7 edge crossings, more than 2"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge web->stock runs 54.8 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge bff->stock runs 26.5 px inside node partner"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge partner->catalog runs 54.7 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "warn",
+     "message": "edge bff->catalog grazes node web (9.9 px inside)"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "f67e46054286215ecccf30faea6ba6ba9406a20158ef814ad52e3e86847f45ad",
+   "png_sha256": "c8ca28ed5f4ead5b34659a20611b79b6298fbe06a5e47d65deff6cd6e2d2ee6b",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 97
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "2947d210cd6a449caee0459183db64920a0a12412016332f73c5a7ca681449b6",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 474.9,
+    "height": 472.0,
+    "nodes": 6,
+    "edges": 9,
+    "crossings": 7,
+    "crossing_pairs": [
+     [
+      "web->pricing",
+      "bff->catalog",
+      172.7,
+      139.4
+     ],
+     [
+      "web->pricing",
+      "partner->catalog",
+      195.6,
+      141.4
+     ],
+     [
+      "web->stock",
+      "bff->catalog",
+      130.0,
+      197.5
+     ],
+     [
+      "web->stock",
+      "partner->catalog",
+      147.3,
+      238.3
+     ],
+     [
+      "web->stock",
+      "partner->pricing",
+      195.8,
+      340.0
+     ],
+     [
+      "bff->stock",
+      "partner->catalog",
+      130.0,
+      277.4
+     ],
+     [
+      "bff->stock",
+      "partner->pricing",
+      172.8,
+      340.0
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "web->stock",
+      "node": "bff",
+      "depth_px": 54.8,
+      "perpendicular_px": 25.5
+     },
+     {
+      "edge": "bff->catalog",
+      "node": "web",
+      "depth_px": 9.9,
+      "perpendicular_px": 5.1
+     },
+     {
+      "edge": "bff->stock",
+      "node": "partner",
+      "depth_px": 26.5,
+      "perpendicular_px": 11.0
+     },
+     {
+      "edge": "partner->catalog",
+      "node": "bff",
+      "depth_px": 54.7,
+      "perpendicular_px": 24.1
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Domain services",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "Domain services",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "Front-ends",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "Web shop",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Mobile BFF",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Partner API",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Catalog service",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Pricing service",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Stock service",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "7 edge crossings, more than 2"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge web->stock runs 54.8 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge bff->stock runs 26.5 px inside node partner"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge partner->catalog runs 54.7 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "warn",
+     "message": "edge bff->catalog grazes node web (9.9 px inside)"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "2529a6fec21de7b8c84e5b986de50c855d1daa4e9ae2cb6a341fc963f42e425f",
+   "png_sha256": "52480d94f04bfef55567fec2a55976202fe421dc627a825c6b41bb52aeb67766",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 97
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "2947d210cd6a449caee0459183db64920a0a12412016332f73c5a7ca681449b6",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 384.9,
+    "height": 400.0,
+    "nodes": 6,
+    "edges": 9,
+    "crossings": 7,
+    "crossing_pairs": [
+     [
+      "web->pricing",
+      "bff->catalog",
+      122.5,
+      114.9
+     ],
+     [
+      "web->pricing",
+      "partner->catalog",
+      142.5,
+      117.2
+     ],
+     [
+      "web->stock",
+      "bff->catalog",
+      92.4,
+      160.3
+     ],
+     [
+      "web->stock",
+      "partner->catalog",
+      105.8,
+      194.3
+     ],
+     [
+      "web->stock",
+      "partner->pricing",
+      142.6,
+      276.0
+     ],
+     [
+      "bff->stock",
+      "partner->catalog",
+      92.4,
+      226.5
+     ],
+     [
+      "bff->stock",
+      "partner->pricing",
+      122.6,
+      276.0
+     ]
+    ],
+    "edges_through_nodes": [
+     {
+      "edge": "web->stock",
+      "node": "bff",
+      "depth_px": 32.6,
+      "perpendicular_px": 14.6
+     },
+     {
+      "edge": "bff->stock",
+      "node": "partner",
+      "depth_px": 8.8,
+      "perpendicular_px": 4.7
+     },
+     {
+      "edge": "partner->catalog",
+      "node": "bff",
+      "depth_px": 32.8,
+      "perpendicular_px": 13.3
+     }
+    ],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Domain services",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Domain services",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Front-ends",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Catalog service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Pricing service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Stock service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Web shop",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Mobile BFF",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Partner API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "7 edge crossings, more than 2"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge web->stock runs 32.6 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "fail",
+     "message": "edge partner->catalog runs 32.8 px inside node bff"
+    },
+    {
+     "check": "edges_through_nodes",
+     "severity": "warn",
+     "message": "edge bff->stock grazes node partner (8.8 px inside)"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "e2a4642344c98780249378010922ab996263e75bb57e3e65607eb5d5c0eed8f8",
+   "png_sha256": "c3d8786c74600336d72905d80d3addd477e6616a02775ba3ca0015ccad396143",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 97
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "2947d210cd6a449caee0459183db64920a0a12412016332f73c5a7ca681449b6",
+   "fence_line": 1,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 692.0,
+    "height": 359.0,
+    "nodes": 6,
+    "edges": 9,
+    "crossings": 9,
+    "crossing_pairs": [
+     [
+      "web->catalog",
+      "partner->pricing",
+      470.0,
+      105.0
+     ],
+     [
+      "web->catalog",
+      "partner->stock",
+      445.9,
+      105.0
+     ],
+     [
+      "web->pricing",
+      "bff->catalog",
+      458.0,
+      203.2
+     ],
+     [
+      "web->pricing",
+      "partner->stock",
+      446.0,
+      203.2
+     ],
+     [
+      "web->stock",
+      "bff->catalog",
+      458.0,
+      301.2
+     ],
+     [
+      "web->stock",
+      "bff->pricing",
+      470.0,
+      301.2
+     ],
+     [
+      "bff->catalog",
+      "partner->pricing",
+      470.0,
+      117.6
+     ],
+     [
+      "bff->catalog",
+      "partner->stock",
+      458.0,
+      300.4
+     ],
+     [
+      "bff->pricing",
+      "partner->stock",
+      470.0,
+      294.4
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Domain services",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Domain services",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Front-ends",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Web shop",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Mobile BFF",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Partner API",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Catalog service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Pricing service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Stock service",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "9 edge crossings, more than 2"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "836d048edf1e1483b512f2f633db3923f49a8d09988922a2e8f0bfd5e99b24ec",
+   "png_sha256": "571a10bff9aa6b90a9c6e5370fa685e05f7dede08ff1663949a5cc793f0fe8cc",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 97
+    }
+   ]
+  }
+ }
+}

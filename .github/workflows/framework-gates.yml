@@ -6,6 +6,10 @@ on:
     branches:
       - "*"
 
+# Every job only reads the repository; the token needs no write scope.
+permissions:
+  contents: read
+
 jobs:
   tooling-tests:
     name: Tooling tests
@@ -42,6 +46,14 @@ jobs:
         with:
           python-version: "${{ matrix.python-version }}"
 
+      # TASK 108 A18: the setup_renderers.sh tests list the pinned renderer pairs only under node
+      # 22.13 or newer, the engines floor of the 11.17 and 12.1 installs; under an older node of
+      # the runner image they skip, and the listing could break unseen.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -77,6 +89,23 @@ jobs:
       # recall-gap fixture into a detector test.
       - name: Run artifact-formalizer eval-instrument selftest
         run: python .agent/skills/artifact-formalizer/evals/selftest_evals.py
+
+      # TASK 108 — the figure skill's own gates. None of them needs a browser: the geometry
+      # tests read committed SVG and evidence fixtures, and the render check itself never runs
+      # in CI (TASK 108 D6). Node serves the setup-script tests only. The lint gate covers the
+      # skill's own references, where a fence marked `%% negative:` must fail the checks it names.
+      - name: Run mermaid-authoring-guidelines unit tests
+        run: python -m pytest -p no:cacheprovider .agent/skills/mermaid-authoring-guidelines/scripts/tests -q
+
+      - name: Figure lint — probe every rule
+        run: python .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py --probe
+
+      - name: Figure lint — the skill's own references (gate)
+        run: python .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py .agent/skills/mermaid-authoring-guidelines/references/*.md
+
+      # The eval INSTRUMENT, not a campaign: it spawns no agent and renders nothing.
+      - name: Run mermaid-authoring-guidelines eval-instrument selftest
+        run: python .agent/skills/mermaid-authoring-guidelines/evals/selftest_figure_evals.py
 
       # Instrument health. Findings stay advisory (documentation-standards §4:
       # a gate that fails on correct documents is how gates get switched off).

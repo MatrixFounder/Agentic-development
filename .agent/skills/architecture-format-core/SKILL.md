@@ -1,7 +1,7 @@
 ---
 name: architecture-format-core
 description: Core structure for Architecture documents. For full templates with examples, load architecture-format-extended.
-version: 1.1
+version: 1.2
 tier: 1
 ---
 
@@ -9,7 +9,8 @@ tier: 1
 
 > [!NOTE]
 > This is the **CORE** template for architecture documents.
-> For full examples with JSON samples, diagrams, and detailed sections, load `architecture-format-extended`.
+> For sections 3–10 in full, with example templates and JSON samples, load `architecture-format-extended`.
+> Figures in any section follow `mermaid-authoring-guidelines`; load it before the first figure.
 
 Your architecture must contain the following sections:
 
@@ -43,11 +44,21 @@ For each functional component describe:
 - Depends on which other components
 - Which components depend on it
 
-### 2.2. Functional Components Diagram
+### 2.2. Functional Components Figure (optional)
 
+Draw a figure only when §2.1 states relations that a reader would otherwise hold in memory;
+otherwise leave this subsection out. Before the figure, load `mermaid-authoring-guidelines`: its
+Step 0 picks the form, and its rules draw the figure. A Mermaid figure takes this block:
+
+````markdown
+**Figure [N].** [Title] — [one sentence: what the figure shows of §2.1].
+
+```mermaid
+[the settings line of the kind, then the figure]
 ```
-[Mermaid diagram showing connections between components]
-```
+
+[Legend: the notation this figure uses, one item per encoding.]
+````
 
 ---
 
@@ -90,11 +101,21 @@ For each system component describe:
 - Other system components
 - External services
 
-### 3.3. Components Diagram
+### 3.3. Components Figure (optional)
 
+Draw a figure only when §3.2 states relations that a reader would otherwise hold in memory;
+otherwise leave this subsection out. Before the figure, load `mermaid-authoring-guidelines`: its
+Step 0 picks the form, and its rules draw the figure. A Mermaid figure takes this block:
+
+````markdown
+**Figure [N].** [Title] — [one sentence: what the figure shows of §3.2].
+
+```mermaid
+[the settings line of the kind, then the figure]
 ```
-[Mermaid diagram showing components and their interaction]
-```
+
+[Legend: the notation this figure uses, one item per encoding.]
+````
 
 ---
 
@@ -219,3 +240,4 @@ Once in Index-Mode:
 | Major refactor (>3 components changed) | `extended` |
 | Sophisticated requirement / complex task | `extended` |
 | User explicitly requests full template | `extended` |
+| Any section gets a figure | `mermaid-authoring-guidelines` as well, before the first figure |

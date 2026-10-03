@@ -1,0 +1,36 @@
+{
+ "eval_id": 0,
+ "eval_name": "control-thumbnails",
+ "arm": "with_skill",
+ "prompt": "You are working in a project repository. Below is §2 of `docs/ARCHITECTURE.md` as the Read tool shows it.\n\n=== BEGIN docs/ARCHITECTURE.md ===\n   1| ## 2. Media storage\n   2| \n   3| Fernhill Photos keeps every uploaded photo and its thumbnail in one object store. This section\n   4| describes the four components that use that store and the relations between them.\n   5| \n   6| ### 2.1 Components\n   7| \n   8| | Component | Technology | Owner | Responsibility |\n   9| | :--- | :--- | :--- | :--- |\n  10| | Upload API | Go service | Gallery team | stores each uploaded photo as an original |\n  11| | Media bucket | object storage | Platform team | holds originals and thumbnails, one prefix each |\n  12| | Thumbnail service | Python worker | Gallery team | produces one thumbnail per original |\n  13| | CDN | managed edge cache | Platform team | serves thumbnails at the network edge |\n  14| \n  15| ### 2.2 Relations\n  16| \n  17| - The Upload API writes originals to the Media bucket.\n  18| - The Thumbnail service reads originals from the Media bucket.\n  19| - The Thumbnail service writes thumbnails to the Media bucket.\n  20| - The CDN reads thumbnails from the Media bucket.\n  21| \n  22| No other component reads or writes the Media bucket.\n  23| \n  24| ### 2.3 Access rules\n  25| \n  26| Each component signs its requests with its own service identity. The Upload API may write only\n  27| under the originals prefix. The Thumbnail service may read the originals prefix and may write only\n  28| under the thumbnails prefix. The CDN may read only the thumbnails prefix. The Platform team grants\n  29| these permissions and reviews them whenever a component changes owner.\n  30| \n  31| ### 2.4 Out of scope\n  32| \n  33| Image moderation, the storage classes of the Media bucket and the cache rules of the CDN are\n  34| described in §5.\n=== END docs/ARCHITECTURE.md ===\n\nAdd a figure to §2.2 that shows the relations between the four components of this section.\n\nReaders open this document on GitHub and in VS Code and JetBrains Markdown previews; some of those previews run Mermaid 10.9, and some readers use a dark theme.\n\nOutput only the Markdown to insert into the section, and nothing else.\n",
+ "case_prompt_sha256": "e5e303266c5b245732c256384b0420bc6c667ad37c9d0be66928a872e31c7b17",
+ "arm_prompt_sha256": "88c5f45d3b337f1b0aac5ab6ac939ad44dc489b2173e716d5309569d40ba1f70",
+ "bundle_kind": "flowchart",
+ "bundle": [
+  {
+   "path": "SKILL.md",
+   "bytes": 16435,
+   "words": 2741,
+   "sha256": "852c6ba551c11c4ce8bc66ead2fb8af40f5362cd8151e21cf46f765d3751604d"
+  },
+  {
+   "path": "references/flowchart.md",
+   "bytes": 20874,
+   "words": 3327,
+   "sha256": "ec67299e0c271a9440da7c26816684b71dc64d64c5f9467b00f33611e10c7e93"
+  },
+  {
+   "path": "references/layout-and-planarity.md",
+   "bytes": 20446,
+   "words": 3783,
+   "sha256": "e5699707f23407321ef22a7517fa5c2acb42b3a3049beb6429e09fb80820d3dd"
+  },
+  {
+   "path": "references/paired-examples.md",
+   "bytes": 37731,
+   "words": 5528,
+   "sha256": "236b706514163547e6abed43114b2d99416189dfac0fac18f84580f4440d79a8"
+  }
+ ],
+ "bundle_sha256": "5f1ea329cbf2c00328e3a1224998c2923370d80d57148d86b631c27ba37e34d7"
+}

@@ -19,6 +19,19 @@ Identify and document:
 - **Data Flows**: Arrows showing data movement with protocol (HTTPS, gRPC, etc.)
 - **Trust Boundaries**: Lines separating zones of trust (internet ↔ DMZ ↔ internal)
 
+In a Markdown document, draw the DFD per `mermaid-authoring-guidelines`; load the skill first.
+- **Kind**: Mermaid `flowchart`.
+- **Trust boundaries**: a zone of trust with two or more elements is a subgraph with a short
+  title. For a zone with one element, the zone name goes on that element's second line.
+- **Data flows**: edges between elements, labelled with the data and its protocol
+  (`readings · MQTT`). No edge ends on a subgraph.
+- **Budget**: the skill's flowchart budget applies. Over it, Step 3 of the skill aggregates the
+  DFD or splits it into several figures.
+- **Legend**: directly below the figure; it names the trust-boundary notation.
+
+In a terminal or chat reply, pick the form with Step 0 of the skill instead. If the skill is not
+installed, list the flows in a table and report that the skill is absent.
+
 ## Step 3: STRIDE Analysis
 
 For EACH element in the DFD, evaluate:

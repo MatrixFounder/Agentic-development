@@ -1,0 +1,981 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "58505baf8f5b0de8d2af3f3dba88dd12cfdbacabdd3114da90b2ecc52d4a89b2",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 843.0,
+    "height": 1400.8,
+    "nodes": 15,
+    "edges": 15,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [
+     {
+      "edge": "warehouse->forecast",
+      "title": "Consumers",
+      "cluster": "consumers",
+      "near_miss": false,
+      "inside_px": 17.0
+     },
+     {
+      "edge": "web->raw",
+      "title": "Pipeline",
+      "cluster": "pipeline",
+      "near_miss": false,
+      "inside_px": 17.0
+     }
+    ],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Consumers",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Consumers",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Pipeline",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Sources",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "feed more than 2 h late",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "POS feeds12 regions, SFTP, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Web ordersJSON export, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Loyalty CSVdaily",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Raw zone",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Normalizerhourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Staging tables",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Deduplicatorhourly, after Normalizer",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Clean sales",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Warehouse loadernightly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Sales warehouse",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Finance dashboards",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Demand forecast jobweekly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Data quality monitor",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Planning systemexternal supply system",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "#sales-data-oncall",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge warehouse->forecast crosses the title 'Consumers'"
+    },
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge web->raw crosses the title 'Pipeline'"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "101d28267e0609ce4d4d83acb3f88354526e21b5d39a7fa2630b5973aabf1aca",
+   "png_sha256": "d0e2b4ad5953af4d032a753c2aadf4041074ace4afe6c2a7087d5a3915127379",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 366
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "58505baf8f5b0de8d2af3f3dba88dd12cfdbacabdd3114da90b2ecc52d4a89b2",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 843.0,
+    "height": 1400.8,
+    "nodes": 15,
+    "edges": 15,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [
+     {
+      "edge": "warehouse->forecast",
+      "title": "Consumers",
+      "cluster": "consumers",
+      "near_miss": false,
+      "inside_px": 17.0
+     },
+     {
+      "edge": "web->raw",
+      "title": "Pipeline",
+      "cluster": "pipeline",
+      "near_miss": false,
+      "inside_px": 17.0
+     }
+    ],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Consumers",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "Consumers",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "Pipeline",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "Sources",
+       "kind": "title",
+       "fg": "#f9fffe",
+       "bg": "#474949",
+       "ratio": 8.96,
+       "scope": "theme"
+      },
+      {
+       "text": "feed more than 2 h late",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "POS feeds12 regions, SFTP, hourly",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Web ordersJSON export, hourly",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Loyalty CSVdaily",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Raw zone",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Normalizerhourly",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Staging tables",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Deduplicatorhourly, after Normalizer",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Clean sales",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Warehouse loadernightly",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Sales warehouse",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Finance dashboards",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Demand forecast jobweekly",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Data quality monitor",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "Planning systemexternal supply system",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      },
+      {
+       "text": "#sales-data-oncall",
+       "kind": "node",
+       "fg": "#cccccc",
+       "bg": "#1f2020",
+       "ratio": 10.17,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge warehouse->forecast crosses the title 'Consumers'"
+    },
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge web->raw crosses the title 'Pipeline'"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "1 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('feed more than 2 h late', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "a7c197059f24552f8f96bd00573d4305c63ec657c7e70e98fc3157c6945ebaab",
+   "png_sha256": "27745f75c3363ee6c980241101095c10312056e4c6c66ecb9e62b33a1bed59dc",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 366
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "58505baf8f5b0de8d2af3f3dba88dd12cfdbacabdd3114da90b2ecc52d4a89b2",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 702.1,
+    "height": 1225.8,
+    "nodes": 15,
+    "edges": 15,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [
+     {
+      "edge": "warehouse->forecast",
+      "title": "Consumers",
+      "cluster": "consumers",
+      "near_miss": false,
+      "inside_px": 17.0
+     },
+     {
+      "edge": "web->raw",
+      "title": "Pipeline",
+      "cluster": "pipeline",
+      "near_miss": false,
+      "inside_px": 17.0
+     }
+    ],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Consumers",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Consumers",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Pipeline",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Sources",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "feed more than 2 h late",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "Finance dashboards",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Demand forecast jobweekly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Data quality monitor",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Raw zone",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Normalizerhourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Staging tables",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Deduplicatorhourly, after Normalizer",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Clean sales",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Warehouse loadernightly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Sales warehouse",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "POS feeds12 regions, SFTP, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Web ordersJSON export, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Loyalty CSVdaily",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Planning systemexternal supply system",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "#sales-data-oncall",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge warehouse->forecast crosses the title 'Consumers'"
+    },
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge web->raw crosses the title 'Pipeline'"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "b8d361e074a1fdcbf95e3bf94d88e4594975e9f68bca86604e9b4465e59e3c71",
+   "png_sha256": "c83a2d6009ec5cb6471226c540fbce443cb8cf7c78ef66391413d480da094814",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 366
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "58505baf8f5b0de8d2af3f3dba88dd12cfdbacabdd3114da90b2ecc52d4a89b2",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "flowchart-v2",
+    "width": 628.3,
+    "height": 1627.6,
+    "nodes": 15,
+    "edges": 15,
+    "crossings": 0,
+    "crossing_pairs": [],
+    "edges_through_nodes": [],
+    "title_crossings": [
+     {
+      "edge": "warehouse->finance",
+      "title": "Consumers",
+      "cluster": "consumers",
+      "near_miss": false,
+      "inside_px": 17.0
+     },
+     {
+      "edge": "web->raw",
+      "title": "Pipeline",
+      "cluster": "pipeline",
+      "near_miss": false,
+      "inside_px": 17.0
+     },
+     {
+      "edge": "loyalty->raw",
+      "title": "Pipeline",
+      "cluster": "pipeline",
+      "near_miss": false,
+      "inside_px": 17.0
+     }
+    ],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "Consumers",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "Consumers",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Pipeline",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Sources",
+       "kind": "title",
+       "fg": "#333333",
+       "bg": "#ffffde",
+       "ratio": 12.4,
+       "scope": "theme"
+      },
+      {
+       "text": "feed more than 2 h late",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e8e8e8",
+       "ratio": 10.31,
+       "scope": "theme"
+      },
+      {
+       "text": "POS feeds12 regions, SFTP, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Web ordersJSON export, hourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Loyalty CSVdaily",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Raw zone",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Normalizerhourly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Staging tables",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Deduplicatorhourly, after Normalizer",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Clean sales",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Warehouse loadernightly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Sales warehouse",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Finance dashboards",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Demand forecast jobweekly",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Data quality monitor",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "Planning systemexternal supply system",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      },
+      {
+       "text": "#sales-data-oncall",
+       "kind": "node",
+       "fg": "#333333",
+       "bg": "#ececff",
+       "ratio": 10.83,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge warehouse->finance crosses the title 'Consumers'"
+    },
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge web->raw crosses the title 'Pipeline'"
+    },
+    {
+     "check": "title_crossings",
+     "severity": "fail",
+     "message": "edge loyalty->raw crosses the title 'Pipeline'"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "c7c4700a13811db499d9ef8769b0d1bd4f126eef835fd414616ffb1812e6930e",
+   "png_sha256": "ab0d3ba83610d5da85ded7eae54a49e5eef6a120dde004817a0d59e24f9d742b",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 366
+    }
+   ]
+  }
+ }
+}

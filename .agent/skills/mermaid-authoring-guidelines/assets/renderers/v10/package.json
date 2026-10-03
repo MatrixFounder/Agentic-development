@@ -1,0 +1,13 @@
+{
+  "name": "mermaid-render-v10",
+  "private": true,
+  "description": "Pinned renderer for render_check.py: mermaid-cli 10.9.1 with mermaid 10.9.8 (the 10.9 floor). Installed by scripts/setup_renderers.sh with npm ci --ignore-scripts.",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "10.9.1",
+    "mermaid": "10.9.8"
+  },
+  "overrides": {
+    "mermaid": "10.9.8"
+  }
+}

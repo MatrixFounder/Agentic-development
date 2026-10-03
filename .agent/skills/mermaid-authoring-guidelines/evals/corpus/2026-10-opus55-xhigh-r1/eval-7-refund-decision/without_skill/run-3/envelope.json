@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 57040,
+ "stop_reason": "end_turn",
+ "session_id": "43b26203-a07c-4a12-9bfd-85d0af4964a8",
+ "total_cost_usd": 0.1285534,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1304,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 5891,
+  "output_tokens_details": {
+   "thinking_tokens": 5220
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1304,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5891,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1304,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1304
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5891,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1304,
+   "webSearchRequests": 0,
+   "costUSD": 0.1285534,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 5220,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "The figure below shows how the rules of §6.1 decide a refund request.\n\n```mermaid\nflowchart TD\n    accTitle: Refund decision flow\n    accDescr: The checks R6.1, R6.2 and R6.3 run in order. A defective item or a larger refund goes to a support agent, and a large refund that the agent approves also needs a team lead. An approved refund goes back to the original payment method.\n\n    request([\"Customer asks for a refund\"])\n    defective{\"R6.1: Reported<br/>as defective?\"}\n    age{\"R6.1: More than 30 days<br/>after delivery?\"}\n    digital{\"R6.2: Digital good?\"}\n    downloaded{\"R6.2: Downloaded?\"}\n    amount{\"R6.3: Refund of<br/>$50 or less?\"}\n    agent[\"Support agent<br/>approves or declines\"]\n    large{\"R6.5: Refund<br/>above $500?\"}\n    lead[\"Team lead<br/>approves or declines\"]\n    approved([\"Approved\"])\n    refund([\"R6.6: Refund goes back to<br/>the original payment method\"])\n    declinedAge([\"Declined\"])\n    declinedDownload([\"Declined\"])\n    declinedAgent([\"Declined\"])\n    declinedLead([\"Declined\"])\n\n    request --> defective\n    defective -->|Yes| agent\n    defective -->|No| age\n    age -->|Yes| declinedAge\n    age -->|No| digital\n    digital -->|Yes| downloaded\n    digital -->|No| amount\n    downloaded -->|Yes| declinedDownload\n    downloaded -->|No| amount\n    amount -->|\"Yes: approved automatically\"| approved\n    amount -->|\"No (R6.4)\"| agent\n    agent -->|Declines| declinedAgent\n    agent -->|Approves| large\n    large -->|No| approved\n    large -->|Yes| lead\n    lead -->|Approves| approved\n    lead -->|Declines| declinedLead\n    approved --> refund\n```",
+ "ttft_ms": 57045,
+ "type": "result",
+ "duration_ms": 57061,
+ "uuid": "8665278e-5afc-493d-8eb6-b02326efce24",
+ "ttft_stream_ms": 1213,
+ "time_to_request_ms": 21,
+ "first_content_frame_ms": 1213,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

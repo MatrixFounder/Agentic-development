@@ -1,0 +1,8 @@
+{
+ "total_tokens": 7023,
+ "duration_ms": 78707,
+ "total_duration_seconds": 78.707,
+ "executor_start": "2026-10-02T22:23:30Z",
+ "executor_end": "2026-10-02T22:24:50Z",
+ "executor_duration_seconds": 79.765
+}

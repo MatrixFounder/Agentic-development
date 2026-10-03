@@ -1,0 +1,374 @@
+{
+ "expectations": [
+  {
+   "text": "Every Mermaid figure renders in Mermaid 11.17",
+   "passed": true,
+   "evidence": "figure 1: rendered as stateDiagram"
+  },
+  {
+   "text": "Every Mermaid figure renders in Mermaid 10.9",
+   "passed": true,
+   "evidence": "figure 1: rendered as stateDiagram"
+  },
+  {
+   "text": "No edge passes through a node other than its endpoints, in Mermaid 11.17 and 10.9",
+   "passed": true,
+   "evidence": "2 figure render(s) measured in v11, v10"
+  },
+  {
+   "text": "Edge crossings stay within the allowance, in Mermaid 11.17 and 10.9",
+   "passed": true,
+   "evidence": "2 figure render(s) measured in v11, v10"
+  },
+  {
+   "text": "No edge passes through a group title or another label, and no label or note overflows, in Mermaid 11.17 and 10.9",
+   "passed": false,
+   "evidence": "figure 1 v11: edge Review->Rejected runs 20.4 px inside the label 'сотрудник отправляет повторно'; figure 1 v10: edge Approved->Cancelled runs 3.0 px inside the label 'сотрудник отменяет не позднее чем за 2 дня до начала'"
+  },
+  {
+   "text": "Every Mermaid figure is legible in a 900 px column in Mermaid 11.17 and 10.9; every text whose colour or background the figure sets meets the contrast minimum there and in the dark render of 11.17",
+   "passed": true,
+   "evidence": "3 figure render(s) measured in v11, v10, v11-dark"
+  },
+  {
+   "text": "Every figure stays within the hard budget of its kind",
+   "passed": true,
+   "evidence": "within the hard budget"
+  },
+  {
+   "text": "Every figure shows one concern, of the kind the request names",
+   "passed": true,
+   "evidence": "one concern; forms accepted for the request (state): state"
+  },
+  {
+   "text": "Nothing drawn is absent from the document",
+   "passed": true,
+   "evidence": "every drawn relation is stated"
+  },
+  {
+   "text": "Every required relation is drawn, directly or through a stated aggregate",
+   "passed": true,
+   "evidence": "every required relation is drawn"
+  },
+  {
+   "text": "No number is absent from the document or attached to the wrong subject",
+   "passed": true,
+   "evidence": "every number is stated for its subject"
+  },
+  {
+   "text": "No node, participant, state, task, group or writer is invented",
+   "passed": true,
+   "evidence": "every element maps to the document"
+  },
+  {
+   "text": "A caption sits in the paragraph directly above or directly below the fence, in any wording and not as a heading, and claims nothing the figure does not show",
+   "passed": true,
+   "evidence": "1 caption(s) next to the figure, claims shown"
+  },
+  {
+   "text": "Every figure takes a form the case key accepts, and a terminal reply holds no Mermaid fence and no image",
+   "passed": true,
+   "evidence": "every figure takes a form the key accepts (state)"
+  },
+  {
+   "text": "Every classDef that sets a fill and a text colour meets the contrast minimum, and no category differs from another by fill alone unless the legend names both",
+   "passed": true,
+   "evidence": "contrast and redundancy hold"
+  }
+ ],
+ "not_applicable": [
+  {
+   "text": "A figure that uses two or more encodings has a legend directly above or below the fence that names every encoding it uses, one item per encoding",
+   "reason": "no figure uses two or more encodings"
+  },
+  {
+   "text": "Every text-fence figure passes the ASCII lint",
+   "reason": "ascii: only when the answer holds a text fence"
+  }
+ ],
+ "summary": {
+  "passed": 14,
+  "failed": 1,
+  "total": 15,
+  "pass_rate": 0.9333
+ },
+ "contract_checks": [
+  {
+   "text": "Each Mermaid figure starts with the settings line of notation.json for its kind",
+   "passed": false,
+   "evidence": "figure 1: settings differ from notation.json state"
+  },
+  {
+   "text": "Every classDef name and colour comes from the palette of notation.json",
+   "passed": false,
+   "evidence": "figure 1: classDef reserved is not in the palette"
+  },
+  {
+   "text": "The caption sits directly above the fence: a bold label and title, then one sentence",
+   "passed": false,
+   "evidence": "figure 1: the caption does not start with a bold label"
+  },
+  {
+   "text": "Names are written exactly as the document writes them",
+   "passed": true,
+   "evidence": "names as the document writes them"
+  },
+  {
+   "text": "Every figure stays within the soft budget of its kind",
+   "passed": true,
+   "evidence": "within the soft budget"
+  }
+ ],
+ "contract_summary": {
+  "passed": 2,
+  "failed": 3,
+  "total": 5,
+  "pass_rate": 0.4
+ },
+ "h_core": {
+  "passed": 12,
+  "total": 13,
+  "pass_rate": 0.9231
+ },
+ "strict_pass": false,
+ "checks": {
+  "Q01": "pass",
+  "Q02": "pass",
+  "Q03": "pass",
+  "Q04": "pass",
+  "Q05": "fail",
+  "Q06": "pass",
+  "Q07": "pass",
+  "Q08": "pass",
+  "Q09": "pass",
+  "Q10": "pass",
+  "Q11": "pass",
+  "Q12": "pass",
+  "Q13": "pass",
+  "Q14": "na",
+  "Q15": "pass",
+  "Q16": "na",
+  "Q17": "pass"
+ },
+ "contract": {
+  "K01": "fail",
+  "K02": "fail",
+  "K03": "na",
+  "K04": "fail",
+  "K05": "na",
+  "K06": "na",
+  "K07": "pass",
+  "K08": "na",
+  "K09": "pass"
+ },
+ "fidelity": {
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "mapped": {
+   "1:Draft": {
+    "text": "Черновик",
+    "entities": [
+     "draft"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Review": {
+    "text": "На согласовании",
+    "entities": [
+     "pending"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Returned": {
+    "text": "Возвращена",
+    "entities": [
+     "returned"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Approved": {
+    "text": "Согласована",
+    "entities": [
+     "approved"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Scheduled": {
+    "text": "Запланирована",
+    "entities": [
+     "scheduled"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:OnLeave": {
+    "text": "В отпуске",
+    "entities": [
+     "onleave"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Completed": {
+    "text": "Завершена",
+    "entities": [
+     "closed"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Rejected": {
+    "text": "Отклонена",
+    "entities": [
+     "rejected"
+    ],
+    "group": null,
+    "status": "mapped"
+   },
+   "1:Cancelled": {
+    "text": "Отменена",
+    "entities": [
+     "cancelled"
+    ],
+    "group": null,
+    "status": "mapped"
+   }
+  },
+  "renamed": [],
+  "invented": [],
+  "unsupported": [],
+  "missing_required": [],
+  "bad_numbers": [],
+  "decoy_hits": [],
+  "decoys": {
+   "t1": {
+    "type": "invented_writer",
+    "hit": false
+   },
+   "t2": {
+    "type": "invented_state",
+    "hit": false
+   },
+   "t3": {
+    "type": "invented_group",
+    "hit": false
+   },
+   "t4": {
+    "type": "number_from_other_rule",
+    "hit": false
+   },
+   "t5": {
+    "type": "number_from_other_rule",
+    "hit": false
+   },
+   "t6": {
+    "type": "caption_overclaim",
+    "hit": false
+   },
+   "t7": {
+    "type": "cyrillic_labels",
+    "hit": null
+   }
+  },
+  "modelled": true,
+  "diagnostics": []
+ },
+ "geometry": {
+  "fig-1": {
+   "v11": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "stateDiagram",
+     "width": 912.6,
+     "height": 874.0,
+     "nodes": 9,
+     "edges": 14,
+     "crossings": 1,
+     "font_px": 16.0,
+     "effective_font_px": 15.78,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "edges_through_labels",
+      "severity": "fail",
+      "message": "edge Review->Rejected runs 20.4 px inside the label 'сотрудник отправляет повторно'"
+     }
+    ]
+   },
+   "v10": {
+    "status": "rendered",
+    "mermaid": "10.9.8",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "stateDiagram",
+     "width": 1163.8,
+     "height": 712.0,
+     "nodes": 9,
+     "edges": 14,
+     "crossings": 1,
+     "font_px": 16.0,
+     "effective_font_px": 12.37,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "edges_through_labels",
+      "severity": "fail",
+      "message": "edge Approved->Cancelled runs 3.0 px inside the label 'сотрудник отменяет не позднее чем за 2 дня до начала'"
+     }
+    ]
+   },
+   "v11-dark": {
+    "status": "rendered",
+    "mermaid": "11.17.2",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "metrics": {
+     "diagram": "stateDiagram",
+     "width": 912.6,
+     "height": 874.0,
+     "nodes": 9,
+     "edges": 14,
+     "crossings": 1,
+     "font_px": 16.0,
+     "effective_font_px": 15.78,
+     "measured": true
+    },
+    "findings": [
+     {
+      "check": "edges_through_labels",
+      "severity": "fail",
+      "message": "edge Review->Rejected runs 20.4 px inside the label 'сотрудник отправляет повторно'"
+     }
+    ]
+   }
+  }
+ },
+ "figures": 1,
+ "figure_forms": {
+  "mermaid": 1,
+  "text": 0,
+  "table": 0,
+  "list": 0
+ },
+ "no_figure": false,
+ "tiny_answer": false,
+ "execution_metrics": {
+  "total_tool_calls": 0,
+  "errors_encountered": 0,
+  "output_chars": 1354
+ },
+ "grader": {
+  "version": "grade_figures/3",
+  "normalize_version": "fidelity-normalize/1: NFC; strip HTML tags, Mermaid and HTML entities; drop quote marks; casefold; fold yo to ye; tokens are runs of Unicode letters and digits, Latin and Cyrillic alike",
+  "normalize_sha256": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
+ }
+}

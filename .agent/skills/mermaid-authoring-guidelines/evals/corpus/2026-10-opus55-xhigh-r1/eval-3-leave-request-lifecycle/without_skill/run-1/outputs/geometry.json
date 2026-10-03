@@ -1,0 +1,1058 @@
+{
+ "fig-1": {
+  "v11": {
+   "render": "v11",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "5e31b056d1ba5c8f6b2c166ba7c1cc0edfb7cdd90587f6ef89e933c237a0ba8d",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 894.1,
+    "height": 874.0,
+    "nodes": 9,
+    "edges": 14,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "Review->Rejected",
+      "Returned->Review",
+      692.2,
+      333.9
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [
+     {
+      "edge": "Review->Rejected",
+      "label": "сотрудник исправляет и отправляет",
+      "inside_px": 20.4
+     }
+    ],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "Returned",
+       "Review"
+      ],
+      "edges": [
+       "Review->Returned",
+       "Returned->Review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник создаёт заявку",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник создаёт заявку",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель согласует",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель возвращает",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель отклоняет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник исправляет и отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "служба кадров, hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "дата начала отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "дата окончания отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет не позднее чем за 2 дня до начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_labels",
+     "severity": "fail",
+     "message": "edge Review->Rejected runs 20.4 px inside the label 'сотрудник исправляет и отправляет'"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    },
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join Returned and Review: Review->Returned, Returned->Review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "0e4eb6952376d99e91240d5f0d1639cd946c480504903e7cb3ac321b46097908",
+   "png_sha256": "a97463903e39df10adc937a94ececf50ba2a35758a28d55fec8c42e0c7266e11",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 375
+    }
+   ]
+  },
+  "v11-dark": {
+   "render": "v11-dark",
+   "renderer": {
+    "tag": "v11",
+    "mermaid": "11.17.2",
+    "cli": "11.17.0",
+    "pinned_mermaid": "11.17.2",
+    "pinned_cli": "11.17.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": true,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "5e31b056d1ba5c8f6b2c166ba7c1cc0edfb7cdd90587f6ef89e933c237a0ba8d",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 894.1,
+    "height": 874.0,
+    "nodes": 9,
+    "edges": 14,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "Review->Rejected",
+      "Returned->Review",
+      692.2,
+      333.9
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [
+     {
+      "edge": "Review->Rejected",
+      "label": "сотрудник исправляет и отправляет",
+      "inside_px": 20.4
+     }
+    ],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "Returned",
+       "Review"
+      ],
+      "edges": [
+       "Review->Returned",
+       "Returned->Review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 16.0,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник создаёт заявку",
+    "smallest_effective_font_px": 16.0,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#0d1117",
+     "texts": [
+      {
+       "text": "сотрудник создаёт заявку",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отправляет",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель согласует",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель возвращает",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель отклоняет",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник исправляет и отправляет",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "служба кадров, hr_schedule()",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "дата начала отпуска",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "дата окончания отпуска",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет не позднее чем за 2 дня до начала",
+       "kind": "edge",
+       "fg": "#cccccc",
+       "bg": "#585858",
+       "ratio": 4.43,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#e0dfdf",
+       "bg": "#1f2020",
+       "ratio": 12.28,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_labels",
+     "severity": "fail",
+     "message": "edge Review->Rejected runs 20.4 px inside the label 'сотрудник исправляет и отправляет'"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    },
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join Returned and Review: Review->Returned, Returned->Review"
+    },
+    {
+     "check": "contrast",
+     "severity": "info",
+     "message": "11 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('сотрудник создаёт заявку', #cccccc on #585858); reported, not gated"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "0da4f14f2ddf7a6c5ebb5920c99149fe0d2009dec9da2fe1cec22cf3055157fb",
+   "png_sha256": "536b74daaad0df37d9739ac9607097efa3fb4592ee48d2de94fc11166be4aa04",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 375
+    }
+   ]
+  },
+  "v10": {
+   "render": "v10",
+   "renderer": {
+    "tag": "v10",
+    "mermaid": "10.9.8",
+    "cli": "10.9.1",
+    "pinned_mermaid": "10.9.8",
+    "pinned_cli": "10.9.1",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "5e31b056d1ba5c8f6b2c166ba7c1cc0edfb7cdd90587f6ef89e933c237a0ba8d",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 1176.0,
+    "height": 712.0,
+    "nodes": 9,
+    "edges": 14,
+    "crossings": 1,
+    "crossing_pairs": [
+     [
+      "Review->Rejected",
+      "Returned->Review",
+      879.5,
+      291.8
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [
+     {
+      "edge": "Approved->Cancelled",
+      "label": "сотрудник отменяет не позднее чем за 2 дня до начала",
+      "inside_px": 3.0
+     }
+    ],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "Returned",
+       "Review"
+      ],
+      "edges": [
+       "Review->Returned",
+       "Returned->Review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 12.24,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник создаёт заявку",
+    "smallest_effective_font_px": 12.24,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник создаёт заявку",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель согласует",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель возвращает",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель отклоняет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник исправляет и отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "служба кадров, hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "дата начала отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "дата окончания отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет не позднее чем за 2 дня до начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#f6f6ff",
+       "ratio": 11.75,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "edges_through_labels",
+     "severity": "fail",
+     "message": "edge Approved->Cancelled runs 3.0 px inside the label 'сотрудник отменяет не позднее чем за 2 дня до начала'"
+    },
+    {
+     "check": "crossings",
+     "severity": "warn",
+     "message": "1 edge crossing(s); allowed 2, aim at 0"
+    },
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join Returned and Review: Review->Returned, Returned->Review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "f05230df4b7c03c97a21cf791d98f62696c18e61ac366ba312f96ea669496c00",
+   "png_sha256": "7dd5dbedff1f71166f62647b5990976f87a40efb536d80eca2ea54a464cee80e",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 375
+    }
+   ]
+  },
+  "v12": {
+   "render": "v12",
+   "renderer": {
+    "tag": "v12",
+    "mermaid": "12.1.0",
+    "cli": "12.0.0",
+    "pinned_mermaid": "12.1.0",
+    "pinned_cli": "12.0.0",
+    "browser": "HeadlessChrome/150.0.7871.24",
+    "browser_path": "~/.cache/puppeteer/chrome-headless-shell/mac_arm-150.0.7871.24/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+   },
+   "dark": false,
+   "status": "rendered",
+   "ok": true,
+   "pass": false,
+   "fence_sha256": "5e31b056d1ba5c8f6b2c166ba7c1cc0edfb7cdd90587f6ef89e933c237a0ba8d",
+   "fence_line": 3,
+   "metrics": {
+    "diagram": "stateDiagram",
+    "width": 957.3,
+    "height": 1128.0,
+    "nodes": 9,
+    "edges": 14,
+    "crossings": 3,
+    "crossing_pairs": [
+     [
+      "Completed->root_end",
+      "Rejected->root_end",
+      386.2,
+      1091.0
+     ],
+     [
+      "Completed->root_end",
+      "Cancelled->root_end",
+      387.7,
+      1092.2
+     ],
+     [
+      "Rejected->root_end",
+      "Cancelled->root_end",
+      387.7,
+      1072.2
+     ]
+    ],
+    "edges_through_nodes": [],
+    "title_crossings": [],
+    "edges_through_labels": [],
+    "label_overlaps": [],
+    "clipped_labels": [],
+    "duplicate_edges": [
+     {
+      "pair": [
+       "Returned",
+       "Review"
+      ],
+      "edges": [
+       "Review->Returned",
+       "Returned->Review"
+      ]
+     }
+    ],
+    "font_px": 16.0,
+    "effective_font_px": 15.04,
+    "smallest_font_px": 16.0,
+    "smallest_text": "сотрудник создаёт заявку",
+    "smallest_effective_font_px": 15.04,
+    "geometry": "modelled",
+    "sequence": {},
+    "gantt": {},
+    "contrast": {
+     "page": "#ffffff",
+     "texts": [
+      {
+       "text": "сотрудник создаёт заявку",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель согласует",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель возвращает",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "руководитель отклоняет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник исправляет и отправляет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "служба кадров, hr_schedule()",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "дата начала отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "дата окончания отпуска",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "сотрудник отменяет не позднее чем за 2 дня до начала",
+       "kind": "edge",
+       "fg": "#333333",
+       "bg": "#e9e9e9",
+       "ratio": 10.4,
+       "scope": "theme"
+      },
+      {
+       "text": "Черновик",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "На согласовании",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Возвращена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Согласована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Запланирована",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "В отпуске",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Завершена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отклонена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      },
+      {
+       "text": "Отменена",
+       "kind": "node",
+       "fg": "#131300",
+       "bg": "#ececff",
+       "ratio": 16.06,
+       "scope": "theme"
+      }
+     ],
+     "measured": true
+    },
+    "measured": true,
+    "warnings": []
+   },
+   "findings": [
+    {
+     "check": "crossings",
+     "severity": "fail",
+     "message": "3 edge crossings, more than 2"
+    },
+    {
+     "check": "duplicate_edges",
+     "severity": "warn",
+     "message": "2 edges join Returned and Review: Review->Returned, Returned->Review"
+    }
+   ],
+   "font_family": "Trebuchet MS",
+   "svg_sha256": "8ab3271fc1ce676a56f622c444d182027f93cdcae4140f359ddfeb9872c4468a",
+   "png_sha256": "81ccda63c01141296baf8f2393e16f792e7c33c6eacacb9583401985e33ee78a",
+   "instrument_sha256": "bc4a21cb6b91ba0fe68caf294d3b17424a35e20cd0e88eb60b666c1ede639983",
+   "log_head": "",
+   "attempts": 1,
+   "fonts": [
+    {
+     "family": "Trebuchet MS",
+     "glyphs": 375
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "mermaid-render-v11",
+  "private": true,
+  "description": "Pinned renderer for render_check.py: mermaid-cli 11.17.0 with mermaid 11.17.2 (the version GitHub runs). Installed by scripts/setup_renderers.sh with npm ci --ignore-scripts.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "11.17.0",
+    "mermaid": "11.17.2",
+    "puppeteer": "25.12.0"
+  },
+  "overrides": {
+    "mermaid": "11.17.2"
+  }
+}

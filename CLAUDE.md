@@ -75,6 +75,9 @@ Read these skills only when their functionality is required:
 - `artifact-formalizer` is **split-tier**: its `references/authoring-contract.md` loads in every
   authoring phase (Analysis, Architecture, Planning) per `skill-phase-context`; the SKILL.md body
   and the scanner load only when auditing an artifact that already exists.
+- `mermaid-authoring-guidelines` is **condition-loaded**: it loads before the first figure of any
+  output, in any phase, per `skill-phase-context`. It is not loaded for an output with no figure,
+  nor for a plan chart that `plan_gantt.py` generates.
 
 ## WORKSPACE WORKFLOWS (Commands)
 Before starting the standard pipeline, check if the user's request matches a workflow.
@@ -129,6 +132,7 @@ Workflows are available as slash commands via `.claude/commands/` and as files i
 ## BEHAVIOR RULES
 - **File Creation**: Always save intermediate artifacts (TASK, Plan) to files, do not just output them in chat.
 - **Stop on Ambiguity**: If you lack critical info, stop and ask the user.
+- **Figures**: Output for a medium that does not render Mermaid carries no Mermaid fence. Such media are a terminal, a log, an MCP response and a chat without a diagram renderer; the output uses a list, a table or ASCII. When the operator asks for Mermaid source in such a medium, the answer gives the source in a fence and states that this medium does not render it.
 
 ## CRITICAL RULE:
 Even for small tasks, **NEVER** skip the Analysis and Architecture phases, **UNLESS** running in **Light Mode** (via `/light` workflow).

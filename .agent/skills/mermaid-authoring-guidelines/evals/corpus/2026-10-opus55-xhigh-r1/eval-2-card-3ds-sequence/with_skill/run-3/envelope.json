@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 317952,
+ "stop_reason": "end_turn",
+ "session_id": "f90600ea-4880-4e20-9722-0a2134495503",
+ "total_cost_usd": 0.9134974,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 30717,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 33373,
+  "output_tokens_details": {
+   "thinking_tokens": 32559
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 30717,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 33373,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 30717,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 30717
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 33373,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 30717,
+   "webSearchRequests": 0,
+   "costUSD": 0.9134974,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 32559,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 4.1.** Card payment with a 3-D Secure challenge — steps 1 to 11 of §4.2.1 when Paylane PSP answers `challenge_required`, with the repeats of step 3 on a network error.\n\n```mermaid\n%%{init: {\"look\": \"classic\", \"themeVariables\": {\"noteBkgColor\": \"#FFF8E1\", \"noteTextColor\": \"#263238\", \"noteBorderColor\": \"#C9A227\"}, \"sequence\": {\"wrap\": true}}}%%\nsequenceDiagram\n  accTitle: Card payment with a 3-D Secure challenge\n  accDescr: Steps 1 to 11 of section 4.2.1 when Paylane PSP answers challenge_required, with the repeats of step 3 on a network error.\n  autonumber\n  participant ACS as Issuer ACS\n  participant CP as Checkout page\n  participant OA as Orders API\n  participant PS as Payment service\n  participant PSP as Paylane PSP\n  CP->>OA: order\n  OA->>PS: POST /payments<br/>fields of Table 4.3\n  loop network error<br/>up to 2 repeats\n    PS->>PSP: create payment intent<br/>waits up to 8 s\n  end\n  PSP-->>PS: challenge_required<br/>with redirect_url\n  PS-->>OA: redirect_url\n  OA-->>CP: redirect_url\n  CP->>ACS: open challenge\n  ACS-->>CP: browser to return_url\n  PSP->>PS: webhook<br/>payment.succeeded\n  PS-->>PSP: HTTP 200\n  PS-->>OA: publish<br/>payment.confirmed\n  Note over OA: marks the order<br/>as paid\n```\n\n- solid arrow = call, the sender waits for the result; dashed arrow = reply, or a message the sender does not wait on;\n- number = the step of §4.2.1; note = the rest of step 11;\n- `loop` = step 3 repeats on a network error, up to 2 times, with the same idempotency key;\n- Issuer ACS and Paylane PSP, at the two ends, are external; the three participants between them belong to the Brightwater store.\n\nNot drawn: when Paylane PSP answers `authorized`, the payment skips steps 4 to 8 and continues at step 9. The fields of `POST /payments` stay in Table 4.3, and the time limits stay in §4.2.3.",
+ "ttft_ms": 313162,
+ "type": "result",
+ "duration_ms": 317987,
+ "uuid": "8da6ea26-9e9f-4437-b600-85ce0a7695eb",
+ "ttft_stream_ms": 1290,
+ "time_to_request_ms": 29,
+ "first_content_frame_ms": 1291,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

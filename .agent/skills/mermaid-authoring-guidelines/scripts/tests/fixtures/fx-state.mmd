@@ -1,0 +1,13 @@
+%%{init: {"layout": "dagre", "look": "classic"}}%%
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Submitted : submit
+  Submitted --> Approved : approve
+  Submitted --> Rejected : reject
+  Rejected --> Draft : revise
+  Approved --> Scheduled : schedule
+  Approved --> Cancelled : cancel
+  Scheduled --> Taken : start
+  Taken --> Closed : close
+  Cancelled --> [*]
+  Closed --> [*]

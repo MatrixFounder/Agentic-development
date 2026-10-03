@@ -43,6 +43,33 @@
 ### Stage 4: Deployment
 [...]
 
+## Schedule
+
+<!--
+  SCHEDULE. `plan_gantt.py` of `mermaid-authoring-guidelines` reads the JSON block under the
+  anchor below. It never parses the task records above. The block holds one entry per task
+  record, with the record's `id`. Keys stay as written; `title` and `stage` take the project's
+  language. `est` is an integer number of hours. The block holds no `status` key. The script
+  writes the plan chart between the two `generated:` markers. Keep both markers, also in a plan
+  without a chart, and write nothing between them by hand. Chart rule and commands:
+  `skill-planning-format` §2.1.
+-->
+
+<!-- contract:schedule -->
+
+```json
+{
+  "schema": "plan-schedule/v1",
+  "tasks": [
+    {"id": "{ID}.1", "title": "[Short title]", "stage": "Stage 1", "est": 3, "deps": []},
+    {"id": "{ID}.2", "title": "[Short title]", "stage": "Stage 1", "est": 4, "deps": ["{ID}.1"]}
+  ]
+}
+```
+
+<!-- generated:plan-gantt-start -->
+<!-- generated:plan-gantt-end -->
+
 <!-- contract:coverage -->
 
 ## Use Case Coverage

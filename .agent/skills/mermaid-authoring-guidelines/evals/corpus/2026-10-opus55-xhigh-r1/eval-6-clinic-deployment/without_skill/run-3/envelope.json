@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 50622,
+ "stop_reason": "end_turn",
+ "session_id": "bd3e157a-d13f-4578-8b25-c0c18ae63786",
+ "total_cost_usd": 0.11594939999999998,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1666,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 5116,
+  "output_tokens_details": {
+   "thinking_tokens": 4345
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1666,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5116,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1666,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1666
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5116,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1666,
+   "webSearchRequests": 0,
+   "costUSD": 0.11594939999999998,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 4345,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "Схема показывает узлы обоих ЦОД и связи между ними.\nПунктирной рамкой отмечены внешние участники; они не входят в число узлов системы.\nСервер мониторинга опрашивает все узлы обоих ЦОД; эти связи на схеме не показаны.\n\n```mermaid\nflowchart TB\n    accTitle: Схема развёртывания МедЗаписи\n    accDescr: Пациенты входят в ЦОД-1 через WAF, регистратура через VPN-шлюз. Балансировщик распределяет запросы между тремя узлами приложения. Узлы приложения работают с СУБД основной. СУБД основная реплицируется в СУБД резервную в ЦОД-2, сервер резервных копий в ЦОД-2 снимает с неё копии.\n\n    PAT[\"Пациенты<br/>(Интернет)\"]\n    REG[\"Рабочие места<br/>регистратуры\"]\n\n    subgraph DC1[\"ЦОД-1 (основной)\"]\n        WAF[\"WAF\"]\n        VPN[\"VPN-шлюз\"]\n        LB[\"Балансировщик<br/>HAProxy, active/passive\"]\n        subgraph APPS[\"Узлы приложения, без состояния\"]\n            APP1[\"app-01\"]\n            APP2[\"app-02\"]\n            APP3[\"app-03\"]\n        end\n        PG1[(\"СУБД основная<br/>PostgreSQL 15\")]\n        MON[\"Сервер мониторинга<br/>Zabbix\"]\n    end\n\n    subgraph DC2[\"ЦОД-2 (резервный)\"]\n        PG2[(\"СУБД резервная<br/>только чтение до продвижения\")]\n        BAK[\"Сервер резервных копий<br/>хранение 14 дней\"]\n    end\n\n    PAT -->|\"HTTPS\"| WAF\n    REG --> VPN\n    WAF --> LB\n    VPN --> LB\n    LB --> APP1 & APP2 & APP3\n    APP1 & APP2 & APP3 --> PG1\n    PG1 -.->|\"асинхронная репликация, до 5 с\"| PG2\n    PG1 -->|\"копия каждые 6 ч\"| BAK\n\n    classDef ext stroke-dasharray: 5 5\n    class PAT,REG ext\n```",
+ "ttft_ms": 45630,
+ "type": "result",
+ "duration_ms": 50650,
+ "uuid": "4af26220-491a-4799-a7f7-b4f76ce98d6e",
+ "ttft_stream_ms": 3627,
+ "time_to_request_ms": 27,
+ "first_content_frame_ms": 3627,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

@@ -1,0 +1,12 @@
+{"schema": "plan-schedule/v1", "tasks": [
+  {"id": "B1", "title": "API skeleton and stubs", "stage": "Stage 1 — Backend", "est": 3, "deps": [], "status": "done"},
+  {"id": "B2", "title": "Data schema and migrations", "stage": "Stage 1 — Backend", "est": 4, "deps": [], "status": "done"},
+  {"id": "B3", "title": "Orders: logic", "stage": "Stage 1 — Backend", "est": 4, "deps": ["B1", "B2"], "status": "in-progress"},
+  {"id": "B4", "title": "Notifications: logic", "stage": "Stage 1 — Backend", "est": 3, "deps": ["B3", "O2"], "status": "not-started"},
+  {"id": "W1", "title": "Web shell and routing", "stage": "Stage 2 — Web client", "est": 2, "deps": ["B1"], "status": "done"},
+  {"id": "W2", "title": "Order form", "stage": "Stage 2 — Web client", "est": 4, "deps": ["W1", "B3"], "status": "not-started"},
+  {"id": "W3", "title": "Order history page", "stage": "Stage 2 — Web client", "est": 3, "deps": ["W2"], "status": "not-started"},
+  {"id": "O1", "title": "Staging environment", "stage": "Stage 3 — Operations", "est": 4, "deps": ["B1"], "status": "not-started"},
+  {"id": "O2", "title": "Mail relay", "stage": "Stage 3 — Operations", "est": 3, "deps": ["O1"], "status": "not-started"},
+  {"id": "O3", "title": "Release rehearsal", "stage": "Stage 3 — Operations", "est": 4, "deps": ["B4", "W3", "O1"], "status": "not-started"}
+]}

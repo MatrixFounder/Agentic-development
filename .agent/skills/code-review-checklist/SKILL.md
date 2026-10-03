@@ -2,7 +2,7 @@
 name: code-review-checklist
 description: "Structured checklist for code review: bugs, style, performance, security, docs."
 tier: 1
-version: 1.3
+version: 1.4
 ---
 # Code Review Checklist
 
@@ -68,8 +68,33 @@ version: 1.3
 - [ ] **A coordinate carrying no referent is not a defect.** Reported as *not examined*, and this
       review never demands one be added.
 
+## 8. Figures (`documentation-standards` §5.6)
+- [ ] **Evidence carried:** each document figure this change adds or edits comes with its figure
+      lint output, holding no `error`, and with render output or the line
+      `not rendered: <reason>`. Without lint output, from the brief or the reviewer's own run,
+      the figure is reported *not verified*: the review returns REJECTED, and
+      `has_critical_issues` is true. The `not rendered` line lets the review conclude and never
+      counts as a passed render.
+- [ ] **No negative marker:** no figure this change adds or edits ends with a `%% negative:`
+      line. Such a line in a project document fails FIG-25 of the skill's review checklist. The
+      lint reports the line as MA-NEG-03, an error. It also counts every finding of that fence.
+- [ ] **A figure this change does not add or edit is not a defect.** It is reported as *not
+      examined*, and this review never demands a redraw of it.
+
+## Script Contract
+- **Scope:** the figure evidence of §8. The caller runs these commands before the review, and the
+  brief carries their output. When the brief carries no lint output, the reviewer runs the lint
+  itself: it reads only and needs no approval.
+- **Figure lint, once per document whose figures the change adds or edits:**
+  `python3 .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py <document>`. Exit
+  `0` no `error`; `1` `error` findings; `2` a broken instrument or a dead rule; `3` usage.
+- **Figure render, optional:**
+  `python3 .agent/skills/mermaid-authoring-guidelines/scripts/render_check.py <document>`. Exit
+  `0` pass; `1` a figure fails; `2` not rendered, printed as `not rendered: <reason>`; `3` usage.
+  Renders are written outside the repository.
+
 ## Criticality Protocol
 Severity is a named value, never a glyph (`documentation-standards` §5.5 rule 5).
 - **BLOCKING:** Task not done, Test failure, Broken compat, Stub violation (Logic in stub task).
-- **MAJOR:** Documentation missing, Duplication, Poor names.
+- **MAJOR:** Documentation missing, Duplication, Poor names, a figure lint `error`.
 - **MINOR:** Style nits.

@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 338917,
+ "stop_reason": "end_turn",
+ "session_id": "5391a07c-6b31-43c1-8985-34ae96621a38",
+ "total_cost_usd": 0.8391573999999999,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 30717,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 29656,
+  "output_tokens_details": {
+   "thinking_tokens": 28870
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 30717,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 29656,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 30717,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 30717
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 29656,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 30717,
+   "webSearchRequests": 0,
+   "costUSD": 0.8391573999999999,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 28870,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 4.1.** Card payment with a 3-D Secure challenge: steps 1 to 11 of §4.2.1 as numbered messages, with the repeat of step 3 as a loop and the challenge as an option.\n\n```mermaid\n%%{init: {\"look\": \"classic\", \"themeVariables\": {\"noteBkgColor\": \"#FFF8E1\", \"noteTextColor\": \"#263238\", \"noteBorderColor\": \"#C9A227\"}, \"sequence\": {\"wrap\": true}}}%%\nsequenceDiagram\n  accTitle: Card payment with a 3-D Secure challenge\n  accDescr: Steps 1 to 11 of section 4.2.1 as numbered messages, with the repeat of step 3 as a loop and the challenge as an option.\n  autonumber\n  participant ACS as Issuer ACS\n  participant CP as Checkout page\n  participant OA as Orders API\n  participant PS as Payment service\n  participant PSP as Paylane PSP\n  CP->>OA: send order\n  OA->>PS: POST /payments\n  loop on network error<br/>up to 2 repeats\n    PS->>PSP: create payment intent<br/>waits up to 8 s\n  end\n  opt challenge_required\n    PSP-->>PS: challenge_required<br/>redirect_url\n    PS-->>OA: redirect_url\n    OA-->>CP: redirect_url\n    CP->>ACS: open challenge\n    ACS-->>CP: back to return_url\n  end\n  PSP->>PS: webhook<br/>payment.succeeded\n  PS-->>PSP: HTTP 200\n  PS-->>OA: publish<br/>payment.confirmed\n  Note over OA: marks the order<br/>as paid\n```\n\n- Solid arrow = call, where the sender waits for the result. Dashed arrow = reply or unwaited message. Numbers = the steps of §4.2.1.\n- `loop` = step 3 repeats on a network error, up to 2 times, with the same idempotency key.\n- `opt` = steps 4 to 8 run only when Paylane PSP answers `challenge_required`. On `authorized`, the payment continues at step 9.\n- Note = what the Orders API does when it consumes `payment.confirmed`.\n\nThe figure leaves out the request fields of Table 4.3 and the time limits of §4.2.3.",
+ "ttft_ms": 311707,
+ "type": "result",
+ "duration_ms": 339940,
+ "uuid": "04453cb1-c3f1-4c5d-8d61-2ae7fce52d8f",
+ "ttft_stream_ms": 3395,
+ "time_to_request_ms": 1020,
+ "first_content_frame_ms": 3395,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

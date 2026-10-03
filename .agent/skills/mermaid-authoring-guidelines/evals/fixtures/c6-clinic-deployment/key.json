@@ -1,0 +1,723 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 6,
+  "name": "clinic-deployment",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "ru",
+  "medium": "document",
+  "kind": "flowchart",
+  "acceptable_forms": [
+    "flowchart"
+  ],
+  "required_concern": "structure",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "pat",
+      "kind": "actor",
+      "aliases": [
+        "Пациенты"
+      ],
+      "soft_aliases": [
+        "Пациент",
+        "Сайт записи",
+        "Браузер пациента",
+        "Интернет-пользователи"
+      ],
+      "lines": [
+        18
+      ],
+      "quote": "Пациенты открывают сайт записи по HTTPS через WAF."
+    },
+    {
+      "id": "reg",
+      "kind": "actor",
+      "aliases": [
+        "Рабочие места регистратуры"
+      ],
+      "soft_aliases": [
+        "Регистратура",
+        "Регистратор",
+        "АРМ регистратуры"
+      ],
+      "lines": [
+        19
+      ],
+      "quote": "Рабочие места регистратуры подключаются через VPN-шлюз."
+    },
+    {
+      "id": "waf",
+      "kind": "node",
+      "aliases": [
+        "WAF"
+      ],
+      "lines": [
+        11
+      ],
+      "quote": "| WAF | единственный вход из Интернета |"
+    },
+    {
+      "id": "vpn",
+      "kind": "node",
+      "aliases": [
+        "VPN-шлюз"
+      ],
+      "soft_aliases": [
+        "VPN",
+        "VPN шлюз"
+      ],
+      "lines": [
+        12
+      ],
+      "quote": "| VPN-шлюз |"
+    },
+    {
+      "id": "lb",
+      "kind": "node",
+      "aliases": [
+        "Балансировщик",
+        "HAProxy"
+      ],
+      "soft_aliases": [
+        "Балансировщик нагрузки",
+        "LB"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "| Балансировщик | HAProxy, пара active/passive |"
+    },
+    {
+      "id": "app",
+      "kind": "node",
+      "aliases": [
+        "Узлы приложения",
+        "app-01",
+        "app-02",
+        "app-03"
+      ],
+      "soft_aliases": [
+        "Сервер приложения",
+        "Серверы приложения",
+        "Приложение"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "| Узлы приложения | app-01, app-02, app-03 |"
+    },
+    {
+      "id": "db1",
+      "kind": "database",
+      "aliases": [
+        "СУБД основная",
+        "основная СУБД"
+      ],
+      "soft_aliases": [
+        "PostgreSQL",
+        "Основная БД",
+        "БД основная"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "| СУБД основная | PostgreSQL 15, данные приложения |"
+    },
+    {
+      "id": "mon",
+      "kind": "node",
+      "aliases": [
+        "Сервер мониторинга",
+        "Zabbix"
+      ],
+      "soft_aliases": [
+        "Мониторинг"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "| Сервер мониторинга | Zabbix |"
+    },
+    {
+      "id": "db2",
+      "kind": "database",
+      "aliases": [
+        "СУБД резервная",
+        "резервная СУБД"
+      ],
+      "soft_aliases": [
+        "Резервная БД",
+        "БД резервная",
+        "реплика"
+      ],
+      "lines": [
+        31
+      ],
+      "quote": "| СУБД резервная | асинхронная потоковая репликация от основной, отставание до 5 с |"
+    },
+    {
+      "id": "bak",
+      "kind": "node",
+      "aliases": [
+        "Сервер резервных копий"
+      ],
+      "soft_aliases": [
+        "Резервное копирование",
+        "Бэкап-сервер",
+        "Сервер бэкапов"
+      ],
+      "lines": [
+        32
+      ],
+      "quote": "| Сервер резервных копий | снимает копии СУБД основной каждые 6 ч, хранит их 14 дней |"
+    },
+    {
+      "id": "duty",
+      "kind": "actor",
+      "aliases": [
+        "дежурный",
+        "Дежурный"
+      ],
+      "note": "acts only in the failover procedure of 4.3",
+      "lines": [
+        38
+      ],
+      "quote": "дежурный вручную продвигает резервную СУБД"
+    },
+    {
+      "id": "dns",
+      "kind": "service",
+      "aliases": [
+        "DNS"
+      ],
+      "note": "named only in the failover procedure of 4.3",
+      "lines": [
+        39
+      ],
+      "quote": "и переключает DNS."
+    }
+  ],
+  "groups": [
+    {
+      "id": "dc1",
+      "kind": "site",
+      "aliases": [
+        "ЦОД-1 (основной)",
+        "ЦОД-1",
+        "основной ЦОД"
+      ],
+      "members": [
+        "waf",
+        "vpn",
+        "lb",
+        "app",
+        "db1",
+        "mon"
+      ],
+      "lines": [
+        7
+      ],
+      "quote": "### 4.1 ЦОД-1 (основной)"
+    },
+    {
+      "id": "dc2",
+      "kind": "site",
+      "aliases": [
+        "ЦОД-2 (резервный)",
+        "ЦОД-2",
+        "резервный ЦОД"
+      ],
+      "members": [
+        "db2",
+        "bak"
+      ],
+      "lines": [
+        27
+      ],
+      "quote": "### 4.2 ЦОД-2 (резервный)"
+    },
+    {
+      "id": "all_nodes",
+      "kind": "category",
+      "aliases": [
+        "все узлы",
+        "все узлы обоих ЦОД"
+      ],
+      "members": [
+        "waf",
+        "vpn",
+        "lb",
+        "app",
+        "db1",
+        "db2",
+        "bak"
+      ],
+      "note": "the targets of monitoring; not a box to draw",
+      "lines": [
+        25
+      ],
+      "quote": "Сервер мониторинга опрашивает все узлы обоих ЦОД."
+    }
+  ],
+  "relations": [
+    {
+      "id": "r_pat_waf",
+      "kind": "call",
+      "from": "pat",
+      "to": "waf",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        18
+      ],
+      "quote": "Пациенты открывают сайт записи по HTTPS через WAF."
+    },
+    {
+      "id": "r_reg_vpn",
+      "kind": "call",
+      "from": "reg",
+      "to": "vpn",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        19
+      ],
+      "quote": "Рабочие места регистратуры подключаются через VPN-шлюз."
+    },
+    {
+      "id": "r_waf_lb",
+      "kind": "call",
+      "from": "waf",
+      "to": "lb",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        20
+      ],
+      "quote": "WAF и VPN-шлюз передают запросы балансировщику."
+    },
+    {
+      "id": "r_vpn_lb",
+      "kind": "call",
+      "from": "vpn",
+      "to": "lb",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        20
+      ],
+      "quote": "WAF и VPN-шлюз передают запросы балансировщику."
+    },
+    {
+      "id": "r_lb_app",
+      "kind": "call",
+      "from": "lb",
+      "to": "app",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        21
+      ],
+      "quote": "Балансировщик распределяет запросы между узлами приложения."
+    },
+    {
+      "id": "r_app_db1",
+      "kind": "call",
+      "from": "app",
+      "to": "db1",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "lines": [
+        24
+      ],
+      "quote": "Узлы приложения читают и пишут данные в СУБД основную."
+    },
+    {
+      "id": "r_db1_db2",
+      "kind": "replication",
+      "from": "db1",
+      "to": "db2",
+      "directed": true,
+      "required": true,
+      "concern": "structure",
+      "note": "asynchronous streaming replication from the main DBMS",
+      "lines": [
+        31
+      ],
+      "quote": "| СУБД резервная | асинхронная потоковая репликация от основной, отставание до 5 с |"
+    },
+    {
+      "id": "r_bak_db1",
+      "kind": "backup",
+      "from": "bak",
+      "to": "db1",
+      "directed": false,
+      "required": true,
+      "concern": "structure",
+      "note": "the backup server takes copies of the main DBMS; either arrow direction reads true",
+      "lines": [
+        32
+      ],
+      "quote": "| Сервер резервных копий | снимает копии СУБД основной каждые 6 ч, хранит их 14 дней |"
+    },
+    {
+      "id": "r_mon_all",
+      "kind": "poll",
+      "from": "mon",
+      "to": "all_nodes",
+      "directed": true,
+      "required": false,
+      "concern": "structure",
+      "expand": "all_members",
+      "note": "may be drawn per node, or stated in a label, the legend or the text",
+      "lines": [
+        25
+      ],
+      "quote": "Сервер мониторинга опрашивает все узлы обоих ЦОД."
+    },
+    {
+      "id": "r_duty_db2",
+      "kind": "failover",
+      "from": "duty",
+      "to": "db2",
+      "directed": true,
+      "required": false,
+      "concern": "dynamics",
+      "lines": [
+        38
+      ],
+      "quote": "дежурный вручную продвигает резервную СУБД"
+    },
+    {
+      "id": "r_duty_dns",
+      "kind": "failover",
+      "from": "duty",
+      "to": "dns",
+      "directed": true,
+      "required": false,
+      "concern": "dynamics",
+      "lines": [
+        39
+      ],
+      "quote": "и переключает DNS."
+    }
+  ],
+  "numbers": [
+    {
+      "value": 5,
+      "unit": "с",
+      "unit_aliases": [
+        "с",
+        "сек",
+        "s"
+      ],
+      "subjects": [
+        "db2",
+        "db1"
+      ],
+      "note": "replication lag",
+      "lines": [
+        31
+      ],
+      "quote": "| СУБД резервная | асинхронная потоковая репликация от основной, отставание до 5 с |"
+    },
+    {
+      "value": 6,
+      "unit": "ч",
+      "unit_aliases": [
+        "ч",
+        "час",
+        "часа",
+        "часов",
+        "h"
+      ],
+      "subjects": [
+        "bak",
+        "db1"
+      ],
+      "note": "backup interval",
+      "lines": [
+        32
+      ],
+      "quote": "| Сервер резервных копий | снимает копии СУБД основной каждые 6 ч, хранит их 14 дней |"
+    },
+    {
+      "value": 14,
+      "unit": "дн",
+      "unit_aliases": [
+        "дн",
+        "дней",
+        "дня",
+        "сут",
+        "d"
+      ],
+      "subjects": [
+        "bak"
+      ],
+      "note": "backup retention",
+      "lines": [
+        32
+      ],
+      "quote": "хранит их 14 дней"
+    },
+    {
+      "value": 1,
+      "unit": "ч",
+      "unit_aliases": [
+        "ч",
+        "час",
+        "h"
+      ],
+      "subjects": [
+        "system"
+      ],
+      "note": "RTO of the whole system",
+      "lines": [
+        41
+      ],
+      "quote": "Цели восстановления для всей системы: RTO 1 ч, RPO 15 мин."
+    },
+    {
+      "value": 15,
+      "unit": "мин",
+      "unit_aliases": [
+        "мин",
+        "минут",
+        "min"
+      ],
+      "subjects": [
+        "system"
+      ],
+      "note": "RPO of the whole system",
+      "lines": [
+        41
+      ],
+      "quote": "Цели восстановления для всей системы: RTO 1 ч, RPO 15 мин."
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "PostgreSQL 15",
+      "part_of": "db1",
+      "lines": [
+        15
+      ],
+      "quote": "| СУБД основная | PostgreSQL 15, данные приложения |"
+    },
+    {
+      "text": "app-01, app-02, app-03",
+      "part_of": "app",
+      "lines": [
+        14
+      ],
+      "quote": "| Узлы приложения | app-01, app-02, app-03 |"
+    },
+    {
+      "text": "ЦОД-1",
+      "part_of": "dc1",
+      "lines": [
+        7
+      ],
+      "quote": "### 4.1 ЦОД-1 (основной)"
+    },
+    {
+      "text": "ЦОД-2",
+      "part_of": "dc2",
+      "lines": [
+        27
+      ],
+      "quote": "### 4.2 ЦОД-2 (резервный)"
+    },
+    {
+      "text": "4",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "## 4. Развёртывание"
+    },
+    {
+      "text": "4.1",
+      "part_of": "section",
+      "lines": [
+        7
+      ],
+      "quote": "### 4.1 ЦОД-1 (основной)"
+    },
+    {
+      "text": "4.2",
+      "part_of": "section",
+      "lines": [
+        27
+      ],
+      "quote": "### 4.2 ЦОД-2 (резервный)"
+    },
+    {
+      "text": "4.3",
+      "part_of": "section",
+      "lines": [
+        36
+      ],
+      "quote": "### 4.3 Отказ ЦОД-1"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "v11_only_syntax",
+      "why": "`architecture-beta` renders in 11.17 and fails in 10.9 with UnknownDiagramError",
+      "lines": [
+        1
+      ],
+      "quote": "## 4. Развёртывание"
+    },
+    {
+      "id": "t2",
+      "type": "boundary_edge",
+      "why": "one ЦОД-1 -> ЦОД-2 edge attaches to an arbitrary node; replication runs from СУБД основная to СУБД резервная",
+      "lines": [
+        31
+      ],
+      "quote": "| СУБД резервная | асинхронная потоковая репликация от основной, отставание до 5 с |"
+    },
+    {
+      "id": "t3",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "app",
+        "to": "db2"
+      },
+      "why": "the application nodes use the main DBMS only",
+      "lines": [
+        24
+      ],
+      "quote": "Узлы приложения читают и пишут данные в СУБД основную."
+    },
+    {
+      "id": "t4",
+      "type": "invented_group",
+      "aliases": [
+        "DMZ",
+        "ДМЗ",
+        "Кластер приложений",
+        "Кластер приложения",
+        "Стойка",
+        "Стойка 1",
+        "Стойка 2",
+        "Сеть",
+        "Внутренняя сеть",
+        "Периметр"
+      ],
+      "why": "the document groups nodes by data centre only",
+      "lines": [
+        7
+      ],
+      "quote": "### 4.1 ЦОД-1 (основной)"
+    },
+    {
+      "id": "t5",
+      "type": "invented_group",
+      "aliases": [
+        "Интернет",
+        "Internet"
+      ],
+      "why": "a one-node «Интернет» boundary around the patients; the document names no such group",
+      "lines": [
+        11
+      ],
+      "quote": "| WAF | единственный вход из Интернета |"
+    },
+    {
+      "id": "t6",
+      "type": "invented_entity",
+      "aliases": [
+        "app-04",
+        "app-05",
+        "Резервные узлы приложения",
+        "Резервный балансировщик"
+      ],
+      "why": "ЦОД-2 holds the standby DBMS and the backup server only; application nodes or a balancer inside ЦОД-2 contradict the text",
+      "lines": [
+        34
+      ],
+      "quote": "В ЦОД-2 нет узлов приложения."
+    },
+    {
+      "id": "t7",
+      "type": "number_from_other_rule",
+      "value": 15,
+      "unit": "мин",
+      "wrong_subjects": [
+        "db1",
+        "db2"
+      ],
+      "why": "RPO 15 мин is a goal of the whole system; the replication lag is up to 5 с",
+      "lines": [
+        41
+      ],
+      "quote": "Цели восстановления для всей системы: RTO 1 ч, RPO 15 мин."
+    },
+    {
+      "id": "t8",
+      "type": "dynamics_in_structure",
+      "aliases": [
+        "переключение DNS",
+        "продвижение",
+        "продвигает",
+        "переключает",
+        "failover"
+      ],
+      "why": "the failover steps of 4.3 are a procedure in time, not a part of the deployment structure",
+      "lines": [
+        38
+      ],
+      "quote": "дежурный вручную продвигает резервную СУБД"
+    },
+    {
+      "id": "t9",
+      "type": "cyrillic_labels",
+      "why": "Cyrillic labels are wider per character; long titles such as «ЦОД-1 (основной)» meet the edges into the nodes under them",
+      "lines": [
+        7
+      ],
+      "quote": "### 4.1 ЦОД-1 (основной)"
+    },
+    {
+      "id": "t10",
+      "type": "aggregation_needed",
+      "why": "one polling edge per node adds seven edges and crosses the request path",
+      "lines": [
+        25
+      ],
+      "quote": "Сервер мониторинга опрашивает все узлы обоих ЦОД."
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "entities": 10,
+    "relations": 8,
+    "with_monitoring_edges": [
+      10,
+      15
+    ]
+  }
+}

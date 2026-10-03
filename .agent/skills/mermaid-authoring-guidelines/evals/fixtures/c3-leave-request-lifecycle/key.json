@@ -1,0 +1,726 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 3,
+  "name": "leave-request-lifecycle",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "ru",
+  "medium": "document",
+  "kind": "state",
+  "acceptable_forms": [
+    "state"
+  ],
+  "required_concern": "state",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "draft",
+      "kind": "state",
+      "aliases": [
+        "Черновик"
+      ],
+      "soft_aliases": [
+        "Черновики"
+      ],
+      "lines": [
+        27
+      ],
+      "quote": "| Черновик |"
+    },
+    {
+      "id": "pending",
+      "kind": "state",
+      "aliases": [
+        "На согласовании"
+      ],
+      "soft_aliases": [
+        "На согласование",
+        "Согласование",
+        "На утверждении"
+      ],
+      "lines": [
+        28
+      ],
+      "quote": "| На согласовании |"
+    },
+    {
+      "id": "returned",
+      "kind": "state",
+      "aliases": [
+        "Возвращена"
+      ],
+      "soft_aliases": [
+        "Возвращено",
+        "На доработке",
+        "Доработка"
+      ],
+      "lines": [
+        29
+      ],
+      "quote": "| Возвращена |"
+    },
+    {
+      "id": "approved",
+      "kind": "state",
+      "aliases": [
+        "Согласована"
+      ],
+      "soft_aliases": [
+        "Согласовано",
+        "Утверждена",
+        "Одобрена"
+      ],
+      "lines": [
+        30
+      ],
+      "quote": "| Согласована |"
+    },
+    {
+      "id": "scheduled",
+      "kind": "state",
+      "aliases": [
+        "Запланирована"
+      ],
+      "soft_aliases": [
+        "Запланировано",
+        "В графике",
+        "Внесена в график"
+      ],
+      "lines": [
+        31
+      ],
+      "quote": "| Запланирована |"
+    },
+    {
+      "id": "onleave",
+      "kind": "state",
+      "aliases": [
+        "В отпуске"
+      ],
+      "soft_aliases": [
+        "Отпуск"
+      ],
+      "lines": [
+        32
+      ],
+      "quote": "| В отпуске |"
+    },
+    {
+      "id": "closed",
+      "kind": "state",
+      "aliases": [
+        "Завершена"
+      ],
+      "soft_aliases": [
+        "Завершено",
+        "Закрыта"
+      ],
+      "lines": [
+        33
+      ],
+      "quote": "| Завершена |"
+    },
+    {
+      "id": "rejected",
+      "kind": "state",
+      "aliases": [
+        "Отклонена"
+      ],
+      "soft_aliases": [
+        "Отклонено"
+      ],
+      "lines": [
+        34
+      ],
+      "quote": "| Отклонена |"
+    },
+    {
+      "id": "cancelled",
+      "kind": "state",
+      "aliases": [
+        "Отменена"
+      ],
+      "soft_aliases": [
+        "Отменено",
+        "Отмена"
+      ],
+      "lines": [
+        35
+      ],
+      "quote": "| Отменена |"
+    },
+    {
+      "id": "emp",
+      "kind": "writer",
+      "aliases": [
+        "сотрудник",
+        "сотрудника",
+        "сотрудником"
+      ],
+      "soft_aliases": [
+        "работник",
+        "employee"
+      ],
+      "optional": true,
+      "lines": [
+        3
+      ],
+      "quote": "Сотрудник создаёт заявку"
+    },
+    {
+      "id": "mgr",
+      "kind": "writer",
+      "aliases": [
+        "руководитель",
+        "руководителя",
+        "руководителем"
+      ],
+      "soft_aliases": [
+        "manager"
+      ],
+      "optional": true,
+      "lines": [
+        9
+      ],
+      "quote": "Руководитель согласует заявку"
+    },
+    {
+      "id": "hr",
+      "kind": "writer",
+      "aliases": [
+        "служба кадров",
+        "службы кадров",
+        "службой кадров",
+        "hr_schedule()",
+        "hr_schedule"
+      ],
+      "soft_aliases": [
+        "отдел кадров",
+        "кадры",
+        "HR"
+      ],
+      "optional": true,
+      "lines": [
+        13
+      ],
+      "quote": "Служба кадров вносит согласованную заявку в график функцией `hr_schedule()`"
+    },
+    {
+      "id": "job",
+      "kind": "writer",
+      "aliases": [
+        "ночное задание",
+        "ночного задания",
+        "ночным заданием"
+      ],
+      "optional": true,
+      "note": "stated as the sender of the reminder; it moves no request",
+      "lines": [
+        42
+      ],
+      "quote": "ночное задание"
+    },
+    {
+      "id": "boss",
+      "kind": "writer",
+      "aliases": [
+        "начальник",
+        "начальника",
+        "начальнику",
+        "начальником"
+      ],
+      "optional": true,
+      "note": "the manager's superior receives the escalation notice; he moves no request",
+      "lines": [
+        43
+      ],
+      "quote": "его начальнику"
+    }
+  ],
+  "groups": [
+    {
+      "id": "reserve",
+      "kind": "category",
+      "aliases": [
+        "Резерв дней",
+        "резерв",
+        "дни в резерве"
+      ],
+      "members": [
+        "approved",
+        "scheduled",
+        "onleave"
+      ],
+      "lines": [
+        25
+      ],
+      "quote": "| Состояние | Резерв дней | Итоговое |"
+    },
+    {
+      "id": "final",
+      "kind": "category",
+      "aliases": [
+        "Итоговое",
+        "Итоговые",
+        "итоговые состояния"
+      ],
+      "members": [
+        "closed",
+        "rejected",
+        "cancelled"
+      ],
+      "lines": [
+        25
+      ],
+      "quote": "| Итоговое |"
+    }
+  ],
+  "relations": [],
+  "transitions": [
+    {
+      "id": "tr0",
+      "kind": "transition",
+      "from": "[*]",
+      "to": "draft",
+      "directed": true,
+      "required": false,
+      "concern": "state",
+      "writer": "emp",
+      "condition": null,
+      "initial": true,
+      "note": "the start; drawing it and labelling it are optional",
+      "lines": [
+        3
+      ],
+      "quote": "Сотрудник создаёт заявку в состоянии «Черновик»."
+    },
+    {
+      "id": "tr1",
+      "kind": "transition",
+      "from": "draft",
+      "to": "pending",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "emp",
+      "condition": null,
+      "lines": [
+        8
+      ],
+      "quote": "Сотрудник отправляет заявку на согласование"
+    },
+    {
+      "id": "tr2",
+      "kind": "transition",
+      "from": "pending",
+      "to": "approved",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "mgr",
+      "condition": null,
+      "lines": [
+        9
+      ],
+      "quote": "Руководитель согласует заявку"
+    },
+    {
+      "id": "tr3",
+      "kind": "transition",
+      "from": "pending",
+      "to": "returned",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "mgr",
+      "condition": null,
+      "lines": [
+        9
+      ],
+      "quote": "возвращает её на доработку"
+    },
+    {
+      "id": "tr4",
+      "kind": "transition",
+      "from": "pending",
+      "to": "rejected",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "mgr",
+      "condition": null,
+      "lines": [
+        9
+      ],
+      "quote": "или отклоняет"
+    },
+    {
+      "id": "tr5",
+      "kind": "transition",
+      "from": "returned",
+      "to": "pending",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "emp",
+      "condition": null,
+      "lines": [
+        11
+      ],
+      "quote": "Сотрудник исправляет возвращённую заявку и отправляет её повторно"
+    },
+    {
+      "id": "tr6",
+      "kind": "transition",
+      "from": "approved",
+      "to": "scheduled",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "hr",
+      "condition": null,
+      "lines": [
+        13
+      ],
+      "quote": "Служба кадров вносит согласованную заявку в график"
+    },
+    {
+      "id": "tr7",
+      "kind": "transition",
+      "from": "scheduled",
+      "to": "onleave",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": null,
+      "condition": "наступает дата начала",
+      "condition_keywords": [
+        "дата начала",
+        "начало отпуска",
+        "начала отпуска"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "Когда наступает дата начала отпуска"
+    },
+    {
+      "id": "tr8",
+      "kind": "transition",
+      "from": "onleave",
+      "to": "closed",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": null,
+      "condition": "наступает дата окончания",
+      "condition_keywords": [
+        "дата окончания",
+        "конец отпуска",
+        "окончания отпуска"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "Когда наступает дата окончания отпуска"
+    },
+    {
+      "id": "tr9",
+      "kind": "transition",
+      "from": "approved",
+      "to": "cancelled",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "emp",
+      "condition": null,
+      "lines": [
+        17
+      ],
+      "quote": "Сотрудник отменяет согласованную заявку"
+    },
+    {
+      "id": "tr10",
+      "kind": "transition",
+      "from": "scheduled",
+      "to": "cancelled",
+      "directed": true,
+      "required": true,
+      "concern": "state",
+      "writer": "emp",
+      "condition": null,
+      "condition_extra": "не позднее чем за 2 дня до начала отпуска",
+      "lines": [
+        18
+      ],
+      "quote": "Сотрудник отменяет запланированную заявку"
+    }
+  ],
+  "initial": "draft",
+  "final": [
+    "closed",
+    "rejected",
+    "cancelled"
+  ],
+  "numbers": [
+    {
+      "value": 2,
+      "unit": "d",
+      "unit_aliases": [
+        "дня",
+        "дней",
+        "день",
+        "дн",
+        "сут",
+        "суток",
+        "days",
+        "d"
+      ],
+      "subjects": [
+        "scheduled",
+        "cancelled"
+      ],
+      "lines": [
+        18
+      ],
+      "quote": "не позднее чем за 2 дня до начала отпуска"
+    },
+    {
+      "value": 3,
+      "unit": "d",
+      "unit_aliases": [
+        "рабочих дня",
+        "рабочих дней",
+        "раб. дня",
+        "раб. дн",
+        "дня",
+        "дней",
+        "дн"
+      ],
+      "subjects": [
+        "pending",
+        "mgr"
+      ],
+      "lines": [
+        42
+      ],
+      "quote": "в течение 3 рабочих дней"
+    },
+    {
+      "value": 5,
+      "unit": "y",
+      "unit_aliases": [
+        "лет",
+        "года",
+        "год",
+        "years"
+      ],
+      "subjects": [
+        "draft",
+        "pending",
+        "returned",
+        "approved",
+        "scheduled",
+        "onleave",
+        "closed",
+        "rejected",
+        "cancelled"
+      ],
+      "note": "every request, in any state",
+      "lines": [
+        45
+      ],
+      "quote": "Заявки хранятся 5 лет."
+    },
+    {
+      "value": 14,
+      "unit": "d",
+      "unit_aliases": [
+        "дней",
+        "дня",
+        "дн",
+        "days",
+        "d"
+      ],
+      "subjects": [
+        "onleave"
+      ],
+      "lines": [
+        46
+      ],
+      "quote": "не короче 14 дней"
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "2.3",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "### 2.3 Жизненный цикл"
+    },
+    {
+      "text": "2.3.1",
+      "part_of": "section",
+      "lines": [
+        4
+      ],
+      "quote": "Раздел 2.3.1"
+    },
+    {
+      "text": "2.3.2",
+      "part_of": "section",
+      "lines": [
+        4
+      ],
+      "quote": "таблица 2.3.2"
+    },
+    {
+      "text": "2.3.3",
+      "part_of": "section",
+      "lines": [
+        40
+      ],
+      "quote": "#### 2.3.3 Сроки"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "invented_writer",
+      "transitions": [
+        "tr7",
+        "tr8"
+      ],
+      "aliases": [
+        "hr_schedule()",
+        "hr_schedule",
+        "служба кадров",
+        "ночное задание",
+        "ночного задания",
+        "ночным заданием",
+        "задание",
+        "планировщик",
+        "scheduler",
+        "cron",
+        "система",
+        "сотрудник",
+        "руководитель"
+      ],
+      "why": "the text names no writer for the transitions that the start date and the end date cause",
+      "lines": [
+        15
+      ],
+      "quote": "Когда наступает дата начала отпуска"
+    },
+    {
+      "id": "t2",
+      "type": "invented_state",
+      "aliases": [
+        "Эскалирована",
+        "Эскалация",
+        "На эскалации",
+        "Напоминание",
+        "Просрочена",
+        "Escalated"
+      ],
+      "why": "the escalation is a notification; the state of the request does not change",
+      "lines": [
+        43
+      ],
+      "quote": "Это уведомление:"
+    },
+    {
+      "id": "t3",
+      "type": "invented_group",
+      "aliases": [
+        "Активные",
+        "Ожидание",
+        "В работе",
+        "Открытые",
+        "Действующие",
+        "Незавершённые"
+      ],
+      "why": "the text defines two categories of states, «Резерв дней» and «Итоговое»",
+      "lines": [
+        25
+      ],
+      "quote": "| Состояние | Резерв дней | Итоговое |"
+    },
+    {
+      "id": "t4",
+      "type": "number_from_other_rule",
+      "value": 3,
+      "unit": "d",
+      "wrong_subjects": [
+        "scheduled",
+        "cancelled",
+        "approved"
+      ],
+      "why": "3 working days is the manager's response time; the cancellation rule is 2 days",
+      "lines": [
+        42
+      ],
+      "quote": "в течение 3 рабочих дней"
+    },
+    {
+      "id": "t5",
+      "type": "number_from_other_rule",
+      "value": 14,
+      "unit": "d",
+      "wrong_subjects": [
+        "scheduled",
+        "cancelled",
+        "approved",
+        "pending"
+      ],
+      "why": "14 days is the shortest part of a leave, not a deadline of any transition",
+      "lines": [
+        46
+      ],
+      "quote": "не короче 14 дней"
+    },
+    {
+      "id": "t6",
+      "type": "caption_overclaim",
+      "aliases": [
+        "каждый переход подписан исполнителем",
+        "все переходы подписаны исполнителями",
+        "переходы подписаны исполнителями",
+        "с исполнителем каждого перехода",
+        "исполнитель каждого перехода",
+        "кто выполняет каждый переход",
+        "each transition labelled with its writer",
+        "the writer of each transition"
+      ],
+      "why": "a caption that every transition names its writer is false for the two date transitions",
+      "lines": [
+        16
+      ],
+      "quote": "Когда наступает дата окончания отпуска"
+    },
+    {
+      "id": "t7",
+      "type": "cyrillic_labels",
+      "why": "Cyrillic labels measure wider per character; sentence-long transition labels widen the figure and collide in the return pair between «На согласовании» and «Возвращена»"
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "states": 9,
+    "transitions": 10
+  }
+}

@@ -2,7 +2,7 @@
 name: skill-phase-context
 description: "Skill loading tiers: TIER 0 (always), TIER 1 (phase-triggered), TIER 2 (extended). Defines when to load which skills."
 tier: 2
-version: 1.1
+version: 1.2
 ---
 # Phase Context Loading Protocol
 
@@ -96,6 +96,19 @@ These skills are specialized and loaded only when explicitly invoked by user or 
 | `skill-adversarial-performance` | ~946 | VDD workflow with performance focus |
 | `vdd-sarcastic` | ~145 | VDD workflow with sarcastic mode |
 
+### Condition-loaded: any phase, before the first figure
+
+One TIER 2 skill loads on a condition instead of a request.
+
+- `mermaid-authoring-guidelines` — load `SKILL.md` before the first figure of any output is
+  written. Then load the references its routing table names for the figure's kind. It is not
+  loaded for an output with no figure.
+- A plan chart that `plan_gantt.py` generates needs no load: the script draws it from the schedule
+  block (`skill-planning-format` §2.1).
+- **Why.** With a load on phase entry, an agent reads the skill in phases that draw no figure. The
+  bootstrap files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) state the output-medium rule and its
+  exception themselves. A terminal answer follows that rule with no skill loaded.
+
 ---
 
 ## Integration
@@ -105,7 +118,8 @@ These skills are specialized and loaded only when explicitly invoked by user or 
 Agent prompts should:
 1. Always load TIER 0 skills at session start
 2. Load TIER 1 skills when entering their specific phase
-3. Load TIER 2 skills only when explicitly triggered
+3. Load TIER 2 skills only when explicitly triggered, or on the condition of a condition-loaded
+   skill
 
 ### Referenced By
 - `.gemini/GEMINI.md` — TIER 0 at bootstrap

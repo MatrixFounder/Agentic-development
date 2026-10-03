@@ -1,0 +1,9 @@
+sequenceDiagram
+  participant C as Client
+  participant G as Gateway
+  participant S as Store
+  C->>G: submit job
+  G->>S: insert row
+  C->>S: read status directly
+  S-->>C: status
+  G->>G: log

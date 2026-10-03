@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant C as Client
+  participant G as Gateway
+  participant S as Service
+  participant D as Database
+  C->>G: request
+  G->>S: forward
+  S->>D: query
+  D-->>S: rows
+  S-->>G: result with order id, customer id, line items, totals, currency, tax lines and the delivery window
+  G-->>C: response

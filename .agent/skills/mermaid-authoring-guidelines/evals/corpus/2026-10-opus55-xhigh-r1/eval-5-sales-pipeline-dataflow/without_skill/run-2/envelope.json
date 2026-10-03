@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 44847,
+ "stop_reason": "end_turn",
+ "session_id": "7165a6ba-ab6d-4bb2-9f9c-91795695a53a",
+ "total_cost_usd": 0.10450139999999998,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1530,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 4598,
+  "output_tokens_details": {
+   "thinking_tokens": 3916
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1530,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 4598,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1530,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1530
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 4598,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1530,
+   "webSearchRequests": 0,
+   "costUSD": 0.10450139999999998,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 3916,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "```markdown\nThe figure shows how sales data moves from the sources through the stages to the consumers of §5.2.\n\n```mermaid\nflowchart TB\n    accTitle: Sales data flow\n    accDescr: POS feeds, web orders and the loyalty CSV land in the Raw zone bucket. The Normalizer, the Deduplicator and the Warehouse loader move the data through Staging tables and Clean sales into the Sales warehouse. Finance dashboards, the Demand forecast job and the Data quality monitor read the results. The Demand forecast job writes to the external Planning system, and the Data quality monitor alerts the on-call channel.\n\n    pos[/\"POS feeds<br>12 regions, CSV\"/]\n    web[/\"Web orders<br>JSON export\"/]\n    loyalty[/\"Loyalty CSV\"/]\n\n    raw[(\"Raw zone bucket\")]\n    normalizer[\"Normalizer<br>hourly\"]\n    staging[(\"Staging tables\")]\n    dedup[\"Deduplicator<br>hourly, after Normalizer\"]\n    clean[(\"Clean sales\")]\n    loader[\"Warehouse loader<br>nightly\"]\n    warehouse[(\"Sales warehouse\")]\n\n    finance([\"Finance dashboards\"])\n    forecast([\"Demand forecast job<br>weekly\"])\n    planning[\"Planning system<br>(external)\"]\n    dq([\"Data quality monitor\"])\n    oncall([\"#sales-data-oncall\"])\n\n    pos -->|\"SFTP, hourly\"| raw\n    web -->|\"hourly\"| raw\n    loyalty -->|\"daily\"| raw\n\n    raw --> normalizer\n    normalizer --> staging\n    staging --> dedup\n    dedup --> clean\n    clean --> loader\n    loader --> warehouse\n\n    warehouse --> finance\n    warehouse --> forecast\n    forecast -->|\"forecasts\"| planning\n    staging --> dq\n    warehouse --> dq\n    dq -.->|\"feed more than 2 h late\"| oncall\n```\n```",
+ "ttft_ms": 40254,
+ "type": "result",
+ "duration_ms": 44882,
+ "uuid": "8b754c97-ce4b-4912-8967-959bf5d0b920",
+ "ttft_stream_ms": 1850,
+ "time_to_request_ms": 34,
+ "first_content_frame_ms": 1850,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

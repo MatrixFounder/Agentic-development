@@ -1,0 +1,894 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 4,
+  "name": "reporting-migration-gantt",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "document",
+  "kind": "gantt",
+  "acceptable_forms": [
+    "gantt"
+  ],
+  "required_concern": "plan",
+  "families": [
+    "renders",
+    "geometry",
+    "budget",
+    "concern",
+    "fidelity",
+    "docs",
+    "form",
+    "colour"
+  ],
+  "families_conditional": {
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "p1",
+      "kind": "task",
+      "aliases": [
+        "P1",
+        "Provision the new cluster"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "| P1 | Provision the new cluster |"
+    },
+    {
+      "id": "p2",
+      "kind": "task",
+      "aliases": [
+        "P2",
+        "Configure replication"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "| P2 | Configure replication |"
+    },
+    {
+      "id": "d1",
+      "kind": "task",
+      "aliases": [
+        "D1",
+        "Backfill dimension tables"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "| D1 | Backfill dimension tables |"
+    },
+    {
+      "id": "d2",
+      "kind": "task",
+      "aliases": [
+        "D2",
+        "Backfill fact tables (2019–2025)",
+        "Backfill fact tables"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "| D2 | Backfill fact tables (2019–2025) |"
+    },
+    {
+      "id": "q1",
+      "kind": "task",
+      "aliases": [
+        "Q1",
+        "Reconcile row counts"
+      ],
+      "lines": [
+        17
+      ],
+      "quote": "| Q1 | Reconcile row counts |"
+    },
+    {
+      "id": "r1",
+      "kind": "task",
+      "aliases": [
+        "R1",
+        "Write freeze"
+      ],
+      "lines": [
+        18
+      ],
+      "quote": "| R1 | Write freeze |"
+    },
+    {
+      "id": "r2",
+      "kind": "milestone",
+      "aliases": [
+        "R2",
+        "Switch dashboards"
+      ],
+      "lines": [
+        19
+      ],
+      "quote": "| R2 | Switch dashboards |"
+    }
+  ],
+  "groups": [
+    {
+      "id": "platform",
+      "kind": "team",
+      "aliases": [
+        "Platform"
+      ],
+      "members": [
+        "p1",
+        "p2"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "Each task belongs to one team: Platform, Data, QA or Release."
+    },
+    {
+      "id": "data",
+      "kind": "team",
+      "aliases": [
+        "Data"
+      ],
+      "members": [
+        "d1",
+        "d2"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "Each task belongs to one team: Platform, Data, QA or Release."
+    },
+    {
+      "id": "qa",
+      "kind": "team",
+      "aliases": [
+        "QA"
+      ],
+      "members": [
+        "q1"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "Each task belongs to one team: Platform, Data, QA or Release."
+    },
+    {
+      "id": "release",
+      "kind": "team",
+      "aliases": [
+        "Release"
+      ],
+      "members": [
+        "r1",
+        "r2"
+      ],
+      "lines": [
+        9
+      ],
+      "quote": "Each task belongs to one team: Platform, Data, QA or Release."
+    }
+  ],
+  "relations": [
+    {
+      "id": "dep_p1_p2",
+      "kind": "dependency",
+      "from": "p1",
+      "to": "p2",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        14
+      ],
+      "quote": "| P2 | Configure replication |"
+    },
+    {
+      "id": "dep_p2_d1",
+      "kind": "dependency",
+      "from": "p2",
+      "to": "d1",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        15
+      ],
+      "quote": "| D1 | Backfill dimension tables |"
+    },
+    {
+      "id": "dep_p2_d2",
+      "kind": "dependency",
+      "from": "p2",
+      "to": "d2",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        16
+      ],
+      "quote": "| D2 | Backfill fact tables (2019–2025) |"
+    },
+    {
+      "id": "dep_d1_q1",
+      "kind": "dependency",
+      "from": "d1",
+      "to": "q1",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        17
+      ],
+      "quote": "| Q1 | Reconcile row counts |"
+    },
+    {
+      "id": "dep_d2_q1",
+      "kind": "dependency",
+      "from": "d2",
+      "to": "q1",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        17
+      ],
+      "quote": "| Q1 | Reconcile row counts |"
+    },
+    {
+      "id": "dep_q1_r1",
+      "kind": "dependency",
+      "from": "q1",
+      "to": "r1",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        18
+      ],
+      "quote": "| R1 | Write freeze |"
+    },
+    {
+      "id": "dep_r1_r2",
+      "kind": "dependency",
+      "from": "r1",
+      "to": "r2",
+      "directed": true,
+      "required": true,
+      "concern": "plan",
+      "lines": [
+        19
+      ],
+      "quote": "| R2 | Switch dashboards |"
+    }
+  ],
+  "numbers": [
+    {
+      "value": 4,
+      "unit": "d",
+      "subjects": [
+        "p1"
+      ],
+      "lines": [
+        13
+      ],
+      "quote": "| P1 | Provision the new cluster | Platform | 4 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 3,
+      "unit": "d",
+      "subjects": [
+        "p2"
+      ],
+      "lines": [
+        14
+      ],
+      "quote": "| P2 | Configure replication | Platform | 3 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 2,
+      "unit": "d",
+      "subjects": [
+        "d1"
+      ],
+      "lines": [
+        15
+      ],
+      "quote": "| D1 | Backfill dimension tables | Data | 2 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 6,
+      "unit": "d",
+      "subjects": [
+        "d2"
+      ],
+      "lines": [
+        16
+      ],
+      "quote": "| D2 | Backfill fact tables (2019–2025) | Data | 6 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 2,
+      "unit": "d",
+      "subjects": [
+        "q1"
+      ],
+      "lines": [
+        17
+      ],
+      "quote": "| Q1 | Reconcile row counts | QA | 2 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 1,
+      "unit": "d",
+      "subjects": [
+        "r1"
+      ],
+      "lines": [
+        18
+      ],
+      "quote": "| R1 | Write freeze | Release | 1 d |",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 0,
+      "unit": "d",
+      "subjects": [
+        "r2"
+      ],
+      "note": "a milestone drawn with duration 0d",
+      "lines": [
+        22
+      ],
+      "quote": "R2 takes no time",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": "2026-11-02",
+      "unit": "date",
+      "subjects": [
+        "p1",
+        "schedule"
+      ],
+      "lines": [
+        4
+      ],
+      "quote": "Work starts on Monday 2 November 2026."
+    },
+    {
+      "value": 16,
+      "unit": "d",
+      "subjects": [
+        "critical_path",
+        "schedule"
+      ],
+      "lines": [
+        26
+      ],
+      "quote": "16 working days in total",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 4,
+      "unit": "d",
+      "subjects": [
+        "d1"
+      ],
+      "note": "slack of D1, not a duration",
+      "lines": [
+        27
+      ],
+      "quote": "D1 can end up to 4 working days late without moving R2.",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 0.1,
+      "unit": "%",
+      "subjects": [
+        "q1"
+      ],
+      "lines": [
+        31
+      ],
+      "quote": "at most 0.1 % between the old and the new warehouse",
+      "unit_aliases": [
+        "%",
+        "percent"
+      ]
+    },
+    {
+      "value": 3,
+      "unit": "days",
+      "subjects": [
+        "rollback",
+        "r2"
+      ],
+      "note": "after R2; not a task duration",
+      "lines": [
+        32
+      ],
+      "quote": "stays ready for a rollback for 3 days",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    },
+    {
+      "value": 30,
+      "unit": "days",
+      "subjects": [
+        "decommission"
+      ],
+      "note": "out of scope; not on the chart",
+      "lines": [
+        36
+      ],
+      "quote": "not before 30 days after R2",
+      "unit_aliases": [
+        "d",
+        "day",
+        "days",
+        "working day",
+        "working days",
+        "wd"
+      ]
+    }
+  ],
+  "name_numbers": [
+    {
+      "text": "2019–2025",
+      "part_of": "d2",
+      "note": "years in a task name",
+      "lines": [
+        16
+      ],
+      "quote": "| D2 | Backfill fact tables (2019–2025) |"
+    },
+    {
+      "text": "TASK-512",
+      "part_of": "decommission",
+      "lines": [
+        36
+      ],
+      "quote": "tracked in TASK-512"
+    },
+    {
+      "text": "2",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "## 2. Schedule"
+    },
+    {
+      "text": "2.1",
+      "part_of": "section",
+      "lines": [
+        7
+      ],
+      "quote": "### 2.1 Tasks"
+    },
+    {
+      "text": "2.2",
+      "part_of": "section",
+      "lines": [
+        24
+      ],
+      "quote": "### 2.2 Critical path"
+    },
+    {
+      "text": "2.3",
+      "part_of": "section",
+      "lines": [
+        29
+      ],
+      "quote": "### 2.3 Acceptance and rollback"
+    },
+    {
+      "text": "2.4",
+      "part_of": "section",
+      "lines": [
+        34
+      ],
+      "quote": "### 2.4 Out of scope"
+    }
+  ],
+  "calendar": {
+    "start": "2026-11-02",
+    "start_weekday": "Monday",
+    "unit": "working_day",
+    "excludes": [
+      "saturday",
+      "sunday"
+    ],
+    "holidays": [],
+    "mermaid": {
+      "dateFormat": "YYYY-MM-DD",
+      "excludes": "weekends",
+      "required": [
+        "excludes weekends"
+      ],
+      "note": "Without `excludes weekends`, `after` and day durations count Saturdays and Sundays, and P2 already ends on Sunday 8 November."
+    },
+    "verified_by_render": {
+      "renderers": [
+        "mermaid 10.9.8",
+        "mermaid 11.17.2",
+        "mermaid 12.1.0"
+      ],
+      "method": "the bars of a figure written with `after`, day durations and `excludes weekends`, rendered at 900 px; bar x and width converted to dates by the tick scale",
+      "result": "every bar covers exactly the task's working_days in all three versions; R2 sits at 2026-11-24 00:00"
+    },
+    "lines": [
+      4
+    ],
+    "quote": "Work starts on Monday 2 November 2026. Durations are working days; nobody works on weekends."
+  },
+  "start_rule": {
+    "rule": "early start: the first working day after the latest end among its deps",
+    "lines": [
+      5
+    ],
+    "quote": "A task starts on the first working day after every task it waits for has ended."
+  },
+  "tasks": [
+    {
+      "id": "p1",
+      "section": "platform",
+      "duration_days": 4,
+      "deps": [],
+      "start": "2026-11-02",
+      "last_day": "2026-11-05",
+      "working_days": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05"
+      ],
+      "next_working_day": "2026-11-06",
+      "explicit_end_ok": [
+        "2026-11-06"
+      ],
+      "critical": true,
+      "lines": [
+        13
+      ],
+      "quote": "| P1 | Provision the new cluster |"
+    },
+    {
+      "id": "p2",
+      "section": "platform",
+      "duration_days": 3,
+      "deps": [
+        "p1"
+      ],
+      "start": "2026-11-06",
+      "last_day": "2026-11-10",
+      "working_days": [
+        "2026-11-06",
+        "2026-11-09",
+        "2026-11-10"
+      ],
+      "next_working_day": "2026-11-11",
+      "explicit_end_ok": [
+        "2026-11-11"
+      ],
+      "critical": true,
+      "lines": [
+        14
+      ],
+      "quote": "| P2 | Configure replication |"
+    },
+    {
+      "id": "d1",
+      "section": "data",
+      "duration_days": 2,
+      "deps": [
+        "p2"
+      ],
+      "start": "2026-11-11",
+      "last_day": "2026-11-12",
+      "working_days": [
+        "2026-11-11",
+        "2026-11-12"
+      ],
+      "next_working_day": "2026-11-13",
+      "explicit_end_ok": [
+        "2026-11-13"
+      ],
+      "critical": false,
+      "lines": [
+        15
+      ],
+      "quote": "| D1 | Backfill dimension tables |"
+    },
+    {
+      "id": "d2",
+      "section": "data",
+      "duration_days": 6,
+      "deps": [
+        "p2"
+      ],
+      "start": "2026-11-11",
+      "last_day": "2026-11-18",
+      "working_days": [
+        "2026-11-11",
+        "2026-11-12",
+        "2026-11-13",
+        "2026-11-16",
+        "2026-11-17",
+        "2026-11-18"
+      ],
+      "next_working_day": "2026-11-19",
+      "explicit_end_ok": [
+        "2026-11-19"
+      ],
+      "critical": true,
+      "lines": [
+        16
+      ],
+      "quote": "| D2 | Backfill fact tables (2019–2025) |"
+    },
+    {
+      "id": "q1",
+      "section": "qa",
+      "duration_days": 2,
+      "deps": [
+        "d1",
+        "d2"
+      ],
+      "start": "2026-11-19",
+      "last_day": "2026-11-20",
+      "working_days": [
+        "2026-11-19",
+        "2026-11-20"
+      ],
+      "next_working_day": "2026-11-23",
+      "explicit_end_ok": [
+        "2026-11-21",
+        "2026-11-22",
+        "2026-11-23"
+      ],
+      "critical": true,
+      "lines": [
+        17
+      ],
+      "quote": "| Q1 | Reconcile row counts |"
+    },
+    {
+      "id": "r1",
+      "section": "release",
+      "duration_days": 1,
+      "deps": [
+        "q1"
+      ],
+      "start": "2026-11-23",
+      "last_day": "2026-11-23",
+      "working_days": [
+        "2026-11-23"
+      ],
+      "next_working_day": "2026-11-24",
+      "explicit_end_ok": [
+        "2026-11-24"
+      ],
+      "critical": true,
+      "lines": [
+        18
+      ],
+      "quote": "| R1 | Write freeze |"
+    },
+    {
+      "id": "r2",
+      "section": "release",
+      "milestone": true,
+      "duration_days": 0,
+      "deps": [
+        "r1"
+      ],
+      "at": "2026-11-24",
+      "critical": true,
+      "note": "the instant the write freeze ends: 00:00 of 2026-11-24; `after r1, 0d` or an explicit 2026-11-24 with 0d draws it there",
+      "lines": [
+        19
+      ],
+      "quote": "| R2 | Switch dashboards |"
+    }
+  ],
+  "date_rules": {
+    "start": "first working day of the task",
+    "last_day": "last working day of the task, inclusive",
+    "next_working_day": "where `after <task>` starts a dependant (00:00 of that day)",
+    "explicit_end_ok": "explicit end dates E that mermaid reads as exclusive (00:00 of E) and that cover exactly the task's working days; any other explicit end is a wrong date",
+    "after": "an `after` list must equal `deps`; a task written with an explicit start date must start on `start`"
+  },
+  "traps": [
+    {
+      "id": "t1",
+      "type": "invented_dependency",
+      "relation": {
+        "from": "d1",
+        "to": "d2"
+      },
+      "why": "D2 waits for P2 only; drawing D2 after D1 moves Q1, R1 and R2 by 2 working days",
+      "lines": [
+        21
+      ],
+      "quote": "D1 and D2 run in parallel; neither waits for the other."
+    },
+    {
+      "id": "t2",
+      "type": "number_from_other_rule",
+      "value": 3,
+      "unit": "d",
+      "wrong_subjects": [
+        "r1"
+      ],
+      "why": "the 3 days are the rollback window after R2; R1 lasts 1 d",
+      "lines": [
+        32
+      ],
+      "quote": "stays ready for a rollback for 3 days"
+    },
+    {
+      "id": "t3",
+      "type": "invented_group",
+      "aliases": [
+        "Phase 1",
+        "Phase 2",
+        "Phase 3",
+        "Preparation",
+        "Migration",
+        "Cutover",
+        "Validation"
+      ],
+      "why": "the document groups tasks by team only",
+      "lines": [
+        9
+      ],
+      "quote": "Each task belongs to one team: Platform, Data, QA or Release."
+    },
+    {
+      "id": "t4",
+      "type": "excluded_item",
+      "aliases": [
+        "Decommission",
+        "Decommission the old warehouse"
+      ],
+      "why": "out of scope: the plan does not schedule it",
+      "lines": [
+        36
+      ],
+      "quote": "Decommission the old warehouse — not before 30 days after R2; tracked in TASK-512."
+    },
+    {
+      "id": "t5",
+      "type": "number_from_other_rule",
+      "value": 30,
+      "unit": "d",
+      "wrong_subjects": [
+        "r2",
+        "decommission"
+      ],
+      "why": "a 30-day bar schedules what the document leaves out",
+      "lines": [
+        36
+      ],
+      "quote": "not before 30 days after R2"
+    },
+    {
+      "id": "t6",
+      "type": "number_from_other_rule",
+      "value": 0.1,
+      "unit": "%",
+      "wrong_subjects": [
+        "d1",
+        "d2",
+        "r1",
+        "r2"
+      ],
+      "why": "the tolerance belongs to Q1",
+      "lines": [
+        31
+      ],
+      "quote": "at most 0.1 % between the old and the new warehouse"
+    },
+    {
+      "id": "t7",
+      "type": "calendar_rule",
+      "required_statement": "excludes weekends",
+      "why": "without the weekend rule, day durations run through Saturdays and Sundays: P2 ends on Sunday 8 November and every later bar starts too early",
+      "lines": [
+        4
+      ],
+      "quote": "Work starts on Monday 2 November 2026. Durations are working days; nobody works on weekends."
+    },
+    {
+      "id": "t8",
+      "type": "invented_number",
+      "why": "an explicit date other than 2026-11-02 that is not a task's start and not in its explicit_end_ok set, typically a date counted in calendar days",
+      "lines": [
+        4
+      ],
+      "quote": "Work starts on Monday 2 November 2026."
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "bars": 7
+  }
+}

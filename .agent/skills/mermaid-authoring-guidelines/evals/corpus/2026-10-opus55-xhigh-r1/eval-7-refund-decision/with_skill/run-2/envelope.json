@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 560721,
+ "stop_reason": "end_turn",
+ "session_id": "242048d1-2f10-4d80-9d60-568f003bf544",
+ "total_cost_usd": 1.3040868,
+ "usage": {
+  "input_tokens": 4,
+  "cache_creation_input_tokens": 82663,
+  "cache_read_input_tokens": 2934,
+  "output_tokens": 32109,
+  "output_tokens_details": {
+   "thinking_tokens": 30581
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 82663,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 32103,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 41356,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 41356
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 4,
+   "outputTokens": 32109,
+   "cacheReadInputTokens": 2934,
+   "cacheCreationInputTokens": 82663,
+   "webSearchRequests": 0,
+   "costUSD": 1.3040868,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 30581,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 2,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 6.1.** Refund checks: R6.1, R6.2 and R6.3 in the order they run, and the three outcomes they lead to.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%\nflowchart TB\n  accTitle: Refund checks\n  accDescr: R6.1, R6.2 and R6.3 in the order they run, and the three outcomes they lead to.\n  CUST([\"Customer<br/><small>asks in the support portal</small>\"])\n  DEF{\"Reported as defective?<br/><small>R6.1 · any age</small>\"}\n  AGE{\"Within 30 days of delivery?<br/><small>R6.1</small>\"}\n  DIG{\"Digital good?<br/><small>R6.2</small>\"}\n  DL{\"Downloaded?<br/><small>R6.2</small>\"}\n  AMT{\"Refund of $50 or less?<br/><small>R6.3</small>\"}\n  AGENT(\"Goes to a support agent\")\n  APPR(\"Approved automatically<br/><small>back to the original payment method</small>\")\n  DECL(\"Declined\")\n  CUST -->|\"refund request\"| DEF\n  DEF -->|\"yes\"| AGENT\n  DEF -->|\"no\"| AGE\n  AGE -->|\"yes\"| DIG\n  AGE -->|\"no\"| DECL\n  DIG -->|\"no\"| AMT\n  DIG -->|\"yes\"| DL\n  DL -->|\"no\"| AMT\n  DL -->|\"yes\"| DECL\n  AMT -->|\"no · above $50\"| AGENT\n  AMT -->|\"yes\"| APPR\n  class CUST ext\n  class DEF,AGE,DIG,DL,AMT,AGENT,APPR,DECL wf\n  classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3\n  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47\n```\n\nLegend:\n- dashed stadium = the customer\n- diamond = a check, top to bottom in the order R6.1, R6.2, R6.3; its second line names the rule\n- rounded box = an outcome; \"Goes to a support agent\" continues in Figure 6.2\n- arrow = the next step; its label = the answer that leads to it\n\nThe defect report is checked before the age because R6.1 sends a defective item to a support agent at any age. R6.2 applies to digital goods only, so any other good goes straight to R6.3.\n\n**Figure 6.2.** Refund review: the decision of the support agent and, above $500, the decision of a team lead.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%\nflowchart TB\n  accTitle: Refund review\n  accDescr: The decision of the support agent and, above $500, the decision of a team lead.\n  IN(\"Goes to a support agent<br/><small>R6.1 defective · R6.4 above $50</small>\")\n  AG{\"Support agent approves?<br/><small>R6.4</small>\"}\n  BIG{\"Refund above $500?<br/><small>R6.5</small>\"}\n  TL{\"Team lead approves?<br/><small>R6.5</small>\"}\n  APPR(\"Approved<br/><small>back to the original payment method</small>\")\n  DECL(\"Declined\")\n  IN --> AG\n  AG -->|\"yes\"| BIG\n  AG -->|\"no\"| DECL\n  BIG -->|\"no\"| APPR\n  BIG -->|\"yes\"| TL\n  TL -->|\"yes\"| APPR\n  TL -->|\"no\"| DECL\n  class IN,AG,BIG,TL,APPR,DECL wf\n  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47\n```\n\nLegend:\n- rounded box at the top = the outcome of Figure 6.1 that this review starts from; other rounded boxes = outcomes\n- diamond = a decision or a check, top to bottom in the order R6.4, R6.5; its second line names the rule\n- arrow = the next step; its label = the answer that leads to it\n- not drawn: the record of every decision in the history of the request, and the limits of §6.2, which do not change the decision",
+ "ttft_ms": 107489,
+ "type": "result",
+ "duration_ms": 560827,
+ "uuid": "0694f182-2970-49c3-834e-b39a8ade7ad8",
+ "ttft_stream_ms": 2834,
+ "time_to_request_ms": 94,
+ "first_content_frame_ms": 2834,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

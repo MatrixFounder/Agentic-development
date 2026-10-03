@@ -1,0 +1,771 @@
+{
+  "schema": "mermaid-key/v1",
+  "case": 10,
+  "name": "roles-operations-matrix",
+  "written": "2026-10-02, before any run; TASK 108 revision 3 added kind and acceptable_forms, before any run",
+  "lang": "en",
+  "medium": "document",
+  "kind": "none",
+  "acceptable_forms": [
+    "table"
+  ],
+  "required_concern": "matrix",
+  "families": [
+    "concern",
+    "fidelity",
+    "docs",
+    "form"
+  ],
+  "families_conditional": {
+    "renders": "only when the answer holds a Mermaid fence",
+    "geometry": "only when the answer holds a Mermaid fence",
+    "colour": "only when the answer holds a Mermaid fence",
+    "budget": "only when the answer holds a Mermaid fence or a text fence",
+    "ascii": "only when the answer holds a text fence"
+  },
+  "entities": [
+    {
+      "id": "viewer",
+      "kind": "role",
+      "aliases": [
+        "Viewer",
+        "Viewers"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "There are four roles: Viewer, Editor, Publisher and Admin."
+    },
+    {
+      "id": "editor",
+      "kind": "role",
+      "aliases": [
+        "Editor",
+        "Editors"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "There are four roles: Viewer, Editor, Publisher and Admin."
+    },
+    {
+      "id": "publisher",
+      "kind": "role",
+      "aliases": [
+        "Publisher",
+        "Publishers"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "There are four roles: Viewer, Editor, Publisher and Admin."
+    },
+    {
+      "id": "admin",
+      "kind": "role",
+      "aliases": [
+        "Admin",
+        "Admins",
+        "Administrator"
+      ],
+      "lines": [
+        5
+      ],
+      "quote": "There are four roles: Viewer, Editor, Publisher and Admin."
+    },
+    {
+      "id": "read_pages",
+      "kind": "operation",
+      "aliases": [
+        "read pages"
+      ],
+      "soft_aliases": [
+        "read",
+        "view pages"
+      ],
+      "lines": [
+        7
+      ],
+      "quote": "The roles act on seven operations: read pages, edit drafts, upload media, publish pages,"
+    },
+    {
+      "id": "edit_drafts",
+      "kind": "operation",
+      "aliases": [
+        "edit drafts"
+      ],
+      "soft_aliases": [
+        "edit",
+        "edit pages"
+      ],
+      "lines": [
+        7
+      ],
+      "quote": "The roles act on seven operations: read pages, edit drafts, upload media, publish pages,"
+    },
+    {
+      "id": "upload_media",
+      "kind": "operation",
+      "aliases": [
+        "upload media"
+      ],
+      "soft_aliases": [
+        "upload",
+        "upload files"
+      ],
+      "lines": [
+        7
+      ],
+      "quote": "The roles act on seven operations: read pages, edit drafts, upload media, publish pages,"
+    },
+    {
+      "id": "publish_pages",
+      "kind": "operation",
+      "aliases": [
+        "publish pages"
+      ],
+      "soft_aliases": [
+        "publish"
+      ],
+      "lines": [
+        7
+      ],
+      "quote": "The roles act on seven operations: read pages, edit drafts, upload media, publish pages,"
+    },
+    {
+      "id": "unpublish_pages",
+      "kind": "operation",
+      "aliases": [
+        "unpublish pages"
+      ],
+      "soft_aliases": [
+        "unpublish"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "unpublish pages, manage users and change settings."
+    },
+    {
+      "id": "manage_users",
+      "kind": "operation",
+      "aliases": [
+        "manage users"
+      ],
+      "soft_aliases": [
+        "users",
+        "user management"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "unpublish pages, manage users and change settings."
+    },
+    {
+      "id": "change_settings",
+      "kind": "operation",
+      "aliases": [
+        "change settings"
+      ],
+      "soft_aliases": [
+        "settings"
+      ],
+      "lines": [
+        8
+      ],
+      "quote": "unpublish pages, manage users and change settings."
+    },
+    {
+      "id": "user",
+      "kind": "actor",
+      "optional": true,
+      "aliases": [
+        "user",
+        "users",
+        "signed-in user"
+      ],
+      "note": "each user holds exactly one role; not a role itself",
+      "lines": [
+        3
+      ],
+      "quote": "the role of the signed-in user"
+    }
+  ],
+  "groups": [],
+  "relations": [
+    {
+      "id": "p_viewer__read_pages",
+      "kind": "permission",
+      "from": "viewer",
+      "to": "read_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        14
+      ],
+      "quote": "A Viewer may read pages."
+    },
+    {
+      "id": "p_editor__read_pages",
+      "kind": "permission",
+      "from": "editor",
+      "to": "read_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        15
+      ],
+      "quote": "An Editor may read pages, edit drafts and upload media."
+    },
+    {
+      "id": "p_editor__edit_drafts",
+      "kind": "permission",
+      "from": "editor",
+      "to": "edit_drafts",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        15
+      ],
+      "quote": "An Editor may read pages, edit drafts and upload media."
+    },
+    {
+      "id": "p_editor__upload_media",
+      "kind": "permission",
+      "from": "editor",
+      "to": "upload_media",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        15
+      ],
+      "quote": "An Editor may read pages, edit drafts and upload media."
+    },
+    {
+      "id": "p_publisher__read_pages",
+      "kind": "permission",
+      "from": "publisher",
+      "to": "read_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        17
+      ],
+      "quote": "A Publisher may read pages, edit drafts, publish pages and unpublish pages."
+    },
+    {
+      "id": "p_publisher__edit_drafts",
+      "kind": "permission",
+      "from": "publisher",
+      "to": "edit_drafts",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        17
+      ],
+      "quote": "A Publisher may read pages, edit drafts, publish pages and unpublish pages."
+    },
+    {
+      "id": "p_publisher__publish_pages",
+      "kind": "permission",
+      "from": "publisher",
+      "to": "publish_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        17
+      ],
+      "quote": "A Publisher may read pages, edit drafts, publish pages and unpublish pages."
+    },
+    {
+      "id": "p_publisher__unpublish_pages",
+      "kind": "permission",
+      "from": "publisher",
+      "to": "unpublish_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        17
+      ],
+      "quote": "A Publisher may read pages, edit drafts, publish pages and unpublish pages."
+    },
+    {
+      "id": "p_admin__read_pages",
+      "kind": "permission",
+      "from": "admin",
+      "to": "read_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__edit_drafts",
+      "kind": "permission",
+      "from": "admin",
+      "to": "edit_drafts",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__upload_media",
+      "kind": "permission",
+      "from": "admin",
+      "to": "upload_media",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__publish_pages",
+      "kind": "permission",
+      "from": "admin",
+      "to": "publish_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__unpublish_pages",
+      "kind": "permission",
+      "from": "admin",
+      "to": "unpublish_pages",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__manage_users",
+      "kind": "permission",
+      "from": "admin",
+      "to": "manage_users",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "p_admin__change_settings",
+      "kind": "permission",
+      "from": "admin",
+      "to": "change_settings",
+      "directed": true,
+      "required": true,
+      "concern": "matrix",
+      "lines": [
+        19
+      ],
+      "quote": "An Admin may perform all seven operations."
+    },
+    {
+      "id": "h_user__viewer",
+      "kind": "holds",
+      "from": "user",
+      "to": "viewer",
+      "directed": true,
+      "required": false,
+      "concern": "matrix",
+      "lines": [
+        3
+      ],
+      "quote": "Each user holds exactly"
+    },
+    {
+      "id": "h_user__editor",
+      "kind": "holds",
+      "from": "user",
+      "to": "editor",
+      "directed": true,
+      "required": false,
+      "concern": "matrix",
+      "lines": [
+        3
+      ],
+      "quote": "Each user holds exactly"
+    },
+    {
+      "id": "h_user__publisher",
+      "kind": "holds",
+      "from": "user",
+      "to": "publisher",
+      "directed": true,
+      "required": false,
+      "concern": "matrix",
+      "lines": [
+        3
+      ],
+      "quote": "Each user holds exactly"
+    },
+    {
+      "id": "h_user__admin",
+      "kind": "holds",
+      "from": "user",
+      "to": "admin",
+      "directed": true,
+      "required": false,
+      "concern": "matrix",
+      "lines": [
+        3
+      ],
+      "quote": "Each user holds exactly"
+    }
+  ],
+  "matrix": {
+    "rows": [
+      "read_pages",
+      "edit_drafts",
+      "upload_media",
+      "publish_pages",
+      "unpublish_pages",
+      "manage_users",
+      "change_settings"
+    ],
+    "cols": [
+      "viewer",
+      "editor",
+      "publisher",
+      "admin"
+    ],
+    "row_kind": "operation",
+    "col_kind": "role",
+    "allowed": [
+      [
+        "read_pages",
+        "viewer"
+      ],
+      [
+        "read_pages",
+        "editor"
+      ],
+      [
+        "edit_drafts",
+        "editor"
+      ],
+      [
+        "upload_media",
+        "editor"
+      ],
+      [
+        "read_pages",
+        "publisher"
+      ],
+      [
+        "edit_drafts",
+        "publisher"
+      ],
+      [
+        "publish_pages",
+        "publisher"
+      ],
+      [
+        "unpublish_pages",
+        "publisher"
+      ],
+      [
+        "read_pages",
+        "admin"
+      ],
+      [
+        "edit_drafts",
+        "admin"
+      ],
+      [
+        "upload_media",
+        "admin"
+      ],
+      [
+        "publish_pages",
+        "admin"
+      ],
+      [
+        "unpublish_pages",
+        "admin"
+      ],
+      [
+        "manage_users",
+        "admin"
+      ],
+      [
+        "change_settings",
+        "admin"
+      ]
+    ],
+    "complete": true,
+    "transpose_ok": true,
+    "note": "a cell is allowed when the role may perform the operation; every other cell is denied (RL-1 to RL-7 and the completeness rule). Roles as rows is the same matrix transposed.",
+    "lines": [
+      28
+    ],
+    "quote": "This list is complete.",
+    "denied": [
+      [
+        "edit_drafts",
+        "viewer"
+      ],
+      [
+        "upload_media",
+        "viewer"
+      ],
+      [
+        "upload_media",
+        "publisher"
+      ],
+      [
+        "publish_pages",
+        "viewer"
+      ],
+      [
+        "publish_pages",
+        "editor"
+      ],
+      [
+        "unpublish_pages",
+        "viewer"
+      ],
+      [
+        "unpublish_pages",
+        "editor"
+      ],
+      [
+        "manage_users",
+        "viewer"
+      ],
+      [
+        "manage_users",
+        "editor"
+      ],
+      [
+        "manage_users",
+        "publisher"
+      ],
+      [
+        "change_settings",
+        "viewer"
+      ],
+      [
+        "change_settings",
+        "editor"
+      ],
+      [
+        "change_settings",
+        "publisher"
+      ]
+    ]
+  },
+  "numbers": [],
+  "name_numbers": [
+    {
+      "text": "4.2",
+      "part_of": "section",
+      "lines": [
+        1
+      ],
+      "quote": "### 4.2 Roles"
+    },
+    {
+      "text": "4.2.1",
+      "part_of": "section",
+      "lines": [
+        12
+      ],
+      "quote": "#### 4.2.1 Permissions"
+    },
+    {
+      "text": "4.2.2",
+      "part_of": "section",
+      "lines": [
+        26
+      ],
+      "quote": "#### 4.2.2 Completeness"
+    },
+    {
+      "text": "RL-1",
+      "part_of": "requirement",
+      "lines": [
+        14
+      ],
+      "quote": "**RL-1.**"
+    },
+    {
+      "text": "RL-2",
+      "part_of": "requirement",
+      "lines": [
+        15
+      ],
+      "quote": "**RL-2.**"
+    },
+    {
+      "text": "RL-3",
+      "part_of": "requirement",
+      "lines": [
+        16
+      ],
+      "quote": "**RL-3.**"
+    },
+    {
+      "text": "RL-4",
+      "part_of": "requirement",
+      "lines": [
+        17
+      ],
+      "quote": "**RL-4.**"
+    },
+    {
+      "text": "RL-5",
+      "part_of": "requirement",
+      "lines": [
+        18
+      ],
+      "quote": "**RL-5.**"
+    },
+    {
+      "text": "RL-6",
+      "part_of": "requirement",
+      "lines": [
+        19
+      ],
+      "quote": "**RL-6.**"
+    },
+    {
+      "text": "RL-7",
+      "part_of": "requirement",
+      "lines": [
+        20
+      ],
+      "quote": "**RL-7.**"
+    },
+    {
+      "text": "RL-5",
+      "part_of": "requirement",
+      "note": "cited in the paragraph on cumulative roles",
+      "lines": [
+        22
+      ],
+      "quote": "RL-5"
+    }
+  ],
+  "traps": [
+    {
+      "id": "t1",
+      "type": "invented_entity",
+      "kind": "role",
+      "aliases": [
+        "Guest",
+        "Anonymous",
+        "Author",
+        "Contributor",
+        "Owner",
+        "Super admin",
+        "Superadmin",
+        "Moderator",
+        "Reviewer",
+        "Installer",
+        "Member",
+        "Reader"
+      ],
+      "why": "the document names four roles and states that no other role exists",
+      "lines": [
+        29
+      ],
+      "quote": "No other role exists;"
+    },
+    {
+      "id": "t2",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "editor",
+        "to": "publish_pages"
+      },
+      "why": "RL-3 denies it",
+      "lines": [
+        16
+      ],
+      "quote": "An Editor may not publish pages and may not unpublish pages."
+    },
+    {
+      "id": "t3",
+      "type": "unstated_relation",
+      "relation": {
+        "from": "publisher",
+        "to": "upload_media"
+      },
+      "why": "RL-5 denies it; the roles are not cumulative",
+      "lines": [
+        18
+      ],
+      "quote": "A Publisher may not upload media."
+    },
+    {
+      "id": "t4",
+      "type": "invented_entity",
+      "kind": "operation",
+      "aliases": [
+        "delete pages",
+        "create pages",
+        "approve drafts",
+        "review drafts",
+        "comment",
+        "view drafts",
+        "delete media",
+        "manage roles",
+        "assign roles",
+        "schedule pages",
+        "archive pages",
+        "export content"
+      ],
+      "why": "the document lists seven operations and no other",
+      "lines": [
+        7
+      ],
+      "quote": "The roles act on seven operations"
+    },
+    {
+      "id": "t5",
+      "type": "wrong_form",
+      "forms": [
+        "mermaid"
+      ],
+      "why": "a role-by-operation relation is many-to-many: drawn as a graph its edges cross, and a graph shows no denied cell"
+    }
+  ],
+  "allowed_generic": [],
+  "caption_claim_traps": [],
+  "budget_hint": {
+    "roles": 4,
+    "operations": 7,
+    "allowed": 15,
+    "naive_nodes": 11,
+    "naive_edges": 15
+  }
+}

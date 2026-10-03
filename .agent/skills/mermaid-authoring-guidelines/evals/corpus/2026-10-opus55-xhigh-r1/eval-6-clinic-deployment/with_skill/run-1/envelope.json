@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 326849,
+ "stop_reason": "end_turn",
+ "session_id": "7ef531e3-116a-4380-b6a4-9c777a87ea2f",
+ "total_cost_usd": 1.0186854,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 41673,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 34250,
+  "output_tokens_details": {
+   "thinking_tokens": 32995
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 41673,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 34250,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 41673,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 41673
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 34250,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 41673,
+   "webSearchRequests": 0,
+   "costUSD": 1.0186854,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 32995,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Рисунок 4.1.** Развёртывание МедЗаписи: все узлы основного ЦОД-1 и резервного ЦОД-2, путь запросов пациентов и регистратуры до СУБД основной, её репликация и резервные копии.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%\nflowchart TB\n  accTitle: Развёртывание МедЗаписи\n  accDescr: Все узлы основного ЦОД-1 и резервного ЦОД-2, путь запросов пациентов и регистратуры до СУБД основной, её репликация и резервные копии.\n  PAT([\"Пациенты\"])\n  REG([\"Рабочие места регистратуры\"])\n  subgraph DC1[\"ЦОД-1\"]\n    WAF[\"WAF<br/><small>единственный вход из Интернета</small>\"]\n    VPN[\"VPN-шлюз\"]\n    LB[\"Балансировщик<br/><small>HAProxy · пара active/passive</small>\"]\n    APP(\"Узлы приложения<br/><small>app-01 · app-02 · app-03</small>\")\n    DBM[(\"СУБД основная<br/><small>PostgreSQL 15 · данные приложения</small>\")]\n    MON[\"Сервер мониторинга<br/><small>Zabbix · опрашивает все узлы</small>\"]\n  end\n  subgraph DC2[\"ЦОД-2\"]\n    DBR[(\"СУБД резервная<br/><small>отставание до 5 с · только чтение</small>\")]\n    BAK[\"Сервер резервных копий<br/><small>хранит копии 14 дней</small>\"]\n  end\n  PAT -->|\"сайт записи · HTTPS\"| WAF\n  WAF -->|\"запросы\"| LB\n  LB -->|\"распределяет запросы\"| APP\n  APP -->|\"чтение · запись\"| DBM\n  DBM -->|\"асинхронная репликация\"| DBR\n  DBM -->|\"копии каждые 6 ч\"| BAK\n  REG -->|\"подключение\"| VPN\n  VPN -->|\"запросы\"| LB\n  %% layout only\n  APP ~~~ MON\n  class PAT,REG ext\n  class WAF,VPN,LB,MON,BAK svc\n  class APP wf\n  class DBM,DBR db\n  style DC1 fill:#7F7F7F0D,stroke:#90A4AE\n  style DC2 fill:#7F7F7F0D,stroke:#90A4AE\n  classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3\n  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47\n  classDef db fill:#F3EEF9,stroke:#5E35B1,color:#2A1653\n  classDef svc fill:#F5F5F5,stroke:#546E7A,color:#1F2A30\n```\n\nУсловные обозначения:\n- овал с пунктирной рамкой — вне системы: пациенты и рабочие места регистратуры\n- прямоугольник — шлюз, балансировщик или служебный сервер; скруглённый прямоугольник — узлы приложения; цилиндр — СУБД\n- серая рамка — ЦОД\n- стрелка — запросы или поток данных, от отправителя к получателю\n- не показано: опрос всех узлов обоих ЦОД сервером мониторинга; ручное продвижение СУБД резервной и переключение DNS при отказе ЦОД-1 (§4.3)",
+ "ttft_ms": 318948,
+ "type": "result",
+ "duration_ms": 326876,
+ "uuid": "5febb605-3b19-4a1b-aa4a-e142446879b9",
+ "ttft_stream_ms": 1331,
+ "time_to_request_ms": 24,
+ "first_content_frame_ms": 1332,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

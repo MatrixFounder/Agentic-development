@@ -1,7 +1,7 @@
 ---
 name: architecture-format-extended
 description: Extended architecture templates with full examples. Imports architecture-format-core for base structure.
-version: 1.1
+version: 1.2
 tier: 2
 requires: architecture-format-core
 ---
@@ -45,7 +45,9 @@ Description of main entities and their relationships at a high level.
 Detailed description considering storage technology (Relational vs NoSQL).
 
 ### 4.3. Data Model Diagram
-ER-diagram in PlantUML format.
+A Mermaid `erDiagram` of the §4.1 entities, within the ER budget of `mermaid-authoring-guidelines`.
+Load the skill before the figure and follow it. A full schema is a table, as in §4.2. PlantUML is
+not used: GitHub does not render it.
 
 ### 4.4. Migrations and Versioning
 Strategy for DB schema changes.

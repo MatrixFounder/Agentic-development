@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 29401,
+ "stop_reason": "end_turn",
+ "session_id": "70676074-fdda-45c2-9988-7e2683041b99",
+ "total_cost_usd": 0.0468414,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1400,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 1767,
+  "output_tokens_details": {
+   "thinking_tokens": 1431
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1400,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 1767,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1400,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1400
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 1767,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1400,
+   "webSearchRequests": 0,
+   "costUSD": 0.0468414,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 1431,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "```mermaid\nflowchart LR\n    accTitle: Front-end calls to domain services\n    accDescr: Web shop, Mobile BFF and Partner API each call Catalog service, Pricing service and Stock service directly over HTTP/JSON, with no API gateway between them.\n\n    subgraph FE[\"Front-ends\"]\n        WEB[\"Web shop\"]\n        BFF[\"Mobile BFF\"]\n        PAPI[\"Partner API\"]\n    end\n\n    subgraph DS[\"Domain services\"]\n        CAT[\"Catalog service\"]\n        PRC[\"Pricing service\"]\n        STK[\"Stock service\"]\n    end\n\n    WEB --> CAT & PRC & STK\n    BFF --> CAT & PRC & STK\n    PAPI --> CAT & PRC & STK\n```\n\n*Figure 2.4: Each front-end calls each domain service directly over HTTP/JSON (FS-1), with no API gateway between them (FS-2). Calls between domain services and calls from the Admin console are not shown.*",
+ "ttft_ms": 14719,
+ "type": "result",
+ "duration_ms": 29494,
+ "uuid": "f62029c9-42d8-4de8-87ca-3ed8ec8bc835",
+ "ttft_stream_ms": 1323,
+ "time_to_request_ms": 92,
+ "first_content_frame_ms": 1323,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

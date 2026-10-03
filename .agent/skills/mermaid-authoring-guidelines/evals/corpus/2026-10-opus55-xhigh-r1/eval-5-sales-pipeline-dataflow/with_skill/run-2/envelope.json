@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 113258,
+ "stop_reason": "end_turn",
+ "session_id": "ffe94eee-2a51-4104-9e93-b5673051eef3",
+ "total_cost_usd": 0.5704414,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 41535,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 11893,
+  "output_tokens_details": {
+   "thinking_tokens": 10925
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 41535,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 11893,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 41535,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 41535
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 11893,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 41535,
+   "webSearchRequests": 0,
+   "costUSD": 0.5704414,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 10925,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Figure 5.1.** Sales data flow: the path of a sale from the sources to the Sales warehouse, and what each consumer reads and writes.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%\nflowchart TB\n  accTitle: Sales data flow\n  accDescr: The path of a sale from the sources to the Sales warehouse, and what each consumer reads and writes.\n  SRC([\"Sources<br/><small>POS feeds · Web orders · Loyalty CSV</small>\"])\n  RAW[(\"Raw zone bucket\")]\n  NORM(\"Normalizer<br/><small>hourly</small>\")\n  STG[(\"Staging tables\")]\n  DEDUP(\"Deduplicator<br/><small>hourly · after Normalizer</small>\")\n  CLEAN[(\"Clean sales\")]\n  LOAD(\"Warehouse loader<br/><small>nightly</small>\")\n  WH[(\"Sales warehouse\")]\n  FIN([\"Finance dashboards\"])\n  FC(\"Demand forecast job<br/><small>weekly</small>\")\n  PLAN[\"Planning system<br/><small>external supply system</small>\"]\n  DQ(\"Data quality monitor\")\n  SRC ==>|\"files\"| RAW\n  RAW ==> NORM\n  NORM ==> STG\n  STG ==> DEDUP\n  DEDUP ==> CLEAN\n  CLEAN ==> LOAD\n  LOAD ==> WH\n  WH --> FIN\n  WH --> FC\n  FC -->|\"forecasts\"| PLAN\n  STG --> DQ\n  WH --> DQ\n  class SRC,FIN ext\n  class NORM,DEDUP,LOAD,FC,DQ wf\n  class RAW,STG,CLEAN,WH db\n  class PLAN svc\n  classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3\n  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47\n  classDef db fill:#F3EEF9,stroke:#5E35B1,color:#2A1653\n  classDef svc fill:#F5F5F5,stroke:#546E7A,color:#1F2A30\n```\n\nLegend:\n- every arrow points the way the data moves\n- thick arrow = the path of a sale to the Sales warehouse; thin arrow = a consumer's read or write\n- dashed stadium = the sources and the Finance dashboards; rectangle = external system\n- rounded box = a stage or a consumer job; its second line = when it runs\n- cylinder = a store\n- not drawn: the alert the Data quality monitor sends to `#sales-data-oncall`",
+ "ttft_ms": 107104,
+ "type": "result",
+ "duration_ms": 113364,
+ "uuid": "61fb52b5-6bcf-4ae9-ab05-129c1374a460",
+ "ttft_stream_ms": 4442,
+ "time_to_request_ms": 105,
+ "first_content_frame_ms": 4442,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

@@ -2,7 +2,7 @@
 name: skill-reverse-engineering
 description: "Regenerate architecture documentation from codebase analysis."
 tier: 2
-version: 1.4
+version: 1.5
 ---
 # Reverse Engineering Skill
 
@@ -52,6 +52,14 @@ Generate diffs for:
 - Component Map
 - Data Flow
 
+**Figures.** Write the text of a section first. Then draw its figure from that text with
+`mermaid-authoring-guidelines`; load the skill before the first figure. Each element of the figure
+has a supporting line in that text. A relation found only in the code goes into the text first, or
+stays out of the figure. A figure in a section this update leaves unchanged stays as it is.
+
+**Why.** The skill's fidelity step (Step 6) accepts a line of the document as support. A line of
+code is not one.
+
 ### 2. KNOWN_ISSUES.md Updates
 Identify:
 - `TODO`/`HACK` comments indicating tech debt.
@@ -84,3 +92,4 @@ Preservation** below still applies to the per-issue bodies.)
 ## Integration
 - **With `skill-update-memory`**: After analysis, run bootstrap mode to create missing `.AGENTS.md` files where needed.
 - **Workflow `04-update-docs`**: Run this skill if docs drift is detected.
+- **With `mermaid-authoring-guidelines`**: every figure of the update; see **Figures** above.

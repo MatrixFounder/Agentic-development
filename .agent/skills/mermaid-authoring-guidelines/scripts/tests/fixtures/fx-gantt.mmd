@@ -1,0 +1,14 @@
+gantt
+  dateFormat x
+  axisFormat %Q
+  tickInterval 2millisecond
+  todayMarker off
+  section Analysis
+    T1 TASK written :done, t1, 0, 2ms
+    T2 Task review :active, t2, 2, 1ms
+  section Build
+    T3 Stubs :t3, 3, 2ms
+    T4 Lint script and its probe pairs for every rule :crit, t4, 5, 3ms
+    T5 Render check :t5, 5, 4ms
+  section Release
+    T6 Changelog :t6, 9, 1ms

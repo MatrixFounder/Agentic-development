@@ -11,6 +11,7 @@
 - [7. Localization Strategy](#7-localization-strategy)
 - [8. Skill Architecture & Optimization Standards](#8-skill-architecture--optimization-standards)
 - [9. Framework Installer Subsystem](#9-framework-installer-subsystem)
+- [10. Figure Authoring Subsystem](#10-figure-authoring-subsystem)
 
 ## 1. Core Concept
 The system is built on a "Multi-Agent" architecture where different "Agents" (Personas defined by System Prompts) collaborate to solve tasks.
@@ -584,3 +585,132 @@ myapp/                                                  ← target project root
 - `System/` rename in framework to remove the high-risk collision.
 
 See [docs/TASK.md §5](TASK.md) for full open-question list.
+
+## 10. Figure Authoring Subsystem
+
+TASK 108. The skill `mermaid-authoring-guidelines` (tier 2) governs every figure an agent writes into
+an output. It is loaded before the first figure of any output, in any phase; a generated plan chart
+needs no load.
+
+### 10.1 Components
+
+| Component | Kind | Role | Runs in CI |
+| :--- | :--- | :--- | :--- |
+| `SKILL.md` | prompt | Step 0 form choice, the authoring contract, the process, the routing table | — |
+| `references/*.md` | prompt | notation per kind, renderer facts, layout, ASCII, paired examples, review | — |
+| `assets/notation.json` | data | budgets, thresholds, settings lines, palette, allowed and avoided kinds | read by tests |
+| `scripts/mermaid_model.py` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII | unit tests |
+| `scripts/lint_mermaid.py` | CLI | static rules with probe pairs; `--inventory` worksheet | yes |
+| `scripts/planarity.py` | library | exact planarity test of a flowchart's simple graph | unit tests |
+| `scripts/svg_geometry.py` | library | crossings, edges through nodes and titles, overlaps, size, from an SVG | fixture tests |
+| `scripts/render_check.py` | CLI | renders with pinned installs, measures text, calls `svg_geometry` | no |
+| `scripts/setup_renderers.sh` | CLI | installs the pinned renderers into a cache outside the repository | no |
+| `assets/renderers/<tag>/` | data | `package.json` and lockfile per pinned renderer, installed with `npm ci` | — |
+| `scripts/plan_gantt.py` | CLI | schedule from a task list; writes or checks the plan chart block | yes |
+| `evals/` | instruments | the A/B evaluation of the skill (§10.4) | selftest only |
+
+**Why one data file.** The lint, the render check and the eval grader read every threshold from
+`assets/notation.json`. A test pins that the references quote the same values. A threshold held in
+two places drifts in one of them.
+
+### 10.2 Authoring flow
+
+1. Step 0 picks the form: no figure, list or table, ASCII, Mermaid, image. The first sufficient
+   form is used.
+2. For Mermaid, the agent writes the figure to a scratch file outside the repository.
+3. `lint_mermaid.py` reports static findings. Postcondition: 0 `error`.
+4. `render_check.py` renders in mermaid 11.17.2 and 10.9.8, plus a dark 11.17.2 render.
+   Postcondition: exit 0, or exit 2 with `not rendered: <reason>` stated in the hand-off.
+5. `lint_mermaid.py --inventory` lists every element; the agent cites a supporting line for each.
+6. The agent inserts caption, fence and legend, and runs the lint on the document.
+
+### 10.3 Interfaces
+
+Exit codes follow §7.4: 0 measured and clean, 1 a defect found, 2 the instrument is broken or
+absent, 3 the invocation is wrong (TASK 108 D20).
+
+| Command | 0 | 1 | 2 | 3 |
+| :--- | :--- | :--- | :--- | :--- |
+| `lint_mermaid.py <file.md\|file.mmd> [--json] [--inventory] [--probe]` | no error | error found | internal failure or dead rule | usage |
+| `render_check.py <file> [--no-dark] [--forward] [--versions TAGS] [--json] [--out DIR] [--fixture FILE]` | pass | a figure fails or does not parse; a broken negative fence, or one that fails a render check its marker does not name | not rendered: a required render left out, no mermaid fence, or output that cannot be written | usage, including a `--fixture` that is not a render-evidence fixture |
+| `plan_gantt.py <plan> [--write DOC\|--check DOC] [--stages ...] [--strict]` | ok | stale block or invalid plan | internal failure | usage |
+
+`setup_renderers.sh [--forward] [--dry-run]` exits 0 when installed, 1 with the failing step
+named, 3 on usage. `plan_gantt.py` reads a JSON schedule, or the JSON block under
+`<!-- contract:schedule -->` of a plan; it never parses the plan's prose (L1). A chart split with
+`--stages` stores its stage groups in the region's first line, `<!-- plan-gantt-groups: ... -->`,
+which a later `--write` or `--check` reuses.
+
+A fence whose last body line is `%% negative: <names>` shows a defect on purpose (TASK 108 R9.4).
+The marker counts only in the skill's `references/` and `scripts/tests/fixtures/`. There, the
+findings of the rules and families it names are `expected` and set no exit code; every other
+finding counts. Elsewhere the lint reports the marker (MA-NEG-03), and the render check grades the
+fence as an ordinary figure. A parse or render error in 11.17.2 or 10.9.8 fails a negative fence
+unless its marker names a parse rule. The render check calls the fence broken, exit 1, when it
+names render checks and none of them fails, or when a render check it does not name fails. A
+marker that names no render check has its renders graded as a positive figure. The lint and the
+render check read the marker and its scope through one definition in `mermaid_model.py`. A figure of a kind whose geometry the check does not
+model passes as `pass, geometry not checked`; the PNG answers for its crossings and overlaps.
+`--fixture FILE` merges hash-bound evidence into `FILE`: the sha256 of the fence lines, the
+renderer versions, the browser build, and the metrics of each render. The unit tests read it
+without node (R9.5).
+
+### 10.4 Evaluation
+
+`evals/` measures the skill under invariant L5 (§7.6). The arms differ in one input: the skill
+bundle that `SKILL.md`'s routing table names for the case's figure kind. Keys are written before
+any run. The grader imports `lint_mermaid` and `svg_geometry` and restates no threshold. Rendering
+happens once, in `render_corpus.py`, so the grader is a function of committed files and its pin
+runs in CI. The decision rule is TASK 108 D8.
+
+### 10.5 Invariant
+
+**Invariant (L6): a figure check states the renderer versions it ran; a check that did not render
+reports `not rendered: <reason>` and exits 2, never 0.**
+
+**Why.** Renderers differ in layout, wrapping and syntax support between 10.9, 11.17 and 12.1. A
+pass without a version names no observable state, and exit 0 from a check that never ran is the
+failure `developer-guidelines` §6.3 describes.
+
+L1 (§7.2) applies to the lint. Caption and legend are found by their position next to the fence.
+Label limits count characters per line; the lowercase rule for edge labels applies to cased
+scripts only.
+
+### 10.6 Integration points
+
+| Surface | What it states |
+| :--- | :--- |
+| `architecture-format-core` §2.2, §3.3; `architecture-format-extended` | load the skill; the figure block skeleton; ER subset or table |
+| `documentation-standards` §5.6 | caption and legend positions; the form ladder; fences are exempt from §5.1 |
+| `04_architect_prompt.md`, `06_planner_prompt.md` | load before the first figure; plan chart at 8 or more tasks |
+| `05_architecture_reviewer_prompt.md`, `07_plan_reviewer_prompt.md` and four review checklists | figure items over caller-supplied lint and render output; the plan reviewer also gets `plan_gantt.py --check` output |
+| workflows `01-start-feature.md`, `vdd-01-start-feature.md`, `02-plan-implementation.md`, `vdd-02-plan.md` | the caller runs the figure lint, and `plan_gantt.py --check` for a plan, before the reviewer's brief |
+| plan template and `PLAN_EXAMPLE.md` of `skill-planning-format` | the schedule block and the generated region |
+| `.claude/agents/architect.md` | the architect may run the lint and the render check |
+| `.claude/settings.json` | the lint and `plan_gantt.py --check` run without approval; the render check asks |
+| `skill-phase-context`, `SKILL_TIERS.md`, bootstrap files | the conditional load |
+| `brainstorming`, `security-audit` DFD, `skill-reverse-engineering`, `skill-planning-format` | figures follow the skill |
+
+### 10.7 Security and safety
+
+- `setup_renderers.sh` installs exact versions with `npm ci --ignore-scripts` from committed
+  lockfiles, never globally, into `${MERMAID_RENDER_HOME:-~/.cache/mermaid-authoring-guidelines}`,
+  with the npm cache beside the installs.
+- The browser resolves no host name, localhost included, uses no proxy, and talks to puppeteer
+  over a pipe; `render_check.py` refuses a config that lacks these arguments.
+- Every node process runs inside its install directory, which holds an empty `.puppeteerrc.json`.
+  A configuration file in the caller's directory or its parents is never read, so it cannot run
+  code in a render.
+- The install home, each install and the render output directory are private to the user. A
+  directory others may write to is refused.
+- The browser runs with its sandbox. `--no-sandbox` is passed only when
+  `MERMAID_RENDER_NO_SANDBOX=1` is set.
+- Renders and PNGs are written outside the repository, so a review round's tree fingerprint does
+  not change.
+- `run_evals.py` spends tokens and stays off the safe-command list, like `run_authoring.py`.
+
+### 10.8 Out of scope
+
+- Plan status tokens and develop-workflow updates (TASK 108 D11).
+- The ELK layout. GitHub does not register it, and every settings line pins `dagre`.
+- Consumer projects and Universal-skills, which receive the skill after `install.py update`.

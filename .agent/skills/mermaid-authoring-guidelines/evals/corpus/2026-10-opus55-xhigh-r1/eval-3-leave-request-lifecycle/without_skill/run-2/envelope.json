@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 41305,
+ "stop_reason": "end_turn",
+ "session_id": "54f285ce-c493-48ae-885e-65a5a2e2baea",
+ "total_cost_usd": 0.0999214,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1750,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 4281,
+  "output_tokens_details": {
+   "thinking_tokens": 3681
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1750,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 4281,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1750,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1750
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 4281,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1750,
+   "webSearchRequests": 0,
+   "costUSD": 0.0999214,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 3681,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "Диаграмма показывает состояния и переходы из разделов 2.3.1 и 2.3.2.\n\n```mermaid\nstateDiagram-v2\n    state \"Черновик\" as Draft\n    state \"На согласовании\" as Review\n    state \"Возвращена\" as Returned\n    state \"Согласована\" as Approved\n    state \"Запланирована\" as Scheduled\n    state \"В отпуске\" as OnLeave\n    state \"Завершена\" as Completed\n    state \"Отклонена\" as Rejected\n    state \"Отменена\" as Cancelled\n\n    [*] --> Draft : сотрудник создаёт\n    Draft --> Review : сотрудник отправляет\n    Review --> Approved : руководитель согласует\n    Review --> Returned : руководитель возвращает\n    Review --> Rejected : руководитель отклоняет\n    Returned --> Review : сотрудник отправляет повторно\n    Approved --> Scheduled : служба кадров, hr_schedule()\n    Approved --> Cancelled : сотрудник отменяет\n    Scheduled --> OnLeave : наступила дата начала\n    Scheduled --> Cancelled : сотрудник отменяет не позднее чем за 2 дня до начала\n    OnLeave --> Completed : наступила дата окончания\n    Completed --> [*]\n    Rejected --> [*]\n    Cancelled --> [*]\n\n    classDef reserved fill:#fff1c2,stroke:#9a6700,color:#1f2328\n    class Approved,Scheduled,OnLeave reserved\n```\n\nЦветом выделены состояния с резервом дней. Итоговые состояния ведут в конечную точку. Напоминание и эскалация из раздела 2.3.3 не меняют состояние заявки, поэтому на диаграмме их нет.",
+ "ttft_ms": 37414,
+ "type": "result",
+ "duration_ms": 41340,
+ "uuid": "a32e2edc-3878-46bc-8ab0-15f6ce0916a6",
+ "ttft_stream_ms": 1910,
+ "time_to_request_ms": 27,
+ "first_content_frame_ms": 1910,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

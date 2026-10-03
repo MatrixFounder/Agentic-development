@@ -58,17 +58,18 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 | **`architecture-design`** | Guidelines for designing scalable and modular system architecture and data models. | `01-start-feature`, `base-stub-first` | Architect, Arch Reviewer |
 | **`skill-planning-format`** | Standard templates for `PLAN.md` and Task Descriptions. | `02-plan-implementation` | Planner |
 | **`architecture-format-core`** | Core template for Architecture documents, incl. Living Document & Index-Mode (>1500-line split). For quick updates. (TIER 1) | `01-start-feature`, Most updates | Architect |
-| **`architecture-format-extended`** | Full templates with examples, diagrams, JSON samples. For new systems. (~400 lines, TIER 2) | New systems, Major refactors | Architect |
+| **`architecture-format-extended`** | Full templates with examples and JSON samples. For new systems. (~400 lines, TIER 2) | New systems, Major refactors | Architect |
 | **`known-issues-format`** | Format authority for BOTH thin-index ledgers — `docs/KNOWN_ISSUES.md` + `docs/issues/` (defects) and `docs/BACKLOG.md` + `docs/backlog/` (work-items): shared index-over-records mechanics stated once, then per-registry frontmatter schema, prefix→category table, status/severity/effort vocab, index-line format, record recipe + two seed templates for new projects + `scripts/check_contract_sync.py` drift gate (both registries). Owns three rows of the `documentation-standards` §4.4 anchor registry. (TIER 2) | Filing/reading known issues or backlog work-items, `04-update-docs` | All Agents |
 | **`run-feedback`** | Quality feedback loop: capture run errors (retro step / opt-in Claude Code hooks / transcript miner) into `.agent/feedback/` inbox with fingerprint dedup, triage (defect/work-item/noise), and file into either `known-issues-format` ledger — defects to `docs/issues/` + `KNOWN_ISSUES.md`, work-items to `docs/backlog/` + `BACKLOG.md`, both lockstep, create-only, ID-allocating, dry-runnable. Feeds `/heal-issues` via `auto_fixable: true`. Stdlib CLI `scripts/run_feedback.py`. Full guide: [`QUALITY_FEEDBACK_LOOP.md`](QUALITY_FEEDBACK_LOOP.md). (TIER 2) | End-of-run Retro (Global Protocol), `/run-feedback`, `heal-issues` | All Agents |
 | **`tdd-stub-first`** | Test-Driven Development strategy: "Structure & Stubs" first, then "Implementation". | `03-develop-single-task`, `vdd-enhanced` | Planner, Developer |
 | **`tdd-strict`** | **[High Assurance]** Strict TDD with mechanical verification (Fail Reason, Minimalism). Tier 3. | `full-robust` | Developer (Strict Mode) |
 | **`developer-guidelines`** | Behavioral rules for Developers: adherence to tasks, "Documentation First", Anti-Loop Protocol, blast radius of bulk-rewrite commands (§5.1), and **gate verification** (§6.3) — verify with CI's invocation not a narrower one, a pipeline's exit code belongs to its last command, and exit 0 is not evidence that work happened. | `03-develop-single-task`, `base-stub-first` | Developer |
 | **`artifact-formalizer`** | Register authority for authored prose — two modes, see the note below | Analysis, Architecture, Planning, Review | Analyst, Architect, Planner, Reviewers |
-| **`documentation-standards`** | Docstrings, "The Why" comments, Markdown structure, register rules (§5.5), and the positional-reference resolver (§4.1–§4.2) — see the note below | All Development Workflows | Developer, Code Reviewer |
+| **`documentation-standards`** | Docstrings, "The Why" comments, Markdown structure, register rules (§5.5), figure rules (§5.6), and the positional-reference resolver (§4.1–§4.2) — see the note below | All Development Workflows | Developer, Code Reviewer |
+| **`mermaid-authoring-guidelines`** | Figure authority for every output — see the note below (TIER 2) | `01-start-feature`, `02-plan-implementation`, any figure | Architect, Planner, Reviewers, any agent drawing a figure |
 | **`testing-best-practices`** | Best practices: E2E/Unit hierarchy, no LLM mocking, realism. | `03-develop-single-task`, `vdd-03-develop` | Developer, Code Reviewer |
 
-### Notes on two rows
+### Notes on three rows
 
 **`artifact-formalizer`** — two modes, and the first is loaded before writing, not after.
 
@@ -94,6 +95,17 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
   reading pass, so neither has a value to pin. `evals/selftest_evals.py` runs 78 cases at zero
   tokens and is wired into CI; `evals/run_authoring.py` spawns the agents a campaign needs and is
   not. ARCHITECTURE §7.6 states the invariant; `evals/README.md` states what none of it proves.
+
+**`mermaid-authoring-guidelines`** — loaded before the first figure of any output, in any phase.
+
+- **Step 0** picks the form: no figure, a list or a table, ASCII, Mermaid, or an image. Output for a
+  medium that does not render Mermaid carries no Mermaid fence.
+- **Mermaid figures** follow one notation per document, the budgets, layout and fidelity rules,
+  and pass `scripts/lint_mermaid.py` and `scripts/render_check.py` (mermaid 11.17.2 and 10.9.8,
+  light and dark). A check that did not render reports `not rendered: <reason>`.
+- **Plan charts** come from `scripts/plan_gantt.py`, which reads the `contract:schedule` block.
+- **Evaluation**: `evals/` holds an A/B campaign against the same model without the skill; its
+  result and the decision rule are in `references/eval-results.md`.
 
 **`documentation-standards`** — §5.5 holds the normative short form of the register rules and the
 detector-coverage table. §5.1 owns cell shape, §5.2 prose shape, §5.3 line length. The scanner

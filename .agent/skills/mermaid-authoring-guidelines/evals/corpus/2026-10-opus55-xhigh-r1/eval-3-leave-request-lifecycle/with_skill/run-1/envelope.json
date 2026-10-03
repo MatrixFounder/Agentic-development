@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 57108,
+ "stop_reason": "end_turn",
+ "session_id": "1a7cda1f-fe81-4c9e-92f2-b76d92d4a3ca",
+ "total_cost_usd": 0.3474134,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 28599,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 5916,
+  "output_tokens_details": {
+   "thinking_tokens": 5003
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 28599,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5916,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 28599,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 28599
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5916,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 28599,
+   "webSearchRequests": 0,
+   "costUSD": 0.3474134,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 5003,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "**Рисунок 2.3.** Состояния заявки на отпуск. Каждый переход подписан исполнителем. Где §2.3.1 исполнителя не называет, переход подписан условием.\n\n```mermaid\n%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%\nstateDiagram-v2\n    accTitle: Состояния заявки на отпуск\n    accDescr: Каждый переход подписан исполнителем, а там, где текст его не называет, условием.\n    direction TB\n    state \"Черновик\" as draft\n    state \"На согласовании\" as review\n    state \"Согласована\" as approved\n    state \"Запланирована\" as scheduled\n    state \"В отпуске\" as onleave\n    state \"Завершена\" as done\n    state \"Отменена\" as cancelled\n    state \"Возвращена\" as returned\n    state \"Отклонена\" as rejected\n    [*] --> draft : сотрудник\n    draft --> review : сотрудник\n    review --> approved : руководитель\n    approved --> scheduled : hr_schedule()\n    scheduled --> onleave : дата начала\n    onleave --> done : дата окончания\n    approved --> cancelled : сотрудник\n    scheduled --> cancelled : сотрудник\n    review --> returned : руководитель\n    returned --> review : сотрудник\n    review --> rejected : руководитель\n    classDef hold fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47,stroke-width:2px\n    classDef wait fill:#FFFFFF,stroke:#607D8B,color:#263238\n    classDef final fill:#ECEFF1,stroke:#37474F,color:#263238,stroke-dasharray:4 3\n    class approved,scheduled,onleave hold\n    class draft,review,returned wait\n    class done,rejected,cancelled final\n```\n\n1. Закрашенный кружок обозначает создание заявки.\n2. Толстая синяя рамка и бледно-голубая заливка: дни отпуска зарезервированы («Резерв дней» = да).\n3. Тонкая серо-синяя рамка и белая заливка: дни не зарезервированы.\n4. Пунктирная тёмно-серая рамка обозначает итоговое состояние. Из него заявка не выходит.\n5. Подпись перехода называет его исполнителя. Подписи «дата начала» и «дата окончания» обозначают условия: наступает дата начала или дата окончания отпуска.\n6. Запланированную заявку сотрудник отменяет не позднее чем за 2 дня до начала отпуска.\n7. На рисунке нет напоминания и эскалации от ночного задания (§2.3.3), потому что они не меняют состояние заявки.",
+ "ttft_ms": 57121,
+ "type": "result",
+ "duration_ms": 57140,
+ "uuid": "7cb02b33-23ee-4cc7-9a9c-183cb24a0afd",
+ "ttft_stream_ms": 1267,
+ "time_to_request_ms": 30,
+ "first_content_frame_ms": 1268,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

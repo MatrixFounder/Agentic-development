@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 47357,
+ "stop_reason": "end_turn",
+ "session_id": "e7a62971-db8c-4c48-9812-f8e277a187d6",
+ "total_cost_usd": 0.123999,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 2948,
+  "cache_read_input_tokens": 535,
+  "output_tokens": 5015,
+  "output_tokens_details": {
+   "thinking_tokens": 4140
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 2948,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5015,
+    "cache_read_input_tokens": 535,
+    "cache_creation_input_tokens": 2948,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 2948
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5015,
+   "cacheReadInputTokens": 535,
+   "cacheCreationInputTokens": 2948,
+   "webSearchRequests": 0,
+   "costUSD": 0.123999,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 4140,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "The figure groups the containers by zone. Arrows run from caller to callee, as listed in §3.2. The dashed box is the Slotting service that this task adds, and the dotted arrow is database replication.\n\n```mermaid\nflowchart TB\n    accTitle: Larkspur WMS containers\n    accDescr: The Handheld app and the Supervisor console call the API gateway in the DMZ, which calls the Inventory and Picking services in the application zone. The Picking service calls the Inventory service and the Label printer bridge. The Picking, Inventory and Slotting services use the Event bus, and the Slotting service stores slot assignments through the Inventory service. The Inventory and Picking services each own a MariaDB database in the data zone, and the Inventory DB streams to the Reporting replica.\n\n    handheld[\"Handheld app<br/>Android, floor operators\"]\n    console[\"Supervisor console<br/>web app, shift supervisors\"]\n\n    subgraph dmz[\"DMZ\"]\n        gateway[\"API gateway<br/>Kong\"]\n    end\n\n    subgraph app[\"Application zone\"]\n        inventory[\"Inventory service<br/>Java\"]\n        picking[\"Picking service<br/>Java\"]\n        slotting[\"Slotting service<br/>Python\"]\n        printer[\"Label printer bridge<br/>Go\"]\n        bus[\"Event bus<br/>RabbitMQ\"]\n    end\n\n    subgraph data[\"Data zone\"]\n        invdb[(\"Inventory DB<br/>MariaDB\")]\n        pickdb[(\"Picking DB<br/>MariaDB\")]\n        replica[(\"Reporting replica<br/>MariaDB, read-only\")]\n    end\n\n    handheld -->|\"HTTPS\"| gateway\n    console -->|\"HTTPS\"| gateway\n    gateway -->|\"gRPC: stock queries\"| inventory\n    gateway -->|\"gRPC: pick tasks\"| picking\n    picking -->|\"gRPC: reserve stock, synchronous\"| inventory\n    picking -->|\"gRPC: print label\"| printer\n    picking -->|\"AMQP: publishes pick.completed\"| bus\n    inventory -->|\"AMQP: consumes pick.completed,<br/>publishes stock.changed\"| bus\n    slotting -->|\"AMQP: consumes stock.changed\"| bus\n    slotting -->|\"gRPC: stores slot assignments\"| inventory\n    inventory -->|\"owns\"| invdb\n    picking -->|\"owns\"| pickdb\n    invdb -.->|\"streams to\"| replica\n\n    classDef added stroke-dasharray: 5 5\n    class slotting added\n```",
+ "ttft_ms": 41824,
+ "type": "result",
+ "duration_ms": 47404,
+ "uuid": "d49f59ae-5494-4ee2-abc7-4e1f76aa76d2",
+ "ttft_stream_ms": 1518,
+ "time_to_request_ms": 48,
+ "first_content_frame_ms": 1518,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

@@ -1,0 +1,98 @@
+{
+ "duration_api_ms": 45900,
+ "stop_reason": "end_turn",
+ "session_id": "8aa72888-503a-4fe3-9676-0437ec3d33d9",
+ "total_cost_usd": 0.11396939999999998,
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 1531,
+  "cache_read_input_tokens": 1467,
+  "output_tokens": 5071,
+  "output_tokens_details": {
+   "thinking_tokens": 4287
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 1531,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "not_available",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 5071,
+    "cache_read_input_tokens": 1467,
+    "cache_creation_input_tokens": 1531,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 1531
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ },
+ "modelUsage": {
+  "claude-opus-5-5": {
+   "inputTokens": 2,
+   "outputTokens": 5071,
+   "cacheReadInputTokens": 1467,
+   "cacheCreationInputTokens": 1531,
+   "webSearchRequests": 0,
+   "costUSD": 0.11396939999999998,
+   "contextWindow": 1000000,
+   "maxOutputTokens": 128000,
+   "thinkingTokens": 4287,
+   "canonicalModel": "claude-opus-5-5",
+   "provider": "firstParty",
+   "costBasis": "list"
+  }
+ },
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "fast_mode_state": "off",
+ "fast_mode_disabled_reason": "sdk_opt_in_required",
+ "subagent_stats": {
+  "spawned": 0,
+  "requested": {
+   "background": 0,
+   "foreground": 0,
+   "unset": 0
+  },
+  "started_in_background": 0,
+  "max_depth": 0,
+  "spawned_by_subagents": 0,
+  "completed": 0,
+  "failed": 0,
+  "killed": {
+   "parent": 0,
+   "user": 0,
+   "system": 0
+  },
+  "refused": {
+   "depth_limit": 0,
+   "concurrency_limit": 0,
+   "budget": 0
+  },
+  "by_type": {}
+ },
+ "is_error": false,
+ "num_turns": 1,
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "The figure below shows how sales data moves from the three sources, through the pipeline stages, to the consumers listed in §5.2. Cylinders are data stores. Dashed arrows are the Data quality monitor's reads and its alert.\n\n```mermaid\nflowchart TB\n    accTitle: Sales data pipeline data flow\n    accDescr: POS feeds, web orders and the loyalty CSV land in the Raw zone. The Normalizer, Deduplicator and Warehouse loader move the data through Staging tables and Clean sales into the Sales warehouse. Finance dashboards and the Demand forecast job read the Sales warehouse, and the Demand forecast job writes forecasts to the external Planning system. The Data quality monitor reads Staging tables and the Sales warehouse and alerts the on-call channel when a feed is more than 2 hours late.\n\n    subgraph sources[\"Sources\"]\n        pos[\"POS feeds<br>12 regions, CSV over SFTP\"]\n        web[\"Web orders<br>JSON export\"]\n        loyalty[\"Loyalty CSV<br>loyalty card purchases\"]\n    end\n\n    subgraph pipeline[\"Pipeline\"]\n        raw[(\"Raw zone\")]\n        normalizer[\"Normalizer<br>hourly\"]\n        staging[(\"Staging tables\")]\n        dedup[\"Deduplicator<br>hourly, after Normalizer\"]\n        clean[(\"Clean sales\")]\n        loader[\"Warehouse loader<br>nightly\"]\n        warehouse[(\"Sales warehouse\")]\n    end\n\n    subgraph consumers[\"Consumers\"]\n        finance[\"Finance dashboards\"]\n        forecast[\"Demand forecast job<br>weekly\"]\n        dq[\"Data quality monitor\"]\n    end\n\n    planning[\"Planning system<br>external supply system\"]\n    oncall[\"#sales-data-oncall\"]\n\n    pos -- \"hourly\" --> raw\n    web -- \"hourly\" --> raw\n    loyalty -- \"daily\" --> raw\n    raw --> normalizer --> staging --> dedup --> clean --> loader --> warehouse\n    warehouse --> finance\n    warehouse --> forecast\n    forecast -- \"forecasts\" --> planning\n    staging -.-> dq\n    warehouse -.-> dq\n    dq -. \"feed more than 2 h late\" .-> oncall\n```",
+ "ttft_ms": 40762,
+ "type": "result",
+ "duration_ms": 45920,
+ "uuid": "b43ae7cc-69e4-4fb7-bec1-6a2fab1d31ae",
+ "ttft_stream_ms": 1319,
+ "time_to_request_ms": 21,
+ "first_content_frame_ms": 1319,
+ "queued_turn_count": 0,
+ "result_index": 0
+}

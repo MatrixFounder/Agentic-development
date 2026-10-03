@@ -25,8 +25,10 @@ spec.loader.exec_module(cpr)
 
 
 def _git(root, *args):
+    # No auto maintenance: since git 2.47 `commit` spawns a DETACHED `maintenance --auto`
+    # that writes a lock under .git, racing tearDown's rmtree ("Directory not empty: '.git'").
     subprocess.run(
-        ["git", "-C", str(root), *args],
+        ["git", "-c", "maintenance.auto=false", "-c", "gc.auto=0", "-C", str(root), *args],
         check=True,
         capture_output=True,
         text=True,

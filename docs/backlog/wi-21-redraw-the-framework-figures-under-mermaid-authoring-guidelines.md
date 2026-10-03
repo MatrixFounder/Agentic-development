@@ -1,15 +1,33 @@
 ---
 id: WI-21
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-02
 slug: wi-21-redraw-the-framework-figures-under-mermaid-authoring-guidelines
 effort: M
 value: 'the framework's own documents show the figure standard it ships'
 source: 'TASK 108 (mermaid-authoring-guidelines)'
+resolved_at: 2026-10-04
+resolved_by: 'operator request of 2026-10-04'
 ---
 
 # WI-21 — Redraw the framework figures under mermaid-authoring-guidelines
+
+> **Done 2026-10-04, on the operator's request.** The skill's lint and render check ran over the
+> seven figures and `docs/presentation/FRAMEWORK_EVOLUTION.md`. Every figure now passes the render
+> check in 11.17.2, 10.9.8 and dark, with 0 lint errors.
+>
+> - `PRODUCT_DEVELOPMENT.md`: redrawn without subgraphs, in the palette, with the notice and the
+>   override as one two-headed edge; a caption and a legend.
+> - `WORKFLOWS.md`, the system map: 26 nodes, over the hard budget. Two structural redraws still
+>   crossed 3 times, because two pipelines call the same three steps, so it is now a table of
+>   who calls whom, in order (the skill's Step 8.4).
+> - `WORKFLOWS.md`, the product choice: the palette instead of hand-set colours, and no
+>   `A -- text --> B` edge.
+> - `brainstorming/examples/demo_complex.md`: 8 participants, split into two sequences of 4 and 6.
+> - `FRAMEWORK_EVOLUTION.md`: dark text on its three self-coloured nodes.
+> - Unchanged and passing: the README pair and the decision figure of `WORKFLOWS.md`. Their lint
+>   warnings stay, and so does the `xychart-beta` of `FRAMEWORK_EVOLUTION.md`, a kind to avoid.
 
 **Signal.** TASK 108 §1 lists seven Mermaid figures in the framework's living documents:
 `README.md:240`, `README.ru.md:240`, `System/Docs/PRODUCT_DEVELOPMENT.md:27`,

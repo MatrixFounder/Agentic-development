@@ -14,8 +14,8 @@ graph TD
     AI -->|Apology + Guess| IDE;
     IDE -->|New Error| Human;
     Human -->|Rage Quit| End([Abandon Task]);
-    style AI fill:#ffcccc,stroke:#333,stroke-width:2px
-    style Human fill:#ffeeee,stroke:#333,stroke-width:2px
+    style AI fill:#ffcccc,stroke:#333,stroke-width:2px,color:#1F2A30
+    style Human fill:#ffeeee,stroke:#333,stroke-width:2px,color:#1F2A30
 ```
 
 > [!WARNING]
@@ -115,7 +115,7 @@ graph LR
     Critic -->|Weakness Found| Dev;
     Critic -->|Security Hole| Dev;
     Critic -->|Pass| Main[Production];
-    style Critic fill:#ff9900,stroke:#333
+    style Critic fill:#ff9900,stroke:#333,color:#1F2A30
 ```
 
 > [!IMPORTANT]

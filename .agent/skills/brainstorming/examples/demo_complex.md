@@ -63,35 +63,49 @@ Each approach (1-4) needs: a `referrals` DB table, a unique referral link genera
 **Agent**:
 "Noted — filing Option 5 as a future consideration. Now evaluating the selected approach.
 
-Here's the architecture flow:
+Here's the architecture flow, in two parts:
+
+**Figure 1.** Referral link and sign-up.
 
 ```mermaid
+%%{init: {"look": "classic", "themeVariables": {"noteBkgColor": "#FFF8E1", "noteTextColor": "#263238", "noteBorderColor": "#C9A227"}, "sequence": {"wrap": true}}}%%
 sequenceDiagram
-    participant UserA as Referrer
-    participant API as API Gateway
-    participant UserB as Referee
-    participant Billing
-    participant Queue as Event Queue
-    participant RefSvc as ReferralService
-    participant DB
-    participant Mailer
+  accTitle: Referral link and sign-up
+  accDescr: The referrer gets a link, and the referee signs up through it.
+  participant UserA as Referrer
+  participant API as API Gateway
+  participant DB
+  participant UserB as Referee
+  UserA->>API: request referral link
+  API->>DB: store code → referrer
+  API-->>UserA: link app.com/ref/abc123
+  UserB->>API: sign up via link
+  API->>DB: create user<br/>with referrer_id
+```
 
-    UserA->>API: Generate referral link (ref=UserA_id)
-    API->>DB: Store referral_code → UserA mapping
-    API-->>UserA: Share link: app.com/ref/abc123
+A solid arrow is a request; the dashed one is the reply.
 
-    UserB->>API: Sign up via link
-    API->>DB: Create user, store referrer_id=UserA
+**Figure 2.** First purchase and the two credits: the event reaches the referral service through
+the queue.
 
-    UserB->>Billing: Make first purchase ($20)
-    Billing->>Queue: Event: purchase_completed {user: UserB, amount: $20}
-
-    Queue->>RefSvc: Consume event
-    RefSvc->>DB: Lookup referrer for UserB
-    RefSvc->>DB: Add $5 credit to UserA (referrer)
-    RefSvc->>DB: Add $5 credit to UserB (referee)
-    RefSvc->>Mailer: "You earned $5!" → UserA
-    RefSvc->>Mailer: "Welcome bonus: $5!" → UserB
+```mermaid
+%%{init: {"look": "classic", "themeVariables": {"noteBkgColor": "#FFF8E1", "noteTextColor": "#263238", "noteBorderColor": "#C9A227"}, "sequence": {"wrap": true}}}%%
+sequenceDiagram
+  accTitle: First purchase and the two credits
+  accDescr: The purchase event reaches the referral service through the queue, which credits both users and mails them.
+  participant UserB as Referee
+  participant Billing
+  participant Queue as Event Queue
+  participant RefSvc as ReferralService
+  participant DB
+  participant Mailer
+  UserB->>Billing: first purchase, $20
+  Billing->>Queue: purchase_completed<br/>UserB, $20
+  Queue->>RefSvc: consume event
+  RefSvc->>DB: look up referrer
+  RefSvc->>DB: +$5 to referrer
+  RefSvc->>DB: +$5 to referee
+  RefSvc->>Mailer: mail both users
 ```
 
 **Trade-off analysis (top 3 options):**

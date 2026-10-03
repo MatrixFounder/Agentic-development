@@ -24,58 +24,48 @@ We have expanded Agentic Development from a "Code Generator" to a **"Full-Cycle 
 ### The "Product Discovery" Pipeline
 The flow is sequential, strictly gated, and human-supervised.
 
-```mermaid
-graph TD
-    %% Nodes
-    User([User Start])
-    p00{p00 Orchestrator}
-    
-    subgraph Strat[Strategy and Vision]
-        p01[p01 Strategic Analyst]
-        p02[p02 Product Analyst]
-    end
-    
-    subgraph Gate[The Gate]
-        p03{p03 Director}
-        Human([Human Gate])
-    end
-    
-    subgraph Sol[Solution Design]
-        p04[p04 Solution Architect]
-    end
-    
-    subgraph Trans[Transition]
-        Script(Handoff Script)
-        Tech[Technical Phase]
-    end
+**Figure 1.** The Product Discovery pipeline: who passes which artifact to whom, and where the
+Director sends the work back.
 
-    %% Flow
-    User -->|Launch| p00
-    
-    p00 -->|Full Mode| p01
-    p00 -->|Quick Mode| p02
-    
-    p01 -->|MARKET_STRATEGY| p02
-    p02 -->|PRODUCT_VISION| p03
-    
-    p03 -.->|REJECT - Moat| p01
-    p03 -.->|REJECT - Vision| p02
-    
-    p03 -.->|Notify| Human
-    Human -.->|Override| p03
-    
-    p03 -->|APPROVE| p04
-    
-    p04 -->|SOLUTION_BLUEPRINT| Script
-    Script -->|Verify Hash| Tech
-    
-    linkStyle 5,6 stroke:#f33,stroke-width:2px,stroke-dasharray: 5 5;
-    
-    %% Styles
-    style p03 fill:#ff9999,stroke:#333
-    style Human fill:#ffeeaa,stroke:#333
-    style Script fill:#99ff99,stroke:#333
+```mermaid
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  accTitle: The Product Discovery pipeline
+  accDescr: Who passes which artifact to whom, and where the Director sends the work back.
+  User(["User"])
+  p00{"p00 Orchestrator"}
+  p01("p01 Strategic Analyst")
+  p02("p02 Product Analyst")
+  p03{"p03 Director"}
+  Human(["Human gate"])
+  p04("p04 Solution Architect")
+  Script{{"Handoff script"}}
+  Tech("Technical phase")
+  User -->|launch| p00
+  p00 -->|full mode| p01
+  p00 -->|quick mode| p02
+  p01 -->|MARKET_STRATEGY| p02
+  p02 -->|PRODUCT_VISION| p03
+  p03 -.-> p01
+  p03 -.-> p02
+  p03 <-.->|"notify · override"| Human
+  p03 -->|approve| p04
+  p04 -->|SOLUTION_BLUEPRINT| Script
+  Script -->|verify hash| Tech
+  class p00,p01,p02,p03,p04,Tech wf
+  class User,Human ext
+  class Script infra
+  classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3
+  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47
+  classDef infra fill:#FAFAFA,stroke:#8D6E63,color:#3E2723
 ```
+
+Legend:
+- rounded box — an agent or the technical phase; diamond — a decision; dashed stadium — a
+  person; hexagon — the handoff script;
+- solid arrow — the next step, labelled with the mode, the artifact or the command it passes;
+- dashed arrow from the Director — the work sent back: to p01 when the moat fails, to p02 when
+  the vision does; two-headed dashed arrow — the Director notifies the human, who can override.
 
 ---
 

@@ -32,107 +32,22 @@ This document is the **Single Source of Truth** for all automation workflows in 
 
 ## 🗺 Workflow System Map
 
-Visualizing how the workflows connect and call each other.
+Which workflow calls which, in order. The sections below describe each workflow.
 
-```mermaid
-graph TD
-    %% Nodes styling
-    classDef pipeline fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef loop fill:#99f,stroke:#333,stroke-width:2px;
-    classDef atomic fill:#fff,stroke:#333,stroke-width:1px;
-
-    %% Meta-Pipelines
-    subgraph Pipelines [Pipelines / Meta-Workflows]
-        Base([base-stub-first]):::pipeline
-        VDDE([vdd-enhanced]):::pipeline
-        Robust([full-robust]):::pipeline
-        VDDMulti([vdd-multi]):::pipeline
-        VDDAdv([vdd-adversarial]):::pipeline
-        Light([light]):::pipeline
-
-        subgraph Product [Product Discovery]
-            ProdFull([product-full-discovery]):::prod
-            ProdQuick([product-quick-vision]):::prod
-            ProdMark([product-market-only]):::prod
-        end
-
-        %% Iterative Design
-        Iterative([iterative-design]):::pipeline
-    end
-
-    %% Styles for Product
-    classDef prod fill:#ff9999,stroke:#333,stroke-width:2px;
-
-    %% Automation Loops
-    subgraph Loops [Automation Loops]
-        RunAll{{05-run-full-task}}:::loop
-        VDDRunAll{{vdd-05-run-full-task}}:::loop
-    end
-
-    %% Atomic Actions
-    subgraph Atomic [Atomic Actions]
-        Start[01-start-feature]:::atomic
-        Plan[02-plan-implementation]:::atomic
-        Dev[03-develop-single-task]:::atomic
-        SecAudit[security-audit]:::atomic
-        VDDStart[vdd-01-start-feature]:::atomic
-        LightStart[light-01-start-feature]:::atomic
-        LightDev[light-02-develop-task]:::atomic
-    end
-
-    %% Subagent wrappers (.claude/agents/ — Waves 1-3)
-    subgraph Agents [.claude/agents/ Subagent Wrappers — Layer A]
-        CritLogic[critic-logic]:::critic
-        CritSec[critic-security]:::critic
-        CritPerf[critic-performance]:::critic
-        DevPipe[dev-pipeline: analyst, architect,<br/>planner, developer, reviewers ×4,<br/>security-auditor]:::wrapper
-        ProdPipe[product-pipeline: strategic-analyst,<br/>product-analyst, product-director,<br/>solution-architect]:::wrapper
-    end
-    classDef critic fill:#ffdd99,stroke:#333,stroke-width:1px;
-    classDef wrapper fill:#ddeeff,stroke:#333,stroke-width:1px;
-
-    %% Relationships
-    Robust -->|1. calls| VDDE
-    Robust -->|2. opt-in coverage gate| VDDMulti
-    Robust -->|3. calls| SecAudit
-
-    VDDE -->|1. Analysis| Start
-    VDDE -->|2. Planning| Plan
-    VDDE -->|3. Development| RunAll
-    VDDE -->|4. adversarial refine| VDDAdv
-
-    VDDAdv -->|fix cycle| Dev
-    VDDAdv -->|re-enters itself, max 3| VDDAdv
-
-    Base -->|1. Analysis| Start
-    Base -->|2. Planning| Plan
-    Base -->|3. Loop| RunAll
-
-    RunAll -->|Iterates + auto-commits| Dev
-    VDDRunAll -->|Iterates with Sarcasmotron + HITL gate, no auto-commit| Dev
-
-    VDDMulti -->|Parallel spawn Layer A| CritLogic
-    VDDMulti -->|Parallel spawn Layer A| CritSec
-    VDDMulti -->|Parallel spawn Layer A| CritPerf
-
-    Light -->|1. Analysis| LightStart
-    Light -->|2. Dev Loop| LightDev
-
-    Iterative -->|Output used by| Start
-    Iterative -->|Output used by| Base
-
-    ProdFull -.-> ProdPipe
-    ProdQuick -.-> ProdPipe
-    ProdMark -.-> ProdPipe
-    Dev -.->|may delegate to| DevPipe
-
-    %% Framework Upgrade
-    Upgrade([framework-upgrade]):::upgrade
-    Upgrade -->|Meta-Audit| SelfImpr{{skill-self-improvement-verificator}}:::audit
-
-    classDef upgrade fill:#ffcc00,stroke:#333,stroke-width:2px;
-    classDef audit fill:#ff9900,stroke:#333,stroke-width:2px;
-```
+| Workflow | Calls, in this order |
+| :--- | :--- |
+| `full-robust` | `vdd-enhanced`, then `vdd-multi` as an opt-in coverage gate, then `security-audit` |
+| `vdd-enhanced` | `01-start-feature`, `02-plan-implementation`, `05-run-full-task`, then `vdd-adversarial` |
+| `base-stub-first` | `01-start-feature`, `02-plan-implementation`, then `05-run-full-task` |
+| `vdd-adversarial` | `03-develop-single-task` in a fix cycle; it re-enters itself, at most 3 times |
+| `05-run-full-task` | `03-develop-single-task` for each task, with auto-commits |
+| `vdd-05-run-full-task` | `03-develop-single-task` for each task, with Sarcasmotron and a HITL gate, without auto-commits |
+| `vdd-multi` | `critic-logic`, `critic-security` and `critic-performance`, spawned in parallel (Layer A) |
+| `light` | `light-01-start-feature`, then `light-02-develop-task` |
+| `iterative-design` | none; its output feeds `01-start-feature` and `base-stub-first` |
+| `product-full-discovery`, `product-quick-vision`, `product-market-only` | the product-pipeline subagents: strategic-analyst, product-analyst, product-director, solution-architect |
+| `03-develop-single-task` | may delegate to the dev-pipeline subagents: analyst, architect, planner, developer, four reviewers, security-auditor |
+| `framework-upgrade` | `skill-self-improvement-verificator`, as its meta-audit |
 
 ## 🚀 Workflow Categorization
 
@@ -403,22 +318,33 @@ graph TD
 
 ### Choosing Product Approach (Phase 0)
 
+**Figure: choosing the product approach.** Two questions pick the workflow to run, and the two
+short ones can lead into the full one.
+
 ```mermaid
-graph TD
-    A[New Idea] --> T{Is the Problem Known?}
-    T -->|No / Risky Idea| V[run product-market-only]
-    T -->|Yes| S{Project Scale?}
-    
-    S -->|Internal Tool / Hackathon| Q[run product-quick-vision]
-    S -->|Enterprise / Startup| F[run product-full-discovery]
-    
-    V -- Viable? --> F
-    Q -- Proven? --> F
-    
-    style V fill:#ff9999,stroke:#333
-    style Q fill:#ffcc99,stroke:#333
-    style F fill:#99ff99,stroke:#333
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  accTitle: Choosing the product approach
+  accDescr: Two questions pick one of the three product workflows; the two short ones can lead into the full one.
+  A("New idea")
+  T{"Is the problem known?"}
+  S{"Project scale?"}
+  V("run product-market-only")
+  Q("run product-quick-vision")
+  F("run product-full-discovery")
+  A --> T
+  T -->|"no, or a risky idea"| V
+  T -->|yes| S
+  S -->|"internal tool, hackathon"| Q
+  S -->|"enterprise, startup"| F
+  V -->|"viable?"| F
+  Q -->|"proven?"| F
+  class A,T,S,V,Q,F wf
+  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47
 ```
+
+Legend: diamond — a question; rounded box — the idea or a workflow to run; arrow — the next step,
+labelled with the answer.
 
 ### Summary Table
 

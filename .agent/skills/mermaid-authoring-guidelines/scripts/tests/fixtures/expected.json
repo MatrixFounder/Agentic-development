@@ -552,7 +552,8 @@
               "to": "S",
               "lifelines": [
                 "G"
-              ]
+              ],
+              "own": []
             },
             {
               "message": "status",
@@ -560,7 +561,8 @@
               "to": "C",
               "lifelines": [
                 "G"
-              ]
+              ],
+              "own": []
             }
           ]
         }
@@ -603,7 +605,8 @@
               "to": "S",
               "lifelines": [
                 "G"
-              ]
+              ],
+              "own": []
             },
             {
               "message": "status",
@@ -611,6 +614,99 @@
               "to": "C",
               "lifelines": [
                 "G"
+              ],
+              "own": []
+            }
+          ]
+        }
+      }
+    },
+    "fx-seq-own": {
+      "source": "fx-seq-own.mmd",
+      "looked_at": "Both PNGs, rendered 2026-10-05 (TASK 110): the 33-character label of client -> gateway is 250 px wide in the 200 px gap, and the lifelines of client and gateway run through its first and last words. The self-message label sits centred on the gateway lifeline, its own end, which is no crossing.",
+      "v10": {
+        "diagram": "sequence",
+        "width": 451.0,
+        "height": 350.0,
+        "nodes": 2,
+        "edges": 3,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "lifeline_through_label"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "sequence": {
+          "participants": [
+            "A",
+            "B"
+          ],
+          "lifeline_gaps": [
+            200.0
+          ],
+          "widest_message_px": 246.4,
+          "lifeline_through_label": [
+            {
+              "message": "reserve the seat and hold payment",
+              "from": "A",
+              "to": "B",
+              "lifelines": [],
+              "own": [
+                "A",
+                "B"
+              ]
+            }
+          ]
+        }
+      },
+      "v11": {
+        "diagram": "sequence",
+        "width": 451.0,
+        "height": 350.0,
+        "nodes": 2,
+        "edges": 3,
+        "crossings": 0,
+        "edges_through_nodes": [],
+        "title_crossings": 0,
+        "title_near_misses": 0,
+        "label_overlaps": 0,
+        "duplicate_edges": 0,
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "fail_checks": [
+          "lifeline_through_label"
+        ],
+        "warn_checks": [
+          "clipped_labels",
+          "contrast"
+        ],
+        "sequence": {
+          "participants": [
+            "A",
+            "B"
+          ],
+          "lifeline_gaps": [
+            200.0
+          ],
+          "widest_message_px": 246.4,
+          "lifeline_through_label": [
+            {
+              "message": "reserve the seat and hold payment",
+              "from": "A",
+              "to": "B",
+              "lifelines": [],
+              "own": [
+                "A",
+                "B"
               ]
             }
           ]

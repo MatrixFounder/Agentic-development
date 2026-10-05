@@ -14,6 +14,7 @@ text, and text past the figure's edge; and that a puppeteer configuration of the
 directory never runs.
 """
 import io
+import hashlib
 import json
 import os
 import shutil
@@ -249,6 +250,7 @@ class TestSourceReading(unittest.TestCase):
         # the lint (MA-NEG-02) and the render check accept the same render check names
         self.assertEqual(set(mm.RENDER_CHECK_NAMES), set(sg.GATE_CHECKS))
         self.assertFalse(set(sg.WARN_CHECKS) & set(mm.RENDER_CHECK_NAMES))
+        self.assertIn("lifeline_through_label", mm.RENDER_CHECK_NAMES)  # TASK 110 R1.2
 
 
 # ----------------------------------------------------------------------------- stubbed runs
@@ -635,7 +637,7 @@ def write_config(test, folder, **over):
     """An install as setup_renderers.sh leaves it, in `<folder>/home/v11`: private directories,
     the empty PUPPETEER_RC, and a puppeteer.json whose keys the keyword arguments replace (the
     value None removes one)."""
-    cfg = {"executablePath": sys.executable, "headless": "shell",
+    cfg = {"executablePath": str(stand_in_browser(folder)), "headless": "shell",
            "args": list(rc.BROWSER_ARGS), "pipe": True}
     for key, value in over.items():
         if value is None:
@@ -649,8 +651,138 @@ def write_config(test, folder, **over):
     (root / rc.PUPPETEER_RC).write_text("{}\n", encoding="utf-8")
     path = root / "puppeteer.json"
     path.write_text(json.dumps(cfg), encoding="utf-8")
+    write_stamps(root, "v11", cfg.get("executablePath") or "")
     return rc.Renderer(tag="v11", mermaid="11.17.2", mmdc=root / "mmdc", puppeteer_config=path,
                        root=root, cli="11.17.0")
+
+
+def stand_in_browser(folder):
+    """A stand-in browser two levels inside *folder*, a private temporary directory, at its
+    resolved path: `install_problem` checks the two directories above it and the path itself
+    (TASK 110 review round 2, S1)."""
+    exe = Path(os.path.realpath(folder)) / "browser" / "build" / "chrome-headless-shell"
+    if not exe.exists():
+        exe.parent.mkdir(parents=True)
+        for d in (exe.parent.parent, exe.parent):
+            d.chmod(0o700)
+        exe.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        exe.chmod(0o755)
+    return exe
+
+
+def write_stamps(root, tag, browser, lock=None):
+    """The stamps setup_renderers.sh writes (TASK 110 R7.7): the sha256 of the committed lockfile
+    of *tag*, and the accepted tree hash with the browser path."""
+    lock_file = rc.SKILL_DIR / "assets" / "renderers" / tag / "package-lock.json"
+    (root / ".lock.sha256").write_text(
+        (lock or hashlib.sha256(lock_file.read_bytes()).hexdigest()) + "\n", encoding="utf-8")
+    parent = Path(browser).parent
+    digest = rc.browser_stat_digest(parent) if parent.is_dir() else "0" * 64
+    (root / ".browser.sha256").write_text("%s  %s\nstat %s\n" % ("a" * 64, browser, digest),
+                                          encoding="utf-8")
+
+
+class TestInstallStamps(unittest.TestCase):
+    """TASK 110 R7.7: an install runs only with the stamps the current setup writes."""
+
+    def setUp(self):
+        self.dir = temp_dir(self)
+        set_env(self, MERMAID_RENDER_NO_SANDBOX=None)
+        self.renderer = write_config(self, self.dir)
+
+    def test_a_stamped_install_runs(self):
+        self.assertIsNone(rc.install_problem(self.renderer))
+
+    def test_a_stale_lock_stamp_is_refused(self):
+        write_stamps(self.renderer.root, "v11", str(stand_in_browser(self.dir)), lock="0" * 64)
+        problem = rc.install_problem(self.renderer)
+        self.assertIn("lockfile", problem)
+        self.assertIn("run setup_renderers.sh again", problem)
+
+    def test_an_install_without_a_browser_stamp_is_refused(self):
+        (self.renderer.root / ".browser.sha256").unlink()
+        problem = rc.install_problem(self.renderer)
+        self.assertIn(".browser.sha256", problem)
+        self.assertIn("run setup_renderers.sh again", problem)
+
+    def test_a_stamp_for_another_browser_is_refused(self):
+        write_stamps(self.renderer.root, "v11", "/other/chrome-headless-shell")
+        problem = rc.install_problem(self.renderer)
+        self.assertIn("another browser", problem)
+
+    def test_a_stamp_without_a_tree_hash_is_refused(self):
+        # review round 1, CR-11
+        (self.renderer.root / ".browser.sha256").write_text(
+            "zz  %s\n" % stand_in_browser(self.dir), encoding="utf-8")
+        self.assertIn("holds no tree sha256", rc.install_problem(self.renderer))
+
+    def test_a_browser_directory_others_may_write_in_is_refused(self):
+        # review round 1, L1: the browser runs from directories no other user may change
+        browser_dir = Path(os.path.realpath(self.dir)) / "shared" / "browser"
+        browser_dir.mkdir(parents=True)
+        exe = browser_dir / "chrome-headless-shell"
+        exe.write_text("#!/bin/sh\n", encoding="utf-8")
+        browser_dir.chmod(0o777)
+        self.addCleanup(browser_dir.chmod, 0o755)
+        renderer = write_config(self, self.dir, executablePath=str(exe))
+        self.assertIn("writable by every user", rc.install_problem(renderer))
+
+    def test_a_browser_path_that_no_longer_resolves_to_itself_is_refused(self):
+        # review round 2, N1: a link put in place of a directory above the browser
+        exe = stand_in_browser(self.dir)
+        other = self.dir / "old" / "build"
+        other.mkdir(parents=True)
+        (other / "chrome-headless-shell").write_text("#!/bin/sh\n", encoding="utf-8")
+        build = exe.parent
+        build.rename(self.dir / "browser" / "moved")
+        build.symlink_to(other, target_is_directory=True)
+        problem = rc.install_problem(self.renderer)
+        self.assertIn("no longer resolves to itself", problem)
+
+    def test_a_stamp_without_a_stat_digest_is_refused(self):
+        # review round 3, N1: an install stamped before the stat digest existed
+        stamp = self.renderer.root / ".browser.sha256"
+        stamp.write_text(stamp.read_text(encoding="utf-8").splitlines()[0] + "\n", encoding="utf-8")
+        self.assertIn("holds no stat digest", rc.install_problem(self.renderer))
+
+    def test_a_browser_file_changed_after_the_hash_is_refused(self):
+        # review round 3, N1 and N2: a library rewritten in place after the setup hashed it
+        exe = stand_in_browser(self.dir)
+        lib = exe.parent / "libGLESv2.dylib"
+        lib.write_bytes(b"genuine")
+        write_stamps(self.renderer.root, "v11", str(exe))
+        self.assertIsNone(rc.install_problem(self.renderer))
+        with open(lib, "ab") as fh:
+            fh.write(b"!")
+        self.assertIn("changed since the setup hashed it", rc.install_problem(self.renderer))
+
+    def test_a_build_swapped_in_by_rename_is_refused(self):
+        # review round 3, N1: the path still resolves to itself, but every inode differs
+        exe = stand_in_browser(self.dir)
+        old = exe.parent.parent / "old"
+        old.mkdir()
+        (old / exe.name).write_text(exe.read_text(encoding="utf-8"), encoding="utf-8")
+        (old / exe.name).chmod(0o755)
+        exe.parent.rename(exe.parent.parent / "away")
+        old.rename(exe.parent)
+        self.assertEqual(os.path.realpath(exe), str(exe))
+        self.assertIn("changed since the setup hashed it", rc.install_problem(self.renderer))
+
+    @unittest.skipIf(sys.platform == "darwin", "APFS keeps every file name valid UTF-8")
+    def test_a_name_that_is_not_utf8_refuses_instead_of_crashing(self):
+        # review round 4, RG4-3: Linux keeps such a name; the digest differs, and the render
+        # check refuses the install rather than stopping
+        exe = stand_in_browser(self.dir)
+        write_stamps(self.renderer.root, "v11", str(exe))
+        open(os.path.join(os.fsencode(exe.parent), b"bad\xff"), "wb").close()
+        self.assertIn("changed since the setup hashed it", rc.install_problem(self.renderer))
+
+    def test_a_browser_others_may_write_is_refused(self):
+        # review round 2, N2
+        exe = stand_in_browser(self.dir)
+        exe.chmod(0o777)
+        self.addCleanup(exe.chmod, 0o755)
+        self.assertIn("may be written by another user", rc.install_problem(self.renderer))
 
 
 class TestConfigProblem(unittest.TestCase):

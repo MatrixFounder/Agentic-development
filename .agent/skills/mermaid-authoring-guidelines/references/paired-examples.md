@@ -447,13 +447,13 @@ sequenceDiagram
     C-->>-R: result
     R->>DB: cvj.step_finish()
     R-->>-D: nudge {reason}
-    %% negative: MA-LABEL-04
+    %% negative: MA-LABEL-04, lifeline_through_label
 ```
 
-Fails: MA-LABEL-04, messages of 32 and 58 characters against a limit of 24 per line. Render: no
-threshold fails. `wrap` breaks the 58-character message into 2 lines and keeps every gap at
-200 px. In both versions, the lifelines at both ends of each long message run through its first
-line.
+Fails: MA-LABEL-04, messages of 32 and 58 characters against a limit of 24 per line. Render:
+`lifeline_through_label`. `wrap` breaks the 58-character message into 2 lines and keeps every gap
+at 200 px. In both versions, the lifelines at both ends of each long message run through its
+first line.
 
 **Positive P7.** `R->>+C: waited call<br/>{step_id, attempt}` in Figure P7. The full input list
 stays in the call table (S26).
@@ -818,7 +818,7 @@ for what is not drawn.
 | N4 → P4 | an external edge into the node under a title | Step 4.5 | `title_crossings` |
 | N5 → P5 | a boundary around one node | Step 4.5 | `MA-FLOW-03`; `title_crossings` |
 | N6 → P6 | left-to-right structure of more than 6 nodes | Step 4.6 | `MA-FLOW-06`; `legibility`, `title_crossings` |
-| N7 → P7 | the payload of a call on a message | Rationalization Table; Step 5.3 | `MA-LABEL-04` |
+| N7 → P7 | the payload of a call on a message | Rationalization Table; Step 5.3 | `MA-LABEL-04`; `lifeline_through_label` |
 | N8 → P8 | a note wider than its box | Step 5.3; Step 8.3 | `MA-LABEL-05`; `clipped_labels` |
 | N9 → P9 | transitions into inner composite states | Step 5.5 | `MA-STATE-01` |
 | N10 → P10 | a group no source line defines | Step 6.2 | fidelity verifier |

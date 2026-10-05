@@ -35,7 +35,9 @@ ASSETS = HERE.parent.parent / "assets" / "renderers"
 #: The oldest browser build the script accepts from the cache; read from the script itself.
 _FLOOR = re.search(r"^BROWSER_MIN_BUILD=['\"]?([0-9.]+)", SCRIPT.read_text(encoding="utf-8"), re.M)
 FLOOR = _FLOOR.group(1) if _FLOOR else ""
-PUPPETEER = {"v10": "19.11.1", "v11": "25.12.0", "v12": "25.12.0"}
+#: v10 overrides the puppeteer of mermaid-cli 10.9.1 with the one of v11 (TASK 110 R7.1).
+PUPPETEER = {"v10": "25.12.0", "v11": "25.12.0", "v12": "25.12.0"}
+HASH_VARIABLE = "MERMAID_RENDER_BROWSER_SHA256"
 
 FAKE_MMDC = """#!/bin/sh
 # Stand-in mmdc: records the directory it runs in and writes an SVG to the file after -o.
@@ -83,6 +85,23 @@ def just_below(version):
     return ".".join(str(p) for p in parts)
 
 
+def tree_sha256(directory):
+    """The tree hash of TASK 110 R7.3, computed here without the script: one JSON line per file,
+    `["file", "./<path>", "<sha256>"]`, and per symbolic link, `["link", "./<path>", "<target>"]`,
+    under *directory*, sorted bytewise by path; the sha256 of those lines."""
+    directory = Path(directory)
+    rows = []
+    for path in directory.rglob("*"):
+        rel = "./" + path.relative_to(directory).as_posix()
+        if path.is_symlink():
+            rows.append(["link", rel, os.readlink(path)])
+        elif path.is_file():
+            rows.append(["file", rel, hashlib.sha256(path.read_bytes()).hexdigest()])
+    rows.sort(key=lambda row: row[1].encode())
+    return hashlib.sha256("".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
+                                  for row in rows).encode()).hexdigest()
+
+
 def browser_in(cache, build):
     """A stand-in chrome-headless-shell of *build* in a puppeteer browser cache."""
     exe = (cache / "chrome-headless-shell" / ("linux-%s" % build) / "chrome-headless-shell-linux64"
@@ -101,7 +120,8 @@ class ScriptTest(unittest.TestCase):
 
     def run_script(self, home, *args, timeout=120, cwd=None, **env):
         full = dict(os.environ, MERMAID_RENDER_HOME=str(home))
-        for key in ("MERMAID_RENDER_CHROME", "MERMAID_RENDER_NO_SANDBOX", "PUPPETEER_CACHE_DIR"):
+        for key in ("MERMAID_RENDER_CHROME", "MERMAID_RENDER_NO_SANDBOX", "PUPPETEER_CACHE_DIR",
+                    HASH_VARIABLE):
             full.pop(key, None)
         full.update(env)
         return subprocess.run(["bash", str(SCRIPT), *args], env=full, capture_output=True,
@@ -234,8 +254,8 @@ class TestDryRun(ScriptTest):
         self.assertNotIn(str(old), proc.stdout)
 
 
-class TestInstallSteps(ScriptTest):
-    """The steps after `npm ci`, on stand-ins of the pinned packages; nothing is downloaded."""
+class StandInTest(ScriptTest):
+    """An install home of stand-ins of the pinned packages, and a stand-in browser cache."""
 
     def setUp(self):
         super().setUp()
@@ -266,11 +286,18 @@ class TestInstallSteps(ScriptTest):
         (dest / ".lock.sha256").write_text(hashlib.sha256(lock).hexdigest() + "\n", encoding="utf-8")
 
     def setup(self, cwd=None, **env):
+        """Run the script on the stand-ins; the stand-in browser is vouched for by its hash."""
+        if HASH_VARIABLE not in env:
+            env[HASH_VARIABLE] = tree_sha256(self.exe.parent)
         return self.run_script(self.home, cwd=cwd, PUPPETEER_CACHE_DIR=str(self.cache), **env)
 
     def config(self, tag):
         path = self.home / tag / "puppeteer.json"
         return path, json.loads(path.read_text(encoding="utf-8"))
+
+
+class TestInstallSteps(StandInTest):
+    """The steps after `npm ci`, on stand-ins of the pinned packages; nothing is downloaded."""
 
     def test_the_written_config_blocks_the_network_and_uses_a_pipe(self):
         # R7.9: no host resolves, no proxy is used, and no DevTools port opens
@@ -357,6 +384,192 @@ class TestInstallSteps(ScriptTest):
         self.assertIn("@puppeteer/browsers@%s install chrome-headless-shell@%s" % (tool, FLOOR),
                       proc.stderr)
         self.assertNotIn("@stable", proc.stderr)
+
+
+
+class TestBrowserHash(StandInTest):
+    """TASK 110 R7.3, R7.4, R7.7: a browser runs only when its tree hash is recorded or named by
+    the operator, and the accepted hash is stamped into the install."""
+
+    def test_an_unrecorded_hash_is_refused_with_its_hash_named(self):
+        proc = self.run_script(self.home, PUPPETEER_CACHE_DIR=str(self.cache))
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        out = proc.stdout + proc.stderr
+        self.assertIn(tree_sha256(self.exe.parent), out)
+        self.assertIn(HASH_VARIABLE, out)
+        self.assertIn("confirm where this browser came from", out)
+        self.assertIn("an agent stops here", out)
+        self.assertFalse((self.home / "v10" / "puppeteer.json").exists())
+
+    def test_a_differing_hash_is_refused(self):
+        proc = self.setup(**{HASH_VARIABLE: "0" * 64})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(tree_sha256(self.exe.parent), proc.stdout + proc.stderr)
+
+    def test_the_named_hash_is_accepted_and_stamped(self):
+        proc = self.setup()
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        for tag in ("v10", "v11"):
+            with self.subTest(tag=tag):
+                stamp = (self.home / tag / ".browser.sha256").read_text(encoding="utf-8")
+                # the stat digest of the setup's node walk equals the one render_check.py
+                # computes at every render (review round 3, N1)
+                self.assertEqual(stamp, "%s  %s\nstat %s\n" % (
+                    tree_sha256(self.exe.parent), self.exe, rc.browser_stat_digest(self.exe.parent)))
+
+    def test_a_linked_browser_is_hashed_where_the_link_leads(self):
+        link_dir = self.tmp / "links"
+        link_dir.mkdir()
+        link = link_dir / "chrome-headless-shell"
+        link.symlink_to(self.exe)
+        proc = self.setup(MERMAID_RENDER_CHROME=str(link))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        # the hashed browser is the one that runs and the one stamped (review round 1, M1, L1)
+        self.assertEqual(self.config("v10")[1]["executablePath"], str(self.exe))
+        stamp = (self.home / "v10" / ".browser.sha256").read_text(encoding="utf-8")
+        self.assertTrue(stamp.splitlines()[0].endswith("  %s" % self.exe), stamp)
+        proc = self.setup(MERMAID_RENDER_CHROME=str(link), **{HASH_VARIABLE: tree_sha256(link_dir)})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        # the dry run shows the path the install writes (review round 2, R2)
+        proc = self.run_script(self.tmp / "dry", "--dry-run", MERMAID_RENDER_CHROME=str(link),
+                               **{HASH_VARIABLE: tree_sha256(self.exe.parent)})
+        self.assertIn("browser: %s (build %s)" % (self.exe, FLOOR), proc.stdout)
+
+    def test_a_link_to_another_program_is_refused(self):
+        # review round 2, R1: a launcher picks its program by the name it was called by
+        launcher = self.tmp / "links" / "chromium"
+        launcher.parent.mkdir()
+        launcher.symlink_to(self.exe)
+        proc = self.setup(MERMAID_RENDER_CHROME=str(launcher))
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("under another name", proc.stdout + proc.stderr)
+        self.assertNotIn("to its tree hash", proc.stderr)
+
+    def test_a_path_with_a_control_character_is_refused(self):
+        # review round 1, M1: `$(...)` drops a trailing newline, so `/x/genuine\n/exe` read as
+        # `/x/genuine` passed the hash of the genuine directory and ran another binary
+        evil = self.tmp / "genuine\n"
+        evil.mkdir()
+        (evil / "chrome-headless-shell").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (evil / "chrome-headless-shell").chmod(0o755)
+        link = self.tmp / "chrome"
+        link.symlink_to(evil / "chrome-headless-shell")
+        proc = self.setup(MERMAID_RENDER_CHROME=str(link))
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("control character", proc.stdout + proc.stderr)
+
+    def test_an_unreadable_file_or_a_special_entry_is_refused(self):
+        # review round 1, L2: the hash covers every byte of the directory, or the browser is refused
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("root reads a file of mode 000")
+        secret = self.exe.parent / "lib.so"
+        secret.write_bytes(b"x")
+        vouched = tree_sha256(self.exe.parent)  # the hash the operator would name
+        secret.chmod(0o000)
+        self.addCleanup(lambda: secret.exists() and secret.chmod(0o644))
+        proc = self.setup(**{HASH_VARIABLE: vouched})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("lib.so", proc.stdout + proc.stderr)
+        secret.chmod(0o644)
+        secret.unlink()
+        os.mkfifo(str(self.exe.parent / "pipe"))
+        proc = self.setup()
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("neither a file, a directory nor a symbolic link", proc.stdout + proc.stderr)
+
+    def test_a_browser_directory_others_may_write_in_is_refused(self):
+        # review round 1, L1: another user could change the browser after the hash; the
+        # refusal gives no hash advice, which cannot help here (review round 2, R5)
+        self.exe.parent.chmod(0o777)
+        self.addCleanup(self.exe.parent.chmod, 0o755)
+        proc = self.setup()
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("writable by every user", proc.stdout + proc.stderr)
+        self.assertNotIn("to its tree hash", proc.stderr)
+
+    def test_a_browser_file_others_may_write_is_refused(self):
+        # review round 2, N2: a file another user may rewrite after the hash
+        self.exe.chmod(0o777)
+        self.addCleanup(self.exe.chmod, 0o755)
+        proc = self.setup()
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("writable by every user", proc.stdout + proc.stderr)
+
+    def test_group_write_follows_the_own_group_rule(self):
+        # review round 3, RG3-2: the walk, private_problem and render_check.py allow group write
+        # only to a group named as the user; a shared primary group such as `staff` is refused
+        import grp
+        import pwd
+        own = grp.getgrgid(os.getgid()).gr_name == pwd.getpwuid(os.getuid()).pw_name
+        lib = self.exe.parent / "lib.dylib"
+        lib.write_bytes(b"x")
+        os.chown(str(lib), -1, os.getgid())
+        lib.chmod(0o664)
+        proc = self.setup()
+        if own:
+            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        else:
+            self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+            self.assertIn("writable by its group", proc.stdout + proc.stderr)
+
+    def test_a_failed_smoke_render_is_not_reported_as_a_refused_hash(self):
+        # review round 1, CR-08
+        for tag in ("v10", "v11"):
+            mmdc = self.home / tag / "node_modules" / ".bin" / "mmdc"
+            mmdc.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        proc = self.setup()
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("renders with v10", proc.stderr)
+        self.assertNotIn("is accepted", proc.stderr)
+
+    def test_a_recorded_hash_needs_no_variable(self):
+        # a copy of the skill tree whose table records the stand-in's hash
+        skill = self.tmp / "skill"
+        (skill / "scripts").mkdir(parents=True)
+        shutil.copy2(str(SCRIPT), str(skill / "scripts" / SCRIPT.name))
+        shutil.copytree(str(ASSETS), str(skill / "assets" / "renderers"))
+        shutil.copy2(str(ASSETS.parent / "notation.json"), str(skill / "assets" / "notation.json"))
+        table = skill / "assets" / "renderers" / "browsers.json"
+        data = json.loads(table.read_text(encoding="utf-8"))
+        data["browsers"].append({"platform": "linux", "build": FLOOR,
+                                 "tree_sha256": tree_sha256(self.exe.parent)})
+        table.write_text(json.dumps(data), encoding="utf-8")
+        env = dict(os.environ, MERMAID_RENDER_HOME=str(self.home), PUPPETEER_CACHE_DIR=str(self.cache))
+        for key in ("MERMAID_RENDER_CHROME", "MERMAID_RENDER_NO_SANDBOX", HASH_VARIABLE):
+            env.pop(key, None)
+        proc = subprocess.run(["bash", str(skill / "scripts" / SCRIPT.name)], env=env,
+                              capture_output=True, text=True, timeout=120)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+    def test_the_dry_run_prints_each_hash_and_its_verdict(self):
+        h = tree_sha256(self.exe.parent)
+        proc = self.run_script(self.tmp / "dry", "--dry-run", PUPPETEER_CACHE_DIR=str(self.cache))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("tree sha256 %s: refused, not recorded" % h, proc.stdout)
+        proc = self.run_script(self.tmp / "dry", "--dry-run", PUPPETEER_CACHE_DIR=str(self.cache),
+                               **{HASH_VARIABLE: h})
+        self.assertIn("tree sha256 %s: accepted" % h, proc.stdout)
+
+
+class TestRecordedBrowsers(unittest.TestCase):
+    """TASK 110 R7.1, R7.4: the v10 override and the table of recorded browsers."""
+
+    def test_v10_overrides_puppeteer_and_holds_no_extract_zip(self):
+        manifest = json.loads((ASSETS / "v10" / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["overrides"].get("puppeteer"), PUPPETEER["v10"])
+        self.assertEqual(manifest["dependencies"]["mermaid"], NOTATION["renderers"]["installs"]["v10"]["mermaid"])
+        lock = json.loads((ASSETS / "v10" / "package-lock.json").read_text(encoding="utf-8"))
+        packages = lock["packages"]
+        self.assertEqual(packages["node_modules/puppeteer"]["version"], PUPPETEER["v10"])
+        self.assertFalse([k for k in packages if k.endswith("/extract-zip")])
+
+    def test_the_table_records_the_build_of_the_evidence(self):
+        table = json.loads((ASSETS / "browsers.json").read_text(encoding="utf-8"))
+        self.assertEqual(table["schema"], "renderer-browsers/v1")
+        builds = {(b["platform"], b["build"]) for b in table["browsers"]}
+        self.assertIn(("mac_arm", FLOOR), builds)
+        for b in table["browsers"]:
+            self.assertRegex(b["tree_sha256"], r"^[0-9a-f]{64}$")
 
 
 if __name__ == "__main__":

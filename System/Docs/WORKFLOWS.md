@@ -80,8 +80,8 @@ The workflows are organized into three categories:
 | Workflow Name | Description | Command |
 | :--- | :--- | :--- |
 | **Run Full Task** | **The Loop Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, and executes `03-develop-single-task` for each one. **Auto-commits only on a green regression suite**; on failure, bounded fix loop (max 2 re-entries into `03-develop-single-task`), then escalates to the user. | `run 05-run-full-task` or `/develop-all` |
-| **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task — **max 3 roast→fix rounds**, then escalate. | `run vdd-03-develop` |
-| **VDD Run Full Task** | **VDD Chain Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, applies adversarial Sarcasmotron review per task. Mandatory inter-task HITL gate (`yes / pause / abort`). Max 3 REJECTED iterations before escalation. **No auto-commit.** Resumable from `.agent/sessions/latest.yaml` after `pause`. Supports `--dry-run` and `--auto-continue=<sec>` flags. | `run vdd-05-run-full-task` or `/vdd-develop-all` |
+| **VDD Develop** | The VDD Loop Engine (single task). Runs the Adversarial "Sarcasmotron" loop for one task — **max 3 roast→fix rounds**, then escalate. Sets the task `in-progress`, then `done` on approval, and rewrites the plan chart (`skill-planning-format` §2.2). | `run vdd-03-develop` |
+| **VDD Run Full Task** | **VDD Chain Engine.** Reads `../../docs/PLAN.md`, iterates through all tasks, applies adversarial Sarcasmotron review per task. Mandatory inter-task HITL gate (`yes / pause / abort`). Max 3 REJECTED iterations before escalation. **No auto-commit.** Resumable from `.agent/sessions/latest.yaml` after `pause`. Supports `--dry-run` and `--auto-continue=<sec>` flags. Sets each task `in-progress` and, after its merge, `done` (`skill-planning-format` §2.2). | `run vdd-05-run-full-task` or `/vdd-develop-all` |
 | **Heal Issues** | **The Ledger Burn-Down Engine.** Consumes `docs/issues/` (fed by the `run-feedback` skill): picks ONE `status: open` + `auto_fixable: true` issue, re-proves it red from its fenced repro, fixes it on a `fix/` branch (≤3 iterations, component gates re-run each pass), flips the ledger status in the same commit. **Branch-only — never touches the base branch, never pushes/merges/opens PRs.** Output = PR-ready branch + run report for HUMAN review. Scheduling is operator-side opt-in only (Stage 0 → Stage 1). Full guide: [`QUALITY_FEEDBACK_LOOP.md`](QUALITY_FEEDBACK_LOOP.md). | `run heal-issues` or `/heal-issues` (`--dry-run`) |
 
 ---
@@ -93,7 +93,7 @@ The workflows are organized into three categories:
 | :--- | :--- | :--- |
 | **Start Feature** | Analysis Phase only (creates TASK). | `run 01-start-feature` |
 | **Plan Impl** | Planning Phase only (creates PLAN). | `run 02-plan-implementation` |
-| **Develop Task** | Executes a **single** task from the plan (No loop). | `run 03-develop-single-task` |
+| **Develop Task** | Executes a **single** task from the plan (No loop) and sets its status (`skill-planning-format` §2.2). | `run 03-develop-single-task` |
 | **Update Docs** | Updates documentation artifacts. | `run 04-update-docs` |
 | **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max 3 iterations** when invoked directly; `full-robust` §3 re-scopes both the cap and the definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, never clean. | `run security-audit` |
 | **Light Start** | Light Mode Analysis Phase only (creates TASK with `[LIGHT]` tag). | `run light-01-start-feature` |

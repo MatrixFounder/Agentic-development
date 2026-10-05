@@ -101,7 +101,7 @@ sys.path.insert(0, str(SKILL.parent / "skill-creator" / "scripts"))
 
 #: Rows this battery prints, pinned as a literal. Deriving it from the run would let a deleted
 #: row agree with itself.
-EXPECTED_CASES = 223
+EXPECTED_CASES = 225
 
 #: The cases of eval delta 4, by slug and id. A case missing from evals.json fails its rows.
 CASES = (("c0-control-thumbnails", 0), ("c1-wms-container-view", 1),
@@ -2343,6 +2343,28 @@ def t_ascii_budget():
           f"Q16 rules={sorted(ids)}")
 
 
+def t_list_marker_fence():
+    """WI-32 item 6 (TASK 110 R6): a `text` fence opened on a list marker is an ASCII figure for
+    Q16, and the opener pattern reads a long line of list or quote markers in linear time."""
+    ev = _ev()
+    f1 = _case(ev, "f1-ci-stages-terminal")
+    k1, ck1, _s = gf.load_key(ev, f1)
+    wide = " -> ".join(f"stage{k}" for k in range(20))     # wider than the ASCII column limit
+    doc = f"Stages:\n\n1. ```text\n   {wide}\n   ```\n"
+    res = gf.grade_answer(doc, f1, k1, ck1, ev, NOTATION, None)
+    evidence = res["q"]["Q16"]["evidence"]
+    check("TC-ME-48 a `text` fence opened on a list marker is an ASCII figure for Q16: its line "
+          "over the column limit fails Q16 with MA-ASCII-03 (WI-32)",
+          _q(res, "Q16") == "fail" and "MA-ASCII-03" in evidence, f"Q16={_q(res, 'Q16')} {evidence[:120]}")
+    n = 100000
+    t0 = time.perf_counter()
+    for line in ("- " * (n // 2), "> " * (n // 2), "1. " * (n // 3), "- > " * (n // 4) + "x"):
+        gf._FENCE_LINE.match(line)
+    took = time.perf_counter() - t0
+    check("TC-ME-48 the fence opener pattern reads four 100,000-character lines of list and "
+          "quote markers in linear time: under 1 s for the four", took < 1.0, f"{took:.3f} s")
+
+
 def t_fences():
     """The matcher finds fenced lines as `mermaid_model.extract_fences` does."""
     ev = _ev()
@@ -3348,7 +3370,7 @@ def main() -> int:
     for fn in (t_api, t_set_shape, t_prompts, t_isolation, t_keys, t_mirage, t_fixtures,
                t_fidelity_rules, t_fixes, t_unfenced, t_ascii_labels, t_duplicates, t_captions,
                t_gantt_dates, t_parts, t_number_subjects, t_invented_ends, t_ascii_budget,
-               t_fences, t_forms, t_grader, t_sequence_legend,
+               t_list_marker_fence, t_fences, t_forms, t_grader, t_sequence_legend,
                t_corpus, t_scores, t_report_completeness, t_calibration, t_provenance,
                t_amendment_a1, t_executor, t_render, t_cli, t_stats, t_heuristics, t_committed,
                t_bundle_words, t_envelope_error, t_zero):

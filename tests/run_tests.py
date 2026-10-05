@@ -105,6 +105,10 @@ CURATED_UNITTEST_MODULES = (
     "test_mermaid_wiring",
     # TASK 109 — one Python floor, stated in README §3 and enforced at the entry points.
     "test_python_floor",
+    # TASK 110 — a fix round replays the stored corpus and keeps a closed list (WI-27).
+    "test_fix_round_rules",
+    # TASK 110 — a dependency finding is reported privately and stays out of the repo (R11.2).
+    "test_disclosure_rule",
 )
 
 

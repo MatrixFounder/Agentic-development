@@ -52,6 +52,7 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
         open findings to the user. Per step 2, a `scan_status: NOT_RUN` never satisfies this loop:
         the verdict is `INCOMPLETE`, not clean.
    - Save report as `docs/audit/security-{ID}.md` (consistent with `security-auditor` agent and `skill-archive-task` ID convention).
+   - A finding in a dependency with no public advisory goes to its maintainers privately. The patches of 4a, the tests of 4b, the saved report, the `.AGENTS.md` notes and the retro records hold no detail of it; a test pins this project's mitigation, never the defect (`security-audit` §6.1).
    - Update `.AGENTS.md` with security notes.
 
 5. **Reference resolver (gate)** — run `python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py --targets-changed`.
@@ -61,7 +62,7 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
    mechanically. A coordinate carrying no referent is reported as
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
-5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "security-audit-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then

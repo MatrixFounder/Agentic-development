@@ -757,7 +757,7 @@
   "evals_sha256_16": "a86c5945919bcd2c",
   "instrument": {
    "fidelity.py": "219522d0456bb9450ccd882c3471fbb5c45b4fa2913b5b5c2c7acc84710054d2",
-   "grade_figures.py": "db71d880ec038fd63df354962a293facb7b881b00927c0d0835a217cfd8cfacb",
+   "grade_figures.py": "6339f09c1adb221c8b6f81be1b3af6579d6f35994a2663fdb8fd28fc28187ea2",
    "normalize": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
   },
   "keys_sha256": {
@@ -2496,7 +2496,7 @@
    },
    "sha256": {
     "fidelity.py": "219522d0456bb9450ccd882c3471fbb5c45b4fa2913b5b5c2c7acc84710054d2",
-    "grade_figures.py": "db71d880ec038fd63df354962a293facb7b881b00927c0d0835a217cfd8cfacb",
+    "grade_figures.py": "6339f09c1adb221c8b6f81be1b3af6579d6f35994a2663fdb8fd28fc28187ea2",
     "normalize": "625c5c891637f4c7903c99fd7bf6ab422e74980b2dd37384ae4329a320399b7e"
    },
    "statement": "the normalisation rule, grade_figures.py, fidelity.py: not registered before the runs of 2026-10-opus55-xhigh-r1. The sha256 is recorded at grading time; a change after the runs shows in it, and nothing refuses it (TASK R11.2; EI-13)."

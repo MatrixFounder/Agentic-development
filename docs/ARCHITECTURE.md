@@ -606,6 +606,7 @@ needs no load.
 | `scripts/render_check.py` | CLI | renders with pinned installs, measures text, calls `svg_geometry` | no |
 | `scripts/setup_renderers.sh` | CLI | installs the pinned renderers into a cache outside the repository | no |
 | `assets/renderers/<tag>/` | data | `package.json` and lockfile per pinned renderer, installed with `npm ci` | — |
+| `assets/renderers/browsers.json` | data | tree sha256 of each browser build the setup accepts without the operator's hash | read by tests |
 | `scripts/plan_gantt.py` | CLI | schedule from a task list; writes or checks the plan chart block | yes |
 | `evals/` | instruments | the A/B evaluation of the skill (§10.4) | selftest only |
 
@@ -685,7 +686,8 @@ scripts only.
 | `04_architect_prompt.md`, `06_planner_prompt.md` | load before the first figure; plan chart at 8 or more tasks |
 | `05_architecture_reviewer_prompt.md`, `07_plan_reviewer_prompt.md` and four review checklists | figure items over caller-supplied lint and render output; the plan reviewer also gets `plan_gantt.py --check` output |
 | workflows `01-start-feature.md`, `vdd-01-start-feature.md`, `02-plan-implementation.md`, `vdd-02-plan.md` | the caller runs the figure lint, and `plan_gantt.py --check` for a plan, before the reviewer's brief |
-| plan template and `PLAN_EXAMPLE.md` of `skill-planning-format` | the schedule block and the generated region |
+| plan template and `PLAN_EXAMPLE.md` of `skill-planning-format` | the schedule block, `not-started` per task, and the generated region |
+| workflows `03-develop-single-task.md`, `vdd-03-develop.md`, `vdd-05-run-full-task.md` | set a task `in-progress` and `done` and run `plan_gantt.py --write` (`skill-planning-format` §2.2) |
 | `.claude/agents/architect.md` | the architect may run the lint and the render check |
 | `.claude/settings.json` | the lint and `plan_gantt.py --check` run without approval; the render check asks |
 | `skill-phase-context`, `SKILL_TIERS.md`, bootstrap files | the conditional load |
@@ -695,7 +697,26 @@ scripts only.
 
 - `setup_renderers.sh` installs exact versions with `npm ci --ignore-scripts` from committed
   lockfiles, never globally, into `${MERMAID_RENDER_HOME:-~/.cache/mermaid-authoring-guidelines}`,
-  with the npm cache beside the installs.
+  with the npm cache beside the installs. The v10 lockfile overrides puppeteer with the version of
+  v11; `npm audit` reports no high advisory for any lockfile (TASK 110).
+- The setup accepts a browser only when the tree hash of its directory is in
+  `assets/renderers/browsers.json` or equals `MERMAID_RENDER_BROWSER_SHA256`, set by the operator,
+  and when that directory and the one above it are private. It resolves every symbolic link of
+  the browser path once and writes that path into `puppeteer.json` and into the stamp. The hash
+  covers the directory of the executable only, so `MERMAID_RENDER_CHROME` names the browser binary
+  in a directory that holds that browser only.
+- `render_check.py` refuses an install in seven cases (TASK 110 R7.3, R7.7):
+  - its lockfile stamp is stale;
+  - its browser stamp is missing, or holds no tree hash or no stat digest;
+  - the stamp names another browser than `puppeteer.json`;
+  - the browser path no longer resolves to itself;
+  - another user may write the executable;
+  - another user may change the browser directory or the one above it;
+  - the stat digest of the browser directory differs from the stamped one.
+
+  It does not hash the browser again. It compares the stat digest: the inode, size, mtime and
+  ctime of every entry, read with `lstat` at every render. A change of metadata alone, such as an
+  extended attribute or a remount, also refuses the install until the setup runs again.
 - The browser resolves no host name, localhost included, uses no proxy, and talks to puppeteer
   over a pipe; `render_check.py` refuses a config that lacks these arguments.
 - Every node process runs inside its install directory, which holds an empty `.puppeteerrc.json`.
@@ -711,6 +732,5 @@ scripts only.
 
 ### 10.8 Out of scope
 
-- Plan status tokens and develop-workflow updates (TASK 108 D11).
 - The ELK layout. GitHub does not register it, and every settings line pins `dagre`.
 - Consumer projects and Universal-skills, which receive the skill after `install.py update`.

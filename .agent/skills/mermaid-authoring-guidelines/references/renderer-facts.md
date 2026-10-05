@@ -797,14 +797,30 @@ the font size × min(1, `column_px` 900 / width); its floor is `min_effective_fo
 
 ### RF-21 — mermaid-cli serves local files to the page
 
-**Versions.** mermaid-cli 11.17.0 (the check pair) and 12.0.0 (`--forward`).
+**Versions.** mermaid-cli 11.14.0 to 12.0.0. This project runs 11.17.0 (the check pair) and 12.0.0
+(`--forward`, the latest release on 2026-10-05); 11.12.0 and earlier have no such filter.
 
 **Observed.** The request filter of mermaid-cli inverts its allowlist. A page can load a local
 `.css`, `.js`, `.mjs` or `.woff2` file by its path.
 
 **Rule.** Render a figure, never a page that someone else wrote. Strict mode keeps a figure from
-running script, and the browser resolves no host, so a loaded file cannot leave the machine. The
-backlog holds the upstream report.
+running script, and the browser resolves no host, so a loaded file cannot leave the machine.
+Further detail went to the maintainers in a private report on 2026-10-05 (WI-30) and stays out of
+this file until a public advisory describes it (`security-audit` §6.1).
+
+### RF-22 — the floor renderer runs on the puppeteer of v11
+
+**Versions.** mermaid 10.9.8 with mermaid-cli 10.9.1, measured 2026-10-05.
+
+**Observed.** mermaid-cli 10.9.1 asks for puppeteer `^19.0.0`. Puppeteer 19.11.1 pins
+`extract-zip` 2.0.1, `tar-fs` 2.1.1 and `ws` 8.13.0: 6 high advisories, and `extract-zip` has no
+release with a fix. The v10 lockfile overrides puppeteer with 25.12.0, the version of v11. npm
+audit then reports no advisory, and the lockfile holds 135 entries instead of 190. Every mermaid
+fence of `references/` rendered in 10.9.8 with the same metrics as under 19.11.1, in the same
+browser build. The setup selects headless mode `shell` for puppeteer 22 or newer, as for v11.
+
+**Rule.** Keep the override while v10 renders with mermaid-cli 10.9.1. Render every reference in
+10.9.8 again after any change of the v10 lockfile.
 
 ## 8. Gantt facts
 

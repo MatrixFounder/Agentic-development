@@ -14,7 +14,15 @@
 # browser download, which is not wanted: the script reuses a cached chrome-headless-shell from
 # ${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}/chrome-headless-shell/ of build
 # BROWSER_MIN_BUILD or newer (the build the committed render evidence was measured with), or the
-# binary named by MERMAID_RENDER_CHROME, used as given. It never downloads a browser.
+# binary named by MERMAID_RENDER_CHROME. It never downloads a browser. A browser is used only when
+# the tree hash of its directory is recorded in assets/renderers/browsers.json, or equals
+# MERMAID_RENDER_BROWSER_SHA256, which the operator sets after confirming where the browser came
+# from (TASK 110 R7.3). The tree hash is the sha256 of one JSON line per file and symbolic link
+# under the directory that holds the executable, every symbolic link of the path resolved (see
+# read_browser). That directory and the one above it must be private. MERMAID_RENDER_CHROME names
+# the browser binary itself, in a directory that holds that browser only. The resolved path is written
+# into puppeteer.json and, with the accepted hash, into each install as .browser.sha256;
+# render_check.py runs no install without it (R7.7).
 #
 # Never installs globally and never writes inside a git work tree; a home with a `.` or `..`
 # segment is refused, since `mkdir -p` would follow it. The home must be private: it, or its
@@ -32,19 +40,19 @@
 # every render, the smoke render included, runs in the install directory. Each install is
 # verified with a smoke render under that configuration.
 #
-# Known advisories, left as measured: the v10 lockfile pins tar-fs 2.1.1, extract-zip 2.0.1 and
-# ws 8.13.0 (npm audit, 2026-10-03: 6 high; v11 and v12: none). None of them runs here: tar-fs
-# and extract-zip only unpack a downloaded browser (puppeteer's install script, BrowserFetcher),
-# which --ignore-scripts and PUPPETEER_SKIP_DOWNLOAD skip, and ws only carries the DevTools
-# WebSocket, which the pipe replaces. Rebuilding the lockfile changes the floor renderer, so it
-# needs a re-render of every reference in 10.9.8.
+# The v10 lockfile overrides the puppeteer 19.11.1 of mermaid-cli 10.9.1 with 25.12.0, the
+# version of v11 (TASK 110 R7.1). 19.11.1 pinned extract-zip 2.0.1, tar-fs 2.1.1 and ws 8.13.0:
+# 6 high advisories (npm audit, 2026-10-03), and extract-zip has no release with a fix. With the
+# override, npm audit reports none for the three lockfiles (2026-10-05), and every reference
+# figure rendered in 10.9.8 with the metrics measured under 19.11.1.
 #
 # Usage: setup_renderers.sh [--forward] [--dry-run]
 #   --dry-run writes nothing: it checks node and the install home (a home inside a git work
 #   tree, or one that another user may write in, fails), lists every pinned pair, and prints the
-#   steps for the pairs this run installs.
-# Exit:  0 installed (or planned, with --dry-run); 1 a step failed, and the message names it;
-#        3 usage error.
+#   steps for the pairs this run installs, with the tree hash of each browser candidate and
+#   whether it is accepted.
+# Exit:  0 installed (or planned, with --dry-run); 1 a step failed, and the message names it,
+#        a browser with no accepted tree hash included; 3 usage error.
 #
 # Compatible with bash 3.2 (macOS) and Linux bash.
 set -euo pipefail
@@ -59,6 +67,8 @@ BROWSER_CACHE="${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}"
 NET_BLOCK_ARG='--host-resolver-rules=MAP * ~NOTFOUND'
 NO_PROXY_ARG='--no-proxy-server'
 BROWSER_MIN_BUILD='150.0.7871.24'
+BROWSER_TABLE="$ASSETS/browsers.json"
+BROWSER_STAMP='.browser.sha256'
 
 FORWARD=0
 DRY_RUN=0
@@ -138,17 +148,26 @@ inside_git_work_tree() {
 # Fails the current step when directory $1, or its nearest existing ancestor, is open to another
 # user: it must belong to this user or root, and no one else may write in it; its group only
 # when that group is the user's own, named as the user (render_check.py private_dir_problem).
-check_private() {
+# Prints why <dir>, or its nearest existing ancestor, is open to another user, or nothing: it
+# must belong to this user or root, and no one else may write in it (render_check.py
+# private_dir_problem makes the same check).
+private_problem() {
   local d="$1"
   while [ ! -e "$d" ]; do d="$(dirname "$d")"; done
-  [ -n "$(find -H "$d" -prune \( -user "$(id -u)" -o -user 0 \) -print)" ] \
-    || fail "$d belongs to another user; use a directory of your own"
-  [ -z "$(find -H "$d" -prune -perm -0002 -print)" ] \
-    || fail "$d is writable by every user; use a directory of your own"
-  if [ -n "$(find -H "$d" -prune -perm -0020 -print)" ]; then
-    { [ "$(id -gn)" = "$(id -un)" ] && [ -n "$(find -H "$d" -prune -group "$(id -g)" -print)" ]; } \
-      || fail "$d is writable by its group; use a directory of your own"
+  if [ -z "$(find -H "$d" -prune \( -user "$(id -u)" -o -user 0 \) -print)" ]; then
+    echo "$d belongs to another user"
+  elif [ -n "$(find -H "$d" -prune -perm -0002 -print)" ]; then
+    echo "$d is writable by every user"
+  elif [ -n "$(find -H "$d" -prune -perm -0020 -print)" ] \
+      && ! { [ "$(id -gn)" = "$(id -un)" ] && [ -n "$(find -H "$d" -prune -group "$(id -g)" -print)" ]; }; then
+    echo "$d is writable by its group"
   fi
+}
+
+check_private() {
+  local problem
+  problem="$(private_problem "$1")"
+  [ -z "$problem" ] || fail "$problem; use a directory of your own"
 }
 
 # A field of a JSON file, read with node: json_field <file> <dotted.key.path>
@@ -208,6 +227,136 @@ build_of() {
     *-[0-9]*.[0-9]*) echo "${d#*-}" ;;
     *) echo "unknown" ;;
   esac
+}
+
+# Reads the browser named by an executable path, once per path (TASK 110 R7.3; review round 1
+# M1, L1, L2): sets BROWSER_EXE to the path with every symbolic link resolved and BROWSER_HASH to
+# the tree hash of the directory that holds it, or BROWSER_PROBLEM to why it cannot be read. The
+# tree hash is the sha256 of one line per entry under that directory, sorted bytewise by path:
+# the JSON array ["file", "./<path>", "<sha256 of the content>"] or ["link", "./<path>",
+# "<target>"], each followed by a newline. A path or a name with a control character, a file
+# that cannot be read, an entry that is neither a file, a directory nor a symbolic link, and an
+# entry another user may write in are refused, so no byte of the directory is left out of the hash
+# or open to a change after it: an entry must belong to this user or root, and only the user's own
+# group may write in it. A link whose file name differs from its target's is refused: it may name
+# a launcher, not the browser (TASK 110 review rounds 2 and 3). BROWSER_STAT is the sha256 of one
+# JSON line per entry, the directory itself included: [path, kind, dev, inode, mode, size, mtime
+# in ns, ctime in ns]. It is stamped, and every render compares it, so a file changed or swapped
+# after the hash shows (review round 3, N1).
+BROWSER_CACHE_LINES=""
+read_browser() {
+  local given="$1" line out status rest own_gid=-1
+  BROWSER_EXE="" BROWSER_HASH="" BROWSER_STAT="" BROWSER_PROBLEM=""
+  # Group write is allowed only to the user's own group, as private_problem and render_check.py
+  # _own_group allow it (TASK 110 review round 3, RG3-2).
+  if [ "$(id -gn)" = "$(id -un)" ]; then own_gid="$(id -g)"; fi
+  while IFS= read -r line; do
+    if [ "${line%%	*}" = "$given" ]; then
+      out="${line#*	}"
+      break
+    fi
+  done <<EOF_CACHE
+$BROWSER_CACHE_LINES
+EOF_CACHE
+  if [ -z "${out:-}" ]; then
+    out="$(node -e 'const fs = require("fs"), path = require("path"), crypto = require("crypto");
+      const bad = (s) => /[\u0000-\u001f\u007f]/.test(s);
+      try {
+        const given = process.argv[1];
+        if (bad(given)) throw new Error("the browser path holds a control character");
+        const exe = fs.realpathSync(given);
+        if (bad(exe)) throw new Error("the resolved browser path holds a control character");
+        if (path.basename(exe) !== path.basename(given))
+          throw new Error(given + " leads to " + exe + " under another name, which may be a launcher; name the browser binary itself");
+        const ownGid = Number(process.argv[2]), uid = process.getuid();
+        const open = (st, full) => {
+          if (st.uid !== uid && st.uid !== 0) throw new Error(full + " belongs to another user");
+          if (st.mode & 0o002) throw new Error(full + " is writable by every user");
+          if ((st.mode & 0o020) && st.gid !== ownGid) throw new Error(full + " is writable by its group");
+        };
+        const rows = [], stats = [];
+        const stamp = (full, rel, kind) => {
+          const st = fs.lstatSync(full, {bigint: true});
+          stats.push([rel, kind, String(st.dev), String(st.ino), String(st.mode), String(st.size),
+                      String(st.mtimeNs), String(st.ctimeNs)]);
+        };
+        const walk = (dir, rel) => {
+          for (const name of fs.readdirSync(dir)) {
+            if (bad(name)) throw new Error("a name under " + dir + " holds a control character");
+            const full = path.join(dir, name), r = rel ? rel + "/" + name : name;
+            const st = fs.lstatSync(full);
+            if (!st.isSymbolicLink()) open(st, full);
+            stamp(full, "./" + r, st.isSymbolicLink() ? "link" : st.isDirectory() ? "dir" : "file");
+            if (st.isSymbolicLink()) rows.push(["link", "./" + r, fs.readlinkSync(full)]);
+            else if (st.isDirectory()) walk(full, r);
+            else if (st.isFile()) rows.push(["file", "./" + r,
+              crypto.createHash("sha256").update(fs.readFileSync(full)).digest("hex")]);
+            else throw new Error(full + " is neither a file, a directory nor a symbolic link");
+          }
+        };
+        const root = path.dirname(exe);
+        open(fs.lstatSync(root), root);
+        stamp(root, ".", "dir");
+        walk(root, "");
+        rows.sort((a, b) => Buffer.compare(Buffer.from(a[1]), Buffer.from(b[1])));
+        const h = crypto.createHash("sha256");
+        for (const row of rows) h.update(JSON.stringify(row) + "\n");
+        // The stat digest: render_check.py browser_stat_digest compares it at every render.
+        stats.sort((a, b) => Buffer.compare(Buffer.from(a[0]), Buffer.from(b[0])));
+        const sd = crypto.createHash("sha256");
+        for (const row of stats) sd.update(JSON.stringify(row) + "\n");
+        process.stdout.write("ok\t" + exe + "\t" + h.digest("hex") + "\t" + sd.digest("hex"));
+      } catch (e) {
+        process.stdout.write("no\t" + String(e.message).replace(/[\u0000-\u001f\u007f]/g, " "));
+      }' "$given" "$own_gid")" || out="no	node could not read the browser"
+    case "$given" in
+      *[[:cntrl:]]*) ;;
+      *) BROWSER_CACHE_LINES="$BROWSER_CACHE_LINES
+$given	$out" ;;
+    esac
+  fi
+  status="${out%%	*}"
+  rest="${out#*	}"
+  if [ "$status" = "ok" ]; then
+    BROWSER_EXE="${rest%%	*}"
+    rest="${rest#*	}"
+    BROWSER_HASH="${rest%%	*}"
+    BROWSER_STAT="${rest#*	}"
+  else
+    BROWSER_PROBLEM="$rest"
+  fi
+}
+
+# Succeeds when the browser named by <executable> may run: its directory and the one above are
+# private, and its tree hash is recorded in BROWSER_TABLE or equals MERMAID_RENDER_BROWSER_SHA256,
+# which only the operator sets. Sets BROWSER_EXE, BROWSER_HASH and, on a refusal,
+# BROWSER_PROBLEM: browser_accepted <executable>
+browser_accepted() {
+  local recorded d problem
+  read_browser "$1"
+  [ -z "$BROWSER_PROBLEM" ] || return 1
+  for d in "$(dirname "$BROWSER_EXE")" "$(dirname "$(dirname "$BROWSER_EXE")")"; do
+    problem="$(private_problem "$d")"
+    if [ -n "$problem" ]; then
+      BROWSER_PROBLEM="$problem"
+      return 1
+    fi
+  done
+  if [ -n "${MERMAID_RENDER_BROWSER_SHA256:-}" ] && [ "$BROWSER_HASH" = "$MERMAID_RENDER_BROWSER_SHA256" ]; then
+    return 0
+  fi
+  recorded="$(node -e 'const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+                       for (const b of t.browsers || []) process.stdout.write(String(b.tree_sha256) + "\n");' \
+                "$BROWSER_TABLE")" || { BROWSER_PROBLEM="cannot read $BROWSER_TABLE"; return 1; }
+  case "
+$recorded
+" in
+    *"
+$BROWSER_HASH
+"*) return 0 ;;
+  esac
+  BROWSER_PROBLEM="not recorded"
+  return 1
 }
 
 # Write puppeteer.json for an install: write_puppeteer_config <file> <executable> <headless>
@@ -316,13 +465,28 @@ if [ "$DRY_RUN" -eq 1 ]; then
     esac
     say "  copy $ASSETS/$tag/{package.json,package-lock.json} -> $RENDER_HOME/$tag/"
     say "  (cd $RENDER_HOME/$tag && PUPPETEER_SKIP_DOWNLOAD=1 npm_config_cache=$RENDER_HOME/.npm-cache npm ci --ignore-scripts)"
-    first="$(browser_candidates "" | head -n 1)"
-    if [ -n "$first" ]; then
-      say "  browser: $first (build $(build_of "$first"))"
+    found="$(browser_candidates "")"
+    if [ -n "$found" ]; then
+      old_ifs="$IFS"
+      IFS='
+'
+      set -f  # a path is one candidate, never a glob
+      for exe in $found; do
+        IFS="$old_ifs"
+        if browser_accepted "$exe"; then
+          say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: accepted"
+        elif [ -n "$BROWSER_HASH" ] && [ "$BROWSER_PROBLEM" = "not recorded" ]; then
+          say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: refused, not recorded"
+        else
+          say "  browser: $exe (build $(build_of "$exe")): refused: $BROWSER_PROBLEM"
+        fi
+      done
+      set +f
+      IFS="$old_ifs"
     else
       say "  browser: none at or above $BROWSER_MIN_BUILD under $BROWSER_CACHE/chrome-headless-shell"
     fi
-    say "  write $RENDER_HOME/$tag/puppeteer.json and the empty .puppeteerrc.json, and verify them with a smoke render run in $RENDER_HOME/$tag"
+    say "  write $RENDER_HOME/$tag/puppeteer.json, the empty .puppeteerrc.json and $BROWSER_STAMP, and verify them with a smoke render run in $RENDER_HOME/$tag"
   done
   if [ "${MERMAID_RENDER_NO_SANDBOX:-}" = "1" ]; then
     say "MERMAID_RENDER_NO_SANDBOX=1: the browser would run without its sandbox"
@@ -393,26 +557,53 @@ for tag in $TAGS; do
   # Puppeteer's search for a configuration ends at this file (render_check.py PUPPETEER_RC).
   printf '{}\n' > "$dest/.puppeteerrc.json" || fail "cannot write $dest/.puppeteerrc.json"
   chosen=""
+  chosen_hash=""
+  chosen_stat=""
+  refused=""
+  smoked=0
   SMOKE_LOG=""
   candidates="$(browser_candidates "$preferred")"
-  [ -n "$candidates" ] || fail "no chrome-headless-shell at or above $BROWSER_MIN_BUILD under $BROWSER_CACHE/chrome-headless-shell and MERMAID_RENDER_CHROME is unset; install one with 'npx --yes @puppeteer/browsers@$BROWSERS_TOOL install chrome-headless-shell@${preferred:-$BROWSER_MIN_BUILD} --path $BROWSER_CACHE' and run this script again"
+  [ -n "$candidates" ] || fail "no chrome-headless-shell at or above $BROWSER_MIN_BUILD under $BROWSER_CACHE/chrome-headless-shell and MERMAID_RENDER_CHROME is unset; install one with 'npx --yes @puppeteer/browsers@$BROWSERS_TOOL install chrome-headless-shell@$BROWSER_MIN_BUILD --path $BROWSER_CACHE', the build $BROWSER_TABLE records, and run this script again; another build needs MERMAID_RENDER_BROWSER_SHA256, which the operator sets"
   old_ifs="$IFS"
   IFS='
 '
+  set -f  # a path is one candidate, never a glob
   for exe in $candidates; do
     IFS="$old_ifs"
-    write_puppeteer_config "$dest/puppeteer.json" "$exe" "$headless"
+    if ! browser_accepted "$exe"; then
+      if [ "$BROWSER_PROBLEM" = "not recorded" ]; then
+        say "$tag: browser $exe refused: tree sha256 $BROWSER_HASH is not recorded in $BROWSER_TABLE"
+        refused="$refused $BROWSER_HASH"
+      else
+        say "$tag: browser $exe refused: $BROWSER_PROBLEM"
+      fi
+      continue
+    fi
+    # The resolved path runs and is stamped: the browser that was hashed is the one that runs.
+    write_puppeteer_config "$dest/puppeteer.json" "$BROWSER_EXE" "$headless"
+    smoked=1
     if smoke_render "$dest" "$dest/puppeteer.json"; then
-      chosen="$exe"
+      chosen="$BROWSER_EXE"
+      chosen_hash="$BROWSER_HASH"
+      chosen_stat="$BROWSER_STAT"
       break
     fi
   done
+  set +f
   IFS="$old_ifs"
   if [ -z "$chosen" ]; then
-    rm -f "$dest/puppeteer.json"
+    rm -f "$dest/puppeteer.json" "$dest/$BROWSER_STAMP"
+    if [ "$smoked" -eq 0 ] && [ -n "$refused" ]; then
+      fail "no browser for $tag is accepted (tree sha256:$refused); the operator may confirm where this browser came from, then set MERMAID_RENDER_BROWSER_SHA256 to its tree hash and run this script again; an agent stops here and reports this refusal"
+    fi
+    if [ "$smoked" -eq 0 ]; then
+      fail "no browser for $tag is accepted; each refusal is named above; an agent stops here and reports it"
+    fi
     fail "no cached chrome-headless-shell renders with $tag under the sandbox and the network block; last log: $SMOKE_LOG"
   fi
-  say "$tag: mermaid $installed, puppeteer $pptr, browser $chosen (build $(build_of "$chosen"), headless: $headless)"
+  printf '%s  %s\nstat %s\n' "$chosen_hash" "$chosen" "$chosen_stat" > "$dest/$BROWSER_STAMP" \
+    || fail "cannot write $dest/$BROWSER_STAMP"
+  say "$tag: mermaid $installed, puppeteer $pptr, browser $chosen (build $(build_of "$chosen"), headless: $headless, tree sha256 $chosen_hash)"
 done
 
 if [ "${MERMAID_RENDER_NO_SANDBOX:-}" = "1" ]; then

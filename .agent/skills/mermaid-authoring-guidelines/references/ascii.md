@@ -160,6 +160,17 @@ Legend: the two paths between the fork and the join run in parallel.
 In Figures 3 and 4, counting from 1, the fork sits in column 23 and the join in column 47 on
 every line.
 
+The lint counts a join in four forms. Forms 1, 2 and 4 have a spelling in either character set;
+form 3 exists in box drawing only:
+
+1. the lower path ends under the stroke, `───┘` or `---+`, and the flow goes on along the upper
+   path;
+2. the stroke meets the path in `┴` or `+`, and the path goes on to an arrowhead, `──┴──▶` or
+   `--+-->`;
+3. the path ends in `┤`, and the stroke goes on down to an arrowhead below;
+4. the stroke meets the path in `┴` or `+`, and the path goes on to a corner that turns down to an
+   arrowhead, `──┴──┐` or `--+--+` over a stroke to `▼` or `v`.
+
 ### 5.3 A tree
 
 A hierarchy: each element has one parent. `│` continues a parent past a nested branch.

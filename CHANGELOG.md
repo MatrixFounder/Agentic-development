@@ -16,6 +16,66 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.35.0 — figure-instrument follow-ups, a pinned renderer supply chain, plan status and fix-round rules (WI-32, WI-30, WI-22, WI-27)**
+
+Four work-items left open by TASK 108 are taken in one run (TASK 110).
+
+#### Changed
+
+- **`lifeline_through_label` is a gate.** A lifeline of a message's own end through its label
+  fails the render check: the label is wider than the gap, and a line of at most 24 characters
+  avoids it. A skipped participant's lifeline through a label stays a warning, and a
+  self-message's own lifeline is not counted. N7 names the check; P7 and P11 keep their content.
+- **MA-SYN-09, an error:** text after `timeline` on its header line. 10.9.8 draws it as a period,
+  and 11.17.2 reads `TD` as a direction.
+- **An ASCII merge that turns down to an arrowhead counts as a join**, so a fork and such a join
+  ask for a legend.
+- **The CommonMark scan is linear.** 500 nested list items took 1.88 s and take 0.04 s; 4000
+  nested markers with 4000 blank lines took 1.76 s and take 0.01 s. Its output is unchanged over
+  30,000 generated documents.
+- **The figure-eval grader reads a `text` fence on a list marker** as an ASCII figure for Q16. The
+  campaign was graded again: no verdict moved (`evals/AMENDMENTS.md`).
+- **The v10 renderer runs on the puppeteer of v11, 25.12.0.** `npm audit` reports no advisory for
+  any renderer lockfile; v10 had 6 high. Every reference figure rendered in 10.9.8 with the
+  metrics measured before.
+- **The renderer setup pins the browser by a tree hash.** A browser runs only when the hash of its
+  directory is in `assets/renderers/browsers.json` or equals `MERMAID_RENDER_BROWSER_SHA256`, and
+  when its directory is private. The setup resolves the browser path once and stamps it with the
+  hash into each install. `render_check.py` refuses an install without the stamp, with a stamp
+  for another browser, or with a stale lockfile stamp. It also refuses a browser path that no
+  longer resolves to itself, an executable or a browser directory another user may change, and a
+  browser directory whose stat digest changed since the setup.
+- **Plan status.** The plan template writes `not-started` for every task. `03-develop-single-task`,
+  `vdd-03-develop` and `vdd-05-run-full-task` set `in-progress` and `done` and rewrite the plan
+  chart (`skill-planning-format` §2.2). `vdd-05` Step 4 passes `--summary`, which its
+  `update_state.py` call lacked.
+- **Fix rounds** (`developer-guidelines` §6.4, `code-review-checklist` §4). A fix to an instrument
+  replays its stored corpus before hand-off and lists every verdict that moved. From the second
+  round of one review, a fix edits only for that round's findings.
+- **No workflow repeats a step number.** `01-start-feature`, `security-audit` and
+  `vdd-adversarial` each numbered two steps alike; a test now reads every workflow.
+- **A vulnerability with no public advisory in a dependency is reported privately**
+  (`security-audit` §6.1, pointed to from `core-principles`, the auditor prompt, `run-feedback`
+  and `vdd-multi`). Until a public advisory describes it, anything published with the repository
+  states only the dependency, the versions, a severity, the mitigation and the report status. The
+  operator sends the report.
+- **The mermaid `SKILL.md` holds 2864 words** of the 3000 its eval allows. Text that repeated a
+  step or a reference became a pointer to it.
+- **Versions:** `mermaid-authoring-guidelines` 1.1, `developer-guidelines` 1.12,
+  `code-review-checklist` 1.5, `skill-planning-format` 1.3, `plan-review-checklist` 1.3,
+  `security-audit` 3.9, `core-principles` 1.1, `run-feedback` 1.6.
+- **WI-32, WI-30, WI-22 and WI-27 closed.** For WI-27, this release's own first fix round
+  addressed 21 review items, 19 resolved and 2 in part, and the second review round found 5
+  regressions from it. For WI-30, the upstream report on mermaid-cli went to its maintainers
+  privately on 2026-10-05; its text stays out of this repository.
+
+#### Migration
+
+- Run `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh` again. Until then
+  `render_check.py` refuses the installs made before this release. On a platform other than
+  macOS arm64 with build 150.0.7871.24, confirm where the browser came from, then set
+  `MERMAID_RENDER_BROWSER_SHA256` to the tree hash the setup prints.
+
 ### **v3.34.0 — Python 3.11 is the minimum and 3.14 the main version (WI-33)**
 
 The framework claimed Python 3.9 in six places. CI tested only 3.11 and 3.13, and five

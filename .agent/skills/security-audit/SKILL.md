@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.8
+version: 3.9
 ---
 
-# Security Audit v3.8
+# Security Audit v3.9
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 
@@ -146,6 +146,50 @@ When secrets are found:
 
 All findings include **CWE identifiers** for integration with vulnerability management systems (Jira, Snyk, Sonar).
 
+### 6.1 A finding in a dependency
+
+A **dependency finding** is a vulnerability that no public advisory describes yet, in code the
+project uses but does not maintain: a library, a CLI tool, a pinned binary. It affects every user
+of that dependency, so its maintainers learn of it before the public does. A vulnerability with a
+public advisory is cited by its advisory identifier (CVE or GHSA).
+
+Until a public advisory describes it:
+
+1. **Report it privately.** The dependency's security policy (`SECURITY.md`) names the channel; on
+   GitHub it is the repository's Security tab, *Report a vulnerability*. A public issue, pull
+   request or discussion is a disclosure. With no private channel, the operator asks the
+   maintainers for one and gives no detail.
+2. **Keep the detail out of everything published with the repository**: files, commit messages,
+   branch and tag names, pull request and release text, and the records that tools write
+   (ledgers, eval corpora, session summaries). A record states only the dependency, the affected
+   versions, a severity, this project's mitigation and the status of the report; nothing on how
+   the defect works or what reaches it. Anyone who reads the repository reads the detail, and it
+   is a working attack on every user of the dependency.
+3. **Hand the report to the operator.** The draft is written outside the repository, and the
+   operator sends it. An agent posts to an external service only when the operator asks for it in
+   their own message.
+4. **Record the status.** The channel, the date the report was sent and, where one exists, the URL
+   of the private report are recorded at once: they show nothing to anyone else. With no channel, or no answer 90 days after the send,
+   the operator decides in their own message what follows, and the record states the decision.
+5. **After the advisory**, a record cites it and restates nothing beyond it. An operator's
+   recorded decision to disclose without one lifts step 2 as far as the decision states.
+
+Five other duties of an audit give way while the rule holds:
+
+- a test pins this project's mitigation and never exercises the dependency's defect;
+- a patch to a vendored copy waits for the advisory, because its diff shows the defect;
+  isolation or configuration mitigates better than a narrow guard in the project's code, which
+  shows it too;
+- the exploit scenario a review role writes goes into the operator's draft, not into the record;
+- the CWE identifier that §6 asks for waits for the advisory, because it names the defect's class;
+- the finding is filed as a work-item, not as a defect, whose record requires a reproduction
+  (`run-feedback`).
+
+Detail that was public before a finding came under this rule is not repeated or extended; a new
+record cites the existing record by its id. The rule holds for a private repository too: a
+private repository is cloned, forked and made public later. (TASK 110 drafted such a report inside
+a public repository; its security review caught the draft before a commit.)
+
 ## 7. Rationalization Table
 
 | Agent Excuse | Reality / Counter-Argument |
@@ -158,3 +202,4 @@ All findings include **CWE identifiers** for integration with vulnerability mana
 | "The LLM generated this code, it's fine" | LLMs hallucinate vulnerabilities. Treat output as untrusted. |
 | "The IaC is only for staging" | Staging configs often get copy-pasted to production. Secure from day one. |
 | "We don't need an SBOM" | EU Cyber Resilience Act and US EO 14028 require it. Regulators disagree. |
+| "The repository is ours, so the reproduction can sit in the review record" | Every reader of the repository gets a working attack before the advisory exists (§6.1). |

@@ -2,7 +2,7 @@
 name: plan-review-checklist
 description: Detailed checklist for verifying Development Plans.
 tier: 1
-version: 1.2
+version: 1.3
 ---
 # Plan Review Checklist
 
@@ -64,6 +64,9 @@ return APPROVED, and `has_critical_issues` is true.
       record and the record's dependencies as `deps`.
 - [ ] **Schedule valid:** the `plan_gantt.py --check` output names no cycle, unknown dependency,
       duplicate id or non-integer estimate.
+- [ ] **Status of a new plan:** every task of the block holds the status `not-started`, or no
+      `status`. No task of a new plan is `in-progress` or `done`: the develop workflows set them
+      (`skill-planning-format` §2.2).
 - [ ] **Chart current:** a plan of 8 or more tasks holds the generated chart, or one chart per
       stage group, between `<!-- generated:plan-gantt-start -->` and
       `<!-- generated:plan-gantt-end -->`, and the check output shows exit `0`. A plan of fewer

@@ -381,7 +381,7 @@ class TestFixtures(unittest.TestCase):
             self.assertEqual((deep[0]["edge"], deep[0]["node"]), ("A->B", "X"))
 
     def test_sequence_gaps(self):
-        for name in ("fx-seq-long", "fx-seq-skip"):
+        for name in ("fx-seq-long", "fx-seq-skip", "fx-seq-own"):
             for v in VERSIONS:
                 with self.subTest(fixture=name, version=v):
                     want = EXPECTED["fixtures"][name][v]["sequence"]
@@ -393,6 +393,8 @@ class TestFixtures(unittest.TestCase):
                     self.assertEqual(seq["lifeline_through_label"], want["lifeline_through_label"])
                     self.assertEqual(seq["lifeline_label_crossings"],
                                      sum(len(x["lifelines"]) for x in want["lifeline_through_label"]))
+                    self.assertEqual(seq["lifeline_own_crossings"],
+                                     sum(len(x["own"]) for x in want["lifeline_through_label"]))
 
     def test_gantt_bars(self):
         for v in VERSIONS:
@@ -864,13 +866,37 @@ class TestSyntheticAnatomy(unittest.TestCase):
 
 
 class TestLifelines(unittest.TestCase):
-    def test_lifeline_through_label_warns(self):
+    def test_a_skipped_lifeline_through_a_label_warns(self):
+        """TASK 110 D2: a skipped participant's lifeline runs through the label centre in every
+        version, so the crossing warns. Metrics stored before TASK 110 have no `own` key and give
+        the verdict they gave then (P8)."""
+        for entry in ({"message": "m", "from": "A", "to": "C", "lifelines": ["B"], "own": []},
+                      {"message": "m", "from": "A", "to": "C", "lifelines": ["B"]}):
+            with self.subTest(entry=entry):
+                f = sg.evaluate(base_metrics(sequence={
+                    "participants": ["A", "B", "C"], "lifeline_gaps": [200.0, 200.0],
+                    "lifeline_through_label": [entry]}), NOTATION)
+                self.assertEqual(checks(f, "warn"), ["lifeline_through_label"])
+                self.assertEqual(checks(f, "fail"), [])
+                self.assertTrue(sg.passes(f))
+
+    def test_an_own_lifeline_through_a_label_fails(self):
+        """TASK 110 R1.2: a label wider than the gap between its own two lifelines fails."""
         f = sg.evaluate(base_metrics(sequence={
-            "participants": ["A", "B", "C"], "lifeline_gaps": [200.0, 200.0],
-            "lifeline_through_label": [{"message": "m", "from": "A", "to": "C",
-                                        "lifelines": ["B"]}]}), NOTATION)
-        self.assertEqual(checks(f, "warn"), ["lifeline_through_label"])
-        self.assertTrue(sg.passes(f))
+            "participants": ["A", "B"], "lifeline_gaps": [200.0],
+            "lifeline_through_label": [{"message": "m", "from": "A", "to": "B", "lifelines": [],
+                                        "own": ["A", "B"]}]}), NOTATION)
+        self.assertEqual(checks(f, "fail"), ["lifeline_through_label"])
+        self.assertFalse(sg.passes(f))
+        self.assertTrue(sg.fired(f, "lifeline_through_label"))
+
+    def test_own_lifelines_are_measured_from_two_participants(self):
+        """The fixture has two participants; the self-message's own lifeline is no crossing."""
+        for v in VERSIONS:
+            with self.subTest(version=v):
+                found = fixture_metrics("fx-seq-own", v)["sequence"]["lifeline_through_label"]
+                self.assertEqual([(x["from"], x["to"], x["own"]) for x in found], [("A", "B", ["A", "B"])])
+                self.assertNotIn("validate", " ".join(x["message"] for x in found))
 
     def test_gap_ratio_comes_from_the_notation(self):
         r = TH["max_lifeline_gap_ratio"]
@@ -1173,6 +1199,14 @@ class TestFired(unittest.TestCase):
         f = [{"check": "lifeline_gap", "severity": "warn", "message": ""}]
         self.assertTrue(sg.fired(f, "lifeline_gap"))
         self.assertFalse(sg.fired(f, "lifeline_through_label"))
+
+    def test_the_lifeline_gate_fires_on_a_fail_only(self):
+        """TASK 110 R1.2: `lifeline_through_label` is a gate check, so its warning fires nothing."""
+        self.assertIn("lifeline_through_label", sg.GATE_CHECKS)
+        warn = [{"check": "lifeline_through_label", "severity": "warn", "message": ""}]
+        self.assertFalse(sg.fired(warn, "lifeline_through_label"))
+        self.assertTrue(sg.fired(warn + [{"check": "lifeline_through_label", "severity": "fail",
+                                          "message": ""}], "lifeline_through_label"))
 
     def test_the_two_sets_partition_the_checks(self):
         self.assertEqual(set(sg.GATE_CHECKS) | set(sg.WARN_CHECKS), set(sg.CHECKS))

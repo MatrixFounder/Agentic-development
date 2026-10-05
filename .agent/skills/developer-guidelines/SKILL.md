@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.11
+version: 1.12
 ---
 # Developers Guidelines
 
@@ -240,6 +240,28 @@ happened to contain.
 > they bind the roles that run commands. `core-principles` is TIER 0 — loaded into every session,
 > including the Analyst, Architect and Planner, who never invoke a gate. A rule costs its tier's
 > audience on every run, and this one has a narrower audience than that.
+
+### 6.4 Fix rounds
+
+A fix round answers the findings of a review. Two rules bind it (TASK 110, WI-27).
+
+**Terms.** An instrument is code that gives a verdict on an input: a linter, a parser, a grader,
+a measurement. A stored corpus is a set of inputs that the project keeps together with the
+verdicts an instrument gave them: an evaluation corpus, render fixtures, golden outputs.
+
+1. **Differential replay.** A fix to code that an instrument applies to a stored corpus re-runs
+   that instrument over the corpus before hand-off, once with the code before the fix and once
+   after it. The hand-off lists every verdict that moved, before and after, with its cause. When
+   none moved, it states "0 of N moved", with N the number of inputs replayed. A project with no
+   stored corpus for the instrument states "no stored corpus".
+2. **Closed list.** From the second fix round of one review on, a fix edits only for the findings
+   on that round's list. A defect found outside the list goes to the reviewer as a new finding; it
+   is not fixed in the round.
+
+**Why.** TASK 108 checked each fix wave with a verifier that replayed the original failures. The
+verifiers still found 23, 17 and 17 new regressions in three successive waves: a fix to shared
+parsing or measuring code moves verdicts on inputs its own test does not hold. A fourth wave with
+a closed list of 12 items ended with one MINOR regression.
 
 ## 7. Language Specific Guidelines
 - **Dynamic Loading:** If you are working in a specific language, you MUST read the corresponding guideline file from `references/languages/` if it exists.

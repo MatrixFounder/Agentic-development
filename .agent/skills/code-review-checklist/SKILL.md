@@ -2,7 +2,7 @@
 name: code-review-checklist
 description: "Structured checklist for code review: bugs, style, performance, security, docs."
 tier: 1
-version: 1.4
+version: 1.5
 ---
 # Code Review Checklist
 
@@ -43,6 +43,10 @@ version: 1.4
 ## 4. Testing
 - [ ] **E2E:** Passed? Checks main scenario?
 - [ ] **Regression:** All passed?
+- [ ] **Replay:** a fix to an instrument that the project applies to a stored corpus carries its
+      differential replay: every verdict that moved, or "0 of N moved" (`developer-guidelines` §6.4).
+- [ ] **Closed list:** from the second fix round of one review on, the diff holds edits for the
+      round's findings only (`developer-guidelines` §6.4).
 - [ ] **Unit:** Edge cases covered?
 - [ ] **No Mocking:** Real LLM/DB used in integration tests?
 

@@ -2,7 +2,7 @@
 name: core-principles
 description: "Fundamental principles of agentic development: atomicity, traceability, stub-first, minimizing hallucinations."
 tier: 0
-version: 1.0
+version: 1.1
 ---
 # Core Principles
 
@@ -41,3 +41,6 @@ All agents must adhere to these fundamental principles to ensure high quality an
 ## 4. Documentation First
 - **Single Source of Truth:** `System/Agents` and `docs/` are the sources of truth.
 - **Local Context:** Update local `.AGENTS.md` files to reflect changes in the codebase immediately.
+
+## 5. Disclosure
+- **Dependency Vulnerabilities:** A vulnerability that no public advisory describes yet, found in a dependency the project does not maintain, goes to its maintainers privately, and the operator sends the report. Until a public advisory describes it, nothing published with the repository says how it works or what reaches it (`security-audit` §6.1). That means no file in the repository, commit message, branch or tag name, pull request or release text, or review record.

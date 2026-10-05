@@ -1,0 +1,13 @@
+{
+  "schema": "renderer-browsers/v1",
+  "about": "chrome-headless-shell builds that setup_renderers.sh accepts without MERMAID_RENDER_BROWSER_SHA256 (TASK 110 R7.3, R7.4). tree_sha256 is the sha256 of one JSON line per entry under the directory that holds the executable, sorted bytewise by path: [\"file\", \"./<path>\", \"<sha256>\"] or [\"link\", \"./<path>\", \"<target>\"], each followed by a newline (setup_renderers.sh read_browser). Chrome for Testing publishes no sha256, so each entry was measured on a build whose renders produced the committed evidence.",
+  "browsers": [
+    {
+      "platform": "mac_arm",
+      "build": "150.0.7871.24",
+      "tree_sha256": "6c16d72661353c5b5e78fb848c1611acfc4f521bd5bd6730e7dbc916ab8bab9c",
+      "files": 17,
+      "measured": "2026-10-05"
+    }
+  ]
+}

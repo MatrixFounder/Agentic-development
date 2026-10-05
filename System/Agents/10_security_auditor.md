@@ -68,6 +68,7 @@ findings under these headings, spelled exactly as written:
 1.  **Summary:** Pass/Fail status.
 2.  **Findings:** Detailed list with CVE/CWE refs.
 3.  **Remediation:** Specific fix instructions.
+4.  **Dependency findings:** a vulnerability in a dependency that no public advisory describes yet follows `security-audit` §6.1. The report names the dependency, the versions, a severity, the mitigation and the status, and no CWE; the exploit scenario goes to the operator's draft outside the repository.
 
 ### Step 4: Output Generation
 **Return Format (JSON):**

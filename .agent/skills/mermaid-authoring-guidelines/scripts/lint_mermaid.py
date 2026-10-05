@@ -392,6 +392,13 @@ rule("MA-SYN-08", "error", "Styling that mermaid 10.9 rejects in an ER, class or
      _doc("erDiagram\n  CUSTOMER ||--o{ ORDER : places"))(
     _hazard_check("styling-v10"))
 
+rule("MA-SYN-09", "error", "Text after `timeline` on its header line",
+     "Write `timeline` alone on its line; mermaid 10.9 draws the text as a first period, and 11.17 "
+     "reads `TD` as a direction.",
+     _doc("timeline TD\n  2025 Q1 : v1 search"),
+     _doc("timeline\n  2025 Q1 : v1 search"))(
+    _hazard_check("timeline-header"))
+
 
 # =========================================================================== SET: settings
 

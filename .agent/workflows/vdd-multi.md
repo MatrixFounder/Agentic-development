@@ -215,6 +215,7 @@ Merge the reports from critics that ran. Apply:
 **Output routing**:
 - If `--output=<path>` → write the merged report to that file; emit a short pointer inline (`"Merged report written to <path> (verdict: <V>)"`).
 - Else → emit the full merged report inline.
+- Either way, a dependency finding of `security-audit` §6.1 enters the report with its severity and the dependency's status only; its exploit scenario goes to the operator's draft outside the repository.
 
 <!-- loop:multi-fix-loop -->
 

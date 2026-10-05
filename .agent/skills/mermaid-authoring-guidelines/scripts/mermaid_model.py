@@ -54,7 +54,7 @@ FIGURE_LANGS = ("mermaid", "text figure")
 #: them; the lint accepts them in a marker and leaves them to the render check.
 RENDER_CHECK_NAMES = ("crossings", "edges_through_nodes", "title_crossings",
                       "edges_through_labels", "label_overlaps", "clipped_labels", "legibility",
-                      "contrast", "gantt_overflow")
+                      "contrast", "lifeline_through_label", "gantt_overflow")
 
 #: The negative-fence marker: a Mermaid comment `%% negative: <names>`, the last body line of a
 #: fence that shows a defect on purpose. Names are comma-separated.
@@ -230,12 +230,12 @@ class _Span:
         return self.close if self.closed or self.close >= n else self.close - 1
 
 
-def _quote_strip(line: str, limit: Optional[int] = None) -> tuple:
-    """Return `(depth, rest)`: the number of blockquote markers `>` that open *line*, at most
-    *limit*, and the line without them. A marker takes one following space; a tab after it gives
+def _quote_strip(line: str) -> tuple:
+    """Return `(depth, rest)`: the number of blockquote markers `>` that open *line*, and the
+    line without them. A marker takes one following space; a tab after it gives
     up one column and keeps the rest as spaces (CommonMark)."""
     depth, col, rest = 0, 0, line
-    while limit is None or depth < limit:
+    while True:
         m = _QUOTE_MARK.match(rest)
         if not m:
             break
@@ -256,18 +256,27 @@ class _Line:
     at the position: `nn` is the index after them, `indent` their width in columns."""
 
     __slots__ = ("text", "offset", "column", "partial", "nn", "nn_column", "indent", "blank",
-                 "_rule_from")
+                 "_rule_from", "_run_from")
 
     def __init__(self, text: str):
         self.text, self.offset, self.column, self.partial = text, 0, 0, False
         self._rule_from = None
+        self._run_from = None
         self.find()
 
     def find(self) -> None:
+        """Read the spaces and tabs at the position. A position inside the run the last scan read
+        ends at the same character and column, since a tab reaches the next multiple of 4 from
+        any column inside it. So a line's run is read once, however many containers take columns
+        of it (TASK 110 R4.1)."""
         i, col = self.offset, self.column
-        while i < len(self.text) and self.text[i] in " \t":
-            col += 1 if self.text[i] == " " else 4 - col % 4
-            i += 1
+        if self._run_from is not None and self._run_from <= i <= self.nn:
+            i, col = self.nn, self.nn_column
+        else:
+            self._run_from = i
+            while i < len(self.text) and self.text[i] in " \t":
+                col += 1 if self.text[i] == " " else 4 - col % 4
+                i += 1
         self.nn, self.nn_column = i, col
         self.indent = col - self.column
         self.blank = i == len(self.text)
@@ -333,9 +342,8 @@ class _Block:
 def _list_item(ln: _Line, interrupts: bool) -> Optional[int]:
     """Read a list marker at the position of *ln* and return the columns between the position
     and the item's content, or None when the line opens no item. An item that *interrupts* a
-    paragraph needs content and, when ordered, the start number 1 (CommonMark §5.2)."""
-    if ln.indent >= 4:
-        return None
+    paragraph needs content and, when ordered, the start number 1 (CommonMark §5.2). The caller
+    passes a position indented less than 4 columns: from 4 on, the line is indented code."""
     m = _CM_BULLET.match(ln.text, ln.nn) or _CM_ORDERED.match(ln.text, ln.nn)
     if not m or (interrupts and m.re is _CM_ORDERED and int(m.group("start")) != 1):
         return None
@@ -380,6 +388,7 @@ class _BlockScan:
         self.spans: list = []
         self.comments: set = set()
         self.stack: list = []  # the open blocks, outermost first; a leaf only at the end
+        self.quotes: list = []  # the stack indices of the open blockquotes, rising
 
     def run(self) -> None:
         for i in range(len(self.lines)):
@@ -388,6 +397,8 @@ class _BlockScan:
 
     def close(self, k: int, i: int) -> None:
         """Close the blocks from `stack[k]` on; line *i* is the first line after them."""
+        while self.quotes and self.quotes[-1] >= k:
+            self.quotes.pop()
         for blk in self.stack[k:]:
             if blk.kind == "fence":
                 blk.span.close = i
@@ -402,8 +413,27 @@ class _BlockScan:
             self.stack.pop()
         if self.stack and self.stack[-1].kind == "item":
             self.stack[-1].child = True
+        if blk.kind == "quote":
+            self.quotes.append(len(self.stack))
         if blk.kind:
             self.stack.append(blk)
+
+    def blank_stop(self, k: int) -> int:
+        """The number of open blocks that a line with nothing left to read after `stack[k - 1]`
+        continues. Each block from `stack[k]` on takes such a line as `line` reads it, up to the
+        first one that cannot: a blockquote, a paragraph, an HTML block of kind 6 or 7, or an
+        item that holds no block yet. Only the last block can be one of the last three, since
+        `push` marks every item it opens a block in (TASK 110 R4.2)."""
+        stack = self.stack
+        j = bisect_left(self.quotes, k)
+        stop = self.quotes[j] if j < len(self.quotes) else len(stack)
+        tip = len(stack) - 1
+        if k <= tip < stop:
+            blk = stack[tip]
+            if blk.kind == "para" or (blk.kind == "html" and blk.html >= 6) \
+                    or (blk.kind == "item" and not blk.child):
+                stop = tip
+        return stop
 
     def html_line(self, blk: _Block, ln: _Line, i: int) -> None:
         """Close an HTML block of kind 1 to 5 on the line that holds its end condition."""
@@ -420,6 +450,9 @@ class _BlockScan:
         matched = 0
         for blk in stack:
             ln.find()
+            if ln.blank and ln.offset == len(ln.text):
+                matched = self.blank_stop(matched)  # nothing left to read on the line
+                break
             if blk.kind == "quote":
                 if ln.indent >= 4 or ln.text[ln.nn:ln.nn + 1] != ">":
                     break
@@ -991,6 +1024,7 @@ HAZARD_CODES = (
     "gantt-label-colon",  # : in a gantt task label (shifts the task id)
     "gantt-topaxis",  # topAxis statement (parse error)
     "gantt-vert",  # vert marker (10.9 crash)
+    "timeline-header",  # text after `timeline` on its header line (10.9: a period; 11.17: a direction)
     "styling-v10",  # classDef, class, style or ::: that 10.9 rejects in ER, class, requirement
     "acc-unsupported",  # accTitle or accDescr in a mindmap or sankey-beta figure (render error)
     "header-line",  # text after a flowchart's direction, or no direction there (parse error)
@@ -3276,6 +3310,16 @@ def _arrow_after(row: list, k: int) -> bool:
     return j < len(row) and row[j][1] in _ARROWHEADS
 
 
+def _turns_down(grid: _Grid, r: int, row: list, k: int, memo: dict) -> bool:
+    """True when the horizontal run after cell *k* of row *r* ends in a corner whose stroke runs
+    down to a down arrowhead: `──┐` or `--+` over `│` lines and `▼` or a lone `v`."""
+    j = k + 1
+    while j < len(row) and row[j][1] in _BOX_HORIZONTAL:
+        j += 1
+    return j > k + 1 and j < len(row) and row[j][1] in _BOX_TOP_RIGHT \
+        and _arrow_below(grid, r, row[j][0], memo)
+
+
 def _arrow_below(grid: _Grid, r: int, col: int, memo: dict) -> bool:
     """True when the stroke below the cell at row *r* runs down its column to a down
     arrowhead: `┤` over `▼`, or over `│` lines and then `▼` or a lone `v`. A row that ends
@@ -3337,16 +3381,18 @@ def _forks(lines: list, grid: _Grid) -> list:
 
 def _joins(lines: list, grid: _Grid) -> list:
     """Lines holding a join of ascii.md §5.2: a path meets a stroke from the line above, and one
-    flow goes on. Three forms count:
+    flow goes on. Four forms count:
 
     - the path ends under the stroke in `┘` or `+`, `───┘` or `---+`, and the flow goes on along
       the upper path;
     - the stroke meets the path in `┴` or `+`, and the path goes on to an arrowhead,
       `──┴──▶ deploy` or `--+--> deploy`;
-    - the path ends in `┤`, `──┤`, and the stroke goes on down to an arrowhead below.
+    - the path ends in `┤`, `──┤`, and the stroke goes on down to an arrowhead below;
+    - the stroke meets the path in `┴` or `+`, and the path goes on to a corner that turns down
+      to an arrowhead, `──┴──┐` or `--+--+` over a stroke to `▼` or `v` (TASK 110 R3).
 
     A fan-out's branch ends in an element, `└──▶ orders`, so a fan-out holds a fork and no join.
-    In the second form, a `+` with a stroke below it starts branches, as `┼` does: the trunk of
+    In forms 2 and 4, a `+` with a stroke below it starts branches, as `┼` does: the trunk of
     a fan-out whose branches leave above and below it is no join. The bottom border of a
     box-drawing grid, `└────┴────┘`, closes a frame and is no join."""
     out, memo = [], {}
@@ -3356,7 +3402,8 @@ def _joins(lines: list, grid: _Grid) -> list:
                     or row[k - 1][1] not in _BOX_HORIZONTAL or not grid.joins(r - 1, col, False):
                 continue
             goes_on = k + 1 < len(row) and row[k + 1][1] in _BOX_HORIZONTAL
-            merges = ch in _MERGE_GLYPHS and goes_on and _arrow_after(row, k) \
+            merges = ch in _MERGE_GLYPHS and goes_on \
+                and (_arrow_after(row, k) or _turns_down(grid, r, row, k, memo)) \
                 and not (ch == "+" and grid.joins(r + 1, col, True))
             if (ch in _JOIN_GLYPHS and not goes_on and (ch == "+" or not _frame_bottom(grid, r, k))) \
                     or merges \
@@ -3621,6 +3668,8 @@ def parse_figure(fence: Fence) -> Figure:
             fig.er = _parse_er(rows, fig)
         elif fig.kind in OTHER_SCANNED_KINDS:
             _scan_other(rows, fig)
+        if fig.kind == "timeline":
+            _timeline_header(rows[0], fig)
         if fig.kind in ACC_UNSUPPORTED_KINDS:
             for line in fig.acc_lines:
                 fig.hazard("acc-unsupported", line, "accTitle / accDescr",
@@ -3630,6 +3679,18 @@ def parse_figure(fence: Fence) -> Figure:
         fig.parse_errors.append({"line": fence.start, "message": f"internal parser error: {exc!r}",
                                  "internal": True})
     return fig
+
+
+def _timeline_header(row: tuple, fig: Figure) -> None:
+    """Text after `timeline` on its header line. Mermaid 10.9.8 draws it as a first period, and
+    11.17.2 reads `TD` as a direction and draws the figure top to bottom (TASK 110 R2)."""
+    line, text = row
+    header = text.strip()
+    # A `%%` comment after the keyword draws nothing in 10.9.8 or 11.17.2 (measured 2026-10-05).
+    rest = header[len("timeline"):].split("%%", 1)[0].strip()
+    if rest:
+        fig.hazard("timeline-header", line, header,
+                   f"`{rest}` after `timeline`: mermaid 10.9 draws it as a period")
 
 
 def parse_document(text: str, langs: tuple = FIGURE_LANGS) -> list:

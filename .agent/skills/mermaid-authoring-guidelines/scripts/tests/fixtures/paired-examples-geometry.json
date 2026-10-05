@@ -3,8 +3,8 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/paired-examples.md": {
-   "generated": "2026-10-03T12:32:12Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:01Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -1598,10 +1598,10 @@
     },
     "438": {
      "fence_end": 451,
-     "sha256": "25785daf3910f5e2a5b9aab75993f8a96718d843fb0c5972a909ea64f3e8b7a3",
+     "sha256": "e131b583e59b820563f2edbcd1d58c24ef0ce2c83420bf3f7c9d0f56e4d182ac",
      "kind": "sequence",
      "negative": true,
-     "negative_names": ["MA-LABEL-04"],
+     "negative_names": ["MA-LABEL-04", "lifeline_through_label"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -1610,7 +1610,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "sequence",
@@ -1642,13 +1642,29 @@
          "messages": 5,
          "lifeline_through_label": [
           {
+           "message": "start {job_id, step_id, attempt}",
+           "from": "D",
+           "to": "R",
+           "lifelines": [],
+           "own": ["D", "R"]
+          },
+          {
+           "message": "execute, waited {job_id, step_id, attempt, deadline_ms, …}",
+           "from": "R",
+           "to": "C",
+           "lifelines": [],
+           "own": ["R", "C"]
+          },
+          {
            "message": "cvj.step_finish()",
            "from": "R",
            "to": "DB",
-           "lifelines": ["C"]
+           "lifelines": ["C"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 1
+         "lifeline_label_crossings": 1,
+         "lifeline_own_crossings": 4
         },
         "gantt": {},
         "contrast": {
@@ -1675,6 +1691,8 @@
         "warnings": []
        },
        "findings": [
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of D and R run through the label 'start {job_id, step_id, attempt}' of D -> R: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of R and C run through the label 'execute, waited {job_id, step_id, attempt, deadline_ms, …}' of R -> C: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
         {"check": "lifeline_through_label", "severity": "warn", "message": "the lifeline of C runs through the label 'cvj.step_finish()' of R -> DB; another participant order or a shorter label may avoid it"}
        ]
       },
@@ -1684,7 +1702,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "sequence",
@@ -1716,13 +1734,29 @@
          "messages": 5,
          "lifeline_through_label": [
           {
+           "message": "start {job_id, step_id, attempt}",
+           "from": "D",
+           "to": "R",
+           "lifelines": [],
+           "own": ["D", "R"]
+          },
+          {
+           "message": "execute, waited {job_id, step_id, attempt, deadline_ms, …}",
+           "from": "R",
+           "to": "C",
+           "lifelines": [],
+           "own": ["R", "C"]
+          },
+          {
            "message": "cvj.step_finish()",
            "from": "R",
            "to": "DB",
-           "lifelines": ["C"]
+           "lifelines": ["C"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 1
+         "lifeline_label_crossings": 1,
+         "lifeline_own_crossings": 4
         },
         "gantt": {},
         "contrast": {
@@ -1749,6 +1783,8 @@
         "warnings": []
        },
        "findings": [
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of D and R run through the label 'start {job_id, step_id, attempt}' of D -> R: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of R and C run through the label 'execute, waited {job_id, step_id, attempt, deadline_ms, …}' of R -> C: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
         {"check": "lifeline_through_label", "severity": "warn", "message": "the lifeline of C runs through the label 'cvj.step_finish()' of R -> DB; another participant order or a shorter label may avoid it"}
        ]
       },
@@ -1758,7 +1794,7 @@
        "mermaid_cli": "10.9.1",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "sequence",
@@ -1790,13 +1826,29 @@
          "messages": 5,
          "lifeline_through_label": [
           {
+           "message": "start {job_id, step_id, attempt}",
+           "from": "D",
+           "to": "R",
+           "lifelines": [],
+           "own": ["D", "R"]
+          },
+          {
+           "message": "execute, waited {job_id, step_id, attempt, deadline_ms, …}",
+           "from": "R",
+           "to": "C",
+           "lifelines": [],
+           "own": ["R", "C"]
+          },
+          {
            "message": "cvj.step_finish()",
            "from": "R",
            "to": "DB",
-           "lifelines": ["C"]
+           "lifelines": ["C"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 1
+         "lifeline_label_crossings": 1,
+         "lifeline_own_crossings": 4
         },
         "gantt": {},
         "contrast": {
@@ -1823,6 +1875,8 @@
         "warnings": []
        },
        "findings": [
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of D and R run through the label 'start {job_id, step_id, attempt}' of D -> R: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
+        {"check": "lifeline_through_label", "severity": "fail", "message": "the lifelines of R and C run through the label 'execute, waited {job_id, step_id, attempt, deadline_ms, …}' of R -> C: the label is wider than the gap between its own ends; keep each line at most 24 characters or break it with <br/>"},
         {"check": "lifeline_through_label", "severity": "warn", "message": "the lifeline of C runs through the label 'cvj.step_finish()' of R -> DB; another participant order or a shorter label may avoid it"}
        ]
       }
@@ -1875,7 +1929,8 @@
          "width_source": "measure",
          "messages": 1,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -1938,7 +1993,8 @@
          "width_source": "measure",
          "messages": 1,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2002,7 +2058,8 @@
          "width_source": "measure",
          "messages": 1,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2077,22 +2134,26 @@
            "message": "cvj.job_enqueue()",
            "from": "SU",
            "to": "DB",
-           "lifelines": ["D"]
+           "lifelines": ["D"],
+           "own": []
           },
           {
            "message": "start {job_id, step_id, attempt}",
            "from": "D",
            "to": "R",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           },
           {
            "message": "nudge {reason}",
            "from": "R",
            "to": "D",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 3
+         "lifeline_label_crossings": 3,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2199,22 +2260,26 @@
            "message": "cvj.job_enqueue()",
            "from": "SU",
            "to": "DB",
-           "lifelines": ["D"]
+           "lifelines": ["D"],
+           "own": []
           },
           {
            "message": "start {job_id, step_id, attempt}",
            "from": "D",
            "to": "R",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           },
           {
            "message": "nudge {reason}",
            "from": "R",
            "to": "D",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 3
+         "lifeline_label_crossings": 3,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2321,22 +2386,26 @@
            "message": "cvj.job_enqueue()",
            "from": "SU",
            "to": "DB",
-           "lifelines": ["D"]
+           "lifelines": ["D"],
+           "own": []
           },
           {
            "message": "start {job_id, step_id, attempt}",
            "from": "D",
            "to": "R",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           },
           {
            "message": "nudge {reason}",
            "from": "R",
            "to": "D",
-           "lifelines": ["DB"]
+           "lifelines": ["DB"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 3
+         "lifeline_label_crossings": 3,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2453,16 +2522,19 @@
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           },
           {
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 2
+         "lifeline_label_crossings": 2,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2570,16 +2642,19 @@
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           },
           {
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 2
+         "lifeline_label_crossings": 2,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -2687,16 +2762,19 @@
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           },
           {
            "message": "start",
            "from": "D",
            "to": "R",
-           "lifelines": ["TW"]
+           "lifelines": ["TW"],
+           "own": []
           }
          ],
-         "lifeline_label_crossings": 2
+         "lifeline_label_crossings": 2,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {

@@ -3,8 +3,8 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/ascii.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -15,8 +15,8 @@
    "figures": {}
   },
   "references/eval-results.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -27,8 +27,8 @@
    "figures": {}
   },
   "references/flowchart.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -784,8 +784,8 @@
    }
   },
   "references/gantt.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -794,8 +794,8 @@
     "legibility_exempt_classes": ["sequenceNumber"]
    },
    "figures": {
-    "390": {
-     "fence_end": 412,
+    "393": {
+     "fence_end": 415,
      "sha256": "94a5965645c45617a485bb5eebc8e10d74c68177b3a3e5bca8deaf5cb5779621",
      "kind": "gantt",
      "negative": false,
@@ -996,8 +996,8 @@
       }
      }
     },
-    "447": {
-     "fence_end": 467,
+    "450": {
+     "fence_end": 470,
      "sha256": "3d099dcc9576b6b324e840b55d788f20e41e8de756b73eddbff05bc99a6fa18a",
      "kind": "gantt",
      "negative": false,
@@ -1165,8 +1165,8 @@
       }
      }
     },
-    "493": {
-     "fence_end": 513,
+    "496": {
+     "fence_end": 516,
      "sha256": "2729270e3cb21f0cf338e052e9b160041788355d97d7e6e221e0e94d7e7ea1e4",
      "kind": "gantt",
      "negative": true,
@@ -1370,8 +1370,8 @@
    }
   },
   "references/layout-and-planarity.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -2064,8 +2064,8 @@
    }
   },
   "references/other-kinds.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -2720,8 +2720,8 @@
       }
      }
     },
-    "234": {
-     "fence_end": 239,
+    "237": {
+     "fence_end": 242,
      "sha256": "8b18991b91e1795246426bfa74d22dbe3bd07b78fe5f46bf3f6c28bbe8151f50",
      "kind": "timeline",
      "negative": false,
@@ -2879,8 +2879,8 @@
       }
      }
     },
-    "255": {
-     "fence_end": 268,
+    "258": {
+     "fence_end": 271,
      "sha256": "1b4c0f3b528098816b4abead99d3de5e82337b8d9fc13d72db72c4f21106f996",
      "kind": "quadrantChart",
      "negative": false,
@@ -3051,8 +3051,8 @@
       }
      }
     },
-    "285": {
-     "fence_end": 294,
+    "288": {
+     "fence_end": 297,
      "sha256": "fd52de566c1e56c602d7d88f8f4773d1b85b083f8b586f3e7ae509964e84b886",
      "kind": "journey",
      "negative": false,
@@ -3211,8 +3211,8 @@
       }
      }
     },
-    "317": {
-     "fence_end": 326,
+    "320": {
+     "fence_end": 329,
      "sha256": "69cfd2bddbba9460e5ced22bffae744e840b5143ff4d0bdc8548574579c916b7",
      "kind": "mindmap",
      "negative": false,
@@ -3377,8 +3377,8 @@
    }
   },
   "references/renderer-facts.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -4225,7 +4225,8 @@
          "width_source": "measure",
          "messages": 4,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -4286,7 +4287,8 @@
          "width_source": "measure",
          "messages": 4,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -4347,7 +4349,8 @@
          "width_source": "measure",
          "messages": 4,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -4878,7 +4881,8 @@
          "width_source": "measure",
          "messages": 6,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -4951,7 +4955,8 @@
          "width_source": "measure",
          "messages": 6,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5024,7 +5029,8 @@
          "width_source": "measure",
          "messages": 6,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5107,7 +5113,8 @@
          "width_source": "measure",
          "messages": 3,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5168,7 +5175,8 @@
          "width_source": "measure",
          "messages": 3,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5235,7 +5243,8 @@
          "width_source": "measure",
          "messages": 3,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5477,7 +5486,8 @@
          "width_source": "measure",
          "messages": 2,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5538,7 +5548,8 @@
          "width_source": "measure",
          "messages": 2,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5599,7 +5610,8 @@
          "width_source": "measure",
          "messages": 2,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5628,8 +5640,8 @@
    }
   },
   "references/review-checklist.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -5638,8 +5650,8 @@
     "legibility_exempt_classes": ["sequenceNumber"]
    },
    "figures": {
-    "419": {
-     "fence_end": 445,
+    "423": {
+     "fence_end": 449,
      "sha256": "1514c139d7c50b23f46ac3c4301f932827380990c32689bed164d25253f4e123",
      "kind": "flowchart-v2",
      "negative": false,
@@ -5809,8 +5821,8 @@
    }
   },
   "references/sequence.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -5819,8 +5831,8 @@
     "legibility_exempt_classes": ["sequenceNumber"]
    },
    "figures": {
-    "231": {
-     "fence_end": 265,
+    "237": {
+     "fence_end": 271,
      "sha256": "4e5f447746c3ce8d23c69caccb1d8804838ca120dd677b80783bcc3e879dd6f7",
      "kind": "sequence",
      "negative": false,
@@ -5864,7 +5876,8 @@
          "width_source": "measure",
          "messages": 11,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -5956,7 +5969,8 @@
          "width_source": "measure",
          "messages": 11,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -6048,7 +6062,8 @@
          "width_source": "measure",
          "messages": 11,
          "lifeline_through_label": [],
-         "lifeline_label_crossings": 0
+         "lifeline_label_crossings": 0,
+         "lifeline_own_crossings": 0
         },
         "gantt": {},
         "contrast": {
@@ -6108,8 +6123,8 @@
    }
   },
   "references/state.md": {
-   "generated": "2026-10-03T12:30:50Z",
-   "instruments": "cec5e51f290f83c39352a22edcae6e276f639d0b3b7b08401594d0f87f352ffe",
+   "generated": "2026-10-05T11:20:40Z",
+   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,

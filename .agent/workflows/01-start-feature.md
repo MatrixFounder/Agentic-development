@@ -41,8 +41,8 @@ contract:
         - **Retry (Max 2 attempts)**: Repeat the review.
         - If after 2 retries the review still fails: **STOP** and ask the user for help.
     - If approved: Proceed.
-4. Read `System/Agents/04_architect_prompt.md` to understand the Architecture phase.
-5. Update `docs/ARCHITECTURE.md` in place to reflect any architectural changes (living document — never per-task archived; if it exceeds 1500 lines, apply the Index-Mode split per `architecture-format-core`).
+5. Read `System/Agents/04_architect_prompt.md` to understand the Architecture phase.
+   Then update `docs/ARCHITECTURE.md` in place to reflect any architectural changes (living document — never per-task archived; if it exceeds 1500 lines, apply the Index-Mode split per `architecture-format-core`).
     - **Evidence before the spawn** — apply `skill-parallel-orchestration` §2.4, orchestrator half.
       Same obligation as the TASK gate, plus the change set: this reviewer cannot produce a diff, so
       **write the diff to a file and pass the path**. "Review `git diff` on these files" is an

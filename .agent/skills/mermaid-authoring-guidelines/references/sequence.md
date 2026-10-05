@@ -105,7 +105,13 @@ A sequence figure shows one scenario in time: who sends which message to whom, a
 | two lines of 16 and 19 characters with `<br/>` | 122 px and 138 px | none |
 
 - `wrap` breaks a message only past about 250 px, wider than the gap between two neighbours.
-- In 12.1.0 both lifelines crossed every message from 24 characters on.
+- The render check reports `lifeline_through_label` in two severities. A lifeline of the message's
+  own end through its label is a `fail`: the label is wider than the gap, and a shorter line
+  avoids it. A skipped participant's lifeline through a label is a `warn`: it runs through the
+  label centre in every version, so only the participant order or a shorter label reduces it. A
+  self-message's own lifeline is not counted: its label sits centred on it in 10.9.8 and 11.17.2.
+- In 12.1.0 both lifelines crossed every message from 24 characters on. The forward render reports
+  that crossing as information; it sets no exit code.
 - In 28 sequence figures of real documents, 152 of 371 messages (41 %) skipped at least one
   lifeline.
 

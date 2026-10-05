@@ -32,9 +32,9 @@
 {
   "schema": "plan-schedule/v1",
   "tasks": [
-    {"id": "1.1", "title": "Map Existing Documentation", "stage": "Stage 1", "est": 4, "deps": []},
-    {"id": "1.2", "title": "Regenerate Table of Contents", "stage": "Stage 1", "est": 2, "deps": ["1.1"]},
-    {"id": "2.1", "title": "Update Installation Guide", "stage": "Stage 2", "est": 3, "deps": []}
+    {"id": "1.1", "title": "Map Existing Documentation", "stage": "Stage 1", "est": 4, "deps": [], "status": "not-started"},
+    {"id": "1.2", "title": "Regenerate Table of Contents", "stage": "Stage 1", "est": 2, "deps": ["1.1"], "status": "not-started"},
+    {"id": "2.1", "title": "Update Installation Guide", "stage": "Stage 2", "est": 3, "deps": [], "status": "not-started"}
   ]
 }
 ```

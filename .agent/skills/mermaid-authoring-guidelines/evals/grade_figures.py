@@ -894,9 +894,13 @@ def _in_unit(finding, unit: Unit) -> bool:
     return unit.start <= finding.line <= unit.end
 
 
-#: The opening line of a fence: indent and blockquote markers, then the fence. A fence inside a
-#: blockquote is a fence (`mermaid_model._scan`), so its opener keeps its markers.
-_FENCE_LINE = re.compile(r"^(?P<ind>[ \t]*(?:>[ \t]*)*)(?P<fence>`{3,}|~{3,})")
+#: The opening line of a fence: indent, blockquote and list markers, then the fence. A fence
+#: inside a blockquote or on a list marker line is a fence (`mermaid_model._scan`), so its opener
+#: keeps its markers. A list marker needs a space or a tab after it. Each repetition starts with a
+#: marker, never with a blank, so the pattern reads a long line of markers in linear time
+#: (TASK 110 R6.1).
+_FENCE_LINE = re.compile(r"^(?P<ind>[ \t]*(?:(?:>|(?:[-+*]|\d{1,9}[.)])(?=[ \t]))[ \t]*)*)"
+                         r"(?P<fence>`{3,}|~{3,})")
 
 
 def _as_text_figures(text: str, units: list) -> str:

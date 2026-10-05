@@ -526,3 +526,26 @@ that no verdict of the 66 answers changes.
   too. Its sha256 in `report.json` still matches, and the stored report still re-derives
   (TC-ME-22).
 - Effect on grading: none. No check, threshold, key or rule changed.
+
+### Instrument fixes of TASK 110 (WI-32)
+
+- Date: 2026-10-05, after the campaign was graded. Each item is an instrument fix, not an
+  amendment: the campaign is graded again under its registered files.
+- Grader: `_FENCE_LINE` of `grade_figures.py` also reads list markers before a fence, so a `text`
+  fence opened on a list marker is an ASCII figure for Q16. Selftest row TC-ME-48 holds it.
+- Lint and model:
+  - rule MA-SYN-09 reports text after `timeline` on its header line;
+  - an ASCII merge that turns down to an arrowhead counts as a join;
+  - the CommonMark scan of `mermaid_model.py` runs in linear time with the same output.
+- Geometry: `lifeline_through_label` is a gate check. A lifeline of the message's own end through
+  its label fails; a skipped participant's lifeline warns, as before.
+- Replay before and after, on the committed campaign:
+  - the lint over the 66 answers: 0 findings moved. Over `references/*.md`, one moved: the
+    base lint does not know the name `lifeline_through_label` that the N7 marker now holds;
+  - the grade: 0 of 66 `grading.json` files changed, byte for byte. `report.json` changed only in
+    the sha256 of `grade_figures.py`. The benchmark files changed only in their timestamp, so the
+    committed ones are kept.
+- The gate is not measured on the campaign. Its stored metrics predate the own-end key, and the
+  grader recomputes findings from stored metrics, so no answer can fail it there. Rendering the
+  corpus again is out of the scope of TASK 110.
+- Effect on grading: none. No verdict of the 66 answers moved.

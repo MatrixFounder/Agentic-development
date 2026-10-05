@@ -120,8 +120,10 @@ Notes per kind:
 - `clipped_labels` needs the browser text measurement. With `measured` false, answer FIG-10 from
   the PNG.
 - Sequence: FIG-6, FIG-7 and FIG-8 are `n/a`. FIG-9 also covers a message label that a lifeline
-  crosses: the render check names it in a `lifeline_through_label` warning, which gates nothing,
-  and the PNG confirms it. A `lifeline_gap` warning names a label that widens the figure.
+  crosses, reported as `lifeline_through_label`. A lifeline of the message's own end fails the
+  figure; a skipped participant's lifeline is a warning, and the PNG confirms it. The forward
+  render in 12.1.0 reports an own-end crossing from 24 characters as information. A
+  `lifeline_gap` warning names a label that widens the figure.
 - A figure the render check reports as `pass, geometry not checked` answers FIG-6, FIG-7 and FIG-9
   from the PNG: quadrantChart, timeline, journey, mindmap, gitGraph, and an ER or requirement
   figure read in part. Its `label_overlaps` covers texts over texts only.

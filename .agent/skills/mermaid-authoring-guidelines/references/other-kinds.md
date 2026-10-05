@@ -224,6 +224,9 @@ column holds the same facts.
 
 - Budget: 5 periods, soft and hard (`budgets.timeline.periods`). In a 900 px column, mermaid
   11.17.2 draws 5 periods with 10.4 px text and 6 periods with 9.1 px text.
+- Write `timeline` alone on its line. Mermaid 10.9.8 draws any text after it as a first period:
+  `timeline TD` and `timeline LR` each drew a period named `TD` or `LR`. 11.17.2 reads `TD` as a
+  direction and draws the figure top to bottom. The lint reports the text as MA-SYN-09, an error.
 - Write no `title`: the caption carries it. Add a `section` only for a group the text defines.
 - Write no `accTitle` or `accDescr`: the SVG keeps neither.
 - In the light render, the first group draws white text on light blue: 3.06:1 on the period and

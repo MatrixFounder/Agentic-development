@@ -3,7 +3,7 @@
  "source": "plan-example.json",
  "fence_sha256": "af6f14ff14ce8e25d160174e0ea1c9c6693a917109fc2e87c7a409af331e42a3",
  "fence_text": "mermaid_model.fence_sha256 of the fence body plan_gantt.py generates from the source: its lines, each ended by LF, in UTF-8; the text render_check.py renders",
- "rendered": "2026-10-03",
+ "rendered": "2026-10-05",
  "render_check": {
   "exit": 0,
   "status": "pass"

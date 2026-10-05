@@ -2,7 +2,7 @@
 name: run-feedback
 description: 'Use when a run of a workflow, skill, command, or test produced errors or friction worth keeping, or when executing the end-of-run Retro Global Protocol — collect findings into the feedback inbox, triage them (defect / work-item / noise), and file defects into the known-issues ledger or work-items into the backlog. NOT for fixing already-filed issues (/heal-issues). Triggers: "собери фидбек по прогону", "file run errors", "retro this run", "/run-feedback".'
 tier: 2
-version: 1.5
+version: 1.6
 ---
 # Run Feedback
 
@@ -198,6 +198,10 @@ thin indexes over record files per `known-issues-format`: defects to `docs/issue
      `/heal-issues` executes; prose repros are not auto-healable.
      Add `--auto-fixable` ONLY when the fix is mechanical and gate-verifiable — this is the explicit
      opt-in the heal harness selects on.
+   - **A vulnerability with no public advisory in a dependency** is filed as a work-item that holds
+     only what `security-audit` §6.1 step 2 lists: the dependency, the versions, a severity, the
+     mitigation and the report status. Signal and Why it matters say no more than that, and
+     Options name mitigations. A defect record would need its reproduction (`security-audit` §6.1).
    - **Work-items**: `--effort` strictly from `S/M/L` (omit when genuinely unknown), `--value` as
      one line on what landing it buys, `--source` only to override the auto-derived run context;
      body from

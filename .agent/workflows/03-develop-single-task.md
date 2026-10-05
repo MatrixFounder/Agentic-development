@@ -14,7 +14,9 @@ contract:
 > **Retro claim (Global Protocol):** run `python3 .agent/skills/run-feedback/scripts/run_feedback.py claim --run-id "03-develop-single-task-<task-slug>"` (non-blocking; exit 6 = an outer workflow of this task owns this run's retro — fine, continue; an owner from another task is a stale claim — run-feedback §7 Retro step 1).
 
 1. Read `System/Agents/08_developer_prompt.md` to understand the Development phase.
-2. Pick a task from `docs/tasks/`.
+2. Pick a task from `docs/tasks/`. **Plan status**: set it `in-progress` by the rule of
+   `skill-planning-format` §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md`
+   and its `--check`.
 3. Implement the task using the Stub-First approach:
     - Create stubs/interfaces first.
     - Verify rendering/compilation.
@@ -26,7 +28,7 @@ contract:
         - Update code/stubs.
         - **Retry (Max 2 attempts)**: Repeat the review.
         - If after 2 retries the review still fails: **STOP** and ask the user for help.
-    - If approved: Proceed or Finish.
+    - If approved: set the task `done` (`skill-planning-format` §2.2), then Proceed or Finish.
 5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "03-develop-single-task-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers

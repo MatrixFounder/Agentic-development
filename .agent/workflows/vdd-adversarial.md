@@ -118,10 +118,10 @@ Post-implementation adversarial cycle for zero-slop robustness.
    mechanically. A coordinate carrying no referent is reported as
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
-3. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+4. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-adversarial-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then
    collect → triage → file per the skill, and `release`. **Non-blocking**: failures
    here are reported in one line and never change this workflow's outcome.
-4. Announce: "VDD cycle complete: zero-slop achieved"
+5. Announce: "VDD cycle complete: zero-slop achieved"

@@ -1,0 +1,7 @@
+%%{init: {"look": "classic", "themeVariables": {"noteBkgColor": "#FFF8E1", "noteTextColor": "#263238", "noteBorderColor": "#C9A227"}, "sequence": {"wrap": true}}}%%
+sequenceDiagram
+    participant A as client
+    participant B as gateway
+    A->>B: reserve the seat and hold payment
+    B->>B: validate the seat map entry
+    B-->>A: held

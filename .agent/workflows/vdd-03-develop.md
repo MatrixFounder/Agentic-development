@@ -18,7 +18,7 @@ contract:
 
 1. **Developer Prompt**: Read `System/Agents/08_developer_prompt.md`.
 2. **Implementation Loop**:
-    - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation).
+    - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation). **Plan status**: on the first round, set the task `in-progress` by the rule of `skill-planning-format` §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md` and its `--check`.
     - **Step 2.2 (Verification)**: Write and run automated tests. Perform manual verification (HITL).
       Every guard the change adds is proven by a planting, and a planting is a measurement: run the
       suite to the end under it (no `-x` / `--maxfail`), label each planting with the behaviour it
@@ -61,7 +61,7 @@ contract:
     - **Bound: max 3 roast→fix rounds.** Still REJECTED after the 3rd: **STOP** and escalate to the
       user with the outstanding findings. Never merge on an exhausted counter — an exhausted bound
       is an escalation, not an approval.
-    - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> **Merge and Proceed**.
+    - **APPROVED ("Objective Convergence")**: ONLY when the objective bar is met — tests run, 0 CRITICAL, 0 legitimate logic/security/slop findings, and only bikeshedding/style remains -> set the task `done` (`skill-planning-format` §2.2), then **Merge and Proceed**.
     - **The terminal state is written, not left behind.** Both exits of this loop end with
       `update_state.py` (`skill-session-state` §3 rule 4): on APPROVED — the accepted status, the
       task under `--add_completed_task`, `--clear_blockers`; on escalation — the escalated status
@@ -75,7 +75,7 @@ contract:
    mechanically; the repair lands in the same commit. A coordinate carrying no referent is reported as
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
-5. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-03-develop-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then

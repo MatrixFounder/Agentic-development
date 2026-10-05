@@ -90,8 +90,9 @@ A schedule block in a plan:
 ```
 ````
 
-- The framework's plan template writes no `status`. Its chart draws every bar plain and marks the
-  critical path.
+- The framework's plan template writes `"status": "not-started"` for every task, and the develop
+  workflows set `in-progress` and `done` (`skill-planning-format` §2.2). Its chart draws done and
+  active bars from them and marks the critical path.
 - The script never reads the plan's prose. A translated plan with the same block yields the same
   chart.
 - An invalid plan exits 1, and the message names the defect. Examples:

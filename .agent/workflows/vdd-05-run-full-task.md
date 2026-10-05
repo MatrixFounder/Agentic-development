@@ -29,7 +29,7 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
 
 1. **Plan parsing**: Read `docs/PLAN.md`. Extract the ordered task list (`Task X.Y`) with paths to `docs/tasks/task-{ID}-{SubID}-{slug}.md`. Respect Stage 1 / Stage 2 sectioning and dependency order. Apply `skill-spec-validator` for PLAN ↔ TASK conformance before iteration. **Flag `--dry-run`**: if present, print the planned chain (task IDs in dependency order) and exit; no execution, no state writes.
 2. **Per-task VDD cycle** (apply for each task in dependency order):
-   - Step A — Builder: implement per `System/Agents/08_developer_prompt.md` + `tdd-stub-first` (Stub → Logic). Strict adherence to the task file; no creative reinterpretation.
+   - Step A — Builder: implement per `System/Agents/08_developer_prompt.md` + `tdd-stub-first` (Stub → Logic). Strict adherence to the task file; no creative reinterpretation. **Plan status**: on the first round of a task, set it `in-progress` (`skill-planning-format` §2.2).
    <!-- loop:builder-red-loop -->
    - Step B — Verification: run `python3 tests/run_tests.py` (the project test harness; or `pytest tests/` if available) and `validate_skill.py` where the task touches `.agent/skills/`. **Red tests force a Builder loop before Sarcasmotron** — never roast a broken build. **Bound: max 3 Builder rounds**; still red after the 3rd → STOP and escalate to the user with the failing test list. Do not proceed to Step C on a red suite, and do not silently drop the failures.
    - Step C — Sarcasmotron-roast: **delegate to `.agent/workflows/vdd-03-develop.md` Step 3** (DRY — do not inline the persona overlay here). Adopt the persona exactly as defined there, then return a verdict: REJECTED or APPROVED (incl. Objective Convergence).
@@ -49,10 +49,14 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    ```bash
    python3 .agent/skills/skill-session-state/scripts/update_state.py \
      --mode "vdd-develop-all" --task "<TaskName>" --status "merged" \
-     --add_completed_task "<TaskName>" \
+     --summary "<TaskName>: <verdict>" --add_completed_task "<TaskName>" \
      --add_decision "<verdict-detail>"
    ```
    See `.agent/skills/skill-session-state/SKILL.md` §3–§4. This is load-bearing for resumability — do not skip.
+
+   **Plan status.** Set the task `done` after a merge only, by the rule of `skill-planning-format`
+   §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md` and its `--check`. On the
+   3-REJECTED path, Step 4 records the failure, and the status stays `in-progress`.
 5. **Finalization (no auto-commit)**: At chain end (all tasks merged, or chain aborted/paused), run the full regression suite: `python3 tests/run_tests.py` + `validate_skill.py` across changed skills. Emit a final report containing:
    - Merged tasks list (in order).
    - **Metrics**: total tasks merged | total REJECTED iterations across the chain | count of post-refinement APPROVED (`Objective Convergence` reached after ≥1 REJECT) vs first-pass clean APPROVED.
@@ -66,7 +70,7 @@ This workflow composes `/develop-all` (chain iteration) with `/vdd-develop` (Sar
    mechanically; the repair lands in the same commit. A coordinate carrying no referent is reported as
    *not examined* and is **not** a defect (`documentation-standards` §4.1).
 
-6. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
+7. **Retro (Global Protocol)** — apply `run-feedback` SKILL.md §7 "Retro protocol":
    `claim --run-id "vdd-05-run-full-task-<task-slug>"` → exit 6 = nested, SKIP this step (unless the owner is another task's run — a stale claim, run-feedback §7 Retro step 1);
    exit 0 = gather what did NOT go smoothly this run (failed/retried gates, blockers
    from `.agent/sessions/latest.yaml`), ask the user the one retro question, then

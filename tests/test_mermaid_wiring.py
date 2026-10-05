@@ -111,6 +111,12 @@ GATE_WORKFLOWS = {
     ".agent/workflows/vdd-02-plan.md": True,
 }
 
+#: TASK 110 R8.2: the workflows that set a task's plan status, and the rule they cite.
+DEVELOP_WORKFLOWS = (".agent/workflows/03-develop-single-task.md",
+                     ".agent/workflows/vdd-03-develop.md",
+                     ".agent/workflows/vdd-05-run-full-task.md")
+STATUS_RULE = "`skill-planning-format` §2.2"
+STATUS_WRITE = "plan_gantt.py docs/PLAN.md --write docs/PLAN.md"
 #: R10.4 — the four review checklists.
 CHECKLISTS = {name: f".agent/skills/{name}/SKILL.md" for name in (
     "architecture-review-checklist",
@@ -139,12 +145,14 @@ SURFACES = {
     # R10.4 checklists
     CHECKLISTS["architecture-review-checklist"]: _CHECKLIST_PINS,
     CHECKLISTS["plan-review-checklist"]: _CHECKLIST_PINS + (
-        GANTT, "--check", SCHEDULE_ANCHOR, GANTT_START, GANTT_END),
+        GANTT, "--check", SCHEDULE_ANCHOR, GANTT_START, GANTT_END, "`not-started`"),
     CHECKLISTS["task-review-checklist"]: _CHECKLIST_PINS,
     CHECKLISTS["code-review-checklist"]: _CHECKLIST_PINS,
     # R10.5 workflows
     **{name: (FIGURE_LINT,) + ((GANTT, "--check") if plan else ())
        for name, plan in GATE_WORKFLOWS.items()},
+    # TASK 110 R8.2 develop workflows
+    **{name: (STATUS_RULE, "`in-progress`", "`done`", STATUS_WRITE) for name in DEVELOP_WORKFLOWS},
     # R10.6 permissions
     ARCHITECT_AGENT: (SKILL, LINT, RENDER),
     SETTINGS: (SKILL, LINT, GANTT),
@@ -268,6 +276,85 @@ def _rule_matches(rule, command):
 def _allow_rules():
     data = json.loads(_read(SETTINGS))
     return data.get("permissions", {}).get("allow", [])
+
+
+def _top_level_numbers(text):
+    """For each `##` or `###` section, the numbers of its list items indented at most 2 spaces,
+    outside fences. A section is keyed by its line index and heading, so two sections with one
+    title stay apart; a sub-heading starts a list of its own, as the light workflows number their
+    phases. A list that restarts within one section counts as a repeat: a step is cited by its
+    number, and two steps with one number in a section make the citation ambiguous. A numbered
+    list nested 2 spaces under a `- ` item counts as top level too; no workflow holds one."""
+    out, current, in_fence = {}, (0, ""), False
+    for index, line in enumerate(text.splitlines()):
+        if FENCE.match(line):
+            in_fence = not in_fence
+        elif not in_fence:
+            if line.startswith(("## ", "### ")):
+                current = (index + 1, line)
+            m = re.match(r"^ {0,2}(\d+)[.)] ", line)
+            if m:
+                out.setdefault(current, []).append(int(m.group(1)))
+    return out
+
+
+def _update_state_commands(text):
+    """Each `update_state.py` command of a document: a fenced line, with its `\\` continuations,
+    or an inline code span, that runs the script with at least one flag. A span with an ellipsis
+    and a bare name in prose are not commands (TASK 110 R8.6, PLAN F1)."""
+    commands, in_fence, pending = [], False, ""
+    for line in text.splitlines():
+        if FENCE.match(line):
+            in_fence = not in_fence
+            pending = ""
+            continue
+        if in_fence:
+            pending += line.rstrip("\\").rstrip() + " "
+            if not line.rstrip().endswith("\\"):
+                if "update_state.py" in pending and " --" in pending:
+                    commands.append(pending.strip())
+                pending = ""
+        else:
+            commands += [span for span in re.findall(r"`([^`]*update_state\.py[^`]*)`", line)
+                         if " --" in span]
+    return [c for c in commands if "..." not in c and "\u2026" not in c]
+
+
+class TestPlanStatus(unittest.TestCase):
+    """TASK 110 R8: the develop workflows set a task's plan status by one rule."""
+
+    def test_the_rule_states_its_steps_and_skips(self):
+        body = _section(_read(PLANNING_FORMAT), r"^2\.2\b")
+        self.assertIsNotNone(body, f"{PLANNING_FORMAT}: no section 2.2")
+        missing = _missing(("`in-progress`", "`done`", "`not-started`", STATUS_WRITE,
+                            "--check docs/PLAN.md", "changes the value", "never adds an entry",
+                            "no schedule anchor", "not installed", "allow-list"), body)
+        self.assertEqual(missing, [], f"{PLANNING_FORMAT} §2.2: missing {missing}")
+
+    def test_vdd05_sets_done_after_a_merge_only(self):
+        text = _read(DEVELOP_WORKFLOWS[2])
+        step4 = text[text.index("4. **Session-state persistence**"):text.index("5. **Finalization")]
+        self.assertEqual(_missing(("`done`", "after a merge", "stays `in-progress`"), step4), [])
+        step_a = text[text.index("Step A"):text.index("Step B")]
+        self.assertEqual(_missing(("`in-progress`", STATUS_RULE), step_a), [])
+
+    def test_every_workflow_numbers_each_step_once(self):
+        """TASK 110 R8.6 and R11.1: a step is cited by its number, so no number repeats in a
+        list; `01-start-feature`, `security-audit` and `vdd-adversarial` each repeated one."""
+        for path in sorted((PROJECT_ROOT / ".agent" / "workflows").glob("*.md")):
+            for section, numbers in _top_level_numbers(path.read_text(encoding="utf-8")).items():
+                with self.subTest(workflow=path.name, section=f"{section[0]}: {section[1]}"):
+                    self.assertEqual(len(numbers), len(set(numbers)), numbers)
+
+    def test_every_update_state_command_passes_the_required_flags(self):
+        found = 0
+        for path in sorted((PROJECT_ROOT / ".agent" / "workflows").glob("*.md")):
+            for command in _update_state_commands(path.read_text(encoding="utf-8")):
+                found += 1
+                with self.subTest(workflow=path.name, command=command[:80]):
+                    flags = set(re.findall(r"--[a-z_]+", command))
+                    self.assertTrue({"--mode", "--task", "--status", "--summary"} <= flags, flags)
+        self.assertGreater(found, 0, "no update_state.py command found in .agent/workflows")
 
 
 class TestSurfacesNameTheSkill(unittest.TestCase):
@@ -782,9 +869,11 @@ class TestPlanTemplate(unittest.TestCase):
         tasks = block.get("tasks")
         self.assertTrue(isinstance(tasks, list) and tasks, f"{rel}: no 'tasks' list")
         for task in tasks:
-            self.assertEqual(set(task), {"id", "title", "stage", "est", "deps"},
+            self.assertEqual(set(task), {"id", "title", "stage", "est", "deps", "status"},
                              f"{rel}: a task holds keys other than id, title, stage, est, deps "
-                             f"(no 'status', D11): {task}")
+                             f"and status (TASK 110 R8.1): {task}")
+            self.assertEqual(task["status"], "not-started",
+                             f"{rel}: a new plan's task is not started (TASK 110 R8.1): {task}")
             self.assertTrue(isinstance(task["est"], int) and not isinstance(task["est"], bool),
                             f"{rel}: 'est' is not an integer: {task}")
             self.assertIsInstance(task["deps"], list, f"{rel}: 'deps' is not a list")

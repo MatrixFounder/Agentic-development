@@ -29,7 +29,7 @@ RULE_IDS = {
     "MA-PARSE-07", "MA-PARSE-08", "MA-PARSE-09", "MA-PARSE-10", "MA-PARSE-11", "MA-PARSE-12",
     "MA-PARSE-13", "MA-PARSE-14", "MA-PARSE-15", "MA-PARSE-16", "MA-PARSE-17", "MA-PARSE-18",
     "MA-SYN-01", "MA-SYN-02", "MA-SYN-03", "MA-SYN-04", "MA-SYN-05", "MA-SYN-06", "MA-SYN-07",
-    "MA-SYN-08",
+    "MA-SYN-08", "MA-SYN-09",
     "MA-SET-01", "MA-SET-02", "MA-SET-03", "MA-SET-04", "MA-SET-05", "MA-SET-06", "MA-SET-07",
     "MA-ID-01", "MA-ID-02",
     "MA-BUDGET-01", "MA-BUDGET-02",
@@ -56,7 +56,7 @@ ERROR_RULES = {
     "MA-PARSE-07", "MA-PARSE-08", "MA-PARSE-09", "MA-PARSE-10", "MA-PARSE-11", "MA-PARSE-12",
     "MA-PARSE-13", "MA-PARSE-14", "MA-PARSE-15", "MA-PARSE-16", "MA-PARSE-17", "MA-PARSE-18",
     "MA-SYN-01", "MA-SYN-02",
-    "MA-SYN-03", "MA-SYN-05", "MA-SYN-06", "MA-SYN-07", "MA-SYN-08", "MA-SET-01", "MA-SET-02",
+    "MA-SYN-03", "MA-SYN-05", "MA-SYN-06", "MA-SYN-07", "MA-SYN-08", "MA-SYN-09", "MA-SET-01", "MA-SET-02",
     "MA-SET-03", "MA-SET-04", "MA-ID-01", "MA-BUDGET-02", "MA-FLOW-02", "MA-STATE-01",
     "MA-STATE-02", "MA-SEQ-01", "MA-SEQ-03", "MA-CLASS-01", "MA-CLASS-06", "MA-GANTT-01",
     "MA-GANTT-02", "MA-GANTT-03", "MA-GANTT-04", "MA-GANTT-06", "MA-GANTT-08", "MA-ASCII-01",
@@ -144,6 +144,8 @@ CASES = {
     "MA-SYN-07": (doc("flowchartTB\n  A --> B"), doc("flowchart TB\n  A --> B")),
     "MA-SYN-08": (doc("requirementDiagram\n  element e1 {\n    type: service\n  }\n  style e1 fill:#FFF4E0"),
                   doc("classDiagram\n  class Dog\n  style Dog fill:#FFF4E0,color:#4A2C00")),
+    "MA-SYN-09": (doc("timeline TD\n  2025 Q1 : v1 search\n  2025 Q3 : v2 seat holds"),
+                  doc("timeline\n  2025 Q1 : v1 search\n  2025 Q3 : v2 seat holds")),
     "MA-SET-01": (doc("%%{init: {'look': 'classic' 'layout': 'dagre'}}%%\nflowchart TB\n  A --> B"),
                   doc("%%{init: {'look': 'classic', 'layout': 'dagre'}}%%\nflowchart TB\n  A --> B")),
     "MA-SET-02": (doc("---\nconfig:\n\tlook: classic\n---\nflowchart TB\n  A --> B"),
@@ -2060,12 +2062,61 @@ class TestAsciiLegend(unittest.TestCase):
         self.assertEqual(ids(run(f"**F.** x\n\n```{ASCII}\n{three}\n```\n\n## Next\n", "MA-DOC-02")),
                          ["MA-DOC-02"])
 
+    #: A fork whose branches merge, then turn down to the next element (TASK 110 R3, WI-32 item
+    #: 3): the merged path ends in a corner over a stroke down to an arrowhead.
+    MERGE_THEN_DOWN = {
+        "pure ASCII": ("build --+--> lint ---+\n        |            |\n"
+                       "        +--> test ---+-----+\n                           |\n"
+                       "                           v\n                        deploy"),
+        "box drawing": ("build ──┬──▶ lint ───┐\n        │            │\n"
+                        "        └──▶ test ───┴─────┐\n                           │\n"
+                        "                           ▼\n                        deploy"),
+    }
+
+    def test_a_merge_that_turns_down_is_a_join(self):
+        for name, body in self.MERGE_THEN_DOWN.items():
+            with self.subTest(case=name):
+                block = ascii_block(body)
+                self.assertEqual((block.forks, block.joins), ([1], [3]))
+                no_legend = f"**Figure 5.** Checks before deploy.\n\n```{ASCII}\n{body}\n```\n\n## Next\n"
+                self.assertEqual(ids(run(no_legend, "MA-DOC-02")), ["MA-DOC-02"])
+                self.assertEqual(run(doc(body, ASCII), "MA-DOC-02"), [])
+
+    def test_a_turn_that_merges_nothing_is_no_join(self):
+        """A single path that turns down, a corner with no arrowhead under it, and a middle-trunk
+        fan-out stay no join under the fourth form."""
+        for body in ("build --+\n        |\n        v\n      deploy",
+                     "build --+\n        |\ntest ---+-----+\n              |\n           deploy",
+                     self.MIDDLE_TRUNK["pure ASCII"]):
+            with self.subTest(body=body):
+                self.assertEqual(ascii_block(body).joins, [])
+
     def test_a_tree_or_a_chain_needs_none(self):
         for body in ("root\n├── a\n└── b", "a ──▶ b ──▶ c", "+--+--+\n|a |b |\n+--+--+",
                      "┌────┬────┐\n│ a  │ b  │\n└────┴────┘"):
             with self.subTest(body=body):
                 self.assertEqual(ascii_block(body).forks, [])
                 self.assertEqual(run(f"**F.** x\n\n```{ASCII}\n{body}\n```\n\n## Next\n", "MA-DOC-02"), [])
+
+
+class TestTimelineHeader(unittest.TestCase):
+    """TASK 110 R2: 10.9.8 draws any text after `timeline` as a first period; 11.17.2 reads `TD`
+    as a direction and draws the figure top to bottom (measured 2026-10-05)."""
+
+    BODY = "\n  2025 Q1 : v1 search\n  2025 Q3 : v2 seat holds"
+
+    def test_text_after_timeline_is_an_error(self):
+        for header in ("timeline TD", "timeline LR", "timeline  TD", "timeline Releases"):
+            with self.subTest(header=header):
+                found = run(doc(header + self.BODY), "MA-SYN-09")
+                self.assertEqual(ids(found), ["MA-SYN-09"])
+                self.assertEqual(found[0].severity, "error")
+
+    def test_a_bare_timeline_header_passes(self):
+        for header in ("timeline", "timeline  ", "timeline\n  title Releases",
+                       "timeline %% releases by quarter"):
+            with self.subTest(header=header):
+                self.assertEqual(run(doc(header + self.BODY), "MA-SYN-09"), [])
 
 
 class TestLegendEncodings(unittest.TestCase):

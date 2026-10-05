@@ -150,6 +150,10 @@ _SANDBOX_SWITCHES = ("--no-sandbox", "--disable-setuid-sandbox", "--no-zygote")
 #: no DevTools port opens, and the browser exits when the process that started it dies.
 CONFIG_KEYS = frozenset({"executablePath", "headless", "args", "pipe"})
 HEADLESS_MODES = (True, "new", "shell")
+#: The stamps `setup_renderers.sh` writes into each install directory (TASK 110 R7.7): the sha256
+#: of the lockfile it installed from, and the accepted tree hash of the browser with its path.
+LOCK_STAMP = ".lock.sha256"
+BROWSER_STAMP = ".browser.sha256"
 #: The empty puppeteer configuration `setup_renderers.sh` writes into each install directory.
 #: Puppeteer reads the first configuration it finds from its working directory up: this one ends
 #: the search in the install directory, so no file of a parent directory is read or run.
@@ -370,12 +374,46 @@ def config_problem(renderer: Renderer) -> Optional[str]:
     return None
 
 
+def browser_stat_digest(root: Path) -> str:
+    """The stat digest `setup_renderers.sh` stamps (TASK 110 review round 3, N1): the sha256 of
+    one JSON line per entry under *root*, *root* itself included, sorted bytewise by path:
+    `[path, kind, dev, inode, mode, size, mtime in ns, ctime in ns]`, numbers as decimal strings.
+    A symbolic link is an entry and is not followed. Reading a file changes none of these; writing,
+    renaming or replacing one changes its ctime at least, which no user can set."""
+    root = Path(root)
+    rows = []
+
+    def entry(path: Path, rel: str) -> None:
+        st = os.lstat(path)
+        kind = "link" if stat.S_ISLNK(st.st_mode) else "dir" if stat.S_ISDIR(st.st_mode) else "file"
+        rows.append([rel, kind, str(st.st_dev), str(st.st_ino), str(st.st_mode), str(st.st_size),
+                     str(st.st_mtime_ns), str(st.st_ctime_ns)])
+        if kind == "dir":
+            for name in os.listdir(path):
+                entry(path / name, (rel + "/" if rel != "." else "./") + name)
+
+    entry(root, ".")
+    # A name that is not UTF-8 keeps its bytes (surrogateescape): it then differs from the setup's
+    # digest, and the install is refused rather than the render check stopping (round 4, RG4-3).
+    rows.sort(key=lambda row: row[0].encode("utf-8", "surrogateescape"))
+    text = "".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n" for row in rows)
+    return hashlib.sha256(text.encode("utf-8", "surrogateescape")).hexdigest()
+
+
 def install_problem(renderer: Renderer) -> Optional[str]:
     """Why a renderer's install may not run, or None (TASK R7.9).
 
     The install home and the install directory must be private (`private_dir_problem`), and the
     install directory must hold PUPPETEER_RC exactly as `setup_renderers.sh` writes it: an empty
-    object, at which puppeteer's search for a configuration ends.
+    object, at which puppeteer's search for a configuration ends. It must also hold the stamps of
+    TASK 110 R7.7: `.lock.sha256`, the sha256 of the committed lockfile of its tag, and
+    BROWSER_STAMP, the accepted tree hash of the browser with the path `puppeteer.json` names. An
+    install made before the lockfile changed, or before the browser pin, is refused, and the
+    message says to run `setup_renderers.sh` again. A browser whose path no longer resolves to
+    itself, whose executable another user may write, or whose directory or the one above it
+    another user may change is refused too; that message names the path, since a new setup does
+    not change it. A stamp without the stat digest, or a browser directory whose stat digest
+    differs from it, is refused with the advice to run the setup again (TASK 110 review round 3).
     """
     root = Path(renderer.root)
     for d in (root.parent, root):
@@ -385,6 +423,56 @@ def install_problem(renderer: Renderer) -> Optional[str]:
     if _load_puppeteer_config(root / PUPPETEER_RC) != {}:
         return ("%s is not the empty puppeteer configuration setup_renderers.sh writes; run "
                 "setup_renderers.sh again" % (root / PUPPETEER_RC))
+    lock = SKILL_DIR / "assets" / "renderers" / renderer.tag / "package-lock.json"
+    try:
+        want = hashlib.sha256(lock.read_bytes()).hexdigest()
+        have = (root / LOCK_STAMP).read_text(encoding="utf-8").strip()
+    except OSError:
+        want, have = "", None
+    if have != want:
+        return ("%s does not match the committed lockfile %s; run setup_renderers.sh again"
+                % (root / LOCK_STAMP, lock))
+    stamp = root / BROWSER_STAMP
+    try:
+        lines = stamp.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ("%s is missing: the install predates the browser pin (TASK 110); run "
+                "setup_renderers.sh again" % stamp)
+    tree, _sep, browser = (lines[0] if lines else "").partition("  ")
+    if not re.fullmatch(r"[0-9a-f]{64}", tree):
+        return "%s holds no tree sha256; run setup_renderers.sh again" % stamp
+    stat_line = re.fullmatch(r"stat ([0-9a-f]{64})", lines[1] if len(lines) > 1 else "")
+    if not stat_line:
+        return "%s holds no stat digest; run setup_renderers.sh again" % stamp
+    cfg = _load_puppeteer_config(Path(renderer.puppeteer_config)) or {}
+    if browser != cfg.get("executablePath"):
+        return ("%s names another browser than %s; run setup_renderers.sh again"
+                % (stamp, renderer.puppeteer_config))
+    # The setup resolved every link of the path and hashed that directory. A link put in place of
+    # a directory above it since then makes the path resolve elsewhere (review round 2, N1).
+    if os.path.realpath(browser) != browser:
+        return ("%s no longer resolves to itself; a link above it leads to another browser"
+                % browser)
+    try:
+        mode = os.stat(browser).st_mode
+    except OSError as exc:
+        return "%s cannot be read: %s" % (browser, exc)
+    if mode & stat.S_IWOTH or (mode & stat.S_IWGRP and not _own_group(os.stat(browser).st_gid)):
+        return "%s may be written by another user; the browser runs only unchanged" % browser
+    # The setup hashed the browser directory and found it private; one that another user may
+    # change since then is refused (TASK 110 review round 1, L1).
+    for d in (Path(browser).parent, Path(browser).parent.parent):
+        problem = private_dir_problem(d)
+        if problem:
+            return "%s; the browser runs only from directories no other user may change" % problem
+    # A file written, renamed or swapped in since the hash changes the stat digest (round 3, N1).
+    try:
+        current = browser_stat_digest(Path(browser).parent)
+    except OSError as exc:
+        return "%s cannot be read: %s" % (Path(browser).parent, exc)
+    if current != stat_line.group(1):
+        return ("%s changed since the setup hashed it; run setup_renderers.sh again, which hashes "
+                "it anew" % Path(browser).parent)
     return None
 
 

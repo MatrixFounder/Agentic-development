@@ -103,7 +103,8 @@ METRIC_KEYS = (
                             # (+ "participants" in lifeline order, "median_gap_px",
                             # "widest_message", "width_source": "measure" | "estimate",
                             # "lifeline_through_label": [{"message", "from", "to",
-                            # "lifelines": [...]}], "lifeline_label_crossings": n)
+                            # "lifelines": [...], "own": [...]}], "lifeline_label_crossings": n,
+                            # "lifeline_own_crossings": n)
     "gantt",                # {"bars": n, "labels_outside": n, "overflow": [...]} or {}
                             # (overflow items {"label", "reason", "px"}; + "section_overflow",
                             # "today_marker", "chart_width_px")
@@ -124,12 +125,12 @@ CHECKS = ("crossings", "edges_through_nodes", "title_crossings", "edges_through_
 #: lint, and a test pins the two equal). A named check shows its defect when it fails in at
 #: least one render.
 GATE_CHECKS = ("crossings", "edges_through_nodes", "title_crossings", "edges_through_labels",
-               "label_overlaps", "clipped_labels", "legibility", "contrast", "gantt_overflow")
+               "label_overlaps", "clipped_labels", "legibility", "contrast",
+               "lifeline_through_label", "gantt_overflow")
 
 #: Checks that never fail a figure. A negative fence cannot name them: the lint rejects the name
 #: (MA-NEG-02), and the render check reads it as no render check.
-WARN_CHECKS = ("title_near_miss", "duplicate_edges", "lifeline_gap", "lifeline_through_label",
-               "geometry")
+WARN_CHECKS = ("title_near_miss", "duplicate_edges", "lifeline_gap", "geometry")
 
 #: Severities in report order. `info` reports a measurement that gates nothing.
 SEVERITIES = ("fail", "warn", "info")
@@ -1238,15 +1239,17 @@ def _measured_texts(measure: Optional[dict], kind: str) -> dict:
 
 def _lifeline_label_crossings(S: _Svg, lifelines: list, measure: Optional[dict],
                               warnings: list) -> list:
-    """Message labels that a lifeline other than the message's own ends runs through.
+    """Message labels that a lifeline runs through: under `lifelines` the lifelines of skipped
+    participants, under `own` the lifelines of the message's own two ends (TASK 110 R1.1).
 
     A message's label is the run of `messageText` elements that precede its line in document
     order (one per printed line). Its ends are the `data-from` and `data-to` of the line (11.x,
     12.x), else the lifelines nearest to its first and last point (10.9). A lifeline strikes a
     label when it runs more than LIFELINE_LABEL_MARGIN_PX inside the label's glyph box, measured
-    in the browser when *measure* is given, estimated otherwise.
+    in the browser when *measure* is given, estimated otherwise. A self-message's label sits
+    centred on its own lifeline in 10.9.8 and 11.17.2, so that lifeline is not counted.
     """
-    if len(lifelines) < 3:
+    if len(lifelines) < 2:
         return []
     index_of = {el: k for k, el in enumerate(S.elements("text"))}
     measured = _measured_texts(measure, "message")
@@ -1293,18 +1296,24 @@ def _lifeline_label_crossings(S: _Svg, lifelines: list, measure: Optional[dict],
         if src is None or dst is None:
             unmapped += 1
             continue
-        hit = []
+        hit, own = [], []
         for t in texts:
             x0, y0, x1, y1 = label_box(t)
             for lx, name, ly0, ly1 in lifelines:
-                if name in (src, dst) or name in hit:
+                if name in (src, dst):
+                    if src == dst:
+                        continue
+                    found = own
+                else:
+                    found = hit
+                if name in found:
                     continue
                 if x0 + LIFELINE_LABEL_MARGIN_PX < lx < x1 - LIFELINE_LABEL_MARGIN_PX \
                         and y1 > ly0 and y0 < ly1:
-                    hit.append(name)
-        if hit:
+                    found.append(name)
+        if hit or own:
             out.append({"message": " ".join(_text_of(t) for t in texts)[:80], "from": src,
-                        "to": dst, "lifelines": hit})
+                        "to": dst, "lifelines": hit, "own": own})
     if unmapped:
         warnings.append("%d message(s) have an end that no lifeline is near" % unmapped)
     return out
@@ -1356,7 +1365,8 @@ def _sequence_metrics(S: _Svg, measure: Optional[dict], warnings: list) -> dict:
            "median_gap_px": round(median, 1), "widest_message_px": round(widest, 1),
            "widest_message": widest_text[:80], "width_source": source,
            "messages": len(messages), "lifeline_through_label": struck,
-           "lifeline_label_crossings": sum(len(s["lifelines"]) for s in struck)}
+           "lifeline_label_crossings": sum(len(s["lifelines"]) for s in struck),
+           "lifeline_own_crossings": sum(len(s["own"]) for s in struck)}
     return {"nodes": len(lifelines), "edges": len(messages), "sequence": seq, "font_px": font}
 
 
@@ -2075,9 +2085,19 @@ def evaluate(metrics: dict, notation: Optional[dict] = None) -> list:
                 add("lifeline_gap", "warn", "the gap between %s is %.0f px, %.1fx the median %.0f px; "
                     "a long message label widens it" % (pair, g, g / median, median))
     for s in seq.get("lifeline_through_label") or []:
-        add("lifeline_through_label", "warn", "the lifeline of %s runs through the label %r of "
-            "%s -> %s; another participant order or a shorter label may avoid it"
-            % (", ".join(s["lifelines"]), s["message"], s["from"], s["to"]))
+        # metrics stored before TASK 110 hold no `own` key and give the verdict they gave then
+        if s.get("own"):
+            ends = s["own"]
+            add("lifeline_through_label", "fail", "the %s of %s %s through the label %r of "
+                "%s -> %s: the label is wider than the gap between its own ends; keep each line "
+                "at most %s characters or break it with <br/>"
+                % ("lifelines" if len(ends) > 1 else "lifeline", " and ".join(ends),
+                   "run" if len(ends) > 1 else "runs", s["message"], s["from"], s["to"],
+                   n.get("labels", {}).get("sequence_message_chars_max", "?")))
+        if s.get("lifelines"):
+            add("lifeline_through_label", "warn", "the lifeline of %s runs through the label %r "
+                "of %s -> %s; another participant order or a shorter label may avoid it"
+                % (", ".join(s["lifelines"]), s["message"], s["from"], s["to"]))
 
     gantt = metrics.get("gantt") or {}
     for o in gantt.get("overflow", []):

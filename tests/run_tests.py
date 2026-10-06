@@ -109,6 +109,15 @@ CURATED_UNITTEST_MODULES = (
     "test_fix_round_rules",
     # TASK 110 — a dependency finding is reported privately and stays out of the repo (R11.2).
     "test_disclosure_rule",
+    # TASK 111 — checks that cover what they claim (WI-31): the committed settings, pinned
+    # actions, the full fingerprint and the audit of every npm lockfile. The anchor hook is
+    # deferred to WI-34.
+    "test_committed_settings",
+    "test_ci_action_pins",
+    "test_tree_fingerprint",
+    "test_lockfile_audit",
+    # TASK 111 retro (R7) — a hook is registered last; an unfinished review is INCOMPLETE.
+    "test_run_safety_rules",
 )
 
 

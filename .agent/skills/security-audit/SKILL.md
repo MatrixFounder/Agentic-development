@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.9
+version: 3.10
 ---
 
-# Security Audit v3.9
+# Security Audit v3.10
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 
@@ -47,7 +47,10 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 - **Analysis**: Review the output. If tools fail or report Critical/High issues, they are **BLOCKERS**.
 - **Scope**: The script checks:
   - Secrets (OWASP A04:2025 Cryptographic Failures, CWE-798) — 30+ patterns including cloud, AI, SaaS keys + entropy detection
-  - Dependencies / Supply Chain (OWASP A03:2025, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum), npm audit
+  - Dependencies / Supply Chain (OWASP A03:2025, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum)
+    - `npm audit --package-lock-only` runs once for every npm lockfile, below the root included, in a temporary copy of the lockfile and its `package.json`; SKIP_DIRS are skipped
+    - a lockfile without its own `package.json` is not audited; npm would audit an ancestor's project
+    - an audit that does not finish is an `info` finding naming its lockfile, and the section status counts them
   - Code Patterns / Injection (OWASP A05:2025, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
   - **Smart Contract / Solidity** — reentrancy, delegatecall, selfdestruct (EIP-6780), tx.origin, oracle manipulation, unchecked returns, unprotected initializers
   - **Rust** — `unsafe{}`, `transmute`, `mem::forget`, `unwrap_unchecked`, weak RNG
@@ -58,6 +61,7 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
   - **MCP / Agentic (OWASP ASI Top 10 2026)** — MCP config provenance (`mcp.json`, `.mcp.json`, `claude_desktop_config.json`, incl. `.vscode/`), auto-approve keys, permission-bypass flags, unpinned `npx -y`/`uvx` servers, `mcp-remote`, cleartext MCP URLs, inline env secrets, shell-spawning servers, tool-description poisoning heuristics — all findings CWE+ASI tagged
   - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
 - **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected; `snyk-agent-scan` (ex-Invariant `mcp-scan`) when MCP config artifacts are detected — never with auto-start flags (servers stay consent-gated).
+- **`npm audit` (external)** runs in each npm lockfile directory, as the dependency scan does.
 - **`--scan-type external`** runs **ONLY** external tools and SKIPS the in-process regex scans. Use `--scan-type all` (default) to run both.
 - **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines.
 - **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).
@@ -189,6 +193,33 @@ Detail that was public before a finding came under this rule is not repeated or 
 record cites the existing record by its id. The rule holds for a private repository too: a
 private repository is cloned, forked and made public later. (TASK 110 drafted such a report inside
 a public repository; its security review caught the draft before a commit.)
+
+### 6.2 A review that cannot finish
+
+An audit has two parts: the scan and the manual adversarial review. Its verdict is one of three:
+
+- `PASS`: both parts ran to completion and found no CRITICAL or HIGH issue;
+- `FAIL`: a part found a CRITICAL or HIGH issue, whether or not the other part completed;
+- `INCOMPLETE`: a part did not run to completion, and neither part found a CRITICAL or HIGH issue.
+
+When either part does not run to completion, the audit is never `PASS`, and the report names that
+part. The causes include a refused tool, a stopped turn, a missing environment and a scan with
+`scan_status: NOT_RUN`. An auditor whose turn stops returns no report, so the orchestrator records
+the audit as `INCOMPLETE` itself.
+
+1. **Re-run once.** The orchestrator re-runs that part once, in a fresh agent or session, on the
+   round's frozen tree. A fix round does not reset the count: each part gets one re-run in a run.
+2. **Then the operator decides.** If the re-run does not complete either, the operator chooses in
+   their own message, and the record quotes it. The choices are to ship the control with the gap
+   recorded, to defer it to a work-item, or to remove it.
+3. **No unverified security claim.** A security control whose bypass hunt never finished does not
+   ship as protection. Its changelog and documents say it is unverified, or it moves to a
+   work-item.
+4. **Tests are not the hunt.** Tests and a mutation run with a passing baseline show that the tests
+   pin the specification. They do not show that the specification closes the threat.
+
+(TASK 111's retro wrote this rule. The bypass hunt on its anchor hook had stopped, and the
+operator had deferred the hook to a work-item.)
 
 ## 7. Rationalization Table
 

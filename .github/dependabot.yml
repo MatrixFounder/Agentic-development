@@ -1,0 +1,12 @@
+# Dependabot keeps the commit-pinned GitHub Actions of .github/workflows/ current (TASK 111 R3).
+# Each action is pinned to a commit with its release tag in a comment; the update pull request
+# changes both. The npm lockfiles of the renderers are not listed: their overrides are deliberate.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # A release proposed at once may be a compromised one; wait a week (TASK 111 review, SEC-11).
+    cooldown:
+      default-days: 7

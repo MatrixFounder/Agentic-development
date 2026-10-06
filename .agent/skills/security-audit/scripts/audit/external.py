@@ -1,10 +1,11 @@
 """External security tool integration."""
 
+import os
 from pathlib import Path
 from typing import List
 import sys
 
-from .helpers import run_command
+from .helpers import find_npm_lockfiles, npm_audit_dir, run_command
 
 
 def run_external_tools(project_path: str, types: List[str]):
@@ -39,11 +40,18 @@ def run_external_tools(project_path: str, types: List[str]):
         # pip-audit replaces safety (Safety DB went commercial in 2024)
         run_command(["pip-audit"], cwd=cwd)
 
-    if "javascript" in types:
-        if (Path(cwd) / "yarn.lock").exists():
-            run_command(["yarn", "audit"], cwd=cwd)
-        else:
-            run_command(["npm", "audit"], cwd=cwd)
+    # npm audit in each lockfile directory, whatever the detected types (TASK 111 R5.4); a project
+    # without an npm lockfile runs none, since npm stops with ENOLOCK there (R5.5).
+    for lockfile in find_npm_lockfiles(cwd):
+        label = os.path.relpath(lockfile, cwd)
+        with npm_audit_dir(lockfile) as workdir:
+            if workdir is None:
+                print(f"[!] npm audit skipped for {label}: no package.json beside it", file=sys.stderr)
+                continue
+            print(f"[*] npm audit for {label}", file=sys.stderr)
+            run_command(["npm", "audit", "--package-lock-only"], cwd=str(workdir))
+    if "javascript" in types and (Path(cwd) / "yarn.lock").exists():
+        run_command(["yarn", "audit"], cwd=cwd)
 
     if "rust" in types:
         run_command(["cargo", "audit"], cwd=cwd)

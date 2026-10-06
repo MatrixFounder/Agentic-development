@@ -31,3 +31,8 @@ __pycache__/
 # (tests/_scratch.py explains which). The suite sweeps this at session start and end;
 # ignoring it means a run killed before its teardown cannot dirty the tree either.
 tests/.scratch/
+
+# The operator's own Claude Code permissions: per machine, never shipped. The installer does not
+# copy this file (System/scripts/vendors.yaml), and the committed .claude/settings.json holds only
+# framework permissions (TASK 111 R2).
+.claude/settings.local.json

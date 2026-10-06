@@ -184,6 +184,8 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
 
+The committed `settings.json` holds framework permissions only (TASK 111 R2). An operator's own rules live in the ignored `.claude/settings.local.json`, which the installer does not copy. A Bash allow rule matches command text only, so a relative-path rule still approves that path in a nested checkout. A PreToolUse hook to make such a command ask is deferred to WI-34.
+
 **Model policy** (v3.11.2 + Wave 3):
 - **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner`, and `product-director`.
 
@@ -549,7 +551,7 @@ myapp/                                                  ← target project root
 ├── .agent/sessions/                                   ← local runtime state (.gitkeep)
 ├── .claude/ | .gemini/ | .codex/ | .cursor/           ← per-vendor (only the chosen one is populated)
 │   ├── settings.json                                  ← copy (if_missing — protects user customization)
-│   ├── hooks/                                         ← copy
+│   ├── hooks/                                         ← copy (Claude: validate_skill_hook.sh)
 │   └── {skills,commands,agents}/<name>                ← per-item symlinks
 ├── System → .agentic-development/System               ← folder symlink (skipped if user-owned)
 ├── CLAUDE.md / AGENTS.md / GEMINI.md                  ← project-owned (NEVER overwritten)

@@ -33,13 +33,16 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
    - **If you cannot execute it** (no execution tool in your role, or the environment refuses):
      record `scan_status: NOT_RUN (<reason>)`, continue to step 3, and carry that status into the
      report. **Never invent the output** (`security-audit` §1). `NOT_RUN` makes the audit
-     `INCOMPLETE`, never `PASS` — step 4's "until clean" loop cannot be satisfied by a scan that
+     `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH issue, never `PASS` — step 4's "until clean" loop cannot be satisfied by a scan that
      never ran.
 
 3. **Manual Adversarial Review ("Think Like a Hacker")**
    - Refer to `.agent/skills/security-audit/SKILL.md` Section 3.
    - Verify against specific checklists (Solidity, Rust, OWASP).
    - Challenge assumptions (Input Validation, AuthZ, Secrets).
+   - A review that does not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue:
+     name the part. The orchestrator re-runs it once, then the operator decides (`security-audit`
+     §6.2).
 
 4. **Remediation & Reporting**
    - If findings exist:
@@ -50,7 +53,8 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
         directly; a caller may re-scope both the cap and the definition of "clean" (`full-robust`
         §3 does exactly that). On exhaustion with findings still open → **STOP** and escalate the
         open findings to the user. Per step 2, a `scan_status: NOT_RUN` never satisfies this loop:
-        the verdict is `INCOMPLETE`, not clean.
+        the verdict is `INCOMPLETE` or `FAIL`, not clean, and `security-audit` §6.2 governs its one
+        re-run.
    - Save report as `docs/audit/security-{ID}.md` (consistent with `security-auditor` agent and `skill-archive-task` ID convention).
    - A finding in a dependency with no public advisory goes to its maintainers privately. The patches of 4a, the tests of 4b, the saved report, the `.AGENTS.md` notes and the retro records hold no detail of it; a test pins this project's mitigation, never the defect (`security-audit` §6.1).
    - Update `.AGENTS.md` with security notes.

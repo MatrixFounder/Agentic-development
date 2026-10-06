@@ -1,334 +1,270 @@
-# PLAN 110 — Figure-instrument follow-ups, the renderer supply chain, plan status and fix-round rules
+# PLAN 111 — Checks that cover what they claim: a framework-only allow list, pinned actions, a full fingerprint, every lockfile
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 11) · **Covers:** R1–R11 · **Acceptance:** A1–A13 ·
-**Revision:** 8, cluster I for the retro items of TASK R11 (D12) with its review fixes. Plan audit rounds 1 and 2 applied (`docs/reviews/framework-audit-110.md`).
+**TASK:** [docs/TASK.md](TASK.md) (revision 14) · **Covers:** R2–R7 · **Acceptance:** A1, A3–A9.
+
+**Revision:** 12. Fix round 8 applies review round 8. Fix round 7 applied review round 7. Fix round 6 applied review round 6. Fix round 5 applied review round 5, and B7 keeps the test runners' bare forms
+(TASK R2.7, D14). Fix round 4 applied the review of cluster I, and B6 dropped seven wildcard rules
+(TASK D13). Cluster I adds the retro items (TASK R7, D12). The hook cluster left after three
+review rounds; R1 moved to WI-34 (TASK D11).
+Plan audit rounds 1 and 2 applied (`docs/reviews/framework-audit-111.md`).
 
 ## Sequencing rule
 
-Eleven clusters. In each code cluster the tests come first and fail on the base code, or under
-their mutation (TASK A4); the fix follows.
+Eight clusters. In each code cluster the test module comes first. Its **base-fail** case fails on
+the base tree before the fix, and the audit records that run (TASK A1).
 
-- `mermaid_model.py` is edited by A1, A2 and B, in that order.
-- `selftest_figure_evals.py` is edited by A3, then by E.
-- D re-renders every reference after A2, B, C and F, which edit reference text or instruments.
-  Before D, each of them states whether it changed a mermaid fence.
-- E grades the campaign after A1, A2, A3, B and D. E and A2.5 run again after any later edit of
-  `grade_figures.py`, `fidelity.py`, `lint_mermaid.py` or `mermaid_model.py` (P2-07).
-- `test_render_check.py` is edited by B1, then by C1.
-- F and G share no file with clusters A to E. I edits F's `tests/test_mermaid_wiring.py` after H.
-- Every test-first step runs its new tests on the base code and records that they fail, or that
-  its mutation makes them fail (P2-09).
+- B, C, D and E share no file with each other.
+- B edits `skill-safe-commands`, a TIER 0 skill, under the bypass recorded in the audit §0.
+- F runs after B to E; it edits versions and records only.
+- G runs every gate after F, then the review.
+- H runs after the operator's commit, never during the run (TASK R2.3, D5).
+- I runs after G; a focused review of I closes the run before the commit.
+- The hook cluster A was removed when R1 moved to WI-34 (TASK D11).
 
 | Order | Cluster | Files | Covers |
 | :--- | :--- | :--- | :--- |
-| A1 | Scanner | `mermaid_model.py` scan, `test_commonmark_scan.py` | R4, R5 |
-| A2 | Lint and model | `mermaid_model.py` hazard and joins, `lint_mermaid.py`, two references | R2, R3 |
-| A3 | Grader | `grade_figures.py`, `selftest_figure_evals.py` | R6.1, R6.2 |
-| B | The lifeline gate | `svg_geometry.py`, `mermaid_model.py` names, references, N7, tests | R1.1–R1.4 |
-| C | Renderer supply chain | v10 lockfile, `setup_renderers.sh`, `render_check.py`, browser table, RF-21 | R7 |
-| F | Plan status | template, planning skills, three workflows, wiring tests | R8 |
-| D | Fixtures | the render-evidence fixtures, `expected.json` | R1.5, A5, A6 |
-| E | Campaign regrade | campaign report files, `AMENDMENTS.md` | R6.3, R9.4, A9 |
-| G | Fix-round rules | `developer-guidelines`, `code-review-checklist`, a pin | R9.1–R9.3 |
-| H | Records, gates, review | versions, changelogs, `System/Docs`, ARCHITECTURE, WIs, audit | R10, A3, A12, A13 |
-| I | Retro items | three workflows, `security-audit`, `core-principles`, mermaid `SKILL.md`, two pins | R11 |
+| B | The settings | `tests/test_committed_settings.py`, `.claude/settings.json`, `.gitignore`, `skill-safe-commands`, the READMEs, `GEMINI.md`, `AGENTS.md` | R2.1, R2.2, R2.4–R2.7 |
+| C | The actions | `tests/test_ci_action_pins.py`, `framework-gates.yml`, `dependabot.yml`, `RELEASE_CHECKLIST.md` | R3 |
+| D | The fingerprint | `tests/test_tree_fingerprint.py`, §2.4.1, `vdd-multi.md`, the auditor wrapper | R4 |
+| E | The lockfile audit | `tests/test_lockfile_audit.py`, `helpers.py`, `scanners.py`, `external.py` | R5 |
+| F | Records | versions, `security-audit` `SKILL.md`, changelogs, ARCHITECTURE, WI-31 | R6 |
+| G | Gates and review | the audit | A7, A8 |
+| H | After the commit | the operator's `.claude/settings.local.json` | R2.3 |
+| I | Retro items | `framework-upgrade.md`, `security-audit` §6.2 and its pointers, a pin | R7 |
 
-**Declared paths (A12, `framework-upgrade` §2.2).** Edited:
+**Declared paths (A8, `framework-upgrade` §2.2).** Edited:
 
-- `.agent/skills/mermaid-authoring-guidelines/SKILL.md`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/mermaid_model.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_lint_mermaid.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_svg_geometry.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_render_check.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_setup_renderers.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_plan_gantt.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/expected.json`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/plan-example-geometry.json`
-- `.agent/skills/mermaid-authoring-guidelines/assets/renderers/v10/package.json`
-- `.agent/skills/mermaid-authoring-guidelines/assets/renderers/v10/package-lock.json`
-- `.agent/skills/mermaid-authoring-guidelines/references/sequence.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/review-checklist.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/other-kinds.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/ascii.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/paired-examples.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/renderer-facts.md`
-- `.agent/skills/mermaid-authoring-guidelines/references/gantt.md`
-- `.agent/skills/mermaid-authoring-guidelines/evals/grade_figures.py`
-- `.agent/skills/mermaid-authoring-guidelines/evals/selftest_figure_evals.py`
-- `.agent/skills/mermaid-authoring-guidelines/evals/AMENDMENTS.md`
-- `.agent/skills/mermaid-authoring-guidelines/evals/corpus/2026-10-opus55-xhigh-r1/report.json`
-- `.agent/skills/mermaid-authoring-guidelines/evals/corpus/2026-10-opus55-xhigh-r1/benchmark.json`
-- `.agent/skills/mermaid-authoring-guidelines/evals/corpus/2026-10-opus55-xhigh-r1/benchmark.md`
-- `.agent/skills/skill-planning-format/SKILL.md`
-- `.agent/skills/skill-planning-format/assets/templates/plan_md_template.md`
-- `.agent/skills/skill-planning-format/examples/PLAN_EXAMPLE.md`
-- `.agent/skills/plan-review-checklist/SKILL.md`
-- `.agent/skills/developer-guidelines/SKILL.md`
-- `.agent/skills/code-review-checklist/SKILL.md`
-- `.agent/workflows/03-develop-single-task.md`
-- `.agent/workflows/vdd-03-develop.md`
-- `.agent/workflows/vdd-05-run-full-task.md`
-- `tests/test_mermaid_wiring.py`
-- `tests/run_tests.py`
-- `System/Docs/WORKFLOWS.md`
+- `.claude/settings.json`
+- `.gitignore`
+- `.github/workflows/framework-gates.yml`
+- `.agent/skills/skill-safe-commands/SKILL.md`
+- `.agent/skills/skill-parallel-orchestration/SKILL.md`
+- `.agent/workflows/vdd-multi.md`
+- `.claude/agents/security-auditor.md`
+- `.agent/skills/security-audit/SKILL.md`
+- `.agent/skills/security-audit/scripts/run_audit.py`
+- `.agent/skills/security-audit/scripts/audit/__init__.py`
+- `.agent/skills/security-audit/scripts/audit/helpers.py`
+- `.agent/skills/security-audit/scripts/audit/scanners.py`
+- `.agent/skills/security-audit/scripts/audit/external.py`
 - `System/Docs/SKILLS.md`
+- `System/Docs/WORKFLOWS.md` (I)
+- `System/Docs/VDD.md`
+- `System/Docs/RELEASE_CHECKLIST.md`
 - `docs/ARCHITECTURE.md`
-- `docs/backlog/wi-32-lint-and-scanner-follow-ups-from-task-108-reviews.md`
-- `docs/backlog/wi-30-renderer-supply-chain-v10-lockfile-mermaid-cli-request-filter-browser-hash.md`
-- `docs/backlog/wi-22-plan-status-tokens-for-the-generated-plan-chart.md`
-- `docs/backlog/wi-27-fix-loops-hand-off-a-differential-replay-of-the-stored-corpus.md`
+- `README.md`
+- `README.ru.md`
+- `docs/backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md`
 - `docs/BACKLOG.md`
 - `CHANGELOG.md`
 - `CHANGELOG.ru.md`
-- `.agent/workflows/01-start-feature.md` (I)
+- `tests/run_tests.py`
+- `.agent/workflows/framework-upgrade.md` (I)
+- `GEMINI.md` (B7)
+- `AGENTS.md` (B7)
 - `.agent/workflows/security-audit.md` (I)
-- `.agent/workflows/vdd-adversarial.md` (I)
-- `.agent/skills/security-audit/SKILL.md` (I)
-- `.agent/skills/core-principles/SKILL.md` (I)
-- `System/Docs/VDD.md` (I)
+- `.agent/workflows/full-robust.md` (I)
 - `System/Agents/10_security_auditor.md` (I)
-- `.agent/skills/run-feedback/SKILL.md` (I)
-- `.agent/workflows/vdd-multi.md` (I)
-- `.claude/agents/security-auditor.md` (I)
 
 Created:
 
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_commonmark_scan.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/fx-seq-own.mmd`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/fx-seq-own-v10.svg`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/fx-seq-own-v11.svg`
-- `.agent/skills/mermaid-authoring-guidelines/assets/renderers/browsers.json`
-- `tests/test_fix_round_rules.py`
-- `tests/test_disclosure_rule.py` (I)
+- `.github/dependabot.yml`
+- `docs/backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md`
+- `docs/backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md` (B6)
+- `tests/test_committed_settings.py`
+- `tests/test_ci_action_pins.py`
+- `tests/test_tree_fingerprint.py`
+- `tests/test_lockfile_audit.py`
+- `tests/test_run_safety_rules.py` (I)
 
-The audit `docs/reviews/framework-audit-110.md` holds every audit and review round of this run,
-as for TASK 109. The run's `docs/TASK.md`, `docs/PLAN.md`, the audit and the TASK 109 archive
-pair are declared by §5.
+The run's `docs/TASK.md`, `docs/PLAN.md`, the audit `docs/reviews/framework-audit-111.md` and the
+TASK 110 archive pair are declared by `framework-upgrade` §5. H edits
+`.claude/settings.local.json` after the commit; no declared path covers it, because §5 runs before
+the commit.
 
-**Conditional paths (P1, P4).** E1 compares, byte for byte, every `grading.json` of the campaign
-and `references/eval-results.md` as the base grader and the new grader write them. Each file that
-differs is added to the edited list in a PLAN revision before E2 writes it. `GRADER_VERSION`
-stays `grade_figures/3`: the report schema does not change, and the grader's sha256 records the
-fix.
+**Rollback point.** Base `3a6e07ed53a3e8c25ea0c64a44708ee1b251cfa5`, clean at the start of the run.
+No file outside the repository is edited during the run. No ignored file is edited, except the run's
+own state under `.agent/sessions/` and `.agent/feedback/` (§3.1). Fallback follows
+`framework-upgrade` §5. H is undone as H1 states.
 
-**Base instruments (P2-06).** A replay needs the base instruments. They come from the base commit:
-`git archive 6ae772b .agent/skills/mermaid-authoring-guidelines | tar -x -C <scratchpad>/base`,
-the whole skill, so the base grader imports the base lint and geometry. No worktree is made.
-`framework-upgrade` §3.1 forbids copies outside version control; this extraction is a read-only
-input that the base commit rebuilds at any time, not a copy of the run's work. The audit records
-it as a deviation.
+**Writing during a round.** The caller computes the fingerprint after its last write to the audit,
+and writes nothing under the work tree until the round returns (TASK R4.3).
 
-**Rollback point.** Base `6ae772bea1c7ce702bc161f9046e875a599d69cc`, clean at the start of the
-run. No file outside the repository is edited except in the session scratchpad. npm runs with
-`--cache <scratchpad>/npm-cache`, so it writes nothing to `~/.npm` (P2-05). The render home
-of every render in this run is a scratch directory outside every git work tree. The default
-render home is left as it is; installing the new v10 there is the operator's step after the
-commit, and D10's changelog line says so. Fallback follows `framework-upgrade` §5.
+**Tests.** Each new module is a `unittest.TestCase` module with no pytest fixture, because
+`CURATED_UNITTEST_MODULES` loads only those.
 
 **Commands.**
 
-- Skill suite: `python3 -m pytest -q scripts/tests` in the skill directory.
-- Eval selftest: `python3 evals/selftest_figure_evals.py` in the skill directory.
+- New modules: `PYTHONPATH=. python3 -m pytest -q -p no:cacheprovider tests/test_<module>.py`.
 - Curated suite: `PYTHONPATH=. python3 tests/run_tests.py`.
-- Loop contract: `python3 System/scripts/check_loop_contract.py`.
-- Scratch render home: `MERMAID_RENDER_HOME=<scratchpad>/rh-110`, set up by the repository's
-  `setup_renderers.sh` after C. The skill suite runs with it from C8 on, and
-  `TestWithInstalledRenderers` records 0 skips (P2-02). Without it, the default home is refused
-  after C5 and that class skips.
+- Gates: every step of `.github/workflows/framework-gates.yml`, run locally.
+- Register: `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py <file>` per edited
+  markdown file, against its base text.
 
-## Cluster A1 — scanner (R4, R5)
+## Cluster B — the settings (R2.1, R2.2, R2.4–R2.7)
 
-- [x] A1.1 `test_commonmark_scan.py`, three parts:
-      - one test per branch of TASK §1, item 5;
-      - a time bound for the staircase of 500 items (0.5 s) and for 4000 markers with 4000 blank
-        lines (0.25 s), each the best of two runs: margins of 11 and 22 over the prototype;
-      - the digest of the scan output over 2000 seeded documents, computed with the base scanner.
-- [x] A1.2 Run it on the base code: the time bounds fail; the branch and digest tests pass.
-- [x] A1.3 `mermaid_model.py`: `_Line.find` reuse; the blank-line walk with the quote positions;
-      `_quote_strip` loses its unused `limit`; `_list_item` loses its indent check, which the only
-      caller already makes (R5.2).
-- [x] A1.4 Run the module: it passes. Run each mutation 5 and 6 of TASK A4: the matching test
-      fails. Run the differential of A8 over 30,000 documents against the base scanner. Time both
-      shapes at the input and at twice the input; the audit records the ratios (A8 growth, P2-03).
-      The digest generator uses only `random.Random(SEED)`, so every Python version draws the
-      same documents (P2-14).
+- [x] B1 Test first: `tests/test_committed_settings.py` with TC-S1, TC-S3, TC-S4 and TC-S5. TC-S1
+      fails on the base tree.
+- [x] B2 `.claude/settings.json`: the allow list of Appendix A, no `additionalDirectories`, no
+      `PreToolUse` block. Key order, the `env` block and the base PostToolUse hook stay.
+- [x] B5 `skill-safe-commands` §Pattern Matching Rules: `find` dropped, the whole-command rule,
+      and the enforcement note deferring the hook to WI-34; version 1.3.
+- [x] B3 `.gitignore`: `.claude/settings.local.json`.
+- [x] B4 `tests/test_mermaid_wiring.py` TC-06 still passes: the lint and `plan_gantt.py --check`
+      rules stay.
+- [x] B6 Fix round 4 (TASK R2.7, D13): seven wildcard `git` and `tree` rules leave the settings
+      and Appendix A. TC-S3 forbids them, TC-S6 pins the hooks block, and TC-S7 pins the archive
+      commands. `skill-safe-commands` states the read forms; WI-35 is filed.
+- [x] B7 Fix round 5 (TASK R2.7, D14): six test-runner rules leave; TC-S6 pins the settings keys;
+      TC-S7 reads every shell block; TC-S8 pins `skill-safe-commands`, the READMEs' lists,
+      `GEMINI.md` and `AGENTS.md`. WI-35 gains the older classes of review round 5.
 
-## Cluster A2 — lint and model (R2, R3)
+## Cluster C — the actions (R3)
 
-- [x] A2.1 Tests first (`test_lint_mermaid.py`): MA-SYN-09 in `RULE_IDS`, `ERROR_RULES` and the
-      example table; `timeline TD`, `timeline LR` and `timeline` with a word fail; `timeline`
-      alone passes. The two merge-then-turn forms count a join; a fan-out trunk, a single turning
-      path and a corner with no arrowhead below do not. Run them on the base code: they fail.
-- [x] A2.2 `mermaid_model.py`: hazard `timeline-header`; `_turns_down` and the fourth join form.
-- [x] A2.3 `lint_mermaid.py`: MA-SYN-09, with its bad and good examples.
-- [x] A2.4 `references/other-kinds.md` §7 and `references/ascii.md` §5.2. No mermaid fence changes.
-- [x] A2.5 Replay (R9.4): lint findings over `references/*.md` and the 66 campaign answers, base
-      against new; every moved finding in the audit.
+- [x] C1 Test first: `tests/test_ci_action_pins.py` with TC-P1 to TC-P3; TC-P1 fails on the base.
+- [x] C2 `framework-gates.yml`: 13 `uses:` lines pinned to the commits of TASK §1 with their tags.
+- [x] C3 `.github/dependabot.yml`: `github-actions`, directory `/`, monthly.
+- [x] C4 `RELEASE_CHECKLIST.md` §5: how a pin changes.
 
-## Cluster A3 — grader (R6.1, R6.2)
+## Cluster D — the fingerprint (R4)
 
-- [x] A3.1 Selftest rows first: a `text` fence on a list marker is linted by Q16; `_FENCE_LINE`
-      on a line of 100,000 marker characters ends within 1 s. Run on the base grader: they fail.
-- [x] A3.2 `grade_figures.py`: `_FENCE_LINE` with list and blockquote markers.
-- [x] A3.3 The selftest: every row passes but TC-ME-22 to TC-ME-24, which wait for E.
+- [x] D1 Test first: `tests/test_tree_fingerprint.py` with TC-F1 to TC-F5. It reads the first
+      `sh` block of §2.4.1 and runs it with `bash` in a temporary repository. Git runs with
+      `GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_NOSYSTEM=1` and an explicit author, so the
+      operator's signing or diff drivers do not apply. TC-F1 fails on the base formula.
+- [x] D2 §2.4.1: the formula of R4.1; the run location and coverage of R4.2; the caller-output
+      rule of R4.3; the excuse sentence of R4.5 removed. Version 3.11.
+- [x] D3 `vdd-multi.md` step 1.0 and `.claude/agents/security-auditor.md` quote the formula.
+      `tests/test_frozen_tree_contract.py`, which pins both files, still passes.
 
-## Cluster B — the lifeline gate (R1.1–R1.4)
+## Cluster E — the lockfile audit (R5)
 
-- [x] B1 Tests first:
-      - `test_svg_geometry.py` reads the new fixture `fx-seq-own`, rendered in 10.9.8 and
-        11.17.2. A 33-character neighbour message → `fail`. A skip → `warn`. A self-message → no
-        own-end finding. Two participants → measured. Metrics without the own-end key, as the
-        campaign stores them → the base verdicts (P8);
-      - `test_render_check.py`: `RENDER_CHECK_NAMES` equals `GATE_CHECKS`, which holds the name.
-- [x] B2 `svg_geometry.py`: own-end crossings, the `own` key, from two lifelines on; the split
-      severity in `evaluate`; the name in `GATE_CHECKS`.
-- [x] B3 `mermaid_model.py`: `RENDER_CHECK_NAMES`.
-- [x] B4 N7 marker and paragraph, and its row in `paired-examples.md` §6; `sequence.md` §3;
-      `review-checklist.md` FIG-9; `SKILL.md`. Every other negative that fails the gate in a D1
-      render gets the same marker change (P2-08). No other mermaid fence changes.
+- [x] E1 Test first: `tests/test_lockfile_audit.py`, a fake `npm` on `PATH`. TC-L1 to TC-L6 drive
+      `scan_dependencies`. The plan adds TC-L7 to TC-L10 for R5.4 and R5.5:
+      - TC-L7 — only `sub/package-lock.json`, types `[]`: `run_external_tools` runs
+        `npm audit --package-lock-only` in `sub/`;
+      - TC-L8 — no lockfile, types `["javascript"]`: `run_external_tools` runs no `npm audit`;
+      - TC-L9 — a root `yarn.lock`, types `["javascript"]`: `run_external_tools` runs
+        `yarn audit` at the root;
+      - TC-L10 — a root `package.json` without a lockfile: `scan_dependencies` reports the
+        missing lockfile and runs no `npm`.
 
-## Cluster C — renderer supply chain (R7)
+      TC-L7 to TC-L9 replace `run_command` with a recorder, so no tool runs. TC-L5's timeout
+      case patches `subprocess.run` to raise `TimeoutExpired`; its `npm` absent case sets `PATH`
+      to an empty directory. TC-L1 and TC-L7 fail on the base tree.
+- [x] E2 `helpers.py`: `find_npm_lockfiles(root)`, one per directory, `SKIP_DIRS`, no links.
+- [x] E3 `scanners.py` `scan_dependencies`: one audit per listed directory, 60 s each, findings
+      naming the lockfile, `info` on an unfinished audit, no audit without a lockfile (R5.2,
+      R5.3, R5.5).
+- [x] E4 `external.py`: `npm audit --package-lock-only` per listed directory; no `npm audit`
+      without a lockfile; `yarn audit` as at the base (R5.4, R5.5).
+- [x] E5 `.agent/skills/security-audit/tests/test_smoke.py` still passes.
 
-- [x] C1 Tests first:
-      - `test_setup_renderers.py`: the browser cases of TASK A7;
-      - the recorded-hash case runs on a temporary copy of the skill tree with its own table;
-      - the existing tests set `MERMAID_RENDER_BROWSER_SHA256`;
-      - `PUPPETEER["v10"]` = 25.12.0, and a test pins the override;
-      - `test_render_check.py`: the three install-stamp refusals.
-- [x] C2 `assets/renderers/v10/package.json`: `"puppeteer": "25.12.0"` in `overrides`, and the
-      `engines.node` floor of v11, which the setup reads per tag (P2-13); rebuild
-      `package-lock.json` with `npm install --package-lock-only --ignore-scripts`.
-- [x] C3 `npm audit --package-lock-only --audit-level=high` for v10, v11 and v12: exit 0.
-- [x] C4 `assets/renderers/browsers.json`; `setup_renderers.sh`: the tree hash of R7.3, the stamp
-      of R7.7, the dry-run report, the header of R7.8.
-- [x] C5 `render_check.py`: the stamp checks of R7.7 in `install_problem`.
-- [x] C6 `renderer-facts.md`: RF-21 types and upstream status; the v10 override and its effect.
-- [x] C7 The upstream report text, handed to the operator outside the repository (review round 2).
-- [x] C8 Set up the scratch render home with the repository's script; v10 and v11 install, each
-      with its stamp.
+## Cluster F — records (R6)
 
-## Cluster F — plan status (R8)
+- [x] F1 The `security-audit` version 3.10 in the six places R6.1 lists; A3 and D2 set the
+      other two versions. `test_disclosure_rule.py` TC-04 passes.
+- [x] F2 `security-audit` `SKILL.md`: the npm audit of every lockfile (R6.2).
+- [x] F3 Both changelogs v3.36.0 with the two migration items (R6.3).
+- [x] F4 ARCHITECTURE (R6.4); the READMEs' Antigravity lists change in B7. This is the
+      architecture update of `framework-upgrade` §2.1: the committed settings narrow.
+- [x] F5 The five modules join `CURATED_UNITTEST_MODULES` (R6.6). The audit records each
+      module's test count from `PYTHONPATH=. python3 tests/run_tests.py -v`; a count of 0 fails
+      F5.
+- [x] F6 WI-31 `done` and its index line under `## Closed` (R6.5).
 
-- [x] F1 Tests first (`tests/test_mermaid_wiring.py`, `test_plan_gantt.py`):
-      - the template and example blocks hold `"status": "not-started"`;
-      - the status steps of R8.2 and the skips of R8.3 in the three workflows;
-      - the `plan-review-checklist` item of R8.4;
-      - unique step numbers in `vdd-03` and `vdd-05`;
-      - every `update_state.py` command in `.agent/workflows/` passes `--mode`, `--task`,
-        `--status` and `--summary`. A command is a line in a fence, or an inline code span, that
-        runs `update_state.py` with at least one flag; a span with an ellipsis and a bare name in
-        prose are not commands (P2-01);
-      - `SURFACES` pins the three workflows; `TestPlannerSurfaces` follows the new phrases.
-- [x] F2 Template, `skill-planning-format` §2.1, `PLAN_EXAMPLE.md`, `gantt.md`, the `plan_gantt.py`
-      docstring: status written. `gantt.md` keeps its mermaid fences.
-- [x] F3 `03-develop-single-task.md`, `vdd-03-develop.md`, `vdd-05-run-full-task.md`: the status
-      steps; `--summary` in vdd-05 Step 4; one number per step. vdd-05 Step 4 sets `done` only
-      after a merge; on its failure path the status stays `in-progress` (P2-10). vdd-03 Step 3 keeps its number,
-      which `vdd-05` and `test_frozen_tree_contract.py` cite. No line enters or leaves a
-      loop-contract window with a bound (TASK R8.2).
-- [x] F4 `plan-review-checklist` §6: the status check.
-- [x] F5 Loop contract: 25 loops, 0 errors, 0 warnings.
+## Cluster G — gates and review (A7, A8)
 
-## Cluster D — fixtures (R1.5, A5, A6)
+- [x] G1 Every gate of `framework-gates.yml`; `validate_skill.py` on the three edited skills;
+      `scan_register.py` on the edited markdown.
+- [x] G2 Review on a frozen tree: one code reviewer with the plain exhaustive prompt and one
+      security auditor (CLAUDE.md, Self-Improvement Mode). Both hold Bash; in rounds 1 to 3 the brief
+      asked each to run the hook on inputs of its own (TASK D7). A fix round reports its replay
+      (`developer-guidelines` §6.4).
+- [x] G2.1 Review round 1: code review REJECTED (3 BLOCKING), security audit FAIL (2 HIGH).
+- [x] G2.2 Fix round 1 on the closed list CR-1 to CR-12 and SEC-1 to SEC-13 (TASK D8):
+      - the hook, in revision 6 numbering: R1.5 to R1.9 and R1.12; tests on four roots,
+        TC-H27 to TC-H36; 20 mutants of
+        the hook, each killed;
+      - the settings: R2.6, Appendix A of 59 rules, TC-S5;
+      - the scanner: R5.2 to R5.7; TC-L11 to TC-L15; 14 mutants of the scanner, each killed;
+      - CI: no persisted checkout credentials, a Dependabot cooldown;
+      - §2.4.1 coverage gaps, `skill-safe-commands`, the changelogs and WI-31.
+- [x] G2.3 Review round 2 on the closed list, with the hook bypass hunt: code review REJECTED
+      (CR2-1 HIGH), security audit FAIL (SEC2-1 HIGH). No stored corpus applies to these
+      instruments (`developer-guidelines` §6.4).
+- [x] G2.4 Fix round 2 on the closed list CR2-1 to CR2-4 and SEC2-1 to SEC2-7 (TASK D9, D10):
+      - the hook recognises safe shapes (TASK R1 revision 7); 51 mutants, each killed;
+      - the scanner: a vulnerability field that is no map, TC-L16 to TC-L20; 21 mutants, each
+        killed;
+      - `skill-safe-commands` drops `find` for every vendor; the hook's descriptions follow R1.
+- [x] G2.5 Review round 3: code review REJECTED (CR3-3, CR3-4 HIGH, new bypasses of the
+      redesigned hook); security audit INCOMPLETE (its bypass hunt stopped). No stored corpus
+      applies (`developer-guidelines` §6.4).
+- [x] G2.6 The operator deferred the hook to WI-34 (TASK D11). Cluster A, `anchor_cwd.py` and its
+      test are removed; the `PreToolUse` block leaves `.claude/settings.json`; the reviewed R2 to
+      R6 stay. R2's narrowing of the committed allow list carries its own review record.
+- [x] G3 `check_positional_refs.py --targets-changed --fix` (§4.5), then G1 again.
+- [x] G4 `git status` against the declared paths.
+- [ ] G4.1 The operator commits.
+- [ ] G5 Tell the operator to restart the session (`framework-upgrade` §4.3):
+      `skill-safe-commands` is a TIER 0 skill, and it loads at session start.
 
-- [x] D1 With the scratch render home, before any fixture changes: render every `references/*.md`
-      in v10 and compare the metrics with the base fixtures, the R1 keys aside (A6).
-- [x] D2 `render_check.py references/paired-examples.md --fixture <new file>` and the same for the
-      other references; each new file replaces the committed one.
-      `test_plan_gantt.py --regenerate-geometry <scratch dir>` for the plan example (P10).
-- [x] D3 `expected.json`: the sequence metrics and verdicts of `fx-seq-long` and `fx-seq-skip`.
-- [x] D4 Replay (R9.4): metrics and findings of every render, base against new, each change
-      explained. The audit records the external figures of P17.
-- [x] D5 `test_paired_examples`, `test_svg_geometry` and `test_plan_gantt` pass. D runs again after
-      any later edit of `render_check.py`, `svg_geometry.py` or `measure_text.mjs` (P16).
+## Cluster I — retro items (TASK R7, D12)
 
-## Cluster E — campaign regrade (R6.3, R9.4, A9)
+- [x] I1 `framework-upgrade` §3 step 4: a hook or an allow rule is built on a fixture root and
+      registered last (R7.1).
+- [x] I2 `security-audit` §6.2 and its pointers (R7.2).
+- [x] I3 `tests/test_run_safety_rules.py` pins both; it joins `CURATED_UNITTEST_MODULES` (A9).
+- [x] I4 Gates again; review round 4 of I: code review CHANGES REQUESTED (CRI-1 to CRI-9),
+      security audit FAIL (SECI-8 HIGH, in R2's settings).
+- [x] I5 Fix round 4 on the closed list CRI-1 to CRI-9 and SECI-1 to SECI-8 (TASK D13); 19 text
+      and settings mutants, each killed.
+- [x] I6 Gates again; review round 5: code review REJECTED (CR5-1 to CR5-21), security audit
+      FAIL (SECI5-1 HIGH, the test-runner rules).
+- [x] I7 Fix round 5 on the closed lists CR5-1 to CR5-21 and SECI5-1 to SECI5-12 (TASK D14).
+- [x] I8 Gates again; review round 6: code review REJECTED (CR6-1 MAJOR, 14 MINOR), security
+      audit PASS (SECI6-1 to SECI6-6, none blocking).
+- [x] I9 Fix round 6 on the closed lists CR6-1 to CR6-15 and SECI6-1 to SECI6-6.
+- [x] I10 Gates again; review round 7: code review APPROVED with 12 MINOR, security audit PASS
+      with 3 LOW.
+- [x] I11 Fix round 7 on CR7-1, CR7-2, CR7-7 and SECI7-1 to SECI7-3; the other MINOR items go to
+      WI-35 (operator).
+- [x] I12 Gates again; review round 8: code review APPROVED, security audit PASS (SECR8-1 and
+      SECR8-2 MEDIUM).
+- [x] I13 Fix round 8 on SECR8-1 to SECR8-5 and the code review's minor items (operator).
+- [x] I14 Gates again; review round 9: code review APPROVED, security audit PASS. Its LOW and
+      minor wording items go to WI-35.
 
-- [x] E1 Grade the campaign into the scratchpad with the base grader and with the new one.
-      Compare every verdict, every `grading.json` byte for byte and `eval-results.md` (P1, P4).
-- [x] E2 A PLAN revision declares each file that differs; then the new files are written. When
-      the regrade moves the scores that `SKILL.md` quotes (0.61 against 0.33), E2 updates that
-      quote (P2-11).
-- [x] E3 `AMENDMENTS.md`: one deviation entry for the grader fix, the lint changes and the gate,
-      each with its effect. The gate is not measured on the campaign (TASK R9.4).
-- [x] E4 The eval selftest passes every row.
+## Cluster H — after the commit (R2.3)
 
-## Cluster G — fix-round rules (R9.1–R9.3)
-
-- [x] G1 Test first: `tests/test_fix_round_rules.py` pins the two rules and their terms in
-      `developer-guidelines` and the two checks in `code-review-checklist`; listed in
-      `CURATED_UNITTEST_MODULES`.
-- [x] G2 `developer-guidelines`: differential replay, its terms, and the closed list.
-- [x] G3 `code-review-checklist`: both checks.
-
-## Cluster H — records, gates, review (R10, A3, A12, A13)
-
-- [x] H1 Versions of TASK R10.2; both changelogs v3.35.0 with the setup line of D10;
-      `System/Docs/WORKFLOWS.md` and `SKILLS.md`; ARCHITECTURE §10.1 row for `browsers.json`
-      (P2-12), §10.6 row, §10.7, §10.8.
-- [x] H2 Each A4 mutation alone, then reverted; the audit records the outcomes, and `git diff`
-      shows each revert byte-identical to the state before it (P2-16).
-- [x] H3 Every gate of `framework-gates.yml` locally; `validate_skill.py` on the five skills;
-      `scan_register.py` on the edited markdown; the greps of A13.
-- [x] H4 Review on a frozen tree: one code reviewer with the plain exhaustive prompt and one
-      security auditor. The fix round reports its replay (R9.1); round 2 counts its regressions
-      (TASK R10.4). Both rounds go into the audit.
-- [x] H5 After the last fix: `check_positional_refs.py --targets-changed --fix` (§4.5) and H3 again.
-- [x] H6 WI-32 and WI-22 close; WI-27 and WI-30 by TASK R10.3 and R10.4.
-- [x] H7 `git status` against the declared paths. The operator commits.
-
-## Cluster I — retro items (R11, D12)
-
-The operator chose three retro items and asked to fix them in this run. I runs after H; H3, H5
-and H7 run again after it, and a focused review covers I.
-
-- [x] I1 `test_mermaid_wiring` reads every workflow, a `##` or `###` heading starting a list; it
-      fails on `01-start-feature`, `security-audit` and `vdd-adversarial`. The three are
-      renumbered in place, and the loop contract still reports 25 loops, 0 errors (R11.1).
-- [x] I2 `security-audit` §6.1 and its §7 row. Pointers in `core-principles` §5, step 4 of the
-      `security-audit` workflow, Step 3 of the auditor prompt, `run-feedback`, the output routing
-      of `vdd-multi` and the `security-auditor` wrapper. Versions 3.9, 1.1 and 1.6;
-      `System/Docs/SKILLS.md` and `VDD.md`. RF-21's rule and WI-30's acceptance speak of the
-      advisory. `tests/test_disclosure_rule.py` pins them and joins `CURATED_UNITTEST_MODULES`
-      (R11.2).
-- [x] I3 The mermaid `SKILL.md` at most 2900 words: two Red Flags that repeat Step 4, and the
-      negative-fence grading that `references/review-checklist.md` §3 states under "Evidence
-      labels", become pointers; two rows leave the examples teaser (R11.3).
-- [x] I4 H3, H5 and H7 again; the focused review; the audit and the changelogs record I.
+- [ ] H1 With the operator's go-ahead: append the 33 rules and 2 directories of the base file to
+      `.claude/settings.local.json`, without duplicates. An audit addendum, committed by the
+      operator, records the counts (33 rules, 2 directories, the number added). It also records
+      the positions in the base list of the entries H1 added, and whether H1 created the
+      `additionalDirectories` key. It records no rule text. The undo removes exactly
+      those entries, and the key when H1 created it.
+- H2 deferred to WI-34 with the hook (TASK D11): its live probe needs the hook.
 
 ## Coverage
 
 | Use case | Clusters |
 | :--- | :--- |
-| UC-1 | B, D |
-| UC-2, UC-3 | A2 |
-| UC-4 | A1 |
-| UC-5 | C |
-| UC-6 | F |
-| UC-7 | G, H4 |
+| UC-3 | B |
+| UC-4 | C |
+| UC-5 | D |
+| UC-6 | E |
 
 | Acceptance | Items |
 | :--- | :--- |
-| A1 | A1.4, A2.1, B1, C1, D5 |
-| A2 | A3.3, E4 |
-| A3 | F5, H3 |
-| A4 | A1.2, A1.4, A2.1, A3.1, B1, H2 |
-| A5 | D2, D5 |
-| A6 | C3, D1 |
-| A7 | C1 |
-| A8 | A1.4 (30,000 documents) |
-| A9 | E1–E4 |
-| A10 | F1, with the status cases of `test_plan_gantt` |
-| A11 | A2.5, D4, E1 |
-| A12 | H3, H7 |
-| A13 | F1, G1, H3, I1–I4 |
+| A1 | B1, C1, D1, E1 |
+| A3 | B1, B2, B5, B6, B7 |
+| A4 | C1, C2, C3 |
+| A5 | D1, D2, D3 |
+| A6 | E1–E4, with TC-L7 to TC-L10 |
+| A7 | G1 |
+| A8 | G1, G4 |
+| A9 | I3, I5, I7 |
 
 ## Schedule
 
@@ -338,17 +274,14 @@ and H7 run again after it, and a focused review covers I.
 {
   "schema": "plan-schedule/v1",
   "tasks": [
-    {"id": "110.1", "title": "Scanner", "stage": "Instruments", "est": 3, "deps": [], "status": "done"},
-    {"id": "110.2", "title": "Lint and model", "stage": "Instruments", "est": 3, "deps": ["110.1"], "status": "done"},
-    {"id": "110.3", "title": "Grader", "stage": "Instruments", "est": 2, "deps": [], "status": "done"},
-    {"id": "110.4", "title": "Lifeline gate", "stage": "Instruments", "est": 3, "deps": ["110.2"], "status": "done"},
-    {"id": "110.5", "title": "Renderer supply chain", "stage": "Instruments", "est": 4, "deps": ["110.4"], "status": "done"},
-    {"id": "110.6", "title": "Plan status", "stage": "Workflows", "est": 3, "deps": [], "status": "done"},
-    {"id": "110.7", "title": "Fixtures re-rendered", "stage": "Evidence", "est": 2, "deps": ["110.2", "110.4", "110.5", "110.6"], "status": "done"},
-    {"id": "110.8", "title": "Campaign regrade", "stage": "Evidence", "est": 2, "deps": ["110.1", "110.3", "110.7"], "status": "done"},
-    {"id": "110.9", "title": "Fix-round rules", "stage": "Workflows", "est": 1, "deps": [], "status": "done"},
-    {"id": "110.10", "title": "Records, gates, review", "stage": "Closure", "est": 4, "deps": ["110.8", "110.9"], "status": "done"},
-    {"id": "110.11", "title": "Retro items", "stage": "Closure", "est": 2, "deps": ["110.10"], "status": "done"}
+    {"id": "111.2", "title": "The settings", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
+    {"id": "111.3", "title": "The actions", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
+    {"id": "111.4", "title": "The fingerprint", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
+    {"id": "111.5", "title": "The lockfile audit", "stage": "Checks", "est": 2, "deps": [], "status": "done"},
+    {"id": "111.6", "title": "Records", "stage": "Closure", "est": 2, "deps": ["111.2", "111.3", "111.4", "111.5"], "status": "done"},
+    {"id": "111.7", "title": "Gates and review", "stage": "Closure", "est": 3, "deps": ["111.6"], "status": "done"},
+    {"id": "111.8", "title": "Local settings sync", "stage": "Closure", "est": 1, "deps": ["111.9"], "status": "not-started"},
+    {"id": "111.9", "title": "Retro items", "stage": "Closure", "est": 2, "deps": ["111.7"], "status": "done"}
   ]
 }
 ```
@@ -358,35 +291,32 @@ and H7 run again after it, and a focused review covers I.
 **Plan chart.** Each bar starts when its last dependency ends and lasts its estimate; the axis counts estimate hours from the start, not dates.
 
 ```mermaid
-%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 233}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
+%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 250}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
 gantt
   accTitle: Plan chart
   accDescr: Each bar starts when its last dependency ends and lasts its estimate, the axis counts estimate hours from the start, not dates.
   dateFormat x
   axisFormat %Q
-  tickInterval 5millisecond
+  tickInterval 2millisecond
   todayMarker off
-  section Instruments
-    110.1 Scanner:done, crit, t110x1, 0, 3ms
-    110.3 Grader:done, t110x3, 0, 2ms
-    110.2 Lint and model:done, crit, t110x2, 3, 3ms
-    110.4 Lifeline gate:done, crit, t110x4, 6, 3ms
-    110.5 Renderer supply chain:done, crit, t110x5, 9, 4ms
-  section Workflows
-    110.6 Plan status:done, t110x6, 0, 3ms
-    110.9 Fix-round rules:done, t110x9, 0, 1ms
-  section Evidence
-    110.7 Fixtures re-rendered:done, crit, t110x7, 13, 2ms
-    110.8 Campaign regrade:done, crit, t110x8, 15, 2ms
+  section Checks
+    111.2 The settings:done, t111x2, 0, 1ms
+    111.3 The actions:done, t111x3, 0, 1ms
+    111.4 The fingerprint:done, t111x4, 0, 1ms
+    111.5 The lockfile audit:done, crit, t111x5, 0, 2ms
   section Closure
-    110.10 Records, gates, review:done, crit, t110x10, 17, 4ms
-    110.11 Retro items:done, crit, t110x11, 21, 2ms
+    111.6 Records:done, crit, t111x6, 2, 2ms
+    111.7 Gates and review:done, crit, t111x7, 4, 3ms
+    111.9 Retro items:done, crit, t111x9, 7, 2ms
+    111.8 Local settings sync:crit, t111x8, 9, 1ms
 ```
 
-Legend: green fill — done · red border — critical path.
+Legend: green fill — done · white fill — not started · red border — critical path.
 
-Ready to start: none.
+Ready to start — every dependency done:
 
-Critical path — 23 h by estimates, 8 of 8 tasks done, 0 h remaining: 110.1 → 110.2 → 110.4 → 110.5 → 110.7 → 110.8 → 110.10 → 110.11.
+- **111.8** Local settings sync — 1 h, critical path
+
+Critical path — 10 h by estimates, 4 of 5 tasks done, 1 h remaining: 111.5 → 111.6 → 111.7 → 111.9 → 111.8.
 
 <!-- generated:plan-gantt-end -->

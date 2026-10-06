@@ -78,12 +78,14 @@ explicit escalation path — never loop silently, never proceed past an undefine
      **once** (max 1); still FAIL → STOP and escalate the remaining findings to the user.
 
 3. **Security audit** — execute `.agent/workflows/security-audit.md` (alias: `/security-audit`).
-   - **Gate:** the automated scan exits clean AND the manual review (per the
-     `security-audit` skill §3 checklists) emits a severity-labelled findings table with
-     **no CRITICAL/HIGH findings**.
+   - **Gate:** the audit footer reads `audit_status: PASS`, the automated scan exits clean, AND
+     the manual review (per the `security-audit` skill §3 checklists) emits a severity-labelled
+     findings table with **no CRITICAL/HIGH findings**. An `INCOMPLETE` audit never meets it.
    - **A scan that did not run is not a scan that passed.** `scan_status: NOT_RUN` (equivalently a
-     `scan: NOT RUN (<reason>)` line) fails the first conjunct: the gate is **not met**, the verdict
-     is `INCOMPLETE`, and the reason is escalated to the user. Left unstated, `NOT RUN` is neither
+     `scan: NOT RUN (<reason>)` line) fails the scan conjunct: the gate is **not met** and the
+     verdict is `INCOMPLETE`, or `FAIL` when the manual review found a CRITICAL or HIGH issue. The
+     missing part is re-run once; if it still does not complete, the
+     reason is escalated to the user (`security-audit` §6.2). Left unstated, `NOT RUN` is neither
      clean nor unclean and the undefined branch resolves in practice to "the other conjunct passed".
    - **Bounded remediation:** the sub-workflow's "fix → re-run audit until clean" loop is
      re-scoped HERE at the caller: "clean" = the gate above (no CRITICAL/HIGH) — MEDIUM/LOW

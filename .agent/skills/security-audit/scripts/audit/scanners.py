@@ -19,7 +19,13 @@ from .config import (
     SEVERITY_ORDER,
     SKIP_DIRS,
 )
-from .helpers import is_self_path, shannon_entropy, sort_findings_by_severity
+from .helpers import (
+    find_npm_lockfiles,
+    is_self_path,
+    npm_audit_dir,
+    shannon_entropy,
+    sort_findings_by_severity,
+)
 from .patterns import (
     CONFIG_PATTERNS,
     DANGEROUS_PATTERNS,
@@ -27,6 +33,70 @@ from .patterns import (
     MCP_AGENTIC_PATTERNS,
     SECRET_PATTERNS,
 )
+
+
+#: Seconds one `npm audit` may run before its lockfile is reported as not audited (TASK 111 R5.2).
+NPM_AUDIT_TIMEOUT = 60
+
+
+def _npm_audit(lockfile: Path, project_path: str) -> list:
+    """The findings of `npm audit` for one lockfile (TASK 111 R5.2, R5.3, R5.6).
+
+    `--package-lock-only` reads the lockfile without `node_modules`, in a temporary copy of the
+    lockfile and its `package.json`. An audit that does not finish yields an `info` finding naming
+    the lockfile and the reason, never a silent pass.
+    """
+    rel = os.path.relpath(lockfile, project_path).replace(os.sep, "/")
+    with npm_audit_dir(lockfile) as workdir:
+        if workdir is None:
+            return [_not_audited(rel, "no package.json beside it")]
+        try:
+            result = subprocess.run(
+                ["npm", "audit", "--json", "--package-lock-only"],
+                cwd=workdir, capture_output=True, text=True, timeout=NPM_AUDIT_TIMEOUT,
+            )
+        except FileNotFoundError:
+            return [_not_audited(rel, "npm is not installed")]
+        except subprocess.TimeoutExpired:
+            return [_not_audited(rel, f"npm audit ran past {NPM_AUDIT_TIMEOUT} s")]
+    try:
+        audit_data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return [_not_audited(rel, "npm audit printed no JSON")]
+    if not isinstance(audit_data, dict):
+        return [_not_audited(rel, "npm audit printed no JSON object")]
+    if "error" in audit_data:
+        error = audit_data["error"]
+        detail = (error.get("code") if isinstance(error, dict) else None) or audit_data.get("message")
+        return [_not_audited(rel, f"npm audit reported an error ({str(detail or 'no detail')[:120]})")]
+    vulnerabilities = audit_data.get("vulnerabilities")
+    if vulnerabilities is not None and not isinstance(vulnerabilities, dict):
+        return [_not_audited(rel, "npm audit printed no vulnerability map")]
+    return _npm_audit_findings(audit_data, rel)
+
+
+def _not_audited(rel: str, reason: str) -> dict:
+    return {
+        "type": "npm audit",
+        "severity": "info",
+        "cwe": "CWE-1104",
+        "message": f"{rel}: not audited, {reason}",
+    }
+
+
+def _npm_audit_findings(audit_data: dict, rel: str) -> list:
+    """One finding per severity, critical and high, of a finished `npm audit`."""
+    severity_count = {"critical": 0, "high": 0}
+    for vuln in (audit_data.get("vulnerabilities") or {}).values():
+        sev = str(vuln.get("severity", "low")).lower() if isinstance(vuln, dict) else "low"
+        if sev in severity_count:
+            severity_count[sev] += 1
+    return [{
+        "type": "npm audit",
+        "severity": sev,
+        "cwe": "CWE-1104",
+        "message": f"{rel}: {count} {sev} vulnerabilities in dependencies",
+    } for sev, count in severity_count.items() if count]
 
 
 def scan_dependencies(project_path: str) -> Dict[str, Any]:
@@ -85,42 +155,16 @@ def scan_dependencies(project_path: str) -> Dict[str, Any]:
                 "message": f"{eco}: No lock file found (expected one of: {', '.join(spec['locks'])}). Supply chain integrity at risk."
             })
 
-    # Run npm audit if applicable
-    if (Path(project_path) / "package.json").exists():
-        try:
-            result = subprocess.run(
-                ["npm", "audit", "--json"],
-                cwd=project_path,
-                capture_output=True, text=True, timeout=60
-            )
-            try:
-                audit_data = json.loads(result.stdout)
-                vulnerabilities = audit_data.get("vulnerabilities", {})
-                severity_count = {"critical": 0, "high": 0}
-                for vuln in vulnerabilities.values():
-                    sev = vuln.get("severity", "low").lower()
-                    if sev in severity_count:
-                        severity_count[sev] += 1
-
-                if severity_count["critical"] > 0:
-                    results["status"] = "[!!] Critical vulnerabilities"
-                    results["findings"].append({
-                        "type": "npm audit",
-                        "severity": "critical",
-                        "cwe": "CWE-1104",
-                        "message": f"{severity_count['critical']} critical vulnerabilities in dependencies"
-                    })
-                elif severity_count["high"] > 0:
-                    results["findings"].append({
-                        "type": "npm audit",
-                        "severity": "high",
-                        "cwe": "CWE-1104",
-                        "message": f"{severity_count['high']} high vulnerabilities in dependencies"
-                    })
-            except json.JSONDecodeError:
-                pass
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+    # npm audit, once per lockfile directory (TASK 111 R5). The audit used to run at the root only,
+    # and a failed run produced no finding, so an offline scan read as a clean one.
+    not_audited = 0
+    for lockfile in find_npm_lockfiles(project_path):
+        found = _npm_audit(lockfile, project_path)
+        not_audited += sum(1 for f in found if f["severity"] == "info")
+        results["findings"].extend(found)
+    if not_audited:
+        # A critical or high finding below still sets its own status (TASK 111 R5.7).
+        results["status"] = f"[?] Not audited: {not_audited} npm lockfile(s)"
 
     if results["findings"]:
         max_sev = min(SEVERITY_ORDER.get(f.get("severity", "low"), 99) for f in results["findings"])

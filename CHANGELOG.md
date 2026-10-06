@@ -16,6 +16,66 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.36.0 — checks that cover what they claim: a framework-only allow list, pinned actions, a full fingerprint, every lockfile (WI-31)**
+
+WI-31 named four checks whose coverage was narrower than their claim (TASK 111).
+
+#### Changed
+
+- **The committed `.claude/settings.json` holds framework permissions only.** A Bash allow rule
+  matches command text only, so `Bash(python3 .agent/tools/task_id_tool.py *)` also approved that
+  path in a nested checkout. 33 personal or one-off rules and 2 home-path directories left the
+  file, among them `Bash(python3 -)` and `Bash(git push *)`. The installer copies this file into new
+  projects. Each rule now names its command whole: `X` and `X *` replace `X*`, which also admitted
+  `git difftool` and `npx jest-cli`. `Bash(find *)` left, since `find -exec` runs any program. The
+  wildcard forms of `git log`, `git diff`, `git show`, `git branch`, `git tag`, `git remote` and
+  `tree` left too: they also approved `--output`, `-o` and writes to refs. Claude Code approves the
+  read forms of `git` on its own. The test runners keep their bare forms only, since their options
+  can run a program or delete a directory; a run with arguments asks in Manual mode, and
+  `npx jest` left. The `mv` and `mkdir` rules name their directories, and `.gitignore` lists
+  `.claude/settings.local.json`. A PreToolUse hook that would make a relative-path rule ask inside
+  a nested checkout was tried and deferred to WI-34, because its command model kept parting from
+  the shell.
+- **CI actions are pinned to commits.** The 13 `uses:` lines name the commit of v4.4.0, v5.6.0
+  and v4.4.0, the releases their tags pointed at. Checkout keeps no credentials.
+  `.github/dependabot.yml` proposes updates monthly, after a 7-day cooldown.
+- **The review-round fingerprint covers untracked content** (`skill-parallel-orchestration`
+  §2.4.1). The formula adds the sha256 of each untracked file and `--binary --no-ext-diff
+  --no-textconv`. `vdd-multi` and the security-auditor wrapper quote it.
+- **The dependency scan audits every npm lockfile.** `security-audit` ran `npm audit` at the root
+  only. It now runs `npm audit --package-lock-only` for each lockfile, in a temporary copy of the
+  lockfile and its `package.json`, so a vendored `.npmrc` takes no part. An audit that does not
+  finish is an `info` finding, and the section status says how many lockfiles were not audited.
+- **A change that alters what runs is registered last** (`framework-upgrade` §3 step 4). A hook, a
+  permission rule or another such key takes effect in the running session at once. The TASK states
+  the registration, both reviews check it, the run's last edit after §4.5 makes it, and a focused
+  review checks that diff. A failed gate or review takes it out again. A change that only narrows
+  may land at once, after a recorded check.
+- **A security review that cannot finish is never `PASS`** (`security-audit` §6.2). §6.2 defines
+  `PASS`, `FAIL` and `INCOMPLETE`. Each part of an audit, the scan or the adversarial review, is
+  re-run once; then the operator decides. A control
+  whose bypass hunt never finished ships as no protection. `full-robust` §3 now gates on
+  `audit_status: PASS`.
+- **Versions:** `security-audit` 3.10 (its scripts' `__version__` too), `skill-parallel-orchestration`
+  3.11, `skill-safe-commands` 1.3.
+- **WI-31 closed;** WI-35 filed for the safe-command patterns that still admit a write or a
+  program.
+
+#### Migration
+
+- **In this repository**, the operator's personal permissions moved to their
+  `.claude/settings.local.json`, after the commit.
+- **In a project installed before v3.36.0**, the copied `settings.json` is not replaced. Update it
+  by hand:
+  - the narrowed framework rules of this release in place of their `X*` forms, with no
+    `Bash(find *)` and no wildcard form of `git log`, `git diff`, `git show`, `git branch`,
+    `git tag`, `git remote` or `tree`, and test runners with no wildcard and no `npx jest`;
+  - if the file came from an install on or after 2026-05-07, remove the personal rules:
+    - paths under another user's home, and `permissions.additionalDirectories`;
+    - `Bash(python3 -)`, `Bash(python3 -c …)`, `Bash(gh run *)`;
+    - `Bash(git add *)`, `Bash(git push *)`, `Bash(git restore *)`;
+    - one-off `sed -n`, `cp`, `md5`, `mkdir -p t064-*`, `rm -rf` and single-test-run rules.
+
 ### **v3.35.0 — figure-instrument follow-ups, a pinned renderer supply chain, plan status and fix-round rules (WI-32, WI-30, WI-22, WI-27)**
 
 Four work-items left open by TASK 108 are taken in one run (TASK 110).

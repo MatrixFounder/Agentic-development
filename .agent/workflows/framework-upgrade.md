@@ -87,11 +87,63 @@ therefore taken here, before §1. Git holds every state this run can return to.
    - No path outside this repository is edited during the run. A mirror is synced after the
      operator's commit.
    - No copy of any file is written outside version control. The run's own state under
-     `.agent/sessions/` and `.agent/feedback/` is ignored by design and is not rolled back.
+     `.agent/sessions/` and `.agent/feedback/` is ignored by design and is not rolled back. A test
+     fixture that the test itself creates in a temporary directory and removes is no such copy
+     (step 4).
 2. **Implement**: Execute `08_developer_prompt.md` with `skill-self-improvement-verificator` active.
 3. **Verify**:
    - Run affected tests.
    - Run `skill-spec-validator` (if modified).
+4. **Hooks and permission rules take effect at once.** Claude Code applies a settings file to the
+   running session as soon as it changes, the reviewers' commands included. The step covers every
+   change that alters what runs, or what runs without a prompt. The list is not exhaustive:
+   - a hook in a settings file, or in the frontmatter of an agent or a skill;
+   - the script of a registered hook, or code that script calls;
+   - a permission rule, `additionalDirectories` or the permission mode, an agent's
+     `permissionMode` and the `allowed-tools` of a skill or a command among them;
+   - a settings key that names a command, such as `statusLine`, or sets a command's environment,
+     `env`;
+   - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
+
+   A change that only narrows what runs without a prompt, such as a removed allow rule, may land
+   at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
+   it narrows, and the audit records the check's output:
+   - a base entry of the same list covers each new allow rule, `additionalDirectories` entry and
+     `allowed-tools` entry;
+   - each base deny or ask rule and `disallowedTools` entry is still present, or a new entry of the
+     same list covers it;
+   - every other key equals the base's;
+   - no file that a registered hook, a `statusLine` command or an MCP server runs changes.
+
+   The run registers nothing in `.claude/settings.local.json` or the user's settings; an edit
+   there waits for the operator's commit and their go-ahead.
+
+   Every other change runs in four stages.
+   1. **Fixture.** The TASK states the exact registration: the event, matcher and command of a
+      hook, or the text of a rule or key. A hook's test builds a temporary root with its own
+      `.claude/settings.json` holding that registration, and removes it. Code that a registered
+      hook runs is edited under a new name.
+   2. **Reviews.** The code review and the security audit check the code and the registration.
+      Both must pass. An `INCOMPLETE` audit blocks the registration until the operator decides
+      under `security-audit` §6.2.
+   3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
+      into its file, or the new code over the code it replaces, and removes the copy under the new
+      name. Only the retro's records follow this edit. The same edit adds a settings test that
+      pins the registration, and the gates run again.
+   4. **Focused review.** A code reviewer and a security auditor check the registration diff on
+      the new fingerprint.
+
+   **Failure.** If the gates of stage 3 fail, or the focused review does not pass, the run
+   restores the registered files at once to their text before stage 3's edit. The restore brings
+   back the copy under the new name, if there is one, and the audit records the stage-3 diff.
+   - After an `INCOMPLETE` audit, `security-audit` §6.2 governs the re-run, which reads that
+     recorded diff. If the re-run passes, stage 3 applies the same diff again, and stage 4 checks
+     it on the new fingerprint.
+   - After a failed gate, a rejected code review or a `FAIL`, the operator decides what follows. A
+     registration, or the code it runs, whose text changes returns to stage 1.
+
+   **Why.** TASK 111 registered a PreToolUse hook while building it, and the hook asked for
+   approval on the orchestrator's and the reviewers' own commands in Auto mode.
 
 ## 4. Documentation & Finalization
 1. **Docs**: Update `System/Docs/` to match new reality.

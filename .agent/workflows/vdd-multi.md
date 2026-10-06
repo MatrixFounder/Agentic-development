@@ -112,7 +112,7 @@ vdd-multi
 2. **Security scan**: run `python3 .agent/skills/security-audit/scripts/run_audit.py <scope> --output summary` (or `json`) and capture the summary. If not run, record `scan: NOT RUN (<reason>)`.
 3. **Tree fingerprint**: capture a value over the reviewed files and put it in the block
    (`skill-parallel-orchestration` §2.4.1). In a git repository:
-   `{ git rev-parse HEAD; git status --porcelain; git diff HEAD; } | shasum -a 256 | cut -c1-12`.
+   `{ git rev-parse HEAD; git status --porcelain; git diff HEAD --binary --no-ext-diff --no-textconv; git ls-files --others --exclude-standard -z | xargs -0 -r shasum -a 256; } | shasum -a 256 | cut -c1-12`.
 
 **Step 1.0b — freeze the tree for the round.** From the spawn until the last critic returns, write
 nothing to the reviewed files: no fix, no mutation run for evidence, no reformat. Recompute the

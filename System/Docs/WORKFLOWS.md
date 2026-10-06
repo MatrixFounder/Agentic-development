@@ -95,7 +95,7 @@ The workflows are organized into three categories:
 | **Plan Impl** | Planning Phase only (creates PLAN). | `run 02-plan-implementation` |
 | **Develop Task** | Executes a **single** task from the plan (No loop) and sets its status (`skill-planning-format` §2.2). | `run 03-develop-single-task` |
 | **Update Docs** | Updates documentation artifacts. | `run 04-update-docs` |
-| **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max 3 iterations** when invoked directly; `full-robust` §3 re-scopes both the cap and the definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, never clean. | `run security-audit` |
+| **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max 3 iterations** when invoked directly; `full-robust` §3 re-scopes both the cap and the definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, or `FAIL` when the manual review found a CRITICAL or HIGH issue, never clean (`security-audit` §6.2). | `run security-audit` |
 | **Light Start** | Light Mode Analysis Phase only (creates TASK with `[LIGHT]` tag). | `run light-01-start-feature` |
 | **Light Develop** | Light Mode Dev → Review loop (skips Plan). | `run light-02-develop-task` |
 

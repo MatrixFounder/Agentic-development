@@ -47,7 +47,10 @@ PYTHONPATH=. pytest -p no:cacheprovider tests/test_product_handoff_scripts.py -q
 
 ## 5. Release Package
 
-1. Ensure `.github/workflows/framework-gates.yml` is up to date.
+1. Ensure `.github/workflows/framework-gates.yml` is up to date. Each `uses:` names an action by
+   commit, followed by its release tag in a comment. A pin changes through the pull request
+   that `.github/dependabot.yml` opens monthly, or by hand: take the commit that the release
+   tag points at, and write both.
 2. Update backlog status in the current release/iteration backlog file under `Backlog/` (do not hardcode a dated filename).
 3. Tag the release in VCS and publish notes.
 4. Announce breaking changes and migration steps.

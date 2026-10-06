@@ -26,7 +26,7 @@ Your default file-discovery commands (`find`, `ls`, `rg`, `fd`) do **NOT** desce
 - Direct reads — `cat`, `sed`, `head`, `tail`, `read_file` — follow symlinks automatically; no flag needed.
 - **Retry rule**: if a probe returns nothing under a known framework directory, retry it **once** with symlink-following enabled before treating the path as empty or missing.
 
-These symlink-aware variants are registered as auto-runnable read-only commands — see `skill-safe-commands`.
+`ls -L`, `rg --follow` and `fd -L` are registered as auto-runnable read-only commands. `find -L` asks for approval, because `find -exec` runs a program — see `skill-safe-commands`.
 
 ## SESSION RESTORATION (BOOTSTRAP)
 **ON SESSION START**:
@@ -51,7 +51,7 @@ Use your harness's **built-in tools** — Cursor and Codex CLI both provide file
 
 ### Safe Commands (Auto-Run without Approval)
 > **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.
-> All commands listed in that skill (including `mv`, `ls`, `git`, tests) are `SafeToAutoRun: true`.
+> All commands listed in that skill (including `mv`, `ls`, the read forms of `git` and bare test runs) are `SafeToAutoRun: true`.
 > *(Note: detailed Regex patterns for IDE configuration are defined in the skill file)*
 
 ### Session State Persistence

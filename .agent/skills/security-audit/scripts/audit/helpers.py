@@ -2,10 +2,13 @@
 
 import math
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional
 
 from .config import (
     MCP_CONFIG_FILENAMES,
@@ -61,6 +64,47 @@ def shannon_entropy(s: str) -> float:
         return 0.0
     prob = [float(s.count(c)) / len(s) for c in set(s)]
     return -sum(p * math.log2(p) for p in prob if p > 0)
+
+
+#: npm lockfiles in the order npm reads them: `npm-shrinkwrap.json` wins over `package-lock.json`.
+NPM_LOCKFILES = ("npm-shrinkwrap.json", "package-lock.json")
+
+
+def find_npm_lockfiles(root_dir: str) -> List[Path]:
+    """One npm lockfile per directory under `root_dir` (TASK 111 R5.1).
+
+    The audit of a lockfile below the root was missing: `npm audit` ran at the root only. Skips the
+    directories of `SKIP_DIRS`, `node_modules` among them, and follows no symbolic link, to a
+    directory or to a lockfile. A directory holding both lockfiles yields `npm-shrinkwrap.json`.
+    """
+    found = []
+    for root, dirs, files in os.walk(root_dir, followlinks=False):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+        for name in NPM_LOCKFILES:
+            path = Path(root) / name
+            if name in files and not path.is_symlink():
+                found.append(path)
+                break
+    return found
+
+
+@contextmanager
+def npm_audit_dir(lockfile: Path) -> Iterator[Optional[Path]]:
+    """A temporary directory holding copies of `lockfile` and its `package.json` (TASK 111 R5.2).
+
+    npm reads `.npmrc` from the directory it runs in, and an audited subdirectory may be vendored
+    code: its `.npmrc` could redirect the registry or the cache. A copy leaves it behind; the
+    operator's own npm configuration still applies. Yields `None` when no regular `package.json`
+    stands beside the lockfile (R5.6): npm would then audit an ancestor's project instead.
+    """
+    package = lockfile.parent / "package.json"
+    if not package.is_file() or package.is_symlink():
+        yield None
+        return
+    with tempfile.TemporaryDirectory(prefix="npm-audit-") as tmp:
+        shutil.copyfile(lockfile, Path(tmp) / lockfile.name)
+        shutil.copyfile(package, Path(tmp) / "package.json")
+        yield Path(tmp)
 
 
 def detect_project_types(root_dir: str) -> List[str]:

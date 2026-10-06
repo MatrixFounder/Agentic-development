@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.10
+version: 3.11
 ---
 
 # Parallel Orchestration Skill
@@ -135,18 +135,29 @@ verdict on a tree that was never committed.
 **Scope of "under review".** The files the round was pointed at, plus any file the roles were told
 to read. The caller's own output is outside it — the round's report, the session file, a findings
 file. Without that bound the rule forbids the caller from recording anything while a round runs.
+While a round runs, the caller writes that output outside the work tree or to an ignored path:
+the formula below hashes the content of every untracked file, so an untracked report moves the
+value.
 
 **The fingerprint is a property, not a command.** Any value that changes when an artifact under
 review changes. In a git repository:
 
 ```sh
-{ git rev-parse HEAD; git status --porcelain; git diff HEAD; } | shasum -a 256 | cut -c1-12
+{ git rev-parse HEAD; git status --porcelain; git diff HEAD --binary --no-ext-diff --no-textconv; git ls-files --others --exclude-standard -z | xargs -0 -r shasum -a 256; } | shasum -a 256 | cut -c1-12
 ```
 
-That covers the commit, the porcelain listing and the tracked diff. An untracked file moves the
-value by appearing or disappearing, **not** by having its contents edited; say so beside the value
-when a round depends on untracked content. Outside a repository, any equivalent works — a hash over
-the file list and the file contents.
+Run it at the top level of the work tree. It covers the commit, the porcelain listing, the tracked
+diff with binary content, and the content of every untracked file that is not ignored.
+`--no-ext-diff --no-textconv` keep a user's diff driver out of the value. It does not cover ignored
+files or the content of a nested repository, which the listing shows as one directory. Nor does it
+see these edits:
+
+- the target of an untracked symbolic link that points nowhere, or an untracked file it cannot read;
+- a mode change of an untracked file;
+- an edit to `.git/info/exclude` or a global excludes file, which moves a file out of coverage;
+- an edit inside a submodule after its first change.
+
+Outside a repository, any equivalent works — a hash over the file list and the file contents.
 
 The line goes in the same block as `Tests:` and `Scan:`:
 
@@ -331,6 +342,11 @@ All universal concepts (§2–§6) — including merge rules and the evidence co
 
 ## 9. History
 
+- **v3.11 (2026-10-05)**: **the §2.4.1 fingerprint covers untracked content** (TASK 111, WI-31).
+  The formula adds the sha256 of each untracked, not ignored file, and `--binary --no-ext-diff
+  --no-textconv` to the diff. An edit inside an untracked file moved no value before, and a round
+  that reviewed untracked files ran under two recipes. The caller writes its own output outside
+  the work tree or to an ignored path while a round runs.
 - **v3.10 (2026-09-10)**: **§2.4.1 gains the second author of a mismatch** (WI-9,
   vpn-distribution-system 001.24). The subsection named only the caller's write, so the repair it
   prescribed — re-take the findings against the frozen artifacts — did not fit the other case: a

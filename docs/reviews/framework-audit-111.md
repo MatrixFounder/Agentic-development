@@ -579,3 +579,18 @@ verdict, so they go to WI-35 without another fix round.
   rules 4.
 - The operator commits. R2.3 appends the 33 personal rules and 2 directories to the operator's
   `.claude/settings.local.json` after the commit, on the operator's go-ahead.
+
+## Addendum: H1, after the operator's commit
+
+The operator committed the change as `3af40e8` and gave the go-ahead to move all 33 personal rules
+and both directories (R2.3, D1).
+
+- **Moved:** 33 of 33 rules and 2 of 2 directories into `.claude/settings.local.json`, which git
+  ignores. None was there before, so each was added.
+- **Positions in the base allow list:** 42 to 45, 47, 48, 51 to 70, 74 to 80.
+- **`additionalDirectories`:** H1 created the key.
+- **Not moved:** `find *`, `tree *` and `npx jest*`. They left the committed file for safety
+  (R2.6, D13, D14), not as personal rules.
+- **Undo:** remove the allow entries taken from those base positions and the
+  `additionalDirectories` key. The local file's 17 earlier rules stay.
+

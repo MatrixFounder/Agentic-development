@@ -206,8 +206,8 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
       R6 stay. R2's narrowing of the committed allow list carries its own review record.
 - [x] G3 `check_positional_refs.py --targets-changed --fix` (§4.5), then G1 again.
 - [x] G4 `git status` against the declared paths.
-- [ ] G4.1 The operator commits.
-- [ ] G5 Tell the operator to restart the session (`framework-upgrade` §4.3):
+- [x] G4.1 The operator commits (`3af40e8`).
+- [x] G5 Tell the operator to restart the session (`framework-upgrade` §4.3):
       `skill-safe-commands` is a TIER 0 skill, and it loads at session start.
 
 ## Cluster I — retro items (TASK R7, D12)
@@ -238,7 +238,7 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
 
 ## Cluster H — after the commit (R2.3)
 
-- [ ] H1 With the operator's go-ahead: append the 33 rules and 2 directories of the base file to
+- [x] H1 With the operator's go-ahead: append the 33 rules and 2 directories of the base file to
       `.claude/settings.local.json`, without duplicates. An audit addendum, committed by the
       operator, records the counts (33 rules, 2 directories, the number added). It also records
       the positions in the base list of the entries H1 added, and whether H1 created the
@@ -280,7 +280,7 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
     {"id": "111.5", "title": "The lockfile audit", "stage": "Checks", "est": 2, "deps": [], "status": "done"},
     {"id": "111.6", "title": "Records", "stage": "Closure", "est": 2, "deps": ["111.2", "111.3", "111.4", "111.5"], "status": "done"},
     {"id": "111.7", "title": "Gates and review", "stage": "Closure", "est": 3, "deps": ["111.6"], "status": "done"},
-    {"id": "111.8", "title": "Local settings sync", "stage": "Closure", "est": 1, "deps": ["111.9"], "status": "not-started"},
+    {"id": "111.8", "title": "Local settings sync", "stage": "Closure", "est": 1, "deps": ["111.9"], "status": "done"},
     {"id": "111.9", "title": "Retro items", "stage": "Closure", "est": 2, "deps": ["111.7"], "status": "done"}
   ]
 }
@@ -308,15 +308,13 @@ gantt
     111.6 Records:done, crit, t111x6, 2, 2ms
     111.7 Gates and review:done, crit, t111x7, 4, 3ms
     111.9 Retro items:done, crit, t111x9, 7, 2ms
-    111.8 Local settings sync:crit, t111x8, 9, 1ms
+    111.8 Local settings sync:done, crit, t111x8, 9, 1ms
 ```
 
-Legend: green fill — done · white fill — not started · red border — critical path.
+Legend: green fill — done · red border — critical path.
 
-Ready to start — every dependency done:
+Ready to start: none.
 
-- **111.8** Local settings sync — 1 h, critical path
-
-Critical path — 10 h by estimates, 4 of 5 tasks done, 1 h remaining: 111.5 → 111.6 → 111.7 → 111.9 → 111.8.
+Critical path — 10 h by estimates, 5 of 5 tasks done, 0 h remaining: 111.5 → 111.6 → 111.7 → 111.9 → 111.8.
 
 <!-- generated:plan-gantt-end -->

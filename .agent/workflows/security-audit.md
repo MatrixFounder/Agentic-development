@@ -33,16 +33,16 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
    - **If you cannot execute it** (no execution tool in your role, or the environment refuses):
      record `scan_status: NOT_RUN (<reason>)`, continue to step 3, and carry that status into the
      report. **Never invent the output** (`security-audit` §1). `NOT_RUN` makes the audit
-     `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH issue, never `PASS` — step 4's "until clean" loop cannot be satisfied by a scan that
-     never ran.
+     `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH issue, never `PASS` — step 4's
+     "until clean" loop cannot be satisfied by a scan that never ran.
 
 3. **Manual Adversarial Review ("Think Like a Hacker")**
    - Refer to `.agent/skills/security-audit/SKILL.md` Section 3.
    - Verify against specific checklists (Solidity, Rust, OWASP).
    - Challenge assumptions (Input Validation, AuthZ, Secrets).
-   - A review that does not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue:
-     name the part. The orchestrator re-runs it once, then the operator decides (`security-audit`
-     §6.2).
+   - A review that does not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a part
+     found a CRITICAL or HIGH issue: name the part. The orchestrator re-runs it once, then the
+     operator decides (`security-audit` §6.2).
 
 4. **Remediation & Reporting**
    - If findings exist:

@@ -2,7 +2,7 @@
 name: artifact-management
 description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, PLAN.md, ARCHITECTURE.md, KNOWN_ISSUES.md, BACKLOG.md)."
 tier: 0
-version: 1.4
+version: 1.5
 ---
 # Artifact Management
 
@@ -71,7 +71,9 @@ See `skill-archive-task` for:
 
 > See **`skill-safe-commands`** for the complete list of commands safe for auto-execution.
 
-Key commands: `mv docs/TASK.md docs/tasks/...`, `mv docs/PLAN.md docs/plans/...`, `ls`, `cat` — read-only validation.
+Key commands: `python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/...` and
+`python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/...` (the archive script); `ls`,
+`cat` — read-only validation.
 
 ## Protocol
 1. **Read First:** Before starting work, read relevant artifacts.

@@ -69,7 +69,9 @@ findings under these headings, spelled exactly as written:
 2.  **Findings:** Detailed list with CVE/CWE refs.
 3.  **Remediation:** Specific fix instructions.
 4.  **Dependency findings:** a vulnerability in a dependency that no public advisory describes yet follows `security-audit` §6.1. The report names the dependency, the versions, a severity, the mitigation and the status, and no CWE; the exploit scenario goes to the operator's draft outside the repository.
-5.  **Unfinished parts:** a scan or an adversarial review that did not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue, and the summary names it (`security-audit` §6.2).
+5.  **Unfinished parts:** a scan or an adversarial review that did not run to completion makes the
+    audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue, and the summary names
+    it (`security-audit` §6.2).
 
 ### Step 4: Output Generation
 **Return Format (JSON):**

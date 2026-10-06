@@ -118,6 +118,9 @@ CURATED_UNITTEST_MODULES = (
     "test_lockfile_audit",
     # TASK 111 retro (R7) — a hook is registered last; an unfinished review is INCOMPLETE.
     "test_run_safety_rules",
+    # TASK 112 — the archive script and the guards of the scripts that allow rules run (WI-35).
+    "test_archive_move",
+    "test_script_guards",
 )
 
 

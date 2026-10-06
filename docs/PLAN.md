@@ -1,97 +1,140 @@
-# PLAN 111 — Checks that cover what they claim: a framework-only allow list, pinned actions, a full fingerprint, every lockfile
+# PLAN 112 — Safe commands that admit no write: an archive script and closed patterns
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 14) · **Covers:** R2–R7 · **Acceptance:** A1, A3–A9.
+**TASK:** [docs/TASK.md](TASK.md) (revision 4) · **Covers:** R1–R8 · **Acceptance:** A1–A8.
 
-**Revision:** 12. Fix round 8 applies review round 8. Fix round 7 applied review round 7. Fix round 6 applied review round 6. Fix round 5 applied review round 5, and B7 keeps the test runners' bare forms
-(TASK R2.7, D14). Fix round 4 applied the review of cluster I, and B6 dropped seven wildcard rules
-(TASK D13). Cluster I adds the retro items (TASK R7, D12). The hook cluster left after three
-review rounds; R1 moved to WI-34 (TASK D11).
-Plan audit rounds 1 and 2 applied (`docs/reviews/framework-audit-111.md`).
+**Revision:** 5. Plan audit rounds 1 to 3 applied; executed, all steps done (`docs/reviews/framework-audit-112.md`).
 
 ## Sequencing rule
 
-Eight clusters. In each code cluster the test module comes first. Its **base-fail** case fails on
-the base tree before the fix, and the audit records that run (TASK A1).
+Ten clusters. In each code cluster the test module comes first. Its **base-fail** case fails on
+the base tree before the fix, and the audit record holds that run (TASK A1).
 
-- B, C, D and E share no file with each other.
-- B edits `skill-safe-commands`, a TIER 0 skill, under the bypass recorded in the audit §0.
-- F runs after B to E; it edits versions and records only.
-- G runs every gate after F, then the review.
-- H runs after the operator's commit, never during the run (TASK R2.3, D5).
-- I runs after G; a focused review of I closes the run before the commit.
-- The hook cluster A was removed when R1 moved to WI-34 (TASK D11).
+- A, B, C, D and E share no file with each other.
+- C edits `skill-safe-commands`, a TIER 0 skill, under the bypass of audit §0.
+- C lands only edits that narrow: `Bash(file *)` and the `mkdir` wildcards leave, and so do the
+  patterns of R3.1, R3.2 and R3.4. Nothing names `archive_move.py` before H (TASK R1.7).
+- E2 rewrites `framework-upgrade` §3 step 4. From E2 on, the new text governs this run, G to I.
+- F edits versions and records only, after A to E.
+- G runs every gate, writes the stage-3 patch, and runs stage 2 of step 4.
+- H is stage 3: `git apply` of the reviewed patch, the last edit of the change. Only the retro's
+  records follow it.
+- I is stage 4: the focused review of the applied patch on the new fingerprint.
+- J tells the operator to restart the session (`framework-upgrade` §4.3).
 
 | Order | Cluster | Files | Covers |
 | :--- | :--- | :--- | :--- |
-| B | The settings | `tests/test_committed_settings.py`, `.claude/settings.json`, `.gitignore`, `skill-safe-commands`, the READMEs, `GEMINI.md`, `AGENTS.md` | R2.1, R2.2, R2.4–R2.7 |
-| C | The actions | `tests/test_ci_action_pins.py`, `framework-gates.yml`, `dependabot.yml`, `RELEASE_CHECKLIST.md` | R3 |
-| D | The fingerprint | `tests/test_tree_fingerprint.py`, §2.4.1, `vdd-multi.md`, the auditor wrapper | R4 |
-| E | The lockfile audit | `tests/test_lockfile_audit.py`, `helpers.py`, `scanners.py`, `external.py` | R5 |
-| F | Records | versions, `security-audit` `SKILL.md`, changelogs, ARCHITECTURE, WI-31 | R6 |
-| G | Gates and review | the audit | A7, A8 |
-| H | After the commit | the operator's `.claude/settings.local.json` | R2.3 |
-| I | Retro items | `framework-upgrade.md`, `security-audit` §6.2 and its pointers, a pin | R7 |
+| A | The archive script | `tests/test_archive_move.py`, `.agent/tools/archive_move.py` | R1.1–R1.4, R1.7 |
+| B | Script guards | `tests/test_script_guards.py`, the two `_next` copies, `.agent/tools/test_rebase_links.py` | R4.1–R4.3 |
+| C | Narrowed patterns and settings | `tests/test_committed_settings.py`, `.claude/settings.json`, `skill-safe-commands`, READMEs | R2.2–R2.4, R3, R6.1 |
+| D | Related checks | `tests/test_lockfile_audit.py`, `external.py`, `tests/test_tool_runner.py`, `tool_runner.py`, `schemas.py`, `ORCHESTRATOR.md` | R5.1, R5.3 |
+| E | Step 4 and wording | `tests/test_run_safety_rules.py`, `framework-upgrade.md`, `full-robust.md`, the auditor wrapper, wrapped files | R5.2, R6.3, R7 |
+| F | Records | `security-audit` 3.11, changelogs, ARCHITECTURE, ledger | R8.1–R8.3, R8.5, R8.6 |
+| G | Gates, patch, stage 2 | the audit record, the stage-3 patch | A1, A7, A8 |
+| H | Stage 3 | the files of the patch | R1.5–R1.7, R2.1, R4.3, R4.4, R6.2, R6.4, R6.5, R8.4 |
+| I | Stage 4 | the audit record | R2.1 |
+| J | Restart | the final message | `framework-upgrade` §4.3 |
+
+### Coverage
+
+| Use case | Steps |
+| :--- | :--- |
+| UC-1 archive | A1–A3, H |
+| UC-2 bad operand | A1, A3 |
+| UC-3 read command | C1, C3 |
+| UC-4 link rebase | B1–B5, H |
+| UC-5 audit | D1, D2 |
+
+| Requirement | Steps |
+| :--- | :--- |
+| R1.1–R1.4, R1.7 | A1–A3; the vendor entries of R1.7 in H |
+| R1.5, R1.6 | H (`skill-archive-task`, `artifact-management`) |
+| R2.1 | H; I1 |
+| R2.2–R2.4 | C2 |
+| R3.1–R3.5, R3.7 | C1, C3 |
+| R3.6 | C4; the archive entry in H |
+| R4.1–R4.3 | B1–B5; the copy-over in H |
+| R4.4, R6.4 | H (`tests/run_tests.py`) |
+| R5.1 | D1, D2 |
+| R5.2 | E1, E5 |
+| R5.3 | D3, D4, F3 |
+| R6.1 | C1 |
+| R6.2, R6.5 | G3, H |
+| R6.3 | E1 |
+| R7.1–R7.3 | E1–E4 |
+| R7.4 | E6, G1, H2 |
+| R8.1 | C3 (1.4), F1 (3.11), H (2.1, 1.5, 2.5, 1.3) |
+| R8.2, R8.3 | F2, F3 |
+| R8.4 | H |
+| R8.5, R8.6 | F4 |
 
 **Declared paths (A8, `framework-upgrade` §2.2).** Edited:
 
 - `.claude/settings.json`
-- `.gitignore`
-- `.github/workflows/framework-gates.yml`
 - `.agent/skills/skill-safe-commands/SKILL.md`
-- `.agent/skills/skill-parallel-orchestration/SKILL.md`
-- `.agent/workflows/vdd-multi.md`
-- `.claude/agents/security-auditor.md`
+- `.agent/skills/skill-archive-task/SKILL.md`
+- `.agent/skills/artifact-management/SKILL.md`
+- `.agent/skills/skill-creator/SKILL.md`
+- `.agent/skills/skill-creator/scripts/init_skill.py`
+- `.agent/skills/skill-phase-context/SKILL.md`
+- `.agent/tools/rebase_links.py`
+- `.agent/tools/test_rebase_links.py`
+- `.agent/tools/schemas.py`
 - `.agent/skills/security-audit/SKILL.md`
 - `.agent/skills/security-audit/scripts/run_audit.py`
 - `.agent/skills/security-audit/scripts/audit/__init__.py`
-- `.agent/skills/security-audit/scripts/audit/helpers.py`
-- `.agent/skills/security-audit/scripts/audit/scanners.py`
 - `.agent/skills/security-audit/scripts/audit/external.py`
+- `.agent/workflows/framework-upgrade.md`
+- `.agent/workflows/full-robust.md`
+- `.agent/workflows/security-audit.md`
+- `.claude/agents/security-auditor.md`
+- `System/Agents/10_security_auditor.md`
+- `System/scripts/tool_runner.py`
+- `System/Docs/ORCHESTRATOR.md`
 - `System/Docs/SKILLS.md`
-- `System/Docs/WORKFLOWS.md` (I)
 - `System/Docs/VDD.md`
-- `System/Docs/RELEASE_CHECKLIST.md`
+- `System/Docs/SKILL_TIERS.md`
 - `docs/ARCHITECTURE.md`
 - `README.md`
 - `README.ru.md`
-- `docs/backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md`
-- `docs/BACKLOG.md`
+- `AGENTS.md`
+- `GEMINI.md`
 - `CHANGELOG.md`
 - `CHANGELOG.ru.md`
+- `docs/BACKLOG.md`
+- `docs/backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md`
+- `tests/test_committed_settings.py`
+- `tests/test_run_safety_rules.py`
+- `tests/test_lockfile_audit.py`
+- `tests/test_tool_runner.py`
 - `tests/run_tests.py`
-- `.agent/workflows/framework-upgrade.md` (I)
-- `GEMINI.md` (B7)
-- `AGENTS.md` (B7)
-- `.agent/workflows/security-audit.md` (I)
-- `.agent/workflows/full-robust.md` (I)
-- `System/Agents/10_security_auditor.md` (I)
 
 Created:
 
-- `.github/dependabot.yml`
-- `docs/backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md`
-- `docs/backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md` (B6)
-- `tests/test_committed_settings.py`
-- `tests/test_ci_action_pins.py`
-- `tests/test_tree_fingerprint.py`
-- `tests/test_lockfile_audit.py`
-- `tests/test_run_safety_rules.py` (I)
+- `.agent/tools/archive_move.py`
+- `.agent/tools/rebase_links_next.py` (removed by the patch in H)
+- `.agent/skills/skill-creator/scripts/init_skill_next.py` (removed by the patch in H)
+- `tests/test_archive_move.py`
+- `tests/test_script_guards.py`
+- `docs/backlog/wi-36-command-substitution-inside-an-allow-approved-command.md`
+- `docs/backlog/wi-37-external-scanners-that-run-the-scanned-projects-code.md`
+- `docs/reviews/framework-audit-112-stage3.diff` (the stage-3 patch; §5 removes it, and the audit
+  record holds its text and SHA-256)
 
-The run's `docs/TASK.md`, `docs/PLAN.md`, the audit `docs/reviews/framework-audit-111.md` and the
-TASK 110 archive pair are declared by `framework-upgrade` §5. H edits
-`.claude/settings.local.json` after the commit; no declared path covers it, because §5 runs before
-the commit.
+The run's `docs/TASK.md`, `docs/PLAN.md`, the audit record `docs/reviews/framework-audit-112.md`
+and the TASK 111 archive pair are declared by `framework-upgrade` §5. A record the retro files is
+declared when the retro files it; §5 runs before the retro.
 
-**Rollback point.** Base `3a6e07ed53a3e8c25ea0c64a44708ee1b251cfa5`, clean at the start of the run.
-No file outside the repository is edited during the run. No ignored file is edited, except the run's
-own state under `.agent/sessions/` and `.agent/feedback/` (§3.1). Fallback follows
-`framework-upgrade` §5. H is undone as H1 states.
-
-**Writing during a round.** The caller computes the fingerprint after its last write to the audit,
-and writes nothing under the work tree until the round returns (TASK R4.3).
+**Rollback point.** Base `eb7248f8027e64cb10aaa20511a4f7b519151117`, clean at the start of the run.
+No file outside the repository is edited during the run. No ignored file is edited, except the
+run's own state under `.agent/sessions/` and `.agent/feedback/` (§3.1). Two helper scripts live in
+the scratchpad: the narrowing check of C2 and the patch generator of G2. Neither holds a copy of a
+repository file. The generator holds the new text of the patch's hunks and writes only the declared
+`.diff`. Fallback follows `framework-upgrade` §5. A test fixture lives in a
+temporary directory that the test creates and removes.
 
 **Tests.** Each new module is a `unittest.TestCase` module with no pytest fixture, because
-`CURATED_UNITTEST_MODULES` loads only those.
+`CURATED_UNITTEST_MODULES` loads only those. A script under test runs as a subprocess with `cwd`
+set to the `realpath` of a temporary root; TC-A11 and TC-A13 call `main(argv)` in-process.
 
 **Commands.**
 
@@ -100,171 +143,176 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
 - Gates: every step of `.github/workflows/framework-gates.yml`, run locally.
 - Register: `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py <file>` per edited
   markdown file, against its base text.
+- Declared paths: `git status --porcelain=v1 --untracked-files=all`, each path compared with the
+  lists above.
 
-## Cluster B — the settings (R2.1, R2.2, R2.4–R2.7)
+## Cluster A — the archive script (R1.1–R1.4, R1.7)
 
-- [x] B1 Test first: `tests/test_committed_settings.py` with TC-S1, TC-S3, TC-S4 and TC-S5. TC-S1
-      fails on the base tree.
-- [x] B2 `.claude/settings.json`: the allow list of Appendix A, no `additionalDirectories`, no
-      `PreToolUse` block. Key order, the `env` block and the base PostToolUse hook stay.
-- [x] B5 `skill-safe-commands` §Pattern Matching Rules: `find` dropped, the whole-command rule,
-      and the enforcement note deferring the hook to WI-34; version 1.3.
-- [x] B3 `.gitignore`: `.claude/settings.local.json`.
-- [x] B4 `tests/test_mermaid_wiring.py` TC-06 still passes: the lint and `plan_gantt.py --check`
-      rules stay.
-- [x] B6 Fix round 4 (TASK R2.7, D13): seven wildcard `git` and `tree` rules leave the settings
-      and Appendix A. TC-S3 forbids them, TC-S6 pins the hooks block, and TC-S7 pins the archive
-      commands. `skill-safe-commands` states the read forms; WI-35 is filed.
-- [x] B7 Fix round 5 (TASK R2.7, D14): six test-runner rules leave; TC-S6 pins the settings keys;
-      TC-S7 reads every shell block; TC-S8 pins `skill-safe-commands`, the READMEs' lists,
-      `GEMINI.md` and `AGENTS.md`. WI-35 gains the older classes of review round 5.
+- [x] A1 Test first: `tests/test_archive_move.py` with TC-A1 to TC-A13. TC-A1 fails on the base
+      tree: the script is absent.
+- [x] A2 Stub: `.agent/tools/archive_move.py` with `main(argv)`, the operand check of R1.1 and
+      exit 2 for every call. TC-A8 passes on the stub; the audit record holds the run.
+- [x] A3 Logic: the pair check; the descriptor-based directory and link checks of R1.3; the move
+      with its copy fallback and its undo on a failed unlink; the JSON output. TC-A1 to TC-A13
+      pass. `archive_move.py` is written at its final name (TASK R1.7).
 
-## Cluster C — the actions (R3)
+## Cluster B — script guards (R4.1–R4.3)
 
-- [x] C1 Test first: `tests/test_ci_action_pins.py` with TC-P1 to TC-P3; TC-P1 fails on the base.
-- [x] C2 `framework-gates.yml`: 13 `uses:` lines pinned to the commits of TASK §1 with their tags.
-- [x] C3 `.github/dependabot.yml`: `github-actions`, directory `/`, monthly.
-- [x] C4 `RELEASE_CHECKLIST.md` §5: how a pin changes.
+- [x] B1 Test first: `tests/test_script_guards.py` with TC-G1 to TC-G6. The module names each
+      script by a path constant. With the constants on `rebase_links.py` and `init_skill.py`, TC-G1
+      and TC-G4 fail on the base tree; the audit record holds that run.
+- [x] B2 `.agent/tools/rebase_links_next.py`: a copy of `rebase_links.py` with the guard of R4.1 in
+      `_main`, before any file is read. `rebase_file()` is unchanged.
+- [x] B3 `.agent/skills/skill-creator/scripts/init_skill_next.py`: a copy of `init_skill.py` with
+      the guard of R4.2 in `create_skill`, before any directory is made. `skill_utils.py` is not
+      edited: the registered hook's `validate_skill.py` imports it.
+- [x] B4 The constants point at the two `_next` copies; TC-G1 to TC-G6 pass.
+- [x] B5 `.agent/tools/test_rebase_links.py`: the CLI tests run with the temporary root as the
+      working directory. The module passes against `rebase_links.py`, and once more against
+      `rebase_links_next.py` loaded under the name `rebase_links`; the audit record holds both
+      runs.
 
-## Cluster D — the fingerprint (R4)
+## Cluster C — narrowed patterns and settings (R2.2–R2.4, R3, R6.1)
 
-- [x] D1 Test first: `tests/test_tree_fingerprint.py` with TC-F1 to TC-F5. It reads the first
-      `sh` block of §2.4.1 and runs it with `bash` in a temporary repository. Git runs with
-      `GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_NOSYSTEM=1` and an explicit author, so the
-      operator's signing or diff drivers do not apply. TC-F1 fails on the base formula.
-- [x] D2 §2.4.1: the formula of R4.1; the run location and coverage of R4.2; the caller-output
-      rule of R4.3; the excuse sentence of R4.5 removed. Version 3.11.
-- [x] D3 `vdd-multi.md` step 1.0 and `.claude/agents/security-auditor.md` quote the formula.
-      `tests/test_frozen_tree_contract.py`, which pins both files, still passes.
+- [x] C1 Test first: `tests/test_committed_settings.py`:
+  - TC-S8 gains the accept and reject cases of TASK §4.1, except the `archive_move.py` accept
+    case, which H adds;
+  - the whole pattern block, the whole table, the info-word sequences of R6.1, table and pattern
+    coverage, and the Antigravity list of R3.6 without its archive entry;
+  - `_shell_blocks` reads backtick and tilde fences with any info string;
+  - TC-S3 gains the command-name set of TASK TC-S3 plus `mv`, which the patch removes;
+  - `FRAMEWORK_ALLOW_RULES` loses `Bash(file *)` and the three `mkdir` wildcards, and gains the
+    three exact `mkdir` rules.
 
-## Cluster E — the lockfile audit (R5)
+  The new cases fail on the base skill and settings; the audit record holds the run.
+- [x] C2 Narrowing check, then `.claude/settings.json`: `Bash(file *)` leaves; three exact `mkdir`
+      rules replace the wildcards. A check script in the scratchpad prints the four results of
+      step 4 into the audit record:
+  - for each new allow rule, the base rule that covers it;
+  - each base `deny` and `ask` rule, and whether it is still present (the base has none);
+  - every other key compared with the base;
+  - no module that the hook's scripts import is added or changed: `validate_skill.py`,
+    `skill_utils.py` and the files of `.claude/hooks/` match the base, and no new file in
+    `skill-creator/scripts/` bears a name they import (`skill_utils` or a standard-library name).
+    `init_skill_next.py` is listed as present and imported by none.
+- [x] C3 `skill-safe-commands`: R3.1 to R3.5 and R3.7, except the archive pattern of R3.3 and the
+      archive row of R3.5, which the patch adds; the `mv` row and pattern leave; version 1.4.
+- [x] C4 The Antigravity list of R3.6, without `python3 .agent/tools/archive_move.py`, in the
+      skill, `README.md` and `README.ru.md`; the note on the matcher in the skill.
 
-- [x] E1 Test first: `tests/test_lockfile_audit.py`, a fake `npm` on `PATH`. TC-L1 to TC-L6 drive
-      `scan_dependencies`. The plan adds TC-L7 to TC-L10 for R5.4 and R5.5:
-      - TC-L7 — only `sub/package-lock.json`, types `[]`: `run_external_tools` runs
-        `npm audit --package-lock-only` in `sub/`;
-      - TC-L8 — no lockfile, types `["javascript"]`: `run_external_tools` runs no `npm audit`;
-      - TC-L9 — a root `yarn.lock`, types `["javascript"]`: `run_external_tools` runs
-        `yarn audit` at the root;
-      - TC-L10 — a root `package.json` without a lockfile: `scan_dependencies` reports the
-        missing lockfile and runs no `npm`.
+## Cluster D — related checks (R5.1, R5.3)
 
-      TC-L7 to TC-L9 replace `run_command` with a recorder, so no tool runs. TC-L5's timeout
-      case patches `subprocess.run` to raise `TimeoutExpired`; its `npm` absent case sets `PATH`
-      to an empty directory. TC-L1 and TC-L7 fail on the base tree.
-- [x] E2 `helpers.py`: `find_npm_lockfiles(root)`, one per directory, `SKIP_DIRS`, no links.
-- [x] E3 `scanners.py` `scan_dependencies`: one audit per listed directory, 60 s each, findings
-      naming the lockfile, `info` on an unfinished audit, no audit without a lockfile (R5.2,
-      R5.3, R5.5).
-- [x] E4 `external.py`: `npm audit --package-lock-only` per listed directory; no `npm audit`
-      without a lockfile; `yarn audit` as at the base (R5.4, R5.5).
-- [x] E5 `.agent/skills/security-audit/tests/test_smoke.py` still passes.
+- [x] D1 Test first: `tests/test_lockfile_audit.py` TC-Y1 to TC-Y3; TC-Y1 replaces TC-L9 and
+      TC-Y3 renames TC-L9b. TC-Y1 fails on the base.
+- [x] D2 `external.py`: `yarn audit` in a temporary copy of `yarn.lock` and `package.json`.
+- [x] D3 Test first: `tests/test_tool_runner.py` TC-T1 and TC-T2. TC-T1 fails on the base.
+- [x] D4 `tool_runner.py`: the command set of R5.3; the error text names it. `ORCHESTRATOR.md` and
+      the `run_tests` description of `schemas.py` list the same set.
 
-## Cluster F — records (R6)
+## Cluster E — step 4 and wording (R5.2, R6.3, R7)
 
-- [x] F1 The `security-audit` version 3.10 in the six places R6.1 lists; A3 and D2 set the
-      other two versions. `test_disclosure_rule.py` TC-04 passes.
-- [x] F2 `security-audit` `SKILL.md`: the npm audit of every lockfile (R6.2).
-- [x] F3 Both changelogs v3.36.0 with the two migration items (R6.3).
-- [x] F4 ARCHITECTURE (R6.4); the READMEs' Antigravity lists change in B7. This is the
-      architecture update of `framework-upgrade` §2.1: the committed settings narrow.
-- [x] F5 The five modules join `CURATED_UNITTEST_MODULES` (R6.6). The audit records each
-      module's test count from `PYTHONPATH=. python3 tests/run_tests.py -v`; a count of 0 fails
-      F5.
-- [x] F6 WI-31 `done` and its index line under `## Closed` (R6.5).
+- [x] E1 Test first: `tests/test_run_safety_rules.py`:
+  - step 4 runs to the end of §3;
+  - each pointer is the whole paragraph or list item that holds it;
+  - the new step 4, the new wrapper lead and the new `full-robust` gate (R5.2).
 
-## Cluster G — gates and review (A7, A8)
+  The step-4, pointer and gate cases fail on the base text.
+- [x] E2 `framework-upgrade.md` §3 step 4: R7.1.
+- [x] E3 `.claude/agents/security-auditor.md`: the bold lead of R7.2.
+- [x] E4 R7.3: the long prose lines of `security-audit/SKILL.md`, `security-audit.md` and
+      `10_security_auditor.md` wrapped at 100.
+- [x] E5 `full-robust.md` §3: the gate of R5.2.
+- [x] E6 R7.4: the audit record holds the SHA-256 of the TASK 111 archive pair as archived in §1.
 
-- [x] G1 Every gate of `framework-gates.yml`; `validate_skill.py` on the three edited skills;
-      `scan_register.py` on the edited markdown.
-- [x] G2 Review on a frozen tree: one code reviewer with the plain exhaustive prompt and one
-      security auditor (CLAUDE.md, Self-Improvement Mode). Both hold Bash; in rounds 1 to 3 the brief
-      asked each to run the hook on inputs of its own (TASK D7). A fix round reports its replay
-      (`developer-guidelines` §6.4).
-- [x] G2.1 Review round 1: code review REJECTED (3 BLOCKING), security audit FAIL (2 HIGH).
-- [x] G2.2 Fix round 1 on the closed list CR-1 to CR-12 and SEC-1 to SEC-13 (TASK D8):
-      - the hook, in revision 6 numbering: R1.5 to R1.9 and R1.12; tests on four roots,
-        TC-H27 to TC-H36; 20 mutants of
-        the hook, each killed;
-      - the settings: R2.6, Appendix A of 59 rules, TC-S5;
-      - the scanner: R5.2 to R5.7; TC-L11 to TC-L15; 14 mutants of the scanner, each killed;
-      - CI: no persisted checkout credentials, a Dependabot cooldown;
-      - §2.4.1 coverage gaps, `skill-safe-commands`, the changelogs and WI-31.
-- [x] G2.3 Review round 2 on the closed list, with the hook bypass hunt: code review REJECTED
-      (CR2-1 HIGH), security audit FAIL (SEC2-1 HIGH). No stored corpus applies to these
-      instruments (`developer-guidelines` §6.4).
-- [x] G2.4 Fix round 2 on the closed list CR2-1 to CR2-4 and SEC2-1 to SEC2-7 (TASK D9, D10):
-      - the hook recognises safe shapes (TASK R1 revision 7); 51 mutants, each killed;
-      - the scanner: a vulnerability field that is no map, TC-L16 to TC-L20; 21 mutants, each
-        killed;
-      - `skill-safe-commands` drops `find` for every vendor; the hook's descriptions follow R1.
-- [x] G2.5 Review round 3: code review REJECTED (CR3-3, CR3-4 HIGH, new bypasses of the
-      redesigned hook); security audit INCOMPLETE (its bypass hunt stopped). No stored corpus
-      applies (`developer-guidelines` §6.4).
-- [x] G2.6 The operator deferred the hook to WI-34 (TASK D11). Cluster A, `anchor_cwd.py` and its
-      test are removed; the `PreToolUse` block leaves `.claude/settings.json`; the reviewed R2 to
-      R6 stay. R2's narrowing of the committed allow list carries its own review record.
-- [x] G3 `check_positional_refs.py --targets-changed --fix` (§4.5), then G1 again.
-- [x] G4 `git status` against the declared paths.
-- [x] G4.1 The operator commits (`3af40e8`).
-- [x] G5 Tell the operator to restart the session (`framework-upgrade` §4.3):
-      `skill-safe-commands` is a TIER 0 skill, and it loads at session start.
+## Cluster F — records (R8.1–R8.3, R8.5, R8.6)
 
-## Cluster I — retro items (TASK R7, D12)
+- [x] F1 `security-audit` 3.11 in front matter, H1, `__init__.py`, `run_audit.py`, `SKILLS.md` and
+      `VDD.md`. The other versions of R8.1 move with their files in C3 and H.
+- [x] F2 `CHANGELOG.md` and `CHANGELOG.ru.md`: v3.37.0 with the two migration items of R8.2.
+- [x] F3 `docs/ARCHITECTURE.md`: R8.3, and the `run_tests` row of R5.3.
+- [x] F4 WI-35 `done`; WI-36 and WI-37 filed `open` per `known-issues-format`; index lines in
+      `docs/BACKLOG.md`.
 
-- [x] I1 `framework-upgrade` §3 step 4: a hook or an allow rule is built on a fixture root and
-      registered last (R7.1).
-- [x] I2 `security-audit` §6.2 and its pointers (R7.2).
-- [x] I3 `tests/test_run_safety_rules.py` pins both; it joins `CURATED_UNITTEST_MODULES` (A9).
-- [x] I4 Gates again; review round 4 of I: code review CHANGES REQUESTED (CRI-1 to CRI-9),
-      security audit FAIL (SECI-8 HIGH, in R2's settings).
-- [x] I5 Fix round 4 on the closed list CRI-1 to CRI-9 and SECI-1 to SECI-8 (TASK D13); 19 text
-      and settings mutants, each killed.
-- [x] I6 Gates again; review round 5: code review REJECTED (CR5-1 to CR5-21), security audit
-      FAIL (SECI5-1 HIGH, the test-runner rules).
-- [x] I7 Fix round 5 on the closed lists CR5-1 to CR5-21 and SECI5-1 to SECI5-12 (TASK D14).
-- [x] I8 Gates again; review round 6: code review REJECTED (CR6-1 MAJOR, 14 MINOR), security
-      audit PASS (SECI6-1 to SECI6-6, none blocking).
-- [x] I9 Fix round 6 on the closed lists CR6-1 to CR6-15 and SECI6-1 to SECI6-6.
-- [x] I10 Gates again; review round 7: code review APPROVED with 12 MINOR, security audit PASS
-      with 3 LOW.
-- [x] I11 Fix round 7 on CR7-1, CR7-2, CR7-7 and SECI7-1 to SECI7-3; the other MINOR items go to
-      WI-35 (operator).
-- [x] I12 Gates again; review round 8: code review APPROVED, security audit PASS (SECR8-1 and
-      SECR8-2 MEDIUM).
-- [x] I13 Fix round 8 on SECR8-1 to SECR8-5 and the code review's minor items (operator).
-- [x] I14 Gates again; review round 9: code review APPROVED, security audit PASS. Its LOW and
-      minor wording items go to WI-35.
+## Cluster G — gates, the stage-3 patch, stage 2
 
-## Cluster H — after the commit (R2.3)
+- [x] G1 The curated suite; `tests/test_archive_move.py` and `tests/test_script_guards.py` by name;
+      every gate of `framework-gates.yml`; `scan_register.py` per edited markdown file; the
+      declared-paths check; the archive-pair hashes of E6. The audit record holds the counts.
+- [x] G2 The stage-3 patch `docs/reviews/framework-audit-112-stage3.diff`, written by a generator
+      that writes no other file. `git apply --check` passes. It holds the whole H edit:
+  - `.claude/settings.json`: `Bash(python3 .agent/tools/archive_move.py *)` after
+    `Bash(cargo test)`; the two `mv` rules removed;
+  - `tests/test_committed_settings.py`: Appendix A whole; TC-S7 of R6.2; `NOT_COMMITTED` removed;
+    the archive row, pattern, accept case and Antigravity entry pinned; `mv` out of the TC-S3
+    command-name set; the new fence info-word sequence of `skill-archive-task`;
+  - `skill-safe-commands`: the archive row, pattern and Antigravity entry; `README.md` and
+    `README.ru.md`: the Antigravity entry;
+  - `skill-archive-task` R1.5, version 2.1; `artifact-management` R1.6, version 1.5;
+  - `AGENTS.md`, `GEMINI.md`, `System/Docs/SKILL_TIERS.md`, `skill-phase-context` (1.3): R8.4;
+  - `rebase_links.py` and `init_skill.py` replaced by the text of their `_next` copies; both
+    copies deleted; the constants of `tests/test_script_guards.py` on the originals;
+  - `skill-creator` `SKILL.md`: the Script Contract states that `--path` lies inside the working
+    directory and that the script runs from the project root; version 2.5;
+  - `tests/run_tests.py`: the registration text of R4.4, verbatim.
+- [x] G3 Base-fail of H's tests: `git apply --include=tests/test_committed_settings.py` of the
+      patch. The expected failures are TC-S1, TC-S3 (`mv` left the set), TC-S7, the archive cases
+      of TC-S8 and the fence pin of `skill-archive-task`; any other failure is a finding. Then
+      `git apply -R` of the same part. The audit record holds the run.
+- [x] G4 Stage 2: a code reviewer and a security auditor check A to F, the patch and the
+      registration `Bash(python3 .agent/tools/archive_move.py *)`. Both must pass.
+  - A rejected review or a `FAIL`: a fix round edits the declared files, G1 to G3 run again, and
+    the reviewer re-checks the changed parts.
+  - An `INCOMPLETE` security audit: `security-audit` §6.2, one re-run of the unfinished part, then
+    the operator decides.
+  - After G6, the audit record holds the patch's text in a fence opened with `~~~~diff`, and its
+    SHA-256; the stored text hashes to the same value.
+- [x] G5 `framework-upgrade` §4.5. First `check_positional_refs.py --targets-changed` without
+      `--fix`; then with `--fix`. The audit record lists every file a repair touched.
+  - A repair of a file in the patch regenerates the patch; G4's reviewers see the regenerated
+    part, and the audit record holds the new text and SHA-256.
+  - When the dry run lists a reference in the TASK 111 archive pair, G5 rebuilds the pair after
+    the repair: `git show <base>:docs/TASK.md` and `git show <base>:docs/PLAN.md`, then the two
+    `rebase_links.py` commands that the audit record quotes in §1. The hashes of E6 must match
+    (TASK R7.4); a mismatch stops the run for the operator.
+- [x] G6 G1 again when G5 repaired a file; `git apply --check` of the patch again.
 
-- [x] H1 With the operator's go-ahead: append the 33 rules and 2 directories of the base file to
-      `.claude/settings.local.json`, without duplicates. An audit addendum, committed by the
-      operator, records the counts (33 rules, 2 directories, the number added). It also records
-      the positions in the base list of the entries H1 added, and whether H1 created the
-      `additionalDirectories` key. It records no rule text. The undo removes exactly
-      those entries, and the key when H1 created it.
-- H2 deferred to WI-34 with the hook (TASK D11): its live probe needs the hook.
+## Cluster H — stage 3, the registration edit
 
-## Coverage
+- [x] H1 Before the edit, the patch's SHA-256 equals the one the audit record holds, and the audit
+      record holds the SHA-256 and mode of every file the patch touches. Then
+      `git apply --whitespace=nowarn docs/reviews/framework-audit-112-stage3.diff`; the explicit
+      option overrides an `apply.whitespace` setting of the operator's.
+- [x] H2 The curated suite, every gate, the declared-paths check, the archive-pair hashes, and
+      `check_positional_refs.py --targets-changed` without `--fix`. The audit record holds the
+      counts. A `REFERENT_MOVED` or `REFERENT_ABSENT` that the patch causes is a failed gate: the
+      patch is reversed, regenerated with the repair, and returns to G4. A hit inside the patch
+      text that the audit record stores is not one the patch causes.
 
-| Use case | Clusters |
-| :--- | :--- |
-| UC-3 | B |
-| UC-4 | C |
-| UC-5 | D |
-| UC-6 | E |
+**Failure.** `git apply -R --whitespace=nowarn` of the same patch restores every file of H, the two
+`_next` copies included. Each file's SHA-256 and mode then equal those H1 recorded; a mismatch
+means STOP and report, and §5 is the fallback. The audit record holds the patch, which is the
+stage-3 diff. Triggers:
 
-| Acceptance | Items |
-| :--- | :--- |
-| A1 | B1, C1, D1, E1 |
-| A3 | B1, B2, B5, B6, B7 |
-| A4 | C1, C2, C3 |
-| A5 | D1, D2, D3 |
-| A6 | E1–E4, with TC-L7 to TC-L10 |
-| A7 | G1 |
-| A8 | G1, G4 |
-| A9 | I3, I5, I7 |
+- a failed gate of H2, or a stage-4 review that does not pass: the operator decides what follows;
+- an `INCOMPLETE` stage-4 security audit as the only failure: `security-audit` §6.2 re-runs it on
+  the restored tree with the recorded patch; a pass re-applies the same patch, and I1 runs again.
+
+The records of C and F describe the state after H. While H stands reversed, the run reports that
+state, and the operator decides; nothing is committed.
+
+## Cluster I — stage 4
+
+- [x] I1 A code reviewer and a security auditor check the applied patch on the new fingerprint.
+      The audit record holds both verdicts.
+
+## Cluster J — restart
+
+- [x] J1 The final message tells the operator to restart the session: two TIER 0 skills and the
+      committed settings changed (`framework-upgrade` §4.3).
+
+## Retro
+
+`run-feedback` §7 after I1: the claim taken in §0, the one retro question, then `release`.
 
 ## Schedule
 
@@ -274,14 +322,16 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
 {
   "schema": "plan-schedule/v1",
   "tasks": [
-    {"id": "111.2", "title": "The settings", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
-    {"id": "111.3", "title": "The actions", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
-    {"id": "111.4", "title": "The fingerprint", "stage": "Checks", "est": 1, "deps": [], "status": "done"},
-    {"id": "111.5", "title": "The lockfile audit", "stage": "Checks", "est": 2, "deps": [], "status": "done"},
-    {"id": "111.6", "title": "Records", "stage": "Closure", "est": 2, "deps": ["111.2", "111.3", "111.4", "111.5"], "status": "done"},
-    {"id": "111.7", "title": "Gates and review", "stage": "Closure", "est": 3, "deps": ["111.6"], "status": "done"},
-    {"id": "111.8", "title": "Local settings sync", "stage": "Closure", "est": 1, "deps": ["111.9"], "status": "done"},
-    {"id": "111.9", "title": "Retro items", "stage": "Closure", "est": 2, "deps": ["111.7"], "status": "done"}
+    {"id": "112.A", "title": "The archive script", "stage": "Build", "est": 2, "deps": [], "status": "done"},
+    {"id": "112.B", "title": "Script guards", "stage": "Build", "est": 2, "deps": [], "status": "done"},
+    {"id": "112.C", "title": "Narrowed patterns", "stage": "Build", "est": 2, "deps": [], "status": "done"},
+    {"id": "112.D", "title": "Related checks", "stage": "Build", "est": 1, "deps": [], "status": "done"},
+    {"id": "112.E", "title": "Step 4 and wording", "stage": "Build", "est": 2, "deps": [], "status": "done"},
+    {"id": "112.F", "title": "Records", "stage": "Closure", "est": 1, "deps": ["112.A", "112.B", "112.C", "112.D", "112.E"], "status": "done"},
+    {"id": "112.G", "title": "Gates, patch, stage 2", "stage": "Closure", "est": 3, "deps": ["112.F"], "status": "done"},
+    {"id": "112.H", "title": "Stage 3", "stage": "Closure", "est": 1, "deps": ["112.G"], "status": "done"},
+    {"id": "112.I", "title": "Stage 4", "stage": "Closure", "est": 1, "deps": ["112.H"], "status": "done"},
+    {"id": "112.J", "title": "Restart", "stage": "Closure", "est": 1, "deps": ["112.I"], "status": "done"}
   ]
 }
 ```
@@ -291,30 +341,32 @@ and writes nothing under the work tree until the round returns (TASK R4.3).
 **Plan chart.** Each bar starts when its last dependency ends and lasts its estimate; the axis counts estimate hours from the start, not dates.
 
 ```mermaid
-%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 250}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
+%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 164}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
 gantt
   accTitle: Plan chart
   accDescr: Each bar starts when its last dependency ends and lasts its estimate, the axis counts estimate hours from the start, not dates.
   dateFormat x
   axisFormat %Q
-  tickInterval 2millisecond
+  tickInterval 1millisecond
   todayMarker off
-  section Checks
-    111.2 The settings:done, t111x2, 0, 1ms
-    111.3 The actions:done, t111x3, 0, 1ms
-    111.4 The fingerprint:done, t111x4, 0, 1ms
-    111.5 The lockfile audit:done, crit, t111x5, 0, 2ms
+  section Build
+    112.A The archive script:done, crit, t112xA, 0, 2ms
+    112.B Script guards:done, t112xB, 0, 2ms
+    112.C Narrowed patterns:done, t112xC, 0, 2ms
+    112.D Related checks:done, t112xD, 0, 1ms
+    112.E Step 4 and wording:done, t112xE, 0, 2ms
   section Closure
-    111.6 Records:done, crit, t111x6, 2, 2ms
-    111.7 Gates and review:done, crit, t111x7, 4, 3ms
-    111.9 Retro items:done, crit, t111x9, 7, 2ms
-    111.8 Local settings sync:done, crit, t111x8, 9, 1ms
+    112.F Records:done, crit, t112xF, 2, 1ms
+    112.G Gates, patch, stage 2:done, crit, t112xG, 3, 3ms
+    112.H Stage 3:done, crit, t112xH, 6, 1ms
+    112.I Stage 4:done, crit, t112xI, 7, 1ms
+    112.J Restart:done, crit, t112xJ, 8, 1ms
 ```
 
 Legend: green fill — done · red border — critical path.
 
 Ready to start: none.
 
-Critical path — 10 h by estimates, 5 of 5 tasks done, 0 h remaining: 111.5 → 111.6 → 111.7 → 111.9 → 111.8.
+Critical path — 9 h by estimates, 6 of 6 tasks done, 0 h remaining: 112.A → 112.F → 112.G → 112.H → 112.I → 112.J. Also at zero slack: 112.B, 112.C, 112.E.
 
 <!-- generated:plan-gantt-end -->

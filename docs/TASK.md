@@ -1,4 +1,4 @@
-# TASK 111 — Checks that cover what they claim: a framework-only allow list, pinned actions, a full fingerprint, every lockfile
+# TASK 112 — Safe commands that admit no write: an archive script and closed patterns
 
 <!-- contract:meta -->
 
@@ -6,87 +6,104 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 111 |
-| Slug | checks-that-cover-what-they-claim |
+| Task ID | 112 |
+| Slug | safe-commands-that-admit-no-write |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | WI-31; the operator's answers of 2026-10-05 (D1, D2) |
-| Base revision | `3a6e07ed53a3e8c25ea0c64a44708ee1b251cfa5` |
-| Closes | WI-31 (its SEC-17 hook handed to WI-34) |
-| Archive name | `task-111-checks-that-cover-what-they-claim.md` |
-| Revision | 14: R7 per review round 8; test runners keep their bare forms (R2.7, D14) |
+| Source | WI-35; the operator's request of 2026-10-06 (D1) |
+| Base revision | `eb7248f8027e64cb10aaa20511a4f7b519151117` |
+| Closes | WI-35 |
+| Archive name | `task-112-safe-commands-that-admit-no-write.md` |
+| Revision | 7: Mode A rounds 1, 2; D4 per the operator; Mode B gaps; stage-2 fix rounds 1–3 |
 
 **Records.**
 
-- [WI-31](backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md)
+- [WI-35](backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md)
+- [TASK 111](tasks/task-111-checks-that-cover-what-they-claim.md), decisions D13 and D14
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-WI-31 names four checks whose coverage is narrower than their claim. Every fact below was measured
-on 2026-10-05 at the base revision.
+WI-35 lists allow rules and safe-command patterns that admit more than their purpose. Every fact
+below was measured on 2026-10-06 at the base revision.
 
-**SEC-17, allow rules.** `.claude/settings.json` allows 80 Bash rules. Several name a framework
-script by a path relative to the working directory, such as
-`Bash(python3 .agent/tools/task_id_tool.py *)`.
+**Committed Claude Code rules (`.claude/settings.json`).**
 
-- A Bash rule matches the command text only; the working directory takes no part
-  (code.claude.com/docs/en/permissions).
-- The working directory persists between Bash calls inside the project and inside each additional
-  working directory (code.claude.com/docs/en/tools-reference).
-- No rule syntax anchors a Bash rule to the project root. A PreToolUse hook receives `cwd` and may
-  return `ask` or `deny` over a matching allow rule (code.claude.com/docs/en/hooks).
+- `Bash(mv docs/TASK.md docs/tasks/*)` and `Bash(mv docs/PLAN.md docs/plans/*)` match any text
+  after the prefix: `mv docs/TASK.md docs/tasks/../../x` and extra source operands.
+- `Bash(mkdir -p docs/*)`, `Bash(mkdir -p .agent/*)` and `Bash(mkdir -p tests/*)` admit a second
+  operand anywhere: `mkdir -p docs/x /any/dir`.
+- `Bash(file *)` admits `file -C` and its abbreviation `file --co`. Measured: `file --co` in the
+  repository root wrote a 7 MB `magic.mgc` (file 5.41).
+- `rebase_links.py` rewrites in place every file operand, wherever it lies.
+- `init_skill.py` creates a skill directory at any `--path`, or at a path-shaped name.
 
-In a nested checkout, such a rule runs that checkout's script of the same relative path without a
-prompt. The test runners allowed by `Bash(python3 -m pytest*)` and its siblings run that
-checkout's `conftest.py` or `package.json` scripts the same way. A `cd` inside one command moves the
-directory without changing the `cwd` the hook receives. The PostToolUse hook is registered by the
-relative path `.claude/hooks/validate_skill_hook.sh`.
+**Patterns of `skill-safe-commands`, every vendor.**
 
-**Personal permissions.** 33 of the 80 rules are personal or one-off:
+- `rg --pre <program>` runs the program on each file; measured with ripgrep 14.1.1.
+  `rg --hostname-bin <program>` runs a program too. ripgrep 14.1.1 rejects abbreviated long
+  options (`--pr`, `--hostname-b`), measured.
+- `fd -x` and `fd -X` (`--exec`, `--exec-batch`) run a program on the matches.
+- `^cd\s+\.agent/tools\s+&&\s+python` and `^python3?\s+-c\s+'from\s+scripts\.tool_runner` admit
+  any text after the prefix.
+- The symlink-aware patterns `^rg\s+(--follow|-L)` and `^fd\s+-[a-zA-Z]*L` match before any
+  exclusion: `rg -L --pre x` matches.
+- The command table and the patterns list different commands. §Implementation Guidelines step 1
+  accepts a match on either.
+- The skill's Antigravity list holds `rg`, `fd`, `ls -L`, `rg --follow` and `fd -L`; the READMEs'
+  lists do not.
+- Troubleshooting item 2 suggests shortening an entry to `mv` alone.
 
-- 4 rules name paths under `/Users/sergey`;
-- `Bash(python3 -)` runs any Python program from standard input;
-- `Bash(git push *)`, `Bash(git add *)` and `Bash(git restore *)` write to git;
-- 25 others are one-off commands: `sed -n` reads, `cp` and `md5` across repositories, `rm -rf` of
-  test directories, single test runs, `gh run *`.
+**The Antigravity matcher.** antigravity.google/docs/permissions, fetched 2026-10-06:
 
-28 of them entered with commit `0b7b075` of 2026-05-25 and 5 with `c846b5e` of 2026-05-07.
-`permissions.additionalDirectories` holds 2 more paths under `/Users/sergey`.
+- "Matches by exact word or token prefix literally by default."
+- "Standard shell composition still prefix-matches normally: pipelines, `&&`/`||`/`;` chains,
+  quoted literals, plain `$VAR` arguments, simple file redirects, …"
+- Command or process substitution, among other constructs, "disables prefix matching for the
+  entire command line".
 
-- `System/scripts/vendors.yaml` copies `.claude/settings.json` into every new consumer project
-  (`if_missing: true`). It copies `.claude/hooks/` always.
-- Its comment says `settings.local.json` left the copy list because it "shipped one operator's
-  permission allow-list — absolute home paths included". The copied file now holds such rules.
-- The repository's `.gitignore` does not list `.claude/settings.local.json`; only the operator's
-  global git ignore does.
+An entry `ls` therefore does not admit `lsof`. An entry admits a simple file redirect, which
+writes.
 
-**SEC-18, CI actions.** `.github/workflows/framework-gates.yml` holds 13 `uses:` lines:
-`actions/checkout@v4`, `actions/setup-python@v5` and `actions/setup-node@v4`. A version tag moves.
-On 2026-10-05 the tags point at the commits of v4.4.0, v5.6.0 and v4.4.0.
+**Claude Code redirects.** code.claude.com/docs/en/permissions, § Redirections, fetched
+2026-10-06: "When a command redirects output or input, Claude Code checks the redirect target
+against your file rules as if Claude wrote or read that file directly." The page does not state
+whether an allow rule approves a simple command that carries a command substitution. Its list of
+built-in read-only commands holds neither `test` nor `mkdir`.
 
-**SEC-19, tree fingerprint.** `skill-parallel-orchestration` §2.4.1 gives the formula
-`{ git rev-parse HEAD; git status --porcelain; git diff HEAD; } | shasum -a 256 | cut -c1-12`.
-`vdd-multi.md` step 1.0 and `.claude/agents/security-auditor.md` repeat it.
+**Related checks.**
 
-- An edit inside an untracked file leaves the value unchanged. §2.4.1 says so in prose.
-- A tracked binary file enters the value only through the 7-character blob hash of its `index`
-  line: without `--binary`, `git diff` prints "Binary files differ" in place of the content.
-  (Revision 5 said a second edit left the value unchanged; the test-first run of D1 measured
-  otherwise.)
-- A user's `diff.external` or textconv setting changes the `git diff` output.
-- TASK 110 reviewed untracked files under a recipe that adds the hash of each untracked file. Its
-  reviewers computed two values for one tree, one per recipe.
+- `run_external_tools` runs `yarn audit` in the scanned root
+  (`.agent/skills/security-audit/scripts/audit/external.py:54@eb7248f` `run_command(["yarn", "audit"]`).
+  Yarn reads `.yarnrc` and `.yarnrc.yml` there; `yarnPath` in `.yarnrc.yml` names a JavaScript
+  file that yarn executes.
+- `full-robust` §3 gates on "the automated scan exits clean". `run_audit.py` exits 0 unless
+  `--fail-on` is given, and this repository's scan always reports findings.
+- `tool_runner.run_tests` accepts any arguments after `pytest`, `python -m pytest`, `npm test`,
+  `npx jest` and `cargo test` (`System/scripts/tool_runner.py:49@eb7248f` `_is_allowed_test_command`).
+  `System/Docs/ORCHESTRATOR.md` lists the same five commands.
 
-**Lockfile audit.** `security-audit/scripts/audit/` audits npm lockfiles at the project root only.
+**Test pins.**
 
-- `scan_dependencies` in `scanners.py` runs `npm audit --json` only when the root holds
-  `package.json`. A failed or offline run yields no finding.
-- `run_external_tools` in `external.py` runs `npm audit` at the root when the tree holds a `.js` or
-  `.ts` file.
-- This repository holds three npm lockfiles under
-  `.agent/skills/mermaid-authoring-guidelines/assets/renderers/` and none at the root. Neither
-  function audits any of them.
+- `tests/test_committed_settings.py` reads table rows that start with `| **` only, fences opened
+  with three backticks and no info string after the language, and the `python` interpreter only.
+  An added pattern line passes.
+- `tests/test_run_safety_rules.py` checks each pointer as a substring, so a sentence appended
+  after it passes. The step-4 pin ends at the next numbered step, so an added step 5 passes.
+
+**`framework-upgrade` §3 step 4.**
+
+- Its list does not name a script that a committed allow rule runs. TASK 111 edited
+  `tests/run_tests.py` in place, and `Bash(python3 tests/run_tests.py)` runs it.
+- The narrowing check omits code that a hook's script calls and a new module it would import.
+- Both Failure bullets apply when the security audit is `INCOMPLETE` and the code review rejects.
+- Stage 2 reads "blocks the registration until the operator decides"; `security-audit` §6.2
+  re-runs the part once first.
+- "audit" names the audit record and the security audit in adjacent sentences.
+- "the registered files" reads as the settings files only.
+
+**Archiving.** Step 5 of `skill-archive-task` guards the move with `test -e`. No committed rule
+approves `test`, and Claude Code does not list it as read-only.
 
 <!-- contract:rtm -->
 
@@ -94,146 +111,239 @@ On 2026-10-05 the tags point at the commits of v4.4.0, v5.6.0 and v4.4.0.
 
 | ID | Requirement | MVP? | Sub-features | Verified by |
 | :--- | :--- | :--- | :--- | :--- |
-| R1 | The anchor hook for SEC-17 — deferred to WI-34 (D11) | — | — | — |
-| R2 | The committed settings hold framework permissions only | Y | R2.1–R2.7 | A1, A3 |
-| R3 | CI actions are pinned to commits and kept current | Y | R3.1–R3.3 | A1, A4 |
-| R4 | The tree fingerprint covers every file under review | Y | R4.1–R4.5 | A1, A5 |
-| R5 | The dependency audit covers every npm lockfile | Y | R5.1–R5.7 | A1, A6 |
-| R6 | Records, versions, migration and the work-item | Y | R6.1–R6.6 | A7, A8 |
-| R7 | The retro items: a hook registered last, an unfinished review | Y | R7.1–R7.2 | A7, A9 |
+| R1 | An archive script moves TASK and PLAN; one allow rule names it | Y | R1.1–R1.8 | A1, A2 |
+| R2 | The committed allow list admits no write outside its purpose | Y | R2.1–R2.4 | A1, A3 |
+| R3 | `skill-safe-commands` patterns, table and vendor lists agree and exclude program options | Y | R3.1–R3.9 | A1, A3 |
+| R4 | Allowed framework scripts write inside the working directory only | Y | R4.1–R4.3 | A1, A4 |
+| R5 | The related checks: `yarn audit`, the `full-robust` gate, `run_tests` | Y | R5.1–R5.3 | A1, A5 |
+| R6 | The test pins read every spelling | Y | R6.1–R6.5 | A3, A6 |
+| R7 | `framework-upgrade` §3 step 4 and the auditor wording | Y | R7.1–R7.4 | A6 |
+| R8 | Records, versions, documents and work-items | Y | R8.1–R8.6 | A7, A8 |
 
 ### 2.1 Sub-features
 
-**The settings (R2).**
+**The archive script (R1).**
 
-- **R2.1** `.claude/settings.json` keeps an allow rule of the base file only when one holds:
-  - `skill-safe-commands` lists its command, as a pattern or in its command list;
-  - `framework-gates.yml` runs its script;
-  - a test of `tests/` pins it: `plan_gantt.py --check` (TASK 108 D9).
+- **R1.1** `.agent/tools/archive_move.py` takes exactly two operands. It accepts two pairs only:
+  - `docs/TASK.md` and `docs/tasks/task-<ID>-<slug>.md`;
+  - `docs/PLAN.md` and `docs/plans/plan-<ID>-<slug>.md`.
 
-  Of the 80 base rules, 33 leave for the operator's local settings (R2.3), and R2.6 drops
-  `Bash(find *)`. The other 46 stay; R2.6 rewrites 18 of them into 31,
-  and R2.7 drops 13, so Appendix A holds 46.
-- **R2.2** `permissions.additionalDirectories` leaves the committed file.
-- **R2.3** After the operator commits, the orchestrator appends the 33 rules and the 2
-  directories to the operator's `.claude/settings.local.json`, on the operator's go-ahead and
-  without duplicates (D1, D5). It reads them from `git show <base>:.claude/settings.json`. The run
-  does not touch that file before the commit. The audit records both counts and the count added.
-- **R2.4** The repository's `.gitignore` lists `.claude/settings.local.json`.
-- **R2.6** Each allow rule names its command whole: `X` and `X *` replace `X*`, which also
-  matches every command whose name starts with `X`, such as `git difftool` for `git diff*`. The
-  `mkdir` rules name `docs/`, `.agent/` or `tests/`, and the `mv` rules their destination
-  directory. `Bash(find *)` leaves: `-exec`, `-execdir`, `-ok` and `-delete` run a command or delete
-  files.
-- **R2.5** No string under `permissions` of `.claude/settings.json` holds an absolute or `~`
-  path. No allow rule is `Bash(python3 -)`. No allow rule names the `git` subcommand `add`,
-  `commit`, `push`, `reset` or `restore`.
-- **R2.7** No committed rule holds a wildcard form of a command that also writes:
-  - `git log`, `git diff` and `git show`, whose `--output` writes a file;
-  - `git branch`, `git tag` and `git remote`, whose arguments create or delete a ref or change a
-    remote;
-  - `tree`, whose `-o` writes a file;
-  - `python -m pytest`, `python3 -m pytest`, `npm test`, `npx jest` and `cargo test`, whose options
-    can run a program, delete a directory or overwrite a file (D14).
+  `<ID>` matches `[0-9]{3,}` and `<slug>` matches `[a-z0-9]+(-[a-z0-9]+)*`, the shapes
+  `task_id_tool.py` produces. The operands are compared as text; `./`, `..`, an absolute path and
+  any other directory are refused with exit 1.
+- **R1.2** The script refuses, with exit 1 and no change on disk:
+  - an operand pair of another shape (R1.1);
+  - a source that is absent, not a regular file, a symbolic link, or a file with more than one
+    hard link;
+  - `docs` or the destination directory when it is a symbolic link or not a directory;
+  - a destination that exists, a dangling symbolic link included.
 
-  Their bare forms stay, except `npx jest`, which downloads jest when the project has none. Claude
-  Code's built-in check approves the read forms of `git` with no rule (Claude Code docs, Configure
-  permissions, § Read-only commands; D13). `skill-safe-commands` states the same limit for every
-  vendor.
+  A wrong operand count, or an operand that starts with `-`, exits 2. Exit 0 means moved. The
+  script checks the operands and the source before it creates a directory. Any other `OSError`,
+  such as an overlong name, is a refusal too: exit 1, a JSON error, and no change on disk.
+- **R1.3** The script works through directory descriptors. It opens `docs` and the destination
+  directory with `O_DIRECTORY | O_NOFOLLOW`, and names every file relative to them.
+  - It creates `docs/tasks` or `docs/plans` when it is absent.
+  - It moves by `os.link` and `os.unlink` on those descriptors, without following links.
+  - After the link, the destination must be a regular file with the source's inode and two hard
+    links; otherwise the script removes it and exits 1.
+  - Where the file system refuses the hard link, it opens the source with
+    `O_RDONLY | O_NOFOLLOW`, checks it with `fstat` as R1.2 does, and copies it into a file
+    created with `O_CREAT | O_EXCL | O_NOFOLLOW`. Then it removes the source.
+  - Any failure after the destination exists removes the destination and exits 1; the source
+    stays.
+  - Removing the source can fail while the script cannot confirm that the source still holds the
+    moved file. Then it keeps the archive, and its error says so. This is the one exit 1 that
+    leaves a change on disk.
+  - An existing destination is never overwritten.
 
-**The actions (R3).**
+  A platform without `dir_fd` support for these calls exits 2.
+- **R1.4** The script prints one JSON object: `{"ok": true, ...}` on stdout, or
+  `{"ok": false, "error": ...}` on stderr.
+- **R1.5** `skill-archive-task` calls the script.
+  - Step 5 and Step 7.6 run it; a non-zero exit means STOP and report.
+  - Step 7.3 and Step 7.5 state that the script creates the directory and refuses an existing
+    destination.
+  - Step 6 and Step 7.7 drop "retry mv": a failed move is reported, not retried.
+  - No shell block of the skill runs `mv`, `test` or `mkdir`.
+  - Its Example Flow, Edge Cases, Safe Commands and Safety Boundaries follow.
+- **R1.6** `artifact-management` names the script where it lists the archiving commands.
+- **R1.8** Run as a script, it removes its own directory from `sys.path` before it imports a
+  module, so a module planted beside it is never imported. A test that loads it keeps its path.
+- **R1.7** `archive_move.py` is written at its final name: no rule names it before stage 3. No
+  safe-command pattern, table row, Antigravity entry or vendor prompt names it before stage 3
+  either; those land in the stage-3 edit with the rule.
 
-- **R3.1** Each `uses:` of `.github/workflows/*.yml` names a 40-hex commit, followed by a comment
-  with its release tag: `actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0`.
+**The committed settings (R2).**
 
-  **Why.** The pinned commits are those the base's tags point at, so CI runs unchanged code.
-- **R3.2** `.github/dependabot.yml` updates the `github-actions` ecosystem monthly (D2).
-- **R3.3** `System/Docs/RELEASE_CHECKLIST.md` states how a pin changes: through the Dependabot pull
-  request, or by hand with the commit and tag of a release.
+- **R2.1** `.claude/settings.json` adds one rule, `Bash(python3 .agent/tools/archive_move.py *)`,
+  and drops the two `mv` rules. This is the registration of §3 step 4 (stages 1 to 4).
+- **R2.2** `Bash(mkdir -p docs/tasks)`, `Bash(mkdir -p docs/plans)` and
+  `Bash(mkdir -p docs/architectures)` replace the three `mkdir` wildcards.
+- **R2.3** `Bash(file *)` leaves. Claude Code's built-in read-only check analyses `file` on its
+  own (permissions page, § Read-only commands).
+- **R2.4** R2.2 and R2.3 only narrow. They land before stage 3 after the narrowing check of §3
+  step 4; the audit record holds its output. Appendix A lists the 44 rules that result.
 
-**The fingerprint (R4).**
+**The safe-command patterns (R3).**
 
-- **R4.1** §2.4.1 gives one formula:
+- **R3.1** `file` leaves the table, the patterns and every vendor list.
 
-  ```sh
-  { git rev-parse HEAD; git status --porcelain; git diff HEAD --binary --no-ext-diff --no-textconv; git ls-files --others --exclude-standard -z | xargs -0 -r shasum -a 256; } | shasum -a 256 | cut -c1-12
+  **Why.** `file` accepts abbreviated long options (`--co` for `--compile`), and `-C` combines with
+  other short options. An exclusion pattern would have to model that parser.
+- **R3.2** `rg` and `fd` leave the general read-only pattern. A short-option cluster is a `-`
+  followed by characters other than `-` and whitespace, digits included. One pattern each excludes the
+  options that run a program, wherever they stand in the command:
+  - `rg`: `--pre` and `--hostname-bin`, with `=` or a space;
+  - `fd`: every long option that starts with `--exe` (`--exec`, `--exec-batch` and their
+    abbreviations), and `x` or `X` in any short-option cluster.
+
+  The symlink-aware lines for `rg` and `fd` leave the patterns; the `rg` and `fd` patterns cover
+  `-L` and `--follow`.
+
+  **Why.** fd's handling of abbreviated long options was not measured; `--exe` covers every
+  unambiguous abbreviation of the two options.
+- **R3.3** The archiving pattern names the script:
+  `^python3\s+\.agent/tools/archive_move\.py(\s|$)`. The `mkdir` pattern names the three
+  directories of R2.2 and ends there.
+- **R3.4** The two open-ended patterns of `cd .agent/tools && python` and
+  `python3 -c 'from scripts.tool_runner` leave.
+- **R3.5** The table names the same commands as the patterns.
+  - Each command of the table matches a pattern, and each pattern matches a command of the table.
+    The **Tool calls** row names native tools, not shell commands, and takes no part.
+  - §Implementation Guidelines step 1 decides by the patterns; the table approves nothing alone.
+  - The table gains the two eval scripts the patterns already hold.
+- **R3.6** The Antigravity list of the skill and of both READMEs is one list:
+  `ls,cat,head,tail,grep,wc,stat,du,df,git status,python3 .agent/tools/archive_move.py`.
+  The note states the matcher as quoted in §1, and that an entry admits a simple file redirect.
+- **R3.9** The patterns' lookaheads match across a line break. On the agent's side a command is
+  not safe when it has a line continuation, `$'…'` or `$"…"` quoting, a parameter or brace
+  expansion, or, for `rg`, `fd` and `git`, an unquoted glob.
+- **R3.7** Troubleshooting item 2 states that a bare command entry, such as `mv`, admits every
+  form of that command, and drops the advice to shorten an entry.
+
+**The framework scripts (R4).**
+
+- **R4.1** In R4 the working directory is `os.getcwd()`. `rebase_links.py` `_main` refuses a file
+  operand that:
+  - lies outside the working directory by its absolute path, normalised without resolving links;
+  - holds a `.git` path segment in any letter case;
+  - lies under an existing directory that is the working directory's `.git`;
+  - lies, by file identity, under the repository's git directory: the `.git` of the working
+    directory or of its nearest ancestor that has one, or the directory a `.git` file names, and
+    its common directory;
+  - is a symbolic link, or a file with more than one hard link.
+
+  A refusal exits 2 and writes nothing. `rebase_file()` keeps its behaviour:
+  `archive_protocol.py` calls it with temporary paths. The CLI tests of
+  `.agent/tools/test_rebase_links.py` run with their temporary root as the working directory.
+- **R4.2** `init_skill.py` refuses a skill directory that lies outside the working directory by its
+  absolute path, normalised without resolving links, or that lies under `.git` as R4.1 states. This
+  covers `--path` and a path-shaped name. A refusal exits 1 and creates nothing. The guard lives in
+  `init_skill.py`; `skill_utils.py`, which the registered hook's `validate_skill.py` imports, stays
+  unchanged.
+
+  **Why.** In a consumer project `.agent/skills` can be a symbolic link into the framework. A test
+  on resolved paths would refuse the default target there.
+- **R4.3** The new code of R4.1 and R4.2 is written under a new name first:
+  `.agent/tools/rebase_links_next.py` and `.agent/skills/skill-creator/scripts/init_skill_next.py`.
+  Stage 3 copies each over its original, removes the copy, and points the guard tests at the
+  originals (R7.1).
+- **R4.4** The registration text for `tests/run_tests.py`, which a rule names (D4): stage 3
+  appends to `CURATED_UNITTEST_MODULES`, after `"test_run_safety_rules",`, this comment and these
+  two entries, and changes nothing else in the file:
+
+  ```python
+      # TASK 112 — the archive script and the guards of the scripts that allow rules run (WI-35).
+      "test_archive_move",
+      "test_script_guards",
   ```
 
-- **R4.2** §2.4.1 states that the formula runs at the top level of the work tree. It names what
-  the value does not cover: ignored files and the content of a nested repository.
-- **R4.3** §2.4.1's scope paragraph states that, while a round runs, the caller writes its own
-  output outside the work tree or to an ignored path.
-- **R4.4** `vdd-multi.md` step 1.0 and `.claude/agents/security-auditor.md` cite §2.4.1 and quote
-  the formula of R4.1 verbatim.
-- **R4.5** §2.4.1 drops the sentence that excuses edits inside untracked files.
+**The related checks (R5).**
 
-**The lockfile audit (R5).**
+- **R5.1** `run_external_tools` runs `yarn audit` in a temporary directory outside the scanned
+  root that holds copies of the root `yarn.lock` and `package.json` only. The copy of
+  `package.json` keeps only `name`, `version`, `private`, `workspaces`, `resolutions` and the four
+  dependency fields, so neither `packageManager` nor `devEngines` reaches a corepack `yarn` shim.
+  - Each of the two is a regular file and not a symbolic link. A root that fails this runs no
+    `yarn audit` and prints a skip line, as for npm (TASK 111 R5.6).
+  - The gate on `"javascript" in types` stays (TC-Y3).
+- **R5.2** `full-robust` §3 gates on a scan that ran to completion: `scan_status` is `clean` or
+  `findings`. The manual review rules on each CRITICAL or HIGH scan hit, and the findings table
+  holds no CRITICAL or HIGH finding. `NOT_RUN` still fails the gate.
+- **R5.3** `run_tests` accepts these commands, whole: `pytest`, `pytest -q`,
+  `pytest -q --tb=short` (its default), `python -m pytest`, `python3 -m pytest`, `npm test`,
+  `cargo test`. `npx jest` leaves. These state the same set: `System/Docs/ORCHESTRATOR.md`, the
+  `run_tests` description of `.agent/tools/schemas.py`, and the `run_tests` row of
+  `docs/ARCHITECTURE.md` § Available Tools.
 
-- **R5.1** A helper lists one npm lockfile per directory under the project:
-  `npm-shrinkwrap.json` when present, else `package-lock.json`. It skips the directories of
-  `SKIP_DIRS` and follows no symbolic link.
-- **R5.2** `scan_dependencies` runs `npm audit --json --package-lock-only` once per listed
-  lockfile, with a timeout of 60 seconds. It runs in a temporary directory that holds copies of the
-  lockfile and its `package.json` only, so a `.npmrc` beside the lockfile takes no part. Each
-  finding names its lockfile by its path relative to the project.
-- **R5.3** An audit that does not finish yields an `info` finding with its lockfile and the
-  reason. The reasons are `npm` absent, the timeout, output that is not a JSON object, and an
-  `error` object; for the last, the reason quotes its code or npm's `message`.
-- **R5.4** `run_external_tools` runs `npm audit --package-lock-only` for each listed lockfile, in
-  a temporary copy as R5.2 makes it. It
-  runs when the helper lists a lockfile, regardless of the detected types. `yarn audit` at the root
-  stays as at the base.
-- **R5.5** A project with no npm lockfile runs no `npm audit`. The missing-lock finding still
-  reports a root `package.json` without a lockfile.
+**The test pins (R6).**
 
-  **Why.** The base ran `npm audit` there, and npm stops with `ENOLOCK` without a lockfile.
-- **R5.6** A lockfile without a regular `package.json` beside it is not audited; it yields an
-  `info` finding. npm would otherwise audit an ancestor's project under the lockfile's name.
-- **R5.7** When an audit does not finish, the section status reads `[?] Not audited: <N> npm
-  lockfile(s)`, unless a critical or high finding sets its own status.
+- **R6.1** `tests/test_committed_settings.py` reads:
+  - every line of the command table, whatever its first cell;
+  - every fence, opened with three or more backticks or tildes, with any info string. A shell
+    fence is one whose first info word is `bash`, `sh`, `shell`, `zsh` or `console`;
+  - the info-word sequence of every fence of `skill-archive-task` and of `skill-safe-commands`,
+    pinned whole, so an added or relabelled fence fails;
+  - the whole pattern block, line by line;
+  - the command name of every allow rule, against a fixed set.
+- **R6.2** TC-S7 follows the archive commands of `skill-archive-task` to the script: no part is
+  exempt, no part runs `mv` or `test`, and both pairs of R1.1 are present.
+- **R6.3** `tests/test_run_safety_rules.py` pins step 4 up to the end of §3, and each pointer as
+  the whole paragraph or list item that holds it.
+- **R6.4** New test modules join `CURATED_UNITTEST_MODULES` of `tests/run_tests.py` in the stage-3
+  edit, as R4.4 states (D4). Until then they run as named modules.
+- **R6.5** TC-S1, TC-S7 and the retargeting of the TC-G constants land with stage 3.
 
-**Records (R6).**
+**Step 4 and the wording (R7).**
 
-- **R6.1** Versions:
-  - `skill-parallel-orchestration` 3.10 → 3.11;
-  - `skill-safe-commands` 1.2 → 1.3;
-  - `security-audit` 3.9 → 3.10.
+- **R7.1** `framework-upgrade` §3 step 4:
+  - its list names a script that a committed allow rule names, code that script calls, and a new
+    module it would import;
+  - test modules and fixtures that no rule names by path are exempt (D4 defines both terms);
+  - code that runs without a prompt only through them is exempt too;
+  - `tests/run_tests.py` is named by a rule and is not exempt;
+  - the hook bullet and the narrowing check name code the script calls and a new module;
+  - stage 1 edits code of the list under a new name;
+  - stage 2: an `INCOMPLETE` security audit re-runs once under `security-audit` §6.2, then the
+    operator decides;
+  - "audit record" names the file `docs/reviews/framework-audit-<ID>.md`, "security audit" the
+    review;
+  - the restore names every file of stage 3's edit;
+  - the first Failure bullet applies when an `INCOMPLETE` security audit is the only failure.
+- **R7.2** The bold lead of the auditor wrapper's bullet is one short sentence.
+- **R7.3** Prose lines that TASK 111 added and that exceed 100 characters are wrapped in the
+  files that wrap at 100: `security-audit/SKILL.md`, `.agent/workflows/security-audit.md`,
+  `System/Agents/10_security_auditor.md`. Tables, fences, ledger index lines and files written one
+  line per item keep their form.
+- **R7.4** TASK 111 R7.1 keeps its text: an archived task is not edited.
 
-  For `security-audit`, these quote 3.10: the front matter, the H1, `scripts/audit/__init__.py`
-  `__version__`, the `run_audit.py` header, `System/Docs/SKILLS.md` and `System/Docs/VDD.md`.
-- **R6.2** `security-audit` `SKILL.md` describes the npm audit of every lockfile where it describes
-  the dependency scan.
-- **R6.3** `CHANGELOG.md` and `CHANGELOG.ru.md` carry v3.36.0 with two migration items:
-  - this repository's operator finds the moved permissions in `settings.local.json`;
-  - a consumer project installed before v3.36.0 removes from its copied `settings.json` the
-    personal permissions listed in §1.
-- **R6.4** `docs/ARCHITECTURE.md` states, beside its tools note on `.claude/settings.json`, that
-  the committed allow list holds framework permissions only and that an operator's own rules live
-  in the ignored `.claude/settings.local.json`.
-- **R6.5** WI-31 closes `done`, with its SEC-17 hook handed to WI-34; its index line moves to
-  `## Closed`. WI-34 is filed `open`. WI-35 is filed `open` (D13).
-- **R6.6** Each new test module joins `CURATED_UNITTEST_MODULES` of `tests/run_tests.py`.
+**Records (R8).**
 
-**The retro items (R7).**
-
-- **R7.1** `framework-upgrade` §3 step 4 states that a change altering what runs, or what runs
-  without a prompt, takes effect in the running session at once. Its list of such changes is not
-  exhaustive. A change that only narrows may land at once, after a check before the edit that
-  each list only narrows and no code a hook runs changes; the audit records its output. The
-  TASK states the exact registration. A hook is built on a temporary fixture root that its test
-  creates and removes; §3.1 allows that fixture. The code review and the security audit check the
-  code and the registration; an `INCOMPLETE` audit blocks it until the operator decides. After
-  §4.5 the last edit of the change registers it verbatim with a pinning settings test, and a code
-  reviewer and a security auditor check that diff. A failed gate or review restores the text
-  before that edit. After a failed gate, a rejected review or a `FAIL` the operator decides, and a
-  changed registration or hook code returns to stage 1.
-- **R7.2** `security-audit` §6.2 defines `PASS`, `FAIL` and `INCOMPLETE`. An audit whose scan or
-  adversarial review does not run to completion is never `PASS`: it is `INCOMPLETE`, or `FAIL` when
-  a part found a CRITICAL or HIGH issue, and it names that part. With no report, the orchestrator
-  records it. Each part gets one re-run in a run; then the operator decides in their own message.
-  A control whose bypass hunt never finished ships as no protection. Tests and a mutation run do
-  not stand in for the hunt. The auditor wrapper, `10_security_auditor.md`, `security-audit.md`,
-  `full-robust.md`, `SKILLS.md` and `WORKFLOWS.md` point to §6.2; `full-robust` §3 gates on `audit_status: PASS`.
+- **R8.1** Versions:
+  - `skill-safe-commands` 1.3 → 1.4;
+  - `skill-archive-task` 2.0 → 2.1;
+  - `artifact-management` 1.4 → 1.5;
+  - `skill-creator` 2.4 → 2.5;
+  - `skill-phase-context` 1.2 → 1.3;
+  - `security-audit` 3.10 → 3.11, in each place that quotes 3.10 (TASK 111 R6.1), including
+    `System/Docs/SKILLS.md` and `System/Docs/VDD.md`.
+- **R8.2** `CHANGELOG.md` and `CHANGELOG.ru.md` carry v3.37.0 with two migration items:
+  - a consumer project whose copied `settings.json` holds the `mv`, `mkdir` or `file` rules of
+    v3.36.0 replaces them as Appendix A does;
+  - a project that copied the patterns or the Antigravity list into `.cursorrules`, `AGENTS.md`
+    or the IDE settings replaces them with those of v3.37.0.
+- **R8.3** `docs/ARCHITECTURE.md` states, beside its note on the committed allow list, that
+  archiving runs through `archive_move.py`.
+- **R8.4** These name the archive script where they name `mv` as an auto-run command:
+  `AGENTS.md`, `GEMINI.md`, `System/Docs/SKILL_TIERS.md` and `skill-phase-context`.
+- **R8.5** WI-35 closes `done`; its index line moves to `## Closed`.
+- **R8.6** Two work-items are filed `open`:
+  - WI-36: check whether a Claude Code allow rule approves a simple command that carries a
+    command substitution;
+  - WI-37: external scanners that run the scanned project's code or configuration: `cargo clippy`
+    build scripts, `slither` through the project's build framework, `pip-audit` building a source
+    distribution, and a yarn shim that honours `packageManager`.
 
 <!-- contract:use-cases -->
 
@@ -241,10 +351,11 @@ On 2026-10-05 the tags point at the commits of v4.4.0, v5.6.0 and v4.4.0.
 
 | UC | Actor | Precondition | Main scenario | Alternative | Postcondition |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| UC-3 consumer install | installer | a new project | the copied settings hold framework rules only | an existing settings file: not copied | no personal rule ships |
-| UC-4 CI | GitHub | a workflow run | each action runs the pinned commit | a moved tag: no effect | a pin changes by pull request |
-| UC-5 review round | orchestrator | an untracked file under review | its edit changes the fingerprint | an ignored file: not covered | the round detects the edit |
-| UC-6 audit | auditor | lockfiles in subdirectories only | each is audited in its directory | `npm` offline: an `info` finding | each finding names its lockfile |
+| UC-1 archive | orchestrator | `docs/TASK.md` and `docs/PLAN.md` exist | the script moves each, no prompt | the destination exists: exit 1, no move | TASK and PLAN archived as a pair |
+| UC-2 bad operand | agent | a destination outside `docs/tasks/` | the script refuses with exit 1 | a link in place of `docs/tasks`: refused | no file written |
+| UC-3 read command | agent on any vendor | `rg -L pattern` | a pattern matches; auto-run | `rg --pre x`: no pattern matches; asks | no program runs unasked |
+| UC-4 link rebase | orchestrator | a moved archive | `rebase_links.py` rewrites it | a file outside the working directory: exit 2 | nothing written outside |
+| UC-5 audit | auditor | a scanned root with `yarn.lock` | `yarn audit` runs in a copy | no `package.json`: skipped | the root's yarn configuration takes no part |
 
 <!-- contract:acceptance -->
 
@@ -253,224 +364,217 @@ On 2026-10-05 the tags point at the commits of v4.4.0, v5.6.0 and v4.4.0.
 | ID | Criterion |
 | :--- | :--- |
 | A1 | Each case marked **base-fail** fails on the base tree and passes after the change |
-| A2 | *(deferred to WI-34 with the hook, D11)* |
-| A3 | The settings cases TC-S1 and TC-S3 to TC-S8 hold |
-| A4 | The pin cases TC-P1 to TC-P3 hold |
-| A5 | The fingerprint cases TC-F1 to TC-F5 hold |
-| A6 | The lockfile cases TC-L1 to TC-L23 hold |
+| A2 | The archive cases TC-A1 to TC-A22 hold |
+| A3 | The settings cases TC-S1, TC-S3 to TC-S8 hold |
+| A4 | The guard cases TC-G1 to TC-G7 hold |
+| A5 | The cases TC-Y1 to TC-Y3, TC-T1, TC-T2 hold |
+| A6 | `tests/test_run_safety_rules.py` pins the new step 4, the pointers and the gate whole |
 | A7 | `PYTHONPATH=. python3 tests/run_tests.py` reports OK; every gate of `framework-gates.yml` passes locally |
 | A8 | `scan_register.py` reports no new `warn` on edited markdown; `git status` lists declared paths only |
-| A9 | `tests/test_run_safety_rules.py` pins the rule sentences of R7.1 and R7.2 and the pointers, and runs in the curated suite |
 
-The other cases are regression guards: they may pass on the base tree. Each case feeds its input
-to the code the TASK names and asserts one outcome.
+The other cases are regression guards: they may pass on the base tree.
 
-**Settings.**
+**Archive script.** Each case runs the script with `cwd` set to a temporary root. The script
+exposes `main(argv)`; TC-A11 and TC-A13 call it in-process after `chdir`, with `os.link` or
+`os.unlink` replaced.
+
+- TC-A1 **base-fail** — `docs/TASK.md` → `docs/tasks/task-112-x.md` → exit 0; the content moved;
+  `docs/tasks/` created.
+- TC-A2 — `docs/PLAN.md` → `docs/plans/plan-112-x.md` → exit 0.
+- TC-A3 — the destination exists → exit 1; both files unchanged.
+- TC-A4 — the destination is a symbolic link, dangling or to a file → exit 1.
+- TC-A5 — `docs/tasks` is a symbolic link to a directory outside the root → exit 1; nothing
+  written there.
+- TC-A6 — the source is a symbolic link → exit 1.
+- TC-A7 — each of `docs/tasks/../x.md`, an absolute path, `docs/tasks/sub/task-112-x.md`,
+  `docs/plans/plan-112-x.md` for `docs/TASK.md`, `docs/tasks/x.md`, `docs/tasks/task-12-x.md`,
+  `./docs/tasks/task-112-x.md` → exit 1.
+- TC-A8 — one operand, three operands, `-f docs/tasks/task-112-x.md`, `docs/TASK.md --help` →
+  exit 2; nothing moved.
+- TC-A9 — `docs` is a symbolic link → exit 1.
+- TC-A10 — the source is absent → exit 1; `docs/tasks` is not created.
+- TC-A11 — `os.link` raises `PermissionError` → the copy path moves the file; with the
+  destination present, it refuses and keeps both.
+- TC-A12 — the source has a second hard link → exit 1; the error names the hard links.
+- TC-A13 — removing the source fails → exit 1; the destination is removed; the source stays.
+- TC-A14 — an overlong archive name → exit 1 with a JSON error; no change on disk.
+- TC-A15 — the source is swapped for another file just before the link → exit 1; no destination.
+- TC-A16 — on the copy path, the source is swapped for another regular file → exit 1.
+- TC-A17 — on the copy path, the source is swapped for a link → exit 1; the error names the open.
+- TC-A18 — on the copy path, a write fails → exit 1; no destination; the source stays.
+- TC-A19 — the `stat` after the link fails → exit 1; no destination.
+- TC-A20 — a `json.py` planted beside the script is not imported when the script runs.
+- TC-A21 — the source vanishes before its unlink → exit 1; the archive stays; the error says so.
+- TC-A22 — the source is swapped for another file before its unlink → exit 1; the archive stays.
+
+**Script guards.** The tests pass relative operands, or the `realpath` of their temporary root:
+`os.getcwd()` returns the resolved path on darwin.
+
+- TC-G1 **base-fail** — `rebase_links.py` with a file outside the working directory → exit 2; the
+  file unchanged.
+- TC-G2 — a file operand that is a symbolic link, or has a second hard link, or lies under
+  `.git/` → exit 2; the target unchanged.
+- TC-G3 — a file inside the working directory → rewritten as at the base.
+- TC-G4 **base-fail** — `init_skill.py x --path <outside>` → exit 1; nothing created.
+- TC-G5 — `init_skill.py ../x`, `init_skill.py <absolute path>` and `init_skill.py x --path .git`
+  → exit 1; nothing created.
+- TC-G6 — `init_skill.py x --path skills` inside the working directory → `skills/x/SKILL.md`.
+- TC-G7 — `rebase_links.py` with a valid operand and a refused one → exit 2; neither is written.
+
+TC-G2 and TC-G5 include `.GIT`, a link to `.git`, a link into `.git/hooks` and `..` after a link.
+
+**Settings and patterns.**
 
 - TC-S1 **base-fail** — the allow list of `.claude/settings.json` equals Appendix A.
-- TC-S3 — R2.5 holds for every string under `permissions`; no rule of a command R2.7 lists holds
-  a `*`, and the only `git` rule with a `*` is `Bash(git status *)`. A `python` rule runs a bare
-  `-m pytest` or a named script.
-- TC-S4 — `.gitignore` lists `.claude/settings.local.json`.
-- TC-S5 — no allow rule ends in a `*` joined to a word, and none starts with `Bash(find`.
-- TC-S6 — the settings hold `env`, `permissions` with `allow` only, and `hooks`. `env` is the
-  base's, and `hooks` holds one entry: PostToolUse, matcher `Write|Edit`, command
-  `.claude/hooks/validate_skill_hook.sh`.
-- TC-S7 — every part of every shell block of `skill-archive-task` matches a committed rule, except
-  the `test -e` guard of Step 5, which WI-35's script absorbs (D13).
-- TC-S8 — the patterns of `skill-safe-commands` accept the read and bare forms of R2.7 and reject
-  its writing forms. Its Antigravity list, the lists of both READMEs, `GEMINI.md` and `AGENTS.md`
-  state the same.
+- TC-S3 — TASK 111's checks hold; each allow rule's command name is one of `ls`, `cat`, `head`,
+  `tail`, `grep`, `wc`, `stat`, `du`, `df`, `echo`, `git`, `mkdir`, `python`, `python3`, `npm`,
+  `cargo`.
+- TC-S4 to TC-S6 — as TASK 111.
+- TC-S7 **base-fail** — R6.2.
+- TC-S8:
+  - the patterns accept and reject the commands of §4.1, each after the shell's quote removal;
+  - the pattern block, the table and the fence lists of R6.1 equal their pinned text;
+  - table and patterns cover each other (R3.5);
+  - the three Antigravity lists equal R3.6.
 
-**Pins.**
+**Related checks.**
 
-- TC-P1 **base-fail** — every `uses:` of `.github/workflows/*.yml` matches
-  `<owner>/<repo>@<40 hex> # v<version>`; fails when one line names `@v4`.
-- TC-P2 — `.github/dependabot.yml` names the `github-actions` ecosystem, monthly.
-- TC-P3 — `RELEASE_CHECKLIST.md` names `dependabot.yml`.
+- TC-Y1 **base-fail** — a root with `yarn.lock`, `package.json` and `.yarnrc.yml`, a fake `yarn`
+  on `PATH` → `yarn audit` runs once, in a directory that holds `yarn.lock` and `package.json`
+  only; that `package.json` holds the kept fields only.
+- TC-Y2 — no regular `package.json` beside `yarn.lock`, or a linked `yarn.lock` → no `yarn` run.
+- TC-Y3 — a root with `yarn.lock` and `package.json`, types without `javascript` → no `yarn` run.
+- TC-T1 **base-fail** — `run_tests` refuses `npx jest`, `pytest -p x`, `pytest --basetemp=/tmp/x`,
+  `python3 -m pytest -x`, `npm test -- -u`, `cargo test x`.
+- TC-T2 — the policy accepts each command of R5.3.
 
-**Fingerprint.** The test reads the formula from the fenced `sh` block of §2.4.1 and runs it with
-`bash` in a temporary repository.
+### 4.1 Pattern cases
 
-- TC-F1 **base-fail** — an edit inside an untracked file changes the value.
-- TC-F2 — a second edit of a tracked binary file changes the value.
-- TC-F3 — a repository with no untracked file yields one value on two runs.
-- TC-F4 — `vdd-multi.md` and the auditor wrapper hold the §2.4.1 block's formula verbatim.
-- TC-F5 — §2.4.1 holds the run-location, coverage and caller-output statements of R4.2 and R4.3,
-  and not the sentence R4.5 drops.
+Accept, with TASK 111's accept list:
 
-**Lockfiles.** A fake `npm` on `PATH` records its directory and arguments and prints a set reply.
+- `ls -la`, `ls -L .agent`;
+- `rg foo`, `rg -L foo`, `rg --follow foo`, `rg --pre-glob '*.gz' foo`;
+- `fd -L foo`, `fd -e md`;
+- `mkdir -p docs/tasks`;
+- `python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/task-112-x.md`.
 
-- TC-L1 **base-fail** — the only lockfile is `sub/package-lock.json` → `npm audit --json
-  --package-lock-only` runs once, in a copy outside the project.
-- TC-L2 — its reply holds one high advisory → a `high` finding names `sub/package-lock.json`.
-- TC-L3 — a lockfile under `node_modules/` → not audited.
-- TC-L4 — no lockfile → no `npm audit`.
-- TC-L5 — `npm` absent, a reply that is not JSON, a reply with an `error` object, or the timeout →
-  an `info` finding names the lockfile and the reason.
-- TC-L6 — `package-lock.json` and `npm-shrinkwrap.json` in one directory → one audit.
-- TC-L7 to TC-L10 — the PLAN's cases for R5.4 and R5.5.
-- TC-L11 — a linked lockfile and a linked directory → not audited.
-- TC-L12 — a critical and a high advisory → one finding each, naming the lockfile.
-- TC-L13 — a `.npmrc` beside the lockfile → the copy holds only the lockfile and `package.json`.
-- TC-L14 — no `package.json` beside the lockfile → an `info` finding, no `npm`.
-- TC-L15 — `npm` absent → the section status of R5.7; each audit has a 60-second timeout.
-- TC-L16 — the copy holds the original `package.json`. TC-L17 — a linked `package.json` → not
-  audited.
-- TC-L18 — a critical finding in one lockfile and an unfinished audit in another → the status
-  names the critical finding.
-- TC-L19 — `vulnerabilities` as `null`, a list, or a map of strings → no crash; a list is an
-  `info` finding. TC-L20 — the timeout reason names 60 s.
-- TC-L21 — an `error` code reaches the reason. TC-L22 — the status counts every unaudited
-  lockfile. TC-L23 — a moderate advisory is no finding.
+Reject, with TASK 111's reject list:
+
+- `rg --pre cat x`, `rg --pre=cat x`, `rg -L --pre cat x`, `rg foo --pre cat`,
+  `rg --hostname-bin x y`;
+- `fd -x rm`, `fd -X rm`, `fd -Hx rm`, `fd -xrm`, `fd -L -x rm`, `fd -e md -x rm`;
+- `fd --exec rm`, `fd --exec=rm`, `fd --exec-batch rm`, `fd --exe rm`;
+- `fd -1x rm`, `fd -0X rm`, `rg foo '--pre' cat`, `fd foo '-x' rm`;
+- `fd foo` with two line continuations before `-x rm`, and the same for `rg --pre` and
+  `git diff --output`.
+- `file x`, `file -C`;
+- `mkdir -p docs/x /tmp/y`, `mkdir -p .agent/x`, `mkdir -p tests/x`;
+- `mv docs/TASK.md docs/tasks/x.md`;
+- `python -c 'x'`, `python3 -c 'from scripts.tool_runner import x'`.
 
 <!-- contract:open-questions -->
 
 ## 5. Open Questions
 
-None open. D1 and D2 record the operator's answers.
+None open. WI-36 holds the Claude Code question of §1 (R8.6).
 
 ## 6. Decisions
 
-**D1, 2026-10-05, operator: the personal permissions move to the operator's local settings.**
-Rejected: removing them, which makes those commands ask again; keeping them, which ships them to
-consumers.
+**D1, 2026-10-06, operator: implement WI-35 and verify that nothing broke.** The request names the
+work-item; the orchestrator takes its Recommendation, Option 1, for the `mv` rules.
 
-**D2, 2026-10-05, operator: Dependabot updates the action pins monthly.** Rejected: manual
-updates, which leave a pin on an old release until someone looks.
+**D2, 2026-10-06, orchestrator: `file` leaves every list; `rg` and `fd` stay with an exclusion.**
+Rejected: an exclusion for `file` — its parser accepts `--co` for `--compile`, measured.
+ripgrep 14.1.1 rejects abbreviations, measured, so an exclusion of `--pre` holds for `rg`.
 
-**D3, 2026-10-05, orchestrator: the hook asks, never denies.** A nested checkout may be the
-operator's own work. Under `claude -p` no one answers the prompt, so an `ask` there stops the call.
-Rejected: `deny`, which blocks a legitimate interactive run with no way through.
+**D3, 2026-10-06, orchestrator: the scripts guard their own operands (R4).** Rejected: dropping
+the two rules — `skill-archive-task` needs `rebase_links.py`, and `CLAUDE.md` requires
+`init_skill.py` before every new skill. Rejected: narrowing the rule text — a `*` matches any
+operand.
 
-**D4, 2026-10-05, orchestrator: the pins keep the current major versions.** The pinned commits
-equal the base's tags, so CI behaviour does not change. A major upgrade arrives as a Dependabot
-pull request. Rejected: upgrading to `checkout` v7 now, which changes CI in a security task.
+**D4, 2026-10-06, operator: test modules and fixtures that no rule names by path are exempt from
+step 4's four stages.** Code that runs without a prompt only through them is exempt with them.
+A test module is a `test_*.py` or `conftest.py` file that no hook or listed script runs or
+imports; a fixture is a data file that a test reads.
+`tests/run_tests.py` and every script that a rule names stay under the four stages, so this run
+edits `run_tests.py` in the stage-3 edit. Rejected: exempting all test-runner code — it reverses
+WI-35's example. Rejected: no exemption — `python3 -m pytest` runs every test module, so every
+test edit would take four stages.
 
-**D5, 2026-10-05, orchestrator: the local settings change after the commit.** `framework-upgrade`
-§3.1 requires every edited path to be tracked, and `settings.local.json` is ignored. R2.3 therefore
-runs after the operator's commit, as a mirror sync does. The base revision holds every moved
-permission. The audit records counts, not the rules, because the rules hold home paths. Rejected:
-editing the file during the run, which §3.1 stops.
+**D6, 2026-10-06, operator: WI-37 is dropped.** The retro asked what to do with it; the operator
+answered that it is not needed. Rejected: queuing it as a task.
 
-**D6, 2026-10-05, operator: a fourth specification audit round.** Round 3 failed on 4 MAJOR
-findings, all in R1, with a fix stated for each. The operator chose to fix them and audit once
-more. Rejected: splitting the hook into a new work-item, which leaves SEC-17 open; stopping the
-run.
-
-**D7, 2026-10-05, operator: revision 5 proceeds to planning.** Round 4 failed on 3 MAJOR
-findings, each a shell edge case of R1 with a one-clause fix that revision 5 applies. The audit
-records `[OVERRIDE_VERIFICATION]`. The hook is checked where it runs: a test per case, and the
-final code review and security audit, whose roles execute it. Rejected: a fifth round, which
-finds the next edge case; splitting the hook off, which leaves SEC-17 open.
-
-**D8, 2026-10-05, orchestrator: review round 1 narrows the settings and the scanner.** The code
-review and the security audit found that `X*` rules admit `X`-prefixed commands, that `find *`
-runs commands, and that `npm` read a vendored `.npmrc`. R2.6, R5.2, R5.6 and R5.7 answer them. The
-hook's own fixes are deferred with it (D11). Rejected: listing the settings gaps in §7, which
-keeps an allow rule that runs any program.
-
-**D9, 2026-10-05, operator: the hook recognises safe shapes.** Review round 2 found that a `cd`
-the shell never runs moved the modelled directory back to the root (SEC2-1). R1 no longer models
-the shell: it lists the shapes it can check and asks on the rest. Rejected: patching the model,
-which each audit and review round had found another way around.
-
-**D10, 2026-10-05, operator: the hook stays strict.** It asks on a guarded command in Auto mode
-too, even when no allow rule would approve it. A narrower hook, guarding only what an allow rule
-approves, goes to a new work-item. Rejected for this run: an approximation of Claude Code's
-matcher, which needs another review round.
-
-**D11, 2026-10-06, operator: the hook is deferred to WI-34.** Three review rounds each found a new
-way the hook's model parted from the shell (SEC2-1, CR3-3, CR3-4), and further adversarial analysis
-could not run to a conclusion in this session. The hook is removed from this change; its design,
-test suite and the review history move to WI-34. This supersedes D3, D6, D7, D9 and D10 for the
-shipped change. R2 still narrows the committed allow list, which stands on its own as the
-recorded reviews confirmed. Rejected: shipping the hook as a partial mitigation, which would claim
-more protection than it gives.
-
-**D12, 2026-10-06, operator: the retro items are fixed in this run.** The retro offered three
-items; the operator chose two and asked to fix them now (R7). Rejected: filing them as
-work-items.
-
-**D13, 2026-10-06, operator: seven wildcard `git` and `tree` rules leave; archiving stays automatic.**
-The R7 security audit found that `Bash(git diff *)`, `Bash(git log *)` and `Bash(git show *)`
-approve `--output`, which writes a file (SECI-8). `git branch *`, `git tag *` and `git remote *`
-approve writes to refs and remotes, and `tree *` approves `-o`. Claude Code's built-in check
-approves the read forms of `git` with no rule (Claude Code docs, Configure permissions, § Read-only
-commands), so the seven rules leave and the bare forms stay (R2.7). The wildcard of the two `mv`
-rules also matches a destination outside their directories. The operator keeps archiving automatic; an archive script that checks its destination goes to
-WI-35. Rejected: deny rules on `--output`, which the Claude Code documentation calls fragile.
-
-**D14, 2026-10-06, operator: test runners keep their bare forms; older classes go to WI-35.** The
-round-5 security audit found that the wildcard rules of `python -m pytest`, `python3 -m pytest`,
-`npm test`, `npx jest` and `cargo test` approve options that run a program, delete a directory or
-overwrite a file (SECI5-1). These rules leave, and `npx jest` leaves whole (R2.7). In Manual mode
-a test run with arguments now asks. The same reviews found older classes in `skill-safe-commands`,
-the framework scripts and the dependency scan; the operator moved them to WI-35. Rejected: fixing
-every vendor's patterns in this run.
+**D5, 2026-10-06, orchestrator: the Antigravity list keeps commands with no writing option.**
+Rejected: dropping the list — the agent's `SafeToAutoRun` still rejects a redirect, and the IDE
+asks when the agent sets it to false (Troubleshooting item 1).
 
 ## 7. Out of scope
 
-- `.gemini/settings.json` and the other vendors' settings: they hold no allow list. The Gemini
-  hook already prefixes `${GEMINI_PROJECT_DIR:-.}`.
-- Lockfiles of `yarn`, `pnpm` and other ecosystems below the root.
-- Rules in `.claude/settings.local.json` that were there before this task.
-- Dependabot for the npm lockfiles of the renderers. Their overrides are deliberate (TASK 110).
-- A command allowed by a read-only rule, such as `cat` or `git status`, in a foreign directory.
-- A destination outside `docs/tasks/` or `docs/plans/` in the two `mv` rules: archiving stays
-  automatic (D13). WI-35 holds the checked archive script.
-- The older classes of review round 5 (D14): `rg`, `fd` and `file` options, open-ended patterns of
-  `skill-safe-commands`, framework-script arguments, `yarn audit` and the `full-robust` scan gate.
-  WI-35 holds them.
-- The anchor hook for SEC-17, and every command shape it would have guarded — deferred to WI-34
-  (D11). Without it, a committed relative-path allow rule still matches in a nested checkout.
-- `Bash(python3 -)` and `Bash(git push *)` in the operator's local settings after R2.3 (D1).
+- The anchor hook for relative-path rules in a nested checkout (WI-34).
+- A kill between the link and the unlink of `archive_move.py`: both names stay, and a re-run
+  refuses. `skill-archive-task` Edge Cases gives the recovery.
+- Two races with a concurrent writer of `docs/`: between the source check and the archive's
+  removal after a failed unlink, and at the unlink itself, which removes whatever the name holds.
+  Closing them needs `renameat2(RENAME_NOREPLACE)`, which Python does not expose.
+- A link into the `.git` of a nested repository inside the working directory (WI-34).
+- `run_tests` accepts a `cwd` anywhere in the repository, a nested checkout included (WI-34).
+- `rg -z`, which runs the decompressors on `PATH`, and `fd -l`, which runs `ls` from `PATH`; neither
+  runs a program the command names.
+- A directory symbolic link inside the working directory that points outside the git directory:
+  R4 checks paths without resolving links, so `rebase_links.py` and `init_skill.py` write through
+  one (R4.2 **Why**). A link into `.git` is refused (R4.1).
+- A link swapped in between the guard of `rebase_links.py` and its write. `archive_move.py`
+  checks the destination after the link (R1.3) and removes it when the check fails.
+- `.claude/settings.local.json`; the operator's rules stay as they are.
+- The mirror copy of `skill-creator` in Universal-skills; the operator syncs it after the commit.
+- `archive_protocol.archive_task()`, the Python mirror of the protocol; no allow rule runs it.
+- The external scanners other than `yarn audit` (WI-37, dropped: D6).
 
-## Appendix A — the allow rules that stay
+## Appendix A — the allow rules after the change
 
-1. `Bash(ls *)`
-2. `Bash(cat *)`
-3. `Bash(head *)`
-4. `Bash(tail *)`
-5. `Bash(grep *)`
-6. `Bash(wc *)`
-7. `Bash(stat *)`
-8. `Bash(file *)`
-9. `Bash(du *)`
-10. `Bash(df *)`
-11. `Bash(echo *)`
-12. `Bash(git status)`
-13. `Bash(git status *)`
-14. `Bash(git log)`
-15. `Bash(git diff)`
-16. `Bash(git show)`
-17. `Bash(git branch)`
-18. `Bash(git remote)`
-19. `Bash(git tag)`
-20. `Bash(mv docs/TASK.md docs/tasks/*)`
-21. `Bash(mv docs/PLAN.md docs/plans/*)`
-22. `Bash(mkdir -p docs/*)`
-23. `Bash(mkdir -p .agent/*)`
-24. `Bash(mkdir -p tests/*)`
-25. `Bash(python -m pytest)`
-26. `Bash(python3 -m pytest)`
-27. `Bash(npm test)`
-28. `Bash(cargo test)`
-29. `Bash(python3 .agent/skills/skill-session-state/scripts/update_state.py *)`
-30. `Bash(python3 .agent/tools/task_id_tool.py *)`
-31. `Bash(python3 .agent/skills/skill-creator/scripts/validate_skill.py *)`
-32. `Bash(python3 .agent/skills/skill-creator/scripts/init_skill.py *)`
-33. `Bash(python3 .agent/tools/rebase_links.py *)`
-34. `Bash(python3 .agent/skills/artifact-formalizer/scripts/scan_register.py *)`
-35. `Bash(python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py *)`
-36. `Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py *)`
-37. `Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py --check *)`
-38. `Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py docs/PLAN.md --check *)`
-39. `Bash(python3 System/scripts/doctor.py)`
-40. `Bash(python3 System/scripts/doctor.py *)`
-41. `Bash(python3 tests/run_tests.py)`
-42. `Bash(python System/scripts/validate_skills.py --root .)`
-43. `Bash(python System/scripts/validate_skills.py --root . --quiet)`
-44. `Bash(python System/scripts/check_prompt_references.py --root .)`
-45. `Bash(python System/scripts/security_lint.py --root .)`
-46. `Bash(python System/scripts/smoke_workflows.py --root .)`
+```
+Bash(ls *)
+Bash(cat *)
+Bash(head *)
+Bash(tail *)
+Bash(grep *)
+Bash(wc *)
+Bash(stat *)
+Bash(du *)
+Bash(df *)
+Bash(echo *)
+Bash(git status)
+Bash(git status *)
+Bash(git log)
+Bash(git diff)
+Bash(git show)
+Bash(git branch)
+Bash(git remote)
+Bash(git tag)
+Bash(mkdir -p docs/tasks)
+Bash(mkdir -p docs/plans)
+Bash(mkdir -p docs/architectures)
+Bash(python -m pytest)
+Bash(python3 -m pytest)
+Bash(npm test)
+Bash(cargo test)
+Bash(python3 .agent/tools/archive_move.py *)
+Bash(python3 .agent/skills/skill-session-state/scripts/update_state.py *)
+Bash(python3 .agent/tools/task_id_tool.py *)
+Bash(python3 .agent/skills/skill-creator/scripts/validate_skill.py *)
+Bash(python3 .agent/skills/skill-creator/scripts/init_skill.py *)
+Bash(python3 .agent/tools/rebase_links.py *)
+Bash(python3 .agent/skills/artifact-formalizer/scripts/scan_register.py *)
+Bash(python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py *)
+Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py *)
+Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py --check *)
+Bash(python3 .agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py docs/PLAN.md --check *)
+Bash(python3 System/scripts/doctor.py)
+Bash(python3 System/scripts/doctor.py *)
+Bash(python3 tests/run_tests.py)
+Bash(python System/scripts/validate_skills.py --root .)
+Bash(python System/scripts/validate_skills.py --root . --quiet)
+Bash(python System/scripts/check_prompt_references.py --root .)
+Bash(python System/scripts/security_lint.py --root .)
+Bash(python System/scripts/smoke_workflows.py --root .)
+```

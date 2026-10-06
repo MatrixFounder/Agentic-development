@@ -2,7 +2,7 @@
 name: skill-archive-task
 description: "Complete protocol for archiving TASK.md and PLAN.md (lockstep) with ID generation. Single source of truth for archiving."
 tier: 1
-version: 2.0
+version: 2.1
 ---
 # Task Archiving Protocol
 
@@ -124,15 +124,22 @@ document's own H1. Rewriting one row silently falsifies the rest.
 
 ### Step 5: Archive (Move File)
 
-**Collision guard first.** `mv` overwrites, and Step 3's conflict check sees *parent* archives
-only — a destination shaped like a sub-task (`task-096-01-x.md`) is invisible to it.
+The archive script moves the file and guards the destination. Step 3's conflict check sees
+*parent* archives only, so a destination shaped like a sub-task (`task-096-01-x.md`) is invisible
+to it; the script refuses that too, as it refuses every existing destination. It also refuses any
+destination but `docs/tasks/task-<ID>-<slug>.md`, a link, and a source with a second hard link. It
+creates `docs/tasks/` when it is absent.
 
 ```bash
-test -e docs/tasks/{filename} && echo "STOP: target exists" || mv docs/TASK.md docs/tasks/{filename}
+python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/{filename}
 ```
 
+- Exit `0`: moved. A non-zero exit means **STOP** and report the script's JSON error. Nothing
+  moved, unless the error says the archive was kept; then follow the Edge Cases row.
+
 > [!IMPORTANT]
-> The `mv` is **SAFE TO AUTO-RUN**. Do NOT wait for user approval.
+> The script is **SAFE TO AUTO-RUN**: one allow rule names it, and it moves nothing but the two
+> archive pairs (`skill-safe-commands`). Do NOT wait for user approval.
 
 ### Step 5.5: Rebase the moved document's links (MANDATORY)
 
@@ -168,8 +175,7 @@ Verify:
       non-zero when a link it rewrote fails to resolve.
 
 **If validation fails:**
-- Check if mv command returned error
-- If `docs/TASK.md` still exists: retry mv or notify user
+- Report the script's exit code and JSON error to the user; a failed move is not retried.
 - DO NOT create new TASK.md until validation passes
 
 ## PLAN.md Archiving (Lockstep)
@@ -206,11 +212,8 @@ IF Step 1 decision was REFINEMENT (not a NEW task):
     DO NOT archive PLAN.md — Planner overwrites it in place → DONE
 ```
 
-**7.3 — Ensure destination** (idempotent, SAFE TO AUTO-RUN):
-
-```bash
-mkdir -p docs/plans
-```
+**7.3 — Destination.** The script of 7.6 creates `docs/plans/` when it is absent; nothing runs
+here.
 
 **7.4 — Derive filename** (NO new ID generation):
 
@@ -229,19 +232,18 @@ entered. The one path where a corrected ID survives is the automated mirror call
 `archive_protocol.archive_task(allow_renumber=True)`; there TASK and PLAN both take the corrected
 ID and stay paired.
 
-**7.5 — Collision guard:**
-
-```
-IF exists("docs/plans/{plan_filename}"):
-    STOP. Do NOT overwrite. Report to user:
-      "Plan archive collision: docs/plans/{plan_filename} already exists."
-```
+**7.5 — Collision guard.** The script of 7.6 refuses an existing destination with exit 1 and
+moves nothing. Report it to the user: "Plan archive collision: docs/plans/{plan_filename} already
+exists."
 
 **7.6 — Archive (move):**
 
 ```bash
-mv docs/PLAN.md docs/plans/{plan_filename}
+python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/{plan_filename}
 ```
+
+A non-zero exit means **STOP** and report. Nothing moved, unless the error says the archive was
+kept (Edge Cases).
 
 **7.6.5 — Rebase the plan's links** (mirrors Step 5.5):
 
@@ -268,7 +270,7 @@ returned exit 0 with `"ok": true`, and Step 7.7's assertion passed on a dead lin
 ASSERT NOT exists("docs/PLAN.md")
 ASSERT exists("docs/plans/{plan_filename}")
 ASSERT every link denoted before the move still resolves   # rebase_links exit code
-IF validation fails: retry mv once, else notify user.
+IF validation fails: notify the user; a failed move is not retried.
 ```
 
 ### Edge Cases
@@ -277,7 +279,8 @@ IF validation fails: retry mv once, else notify user.
 |------|----------|
 | `docs/PLAN.md` absent | Skip silently (7.1). Not an error — many tasks reach analysis but not planning. |
 | Task refinement (same task) | Step 7.2 returns early. PLAN.md is overwritten in place by the Planner. |
-| `docs/plans/` missing | `mkdir -p` in 7.3 creates it. |
+| `docs/plans/` missing | The script of 7.6 creates it. |
+| A move killed between its link (or copy) and its unlink, or an error that says the archive was kept | `docs/TASK.md` (or `docs/PLAN.md`) and the archive may both remain, and the script refuses again. Compare them with `cmp`. Equal: remove the `docs/` name by hand. Different: report both to the user; never remove a name whose content exists nowhere else. |
 | Corrected `used_id` | Unreachable under this protocol: Step 3 runs correction OFF and Step 4 stops on a mismatch. Only `archive_task(allow_renumber=True)` reaches it, and there 7.4 keeps TASK and PLAN paired. |
 | **Orphan PLAN.md** (PLAN.md exists, no TASK.md) | Step 1 skipped archiving (no TASK.md) → Step 7 is never reached. The orphan PLAN.md is **left in place**. Warn the user it may be stale. PLAN.md has no independent ID, so it cannot be safely archived alone — this is a deliberate limitation. |
 
@@ -286,25 +289,29 @@ IF validation fails: retry mv once, else notify user.
 > See **`skill-safe-commands`** for the authoritative list of commands safe for auto-execution.
 
 Key commands for this skill:
-- `mv docs/TASK.md docs/tasks/...` — archiving TASK.md
-- `mv docs/PLAN.md docs/plans/...` — archiving PLAN.md (lockstep)
-- `mkdir -p docs/plans` — ensure PLAN archive destination exists
+- `python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/...` — archiving TASK.md
+- `python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/...` — archiving PLAN.md
+  (lockstep); the script creates `docs/plans/`
+- `python3 .agent/tools/task_id_tool.py`, `python3 .agent/tools/rebase_links.py` — ID and links
 - `ls`, `cat` — validation
 
 
 ## Safety Boundaries
 
-This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries apply:
+This skill performs **file mutations**: the archive script's move, and its creation of
+`docs/tasks/` or `docs/plans/`. The following boundaries apply:
 
-- **Move, never delete.** Archiving uses `mv` only — `docs/TASK.md` / `docs/PLAN.md`
-  content is relocated, never destroyed.
-- **No overwrite.** Step 5 and Step 7.5 enforce collision guards: if the target archive
-  filename already exists, **STOP** and report — never overwrite an existing archive.
+- **Move, never delete.** Archiving uses `archive_move.py` only — `docs/TASK.md` /
+  `docs/PLAN.md` content is relocated, never destroyed. A failure after the destination exists
+  removes the destination and keeps the source.
+- **No overwrite.** The script refuses an existing destination (Steps 5 and 7.5): **STOP** and
+  report — never overwrite an existing archive.
 - **Lockstep integrity.** PLAN.md is archived only after TASK.md archiving is validated
   (Step 6). A failed TASK archive aborts the PLAN archive.
 - **Living documents untouched.** `docs/ARCHITECTURE.md` is never moved or archived.
-- **Validate before proceeding.** Each `mv` is followed by an existence assertion
-  (Steps 6, 7.7); on failure, retry once then notify the user — do not continue blindly.
+- **Validate before proceeding.** Each move is followed by an existence assertion
+  (Steps 6, 7.7); on failure, notify the user — a failed move is not retried, and the run does
+  not continue blindly.
 
 ## Integration
 
@@ -329,11 +336,9 @@ This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries
    `status: "conflict"` → **STOP**; the operator decides. Sub-task files matching
    `task-{OLD_ID}-<digits>-*` are **not** a conflict.
 6. **Step 4** — assert `id_in_filename == {OLD_ID}`. This step never assigns.
-7. **Step 5** — collision guard, then move:
+7. **Step 5** — move; the script refuses an existing destination:
    ```bash
-   test -e docs/tasks/task-{OLD_ID}-{old-slug}.md \
-     && echo "STOP: target exists" \
-     || mv docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md
+   python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/task-{OLD_ID}-{old-slug}.md
    ```
 8. **Step 5.5** — rebase the moved document's links. `docs/tasks/` is one level deeper, so every
    relative link now denotes something else. `docs/PLAN.md` is a slot, so pass the pairing Step 7
@@ -348,8 +353,9 @@ This skill performs **file mutations** (`mv`, `mkdir`). The following boundaries
    Exit `3` lists links left alone deliberately — report them, never guess a target.
 9. **Step 6** — validate: `docs/TASK.md` gone ✓, archive present ✓, links still resolve ✓.
 10. **Step 7** — PLAN lockstep. `docs/PLAN.md` exists? → YES.
-    - `mkdir -p docs/plans`, reuse `{OLD_ID}` + `{old-slug}` from the TASK archive above.
-    - Collision guard, then `mv docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md`.
+    - Reuse `{OLD_ID}` + `{old-slug}` from the TASK archive above.
+    - `python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/plan-{OLD_ID}-{old-slug}.md`;
+      the script creates `docs/plans/` and refuses an existing destination.
     - **Step 7.6.5** — rebase, with `docs/TASK.md` mapped to the archive it just became:
       ```bash
       python3 .agent/tools/rebase_links.py docs/plans/plan-{OLD_ID}-{old-slug}.md \

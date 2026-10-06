@@ -15,7 +15,7 @@ All skills in `.agent/skills/` MUST define a `tier` property in their YAML front
 | Skill | Tier | Description |
 |-------|------|-------------|
 | `core-principles` | 0 | Anti-hallucination rules, Stub-First methodology |
-| `skill-safe-commands` | 0 | **Enables automation** — auto-run for `mv`, `ls`, `git`, tests |
+| `skill-safe-commands` | 0 | **Enables automation** — auto-run for the archive script, `ls`, `git`, tests |
 | `artifact-management` | 0 | Archiving protocol, file management |
 | `skill-session-state` | 0 | Persist/Restore session context (Mode, Task) |
 

@@ -2,7 +2,7 @@
 name: skill-creator
 description: Use when creating new Agent Skills, upgrading existing skills, running evals to test a skill, benchmarking skill performance, or optimizing a skill's description for better triggering accuracy. Guidelines for Gold Standard skill structures.
 tier: 2
-version: 2.4
+version: 2.5
 ---
 # Skill Creator Guide
 
@@ -117,11 +117,11 @@ Template: `assets/SKILL_TEMPLATE.md`
 
 ### Script Contract
 - **Primary Commands**:
-  - `python3 scripts/init_skill.py <name> --tier <N> --path <ABSOLUTE-DIR>` — generate a
-    skill skeleton. Pass `--path` absolute: `init_skill.py:143` resolves it with
-    `os.path.abspath()`, i.e. against the **current working directory**, so the same
-    relative path lands in a different place depending on where you invoked it from —
-    run it from `scripts/` and the skill is scaffolded outside the repository.
+  - `python3 scripts/init_skill.py <name> --tier <N> --path <DIR>` — generate a skill
+    skeleton. Run it from the project root. `--path` and a path-shaped `<name>` resolve against
+    the **current working directory**, and the skill directory must lie inside it, outside
+    `.git/`, by its absolute path without resolving links. Anything else exits 1 and creates
+    nothing (TASK 112 R4.2).
   - `python3 scripts/validate_skill.py <skill-path> [--json] [--strict]` — validate
     structure and compliance
   - `python3 scripts/package_skill.py <skill-path> <output-dir>` — package into a `.skill`

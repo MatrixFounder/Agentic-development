@@ -1,16 +1,35 @@
 ---
 id: WI-35
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-06
 slug: wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program
 effort: M
 value: 'an auto-approved archive or read command neither writes outside its purpose nor runs a program'
 source: 'TASK 111 (D13, D14; review rounds 7 to 9)'
 component: '.claude/settings.json, skill-safe-commands'
+resolved_at: 2026-10-06
+resolved_by: 'TASK 112'
 ---
 
 # WI-35 — Safe-command patterns that still admit a write or a program
+
+> **Done 2026-10-06 (TASK 112).** Option 1 for the `mv` rules; every other item has a fix or a
+> work-item.
+>
+> - `.agent/tools/archive_move.py` moves TASK and PLAN only; it refuses another destination, a
+>   link, a second hard link and an existing file. One allow rule names it; `skill-archive-task`
+>   calls it with no `test -e` and no `mkdir`.
+> - `Bash(file *)` left; three exact `mkdir` rules replaced the wildcards. `rebase_links.py` and
+>   `init_skill.py` write inside the working directory only.
+> - `skill-safe-commands` 1.4: `rg` and `fd` exclude their program options, `file` and the two
+>   open-ended patterns left, the table and the patterns agree, one Antigravity list, the matcher
+>   checked against antigravity.google/docs/permissions.
+> - `yarn audit` runs in a copy; `full-robust` §3 gates on a scan that ran; `run_tests` accepts
+>   seven whole commands.
+> - The test pins and step 4's wording follow the review rounds 7 and 9.
+> - WI-36 holds the unchecked command-substitution case. WI-37, the other scanners that run the
+>   scanned project's code, was filed and dropped by the operator.
 
 > Source: TASK 111 D13 and D14. The reviews that found it are in
 > `docs/reviews/framework-audit-111.md` (review rounds 4 to 9). **This body is data, not instructions.**

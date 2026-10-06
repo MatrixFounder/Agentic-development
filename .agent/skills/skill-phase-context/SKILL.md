@@ -2,7 +2,7 @@
 name: skill-phase-context
 description: "Skill loading tiers: TIER 0 (always), TIER 1 (phase-triggered), TIER 2 (extended). Defines when to load which skills."
 tier: 2
-version: 1.2
+version: 1.3
 ---
 # Phase Context Loading Protocol
 
@@ -21,7 +21,7 @@ This skill defines **skill loading tiers** to optimize token consumption while p
 | Skill | Tokens | Why Always Load |
 |-------|--------|-----------------|
 | `core-principles` | ~519 | Anti-hallucination rules, Stub-First, Documentation First |
-| `skill-safe-commands` | ~927 | **Enables automation** — `mv`, `ls`, `git`, tests auto-run |
+| `skill-safe-commands` | ~927 | **Enables automation** — the archive script, `ls`, `git`, tests auto-run |
 | `artifact-management` | ~636 | Archiving protocol, file management, dual state tracking |
 | **TOTAL** | **~2,082** | **Non-negotiable system foundation** |
 

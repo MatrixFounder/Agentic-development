@@ -51,7 +51,7 @@ Use your harness's **built-in tools** — Cursor and Codex CLI both provide file
 
 ### Safe Commands (Auto-Run without Approval)
 > **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.
-> All commands listed in that skill (including `mv`, `ls`, the read forms of `git` and bare test runs) are `SafeToAutoRun: true`.
+> All commands listed in that skill (including the archive script `python3 .agent/tools/archive_move.py`, `ls`, the read forms of `git` and bare test runs) are `SafeToAutoRun: true`.
 > *(Note: detailed Regex patterns for IDE configuration are defined in the skill file)*
 
 ### Session State Persistence

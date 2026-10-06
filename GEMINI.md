@@ -54,7 +54,7 @@ Use your harness's **built-in tools** — **Gemini CLI**: `run_shell_command` (s
 
 ### Safe Commands (Auto-Run)
 > **MANDATORY**: You MUST read **`skill-safe-commands`** to load the authoritative list of auto-run commands.
-> All commands listed in that skill (including `mv`, `ls`, the read forms of `git` and bare test runs) are `SafeToAutoRun: true`.
+> All commands listed in that skill (including the archive script `python3 .agent/tools/archive_move.py`, `ls`, the read forms of `git` and bare test runs) are `SafeToAutoRun: true`.
 
 ### Session State Persistence
 - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.

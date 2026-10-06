@@ -3,7 +3,7 @@ TOOLS_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "run_tests",
-            "description": "Run tests with a restricted allowlist (pytest/python -m pytest/npm test/npx jest/cargo test) and timeout.",
+            "description": "Run tests with a timeout. Accepts these whole commands only: pytest, pytest -q, pytest -q --tb=short, python -m pytest, python3 -m pytest, npm test, cargo test.",
             "parameters": {
                 "type": "object",
                 "properties": {

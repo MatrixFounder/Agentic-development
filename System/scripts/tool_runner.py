@@ -8,6 +8,9 @@ DEFAULT_TEST_COMMAND = "pytest -q --tb=short"
 DEFAULT_TEST_TIMEOUT_SECONDS = 120
 MAX_TEST_TIMEOUT_SECONDS = 1800
 DISALLOWED_SHELL_CHARS = (";", "|", "&", "`", "<", ">", "$(")
+#: The whole commands `run_tests` accepts (TASK 112 R5.3); `DEFAULT_TEST_COMMAND` is one of them.
+ALLOWED_TEST_COMMANDS = ("pytest", "pytest -q", "pytest -q --tb=short", "python -m pytest",
+                         "python3 -m pytest", "npm test", "cargo test")
 
 
 def _normalize_tool_call(tool_call) -> Dict[str, Any]:
@@ -47,27 +50,14 @@ def _contains_disallowed_shell_chars(command: str) -> bool:
 
 
 def _is_allowed_test_command(parts: List[str]) -> bool:
-    if not parts:
-        return False
+    """Whether `parts` is one of `ALLOWED_TEST_COMMANDS`, whole (TASK 112 R5.3).
 
-    exe = parts[0]
-
-    if exe == "pytest":
-        return True
-
-    if exe in {"python", "python3"} and len(parts) >= 3 and parts[1] == "-m" and parts[2] == "pytest":
-        return True
-
-    if exe == "npm" and len(parts) >= 2 and parts[1] == "test":
-        return True
-
-    if exe == "npx" and len(parts) >= 2 and parts[1] == "jest":
-        return True
-
-    if exe == "cargo" and len(parts) >= 2 and parts[1] == "test":
-        return True
-
-    return False
+    An option of a test runner can run a program (`pytest -p`), delete a directory
+    (`pytest --basetemp`) or overwrite a file, and `npx jest` downloads jest when the project has
+    none. The tool accepts the bare commands and the default command only, as the safe-command
+    patterns do (TASK 111 D14).
+    """
+    return tuple(parts) in {tuple(command.split()) for command in ALLOWED_TEST_COMMANDS}
 
 
 def _parse_timeout_seconds(value: Any) -> int:
@@ -139,7 +129,7 @@ def execute_tool(tool_call) -> Dict[str, Any]:
 
             if not _is_allowed_test_command(parts):
                 return {
-                    "error": "Command not allowed (only pytest/python -m pytest/npm test/npx jest/cargo test)",
+                    "error": "Command not allowed (only: " + ", ".join(ALLOWED_TEST_COMMANDS) + ")",
                     "success": False,
                 }
 

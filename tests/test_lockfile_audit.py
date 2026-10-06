@@ -14,7 +14,9 @@ set reply. This file pins:
 * an audit that does not finish yields an `info` finding and the section says so (``TC-L5``,
   ``TC-L14``, ``TC-L15``);
 * one directory is audited once (``TC-L6``);
-* `run_external_tools` audits each lockfile, and only those (``TC-L7`` to ``TC-L9``);
+* `run_external_tools` audits each lockfile, and only those (``TC-L7`` to ``TC-L9c``); it runs
+  `yarn audit` in a copy of `yarn.lock` and `package.json`, never through a link, and for a
+  javascript project only (``TC-Y1`` to ``TC-Y3``, TASK 112 R5.1);
 * a root `package.json` without a lockfile is reported, not audited (``TC-L10``);
 * the copy holds the original `package.json`, never a linked one (``TC-L16``, ``TC-L17``);
 * a finding outranks an unaudited lockfile in the status; an unexpected vulnerability field and a
@@ -284,7 +286,7 @@ class TestScanDependencies(AuditTestCase):
 
 
 class TestExternalTools(AuditTestCase):
-    """TC-L7 to TC-L9 drive `run_external_tools` (R5.4, R5.5)."""
+    """TC-L7 to TC-L9c and TC-Y1 to TC-Y3 drive `run_external_tools` (R5.4, R5.5; TASK 112 R5.1)."""
 
     def external(self, types):
         recorded = []
@@ -311,18 +313,62 @@ class TestExternalTools(AuditTestCase):
         npm = [r for r in self.external(["javascript"]) if r[0][:1] == ["npm"]]
         self.assertEqual(npm, [])
 
-    def test_l9b_yarn_audit_needs_a_javascript_project(self):
+    def test_y3_yarn_audit_needs_a_javascript_project(self):
+        """TC-Y3 (TASK 112 R5.1), formerly TC-L9b."""
         (self.project / "yarn.lock").write_text("")
+        (self.project / "package.json").write_text('{"name": "x"}')
         self.assertEqual([r for r in self.external([]) if r[0][:1] == ["yarn"]], [])
 
     def test_l9c_lockfile_without_package_json_is_skipped(self):
         self.lockfile("sub", package=False)
         self.assertEqual([r for r in self.external([]) if r[0][:1] == ["npm"]], [])
 
-    def test_l9_root_yarn_lock_runs_yarn_audit_at_the_root(self):
+    def test_y1_yarn_audit_runs_in_a_copy(self):
+        """TC-Y1 (TASK 112 R5.1): yarn reads `.yarnrc.yml` where it runs; `yarnPath` there names a
+        script yarn executes. Base-fail: the base runs `yarn audit` in the scanned root."""
         (self.project / "yarn.lock").write_text("")
-        yarn = [r[:2] for r in self.external(["javascript"]) if r[0][:1] == ["yarn"]]
-        self.assertEqual(yarn, [(["yarn", "audit"], self.project.resolve())])
+        (self.project / "package.json").write_text(json.dumps({
+            "name": "x", "packageManager": "yarn@4.0.0", "dependencies": {"a": "1"},
+            "devEngines": {"packageManager": {"name": "yarn", "version": "4.0.0"}},
+            "scripts": {"preinstall": "evil"}, "resolutions": {"b": "2"}}))
+        (self.project / ".yarnrc.yml").write_text("yarnPath: evil.js\n")
+        copies = []
+
+        def record(cmd, cwd=None, **_kw):
+            if cmd[:1] == ["yarn"]:
+                copies.append((list(cmd), Path(cwd).resolve(), " ".join(sorted(os.listdir(cwd))),
+                               json.loads((Path(cwd) / "package.json").read_text())))
+
+        with mock.patch.object(external, "run_command", side_effect=record):
+            external.run_external_tools(str(self.project), ["javascript"])
+        self.assertEqual(len(copies), 1, copies)
+        cmd, where, entries, package = copies[0]
+        self.assertEqual(cmd, ["yarn", "audit"])
+        self.assertEqual(entries, "package.json yarn.lock")
+        self.assertFalse(where.is_relative_to(self.project.resolve()))
+        # A corepack `yarn` shim would fetch the version `packageManager` or `devEngines` names;
+        # the copy keeps the dependency fields only (TASK 112 R5.1).
+        self.assertEqual(package, {"name": "x", "dependencies": {"a": "1"}, "resolutions": {"b": "2"}})
+
+    def test_y2_no_regular_package_json_or_a_linked_lockfile_runs_no_yarn(self):
+        """TC-Y2 (TASK 112 R5.1)."""
+        real = self.tmp / "real.lock"
+        real.write_text("")
+        for case in ("no package.json", "linked package.json", "linked yarn.lock"):
+            with self.subTest(case=case):
+                for name in ("yarn.lock", "package.json"):
+                    path = self.project / name
+                    if path.is_symlink() or path.exists():
+                        path.unlink()
+                if case == "linked yarn.lock":
+                    (self.project / "yarn.lock").symlink_to(real)
+                    (self.project / "package.json").write_text('{"name": "x"}')
+                else:
+                    (self.project / "yarn.lock").write_text("")
+                    if case == "linked package.json":
+                        (self.project / "package.json").symlink_to(real)
+                yarn = [r for r in self.external(["javascript"]) if r[0][:1] == ["yarn"]]
+                self.assertEqual(yarn, [])
 
 
 if __name__ == "__main__":

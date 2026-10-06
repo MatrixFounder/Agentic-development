@@ -78,9 +78,12 @@ explicit escalation path — never loop silently, never proceed past an undefine
      **once** (max 1); still FAIL → STOP and escalate the remaining findings to the user.
 
 3. **Security audit** — execute `.agent/workflows/security-audit.md` (alias: `/security-audit`).
-   - **Gate:** the audit footer reads `audit_status: PASS`, the automated scan exits clean, AND
-     the manual review (per the `security-audit` skill §3 checklists) emits a severity-labelled
-     findings table with **no CRITICAL/HIGH findings**. An `INCOMPLETE` audit never meets it.
+   - **Gate:** the audit footer reads `audit_status: PASS`, the automated scan ran to completion
+     (`scan_status` is `clean` or `findings`), AND the manual review (per the `security-audit`
+     skill §3 checklists) emits a severity-labelled findings table with **no CRITICAL/HIGH
+     findings**. The table rules on each CRITICAL or HIGH hit of the scan: a confirmed hit is a
+     finding, and a rejected one is listed as a false positive. An `INCOMPLETE` audit never
+     meets it.
    - **A scan that did not run is not a scan that passed.** `scan_status: NOT_RUN` (equivalently a
      `scan: NOT RUN (<reason>)` line) fails the scan conjunct: the gate is **not met** and the
      verdict is `INCOMPLETE`, or `FAIL` when the manual review found a CRITICAL or HIGH issue. The

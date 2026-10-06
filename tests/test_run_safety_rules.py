@@ -1,17 +1,20 @@
-"""Two rules from the TASK 111 retro (R7).
+"""Two rules from the TASK 111 retro (R7), as TASK 112 R7 rewrote them.
 
 TASK 111 registered a PreToolUse hook in this repository while building it; the hook then asked
 for approval on the orchestrator's and the reviewers' own commands in Auto mode. Its bypass hunt
 stopped, and the operator deferred the hook to WI-34. This file pins the rules whole:
 
-* `framework-upgrade` §3 step 4, whole: what takes effect at once, the four stages, the failure
-  branch; and §3.1's fixture exception (``TC-1``);
+* `framework-upgrade` §3 step 4, whole and up to the end of §3: what takes effect at once, the
+  scripts that allow rules run, the test-module exemption, the four stages, the failure branch;
+  and §3.1's fixture exception (``TC-1``);
 * `security-audit` §6.2, whole: the three verdicts, one re-run per part, the operator's decision,
   no unverified control, tests are not the hunt (``TC-2``);
-* the wrapper's bullet and the sentences of the five other places that route an audit, and
-  `full-robust` §3's gate on `audit_status: PASS` (``TC-3``).
+* each place that routes an audit, as the whole paragraph, list item or table row that holds its
+  pointer, and `full-robust` §3's gate on `audit_status: PASS` and a scan that ran (``TC-3``).
 
-A change to a pinned rule changes this file in the same edit, where a review sees both.
+The pinned texts below are written as they stand in their files, wrapped; the tests compare them
+with whitespace collapsed. A change to a pinned rule changes this file in the same edit, where a
+review sees both.
 """
 import re
 import unittest
@@ -22,49 +25,72 @@ WORKFLOW = ".agent/workflows/framework-upgrade.md"
 SKILL = ".agent/skills/security-audit/SKILL.md"
 WRAPPER = ".claude/agents/security-auditor.md"
 
-STEP_4 = (
-    '4. **Hooks and permission rules take effect at once.** Claude Code applies a settings '
-    "file to the running session as soon as it changes, the reviewers' commands included. "
-    'The step covers every change that alters what runs, or what runs without a prompt. The '
-    'list is not exhaustive: - a hook in a settings file, or in the frontmatter of an agent '
-    'or a skill; - the script of a registered hook, or code that script calls; - a '
-    "permission rule, `additionalDirectories` or the permission mode, an agent's "
-    '`permissionMode` and the `allowed-tools` of a skill or a command among them; - a '
-    "settings key that names a command, such as `statusLine`, or sets a command's "
-    'environment, `env`; - the MCP servers of `.mcp.json` or a settings file, and '
-    '`enableAllProjectMcpServers`. A change that only narrows what runs without a prompt, '
-    'such as a removed allow rule, may land at once: it runs nothing new, and at worst a '
-    'command asks. Before the edit, a check shows that it narrows, and the audit records '
-    "the check's output: - a base entry of the same list covers each new allow rule, "
-    '`additionalDirectories` entry and `allowed-tools` entry; - each base deny or ask rule '
-    'and `disallowedTools` entry is still present, or a new entry of the same list covers '
-    "it; - every other key equals the base's; - no file that a registered hook, a "
-    '`statusLine` command or an MCP server runs changes. The run registers nothing in '
-    "`.claude/settings.local.json` or the user's settings; an edit there waits for the "
-    "operator's commit and their go-ahead. Every other change runs in four stages. 1. "
-    '**Fixture.** The TASK states the exact registration: the event, matcher and command of '
-    "a hook, or the text of a rule or key. A hook's test builds a temporary root with its "
-    'own `.claude/settings.json` holding that registration, and removes it. Code that a '
-    'registered hook runs is edited under a new name. 2. **Reviews.** The code review and '
-    'the security audit check the code and the registration. Both must pass. An '
-    '`INCOMPLETE` audit blocks the registration until the operator decides under '
-    '`security-audit` §6.2. 3. **Registration.** After §4.5, the last edit of the change '
-    'copies the registration verbatim into its file, or the new code over the code it '
-    "replaces, and removes the copy under the new name. Only the retro's records follow "
-    'this edit. The same edit adds a settings test that pins the registration, and the '
-    'gates run again. 4. **Focused review.** A code reviewer and a security auditor check '
-    'the registration diff on the new fingerprint. **Failure.** If the gates of stage 3 '
-    'fail, or the focused review does not pass, the run restores the registered files at '
-    "once to their text before stage 3's edit. The restore brings back the copy under the "
-    'new name, if there is one, and the audit records the stage-3 diff. - After an '
-    '`INCOMPLETE` audit, `security-audit` §6.2 governs the re-run, which reads that '
-    'recorded diff. If the re-run passes, stage 3 applies the same diff again, and stage 4 '
-    'checks it on the new fingerprint. - After a failed gate, a rejected code review or a '
-    '`FAIL`, the operator decides what follows. A registration, or the code it runs, whose '
-    'text changes returns to stage 1. **Why.** TASK 111 registered a PreToolUse hook while '
-    "building it, and the hook asked for approval on the orchestrator's and the reviewers' "
-    'own commands in Auto mode.'
-)
+
+def _flat(text):
+    return " ".join(text.split())
+
+
+STEP_4 = _flat("""
+4. **Hooks and permission rules take effect at once.** Claude Code applies a settings file to the
+   running session as soon as it changes, the reviewers' commands included. The step covers every
+   change that alters what runs, or what runs without a prompt. The list is not exhaustive:
+   - a hook in a settings file, or in the frontmatter of an agent or a skill;
+   - the script of a registered hook, code that script calls, and a new module it would import;
+   - a script that a committed allow rule names, code that script calls, and a new module it
+     would import;
+   - a permission rule, `additionalDirectories` or the permission mode, an agent's
+     `permissionMode` and the `allowed-tools` of a skill or a command among them;
+   - a settings key that names a command, such as `statusLine`, or sets a command's environment,
+     `env`;
+   - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
+
+   Test modules and fixtures that no rule names by path are exempt, and so is code that runs
+   without a prompt only through them. A test module is a `test_*.py` or `conftest.py` file that no
+   hook or listed script runs or imports; a fixture is a data file that a test reads.
+   `tests/run_tests.py` is named by a rule and is not exempt.
+
+   A change that only narrows what runs without a prompt, such as a removed allow rule, may land
+   at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
+   it narrows, and the audit record holds the check's output:
+   - a base entry of the same list covers each new allow rule, `additionalDirectories` entry and
+     `allowed-tools` entry;
+   - each base deny or ask rule and `disallowedTools` entry is still present, or a new entry of the
+     same list covers it;
+   - every other key equals the base's;
+   - no code of the list above changes, and no new module appears that it would import.
+
+   The run registers nothing in `.claude/settings.local.json` or the user's settings; an edit
+   there waits for the operator's commit and their go-ahead.
+
+   Every other change runs in four stages. The audit record is
+   `docs/reviews/framework-audit-<ID>.md`; the security audit is the review of stage 2.
+   1. **Fixture.** The TASK states the exact registration: the event, matcher and command of a
+      hook, or the text of a rule or key. A hook's test builds a temporary root with its own
+      `.claude/settings.json` holding that registration, and removes it. Code of the list above
+      is edited under a new name.
+   2. **Reviews.** The code review and the security audit check the code and the registration.
+      Both must pass. An `INCOMPLETE` security audit blocks the registration: `security-audit`
+      §6.2 re-runs the unfinished part once, and then the operator decides.
+   3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
+      into its file, or the new code over the code it replaces, and removes the copy under the new
+      name. Only the retro's records follow this edit. The same edit adds a settings test that
+      pins the registration, and the gates run again.
+   4. **Focused review.** A code reviewer and a security auditor check the stage-3 diff on the new
+      fingerprint.
+
+   **Failure.** If the gates of stage 3 fail, or the focused review does not pass, the run
+   restores every file of stage 3's edit at once to its text before that edit. The restore brings
+   back the copy under the new name, if there is one, and the audit record holds the stage-3 diff.
+   - When an `INCOMPLETE` security audit is the only failure, `security-audit` §6.2 governs the
+     re-run, which reads that recorded diff. If the re-run passes, stage 3 applies the same diff
+     again, and stage 4 checks it on the new fingerprint.
+   - In every other case, a failed gate, a rejected code review or a `FAIL` among them, the
+     operator decides what follows. A registration, or the code it runs, whose text changes
+     returns to stage 1.
+
+   **Why.** TASK 111 registered a PreToolUse hook while building it, and the hook asked for
+   approval on the orchestrator's and the reviewers' own commands in Auto mode.
+""")
 SECTION_6_2 = (
     'An audit has two parts: the scan and the manual adversarial review. Its verdict is one '
     'of three: - `PASS`: both parts ran to completion and found no CRITICAL or HIGH issue; '
@@ -87,45 +113,82 @@ SECTION_6_2 = (
     'retro wrote this rule. The bypass hunt on its anchor hook had stopped, and the '
     'operator had deferred the hook to a work-item.)'
 )
+#: Each router's pointers, as the whole block that holds each: a paragraph, a list item or a
+#: table row. A sentence appended inside the block changes it (TASK 112 R6.3).
 POINTERS = {
     WRAPPER: (
-        "**A part that does not run to completion makes the audit `INCOMPLETE`**, whether the scan "
-        "or the adversarial review, or `FAIL` when a part found a CRITICAL or HIGH issue: name the "
-        "part. The orchestrator re-runs it once, then the operator decides (`security-audit` §6.2).",
-        "`NOT_RUN` forces `audit_status: \"INCOMPLETE\"`, or `\"FAIL\"` when the manual review found "
-        "a CRITICAL or HIGH issue — never `PASS`.",
+        """- **An unfinished part makes the audit `INCOMPLETE`.** A part is the scan or the
+        adversarial review. When a part found a CRITICAL or HIGH issue, the audit is `FAIL`. Name
+        the unfinished part. The orchestrator re-runs it once, then the operator decides
+        (`security-audit` §6.2).""",
+        """- **`scan_status` is a required field and it is not decoration.** `NOT_RUN` forces
+        `audit_status: "INCOMPLETE"`, or `"FAIL"` when the manual review found a CRITICAL or HIGH
+        issue — never `PASS`. Without that, a scan-less audit reported the same machine-readable
+        verdict as a clean one, and every consumer that gates on the footer (`full-robust` §3,
+        `security-audit.md` step 4) treated "we did not look" as "we looked and it was fine".
+        Reporting the gap in prose while the footer says `PASS` is the fabrication this replaced,
+        one layer down.""",
     ),
     "System/Agents/10_security_auditor.md": (
-        "5. **Unfinished parts:** a scan or an adversarial review that did not run to completion "
-        "makes the audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue, and the "
-        "summary names it (`security-audit` §6.2).",
-        "`\"NOT_RUN\"` forces `audit_status: \"INCOMPLETE\"`, or `\"FAIL\"` when the manual review "
-        "found a CRITICAL or HIGH issue — never `\"PASS\"`.",
+        """5. **Unfinished parts:** a scan or an adversarial review that did not run to completion
+        makes the audit `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue, and the
+        summary names it (`security-audit` §6.2).""",
+        """- `scan_status` is `"clean" | "findings" | "NOT_RUN"` and is **required**. `"NOT_RUN"`
+        forces `audit_status: "INCOMPLETE"`, or `"FAIL"` when the manual review found a CRITICAL or
+        HIGH issue — never `"PASS"`. Without it a scan-less audit is machine- indistinguishable
+        from a clean one, and every consumer that branches on this footer treats "we did not look"
+        as "we looked and it was fine".""",
     ),
     ".agent/workflows/security-audit.md": (
-        "- A review that does not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a "
-        "part found a CRITICAL or HIGH issue: name the part. The orchestrator re-runs it once, then "
-        "the operator decides (`security-audit` §6.2).",
-        "`NOT_RUN` makes the audit `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH "
-        "issue, never `PASS`",
-        "the verdict is `INCOMPLETE` or `FAIL`, not clean, and `security-audit` §6.2 governs its one "
-        "re-run.",
+        """- A review that does not run to completion makes the audit `INCOMPLETE`, or `FAIL` when a
+        part found a CRITICAL or HIGH issue: name the part. The orchestrator re-runs it once, then
+        the operator decides (`security-audit` §6.2).""",
+        """- **If you cannot execute it** (no execution tool in your role, or the environment
+        refuses): record `scan_status: NOT_RUN (<reason>)`, continue to step 3, and carry that
+        status into the report. **Never invent the output** (`security-audit` §1). `NOT_RUN` makes
+        the audit `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH issue, never `PASS`
+        — step 4's "until clean" loop cannot be satisfied by a scan that never ran.""",
+        """- If findings exist: a. Fix implementation (apply patches, rotate secrets). b. Add
+        regression tests (security-focused). <!-- loop:audit-remediation --> c. Re-run audit
+        script until clean. **Bound: max 3 iterations** when this workflow is entered directly; a
+        caller may re-scope both the cap and the definition of "clean" (`full-robust` §3 does
+        exactly that). On exhaustion with findings still open → **STOP** and escalate the open
+        findings to the user. Per step 2, a `scan_status: NOT_RUN` never satisfies this loop: the
+        verdict is `INCOMPLETE` or `FAIL`, not clean, and `security-audit` §6.2 governs its one
+        re-run.""",
     ),
     ".agent/workflows/full-robust.md": (
-        "**Gate:** the audit footer reads `audit_status: PASS`, the automated scan exits clean, AND "
-        "the manual review",
-        "An `INCOMPLETE` audit never meets it.",
-        "the gate is **not met** and the verdict is `INCOMPLETE`, or `FAIL` when the manual review "
-        "found a CRITICAL or HIGH issue. The missing part is re-run once; if it still does not "
-        "complete, the reason is escalated to the user (`security-audit` §6.2).",
+        """- **Gate:** the audit footer reads `audit_status: PASS`, the automated scan ran to
+        completion (`scan_status` is `clean` or `findings`), AND the manual review (per the
+        `security-audit` skill §3 checklists) emits a severity-labelled findings table with **no
+        CRITICAL/HIGH findings**. The table rules on each CRITICAL or HIGH hit of the scan: a
+        confirmed hit is a finding, and a rejected one is listed as a false positive. An
+        `INCOMPLETE` audit never meets it.""",
+        """- **A scan that did not run is not a scan that passed.** `scan_status: NOT_RUN`
+        (equivalently a `scan: NOT RUN (<reason>)` line) fails the scan conjunct: the gate is **not
+        met** and the verdict is `INCOMPLETE`, or `FAIL` when the manual review found a CRITICAL or
+        HIGH issue. The missing part is re-run once; if it still does not complete, the reason is
+        escalated to the user (`security-audit` §6.2). Left unstated, `NOT RUN` is neither clean
+        nor unclean and the undefined branch resolves in practice to "the other conjunct
+        passed".""",
     ),
     "System/Docs/SKILLS.md": (
-        "private disclosure of a dependency finding (§6.1), an unfinished review reported as "
-        "`INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH issue (§6.2).",
+        """| **`security-audit`** | Vulnerability assessment v3.11 (two-layer model: deterministic
+        regex floor + LLM semantic pass): OWASP Top 10:2025 (final taxonomy, 2021→2025 mapping
+        table included), **MCP/agentic (OWASP ASI Top 10 2026)** — config provenance,
+        auto-approve, unpinned servers, tool-poisoning heuristics, smart contracts (Solidity
+        reentrancy, delegatecall, oracle manipulation), secrets (28 patterns + entropy), IaC
+        (Docker/K8s/Terraform), SBOM, CI/CD gates. 148 automated regex patterns + external tool
+        integrations (incl. `snyk-agent-scan`), private disclosure of a dependency finding (§6.1),
+        an unfinished review reported as `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or
+        HIGH issue (§6.2). | `security-audit`, `full-robust` | Security Auditor |""",
     ),
     "System/Docs/WORKFLOWS.md": (
-        "A `scan_status: NOT_RUN` yields `INCOMPLETE`, or `FAIL` when the manual review found a "
-        "CRITICAL or HIGH issue, never clean (`security-audit` §6.2).",
+        """| **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max
+        3 iterations** when invoked directly; `full-robust` §3 re-scopes both the cap and the
+        definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, or `FAIL` when the
+        manual review found a CRITICAL or HIGH issue, never clean (`security-audit` §6.2). | `run
+        security-audit` |""",
     ),
 }
 
@@ -135,10 +198,6 @@ def _read(rel):
     if not path.is_file():
         raise AssertionError(f"{rel}: the file is missing")
     return path.read_text(encoding="utf-8")
-
-
-def _flat(text):
-    return " ".join(text.split())
 
 
 def _section(text, heading):
@@ -158,6 +217,30 @@ def _step(section, number):
     return m.group(0)
 
 
+def _step_to_end(section, number):
+    """The text of a top-level numbered step, up to the end of the section (TASK 112 R6.3)."""
+    m = re.search(rf"^{number}\. ", section, re.M)
+    if not m:
+        raise AssertionError(f"step {number} is missing")
+    return section[m.start():]
+
+
+def _blocks(text):
+    """Each paragraph, list item and table row of `text`, whitespace collapsed."""
+    item = re.compile(r"^\s*(?:[-*+]|\d+\.)\s|^\s*\|")
+    blocks, current = [], []
+    for line in text.splitlines():
+        if not line.strip() or (item.match(line) and current):
+            if current:
+                blocks.append(_flat(" ".join(current)))
+            current = [line] if line.strip() else []
+            continue
+        current.append(line)
+    if current:
+        blocks.append(_flat(" ".join(current)))
+    return blocks
+
+
 class TestHookRegistration(unittest.TestCase):
     """TC-1: a hook or a permission rule takes effect at once."""
 
@@ -166,8 +249,8 @@ class TestHookRegistration(unittest.TestCase):
     def setUp(self):
         self.section = _section(_read(WORKFLOW), "3. Execution (Atomic Updates)")
 
-    def test_step_4_is_the_reviewed_text(self):
-        self.assertEqual(_flat(_step(self.section, 4)), STEP_4)
+    def test_step_4_is_the_reviewed_text_to_the_end_of_section_3(self):
+        self.assertEqual(_flat(_step_to_end(self.section, 4)), STEP_4)
 
     def test_base_check_allows_the_fixture(self):
         self.assertIn("A test fixture that the test itself creates in a temporary directory and "
@@ -185,14 +268,22 @@ class TestIncompleteReview(unittest.TestCase):
 
 
 class TestPointers(unittest.TestCase):
-    """TC-3: every place that routes an audit states the rule."""
+    """TC-3: every place that routes an audit states the rule, in a block of its own."""
 
-    def test_each_router_states_the_rule(self):
-        for rel, sentences in POINTERS.items():
-            text = _flat(_read(rel))
-            for sentence in sentences:
-                with self.subTest(file=rel, sentence=sentence[:40]):
-                    self.assertIn(sentence, text)
+    maxDiff = None
+
+    def test_each_router_states_the_rule_whole(self):
+        for rel, expected in POINTERS.items():
+            blocks = _blocks(_read(rel))
+            for block in expected:
+                block = _flat(block)
+                with self.subTest(file=rel, block=block[:50]):
+                    self.assertIn(block, blocks)
+
+    def test_blocks_split_at_items_rows_and_blank_lines(self):
+        text = "- one\n  two\n- three\n\npara\nline\n| a | b |\n| c | d |\n"
+        self.assertEqual(_blocks(text), ["- one two", "- three", "para line", "| a | b |",
+                                         "| c | d |"])
 
 
 if __name__ == "__main__":

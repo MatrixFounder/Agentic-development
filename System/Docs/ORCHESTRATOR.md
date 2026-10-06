@@ -47,7 +47,10 @@ All file operations (`read_file`, `write_file`, `list_directory`) are restricted
 The `run_tests` tool prevents arbitrary shell execution.
 - **Execution Mode:** `subprocess.run(..., shell=False)`
 - **Disallowed:** shell metacharacters (`;`, `|`, `&`, backticks, redirections, subshell syntax)
-- **Allowed commands:** `pytest`, `python -m pytest`, `npm test`, `npx jest`, `cargo test`
+- **Allowed commands, whole:** `pytest`, `pytest -q`, `pytest -q --tb=short` (the default),
+  `python -m pytest`, `python3 -m pytest`, `npm test`, `cargo test`. Any other option or operand
+  is refused: an option can run a program or delete a directory, and `npx jest` downloads jest
+  (TASK 112 R5.3).
 - **Timeout:** configurable `timeout_seconds` (default `120`, max `1800`).
 
 ## 📘 User Guide

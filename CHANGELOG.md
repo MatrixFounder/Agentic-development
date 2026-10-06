@@ -16,6 +16,70 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.37.0 — safe commands that admit no write: an archive script and closed patterns (WI-35)**
+
+WI-35 listed allow rules and safe-command patterns that admitted more than their purpose
+(TASK 112).
+
+#### Changed
+
+- **Archiving runs through a script.** `.agent/tools/archive_move.py` moves `docs/TASK.md` into
+  `docs/tasks/` and `docs/PLAN.md` into `docs/plans/`, and nothing else. It refuses another
+  destination, a link, a second hard link and an existing file, and creates the destination
+  directory. One allow rule names it in place of the two `mv` rules, whose wildcard also approved
+  `mv docs/TASK.md docs/tasks/../../x`. `skill-archive-task` calls it at Steps 5 and 7.6, with no
+  `test -e` guard and no `mkdir`.
+- **Allow-listed scripts write inside the working directory.** `rebase_links.py` refuses a file
+  operand outside it, under `.git/`, a link, or a file with a second hard link. `init_skill.py`
+  refuses a skill directory outside it or under `.git/`. Paths are compared without resolving
+  links; `.git` matches in any letter case and through a link to it.
+- **The committed allow list narrows.** `Bash(file *)` left: `file --co`, an abbreviation of
+  `--compile`, wrote a 7 MB `magic.mgc` in a measured run. Three exact `mkdir` rules replace the
+  wildcards of `docs/`, `.agent/` and `tests/`.
+- **The safe-command patterns, for every vendor.**
+  - `rg` and `fd` exclude the options that run a program: `rg --pre`, `rg --hostname-bin`,
+    `fd -x` and `fd -X` in any short-option cluster (`fd -1x` included), and every long option
+    that starts with `--exe`.
+  - `file` left, and so did the open-ended `cd .agent/tools && python` and
+    `python3 -c 'from scripts.tool_runner` patterns.
+  - Each pattern ends at its command or its script's name.
+  - The table names the same commands as the patterns, and the patterns decide.
+- **One Antigravity list** in the skill and both READMEs:
+  `ls,cat,head,tail,grep,wc,stat,du,df,git status,python3 .agent/tools/archive_move.py`. The skill
+  quotes Antigravity's matcher: a word or token prefix, which still admits a chain and a simple
+  file redirect.
+- **`yarn audit` runs in a copy** of `yarn.lock` and `package.json`, so the scanned project's
+  `.yarnrc.yml` and its `yarnPath` take no part. The copied `package.json` keeps the dependency
+  fields only, so a corepack `yarn` shim fetches no version that `packageManager` or `devEngines`
+  names.
+- **`run_tests` accepts seven whole commands** (`tool_runner.py`): `pytest`, `pytest -q`,
+  `pytest -q --tb=short`, `python -m pytest`, `python3 -m pytest`, `npm test`, `cargo test`.
+  `npx jest` left.
+- **`full-robust` §3 gates on a scan that ran:** `scan_status` is `clean` or `findings`, and the
+  manual review rules on each CRITICAL or HIGH hit. This repository's scan always reports
+  findings, so the old "exits clean" was never met.
+- **`framework-upgrade` §3 step 4** names a script that a committed allow rule runs, and the code it
+  calls. Test modules and fixtures that no rule names are exempt (the operator's decision, TASK 112
+  D4); `tests/run_tests.py` is not. The narrowing check names the code a hook calls and a new
+  module. The two failure branches no longer overlap.
+- **The pinning tests read every spelling.** They read tilde fences and info strings, the whole
+  pattern block and table, and each rule's command name. Each audit pointer is pinned as its whole
+  block, and step 4 up to the end of §3.
+- **Versions:** `skill-safe-commands` 1.4, `skill-archive-task` 2.1, `artifact-management` 1.5,
+  `skill-creator` 2.5, `skill-phase-context` 1.3, `security-audit` 3.11.
+- **WI-35 closed;** WI-36 (a command substitution inside an allow-approved command) filed. WI-37
+  (external scanners that run the scanned project's code) was filed and dropped by the operator.
+
+#### Migration
+
+- **In a project installed before v3.37.0**, the copied `settings.json` is not replaced. Update it
+  by hand:
+  - remove `Bash(file *)`, the two `mv` rules and the three `mkdir` wildcards;
+  - add `Bash(mkdir -p docs/tasks)`, `Bash(mkdir -p docs/plans)`,
+    `Bash(mkdir -p docs/architectures)` and `Bash(python3 .agent/tools/archive_move.py *)`.
+- **A project that copied the patterns or the Antigravity list** into `.cursorrules`, `AGENTS.md`
+  or the IDE settings replaces them with those of `skill-safe-commands` 1.4.
+
 ### **v3.36.0 — checks that cover what they claim: a framework-only allow list, pinned actions, a full fingerprint, every lockfile (WI-31)**
 
 WI-31 named four checks whose coverage was narrower than their claim (TASK 111).

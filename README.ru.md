@@ -112,7 +112,7 @@ Antigravity поддерживает архитектуру "из коробки
 3.  **Сценарии**: (Опционально) Используйте `.agent/workflows/` для автоматизированных последовательностей.
 4.  **Автономный режим**: Добавьте следующие команды в **Allow List Terminal Commands** в настройках IDE:
     ```text
-    ls,cat,head,tail,grep,wc,stat,file,du,df,git status,mv docs/TASK.md,mv docs/PLAN.md,mkdir -p docs,mkdir -p .agent,mkdir -p tests
+    ls,cat,head,tail,grep,wc,stat,du,df,git status,python3 .agent/tools/archive_move.py
     ```
 
 #### 🟠 Вариант В: Claude Code (Нативно)

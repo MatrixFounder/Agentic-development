@@ -304,6 +304,11 @@ class TestSlotTargetIsAForwardReference:
     measured the command without `--slot`, which is not the documented one.
     """
 
+    @pytest.fixture(autouse=True)
+    def _work_tree(self, tmp_path, monkeypatch):
+        """`_main` refuses a file outside the working directory (TASK 112 R4.1)."""
+        monkeypatch.chdir(tmp_path)
+
     @staticmethod
     def _archive_fixture(tmp_path):
         (tmp_path / "docs" / "tasks").mkdir(parents=True)
@@ -374,6 +379,11 @@ class TestSlotTargetMustExist:
     The exemption is right at Step 5.5, where the plan archive does not exist
     yet. `--slot-must-exist` is how the caller states which of the two it is.
     """
+
+    @pytest.fixture(autouse=True)
+    def _work_tree(self, tmp_path, monkeypatch):
+        """`_main` refuses a file outside the working directory (TASK 112 R4.1)."""
+        monkeypatch.chdir(tmp_path)
 
     @staticmethod
     def _plan_fixture(tmp_path):

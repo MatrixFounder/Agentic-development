@@ -1,11 +1,31 @@
 """External security tool integration."""
 
+import json
 import os
 from pathlib import Path
 from typing import List
 import sys
 
 from .helpers import find_npm_lockfiles, npm_audit_dir, run_command
+
+
+#: The `package.json` fields the yarn copy keeps (TASK 112 R5.1). `packageManager` and
+#: `devEngines.packageManager` are left out: a corepack `yarn` shim fetches the version they name.
+YARN_KEPT_FIELDS = ("name", "version", "private", "workspaces", "resolutions", "dependencies",
+                    "devDependencies", "optionalDependencies", "peerDependencies")
+
+
+def _keep_dependency_fields(package: Path) -> bool:
+    """Rewrite the copied `package.json` with `YARN_KEPT_FIELDS` only; False when no JSON object."""
+    try:
+        data = json.loads(package.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError):
+        return False
+    if not isinstance(data, dict):
+        return False
+    kept = {key: data[key] for key in YARN_KEPT_FIELDS if key in data}
+    package.write_text(json.dumps(kept), encoding="utf-8")
+    return True
 
 
 def run_external_tools(project_path: str, types: List[str]):
@@ -50,8 +70,22 @@ def run_external_tools(project_path: str, types: List[str]):
                 continue
             print(f"[*] npm audit for {label}", file=sys.stderr)
             run_command(["npm", "audit", "--package-lock-only"], cwd=str(workdir))
-    if "javascript" in types and (Path(cwd) / "yarn.lock").exists():
-        run_command(["yarn", "audit"], cwd=cwd)
+    # yarn reads `.yarnrc` and `.yarnrc.yml` where it runs, and `yarnPath` there names a script it
+    # executes. It runs in a copy of the lockfile and its `package.json`, as npm does, and the copy
+    # keeps the dependency fields only: a corepack `yarn` shim would fetch and run the version that
+    # `packageManager` or `devEngines` names (TASK 112 R5.1).
+    yarn_lock = Path(cwd) / "yarn.lock"
+    if "javascript" in types and (yarn_lock.exists() or yarn_lock.is_symlink()):
+        if yarn_lock.is_symlink() or not yarn_lock.is_file():
+            print("[!] yarn audit skipped: yarn.lock is a link or not a regular file", file=sys.stderr)
+        else:
+            with npm_audit_dir(yarn_lock) as workdir:
+                if workdir is None:
+                    print("[!] yarn audit skipped: no package.json beside yarn.lock", file=sys.stderr)
+                elif not _keep_dependency_fields(workdir / "package.json"):
+                    print("[!] yarn audit skipped: package.json is not a JSON object", file=sys.stderr)
+                else:
+                    run_command(["yarn", "audit"], cwd=str(workdir))
 
     if "rust" in types:
         run_command(["cargo", "audit"], cwd=cwd)

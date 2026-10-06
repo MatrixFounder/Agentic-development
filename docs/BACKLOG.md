@@ -73,7 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-35** [Safe-command patterns that still admit a write or a program](backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md) — effort `M`, status `open`, opened 2026-10-06
+- **WI-36** [Command substitution inside an allow-approved command](backlog/wi-36-command-substitution-inside-an-allow-approved-command.md) — effort `S`, status `open`, opened 2026-10-06
 - **WI-34** [An anchor hook for relative-path allow rules in a nested checkout](backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md) — effort `L`, status `open`, opened 2026-10-06
 - **WI-29** [Installer leaves declared skill development paths out of copy installs](backlog/wi-29-installer-leaves-declared-skill-development-paths-out-of-copy-installs.md) — effort `M`, status `open`, opened 2026-10-03
 - **WI-28** [Simplify mermaid-authoring-guidelines by measured use](backlog/wi-28-simplify-mermaid-authoring-guidelines-by-measured-use.md) — effort `M`, status `open`, opened 2026-10-03
@@ -86,6 +86,8 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-37** [External scanners that run the scanned project's code](backlog/wi-37-external-scanners-that-run-the-scanned-projects-code.md) — effort `M`, status `dropped`, opened 2026-10-06 · **dropped 2026-10-06** (operator, TASK 112 retro): not needed
+- **WI-35** [Safe-command patterns that still admit a write or a program](backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md) — effort `M`, status `done`, opened 2026-10-06 · **done 2026-10-06** (TASK 112): archive script, closed patterns, script guards; WI-36 and WI-37 filed
 - **WI-31** [Anchored allow rules, SHA-pinned actions, a full fingerprint and a nested lockfile audit](backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md) — effort `M`, status `done`, opened 2026-10-03 · **done 2026-10-06** (TASK 111): SEC-17 hook moved to WI-34
 - **WI-30** [Renderer supply chain: v10 lockfile, mermaid-cli request filter, browser hash](backlog/wi-30-renderer-supply-chain-v10-lockfile-mermaid-cli-request-filter-browser-hash.md) — effort `M`, status `done`, opened 2026-10-03 · **done 2026-10-05** (TASK 110): v10 lockfile without advisories, browser pinned by hash, upstream report sent privately
 - **WI-27** [Fix loops hand off a differential replay of the stored corpus](backlog/wi-27-fix-loops-hand-off-a-differential-replay-of-the-stored-corpus.md) — effort `M`, status `done`, opened 2026-10-03 · **done 2026-10-05** (TASK 110): rules in `developer-guidelines` §6.4; 5 regressions from 21 items addressed

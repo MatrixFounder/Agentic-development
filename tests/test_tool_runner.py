@@ -1,8 +1,11 @@
 import json
+import shlex
 import shutil
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from System.scripts import tool_runner
 from System.scripts.tool_runner import execute_tool
 
 
@@ -116,6 +119,38 @@ class TestToolRunner(unittest.TestCase):
         result = execute_tool(tool_call)
         self.assertFalse(result["success"])
         self.assertIn("timeout_seconds", result["error"])
+
+
+    #: TASK 112 R5.3: the whole commands `run_tests` accepts; any other option or operand asks.
+    ALLOWED = ("pytest", "pytest -q", "pytest -q --tb=short", "python -m pytest",
+               "python3 -m pytest", "npm test", "cargo test")
+    REFUSED = ("npx jest", "pytest -p x", "pytest --basetemp=/tmp/x", "python3 -m pytest -x",
+               "npm test -- -u", "cargo test x", "pytest tests", "python -m pytest -q")
+
+    def test_t1_run_tests_refuses_options_and_npx_jest(self):
+        """TC-T1 (TASK 112 R5.3): an option can run a program, delete a directory or overwrite a
+        file, and `npx jest` downloads jest. Base-fail: the base accepts every one of them."""
+        for command in self.REFUSED:
+            with self.subTest(command=command):
+                self.assertFalse(tool_runner._is_allowed_test_command(shlex.split(command)))
+        # Tokens, not text: a quoted `"pytest -q"` is one token, a program of that name.
+        for parts in (["pytest -q"], ["python", "-m pytest"], ["npm test"]):
+            with self.subTest(parts=parts):
+                self.assertFalse(tool_runner._is_allowed_test_command(parts))
+        with mock.patch.object(tool_runner.subprocess, "run",
+                               side_effect=AssertionError("a refused command ran")):
+            result = execute_tool({"name": "run_tests", "arguments": {"command": "npx jest"}})
+        self.assertFalse(result["success"])
+        self.assertIn("Command not allowed", result["error"])
+        for command in self.ALLOWED:
+            self.assertIn(command, result["error"])
+
+    def test_t2_policy_accepts_the_whole_commands(self):
+        """TC-T2 (TASK 112 R5.3), the default command among them."""
+        self.assertIn(tool_runner.DEFAULT_TEST_COMMAND, self.ALLOWED)
+        for command in self.ALLOWED:
+            with self.subTest(command=command):
+                self.assertTrue(tool_runner._is_allowed_test_command(shlex.split(command)))
 
 
 if __name__ == "__main__":

@@ -112,7 +112,7 @@ Antigravity supports this architecture out-of-the-box:
 3.  **Workflows**: (Optional) Use `.agent/workflows/` for automated sequences.
 4.  **Auto-Run Permissions**: To enable autonomous command execution, add the following to **Allow List Terminal Commands** in IDE Settings:
     ```text
-    ls,cat,head,tail,grep,wc,stat,file,du,df,git status,mv docs/TASK.md,mv docs/PLAN.md,mkdir -p docs,mkdir -p .agent,mkdir -p tests
+    ls,cat,head,tail,grep,wc,stat,du,df,git status,python3 .agent/tools/archive_move.py
     ```
 
 #### 🟠 Option C: Claude Code (Native)

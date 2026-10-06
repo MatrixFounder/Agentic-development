@@ -98,49 +98,58 @@ therefore taken here, before §1. Git holds every state this run can return to.
    running session as soon as it changes, the reviewers' commands included. The step covers every
    change that alters what runs, or what runs without a prompt. The list is not exhaustive:
    - a hook in a settings file, or in the frontmatter of an agent or a skill;
-   - the script of a registered hook, or code that script calls;
+   - the script of a registered hook, code that script calls, and a new module it would import;
+   - a script that a committed allow rule names, code that script calls, and a new module it
+     would import;
    - a permission rule, `additionalDirectories` or the permission mode, an agent's
      `permissionMode` and the `allowed-tools` of a skill or a command among them;
    - a settings key that names a command, such as `statusLine`, or sets a command's environment,
      `env`;
    - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
 
+   Test modules and fixtures that no rule names by path are exempt, and so is code that runs
+   without a prompt only through them. A test module is a `test_*.py` or `conftest.py` file that no
+   hook or listed script runs or imports; a fixture is a data file that a test reads.
+   `tests/run_tests.py` is named by a rule and is not exempt.
+
    A change that only narrows what runs without a prompt, such as a removed allow rule, may land
    at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
-   it narrows, and the audit records the check's output:
+   it narrows, and the audit record holds the check's output:
    - a base entry of the same list covers each new allow rule, `additionalDirectories` entry and
      `allowed-tools` entry;
    - each base deny or ask rule and `disallowedTools` entry is still present, or a new entry of the
      same list covers it;
    - every other key equals the base's;
-   - no file that a registered hook, a `statusLine` command or an MCP server runs changes.
+   - no code of the list above changes, and no new module appears that it would import.
 
    The run registers nothing in `.claude/settings.local.json` or the user's settings; an edit
    there waits for the operator's commit and their go-ahead.
 
-   Every other change runs in four stages.
+   Every other change runs in four stages. The audit record is
+   `docs/reviews/framework-audit-<ID>.md`; the security audit is the review of stage 2.
    1. **Fixture.** The TASK states the exact registration: the event, matcher and command of a
       hook, or the text of a rule or key. A hook's test builds a temporary root with its own
-      `.claude/settings.json` holding that registration, and removes it. Code that a registered
-      hook runs is edited under a new name.
+      `.claude/settings.json` holding that registration, and removes it. Code of the list above
+      is edited under a new name.
    2. **Reviews.** The code review and the security audit check the code and the registration.
-      Both must pass. An `INCOMPLETE` audit blocks the registration until the operator decides
-      under `security-audit` §6.2.
+      Both must pass. An `INCOMPLETE` security audit blocks the registration: `security-audit`
+      §6.2 re-runs the unfinished part once, and then the operator decides.
    3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
       into its file, or the new code over the code it replaces, and removes the copy under the new
       name. Only the retro's records follow this edit. The same edit adds a settings test that
       pins the registration, and the gates run again.
-   4. **Focused review.** A code reviewer and a security auditor check the registration diff on
-      the new fingerprint.
+   4. **Focused review.** A code reviewer and a security auditor check the stage-3 diff on the new
+      fingerprint.
 
    **Failure.** If the gates of stage 3 fail, or the focused review does not pass, the run
-   restores the registered files at once to their text before stage 3's edit. The restore brings
-   back the copy under the new name, if there is one, and the audit records the stage-3 diff.
-   - After an `INCOMPLETE` audit, `security-audit` §6.2 governs the re-run, which reads that
-     recorded diff. If the re-run passes, stage 3 applies the same diff again, and stage 4 checks
-     it on the new fingerprint.
-   - After a failed gate, a rejected code review or a `FAIL`, the operator decides what follows. A
-     registration, or the code it runs, whose text changes returns to stage 1.
+   restores every file of stage 3's edit at once to its text before that edit. The restore brings
+   back the copy under the new name, if there is one, and the audit record holds the stage-3 diff.
+   - When an `INCOMPLETE` security audit is the only failure, `security-audit` §6.2 governs the
+     re-run, which reads that recorded diff. If the re-run passes, stage 3 applies the same diff
+     again, and stage 4 checks it on the new fingerprint.
+   - In every other case, a failed gate, a rejected code review or a `FAIL` among them, the
+     operator decides what follows. A registration, or the code it runs, whose text changes
+     returns to stage 1.
 
    **Why.** TASK 111 registered a PreToolUse hook while building it, and the hook asked for
    approval on the orchestrator's and the reviewers' own commands in Auto mode.

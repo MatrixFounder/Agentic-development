@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.10
+version: 3.11
 ---
 
-# Security Audit v3.10
+# Security Audit v3.11
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 
@@ -47,10 +47,15 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 - **Analysis**: Review the output. If tools fail or report Critical/High issues, they are **BLOCKERS**.
 - **Scope**: The script checks:
   - Secrets (OWASP A04:2025 Cryptographic Failures, CWE-798) — 30+ patterns including cloud, AI, SaaS keys + entropy detection
-  - Dependencies / Supply Chain (OWASP A03:2025, CWE-1104) — real lock files only (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS; Cargo.lock; go.sum)
-    - `npm audit --package-lock-only` runs once for every npm lockfile, below the root included, in a temporary copy of the lockfile and its `package.json`; SKIP_DIRS are skipped
-    - a lockfile without its own `package.json` is not audited; npm would audit an ancestor's project
-    - an audit that does not finish is an `info` finding naming its lockfile, and the section status counts them
+  - Dependencies / Supply Chain (OWASP A03:2025, CWE-1104) — real lock files only
+    (Pipfile.lock/poetry.lock/uv.lock/pdm.lock for Python; package-lock/yarn.lock/pnpm-lock for JS;
+    Cargo.lock; go.sum)
+    - `npm audit --package-lock-only` runs once for every npm lockfile, below the root included, in
+      a temporary copy of the lockfile and its `package.json`; SKIP_DIRS are skipped
+    - a lockfile without its own `package.json` is not audited; npm would audit an ancestor's
+      project
+    - an audit that does not finish is an `info` finding naming its lockfile, and the section status
+      counts them
   - Code Patterns / Injection (OWASP A05:2025, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
   - **Smart Contract / Solidity** — reentrancy, delegatecall, selfdestruct (EIP-6780), tx.origin, oracle manipulation, unchecked returns, unprotected initializers
   - **Rust** — `unsafe{}`, `transmute`, `mem::forget`, `unwrap_unchecked`, weak RNG
@@ -62,6 +67,8 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
   - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
 - **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected; `snyk-agent-scan` (ex-Invariant `mcp-scan`) when MCP config artifacts are detected — never with auto-start flags (servers stay consent-gated).
 - **`npm audit` (external)** runs in each npm lockfile directory, as the dependency scan does.
+- **`yarn audit` (external)** runs in a temporary copy of the root `yarn.lock` and its
+  `package.json`, so the project's `.yarnrc` and `.yarnrc.yml` take no part (TASK 112 R5.1).
 - **`--scan-type external`** runs **ONLY** external tools and SKIPS the in-process regex scans. Use `--scan-type all` (default) to run both.
 - **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines.
 - **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).

@@ -9,6 +9,90 @@ sys.path.append(script_dir)
 import skill_utils
 from skill_utils import install_human_channel
 
+def _git_dirs(cwd):
+    """The repository's git directories, as real paths (TASK 112 R4.1).
+
+    The `.git` of the working directory, or of its nearest ancestor that has one. In a linked
+    worktree `.git` is a file naming the worktree's git directory, whose `commondir` names the
+    main one; both count.
+    """
+    here = os.path.realpath(cwd)
+    while True:
+        dot = os.path.join(here, ".git")
+        if os.path.isdir(dot):
+            return [os.path.realpath(dot)]
+        if os.path.isfile(dot):
+            break
+        parent = os.path.dirname(here)
+        if parent == here:
+            return []
+        here = parent
+    try:
+        with open(dot, encoding="utf-8") as fh:
+            line = fh.readline().strip()
+    except (OSError, UnicodeDecodeError):
+        return []
+    if not line.startswith("gitdir:"):
+        return []
+    gitdir = os.path.realpath(os.path.join(here, line[len("gitdir:"):].strip()))
+    dirs = [gitdir]
+    try:
+        with open(os.path.join(gitdir, "commondir"), encoding="utf-8") as fh:
+            dirs.append(os.path.realpath(os.path.join(gitdir, fh.read().strip())))
+    except (OSError, UnicodeDecodeError):
+        pass
+    return dirs
+
+
+def _under_git(path, cwd):
+    """True when `path` lies under the repository's git directory (TASK 112 R4.1).
+
+    A segment named `.git` in any letter case counts: a case-insensitive file system resolves
+    `.GIT` to `.git`. So does any existing ancestor of the real path (links resolved before `..`)
+    that is a git directory of `_git_dirs` by file identity, which a firmlink or a Unicode
+    normalisation of the spelling does not hide.
+    """
+    absolute = os.path.normpath(os.path.join(cwd, path))
+    segments = os.path.relpath(absolute, cwd).split(os.sep)
+    if any(segment.casefold() == ".git" for segment in segments):
+        return True
+    gits = []
+    for git in _git_dirs(cwd):
+        try:
+            gits.append(os.stat(git))
+        except OSError:
+            pass
+    probe = os.path.realpath(os.path.join(cwd, path))
+    while gits:
+        try:
+            st = os.stat(probe)
+        except OSError:
+            st = None
+        if st is not None and any(os.path.samestat(st, git) for git in gits):
+            return True
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            break
+        probe = parent
+    return False
+
+def _refuse_target(skill_dir):
+    """Why `create_skill` refuses this directory, or None (TASK 112 R4.2).
+
+    `Bash(python3 .agent/skills/skill-creator/scripts/init_skill.py *)` approves any `--path` and
+    any path-shaped name. A directory outside the working directory, by its absolute path
+    normalised without resolving links, is refused, and so is one under `.git/`. Links are not
+    resolved: in a consumer project `.agent/skills` can be a link into the framework.
+    """
+    cwd = os.getcwd()
+    absolute = os.path.normpath(os.path.join(cwd, skill_dir))
+    if os.path.commonpath([absolute, cwd]) != cwd or absolute == cwd:
+        return "lies outside the working directory"
+    if _under_git(skill_dir, cwd):
+        return "lies under .git/"
+    return None
+
+
 def create_skill(name, base_path, tier_value, config):
     """
     Creates a new skill directory with the standard structure.
@@ -22,7 +106,12 @@ def create_skill(name, base_path, tier_value, config):
     # Sanitize name
     safe_name = name.lower().replace(" ", "-").replace("_", "-")
     skill_dir = os.path.join(base_path, safe_name)
-    
+
+    reason = _refuse_target(skill_dir)
+    if reason:
+        print(f"Error: Skill directory '{skill_dir}' {reason}.")
+        sys.exit(1)
+
     if os.path.exists(skill_dir):
         print(f"Error: Skill directory '{skill_dir}' already exists.")
         sys.exit(1)

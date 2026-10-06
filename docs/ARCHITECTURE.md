@@ -103,7 +103,7 @@ The orchestration layer now supports **Structured Tool Calling**:
 ### Available Tools
 | Tool | Description |
 |------|-------------|
-| `run_tests` | Run pytest with custom commands |
+| `run_tests` | Run one of seven whole test commands, with no other option (TASK 112 R5.3) |
 | `read_file` | Read file contents |
 | `write_file` | Create/overwrite files |
 | `list_directory` | List directory contents |
@@ -185,6 +185,8 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
 
 The committed `settings.json` holds framework permissions only (TASK 111 R2). An operator's own rules live in the ignored `.claude/settings.local.json`, which the installer does not copy. A Bash allow rule matches command text only, so a relative-path rule still approves that path in a nested checkout. A PreToolUse hook to make such a command ask is deferred to WI-34.
+
+Archiving runs through `.agent/tools/archive_move.py`, which one allow rule names (TASK 112). A rule's `*` matches any text, so the script guards its own operands: it moves `docs/TASK.md` into `docs/tasks/` and `docs/PLAN.md` into `docs/plans/`, and refuses every other operand, a link and an existing file. `rebase_links.py` and `init_skill.py`, which allow rules also name, write only to paths inside the working directory and outside `.git/`, compared by path without resolving links.
 
 **Model policy** (v3.11.2 + Wave 3):
 - **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner`, and `product-director`.

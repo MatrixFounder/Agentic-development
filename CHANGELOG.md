@@ -16,6 +16,19 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.37.1 — the archive script holds its source open during the move (TASK 113)**
+
+#### Fixed
+
+- **`archive_move.py` accepted a swapped source on ext4.** The script identified the source by
+  its device and inode numbers and held no descriptor of it. On ext4, a file created after an
+  unlink can receive the freed inode number, so a source swapped in that way passed the check and
+  was moved. The script now opens the source after its type checks and holds it open to the end of
+  the move. The inode stays allocated, and no other file can take its number. A source that cannot
+  be opened for reading is refused. The copy path opens the source with `O_NONBLOCK`, so a FIFO
+  swapped in there no longer blocks the script. TC-A15 and TC-A16 failed in the Ubuntu jobs of
+  `Framework Gates` (run 37480167366).
+
 ### **v3.37.0 — safe commands that admit no write: an archive script and closed patterns (WI-35)**
 
 WI-35 listed allow rules and safe-command patterns that admitted more than their purpose

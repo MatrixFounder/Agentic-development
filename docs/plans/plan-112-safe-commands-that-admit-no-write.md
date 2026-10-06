@@ -1,6 +1,6 @@
 # PLAN 112 — Safe commands that admit no write: an archive script and closed patterns
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 4) · **Covers:** R1–R8 · **Acceptance:** A1–A8.
+**TASK:** [docs/TASK.md](../tasks/task-112-safe-commands-that-admit-no-write.md) (revision 4) · **Covers:** R1–R8 · **Acceptance:** A1–A8.
 
 **Revision:** 5. Plan audit rounds 1 to 3 applied; executed, all steps done (`docs/reviews/framework-audit-112.md`).
 

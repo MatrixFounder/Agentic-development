@@ -17,9 +17,10 @@ It accepts exactly two operand pairs, compared as text:
 It works through directory descriptors: `docs` and the destination directory are opened with
 `O_DIRECTORY | O_NOFOLLOW`, and every file is named relative to them, so a link swapped in for
 either directory is refused. It refuses a source that is a link or has a second hard link, and a
-destination that exists. It moves by a hard link and an unlink, and copies into an exclusively
-created file where the file system refuses the hard link. Any failure after the destination exists
-removes the destination; the source stays.
+destination that exists. It holds the source open from its open to the end of the move, so a file
+swapped in under its name meanwhile cannot take its inode number. It moves by a hard link and an
+unlink, and copies into an exclusively created file where the file system refuses the hard link.
+Any failure after the destination exists removes the destination; the source stays.
 
 Exit codes: 0 moved; 1 refused, nothing changed on disk, except when the error says the archive
 was kept; 2 usage error or a platform without `dir_fd` support. Any `OSError`, such as an overlong
@@ -102,6 +103,13 @@ def _same_file(st, ref):
 
 
 def _check_source(docs_fd, name):
+    """`(descriptor, fstat of it)` of the source; the caller closes the descriptor after the move.
+
+    The `lstat` checks come first, so nothing but a regular file is opened. The open descriptor
+    keeps the source's inode allocated, so no file swapped in under the same name afterwards can
+    receive its inode number, and `_same_file` stays sound (ext4 can give a freed number to the
+    next new file).
+    """
     try:
         st = os.stat(name, dir_fd=docs_fd, follow_symlinks=False)
     except FileNotFoundError as exc:
@@ -110,7 +118,18 @@ def _check_source(docs_fd, name):
         raise Refused(f"docs/{name} is a symbolic link or not a regular file")
     if st.st_nlink != 1:
         raise Refused(f"docs/{name} has {st.st_nlink} hard links")
-    return st
+    try:
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=docs_fd)
+    except OSError as exc:
+        raise Refused(f"cannot open docs/{name}: {exc.strerror}") from exc
+    try:
+        held = os.fstat(fd)
+        if not (stat.S_ISREG(held.st_mode) and _same_file(held, st) and held.st_nlink == 1):
+            raise Refused("the source changed during the move")
+    except BaseException:
+        _close(fd)
+        raise
+    return fd, held
 
 
 def _exists(name, dir_fd):
@@ -160,7 +179,7 @@ def _link(docs_fd, src, sub_fd, dst, ref):
 def _copy(docs_fd, src, sub_fd, dst, ref):
     """Copy `src` into an exclusively created `dst`."""
     try:
-        src_fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=docs_fd)
+        src_fd = os.open(src, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=docs_fd)
     except OSError as exc:
         raise Refused(f"cannot open docs/{src}: {exc.strerror}") from exc
     try:
@@ -227,9 +246,9 @@ def _move(src, subdir, dst):
         docs_fd = _open_dir("docs")
     except FileNotFoundError as exc:
         raise Refused("docs does not exist") from exc
-    sub_fd, created = None, False
+    src_fd, sub_fd, created = None, None, False
     try:
-        ref = _check_source(docs_fd, src)
+        src_fd, ref = _check_source(docs_fd, src)
         try:
             sub_fd = _open_dir(subdir, docs_fd)
         except FileNotFoundError:
@@ -254,6 +273,7 @@ def _move(src, subdir, dst):
             raise
         raise Refused(f"{exc.strerror or exc}: {exc.filename or ''}".rstrip(": ")) from exc
     finally:
+        _close(src_fd)
         _close(sub_fd)
         _close(docs_fd)
     return {"method": method, "created_directory": created}

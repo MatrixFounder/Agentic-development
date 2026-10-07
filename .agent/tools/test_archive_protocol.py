@@ -281,6 +281,33 @@ class TestCoreScenarios:
         assert result["reason"] == "conflict"
         assert victim.read_text() == "# planner sub-task, must survive"
 
+    def test_tc7_letter_suffixed_subtasks_keep_the_parent_id(self, clean_docs_dir):
+        """TASK 114 TC-7: sub-tasks `05a` and `08b` are not a parent archive of 033.
+
+        Before TASK 114 the id tool read `task-033-05a-*.md` as a parent by its name,
+        returned `conflict`, and the protocol stopped (KI-089 of n8n-lazy-loading-skills).
+        """
+        tasks = clean_docs_dir / "tasks"
+        for name, h1 in (("task-033-01-run-guards.md", "# Task 033-01: Guard run"),
+                         ("task-033-05a-sqltest-db.md", "# Task 033-05a: Test database"),
+                         ("task-033-08b-sql-tests.md", "# Task 033-08b: SQL tests")):
+            (tasks / name).write_text(f"{h1}\n")
+        (clean_docs_dir / "TASK.md").write_text(
+            "# Task 033: Admission core V1\n\n<!-- contract:meta -->\n\n"
+            "| Field | Value |\n|:---|:---|\n| Task ID | 033 |\n| Slug | admission-core-v1 |\n")
+        (clean_docs_dir / "PLAN.md").write_text("# Plan 033\n")
+
+        task_result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+        assert task_result["status"] == "archived", task_result["message"]
+        plan_result = archive_plan(docs_dir=str(clean_docs_dir),
+                                   used_id=task_result["used_id"], slug=task_result["slug"])
+
+        assert plan_result["status"] == "archived"
+        assert (tasks / "task-033-admission-core-v1.md").exists()
+        assert (clean_docs_dir / "plans" / "plan-033-admission-core-v1.md").exists()
+        assert not (clean_docs_dir / "TASK.md").exists()
+        assert not (clean_docs_dir / "PLAN.md").exists()
+
 
 # ============================================================================
 # VDD ADVERSARIAL TESTS

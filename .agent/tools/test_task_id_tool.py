@@ -192,6 +192,176 @@ class TestParentArchiveVsSubTask:
         assert sorted(get_parent_archive_ids(str(tasks_dir))) == [5, 12]
 
 
+class TestSubTaskByH1:
+    """TASK 114: a file in `docs/tasks/` is classified by its H1 first, by its name second.
+
+    The planner splits a sub-task further with a letter suffix (`task-033-05a-sqltest-db.md`).
+    The filename rule reads `05a` as a parent slug, so `--proposed-id 033` returned `conflict`
+    with no parent archive present (KI-089 of n8n-lazy-loading-skills). A filename rule of
+    `\\d+[a-z]?` would read `task-012-3d-viewer.md` as sub-task `3d`, so the H1 decides.
+    """
+
+    @staticmethod
+    def _write(tasks_dir, name, h1):
+        tasks_dir.mkdir(exist_ok=True)
+        (tasks_dir / name).write_text(f"{h1}\n\nBody.\n" if h1 else "No heading.\n")
+
+    def test_tc1_letter_suffixed_subtasks_are_not_a_parent(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-033-05-acceptance-monitor.md", "# Task 033-05: Monitor")
+        self._write(tasks_dir, "task-033-05a-sqltest-db.md", "# Task 033-05a: Test database")
+        self._write(tasks_dir, "task-033-08b-sql-tests.md", "# Task 033.08b — SQL tests")
+
+        result = generate_task_archive_filename(
+            "admission-core-v1", proposed_id="033", tasks_dir=str(tasks_dir))
+
+        assert result["status"] == "generated"
+        assert result["filename"] == "task-033-admission-core-v1.md"
+        assert get_parent_archive_ids(str(tasks_dir)) == []
+
+    def test_tc2_a_parent_h1_still_conflicts(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-033-admission-core-v1.md", "# Task 033: Admission core V1")
+        self._write(tasks_dir, "task-033-05a-sqltest-db.md", "# Task 033-05a: Test database")
+
+        result = generate_task_archive_filename(
+            "other", proposed_id="033", tasks_dir=str(tasks_dir))
+
+        assert result["status"] == "conflict"
+        assert get_parent_archive_ids(str(tasks_dir)) == [33]
+
+    def test_tc3_a_parent_h1_overrides_a_numeric_first_segment(self, tmp_path):
+        """The H1 resolves the old known limitation: `2024-migration` is a slug, not sub-task 2024."""
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-007-2024-migration.md", "# TASK 007 — Migration of 2024")
+
+        result = generate_task_archive_filename(
+            "other", proposed_id="007", tasks_dir=str(tasks_dir))
+
+        assert result["status"] == "conflict"
+
+    def test_tc4_3d_viewer_with_a_parent_h1_stays_a_parent(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-012-3d-viewer.md", "# Task 012: 3D viewer")
+        assert get_parent_archive_ids(str(tasks_dir)) == [12]
+
+    @pytest.mark.parametrize("name, h1, parents", [
+        ("task-012-3d-viewer.md", None, [12]),
+        ("task-005-1-usage-ddl.md", None, []),
+        ("task-005-1-usage-ddl.md", "# Technical Specification: Usage DDL", []),
+        ("task-005-m2-alpha.md", "# Task 006-01: an H1 of another task", [5]),
+        ("task-005-1-usage-ddl.md", "# Task 006: an H1 of another task", []),
+        ("task-005-05a-x.md", None, [5]),
+    ])
+    def test_tc5_without_a_matching_h1_the_name_decides(self, tmp_path, name, h1, parents):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, name, h1)
+        assert get_parent_archive_ids(str(tasks_dir)) == parents
+
+    # The name of each case reads the OPPOSITE way to its H1, so a pass shows the H1 decided:
+    # `task-033-2024-x.md` is a sub-task by name, `task-033-05a-x.md` a parent by name.
+    @pytest.mark.parametrize("h1, parents", [
+        ("# Task 033: colon", [33]),
+        ("# Task 033 — em dash", [33]),
+        ("# Task 033 – en dash", [33]),
+        ("# Task 033 - spaced hyphen", [33]),
+        ("# Task 033", [33]),
+        ("# TASK 033 — upper case", [33]),
+        ("# Task 33: no zero padding", [33]),
+    ])
+    def test_h1_grammar_of_a_parent(self, tmp_path, h1, parents):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-033-2024-x.md", h1)
+        assert get_parent_archive_ids(str(tasks_dir)) == parents
+
+    @pytest.mark.parametrize("h1, parents", [
+        ("# Task 033-05a: hyphen", []),
+        ("# task 033-05a: lower case", []),
+        ("# Task 33.1: dot, no zero padding", []),
+        ("# Task 033-05 — em dash", []),
+        ("# Task 033-05a-b: a subid of another grammar", [33]),
+        ("# Task 033-05A: an upper-case letter is outside the grammar", [33]),
+    ])
+    def test_h1_grammar_of_a_subtask(self, tmp_path, h1, parents):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-033-05a-x.md", h1)
+        assert get_parent_archive_ids(str(tasks_dir)) == parents
+
+    def test_comments_and_front_matter_before_the_h1_are_skipped(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-033-05a-x.md").write_text(
+            "---\n# Task 033: a YAML comment, not the H1\n---\n"
+            "<!--\n# Task 033: inside a comment\n-->\n\n"
+            "```markdown\n# Task 033: inside a fence\n```\n\n"
+            "# Task 033-05a: the H1\n")
+        assert get_parent_archive_ids(str(tasks_dir)) == []
+
+    @pytest.mark.parametrize("body, parents", [
+        ("﻿# Task 033-05a: after a BOM\n", []),
+        ("<!--\n# Task 033-05a: inside an unclosed comment\n", [33]),
+        ("~~~\n# Task 033-05a: inside an unclosed fence\n", [33]),
+        ("# Task " + "0" * 5000 + "33-05a: a digit run past the int limit\n", []),
+    ])
+    def test_odd_heads(self, tmp_path, body, parents):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-033-05a-x.md").write_text(body, encoding="utf-8")
+        assert get_parent_archive_ids(str(tasks_dir)) == parents
+
+    @pytest.mark.parametrize("filler, parents", [(16384 - 40, [33]), (16384, [])])
+    def test_the_h1_is_searched_in_the_first_16_kib(self, tmp_path, filler, parents):
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        (tasks_dir / "task-033-2024-x.md").write_text(
+            "x" * filler + "\n# Task 033: late H1\n", encoding="ascii")
+        assert get_parent_archive_ids(str(tasks_dir)) == parents
+
+    @staticmethod
+    def _scan_with_timeout(tasks_dir):
+        """`get_parent_archive_ids` in a thread; a scan that blocks fails instead of stalling."""
+        import threading
+        result = []
+        worker = threading.Thread(
+            target=lambda: result.append(get_parent_archive_ids(str(tasks_dir))), daemon=True)
+        worker.start()
+        worker.join(timeout=10)
+        assert not worker.is_alive(), "the scan blocked on a special file"
+        return result[0]
+
+    def test_a_fifo_is_not_read(self, tmp_path):
+        """A FIFO named like a task file does not block the scan; its name decides."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        os.mkfifo(tasks_dir / "task-033-05a-x.md")
+        assert self._scan_with_timeout(tasks_dir) == [33]
+
+    def test_a_fifo_with_data_is_not_read(self, tmp_path):
+        """Only a regular file is read: a FIFO holding a sub-task H1 is classified by its name."""
+        tasks_dir = tmp_path / "tasks"
+        tasks_dir.mkdir()
+        fifo = tasks_dir / "task-033-05a-x.md"
+        os.mkfifo(fifo)
+        reader = os.open(fifo, os.O_RDONLY | os.O_NONBLOCK)
+        writer = os.open(fifo, os.O_WRONLY | os.O_NONBLOCK)
+        try:
+            os.write(writer, b"# Task 033-05a: x\n")
+            assert self._scan_with_timeout(tasks_dir) == [33]
+        finally:
+            os.close(writer)
+            os.close(reader)
+
+    def test_tc6_auto_generation_reserves_an_id_held_by_letter_subtasks(self, tmp_path):
+        tasks_dir = tmp_path / "tasks"
+        self._write(tasks_dir, "task-033-05a-sqltest-db.md", "# Task 033-05a: Test database")
+        self._write(tasks_dir, "task-033-08b-sql-tests.md", "# Task 033-08b: SQL tests")
+
+        result = generate_task_archive_filename("brand-new", tasks_dir=str(tasks_dir))
+
+        assert result["status"] == "generated"
+        assert result["used_id"] == "034"
+
+
 class TestFindNextAvailableId:
     """Tests for finding next available ID."""
     

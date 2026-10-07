@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-38** [Links into the TASK and PLAN slots from other documents are not re-targeted on archive](backlog/wi-38-inbound-slot-links-not-retargeted-on-archive.md) — effort `M`, status `open`, opened 2026-10-07
 - **WI-36** [Command substitution inside an allow-approved command](backlog/wi-36-command-substitution-inside-an-allow-approved-command.md) — effort `S`, status `open`, opened 2026-10-06
 - **WI-34** [An anchor hook for relative-path allow rules in a nested checkout](backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md) — effort `L`, status `open`, opened 2026-10-06
 - **WI-29** [Installer leaves declared skill development paths out of copy installs](backlog/wi-29-installer-leaves-declared-skill-development-paths-out-of-copy-installs.md) — effort `M`, status `open`, opened 2026-10-03

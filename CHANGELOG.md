@@ -16,6 +16,28 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.37.2 — a sub-task is told from its parent by the H1 first (TASK 114)**
+
+#### Fixed
+
+- **`task_id_tool.py` read a letter-suffixed sub-task as a parent archive.** The planner splits a
+  sub-task further as `task-033-05a-*.md`. The tool read a sub-task from the filename only, and
+  only a purely numeric segment counted. `--proposed-id 033` therefore returned `conflict` with no
+  parent archive present. Observed in a project on 2026-10-07. The new `classify_task_file()`
+  reads the file's first H1 first: `# Task 033-05a: …` or `# Task 033.5: …` is a sub-task,
+  `# Task 033: …` a parent. A file whose H1 names no task of its ID keeps the filename rule. The
+  H1 also settles the old limitation: `task-007-2024-migration.md` with `# Task 007: …` is a
+  parent. `get_existing_task_ids()` is unchanged, so auto-generation still skips an ID held only
+  by sub-tasks. `archive_protocol.py` takes the fix through the tool.
+
+#### Changed
+
+- **`skill-planning-format` 1.4** states the `{SubID}` grammar `\d+[a-z]?` and the sub-task H1
+  `# Task {ID}-{SubID}: …`. The sub-task template writes that H1 in place of `# Task X.Y`.
+- **`skill-archive-task` 2.2** states the H1-first rule in Step 3, Option B step 2 and the Example
+  Flow. Step 5 states that `archive_move.py` refuses an existing sub-task file by its existence and
+  reads nothing of the destination.
+
 ### **v3.37.1 — the archive script holds its source open during the move (TASK 113)**
 
 #### Fixed

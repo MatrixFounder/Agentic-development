@@ -22,7 +22,9 @@ Before TASK 112 two allow rules, `Bash(mv docs/TASK.md docs/tasks/*)` and
 * a failed check after the link leaves no destination; a module planted beside the script is not
   imported, and loading the script keeps the caller's `sys.path`; a source that vanishes before
   its unlink, holds another file then, or cannot be checked, leaves the archive in place
-  (``TC-A19`` to ``TC-A23``).
+  (``TC-A19`` to ``TC-A23``);
+* an existing letter-suffixed sub-task file in the destination's place is refused (``TC-A24``,
+  TASK 114).
 
 Each case runs the script with the `realpath` of a temporary root as its working directory;
 TC-A11, TC-A13 and TC-A15 to TC-A18 call `main(argv)` in-process to replace `os.link`, `os.unlink`
@@ -138,7 +140,7 @@ class TestMoves(ArchiveTestCase):
 
 
 class TestRefusals(ArchiveTestCase):
-    """TC-A3 to TC-A10, TC-A12."""
+    """TC-A3 to TC-A10, TC-A12, TC-A24."""
 
     def test_a3_an_existing_destination_is_kept(self):
         self.write(TASK_DEST, "# older\n")
@@ -213,6 +215,12 @@ class TestRefusals(ArchiveTestCase):
         os.link(self.root / TASK, self.root / "alias.md")
         report = self.assertRefused((TASK, TASK_DEST))
         self.assertIn("hard links", report["error"], "refused before the link, by the source check")
+
+    def test_a24_an_existing_letter_suffixed_subtask_is_kept(self):
+        # TASK 114 R4: the guard is the destination's existence, not its name; a name rule would
+        # also refuse the new parent archive `task-012-3d-viewer.md`.
+        self.write("docs/tasks/task-112-05a-x.md", "# Task 112-05a: a planner sub-task\n")
+        self.assertRefused((TASK, "docs/tasks/task-112-05a-x.md"))
 
     def test_a14_an_overlong_name_is_a_refusal(self):
         report = self.assertRefused((TASK, "docs/tasks/task-112-" + "a" * 300 + ".md"))

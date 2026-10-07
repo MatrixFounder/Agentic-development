@@ -1,55 +1,95 @@
-# TASK 113 — [LIGHT] The archive script pins the source inode during the move
+# TASK 114 — [LIGHT] A sub-task is told from its parent by the H1 first, by the filename second
 
 ## 0. Meta
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 113 |
-| Slug | archive-move-pins-the-source-inode |
-| Mode | Light (one-file bugfix; no API, schema or dependency change) |
-| Source | The operator's request of 2026-10-06: fix the failing CI workflow |
-| Base revision | `d40eff8` |
-| Archive name | `task-113-archive-move-pins-the-source-inode.md` |
+| Task ID | 114 |
+| Slug | subtask-classified-by-h1 |
+| Mode | Light (two tools, their tests, two skills; no API, schema or dependency change) |
+| Source | The operator's request of 2026-10-07: KI-089 of n8n-lazy-loading-skills |
+| Base revision | `9983c84` |
+| Archive name | `task-114-subtask-classified-by-h1.md` |
 
 ## 1. Problem
 
-Run 37480167366 of `Framework Gates` on `main` (commit `d40eff8`) failed in the step "Run curated
-unittest suite (incl. installer)" of the jobs `Tooling tests (3.11)` and `Tooling tests (3.14)`.
-Two cases failed with `AssertionError: 0 != 1`:
+The planner splits a sub-task further with a letter suffix: `task-033-05a-sqltest-db.md`, `08b`,
+`33b`. `task_id_tool.py` reads a sub-task from the filename only:
 
-- `test_archive_move.TestSwappedSource.test_a15_link_path_refuses_a_swapped_source`
-- `test_archive_move.TestSwappedSource.test_a16_copy_path_refuses_a_swapped_regular_file`
+- `.agent/tools/task_id_tool.py:78` `SUBTASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-(\d+)-.+\.md$')`
 
-Both cases pass on macOS.
+`get_parent_archive_ids()` therefore counts `task-033-05a-sqltest-db.md` as a parent archive.
+`task_id_tool.py "admission-core-v1" --proposed-id 033 --no-correction` returns `conflict` and
+suggests 034, with no parent archive present. Following the suggestion renumbers a task that its
+sub-tasks, plan, commits and ledgers cite as 033 (ARC-1). Observed in n8n-lazy-loading-skills on
+2026-10-07, filed there as KI-089.
 
-**Cause.** `.agent/tools/archive_move.py` identifies the source by `(st_dev, st_ino)` only
-(`_same_file`). It reads that pair with `os.stat` and holds no descriptor of the source. The test
-unlinks `docs/TASK.md` and creates a new file under the same name. On the ext4 file system of the
-GitHub runner, the new file receives the inode number that the unlink freed. The swapped file then
-matches the recorded pair, and the script moves it with exit 0. APFS does not reuse a freed inode
-number at once, so the defect does not appear on macOS.
+A filename rule of `(\d+[a-z]?)` is not a fix. The docstring of `get_parent_archive_ids()` keeps
+`task-012-3d-viewer.md` a parent archive, and that rule reads `3d` as a sub-task id.
 
-The defect is in the script, not in the test: R1.3 of TASK 112 requires a refusal when the source
-changes during the move, and on Linux an unlink-and-create swap passes the check.
+## 2. Classification rule
 
-## 2. Requirements
+A file named `task-<ID>-*.md` in `docs/tasks/` is classified in this order:
+
+1. Its first H1 reads `# Task <ID>-<SubID>` or `# Task <ID>.<SubID>`, followed by `:`, `—`, `–`,
+   `- ` or the line end → a sub-task.
+2. Its first H1 reads `# Task <ID>`, followed by `:`, `—`, `–`, `- ` or the line end → a parent.
+3. Otherwise → the filename rule of `SUBTASK_FILENAME_RE`, unchanged.
+
+- `<SubID>` is `\d+[a-z]?`. `Task` matches in any case.
+- The H1 counts only when its `<ID>` equals the filename's ID as a number.
+- A UTF-8 BOM, HTML comments, a leading YAML front matter and fenced code blocks are skipped
+  before the first H1 is taken. An unclosed comment runs to the end of the head.
+- Only a regular file is read, opened with `O_NONBLOCK | O_NOCTTY`, at most 16 KiB of its head.
+- `<SubID>` letters are lowercase; `# Task 033-05A` is outside the grammar.
+
+## 3. Requirements
 
 | ID | Requirement | Verify |
 |----|-------------|--------|
-| R1 | `_check_source` opens the source with `O_RDONLY \| O_NOFOLLOW \| O_NONBLOCK` relative to the `docs` descriptor, after the `lstat` checks, and refuses it when `fstat` of the descriptor does not match the `lstat` result. | TC-A15 to TC-A17 pass. |
-| R2 | `_move` keeps that descriptor open until the move ends and closes it on every path. While the descriptor is open, the file system cannot assign the source's inode number to another file, so `(st_dev, st_ino)` identifies the source. | CI jobs `Tooling tests (3.11)` and `Tooling tests (3.14)` pass on Ubuntu. |
-| R3 | A source that cannot be opened is refused with exit 1 and an error that names `docs/<name>`. | Full `tests/test_archive_move.py` passes. |
-| R4 | The module docstring states that the source is held open from its open to the end of the move. | Review. |
-| R5 | `_copy` opens the source with `O_NONBLOCK`, so a FIFO swapped in on the copy path does not block the script (code review, finding 1). | Review. |
+| R1 | `task_id_tool.py` classifies a file by §2. `get_parent_archive_ids()` returns the IDs of the files that §2 classifies as parents. | TC-1 to TC-5 |
+| R2 | `get_existing_task_ids()` counts parents and sub-tasks of either shape, as before. | TC-6 |
+| R3 | `archive_protocol.archive_task()` and `archive_plan()` archive a TASK whose sub-tasks carry letter suffixes under its own ID. | TC-7 |
+| R4 | `archive_move.py` refuses an existing destination shaped like a letter-suffixed sub-task. | TC-8 |
+| R5 | `skill-planning-format` §3 states the `<SubID>` grammar and the sub-task H1. The sub-task template writes `# Task {ID}-{SubID}: …`. | Review |
+| R6 | `skill-archive-task` Step 3, Option B step 2, Step 5 and the Example Flow state the §2 rule. | Review |
+| R7 | The skill versions and both CHANGELOG files record the change. | Review |
 
-## 3. Out of scope
+## 4. Test obligations
 
-- The tests of `tests/test_archive_move.py`. They state the required behaviour and stay unchanged.
-- Other users of `(st_dev, st_ino)` in the repository.
+Each test writes its fixture files with the H1 given. TC-1, TC-3 and TC-7 fail on base `9983c84`.
 
-## 4. Verification
+- TC-1 — no parent; `task-NNN-05-x.md` and `task-NNN-05a-y.md` carry sub-task H1s → `--proposed-id NNN` returns `generated`.
+- TC-2 — `task-NNN-slug.md` with H1 `# Task NNN: …` → `conflict`.
+- TC-3 — `task-NNN-2024-migration.md` with H1 `# Task NNN: …` → `conflict`.
+- TC-4 — `task-012-3d-viewer.md` with H1 `# Task 012: …` → a parent.
+- TC-5 — a file with no H1, or with an H1 of another ID, is classified by its name.
+- TC-6 — only letter-suffixed sub-tasks of NNN, no `proposed_id` → an ID other than NNN.
+- TC-7 — `archive_task` + `archive_plan` on a fixture with sub-tasks `01`, `05a`, `08b` → `task-NNN-*` and `plan-NNN-*`.
+- TC-8 — `archive_move.py docs/TASK.md docs/tasks/task-NNN-05a-x.md` with that file present → exit 1; the file is unchanged.
 
-1. `python3 -m unittest tests.test_archive_move -v` passes on macOS.
-2. `PYTHONPATH=. python3 tests/run_tests.py` (the curated suite of the CI step) passes on macOS.
-3. After the push, the `Framework Gates` run on `main` passes, including the Ubuntu jobs that
-   reproduce the inode reuse.
+## 5. Decisions
+
+- D1, 2026-10-07, agent: `archive_move.py` keeps its code. It refuses every existing destination,
+  a sub-task file of either shape included. Rejected: a refusal by name — it also refuses the new
+  archive `task-012-3d-viewer.md`.
+- D2, 2026-10-07, agent: the H1 rule reads both `-` and `.` between `<ID>` and `<SubID>`. Sub-tasks
+  006 to 096 of this repository use `.`; the plan template enumerates `Task {ID}.1`.
+
+- D3, 2026-10-07, agent: code review round 1 findings 1–6 and 8 are fixed: digit strings compared
+  without `int()`, an unclosed comment, a BOM, fences, the scan limit and the separators pinned by
+  tests, `O_NOCTTY`. Not changed: finding 7 — the H1 overrides the name in both directions, as §2
+  states; finding 9 — the auto-generation path also reads the heads.
+
+## 6. Out of scope
+
+- Re-targeting links to `docs/TASK.md` and `docs/PLAN.md` in other documents after the move
+  (part 2 of the request, marked optional).
+- The H1s of archived files in this repository.
+
+## 7. Verification
+
+1. `python3 -m pytest` in `.agent/tools/` passes.
+2. `python3 -m unittest tests.test_archive_move -v` passes.
+3. `PYTHONPATH=. python3 tests/run_tests.py` passes.
+4. `python3 .agent/skills/skill-creator/scripts/validate_skill.py` passes for both edited skills.

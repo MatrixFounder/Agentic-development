@@ -7,6 +7,7 @@ Format: task-{XXX}-{slug}.md where XXX is a zero-padded 3-digit number.
 
 import os
 import re
+import stat
 from typing import Optional
 
 
@@ -70,10 +71,90 @@ def normalize_slug(slug: str) -> str:
 #: Any archived task file: `task-<id>-<rest>.md`. 3+ digits, future-proofed.
 TASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-.*\.md$')
 
-#: A PLANNER SUB-TASK: `task-<id>-<subid>-<slug>.md`, e.g. `task-005-1-usage-ddl.md`. The segment
-#: right after the id is purely numeric — that is what distinguishes it from a parent archive
-#: (`task-005-m2-alpha-paid.md`), whose slug never starts with a bare number segment.
+#: A PLANNER SUB-TASK by name: `task-<id>-<subid>-<slug>.md`, e.g. `task-005-1-usage-ddl.md`, with
+#: a purely numeric segment right after the id. This is the FALLBACK rule of `classify_task_file()`,
+#: used only when the file's H1 names no task of its id. It reads `task-033-05a-x.md` as a parent,
+#: and it cannot be widened to `\d+[a-z]?`: that reads `task-012-3d-viewer.md` as sub-task `3d`.
 SUBTASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-(\d+)-.+\.md$')
+
+#: The H1 of a task file: `# Task <id>` for a parent, `# Task <id>-<subid>` or `# Task <id>.<subid>`
+#: for a sub-task, followed by `:`, `—`, `–`, `- ` or the line end. `<subid>` is `\d+[a-z]?`, the
+#: grammar of `skill-planning-format` §3 (`05`, `05a`). Only `Task` matches in any case. TASK 114.
+H1_TASK_RE = re.compile(
+    r'^#[ \t]+(?i:task)[ \t]+(\d+)(?:[-.](\d+[a-z]?))?(?=[ \t]*(?:[:—–]|-[ \t]|$))')
+
+#: Bytes read from the head of a task file to find its H1.
+H1_SCAN_BYTES = 16384
+
+#: An opening or closing code fence: up to three spaces, then three or more backticks or tildes.
+_FENCE_RE = re.compile(r'[ ]{0,3}(`{3,}|~{3,})')
+
+
+def _first_h1(path: str) -> Optional[str]:
+    """The first H1 line of a regular file, or None.
+
+    Reads at most `H1_SCAN_BYTES`. A UTF-8 BOM, HTML comments (an unclosed one to the end of the
+    head), a leading YAML front matter and fenced code blocks are skipped: the sub-task template
+    puts a comment block above its H1, and a YAML or shell comment line starts with `# `.
+    The file is opened with `O_NONBLOCK | O_NOCTTY` and read only when `fstat` shows a regular
+    file, so a FIFO or a device named `task-*.md` does not block the scan.
+    """
+    flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOCTTY', 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError:
+        return None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            return None
+        head = os.read(fd, H1_SCAN_BYTES).decode('utf-8-sig', errors='replace')
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+    head = re.sub(r'<!--(?:.*?-->|.*)', '', head, flags=re.DOTALL)
+    lines = head.splitlines()
+    if lines and lines[0].strip() == '---':
+        for i, line in enumerate(lines[1:], start=1):
+            if line.strip() in ('---', '...'):
+                lines = lines[i + 1:]
+                break
+    fence = None
+    for line in lines:
+        marker = _FENCE_RE.match(line)
+        if marker:
+            if fence is None:
+                fence = marker.group(1)[0]
+            elif marker.group(1)[0] == fence:
+                fence = None
+            continue
+        if fence is None and re.match(r'#[ \t]+\S', line):
+            return line
+    return None
+
+
+def classify_task_file(tasks_dir: str, filename: str) -> Optional[tuple[int, bool]]:
+    """`(task id, is_subtask)` of a file in `tasks_dir`, or None when its name is not `task-<id>-*.md`.
+
+    The order (TASK 114):
+
+    1. The first H1 reads `# Task <id>-<subid>` or `# Task <id>.<subid>` -> a sub-task.
+    2. The first H1 reads `# Task <id>` -> a parent archive.
+    3. Otherwise -> `SUBTASK_FILENAME_RE` on the name decides, as before TASK 114.
+
+    The H1 counts only when its id equals the filename's id as a number; `Task` matches in any case.
+    The ids are compared as digit strings without leading zeros, so an H1 digit run past the
+    int conversion limit cannot raise.
+    """
+    match = TASK_FILENAME_RE.match(filename)
+    if not match:
+        return None
+    task_id = int(match.group(1))
+    h1 = _first_h1(os.path.join(tasks_dir, filename))
+    heading = H1_TASK_RE.match(h1) if h1 else None
+    if heading and heading.group(1).lstrip('0') == match.group(1).lstrip('0'):
+        return task_id, heading.group(2) is not None
+    return task_id, bool(SUBTASK_FILENAME_RE.match(filename))
 
 
 def get_existing_task_ids(tasks_dir: str = "docs/tasks") -> list[int]:
@@ -116,11 +197,12 @@ def get_parent_archive_ids(tasks_dir: str = "docs/tasks") -> list[int]:
     `docs/plans/plan-<id>-*.md` and any commit referencing it. Nothing errored; the archive was
     simply wrong, in a hand-maintained ledger.
 
-    Known limitation: a parent slug that itself begins with a bare number segment
-    (`task-007-2024-migration.md`) is indistinguishable from sub-task 2024 by filename alone.
-    Avoid leading numeric segments in slugs; `normalize_slug` does not forbid them because a
-    project may legitimately want e.g. `task-012-3d-viewer` (segment `3d` is not purely numeric,
-    so it is read as a parent correctly).
+    A file is a parent archive when `classify_task_file()` says so: by its H1 first, by its name
+    second. The name alone reads the letter-suffixed sub-task `task-033-05a-x.md` as a parent
+    (KI-089 of n8n-lazy-loading-skills), and the parent `task-007-2024-migration.md` as sub-task
+    2024. The H1 settles both: `# Task 033-05a: …` is a sub-task, `# Task 007: …` a parent, and
+    `task-012-3d-viewer.md` with `# Task 012: …` stays a parent. A file whose H1 names no task of
+    its id keeps the name rule, with its two misreadings.
 
     Args:
         tasks_dir: Path to the tasks directory
@@ -134,9 +216,9 @@ def get_parent_archive_ids(tasks_dir: str = "docs/tasks") -> list[int]:
         return parent_ids
 
     for filename in os.listdir(tasks_dir):
-        match = TASK_FILENAME_RE.match(filename)
-        if match and not SUBTASK_FILENAME_RE.match(filename):
-            parent_ids.append(int(match.group(1)))
+        kind = classify_task_file(tasks_dir, filename)
+        if kind and not kind[1]:
+            parent_ids.append(kind[0])
 
     return parent_ids
 

@@ -2,7 +2,7 @@
 name: skill-planning-format
 description: Standards for Development Plans (PLAN.md) and Detailed Task Descriptions (TASK.md).
 tier: 1
-version: 1.3
+version: 1.4
 ---
 
 # Planning Output Format
@@ -92,6 +92,15 @@ A develop workflow keeps the `status` of each task in the schedule block of `doc
 
 ## 3. Detailed Task Description Structure
 For **each** task in the plan, you must create a separate file: `docs/tasks/task-{ID}-{SubID}-{slug}.md`.
+
+- `{ID}` is the Task ID of `docs/TASK.md`, zero-padded to three digits.
+- `{SubID}` matches `\d+[a-z]?`: digits, then at most one lowercase letter. A sub-task added
+  after `05` is `05a`, the next one `05b`; `05` keeps its name.
+- The file's first H1 is `# Task {ID}-{SubID}: {Task Name}`, e.g. `# Task 033-05a: Test database`.
+  Older files write `# Task {ID}.{SubID}`; both forms are read.
+- `skill-archive-task` tells a sub-task from a parent archive by this H1 first and by the
+  filename second (TASK 114). A file with the H1 `# Task {ID}: …` is read as a parent archive;
+  a file whose H1 names no task ID is classified by its filename.
 
 > [!TIP]
 > Use the template at `assets/templates/task_md_template.md`.

@@ -2,7 +2,7 @@
 name: skill-archive-task
 description: "Complete protocol for archiving TASK.md and PLAN.md (lockstep) with ID generation. Single source of truth for archiving."
 tier: 1
-version: 2.1
+version: 2.2
 ---
 # Task Archiving Protocol
 
@@ -91,13 +91,23 @@ result = generate_task_archive_filename(
 - Read `result["status"]`: `"generated"` → continue. `"conflict"` → **STOP**, report both paths,
   the operator decides. `"error"` → STOP.
 - A populated **sub-task namespace is not a conflict** — with `--proposed-id` the tool checks
-  parent archives only.
+  parent archives only. It tells a sub-task from a parent by the rule of Option B step 2.
 
 **Option B: Manual Generation (Fallback)**
 1. Filename = `task-<ID-from-Meta>-<slug-from-Meta>.md`. The ID is **copied, never invented**.
-2. Conflict check, parents only:
-   `ls docs/tasks/task-<ID>-*.md` — hits shaped `task-<ID>-<digits>-*` are SUB-TASKS, expected, not
-   conflicts. Any other hit, or any `docs/plans/plan-<ID>-*.md`, is a real conflict → STOP.
+2. Conflict check, parents only: `ls docs/tasks/task-<ID>-*.md`. Classify each hit by its first
+   H1, then by its name (TASK 114). In the H1, `Task` is in any case, `<ID>` may drop its leading
+   zeros, and a `:`, a dash or the line end follows the ID:
+   - H1 `# Task <ID>-<SubID>: …` or `# Task <ID>.<SubID>: …`, `<SubID>` = `\d+[a-z]?` → a
+     SUB-TASK: expected, not a conflict.
+   - H1 `# Task <ID>: …` or `# TASK <ID> — …` → a parent archive: a real conflict → STOP.
+   - Any other H1, or none → by name: `task-<ID>-<digits>-*` is a sub-task, any other hit a
+     parent archive.
+
+   Any `docs/plans/plan-<ID>-*.md` is a real conflict → STOP.
+
+   **Why.** The name alone reads sub-task `task-<ID>-05a-*` as a parent and parent
+   `task-<ID>-2024-migration` as a sub-task ⇒ only the H1 tells them apart.
 3. Only if Step 2 found no ID: `NNN = max(ID over docs/tasks/ and docs/plans/) + 1`, sub-tasks
    **included** in that maximum — a populated namespace reserves its parent's number.
 
@@ -125,10 +135,11 @@ document's own H1. Rewriting one row silently falsifies the rest.
 ### Step 5: Archive (Move File)
 
 The archive script moves the file and guards the destination. Step 3's conflict check sees
-*parent* archives only, so a destination shaped like a sub-task (`task-096-01-x.md`) is invisible
-to it; the script refuses that too, as it refuses every existing destination. It also refuses any
-destination but `docs/tasks/task-<ID>-<slug>.md`, a link, and a source with a second hard link. It
-creates `docs/tasks/` when it is absent.
+*parent* archives only, so an existing sub-task file in the destination's place (`task-096-01-x.md`,
+`task-096-05a-x.md`) is invisible to it. The script refuses it, as it refuses every existing
+destination; it reads nothing of the destination and judges no name as a sub-task. It also
+refuses any destination but `docs/tasks/task-<ID>-<slug>.md`, a link, and a source with a second
+hard link. It creates `docs/tasks/` when it is absent.
 
 ```bash
 python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/{filename}
@@ -333,8 +344,9 @@ This skill performs **file mutations**: the archive script's move, and its creat
    ```bash
    python3 .agent/tools/task_id_tool.py "{old-slug}" --proposed-id "{OLD_ID}" --no-correction
    ```
-   `status: "conflict"` → **STOP**; the operator decides. Sub-task files matching
-   `task-{OLD_ID}-<digits>-*` are **not** a conflict.
+   `status: "conflict"` → **STOP**; the operator decides. Sub-task files are **not** a
+   conflict: H1 `# Task {OLD_ID}-<SubID>` or `# Task {OLD_ID}.<SubID>`, or, with no H1 naming
+   `{OLD_ID}`, a name `task-{OLD_ID}-<digits>-*`.
 6. **Step 4** — assert `id_in_filename == {OLD_ID}`. This step never assigns.
 7. **Step 5** — move; the script refuses an existing destination:
    ```bash

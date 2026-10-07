@@ -6,7 +6,7 @@
   the rules. Audit with `artifact-formalizer/scripts/scan_register.py`.
 -->
 
-# Task X.Y: [Task Name]
+# Task {ID}-{SubID}: [Task Name]
 
 <!--
   The `contract:*` anchors below are how a MACHINE addresses a section. They are

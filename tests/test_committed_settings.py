@@ -114,14 +114,15 @@ PYTHON_RULE = re.compile(r"Bash\(python3? (-m pytest|[\w./-]+\.py( .*)?)\)")
 ARCHIVE_SCRIPT = PROJECT_ROOT / ".agent" / "tools" / "archive_move.py"
 ARCHIVE_COMMANDS = ("python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/",
                     "python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/",
-                    "python3 .agent/tools/task_id_tool.py", "python3 .agent/tools/rebase_links.py")
+                    "python3 .agent/tools/task_id_tool.py", "python3 .agent/tools/rebase_links.py",
+                    "python3 .agent/tools/rebase_links.py --inbound")
 #: A part of an archive block that moves, guards or creates outside the script (TASK 112 R1.5).
 OUTSIDE_THE_SCRIPT = re.compile(r"^(mv|test|mkdir|\[)\s")
 #: The info words that make a fence a shell block (TASK 112 R6.1).
 SHELL = ("bash", "sh", "shell", "zsh", "console")
 #: The first info word of every fence, in order; an added or relabelled fence fails (R6.1).
 ARCHIVE_FENCES = ("", "", "bash", "python", "", "bash", "bash", "", "", "", "bash", "bash", "",
-                  "bash", "bash", "bash", "bash")
+                  "bash", "bash", "bash", "bash", "bash", "bash")
 SAFE_FENCES = ("", "markdown")
 FENCE = re.compile(r"^[ \t]*(`{3,}|~{3,})(.*)$")
 

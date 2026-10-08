@@ -3,6 +3,7 @@
 ## 0. Meta Information
 - **ID:** 050
 - **Slug:** framework-maintenance-tools
+- **Base revision:** `9f1c2ab`
 - **Context:** Maintenance task to fix inconsistencies in tool definitions.
 
 ## 1. Executive Summary

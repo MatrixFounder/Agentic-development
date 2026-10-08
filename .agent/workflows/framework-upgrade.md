@@ -49,7 +49,10 @@ therefore taken here, before §1. Git holds every state this run can return to.
 
 ## 1. Analysis & Meta-Audit
 1. **Analyze**: Read User Request.
-2. **Draft**: Create `docs/TASK.md` (Type: Framework Upgrade).
+2. **Draft**: Create `docs/TASK.md` (Type: Framework Upgrade). `skill-archive-task` archives the
+   previous TASK and PLAN first. When its Step 8 rewrites a file, the run records the list at once
+   in the session state, as §0 records the base, and §1.3 copies it into the audit with Step 8's
+   records.
 3. **Meta-Audit**:
    - **Call**: `skill-self-improvement-verificator` (Mode: SPECIFICATION AUDIT).
    - **Instruction**: "Check `docs/TASK.md` for safety violations."
@@ -186,10 +189,12 @@ stops.
    change. Every path on every entry must be identical to a declared path:
    - a path the PLAN declares;
    - a file a §4.5 repair touched, as the audit lists it;
+   - a file that Step 8 of `skill-archive-task` rewrote in §1, as the audit lists it, or as the
+     session state lists it before §1.3 has written the audit;
    - this run's `docs/TASK.md`, `docs/PLAN.md`, archive pair or audit.
 
    An `R` or `C` entry names two paths, and both must be declared. Before §2.2 has written the
-   PLAN, only the last kind applies. Any other entry means **STOP** and ask the operator.
+   PLAN, only the last two kinds apply. Any other entry means **STOP** and ask the operator.
 2. **Confirm.** Record the list where the base is recorded, show it to the operator, and wait for
    the operator's reply. Then list again; a different list means **STOP**. Steps 3 and 4 act on
    the recorded list.

@@ -2,9 +2,10 @@
 Archive Protocol Module
 
 Testable Python implementation of the archiving protocol from
-skill-archive-task: TASK.md archiving (Steps 1-6) and PLAN.md
-lockstep archiving (Step 7). This module enables automated testing
-of the archiving scenarios.
+skill-archive-task: TASK.md archiving (Steps 1-6), PLAN.md lockstep
+archiving (Step 7) and the re-targeting of inbound slot links (Step 8,
+TASK 115). This module enables automated testing of the archiving
+scenarios.
 
 Note: This duplicates logic from skill-archive-task for testability.
 """
@@ -22,6 +23,62 @@ from task_id_tool import generate_task_archive_filename, normalize_slug
 #: `documentation-standards` §4.4. Checked before the English prose probes so
 #: that a TASK.md in any language is read correctly.
 META_ANCHOR = "<!-- contract:meta -->"
+
+#: A base revision: 7 to 64 hexadecimal digits in any case, optionally in
+#: backticks (TASK 115 §3, the hash shape). Step 8 passes it as `--since`.
+BASE_REVISION_RE = re.compile(r'`?([0-9a-fA-F]{7,64})`?')
+#: A `Base revision` row or bullet of the meta region, and its value cell:
+#: `| Base revision | `abc1234` |` or `- **Base revision:** abc1234`.
+BASE_REVISION_LINE_RE = re.compile(
+    r'^[ \t]*(?:\|[ \t]*|[-*][ \t]+)\**Base revision\**[ \t]*:?[ \t]*\**[ \t]*'
+    r'(?:\|[ \t]*)?(.*?)[ \t]*\|?[ \t]*$', re.MULTILINE)
+
+
+def _is_hash(value: str) -> bool:
+    """True for a value of the hash shape that holds a digit (TASK 115 R9.1)."""
+    return bool(BASE_REVISION_RE.fullmatch(value)) and any(ch.isdigit() for ch in value)
+
+
+def _meta_region(content: str) -> str:
+    """The anchored meta region; else the section headed `0. Meta`; else the first H2-H6 naming
+    Meta; else ''. An H1 is skipped: a title such as `# Task 120: Metadata cleanup` is no section."""
+    start = content.find(META_ANCHOR)
+    if start != -1:
+        rest = content[start + len(META_ANCHOR):]
+        nxt = rest.find("<!-- contract:")
+        return rest if nxt == -1 else rest[:nxt]
+    heading = (re.search(r'^#{2,6}[ \t]+0\.?[ \t]*Meta.*$', content, re.MULTILINE)
+               or re.search(r'^#{2,6}[ \t].*Meta.*$', content, re.MULTILINE))
+    if heading is None:
+        return ""
+    rest = content[heading.end():]
+    nxt = re.search(r'^#{1,6}[ \t]', rest, re.MULTILINE)
+    return rest if nxt is None else rest[:nxt.start()]
+
+
+def _labelled_base_revision(content: str):
+    """`(found, value)` of the first `Base revision` row or bullet of the meta region (R9.1).
+
+    `value` is None for `none` or any value that is not of the hash shape: an explicit row stops
+    the structural read below, so a `none` is never overridden by another cell.
+    """
+    for match in BASE_REVISION_LINE_RE.finditer(_meta_region(content)):
+        value = match.group(1).strip().strip("`").strip()
+        return True, (value if re.fullmatch(r'[0-9a-fA-F]{7,64}', value) else None)
+    return False, None
+
+
+def _meta_rows(content: str) -> list:
+    """The value cells of the anchored meta region, in order; [] without the anchor."""
+    start = content.find(META_ANCHOR)
+    if start == -1:
+        return []
+    rest = content[start + len(META_ANCHOR):]
+    nxt = rest.find("<!-- contract:")
+    region = rest if nxt == -1 else rest[:nxt]
+    return [value.strip() for _, value in
+            re.findall(r'^\s*\|([^|\n]+)\|([^|\n]*)\|\s*$', region, re.MULTILINE)
+            if not (value.strip() and set(value.strip()) <= set("-: "))]
 
 
 def parse_task_meta(content: str) -> dict:
@@ -52,7 +109,13 @@ def parse_task_meta(content: str) -> dict:
         "has_meta": False,
         "id_ambiguous": False,
         "slug_unreadable": False,
+        "base_revision": None,
     }
+
+    # TASK 115 R9.1: Step 2 also reads the Base revision, which Step 8 passes
+    # as `--since`. The English label first, inside the meta region only; the
+    # structural read below covers a meta table in any language.
+    labelled, result["base_revision"] = _labelled_base_revision(content)
     
     # Locate the meta section. The anchor is checked FIRST and in any language;
     # the two English prose probes stay as the fallback for every TASK.md
@@ -164,13 +227,27 @@ def parse_task_meta(content: str) -> dict:
                 if len(blanks) == 1:
                     anchor = blanks[0]
 
-            if result["slug"] is None and anchor is not None \
-                    and anchor + 1 < len(rows):
-                nxt_value = rows[anchor + 1]
+            # TASK 115 R9.1: a Base revision row placed between the id and the
+            # slug is skipped, so its hash never becomes the archive's slug.
+            slug_row = anchor + 1 if anchor is not None else None
+            while slug_row is not None and slug_row < len(rows) and _is_hash(rows[slug_row]):
+                slug_row += 1
+            if result["slug"] is None and slug_row is not None \
+                    and slug_row < len(rows):
+                nxt_value = rows[slug_row]
                 if any(ch.isalpha() for ch in nxt_value):
                     normalized = normalize_slug(nxt_value)
                     if normalized != "untitled":
                         result["slug"] = normalized
+
+    # TASK 115 R9.1: inside the meta region, a single value of the hash shape that
+    # holds a letter and a digit is the Base revision under any label; two such
+    # values give no base. A hex word (`deadbeef`) or a date (`20261007`) is not one.
+    if not labelled:
+        hashes = [m.group(1) for m in map(BASE_REVISION_RE.fullmatch, _meta_rows(content))
+                  if m and re.search(r'[a-fA-F]', m.group(1)) and re.search(r'\d', m.group(1))]
+        if len(hashes) == 1:
+            result["base_revision"] = hashes[0]
 
     # ARC-3, the milder shape: an id was read but no slug was. Falling through
     # left the caller to substitute the literal "untitled", which is the shared
@@ -273,7 +350,7 @@ def archive_task(
     allow_renumber: bool = False
 ) -> dict:
     """
-    Execute the 6-step archiving protocol.
+    Execute Steps 1-6 of the archiving protocol (TASK.md).
     
     Args:
         docs_dir: Path to docs/ directory (e.g., "/path/to/docs")
@@ -357,6 +434,10 @@ def archive_task(
             current_task_slug = meta.get("slug") or "untitled"
         if current_task_id is None:
             current_task_id = meta.get("task_id")
+
+    # TASK 115 R9.2: Step 2 also reads the Base revision. Step 8
+    # (retarget_inbound_slot_links) takes it as `since`.
+    base_revision = parse_task_meta(task_file.read_text()).get("base_revision")
 
     # Step 3: Generate filename via tool.
     # The document's id is the identity; the filename follows it. Correction is
@@ -506,6 +587,8 @@ def archive_task(
         # offered no single empty value cell. Reported rather than inferred:
         # the miss used to be indistinguishable from a successful write.
         "meta_id_written": meta_id_written,
+        # TASK 115 R9.2: the Meta Base revision, or None; Step 8's `since`.
+        "base_revision": base_revision,
     }
 
 
@@ -627,4 +710,46 @@ def archive_plan(docs_dir: str, used_id: str, slug: str) -> dict:
         "archived_to": str(archived_path),
         "message": f"Archived PLAN.md in lockstep with ID {used_id}",
         "links": [r._asdict() for r in link_records],
+    }
+
+
+def retarget_inbound_slot_links(docs_dir: str, used_id: str, slug: str, plan_archived: bool,
+                                since: Optional[str] = None, dry_run: bool = False) -> dict:
+    """
+    Execute Step 8 of skill-archive-task: re-target the task's inbound slot links (TASK 115).
+
+    Call it after archive_task() and, when PLAN.md existed, after archive_plan(), with the
+    used_id and slug of archive_task(). `plan_archived` is True only when archive_plan()
+    returned "archived". `since` is archive_task()'s `base_revision`, or None.
+
+    Returns:
+        dict with keys:
+            - status: "retargeted" (exit code 0 or 3) | "error"
+            - exit_code: the exit code of slot_links.retarget_inbound()
+            - records: the records, as dicts
+            - archived_slot_links: slot links counted in archived documents
+            - message: one line on the run
+    """
+    docs_path = Path(docs_dir)
+    if docs_path.name != "docs":
+        return {"status": "error", "exit_code": 2, "records": [], "archived_slot_links": 0,
+                "message": f"docs_dir must be a directory named docs, not {docs_dir}"}
+    # Imported here, as _rebase_moved_document imports rebase_links.
+    from slot_links import InboundError, retarget_inbound
+
+    task_archive = f"docs/tasks/task-{used_id}-{slug}.md"
+    plan_archive = f"docs/plans/plan-{used_id}-{slug}.md" if plan_archived else None
+    try:
+        result = retarget_inbound(str(docs_path.parent), task_archive, plan_archive, since,
+                                  dry_run)
+    except InboundError as exc:
+        return {"status": "error", "exit_code": 2, "records": [], "archived_slot_links": 0,
+                "message": str(exc)}
+    attributed = f"lines since {result.since}" if result.since else "lines not attributed"
+    return {
+        "status": "retargeted" if result.exit_code in (0, 3) else "error",
+        "exit_code": result.exit_code,
+        "records": [record._asdict() for record in result.records],
+        "archived_slot_links": result.archived_slot_links,
+        "message": f"Step 8: exit {result.exit_code}, scan {result.scan}, {attributed}",
     }

@@ -49,6 +49,8 @@ Follow this process strictly:
       That directory holds sub-task files (`task-NNN-SubID-slug.md`) beside archived parents, and a
       manual max+1 scan counts them as occupying the parent's number (ARC-1).
     - **Slug:** Short, descriptive name (e.g., `task-012-user-login`).
+    - **Base revision:** `git rev-parse HEAD` when the task starts, or `none` outside git. Never
+      empty: archiving Step 8 re-targets the slot links on the lines added since this commit.
 - **Plan:** Define clear Use Cases and Acceptance Criteria.
 
 ### Step 3: Artifact Creation (docs/TASK.md)
@@ -70,7 +72,7 @@ register: `documentation-standards` §5.1-§5.3.
     - **Action:** Skip RTM generation. Focus on concise fix description.
 
 **Content Requirements (Standard Mode):**
-1.  **Meta Information:** ID, Slug, Context. — anchor `<!-- contract:meta -->`
+1.  **Meta Information:** ID, Slug, Base revision, Context. — anchor `<!-- contract:meta -->`
 2.  **Requirements Traceability Matrix (RTM):** — anchor `<!-- contract:rtm -->`
     - **Format:** a table whose **first column is the requirement ID**. The recommended
       shape is `| ID | Requirement | MVP? | Sub-features |`.
@@ -123,7 +125,8 @@ IF you receive detailed feedback from `03_task_reviewer`:
 
 ## 6. QUALITY CHECKLIST (VDD)
 Before returning result:
-- [ ] **Archive:** Did `skill-archive-task` rotate the old TASK.md → `docs/tasks/` (and PLAN.md → `docs/plans/`, if present) in lockstep?
+- [ ] **Archive:** Did `skill-archive-task` rotate the old TASK.md → `docs/tasks/` (and PLAN.md → `docs/plans/`, if present) in lockstep, and re-target its inbound slot links (Step 8)?
+- [ ] **Base revision:** Does Section 0 carry it?
 - [ ] **Meta:** Is Section 0 (Meta Info) present?
 - [ ] **Structure:** Are Use Cases and Scenarios detailed?
 - [ ] **Verification:** Are Acceptance Criteria verifiable?

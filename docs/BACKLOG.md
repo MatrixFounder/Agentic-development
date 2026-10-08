@@ -73,7 +73,13 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-38** [Links into the TASK and PLAN slots from other documents are not re-targeted on archive](backlog/wi-38-inbound-slot-links-not-retargeted-on-archive.md) — effort `M`, status `open`, opened 2026-10-07
+- **WI-45** [No deny rule for the git commands that discard the uncommitted work of a run](backlog/wi-45-no-deny-rule-for-the-git-commands-that-discard-the-uncommitted-work-of-a-run.md) — effort `S`, status `open`, opened 2026-10-08
+- **WI-44** [Three slot links older than Step 8 point at the current task](backlog/wi-44-three-slot-links-older-than-step-8-point-at-the-current-task.md) — effort `S`, status `open`, opened 2026-10-08
+- **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08
+- **WI-42** [Security-audit scans hide what did not run](backlog/wi-42-security-audit-scans-hide-what-did-not-run.md) — effort `M`, status `open`, opened 2026-10-08
+- **WI-41** [KaTeX advisory GHSA-238p-pmpm-9mq7 in the renderer lockfiles](backlog/wi-41-katex-advisory-ghsa-238p-pmpm-9mq7-in-the-renderer-lockfiles.md) — effort `S`, status `open`, opened 2026-10-08
+- **WI-40** [rebase_links.py writes through a linked parent directory](backlog/wi-40-rebase-links-py-writes-through-a-linked-parent-directory.md) — effort `S`, status `open`, opened 2026-10-08
+- **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-36** [Command substitution inside an allow-approved command](backlog/wi-36-command-substitution-inside-an-allow-approved-command.md) — effort `S`, status `open`, opened 2026-10-06
 - **WI-34** [An anchor hook for relative-path allow rules in a nested checkout](backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md) — effort `L`, status `open`, opened 2026-10-06
 - **WI-29** [Installer leaves declared skill development paths out of copy installs](backlog/wi-29-installer-leaves-declared-skill-development-paths-out-of-copy-installs.md) — effort `M`, status `open`, opened 2026-10-03
@@ -87,6 +93,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-38** [Links into the TASK and PLAN slots from other documents are not re-targeted on archive](backlog/wi-38-inbound-slot-links-not-retargeted-on-archive.md) — effort `M`, status `done`, opened 2026-10-07 · **done 2026-10-08** (TASK 115): Step 8, `rebase_links.py --inbound`; the TASK template's Base revision
 - **WI-37** [External scanners that run the scanned project's code](backlog/wi-37-external-scanners-that-run-the-scanned-projects-code.md) — effort `M`, status `dropped`, opened 2026-10-06 · **dropped 2026-10-06** (operator, TASK 112 retro): not needed
 - **WI-35** [Safe-command patterns that still admit a write or a program](backlog/wi-35-safe-command-patterns-that-still-admit-a-write-or-a-program.md) — effort `M`, status `done`, opened 2026-10-06 · **done 2026-10-06** (TASK 112): archive script, closed patterns, script guards; WI-36 and WI-37 filed
 - **WI-31** [Anchored allow rules, SHA-pinned actions, a full fingerprint and a nested lockfile audit](backlog/wi-31-anchored-allow-rules-sha-pinned-actions-a-full-fingerprint-and-a-nested-lockfile-audit.md) — effort `M`, status `done`, opened 2026-10-03 · **done 2026-10-06** (TASK 111): SEC-17 hook moved to WI-34

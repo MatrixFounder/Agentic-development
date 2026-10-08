@@ -10,6 +10,9 @@
 ### 0. Meta Information (MANDATORY)
 - **Task ID:** Extract from existing tasks (e.g. 002 if 001 exists) or use 001 for new project. **REQUIRED.**
 - **Slug:** Short kebab-case name (e.g. `user-auth`). **REQUIRED.**
+- **Base revision:** the output of `git rev-parse HEAD` when the task starts, or `none` outside
+  git. Never leave it empty. Archiving Step 8 re-targets the slot links on the lines added since
+  this commit (`skill-archive-task`).
 - **WARNING:** Do not skip this section. Archiving reads the Task ID and Slug from here; without them `skill-archive-task` cannot name the archive file.
 
 ### 1. General Description

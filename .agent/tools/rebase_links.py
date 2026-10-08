@@ -51,13 +51,39 @@ The conservation probe it guarded re-derives its target by `relpath` from a path
 whose existence was already proven, so it reconstructs an existing path in every
 case. That probe is retained as a postcondition on the rewrite arithmetic, but
 it is not the gate that catches a wrong slot map -- `--slot-must-exist` is.
+
+Inbound mode (TASK 115, `skill-archive-task` Step 8). With `--inbound` as the
+first argument, the remaining arguments go to `main(argv)` of `slot_links.py`:
+
+    rebase_links.py --inbound --task docs/tasks/task-<ID>-<slug>.md
+        [--plan docs/plans/plan-<ID>-<slug>.md] [--since <rev>] [--dry-run] [--json]
+
+It re-targets the slot links that an archived task wrote in other documents, and
+lists the others. The allow rule that names this script covers the mode, so
+archiving stays automatic (TASK 111 D13). Its exit codes are those of
+`slot_links.py`.
 """
 
-from __future__ import annotations
-
 import os
-import re
-from typing import NamedTuple
+import sys
+
+# Run as a script, under the allow rule, three steps precede every import but `os` and `sys`
+# (TASK 115 R1.2, as TASK 112 R1.8 does for `archive_move.py`):
+# - its own directory leaves `sys.path`, so no file planted beside the script answers an import:
+#   not a standard-library name, not one the standard library lacks on this platform (`subprocess`
+#   imports `msvcrt` on POSIX), and not a sibling's name; the inbound mode loads its siblings by
+#   explicit path (`_load_siblings`);
+# - no bytecode is written, and `.pyc` files are looked up under the null device, where none can
+#   exist, so a `.pyc` planted in `__pycache__/` is never read.
+# The module has no `from __future__` statement: at run time it imports `__future__`.
+if __name__ == "__main__":
+    _HERE = os.path.dirname(os.path.realpath(__file__))
+    sys.path[:] = [entry for entry in sys.path if os.path.realpath(entry or os.curdir) != _HERE]
+    sys.dont_write_bytecode = True
+    sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
+
+import re  # noqa: E402
+from typing import NamedTuple  # noqa: E402
 
 #: Schemes and forms that are never document-relative.
 _ABSOLUTE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//|/|#)", re.IGNORECASE)
@@ -387,14 +413,47 @@ def _refuse_operand(path):
     return None
 
 
+def _load_siblings():
+    """The `slot_links` module, its siblings loaded by explicit path (TASK 115 R1.2).
+
+    No sibling is found by a path search, so a package or an extension module planted beside the
+    script under a sibling's name is never chosen. `rebase_links` is this module, whether it runs
+    as `__main__` or was imported; `slot_links` finds all three in `sys.modules`.
+    """
+    import importlib.util
+    here = os.path.dirname(os.path.realpath(__file__))
+    sys.modules.setdefault("rebase_links", sys.modules[__name__])
+    for name in ("archive_move", "task_id_tool", "slot_links"):
+        if name in sys.modules:
+            continue
+        spec = importlib.util.spec_from_file_location(name, os.path.join(here, f"{name}.py"))
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            del sys.modules[name]
+            raise
+    return sys.modules["slot_links"]
+
+
 def _main(argv=None):
     import argparse
     import json
-    import sys
+
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv[:1] == ["--inbound"]:
+        # TASK 115 R1.1: `skill-archive-task` Step 8, loaded here only, so the file mode never
+        # loads the inbound module.
+        return _load_siblings().main(argv[1:])
 
     ap = argparse.ArgumentParser(
         description="Rebase document-relative links after a file moves "
-                    "(ARC-2). The move is the trigger; existence is the guard.")
+                    "(ARC-2). The move is the trigger; existence is the guard.",
+        epilog="Inbound mode: rebase_links.py --inbound --task docs/tasks/task-<ID>-<slug>.md "
+               "[--plan docs/plans/plan-<ID>-<slug>.md] [--since <rev>] [--dry-run] [--json] "
+               "re-targets the slot links an archived task wrote in other documents "
+               "(TASK 115, skill-archive-task Step 8).")
     ap.add_argument("files", nargs="+", help="moved markdown file(s)")
     ap.add_argument("--from", dest="from_dir", required=True,
                     help="directory the file used to live in (repo-relative)")

@@ -375,9 +375,11 @@ labelled with the answer.
 2. **Planning Gate:** Checks `docs/PLAN.md` for atomicity and rollback steps.
 3. **Execution Guard:** Changes are applied with the Self-Improvement Verificator active.
 4. **Rollback:** The run starts on a clean tree and records its base commit. Fallback lists every
-   change and stops on any path the PLAN does not declare. Once the operator confirms, it removes
-   the declared created files, restores the declared paths with `git restore --source=<base>`, and
-   checks that only the audit remains. No copy is written outside version control.
+   change and stops on any undeclared path. The declared kinds are the PLAN's paths, the files of a
+   §4.5 repair and the files that Step 8 of `skill-archive-task` rewrote. Once the operator
+   confirms, it removes the declared created files, restores the declared paths with
+   `git restore --source=<base>`, and checks that only the audit remains. No copy is written
+   outside version control.
 
 ### ✅ Recommended Strategy
 For critical system updates, follow this **Hybrid Verification Loop**:

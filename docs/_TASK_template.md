@@ -3,6 +3,7 @@
 ### 0. Meta Information
 - **Task ID:** [Three Digit ID, e.g., 001]
 - **Slug:** [kebab-case-slug, e.g., feature-name]
+- **Base revision:** [output of `git rev-parse HEAD` when the task starts, or `none` outside git]
 
 ## 1. General Description
 [Brief description of the task, goal, and context]

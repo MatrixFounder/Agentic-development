@@ -2,7 +2,7 @@
 name: artifact-management
 description: "Rules for managing local .AGENTS.md and global artifacts (TASK.md, PLAN.md, ARCHITECTURE.md, KNOWN_ISSUES.md, BACKLOG.md)."
 tier: 0
-version: 1.5
+version: 1.6
 ---
 # Artifact Management
 
@@ -53,12 +53,12 @@ You serve TWO masters:
 
 Before creating a NEW `docs/TASK.md`:
 1. **Apply Skill**: `skill-archive-task`
-2. Follow the protocol defined there (Steps 1-6 archive TASK.md → `docs/tasks/`; Step 7 archives PLAN.md → `docs/plans/` in lockstep)
+2. Follow the protocol defined there (Steps 1-6 archive TASK.md → `docs/tasks/`; Step 7 archives PLAN.md → `docs/plans/` in lockstep; Step 8 re-targets the links into both slots)
 
 See `skill-archive-task` for:
 - When to Archive (conditions)
 - Decision Logic (new vs refinement)
-- Protocol Steps (Steps 1-6 = TASK.md; Step 7 = PLAN.md lockstep)
+- Protocol Steps (Steps 1-6 = TASK.md; Step 7 = PLAN.md lockstep; Step 8 = inbound slot links)
 - Filename generation (tool or manual fallback)
 
 > [!NOTE]

@@ -36,7 +36,7 @@ The Skills System separates **"Who"** (Agent Persona) from **"What"** (Capabilit
 |-------|-------------|----------------------|----------------|
 | **`core-principles`** | Fundamental principles: Atomicity, Traceability, Stub-First, Minimizing Hallucinations, Dependency Vulnerabilities. | All (`01-03`, `vdd-*`) | All Agents |
 | **`artifact-management`** | Rules for managing `.AGENTS.md` (local memory) and global artifacts (`TASK.md`, `PLAN.md`, `ARCHITECTURE.md`, `KNOWN_ISSUES.md`). Owns lifecycle/ownership; delegates each artifact's format to a per-artifact skill (`known-issues-format`, `architecture-format-core`). | All Workflows | All Agents |
-| **`skill-archive-task`** | Complete protocol for archiving TASK.md **and PLAN.md (lockstep)** with ID generation. Single source of truth for archiving. | `01-start-feature`, All | Analyst, Orchestrator |
+| **`skill-archive-task`** | Complete protocol for archiving TASK.md **and PLAN.md (lockstep)** with ID generation, and for re-targeting the links into their slots (Step 8). Single source of truth for archiving. | `01-start-feature`, All | Analyst, Orchestrator |
 | **`skill-safe-commands`** | Centralized list of commands safe for auto-execution without user approval. | All | All Agents |
 | **`skill-session-state`** | Persist and restore session state (Mode, Task, Summary) to recovery from checks/resets. <br> **[Guide: Session Context Management](SESSION_CONTEXT_GUIDE.md)** | All | All Agents |
 | **`skill-phase-context`** | Skill loading tiers: TIER 0 (always), TIER 1 (phase-triggered), TIER 2 (extended). Defines when to load which skills. | All | Orchestrator |

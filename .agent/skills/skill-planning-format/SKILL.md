@@ -2,7 +2,7 @@
 name: skill-planning-format
 description: Standards for Development Plans (PLAN.md) and Detailed Task Descriptions (TASK.md).
 tier: 1
-version: 1.4
+version: 1.5
 ---
 
 # Planning Output Format

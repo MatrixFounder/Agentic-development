@@ -9,6 +9,9 @@ skill directory at any `--path` or path-shaped name. This file pins:
   second hard link and a file under `.git/` in any letter case or through a link, with exit 2 and
   no write (``TC-G1``, ``TC-G2``); a file inside is rewritten as before (``TC-G3``); one refused
   operand stops every write (``TC-G7``);
+* `rebase_links.py --inbound` refuses a file with a second hard link and skips a symbolic link,
+  with exit 3 and no write; it rewrites a sub-task inside; neither a module nor a `.pyc`
+  planted beside the script runs (``TC-G8`` to ``TC-G12``, TASK 115);
 * `init_skill.py` refuses a skill directory outside the working directory or under `.git/`, with
   exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``).
 
@@ -29,6 +32,8 @@ REBASE = PROJECT_ROOT / ".agent" / "tools" / "rebase_links.py"
 INIT = PROJECT_ROOT / ".agent" / "skills" / "skill-creator" / "scripts" / "init_skill.py"
 LINKED = "[a](ARCHITECTURE.md)\n"
 REBASED = "[a](../ARCHITECTURE.md)\n"
+SUBTASK = "# Task 112-01: a\n\n[docs/TASK.md](../TASK.md)\n"
+RETARGETED = "# Task 112-01: a\n\n[task-112](task-112-x.md)\n"
 
 
 def _tmp(case):
@@ -120,6 +125,106 @@ class TestRebaseLinksGuard(unittest.TestCase):
         result = self.rebase("docs/tasks/t.md")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
+
+
+class TestInboundGuard(unittest.TestCase):
+    """TC-G8 to TC-G12: `--inbound` writes only regular files with one hard link (TASK 115).
+
+    The root holds no git repository, so the script walks it. An own link is a slot link in a
+    sub-task file of task 112.
+    """
+
+    def setUp(self):
+        self.root = _tmp(self)
+        self.tasks = self.root / "docs" / "tasks"
+        self.tasks.mkdir(parents=True)
+        (self.tasks / "task-112-x.md").write_text("# Task 112: x\n", encoding="utf-8")
+        self.outside = _tmp(self)
+
+    def inbound(self, script=None):
+        return _run(script or REBASE, ["--inbound", "--task", "docs/tasks/task-112-x.md"],
+                    self.root)
+
+    def test_g8_a_second_hard_link(self):
+        # base-fail: the base rejects --inbound with exit 2.
+        sub = self.tasks / "task-112-01-a.md"
+        sub.write_text(SUBTASK, encoding="utf-8")
+        os.link(sub, self.root / "alias.md")
+        result = self.inbound()
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("[REFUSED] docs/tasks/task-112-01-a.md", result.stdout)
+        self.assertEqual(sub.read_text(encoding="utf-8"), SUBTASK)
+        self.assertEqual((self.root / "alias.md").read_text(encoding="utf-8"), SUBTASK)
+
+    def test_g9_a_symbolic_link_to_a_file_outside(self):
+        victim = self.outside / "victim.md"
+        victim.write_text(SUBTASK, encoding="utf-8")
+        (self.tasks / "task-112-02-b.md").symlink_to(victim)
+        result = self.inbound()
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("[SKIPPED] docs/tasks/task-112-02-b.md", result.stdout)
+        self.assertEqual(victim.read_text(encoding="utf-8"), SUBTASK)
+
+    def test_g10_a_subtask_inside_is_rewritten(self):
+        sub = self.tasks / "task-112-03-c.md"
+        sub.write_text(SUBTASK, encoding="utf-8")
+        result = self.inbound()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(sub.read_text(encoding="utf-8"), RETARGETED)
+
+    def _tools_copy(self):
+        tools = self.outside / "tools"
+        tools.mkdir()
+        names = {REBASE.name, "rebase_links.py", "slot_links.py", "task_id_tool.py",
+                 "archive_move.py"}
+        for name in names:
+            shutil.copy2(REBASE.parent / name, tools / name)
+        (self.tasks / "task-112-04-d.md").write_text(SUBTASK, encoding="utf-8")
+        return tools
+
+    def test_g11_a_planted_module_is_not_imported(self):
+        # No module planted beside the script runs (TASK 115 R1.2): a standard-library name, one the
+        # standard library lacks on this platform (`subprocess` imports `msvcrt` on POSIX), a
+        # package or an extension module in a sibling's name.
+        import importlib.machinery
+        tools = self._tools_copy()
+        planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
+                   "msvcrt", "_winapi")
+        for name in planted:
+            sentinel = self.outside / f"sentinel-{name}"
+            (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
+                                              encoding="utf-8")
+        siblings = ("slot_links", "rebase_links", "archive_move", "task_id_tool")
+        for name in siblings:
+            package = tools / name
+            package.mkdir()
+            sentinel = self.outside / f"sentinel-package-{name}"
+            (package / "__init__.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
+                                                 encoding="utf-8")
+        suffix = importlib.machinery.EXTENSION_SUFFIXES[0]
+        (tools / f"slot_links{suffix}").write_bytes(b"not a shared object")
+        result = self.inbound(tools / REBASE.name)
+        self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
+        ran = [name for name in planted if (self.outside / f"sentinel-{name}").exists()]
+        ran += [name for name in siblings
+                if (self.outside / f"sentinel-package-{name}").exists()]
+        self.assertEqual(ran, [], "a module planted beside the script was imported")
+
+    def test_g12_a_planted_pyc_is_never_read(self):
+        import py_compile
+        tools = self._tools_copy()
+        sentinel = self.outside / "sentinel-pyc"
+        evil = self.outside / "evil.py"
+        evil.write_text(f"open({str(sentinel)!r}, 'w').close()\n", encoding="utf-8")
+        cache = tools / "__pycache__"
+        cached = cache / f"slot_links.{sys.implementation.cache_tag}.pyc"
+        cache.mkdir()
+        py_compile.compile(str(evil), cfile=str(cached),
+                           invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
+        result = self.inbound(tools / REBASE.name)
+        self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
+        self.assertFalse(sentinel.exists(), "a .pyc planted in __pycache__/ was read")
+        self.assertEqual(os.listdir(cache), [cached.name])
 
 
 class TestInitSkillGuard(unittest.TestCase):

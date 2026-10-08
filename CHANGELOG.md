@@ -16,6 +16,43 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.38.0 — links into the TASK and PLAN slots are re-targeted on archive (TASK 115, WI-38)**
+
+#### Added
+
+- **`skill-archive-task` Step 8 re-targets inbound slot links.** Steps 5.5 and 7.6.5 rebase the
+  links inside the moved documents only. A link in another document that resolved to
+  `docs/TASK.md` or `docs/PLAN.md` kept naming the slot, and the next task's TASK and PLAN filled
+  it; no gate saw the change. Step 8 runs `rebase_links.py --inbound` after Step 7. It rewrites
+  the task's own slot links to the archive paths: every slot link in the task's sub-task files,
+  and every slot link on a line added since the task's base revision. Link text that names the
+  slot becomes `task-<ID>` or `plan-<ID>`. Every other slot link is listed and left as written.
+  Ledger records, archived documents, the slots and symbolic links are never rewritten.
+- **`.agent/tools/slot_links.py`** holds the logic. `rebase_links.py` passes the arguments after
+  a first `--inbound` to it, so the allow rule that names `rebase_links.py` covers Step 8, and
+  archiving stays automatic. Added lines come from `git cat-file blob` and `difflib`; no
+  `git diff` runs, so no diff driver, textconv driver, clean filter or fsmonitor hook runs. A file
+  is written through a descriptor that follows no link, and only when it has one hard link and
+  the bytes the scan read; a dry run makes the same checks. Run as a script, `rebase_links.py`
+  removes its own directory from `sys.path`, loads its siblings by explicit path, reads no `.pyc`
+  and has no `from __future__` statement. No module, package, extension module or `.pyc` planted
+  beside it runs. The text output escapes control and bidirectional characters, and `--json` is
+  ASCII.
+- **The TASK template carries a Base revision.** `requirements-analysis` 1.4 and
+  `docs/_TASK_template.md` add the bullet; Step 2 of `skill-archive-task` reads it, and
+  `parse_task_meta()` returns it.
+
+#### Changed
+
+- **`skill-archive-task` 2.3**, **`skill-task-model` 1.2**, **`artifact-management` 1.6**: Step 8
+  and the Base revision. `docs/ARCHITECTURE.md` is still never moved or archived; Step 8 may
+  re-target the task's own slot links in it.
+- **`skill-planning-format` 1.5**: its TASK example carries the Base revision.
+- **`framework-upgrade` §1 and §5.1**: the audit lists every file Step 8 rewrote, and the
+  fallback treats those files as declared.
+- **`archive_protocol.py`**: `retarget_inbound_slot_links()` mirrors Step 8; `archive_task()`
+  returns `base_revision`.
+
 ### **v3.37.2 — a sub-task is told from its parent by the H1 first (TASK 114)**
 
 #### Fixed

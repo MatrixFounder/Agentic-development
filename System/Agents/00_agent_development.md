@@ -106,6 +106,7 @@ Standard flows can be overridden by Workflows (`.agent/workflows/`):
 
 ### PLAN.md Lifecycle
 - **Lockstep Archiving:** (Skill: `skill-archive-task`, Step 7) When a new task starts, the old `docs/PLAN.md` is archived to `docs/plans/plan-XXX-slug.md`, reusing the same ID/slug as the TASK.md it accompanied. Re-planning the same task overwrites `docs/PLAN.md` in place.
+- **Inbound Slot Links:** (Skill: `skill-archive-task`, Step 8) After the archive, the links that the task wrote to `docs/TASK.md` or `docs/PLAN.md` in other documents are re-targeted to the archives; every other such link is listed.
 
 ### ARCHITECTURE.md
 - **Modular Format:** Uses `architecture-format-core` for updates and `architecture-format-extended` for new systems.

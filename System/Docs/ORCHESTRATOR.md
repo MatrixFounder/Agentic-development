@@ -306,7 +306,7 @@ See the implementation in:
 
 ## 🧪 Archive Protocol Module (Testing Infrastructure)
 
-The `archive_protocol.py` module provides a **testable Python implementation** of the 6-step archiving protocol from `skill-archive-task`. This module is primarily for **automated testing** and **validation**.
+The `archive_protocol.py` module provides a **testable Python implementation** of the archiving protocol from `skill-archive-task`, Steps 1–8. This module is primarily for **automated testing** and **validation**.
 
 ### Purpose
 
@@ -321,8 +321,10 @@ The `archive_protocol.py` module provides a **testable Python implementation** o
 ```
 .agent/tools/
 ├── archive_protocol.py          # Testable protocol implementation
-├── test_archive_protocol.py     # 15 automated tests
+├── test_archive_protocol.py     # Its automated tests
 ├── task_id_tool.py              # ID generation tool (dependency)
+├── slot_links.py                # Step 8: `rebase_links.py --inbound` (TASK 115)
+├── test_slot_links.py           # TC-0 to TC-46 of TASK 115
 └── fixtures/
     ├── task_with_meta.md        # Valid TASK with Meta Information
     ├── task_without_meta.md     # TASK missing Meta section
@@ -367,7 +369,8 @@ should_archive(is_new_task=False, task_exists=True)  # False
 
 #### `archive_task(docs_dir, is_new_task, current_task_slug=None, current_task_id=None) -> dict`
 
-Executes the complete 6-step archiving protocol.
+Executes Steps 1–6 (TASK.md). On `status: "archived"` the result also carries `base_revision`,
+the Meta Base revision or `None`, which Step 8 takes as `since`.
 
 ```python
 from archive_protocol import archive_task
@@ -396,13 +399,35 @@ result = archive_task(
 | `skipped` | Archiving not needed (no file or refinement) |
 | `error` | Something went wrong (see `reason` and `message`) |
 
+---
+
+#### `retarget_inbound_slot_links(docs_dir, used_id, slug, plan_archived, since=None, dry_run=False) -> dict`
+
+Executes Step 8 (TASK 115): the links that the task wrote to `docs/TASK.md` or `docs/PLAN.md` in
+other documents are re-targeted to the archives, and every other such link is listed. It calls
+`slot_links.retarget_inbound()` with the parent of `docs_dir` as the project root.
+
+```python
+from archive_protocol import retarget_inbound_slot_links
+
+result = retarget_inbound_slot_links("/path/to/docs", "042", "my-feature",
+                                     plan_archived=True, since=task["base_revision"])
+# {"status": "retargeted", "exit_code": 3, "records": [...], "archived_slot_links": 0, ...}
+```
+
+`status` is `retargeted` for exit code 0 or 3, and `error` otherwise; an operand or git error
+returns `exit_code: 2` and no records.
+
 ### Running Tests
 
 ```bash
-# All archive protocol tests (31 tests)
+# All archive protocol tests
 cd .agent/tools && python -m pytest test_archive_protocol.py -v
 
-# Full test suite (106 tests)
+# Step 8, the inbound slot links (TASK 115)
+cd .agent/tools && python -m pytest test_slot_links.py -v
+
+# Full test suite
 cd .agent/tools && python -m pytest -v
 
 # With coverage

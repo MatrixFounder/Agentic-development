@@ -32,7 +32,8 @@ from archive_protocol import (
     parse_task_meta,
     should_archive,
     archive_task,
-    archive_plan
+    archive_plan,
+    retarget_inbound_slot_links,
 )
 
 
@@ -728,3 +729,107 @@ class TestPlanSlotIsConditional:
         archived = (clean_docs_dir / "tasks" / "task-077-no-plan.md").read_text()
         assert "plan-077-no-plan.md" not in archived, \
             "authored a citation to a plan archive that will never exist"
+
+
+class TestInboundSlotLinks:
+    """TASK 115 TC-25: Step 8 in the mirror, and the Base revision that Step 2 reads (R9)."""
+
+    META = ("# Task 033: Admission core V1\n\n<!-- contract:meta -->\n\n"
+            "| Field | Value |\n|:---|:---|\n| Task ID | 033 |\n| Slug | admission-core-v1 |\n"
+            "| Base revision | `abc1234` |\n")
+
+    def test_tc25_the_protocol_retargets_the_subtask_links(self, clean_docs_dir):
+        tasks = clean_docs_dir / "tasks"
+        (tasks / "task-033-01-run-guards.md").write_text(
+            "# Task 033-01: Guards\n\n| Plan | [docs/PLAN.md](../PLAN.md) |\n")
+        (tasks / "task-033-05a-sqltest-db.md").write_text(
+            "# Task 033-05a: Test database\n\nSee [docs/TASK.md](../TASK.md).\n")
+        (clean_docs_dir / "TASK.md").write_text(self.META)
+        (clean_docs_dir / "PLAN.md").write_text("# Plan 033\n")
+
+        task = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
+        assert task["status"] == "archived", task["message"]
+        assert task["base_revision"] == "abc1234"
+        plan = archive_plan(docs_dir=str(clean_docs_dir), used_id=task["used_id"],
+                            slug=task["slug"])
+        assert plan["status"] == "archived"
+        result = retarget_inbound_slot_links(str(clean_docs_dir), task["used_id"], task["slug"],
+                                             plan_archived=True)
+
+        assert result["status"] == "retargeted", result["message"]
+        assert result["exit_code"] == 0
+        assert (tasks / "task-033-01-run-guards.md").read_text() == (
+            "# Task 033-01: Guards\n\n"
+            "| Plan | [plan-033](../plans/plan-033-admission-core-v1.md) |\n")
+        assert (tasks / "task-033-05a-sqltest-db.md").read_text() == (
+            "# Task 033-05a: Test database\n\nSee [task-033](task-033-admission-core-v1.md).\n")
+
+    @pytest.mark.parametrize("content, expected", [
+        ("| Task ID | 033 |\n| Slug | x |\n| Base revision | `fc53476` |\n", "fc53476"),
+        ("- **Task ID:** 033\n- **Slug:** x\n- **Base revision:** `abc1234def`\n", "abc1234def"),
+        ("| Base revision | " + "a" * 63 + "1 |\n", "a" * 63 + "1"),
+        ("| Base revision | none |\n", None),
+        ("| Base revision | `git rev-parse HEAD` |\n", None),
+    ])
+    def test_tc25_base_revision_by_its_label(self, content, expected):
+        meta = parse_task_meta("## 0. Meta Information\n\n" + content)
+        assert meta["base_revision"] == expected
+
+    @staticmethod
+    def _anchored(body):
+        return parse_task_meta("<!-- contract:meta -->\n" + body + "\n<!-- contract:rtm -->")
+
+    def test_tc25_base_revision_under_a_non_english_label(self):
+        m = self._anchored("| ИД задачи | 033 |\n| Слаг | admission-core-v1 |\n"
+                           "| Базовая ревизия | `9983c84` |")
+        assert m["base_revision"] == "9983c84"
+        assert m["slug"] == "admission-core-v1"
+
+    def test_tc25_a_base_revision_before_the_slug_is_not_the_slug(self):
+        """Mode A round 2, n2: the positional slug rule skips a hash that holds a digit."""
+        m = self._anchored("| ИД задачи | 033 |\n| Базовая ревизия | 9983c84 |\n"
+                           "| Слаг | admission-core-v1 |")
+        assert m["base_revision"] == "9983c84"
+        assert m["slug"] == "admission-core-v1"
+
+    def test_tc25_two_hashes_under_other_labels_give_none(self):
+        m = self._anchored("| ИД | 033 |\n| Слаг | x-y |\n| А | abc1234 |\n| Б | def5678 |")
+        assert m["base_revision"] is None
+
+    def test_tc25_errors_are_reported_not_raised(self, clean_docs_dir, tmp_path):
+        other = tmp_path / "notdocs"
+        other.mkdir()
+        assert retarget_inbound_slot_links(str(other), "033", "x", False)["exit_code"] == 2
+        result = retarget_inbound_slot_links(str(clean_docs_dir), "033", "missing", False)
+        assert result["status"] == "error"
+        assert result["exit_code"] == 2
+        assert result["records"] == []
+
+    # Stage-2 round 1: the base is read from the Meta region only (R9.1).
+
+    def test_tc25_a_base_in_body_prose_is_not_the_meta_value(self):
+        content = ("# Task 033: x\n\n## 0. Meta Information\n\n| Task ID | 033 |\n| Slug | x |\n"
+                   "| Base revision | none |\n\n## 1. Problem\n\n"
+                   "The run on Base revision `fc53476` failed.\n")
+        assert parse_task_meta(content)["base_revision"] is None
+
+    def test_tc25_a_heading_named_base_revision_is_not_a_value(self):
+        content = ("## 0. Meta Information\n\n| Task ID | 033 |\n| Slug | x |\n\n"
+                   "### Base revision\n\ndefaced the old table.\n")
+        assert parse_task_meta(content)["base_revision"] is None
+
+    @pytest.mark.parametrize("value", ["deadbeef", "20261007"])
+    def test_tc25_a_hex_word_or_a_date_is_not_a_structural_base(self, value):
+        m = self._anchored(f"| ИД | 033 |\n| Слаг | x-y |\n| Дата | {value} |")
+        assert m["base_revision"] is None
+
+    def test_tc25_an_h1_naming_metadata_is_not_the_meta_section(self):
+        content = ("# Task 120: Metadata cleanup\n\nIntro.\n\n## 0. Meta Information\n\n"
+                   "- **Task ID:** 120\n- **Slug:** x\n- **Base revision:** abc1234\n")
+        assert parse_task_meta(content)["base_revision"] == "abc1234"
+
+    def test_tc25_the_planning_example_carries_a_readable_base(self):
+        example = (Path(__file__).resolve().parents[1] / "skills" / "skill-planning-format"
+                   / "examples" / "TASK_EXAMPLE.md")
+        assert parse_task_meta(example.read_text(encoding="utf-8"))["base_revision"] == "9f1c2ab"
+

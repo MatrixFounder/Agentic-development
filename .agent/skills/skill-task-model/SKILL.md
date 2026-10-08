@@ -2,7 +2,7 @@
 name: skill-task-model
 description: Standards for Technical Specifications (TASK) and Use Cases.
 tier: 1
-version: 1.1
+version: 1.2
 ---
 
 # TASK Model & Examples
@@ -16,7 +16,7 @@ version: 1.1
 - "I don't need actors, it's just a backend job" -> **WRONG**. "System" is an actor. "Cron Job" is an actor.
 
 ## 2. TASK Structure Rules
-- **Meta Information:** Section 0 MUST include Task ID and Slug.
+- **Meta Information:** Section 0 MUST include Task ID, Slug and Base revision (`git rev-parse HEAD` when the task starts, or `none` outside git).
 - **Use Cases:** Must be structured with Actors, Preconditions, Main Scenario, Alternative Scenarios, Postconditions, and Acceptance Criteria.
 - **Validation:** Criteria must be verifiable.
 

@@ -234,7 +234,7 @@ class TestCliContract(unittest.TestCase):
         """A file count is not evidence that anything was checked
         (`developer-guidelines` §6.3, rule 3)."""
         code, out = run_validator(PROJECT_ROOT)
-        self.assertRegex(out, r"checked 25 loops: 0 error\(s\)")
+        self.assertRegex(out, r"checked 26 loops: 0 error\(s\)")
 
 
 if __name__ == "__main__":

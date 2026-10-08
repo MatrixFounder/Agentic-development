@@ -82,6 +82,7 @@ if __name__ == "__main__":
     sys.dont_write_bytecode = True
     sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
 
+import posixpath  # noqa: E402
 import re  # noqa: E402
 import stat  # noqa: E402
 from typing import NamedTuple  # noqa: E402
@@ -164,6 +165,8 @@ _SLOT_ARCHIVES = {
     "docs/PLAN.md": ("docs/plans/plan-<ID>-<slug>.md",
                      re.compile(rf"docs/plans/plan-[0-9]{{3,}}-{_SLUG}\.md")),
 }
+#: TASK 117 R1: the name of an archive; its group is the `<ID>-<slug>` that a slot archive shares.
+_ARCHIVE_NAME = re.compile(rf"(?:task|plan)-([0-9]{{3,}}-{_SLUG})\.md")
 
 
 def _mask(text: str) -> str:
@@ -424,19 +427,41 @@ def _adds_characters(authored, new):
 
 
 def _adds_parts(record):
-    """True when a part of the new target's path is not one its author wrote (TASK 116 R8.7).
+    """True when the new target's path is not a tail of the path its author wrote (TASK 117 R2).
 
-    A part, between `/`, other than `.` and `..`, must be a part of the authored target's path,
-    or, for a slot link, of the archive it names. A rewrite may drop parts and add `..`.
+    The parts of the normalised path, between `/`, other than `..`, must end the authored target's
+    parts in the same order, or, for a slot link, the parts of the archive it names. A rewrite may
+    drop leading parts and add `..`; it may not reorder or repeat one (TASK 116 R8.7 tested a
+    set). Normalising only removes parts, so `a/b/../c.md` is `a/c.md`.
     """
     def parts(target):
         if target.startswith("<") and target.endswith(">"):
             target = target[1:-1]
-        return set(_split_fragment(target)[0].split("/")) - {"", ".", ".."}
-    known = parts(record.authored)
+        path = posixpath.normpath(_split_fragment(target)[0] or ".")
+        return [part for part in path.split("/") if part not in ("", ".", "..")]
+    new = parts(record.new_target)
+    known = [parts(record.authored)]
     if record.action == "SLOT_RESOLVED":
-        known |= parts(record.denotes_old)
-    return not parts(record.new_target) <= known
+        known.append(parts(record.denotes_old))
+    return not any(len(new) <= len(old) and old[len(old) - len(new):] == new for old in known)
+
+
+def _refuse_slot(path, slot_map):
+    """Why the slot map names another task than the operand `path`, or None (TASK 117 R1).
+
+    The archive steps pass the slot archive of the operand's own task: `task-<ID>-<slug>.md` takes
+    `plan-<ID>-<slug>.md`, and the reverse. So each slot archive's `<ID>-<slug>` equals the
+    operand's, and no other slug enters a link.
+    """
+    if not slot_map:
+        return None
+    own = _ARCHIVE_NAME.fullmatch(os.path.basename(path))
+    if own is None:
+        return "its name is not task-<ID>-<slug>.md or plan-<ID>-<slug>.md, as --slot requires"
+    for slot, archive in slot_map.items():
+        if _ARCHIVE_NAME.fullmatch(os.path.basename(archive)).group(1) != own.group(1):
+            return f"--slot {slot}={archive} names another <ID>-<slug> than its name"
+    return None
 
 
 def _refuse_operand(path):
@@ -623,6 +648,8 @@ def _main(argv=None):
                          "docs/PLAN.md=docs/plans/plan-096-x.md. Repeatable. SLOT is "
                          "docs/TASK.md, with ARCHIVE docs/tasks/task-<ID>-<slug>.md, or "
                          "docs/PLAN.md, with ARCHIVE docs/plans/plan-<ID>-<slug>.md. "
+                         "Each operand is then named task-<ID>-<slug>.md or "
+                         "plan-<ID>-<slug>.md, with the archive's <ID>-<slug>. "
                          "Resolved before any filesystem probe, so it still "
                          "works once the slot file has been moved away.")
     ap.add_argument("--slot-must-exist", action="store_true",
@@ -680,7 +707,7 @@ def _file_mode(args, slot_map, opened):
     import json
 
     for path in args.files:
-        reason = _refuse_operand(path)
+        reason = _refuse_operand(path) or _refuse_slot(path, slot_map)
         if reason:
             print(json.dumps({"ok": False, "error": f"{path}: {reason}"}), file=sys.stderr)
             return 2
@@ -712,14 +739,20 @@ def _file_mode(args, slot_map, opened):
                 return 2
             parts = [r.line for r in records if r.action in _WROTE and _adds_parts(r)]
             if parts:
-                print(json.dumps({"ok": False, "error": f"{path}:{parts[0]}: a rewritten link "
-                                  "holds a path part that its authored link does not"}),
+                print(json.dumps({"ok": False, "error": f"{path}:{parts[0]}: the path of a "
+                                  "rewritten link is not a tail of its authored link's"}),
                       file=sys.stderr)
                 return 2
             # Overlapping links are spliced one into the other: the text gains no character either.
             if _adds_characters(text, new_text):
                 print(json.dumps({"ok": False, "error": f"{path}: the rewritten text holds a "
                                   "character that the text did not"}), file=sys.stderr)
+                return 2
+            # TASK 117 R3: a splice that adds no new character still changes the length.
+            if len(new_text) != len(text) + sum(len(r.new_target) - len(r.authored)
+                                                for r in records if r.action in _WROTE):
+                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text is not the "
+                                  "text with each rewritten link replaced"}), file=sys.stderr)
                 return 2
             if changed and not args.dry_run:
                 _write_checked(path, cwd, st, new_text.encode("utf-8"))

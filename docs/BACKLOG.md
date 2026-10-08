@@ -73,8 +73,6 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-48** [Stage 2 of framework-upgrade has no bound on its review rounds](backlog/wi-48-stage-2-of-framework-upgrade-has-no-bound-on-its-review-rounds.md) — effort `S`, status `open`, opened 2026-10-08
-- **WI-47** [rebase_links.py can still write a chosen slug into a slot link](backlog/wi-47-rebase-links-py-can-still-write-a-chosen-slug-into-a-slot-link.md) — effort `S`, status `open`, opened 2026-10-08
 - **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-42** [Security-audit scans hide what did not run](backlog/wi-42-security-audit-scans-hide-what-did-not-run.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-41** [KaTeX advisory GHSA-238p-pmpm-9mq7 in the renderer lockfiles](backlog/wi-41-katex-advisory-ghsa-238p-pmpm-9mq7-in-the-renderer-lockfiles.md) — effort `S`, status `open`, opened 2026-10-08
@@ -92,6 +90,8 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-48** [Stage 2 of framework-upgrade has no bound on its review rounds](backlog/wi-48-stage-2-of-framework-upgrade-has-no-bound-on-its-review-rounds.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-09** (TASK 117): loop `stage2-review-retry`, max 3 rounds; a rule for LOW routes of a fixed class
+- **WI-47** [rebase_links.py can still write a chosen slug into a slot link](backlog/wi-47-rebase-links-py-can-still-write-a-chosen-slug-into-a-slot-link.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-09** (TASK 117): a slot archive bound to the operand's name, a tail test of parts, a length test of the text
 - **WI-46** [rebase_links.py opens a checked path again to write it](backlog/wi-46-rebase-links-py-opens-a-checked-path-again-to-write-it.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-08** (TASK 116): both modes write through the descriptor they checked
 - **WI-45** [No deny rule for the git commands that discard the uncommitted work of a run](backlog/wi-45-no-deny-rule-for-the-git-commands-that-discard-the-uncommitted-work-of-a-run.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-08** (TASK 116): deny rules for `git stash`, `git reset --hard` and `git clean`
 - **WI-44** [Three slot links older than Step 8 point at the current task](backlog/wi-44-three-slot-links-older-than-step-8-point-at-the-current-task.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-08** (TASK 116): six old slot links name their archives

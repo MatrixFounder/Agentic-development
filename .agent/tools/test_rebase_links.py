@@ -348,12 +348,27 @@ class TestSlotTargetIsAForwardReference:
         assert code == 3
 
     def test_a_wrong_slot_map_is_still_surfaced(self, tmp_path, capsys):
-        """Exempting slots from the exit code must not make a typo invisible."""
+        """Exempting slots from the exit code must not make a typo invisible.
+
+        TASK 117 R1: a slug that is not the operand's own exits 2 and writes nothing.
+        """
         from rebase_links import _main as main
         moved = self._archive_fixture(tmp_path)
-        main([str(moved), "--from", "docs", "--to", "docs/tasks",
-              "--repo-root", str(tmp_path),
-              "--slot", "docs/PLAN.md=docs/plans/plan-077-logn.md"])
+        before = moved.read_text()
+        code = main([str(moved), "--from", "docs", "--to", "docs/tasks",
+                     "--repo-root", str(tmp_path),
+                     "--slot", "docs/PLAN.md=docs/plans/plan-077-logn.md"])
+        assert code == 2
+        assert "names another <ID>-<slug>" in capsys.readouterr().err
+        assert moved.read_text() == before
+
+    def test_a_pending_slot_target_is_reported(self, tmp_path, capsys):
+        from rebase_links import _main as main
+        moved = self._archive_fixture(tmp_path)
+        code = main([str(moved), "--from", "docs", "--to", "docs/tasks",
+                     "--repo-root", str(tmp_path),
+                     "--slot", "docs/PLAN.md=docs/plans/plan-077-login.md"])
+        assert code == 0
         assert "SLOT_PENDING" in capsys.readouterr().out
 
     def test_slot_target_that_exists_reports_no_pending(self, tmp_path, capsys):
@@ -394,14 +409,25 @@ class TestSlotTargetMustExist:
         moved.write_text("[t](TASK.md)\n")
         return moved
 
-    def test_a_mistyped_slot_target_exits_one(self, tmp_path):
+    def test_an_absent_slot_target_exits_one(self, tmp_path):
         """Red until `--slot-must-exist` sets the failure flag."""
+        from rebase_links import _main as main
+        moved = self._plan_fixture(tmp_path)
+        (tmp_path / "docs" / "tasks" / "task-077-login.md").unlink()
+        code = main([str(moved), "--from", "docs", "--to", "docs/plans",
+                     "--repo-root", str(tmp_path), "--slot-must-exist",
+                     "--slot", "docs/TASK.md=docs/tasks/task-077-login.md"])
+        assert code == 1
+
+    def test_a_mistyped_slot_target_exits_two(self, tmp_path):
+        """TASK 117 R1: the slug is bound to the operand's name before `--slot-must-exist`."""
         from rebase_links import _main as main
         moved = self._plan_fixture(tmp_path)
         code = main([str(moved), "--from", "docs", "--to", "docs/plans",
                      "--repo-root", str(tmp_path), "--slot-must-exist",
                      "--slot", "docs/TASK.md=docs/tasks/task-077-logn.md"])
-        assert code == 1
+        assert code == 2
+        assert moved.read_text() == "[t](TASK.md)\n"
 
     def test_the_correct_slot_target_exits_zero(self, tmp_path):
         from rebase_links import _main as main
@@ -429,9 +455,10 @@ class TestSlotTargetMustExist:
         """`"ok": true` on a dangling rewrite is what ARC-6 measured."""
         from rebase_links import _main as main
         moved = self._plan_fixture(tmp_path)
+        (tmp_path / "docs" / "tasks" / "task-077-login.md").unlink()
         main([str(moved), "--from", "docs", "--to", "docs/plans",
               "--repo-root", str(tmp_path), "--slot-must-exist", "--json",
-              "--slot", "docs/TASK.md=docs/tasks/task-077-logn.md"])
+              "--slot", "docs/TASK.md=docs/tasks/task-077-login.md"])
         assert json.loads(capsys.readouterr().out)["ok"] is False
 
 

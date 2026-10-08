@@ -2,7 +2,7 @@
 name: skill-archive-task
 description: "Complete protocol for archiving TASK.md and PLAN.md (lockstep) with ID generation, and for re-targeting the links into their slots. Single source of truth for archiving."
 tier: 1
-version: 2.4
+version: 2.5
 ---
 # Task Archiving Protocol
 
@@ -277,10 +277,14 @@ and Step 7 runs only after Step 6 passed. An existence-based rule would see the 
 nothing. The slot map carries the identity without touching the filesystem.
 
 `--slot-must-exist` is **required here and forbidden at Step 5.5** (**ARC-6**). Here the TASK
-archive was created in Step 5, so a mistyped `{slug}` names a file that is already absent and the
-tool exits 1. At Step 5.5 the plan archive does not exist yet, so the same assertion would fail the
-protocol's own happy path. Without the flag a one-character slug typo rewrote the citation and
-returned exit 0 with `"ok": true`, and Step 7.7's assertion passed on a dead link.
+archive was created in Step 5, so a slot archive that is absent exits 1. At Step 5.5 the plan
+archive does not exist yet, so the same assertion would fail the protocol's own happy path. Without
+the flag a one-character slug typo rewrote the citation and returned exit 0 with `"ok": true`, and
+Step 7.7's assertion passed on a dead link.
+
+Both steps pass a slot archive of the operand's own `<ID>-<slug>`. The script refuses any other
+with exit 2 before it opens the operand (TASK 117), so a mistyped `{slug}` in `--slot` exits 2 at
+either step.
 
 **7.7 — Validate:**
 
@@ -432,7 +436,8 @@ boundaries apply:
       ```
       The slot map is resolved before any filesystem probe, which is why it still works here —
       `docs/TASK.md` was moved away in Step 5 above. `--slot-must-exist` belongs here and not in
-      Step 5.5: the TASK archive already exists, so a mistyped `{old-slug}` exits 1 (ARC-6).
+      Step 5.5: the TASK archive already exists, so an absent one exits 1 (ARC-6). A mistyped
+      `{old-slug}` in `--slot` exits 2 (TASK 117).
     - Validate: `docs/PLAN.md` does NOT exist ✓.
 11. **Step 8** — re-target the slot links this task wrote. `{old-base}` is the Base revision of
     Step 2:

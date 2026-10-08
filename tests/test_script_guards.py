@@ -123,7 +123,7 @@ def _descriptor_path_known():
 
 
 class TestRebaseLinksGuard(unittest.TestCase):
-    """TC-G1 to TC-G3, TC-G7, TC-G13 to TC-G18 and TC-G20 to TC-G30 (TASK 116)."""
+    """TC-G1 to TC-G3, TC-G7, TC-G13 to TC-G18, TC-G20 to TC-G30 (TASK 116), TC-G31 (TASK 117)."""
 
     def setUp(self):
         self.root = _tmp(self)
@@ -503,7 +503,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
 
     def test_g28_a_slot_map_of_another_form(self):
         # base-fail: the base writes any archive text over the slot link.
-        moved = self.root / "docs" / "tasks" / "t.md"
+        # TASK 117 R1: the operand carries the slot archives' `<ID>-<slug>`.
+        moved = self.root / "docs" / "tasks" / "task-116-x.md"
         text = LINKED + "[t](TASK.md)\n[p](PLAN.md)\n"
         refused = (("docs/NOTES.md=docs/tasks/task-116-x.md", "its slot is not"),
                    ("docs/TASK.md=.agent/tools/x.py", "its archive is not"),
@@ -517,8 +518,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
         for pair, reason in refused:
             with self.subTest(pair=pair):
                 moved.write_text(text, encoding="utf-8")
-                result = _run(REBASE, ["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
-                                       "--slot", pair], self.root)
+                result = _run(REBASE, ["docs/tasks/task-116-x.md", "--from", "docs",
+                                       "--to", "docs/tasks", "--slot", pair], self.root)
                 self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                 error = json.loads(result.stderr.strip().splitlines()[-1])["error"]
                 self.assertIn(reason, error)
@@ -528,8 +529,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
                      "docs/PLAN.md=docs/plans/plan-116-x.md"):
             with self.subTest(pair=pair):
                 moved.write_text(text, encoding="utf-8")
-                result = _run(REBASE, ["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
-                                       "--slot", pair], self.root)
+                result = _run(REBASE, ["docs/tasks/task-116-x.md", "--from", "docs",
+                                       "--to", "docs/tasks", "--slot", pair], self.root)
                 self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
                 self.assertIn("../ARCHITECTURE.md", moved.read_text(encoding="utf-8"))
         grammar = re.compile(r'^_?SLUG = (r".*")$', re.M)
@@ -567,7 +568,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
             (docs / name).parent.mkdir(exist_ok=True)
             (docs / name).write_text("# a\n", encoding="utf-8")
         text_held = "holds text that its authored link does not"
-        part_held = "holds a path part that its authored link does not"
+        part_held = "the path of a rewritten link is not a tail of its authored link's"
         refused = (
             # (--from, --to, other options, the operand's text, the reason)
             ("docs", "docs/tasks", ["--repo-root", str(self.root / "nowhere")] + slot, with_slot,
@@ -625,6 +626,65 @@ class TestRebaseLinksGuard(unittest.TestCase):
             result = self.rebase("docs/tasks/t.md")
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(moved.read_text(encoding="utf-8"), "[a](<../sp ace.md>)\n")
+
+    def test_g31_a_chosen_slug_reordered_parts_and_a_splice(self):
+        # base-fail: the base of TASK 117 writes each refused shape (WI-47).
+        docs = self.root / "docs"
+        (docs / "plans").mkdir()
+        (docs / "tasks" / "task-116-x.md").write_text("# Task 116: x\n", encoding="utf-8")
+        for name in ("two/one/one/two/three.md", "one/one/a.md", "](x", "x", 'x">', "a/c.md"):
+            (docs / name).parent.mkdir(parents=True, exist_ok=True)
+            (docs / name).write_text("# a\n", encoding="utf-8")
+        other = "names another <ID>-<slug> than its name"
+        tail = "the path of a rewritten link is not a tail of its authored link's"
+        splice = "the rewritten text is not the text with each rewritten link replaced"
+        refused = (
+            # (operand, --from, --to, other options, the operand's text, the reason)
+            # R1: a slug, or an ID, that is not the operand's own
+            ("plans/plan-116-x.md", "docs", "docs/plans",
+             ["--slot", "docs/TASK.md=docs/tasks/task-116-marker-chosen-words-here.md"],
+             "[t](TASK.md)\n", other),
+            ("plans/plan-116-x.md", "docs", "docs/plans",
+             ["--slot", "docs/TASK.md=docs/tasks/task-117-x.md"], "[t](TASK.md)\n", other),
+            ("tasks/task-116-y.md", "docs", "docs/tasks",
+             ["--slot", "docs/PLAN.md=docs/plans/plan-116-x.md"], "[p](PLAN.md)\n", other),
+            ("plans/notes.md", "docs", "docs/plans",
+             ["--slot", "docs/TASK.md=docs/tasks/task-116-x.md"], "[t](TASK.md)\n",
+             "its name is not task-<ID>-<slug>.md or plan-<ID>-<slug>.md"),
+            # R2: parts reordered, and a part repeated
+            ("tasks/t.md", "docs/two/one", "docs/tasks", [], "[a](one/two/three.md)\n", tail),
+            ("tasks/t.md", "docs/one", "docs/tasks", [], "[a](one/a.md)\n", tail),
+            # R3: two overlapping links spliced into one, with no new character
+            ("tasks/t.md", "docs", "docs/tasks", [], "[r]: ](x\n", splice),
+            ("tasks/t.md", "docs", "docs/tasks", [], '<a href="](x">\n', splice),
+            ("tasks/t.md", "docs", "docs/tasks", ["--dry-run"], "[r]: ](x\n", splice))
+        for operand, from_dir, to_dir, extra, text, reason in refused:
+            with self.subTest(operand=operand, from_dir=from_dir, extra=extra, text=text):
+                moved = docs / operand
+                moved.write_text(text, encoding="utf-8")
+                result = _run(REBASE, [f"docs/{operand}", "--from", from_dir, "--to", to_dir,
+                                       *extra], self.root)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn(reason, result.stderr)
+                self.assertEqual(moved.read_text(encoding="utf-8"), text)
+                moved.unlink()
+        # R4: the commands of `skill-archive-task` Steps 5.5 and 7.6.5, and R2's normalised parts
+        kept = (("tasks/task-116-x.md", "docs/tasks",
+                 ["--slot", "docs/PLAN.md=docs/plans/plan-116-x.md"],
+                 LINKED + "[p](PLAN.md)\n", REBASED + "[p](../plans/plan-116-x.md)\n"),
+                ("plans/plan-116-x.md", "docs/plans",
+                 ["--slot-must-exist", "--slot", "docs/TASK.md=docs/tasks/task-116-x.md"],
+                 LINKED + "[t](TASK.md)\n", REBASED + "[t](../tasks/task-116-x.md)\n"),
+                # a `..` inside the authored path: its parts are normalised first
+                ("tasks/t.md", "docs/tasks", [], "[c](a/b/../c.md)\n", "[c](../a/c.md)\n"))
+        for operand, to_dir, extra, text, rebased in kept:
+            with self.subTest(kept=operand):
+                moved = docs / operand
+                moved.write_text(text, encoding="utf-8")
+                result = _run(REBASE, [f"docs/{operand}", "--from", "docs", "--to", to_dir,
+                                       *extra], self.root)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(moved.read_text(encoding="utf-8"), rebased)
 
 
 class TestInboundGuard(unittest.TestCase):

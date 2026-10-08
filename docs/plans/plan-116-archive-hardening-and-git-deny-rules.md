@@ -1,6 +1,6 @@
 # PLAN 116 — The file mode refuses a directory that resolves outside and takes markdown files under docs/ and archive slots only, both modes write through the checked descriptor, and three git commands are denied
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 19) · **Covers:** R1–R8 · **Acceptance:** A1–A11.
+**TASK:** [docs/TASK.md](../tasks/task-116-archive-hardening-and-git-deny-rules.md) (revision 19) · **Covers:** R1–R8 · **Acceptance:** A1–A11.
 
 **Revision:** 14. Mode B rounds 1 and 2 applied; stage-2 fix rounds 1 and 2; cluster K takes R7,
 WI-46, after operator decisions D13 and D14; both Mode B rounds of D14's count applied. Cluster L

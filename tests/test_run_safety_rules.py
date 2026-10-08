@@ -71,6 +71,17 @@ STEP_4 = _flat("""
    2. **Reviews.** The code review and the security audit check the code and the registration.
       Both must pass. An `INCOMPLETE` security audit blocks the registration: `security-audit`
       §6.2 re-runs the unfinished part once, and then the operator decides.
+      <!-- loop:stage2-review-retry -->
+      - **Bound: max 3 review rounds.** A round is one code review and one security audit of the
+        same fingerprint. A round that does not pass returns the run to the fix of its findings.
+        The §6.2 re-run of an `INCOMPLETE` audit is not a round. Still failing after the 3rd
+        round: **STOP** and escalate to the operator with the open findings; the operator
+        decides what follows.
+      - **LOW routes of a fixed class.** A round whose findings are all LOW, each a route of a
+        class that an earlier round of this run fixed, proposes to the operator before the next
+        round: the scope of each route as a residual in the TASK, and one backlog record that
+        holds them. The operator chooses between that record and one more round. TASK 116 ran
+        seven rounds; from round 4 on, each found a narrower route of one class (WI-48).
    3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
       into its file, or the new code over the code it replaces, and removes the copy under the new
       name. Only the retro's records follow this edit. The same edit adds a settings test that

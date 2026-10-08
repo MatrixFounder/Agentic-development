@@ -16,6 +16,34 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.39.1 — the file mode refuses a slot archive of another task, reordered parts and spliced links, and stage 2 of framework-upgrade has a bound (TASK 117)**
+
+#### Fixed
+
+- **The file mode of `rebase_links.py` still wrote chosen text into a link** (WI-47). Three
+  routes remained after TASK 116, and each now exits 2 before any write:
+  - `--slot` took any slug of the archive grammar. With a `--slot`, each operand is now named
+    `task-<ID>-<slug>.md` or `plan-<ID>-<slug>.md`, and each slot archive carries the operand's
+    `<ID>-<slug>`, as the archive steps pass it. A mistyped slug (ARC-6) now exits 2;
+    `--slot-must-exist` still exits 1 for an absent archive of the operand's name.
+  - The path parts of a rewritten link were tested as a set, so `[a](one/two/three.md)` with
+    `--from docs/two/one` became `../two/one/one/two/three.md`. The new parts, but `.` and `..`,
+    must now end the authored parts, or the slot archive's, in order. On 317 files of `docs/`
+    moved one directory deeper, the test refuses none of 306 rewrites.
+  - Two overlapping link matches were spliced into one, as `[r]: ](x` into `[r]: ../](x../x`.
+    The rewritten text's length must now equal the text's plus each rewrite's change of length.
+
+#### Changed
+
+- **`framework-upgrade` bounds the review rounds of stage 2** (WI-48). The new loop
+  `stage2-review-retry` has `default_max: 3` and `on_exhaust: escalate_user`, as the spec and
+  plan audits have. A round is one code review and one security audit of the same fingerprint.
+  A round whose findings are all LOW routes of a class that an earlier round fixed proposes
+  their scope as TASK residuals and one backlog record, and the operator chooses between that
+  and one more round. TASK 116 ran seven rounds.
+- **`skill-archive-task` 2.5** states in Step 7.6.5 and the Example Flow that a mistyped slug in
+  `--slot` exits 2 at either step, and that `--slot-must-exist` exits 1 for an absent archive.
+
 ### **v3.39.0 — the file mode refuses a directory that resolves outside and takes markdown files under docs/ and archive slots only, and three git commands are denied (TASK 116)**
 
 #### Added

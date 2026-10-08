@@ -1,16 +1,32 @@
 ---
 id: WI-47
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-08
 slug: wi-47-rebase-links-py-can-still-write-a-chosen-slug-into-a-slot-link
 effort: S
 value: 'the file mode of rebase_links.py writes into a link only what its author or the archive step wrote'
 source: 'TASK 116 D23'
 component: '.agent/tools/rebase_links.py'
+resolved_at: 2026-10-09
+resolved_by: 'TASK 117'
 ---
 
 # WI-47 — rebase_links.py can still write a chosen slug into a slot link
+
+> **Done 2026-10-09 (TASK 117, R1 to R3).** Options 1 to 3 together, each a check in
+> `_file_mode` that exits 2 before any write:
+>
+> - With a `--slot`, each operand is named `task-<ID>-<slug>.md` or `plan-<ID>-<slug>.md`, and
+>   each slot archive carries the same `<ID>-<slug>` (`_refuse_slot`). A mistyped slug of ARC-6
+>   now exits 2; `--slot-must-exist` still exits 1 for an absent archive of the operand's name.
+> - `_adds_parts` tests a tail, not a set: the new parts, but `.` and `..`, end the authored
+>   parts, or the archive's, in order. Measured on 317 files of `docs/` moved one directory
+>   deeper: 306 rewrites, none refused.
+> - The rewritten text's length equals the text's plus each rewrite's change of length.
+>
+> TC-G31 of `tests/test_script_guards.py` makes each shape of this record, both splices among
+> them; each fails at base `9e407e5`.
 
 > Origin: stage-2 round 7 of TASK 116, the security audit's L1 and I1 and I2. TASK 116 §11 states
 > each residual, and D23 files them here.

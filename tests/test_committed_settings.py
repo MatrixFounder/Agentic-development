@@ -10,15 +10,20 @@ file pins:
   admit `--output`, `-o` or a write to a ref; each rule's command name is one of a fixed set
   (``TC-S3``, TASK 111 R2.7, TASK 112 TC-S3);
 * the repository ignores the operator's local settings file (``TC-S4``);
-* the settings hold `env`, `permissions.allow` and the one PostToolUse hook of the base, nothing
-  else (``TC-S6``);
+* the settings hold `env`, `permissions.allow`, `permissions.deny` and the one PostToolUse hook
+  of the base, nothing else; the deny list is TASK 116 §10.1 (``TC-S6``);
 * every part of every shell block of `skill-archive-task` matches a committed rule; no part runs
   `mv`, `test` or `mkdir`; each archive command calls `archive_move.py` with operands the script
-  accepts (``TC-S7``, TASK 111 D13, TASK 112 R6.2);
+  accepts (``TC-S7``, TASK 111 D13, TASK 112 R6.2); each `--inbound` command is one line, has
+  `--inbound` first and names operands the inbound mode accepts (``TC-S7``, ``TC-S7b``,
+  ``TC-S7c``, TASK 116 R2.3 to R2.5);
 * `skill-safe-commands`, the READMEs' Antigravity lists, `GEMINI.md` and `AGENTS.md` state the
   limit of R2.7 for every vendor; the pattern block, the command table and the fence lists equal
   their reviewed text; table and patterns name the same commands; no pattern admits an option that
-  runs a program or writes (``TC-S8``, TASK 112 R3, R6.1).
+  runs a program or writes (``TC-S8``, TASK 112 R3, R6.1);
+* the deny rules match `git stash`, `git reset --hard` and `git clean`, alone and in a compound
+  command; they match none of six listed commands that the framework's steps run, and no archive
+  command (``TC-S9``, TASK 116 R4.4).
 
 A fence is read as CommonMark reads it: three or more backticks or tildes, any info string. A shell
 fence is one whose first info word is `bash`, `sh`, `shell`, `zsh` or `console`.
@@ -112,6 +117,11 @@ SHELL_EXTRAS = re.compile(r"[<>`]|\$\(")
 #: A `python` rule runs a bare `-m pytest` or a named script, never `-c` or arbitrary code.
 PYTHON_RULE = re.compile(r"Bash\(python3? (-m pytest|[\w./-]+\.py( .*)?)\)")
 ARCHIVE_SCRIPT = PROJECT_ROOT / ".agent" / "tools" / "archive_move.py"
+#: The module of `rebase_links.py --inbound`; TC-S7 reads the options of its `main` as text.
+SLOT_LINKS = PROJECT_ROOT / ".agent" / "tools" / "slot_links.py"
+#: TASK 116 §10.1: Claude Code refuses these three git commands, bare and with arguments.
+DENY_RULES = ("Bash(git stash)", "Bash(git stash *)", "Bash(git reset --hard)",
+              "Bash(git reset --hard *)", "Bash(git clean)", "Bash(git clean *)")
 ARCHIVE_COMMANDS = ("python3 .agent/tools/archive_move.py docs/TASK.md docs/tasks/",
                     "python3 .agent/tools/archive_move.py docs/PLAN.md docs/plans/",
                     "python3 .agent/tools/task_id_tool.py", "python3 .agent/tools/rebase_links.py",
@@ -150,7 +160,11 @@ def _archive_module():
 
 
 def _approves(rule, command):
-    """Claude Code's documented match: the whole command text, `*` standing in for any text."""
+    """Claude Code's documented match: the whole command text, `*` standing in for any text.
+
+    One difference: here a ` *` after a space needs an argument, while Claude Code also matches the
+    bare command. Each rule is therefore written in both forms (TASK 116 D4).
+    """
     m = re.fullmatch(r"Bash\((.*)\)", rule)
     pattern = ".*".join(re.escape(part) for part in m.group(1).split("*"))
     return re.fullmatch(pattern, command, re.S) is not None
@@ -186,21 +200,113 @@ def _shell_blocks(text):
             yield body
 
 
-def _archive_commands():
-    """Every part of every shell block of `skill-archive-task`."""
-    for block in _shell_blocks(ARCHIVE_SKILL.read_text(encoding="utf-8")):
-        block = block.replace("\\\n", " ")
-        for line in block.splitlines():
-            if not line.strip() or line.strip().startswith("#"):
+def _archive_commands(text=None):
+    """Every part of every shell command of `text`, read by `_shell_commands`.
+
+    With no `text`, the text of `skill-archive-task`, as at the base (TASK 116 TC-S7d).
+    """
+    if text is None:
+        text = ARCHIVE_SKILL.read_text(encoding="utf-8")
+    for _, line in _shell_commands(text):
+        line = re.sub(r'"<[^<>"]+>"', '"sample"', _fill(line))
+        for part in re.split(r"&&|\|\||[;|&]", line):
+            part = " ".join(part.split())
+            if part:
+                yield part
+
+
+def _fill(line):
+    """`line` with the placeholders of `skill-archive-task` filled: `PLACEHOLDERS`, then `112`."""
+    for key, value in PLACEHOLDERS.items():
+        line = line.replace(key, value)
+    return re.sub(r"\{[^}]+\}", "112", line)
+
+
+def _shell_commands(text):
+    """`(physical lines, joined text)` of every command of every shell block of `text`.
+
+    A line that ends with `\\` continues on the next one, as the shell reads it. A comment line is
+    no command and continues no line.
+    """
+    for block in _shell_blocks(text):
+        lines = block.splitlines()
+        i = 0
+        while i < len(lines):
+            group = [lines[i]]
+            comment = lines[i].strip().startswith("#")
+            while not comment and group[-1].endswith("\\") and i + 1 < len(lines):
+                i += 1
+                group.append(lines[i])
+            i += 1
+            if group[0].strip().startswith("#"):
                 continue
-            for key, value in PLACEHOLDERS.items():
-                line = line.replace(key, value)
-            line = re.sub(r"\{[^}]+\}", "112", line)
-            line = re.sub(r'"<[^<>"]+>"', '"sample"', line)
-            for part in re.split(r"&&|\|\||[;|&]", line):
-                part = " ".join(part.split())
-                if part:
-                    yield part
+            joined = " ".join(line[:-1] if line.endswith("\\") else line for line in group)
+            yield group, " ".join(joined.split())
+
+
+def _wrapped_inbound(text):
+    """The `--inbound` commands of `text` that a line continuation wraps (TASK 116 R2.3)."""
+    return [joined for group, joined in _shell_commands(text)
+            if "rebase_links.py --inbound" in joined
+            and any(line.rstrip().endswith("\\") for line in group)]
+
+
+def _inbound_options():
+    """`{option: takes a value}` of the `add_argument` calls of `slot_links.main`, read as text."""
+    text = SLOT_LINKS.read_text(encoding="utf-8")
+    main = text[text.index("def main("):]
+    return {m.group(1): 'action="store_true"' not in m.group(2)
+            for m in re.finditer(r'add_argument\("(--[a-z-]+)"(.*)$', main, re.M)}
+
+
+def _inbound_problems(text, options, pairs):
+    """Why an `--inbound` command of `text` would not run as Step 8 means it (TASK 116 R2.4).
+
+    The placeholders are filled as TC-S7 fills them. `--task` names
+    `docs/tasks/task-<ID>-<slug>.md`, and `--plan` the plan of the same `<ID>` and `<slug>`, by the
+    name patterns of `archive_move.PAIRS`.
+    """
+    problems = []
+    for _, joined in _shell_commands(text):
+        if "rebase_links.py" not in joined or "--inbound" not in joined:
+            continue
+        words = _fill(joined).split()
+        args = words[words.index(".agent/tools/rebase_links.py") + 1:]
+        if args[:1] != ["--inbound"]:
+            problems.append((joined, "--inbound is not the first argument"))
+            continue
+        seen, problem, i, rest = {}, None, 0, args[1:]
+        while i < len(rest) and problem is None:
+            name, eq, value = rest[i].partition("=")
+            if not name.startswith("--"):
+                problem = f"a positional argument {rest[i]!r}"
+            elif name not in options:
+                problem = f"{name} is not an option of the inbound mode"
+            elif options[name] and not eq:
+                i += 1
+                if i < len(rest) and not rest[i].startswith("--"):
+                    seen[name] = rest[i]
+                else:
+                    problem = f"{name} has no value"
+            elif options[name]:
+                seen[name] = value
+            elif eq:
+                problem = f"{name} takes no value"
+            else:
+                seen[name] = True
+            i += 1
+        task, plan = seen.get("--task"), seen.get("--plan")
+        if problem is None and not (isinstance(task, str) and task.startswith("docs/tasks/")
+                                    and pairs["docs/TASK.md"][1].fullmatch(task[11:])):
+            problem = "--task is not docs/tasks/task-<ID>-<slug>.md"
+        if problem is None and plan is not None and not (
+                isinstance(plan, str) and plan.startswith("docs/plans/")
+                and pairs["docs/PLAN.md"][1].fullmatch(plan[11:])
+                and plan[len("docs/plans/plan-"):] == task[len("docs/tasks/task-"):]):
+            problem = "--plan is not the plan of the --task"
+        if problem:
+            problems.append((joined, problem))
+    return problems
 
 
 def _pattern_block():
@@ -286,18 +392,30 @@ class TestAllowList(unittest.TestCase):
 
 
 class TestHooks(unittest.TestCase):
-    """TC-S6: a settings key takes effect in the running session; none joins without review."""
+    """TC-S6: a settings key takes effect in the running session; none joins without review.
 
-    def test_s6_settings_hold_env_allow_and_the_base_hook_only(self):
+    `permissions` holds the allow list and the deny list of TASK 116 §10.1, in that order.
+    """
+
+    def test_s6_settings_hold_env_allow_deny_and_the_base_hook_only(self):
         settings = _settings()
         self.assertEqual(sorted(settings), ["env", "hooks", "permissions"])
-        self.assertEqual(list(settings["permissions"]), ["allow"])
+        self.assertEqual(list(settings["permissions"]), ["allow", "deny"])
+        self.assertEqual(tuple(settings["permissions"]["deny"]), DENY_RULES)
         self.assertEqual(settings["env"], ENV)
         self.assertEqual(settings["hooks"], HOOKS)
 
 
+#: The two `--inbound` commands of `skill-archive-task`, Step 8 and Example Flow item 11.
+STEP8 = ("python3 .agent/tools/rebase_links.py --inbound --task docs/tasks/{filename} "
+         "--plan docs/plans/{plan_filename} --since {base_revision}")
+FLOW = ("python3 .agent/tools/rebase_links.py --inbound "
+        "--task docs/tasks/task-{OLD_ID}-{old-slug}.md "
+        "--plan docs/plans/plan-{OLD_ID}-{old-slug}.md --since {old-base}")
+
+
 class TestArchiving(unittest.TestCase):
-    """TC-S7: archiving stays automatic (TASK 111 D13)."""
+    """TC-S7: archiving stays automatic (TASK 111 D13); TC-S7b to TC-S7d (TASK 116 R2.5)."""
 
     def test_s7_archive_commands_match_a_committed_rule(self):
         allow = _settings()["permissions"]["allow"]
@@ -317,6 +435,59 @@ class TestArchiving(unittest.TestCase):
                     operands = command.split()[2:]
                     self.assertEqual(len(operands), 2)
                     module._parse(*operands)  # raises Refused on an operand the script refuses
+
+    def test_s7_inbound_commands_are_one_line_with_known_operands(self):
+        text = ARCHIVE_SKILL.read_text(encoding="utf-8")
+        self.assertEqual(len([j for _, j in _shell_commands(text) if "--inbound" in j]), 2)
+        self.assertEqual(_wrapped_inbound(text), [])
+        self.assertEqual(_inbound_problems(text, _inbound_options(), _archive_module().PAIRS), [])
+
+    def test_s7b_a_wrapped_inbound_command_is_found(self):
+        text = ARCHIVE_SKILL.read_text(encoding="utf-8")
+        self.assertIn(STEP8, text)
+        for wrapped in (STEP8.replace(" --plan", " \\\n  --plan"),
+                        STEP8.replace(" --inbound", " \\\n  --inbound")):
+            with self.subTest(wrapped=wrapped):
+                self.assertTrue(_wrapped_inbound(text.replace(STEP8, wrapped, 1)))
+
+    def test_s7d_a_comment_continues_no_line(self):
+        # bash, sh and zsh run the line after a comment that ends with a backslash.
+        text = "```bash\n# a note \\\nmv a b\n```\n"
+        self.assertEqual([joined for _, joined in _shell_commands(text)], ["mv a b"])
+        self.assertIn("mv a b", list(_archive_commands(text)))
+
+    def test_s7c_an_inbound_command_with_wrong_operands_is_found(self):
+        text = ARCHIVE_SKILL.read_text(encoding="utf-8")
+        options, pairs = _inbound_options(), _archive_module().PAIRS
+        self.assertIn(STEP8, text)
+        self.assertIn(FLOW, text)
+        plan = "--plan is not the plan of the --task"
+        task = "--task is not docs/tasks/task-<ID>-<slug>.md"
+        plantings = (
+            # one planting per sub-check of `--task` and `--plan`: a directory of the right
+            # length, and a name in the right directory
+            (STEP8, STEP8.replace("docs/tasks/{filename}", "docs/taskz/{filename}"), task),
+            (STEP8, STEP8.replace("docs/tasks/{filename}", "docs/tasks/ksat-112-sample.md"), task),
+            (STEP8, STEP8.replace("docs/plans/{plan_filename}", "docs/planz/{plan_filename}"), plan),
+            (STEP8, STEP8.replace("docs/plans/{plan_filename}", "docs/plans/nalp-112-sample.md"),
+             plan),
+            (STEP8, STEP8.replace("--since", "--base"),
+             "--base is not an option of the inbound mode"),
+            (STEP8, STEP8.replace("docs/plans/{plan_filename}", "docs/plan/{plan_filename}"), plan),
+            (STEP8, STEP8.replace("docs/tasks/{filename}", "{filename}"), task),
+            (FLOW, FLOW.replace("--inbound --task docs/tasks/task-{OLD_ID}-{old-slug}.md",
+                                "--task docs/tasks/task-{OLD_ID}-{old-slug}.md --inbound"),
+             "--inbound is not the first argument"),
+            (FLOW, FLOW.replace("plan-{OLD_ID}", "plan-113"), plan),
+            (STEP8, STEP8 + " extra", "a positional argument 'extra'"),
+            (STEP8, STEP8 + " --dry-run=1", "--dry-run takes no value"),
+            (STEP8, STEP8.replace("--since {base_revision}", "--since --dry-run"),
+             "--since has no value"),
+        )
+        for old, new, reason in plantings:
+            with self.subTest(planted=new):
+                problems = _inbound_problems(text.replace(old, new, 1), options, pairs)
+                self.assertEqual([found for _, found in problems], [reason])
 
     def test_s7_fences_of_the_archive_skill(self):
         words = tuple(word for word, _ in _fences(ARCHIVE_SKILL.read_text(encoding="utf-8")))
@@ -410,7 +581,7 @@ class TestEveryVendor(unittest.TestCase):
         '| **Archiving** | `python3 .agent/tools/archive_move.py` | Moves `docs/TASK.md` and `docs/PLAN.md` into `docs/tasks/` and `docs/plans/`; refuses every other operand (TASK 112) |',
         '| **Directory** | `mkdir -p docs/tasks`, `mkdir -p docs/plans`, `mkdir -p docs/architectures` | Idempotent; three fixed directories |',
         '| **Tool calls** | `generate_task_archive_filename`, `list_directory`, `read_file` | Native tools |',
-        '| **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/tools/rebase_links.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py`, `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py`, `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py`, `python3 .agent/skills/artifact-formalizer/evals/grade_run.py`, `python3 System/scripts/doctor.py` | Framework automation; `rebase_links.py` and `init_skill.py` write only inside the working directory, compared without resolving links |',
+        '| **Framework scripts** | `python3 .agent/skills/skill-session-state/scripts/update_state.py`, `python3 .agent/tools/task_id_tool.py`, `python3 .agent/tools/rebase_links.py`, `python3 .agent/skills/skill-creator/scripts/validate_skill.py`, `python3 .agent/skills/skill-creator/scripts/init_skill.py`, `python3 .agent/skills/artifact-formalizer/scripts/scan_register.py`, `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py`, `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py`, `python3 .agent/skills/artifact-formalizer/evals/grade_run.py`, `python3 System/scripts/doctor.py` | Framework automation; `rebase_links.py` writes markdown in the working directory by real path, `init_skill.py` by path |',
         '| **Testing** | `python -m pytest`, `python3 -m pytest`, `npm test`, `cargo test`, with no argument | Their options can run a program, delete a directory or overwrite a file (TASK 111 D14) |',
     )
 
@@ -498,6 +669,45 @@ class TestEveryVendor(unittest.TestCase):
                 self.assertIn("`find -L` asks for approval, because `find -exec` runs a program", text)
                 self.assertIn("the read forms of `git` and bare test runs) are "
                               "`SafeToAutoRun: true`", text)
+
+
+class TestDenyList(unittest.TestCase):
+    """TC-S9: the deny rules refuse three git commands that discard work (TASK 116 R4.4)."""
+
+    DENIED = ("git stash", "git stash -u", "git stash pop", "git stash list",
+              "git reset --hard", "git reset --hard HEAD~1", "git clean -fdx",
+              "git status && git stash -q")
+    NOT_DENIED = ("git restore --source=c8aba597ed06545a8fc0933238aaa4510f059db2 --staged "
+                  "--worktree -- docs/TASK.md",
+                  "git status", "git diff", "git reset",
+                  "git apply -R --whitespace=nowarn docs/reviews/framework-audit-116-stage3.diff",
+                  "rm -- docs/reviews/x.md")
+
+    @staticmethod
+    def _denied(command):
+        """A deny rule matches a part of `command`, split on the operators TC-S7 splits on.
+
+        Claude Code also splits on a newline and looks inside a subshell; no listed command holds
+        either.
+        """
+        deny = _settings()["permissions"].get("deny", [])
+        parts = [" ".join(part.split()) for part in re.split(r"&&|\|\||[;|&]", command)]
+        return any(_approves(rule, part) for rule in deny for part in parts if part)
+
+    def test_s9_denied_commands_match_a_rule(self):
+        for command in self.DENIED:
+            with self.subTest(command=command):
+                self.assertTrue(self._denied(command))
+
+    def test_s9_other_commands_match_none(self):
+        for command in self.NOT_DENIED:
+            with self.subTest(command=command):
+                self.assertFalse(self._denied(command))
+
+    def test_s9_archive_commands_match_none(self):
+        for command in _archive_commands():
+            with self.subTest(command=command):
+                self.assertFalse(self._denied(command))
 
 
 class TestGitignore(unittest.TestCase):

@@ -353,7 +353,7 @@ class TestSlotTargetIsAForwardReference:
         moved = self._archive_fixture(tmp_path)
         main([str(moved), "--from", "docs", "--to", "docs/tasks",
               "--repo-root", str(tmp_path),
-              "--slot", "docs/PLAN.md=docs/plans/TYPO.md"])
+              "--slot", "docs/PLAN.md=docs/plans/plan-077-logn.md"])
         assert "SLOT_PENDING" in capsys.readouterr().out
 
     def test_slot_target_that_exists_reports_no_pending(self, tmp_path, capsys):
@@ -433,3 +433,74 @@ class TestSlotTargetMustExist:
               "--repo-root", str(tmp_path), "--slot-must-exist", "--json",
               "--slot", "docs/TASK.md=docs/tasks/task-077-logn.md"])
         assert json.loads(capsys.readouterr().out)["ok"] is False
+
+
+class TestFileModeCommandLine:
+    """TC-F1 to TC-F6 (TASK 116 R7.5): the command line of the file mode keeps the base's results.
+
+    Each case runs `_main` in process, so it drives the base and the copy of TASK 116 alike.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _work_tree(self, tmp_path, monkeypatch):
+        """`_main` refuses a file outside the working directory (TASK 112 R4.1)."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "docs" / "tasks").mkdir(parents=True)
+        (tmp_path / "docs" / "ARCHITECTURE.md").write_text("# a")
+
+    @staticmethod
+    def run(*args, from_dir="docs", to_dir="docs/tasks"):
+        from rebase_links import _main as main
+        return main([*args, "--from", from_dir, "--to", to_dir])
+
+    def test_f1_crlf_line_endings_stay(self, tmp_path):
+        moved = tmp_path / "docs" / "tasks" / "t.md"
+        moved.write_bytes(b"# t\r\n[a](ARCHITECTURE.md)\r\n")
+        assert self.run("docs/tasks/t.md") == 0
+        assert moved.read_bytes() == b"# t\r\n[a](../ARCHITECTURE.md)\r\n"
+
+    def test_f2_non_ascii_bytes_stay(self, tmp_path):
+        moved = tmp_path / "docs" / "tasks" / "t.md"
+        moved.write_bytes("# é\n[a](ARCHITECTURE.md)\n".encode("utf-8"))
+        assert self.run("docs/tasks/t.md") == 0
+        assert moved.read_bytes() == "# é\n[a](../ARCHITECTURE.md)\n".encode("utf-8")
+
+    def test_f3_a_non_utf8_operand_raises_as_at_the_base(self, tmp_path):
+        moved = tmp_path / "docs" / "tasks" / "t.md"
+        moved.write_bytes(b"\xff\xfe[a](ARCHITECTURE.md)\n")
+        with pytest.raises(UnicodeDecodeError):
+            self.run("docs/tasks/t.md")
+        assert moved.read_bytes() == b"\xff\xfe[a](ARCHITECTURE.md)\n"
+
+    def test_f4_a_dry_run_writes_nothing(self, tmp_path):
+        moved = tmp_path / "docs" / "tasks" / "t.md"
+        moved.write_bytes(b"[a](ARCHITECTURE.md)\n")
+        before = moved.stat()
+        assert self.run("docs/tasks/t.md", "--dry-run") == 0
+        after = moved.stat()
+        assert moved.read_bytes() == b"[a](ARCHITECTURE.md)\n"
+        assert (after.st_ino, after.st_mtime_ns) == (before.st_ino, before.st_mtime_ns)
+
+    @pytest.mark.skipif(not hasattr(os, "geteuid") or os.geteuid() == 0,
+                        reason="root writes through the mode bits")
+    def test_f5_a_read_only_operand(self, tmp_path):
+        same = tmp_path / "docs" / "tasks" / "same.md"
+        same.write_bytes(b"# no link\n")
+        changed = tmp_path / "docs" / "tasks" / "changed.md"
+        changed.write_bytes(b"[a](ARCHITECTURE.md)\n")
+        for path in (same, changed):
+            path.chmod(0o444)
+        try:
+            assert self.run("docs/tasks/same.md") == 0
+            assert same.read_bytes() == b"# no link\n"
+            assert self.run("docs/tasks/changed.md") == 2
+            assert changed.read_bytes() == b"[a](ARCHITECTURE.md)\n"
+        finally:
+            for path in (same, changed):
+                path.chmod(0o644)
+
+    def test_f6_a_text_that_shrinks_is_truncated(self, tmp_path):
+        moved = tmp_path / "docs" / "t.md"
+        moved.write_bytes(b"[a](../ARCHITECTURE.md)\n")
+        assert self.run("docs/t.md", from_dir="docs/tasks", to_dir="docs") == 0
+        assert moved.read_bytes() == b"[a](ARCHITECTURE.md)\n"

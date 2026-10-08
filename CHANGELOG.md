@@ -16,6 +16,76 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.39.0 — the file mode refuses a directory that resolves outside and takes markdown files under docs/ and archive slots only, and three git commands are denied (TASK 116)**
+
+#### Added
+
+- **`.claude/settings.json` denies `git stash`, `git reset --hard` and `git clean` to Claude
+  Code** (WI-45). Each rule is written bare and with arguments. During TASK 115 a verification
+  command stashed the uncommitted work of a `/framework-upgrade` run, which the workflow forbade
+  in text only. A deny rule matches only the spellings it names, also inside a compound command;
+  `framework-upgrade` forbids the commands in every spelling during a run. A new install
+  receives the list with the file. An existing install keeps its own file; to adopt the list, add
+  this key to its `permissions`:
+
+  ```json
+  "deny": [
+    "Bash(git stash)",
+    "Bash(git stash *)",
+    "Bash(git reset --hard)",
+    "Bash(git reset --hard *)",
+    "Bash(git clean)",
+    "Bash(git clean *)"
+  ]
+  ```
+
+#### Fixed
+
+- **`rebase_links.py` wrote through a directory link to a path outside the repository** (WI-40).
+  The file mode compared an operand by its absolute path, with no link resolved. It now refuses,
+  with exit 2, a file whose directory resolves outside the working directory. A link that resolves
+  inside still works. `archive_move.py` already refused a linked `docs/`, so no archive that
+  worked before is refused.
+- **Both modes of `rebase_links.py` wrote through a path they had checked before** (WI-46). A
+  directory swapped for a link, a file swapped for a link or a second hard link made between the
+  check and the open moved the write. Both modes now open the file with no link followed and
+  check the descriptor: the regular file at the operand's real path, with one hard link. The
+  directory of the descriptor's own path, as the kernel gives it, lies inside the working
+  directory. The file mode checks every operand before it reads any, and a second descriptor
+  writes only a changed text of the same inode.
+- **The file mode of `rebase_links.py` wrote any `--slot` text into any file** (TASK 116
+  stage-2 audit). It took any SLOT and ARCHIVE, and an operand of any kind. Under the allow
+  rule, an agent could write chosen text over a link-shaped token in any file of the tree. It
+  now takes only `docs/TASK.md=docs/tasks/task-<ID>-<slug>.md` and
+  `docs/PLAN.md=docs/plans/plan-<ID>-<slug>.md`, and only a markdown operand under `docs/`.
+  `--repo-root` must be the working directory, and `--from` and `--to` must lie inside it. A
+  rewritten link may not hold a character outside letters, digits and `._~/%-` more often
+  than the authored link does. Nor may it hold a path part that neither the authored link nor,
+  for a slot link, the archive name holds. The rewritten text may not gain such a character
+  either. Anything else exits 2 with no write. The archive steps already pass these forms. A move
+  other than into a subdirectory of `--from` is now refused when the document links to a file
+  under `--from`. A slot archive's slug is still chosen text, and overlapping links can still be
+  spliced (WI-47).
+- **Six old links named the slots** (WI-44): two in `framework-audit-101.md`, one in sub-task
+  061-02, two in `docs/ARCHITECTURE.md` and one in the installer's `.AGENTS.md`. Each now names
+  the archive it meant: TASK 101, PLAN 101, TASK 062 or TASK 063.
+
+#### Changed
+
+- **`skill-archive-task` 2.4**: Step 8 says when an `INBOUND` record may hold a link the task
+  wrote. Such a record comes from a run without `--since`, says `not attributed`, names a ledger
+  file, or is a `docs/PLAN.md` link of a run without `--plan`. The operator decides on it (WI-43,
+  in part).
+- **`skill-safe-commands` 1.5**: the Framework scripts row states that `rebase_links.py` writes
+  markdown in the working directory by real path.
+- **The file mode of `rebase_links.py` opens every operand before it writes any.** An operand
+  that cannot be opened, a FIFO, or more operands than the limit of open files now exit 2
+  before any write. A failed open reads `cannot open it:` and the error, with exit 2 as
+  before. A platform with no `O_NOFOLLOW` exits 2. The write truncates the file first, as
+  before, and then syncs it.
+- **TC-S7** checks that each `--inbound` command of the skill is one line, puts `--inbound` first
+  and names operands that the inbound mode accepts.
+
 ### **v3.38.0 — links into the TASK and PLAN slots are re-targeted on archive (TASK 115, WI-38)**
 
 #### Added

@@ -1,7 +1,7 @@
 # Framework audit 101 — behavioural evals for artifact-formalizer
 
-**Skill applied:** `skill-self-improvement-verificator` · **Artifacts:** [docs/TASK.md](../TASK.md),
-[docs/PLAN.md](../PLAN.md) · **Date:** 2026-08-05 · **Verdict:** APPROVED
+**Skill applied:** `skill-self-improvement-verificator` · **Artifacts:** [task-101](../tasks/task-101-formalizer-behavioural-evals-mode-a-and-recall-gaps.md),
+[plan-101](../plans/plan-101-formalizer-behavioural-evals-mode-a-and-recall-gaps.md) · **Date:** 2026-08-05 · **Verdict:** APPROVED
 
 ## Mode A — specification audit
 

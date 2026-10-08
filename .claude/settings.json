@@ -48,6 +48,14 @@
       "Bash(python System/scripts/check_prompt_references.py --root .)",
       "Bash(python System/scripts/security_lint.py --root .)",
       "Bash(python System/scripts/smoke_workflows.py --root .)"
+    ],
+    "deny": [
+      "Bash(git stash)",
+      "Bash(git stash *)",
+      "Bash(git reset --hard)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean)",
+      "Bash(git clean *)"
     ]
   },
   "hooks": {

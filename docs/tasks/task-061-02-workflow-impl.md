@@ -7,7 +7,7 @@
 
 ## Goal
 
-Replace every `<stub>` in `.agent/workflows/vdd-05-run-full-task.md` with concrete instructions that satisfy all 11 acceptance bullets from [TASK.md §2 Issues I1.1–I1.9](../TASK.md). Reference SOTs (skills, agent prompts, sibling workflows). DRY — do not inline the Sarcasmotron persona.
+Replace every `<stub>` in `.agent/workflows/vdd-05-run-full-task.md` with concrete instructions that satisfy all 11 acceptance bullets from [task-062 §2 Issues I1.1–I1.9](task-062-vdd-develop-all.md). Reference SOTs (skills, agent prompts, sibling workflows). DRY — do not inline the Sarcasmotron persona.
 
 ## Detailed content per step
 

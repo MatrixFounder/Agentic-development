@@ -321,11 +321,33 @@ def _resolves(root, record):
     return os.path.isfile(os.path.join(root, resolved))
 
 
+def _descriptor_path(fd):
+    """The path the kernel holds for `fd`, or None where the platform gives none (TASK 116 R7.4).
+
+    `fcntl.F_GETPATH` gives it on darwin, and the link `/proc/self/fd/<fd>` on Linux. It is one
+    lookup, so no swap of a directory between two lookups by name can change it, as one can
+    between `realpath` and `stat`. A failed lookup raises `OSError`. The same lookup as
+    `rebase_links._descriptor_path`, held here since a copy of one module may run beside
+    the base of the other.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        fcntl = None
+    if hasattr(fcntl, "F_GETPATH"):
+        return os.fsdecode(fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024)).split(b"\0", 1)[0])
+    if os.path.isdir("/proc/self/fd"):
+        return os.readlink(f"/proc/self/fd/{fd}")
+    return None
+
+
 def _write_file(root, rel, original, ident, data, dry_run=False):
     """Write `data` over `rel` through a descriptor that follows no link (R5.2, R5.3).
 
-    Returns None when the file was written, or, in a dry run, would be; else a `_Refusal`. A dry
-    run makes every check of a real run and writes nothing (R5.4).
+    After the open, the descriptor must be the file at the real path of `rel`, and the directory
+    of its own path must lie inside `root` (TASK 116 R7.4). Returns None when the file was
+    written, or, in a dry run, would be; else a `_Refusal`. A dry run makes every check of a real
+    run and writes nothing (R5.4).
     """
     path = os.path.join(root, rel)
     real_root = os.path.realpath(root)
@@ -345,6 +367,17 @@ def _write_file(root, rel, original, ident, data, dry_run=False):
             return _Refusal("is not a regular file", False)
         if st.st_nlink != 1:
             return _Refusal(f"has {st.st_nlink} hard links", False)
+        # TASK 116 R7.4: the descriptor is the file at the real path of `rel`, inside the root.
+        try:
+            real = os.path.realpath(path)
+            now = os.stat(real)
+            where = _descriptor_path(fd) or real
+        except (OSError, ValueError):
+            return _Refusal("is not the file at its real path", False)
+        if (now.st_dev, now.st_ino) != (st.st_dev, st.st_ino):
+            return _Refusal("is not the file at its real path", False)
+        if os.path.commonpath([os.path.dirname(where), real_root]) != real_root:
+            return _Refusal("its directory resolves outside the working directory", False)
         if (st.st_dev, st.st_ino) != ident:
             return _Refusal("changed during the run", False)
         chunks, size = [], 0

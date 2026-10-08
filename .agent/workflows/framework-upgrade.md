@@ -205,7 +205,9 @@ stops.
 5. **Check.** `git status --porcelain=v1 --untracked-files=all` prints only the audit. Otherwise
    **STOP** and ask the operator. The operator commits or removes the audit before the next run.
 6. Do not use `git reset --hard`, `git clean`, `git checkout` or `git stash` here. Each acts on
-   paths no step named.
+   paths no step named. The committed `.claude/settings.json` denies the first, second and fourth
+   of them to Claude Code (TASK 116). A deny rule matches only the spellings it names, so this
+   rule still applies.
 7. Once the operator has committed the upgrade, the rollback is the operator's
    `git revert <commit>`; for a merge commit, `git revert -m 1 <merge>`.
 

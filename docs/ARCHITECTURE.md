@@ -184,9 +184,9 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
 
 Tools note: simple tool names only; Bash sub-command restrictions live in project-level [.claude/settings.json](../.claude/settings.json) `permissions.allow` allow-list (governs auto-approve vs prompt), not in subagent frontmatter. Reviewers/critics without `Bash` in tools cannot invoke any shell command — no pattern needed.
 
-The committed `settings.json` holds framework permissions only (TASK 111 R2). An operator's own rules live in the ignored `.claude/settings.local.json`, which the installer does not copy. A Bash allow rule matches command text only, so a relative-path rule still approves that path in a nested checkout. A PreToolUse hook to make such a command ask is deferred to WI-34.
+The committed `settings.json` holds framework permissions only (TASK 111 R2). An operator's own rules live in the ignored `.claude/settings.local.json`, which the installer does not copy. A Bash allow rule matches command text only, so a relative-path rule still approves that path in a nested checkout. A PreToolUse hook to make such a command ask is deferred to WI-34. The committed file also denies `git stash`, `git reset --hard` and `git clean` to Claude Code, each bare and with arguments (TASK 116). A deny rule matches only the spellings it names; `framework-upgrade` forbids the commands in every spelling during a run (§0 step 2, §5 rule 6). A new install receives the deny list with the file; an existing install keeps its own file.
 
-Archiving runs through `.agent/tools/archive_move.py`, which one allow rule names (TASK 112). A rule's `*` matches any text, so the script guards its own operands: it moves `docs/TASK.md` into `docs/tasks/` and `docs/PLAN.md` into `docs/plans/`, and refuses every other operand, a link and an existing file. `rebase_links.py` and `init_skill.py`, which allow rules also name, write only to paths inside the working directory and outside `.git/`, compared by path without resolving links. `rebase_links.py --inbound` (TASK 115, `skill-archive-task` Step 8) rewrites the slot links an archived task wrote, in files it finds by scanning the working tree. It writes no symbolic link, no file with a second hard link and no file whose directory resolves outside the working directory, and it runs no `git diff`.
+Archiving runs through `.agent/tools/archive_move.py`, which one allow rule names (TASK 112). A rule's `*` matches any text, so the script guards its own operands: it moves `docs/TASK.md` into `docs/tasks/` and `docs/PLAN.md` into `docs/plans/`, and refuses every other operand, a link and an existing file. `rebase_links.py` and `init_skill.py`, which allow rules also name, write only to paths inside the working directory and outside `.git/`, but for the races and the links inside the root that TASK 116 §11 states. `init_skill.py` compares them by path, without resolving links; `rebase_links.py` also refuses a file whose directory resolves outside the working directory (TASK 116). Both modes of `rebase_links.py` write through the descriptor they checked (TASK 116). The file is opened with no link followed, and must be the regular file at its real path, with one hard link. The directory of the descriptor's own path, as the kernel gives it, must lie inside the working directory. The file mode checks before its read and again before its write; the inbound mode checks once, after its open. The file mode takes only a markdown operand under `docs/`, and a slot map only from `docs/TASK.md` or `docs/PLAN.md` to an archive name of its form. Its `--repo-root` is the working directory, and `--from` and `--to` lie inside it. A rewrite adds to a link no character outside letters, digits and `._~/%-`. It adds no path part that neither its author nor, for a slot link, the archive name wrote. The text gains no such character either. A move other than into a subdirectory of `--from` is so refused when the document links to a file under `--from`. A slot archive's slug is still chosen text, and overlapping links can still be spliced (TASK 116, WI-47). `rebase_links.py --inbound` (TASK 115, `skill-archive-task` Step 8) rewrites the slot links an archived task wrote, in files it finds by scanning the working tree. It writes no symbolic link, no file with a second hard link and no file whose directory resolves outside the working directory, and it runs no `git diff`.
 
 **Model policy** (v3.11.2 + Wave 3):
 - **Verifiers and rigor-heavy roles → Opus** (10 wrappers): all 4 dev-pipeline reviewers (`task-reviewer`, `architecture-reviewer`, `plan-reviewer`, `code-reviewer`), 3 adversarial critics (`critic-logic`, `critic-security`, `critic-performance`), `security-auditor`, `planner`, and `product-director`.
@@ -455,7 +455,7 @@ All new skills must be generated using `skill-creator`.
 
 ## 9. Framework Installer Subsystem
 
-> **Added in v3.15** (see [docs/TASK.md](TASK.md) — Task 063). Bootstrap-time tool, **not** part of the runtime agent pipeline.
+> **Added in v3.15** (see [task-063](tasks/task-063-framework-installer.md) — Task 063). Bootstrap-time tool, **not** part of the runtime agent pipeline.
 
 ### 9.1 Purpose
 
@@ -588,7 +588,7 @@ myapp/                                                  ← target project root
 - MD→MDC transformer for Cursor `.cursor/rules/`.
 - `System/` rename in framework to remove the high-risk collision.
 
-See [docs/TASK.md §5](TASK.md) for full open-question list.
+See [task-063 §5](tasks/task-063-framework-installer.md) for full open-question list.
 
 ## 10. Figure Authoring Subsystem
 

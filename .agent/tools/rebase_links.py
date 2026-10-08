@@ -83,6 +83,7 @@ if __name__ == "__main__":
     sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
 
 import re  # noqa: E402
+import stat  # noqa: E402
 from typing import NamedTuple  # noqa: E402
 
 #: Schemes and forms that are never document-relative.
@@ -153,6 +154,16 @@ _CONSERVED = ("REWRITTEN", "AMBIGUOUS_REBASE")
 #: link checker because it resolves. So the link is left exactly as authored and
 #: reported as UNMAPPED_SLOT.
 KNOWN_SLOTS = ("docs/TASK.md", "docs/PLAN.md")
+#: The grammar of `archive_move.SLUG`, held here so the file mode loads no sibling (TASK 115
+#: R1.2, TASK 116 R8.3). TC-G28 pins the two equal.
+_SLUG = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+#: TASK 116 R8.1: the slots that `--slot` takes, each with the form of the archive it names.
+_SLOT_ARCHIVES = {
+    "docs/TASK.md": ("docs/tasks/task-<ID>-<slug>.md",
+                     re.compile(rf"docs/tasks/task-[0-9]{{3,}}-{_SLUG}\.md")),
+    "docs/PLAN.md": ("docs/plans/plan-<ID>-<slug>.md",
+                     re.compile(rf"docs/plans/plan-[0-9]{{3,}}-{_SLUG}\.md")),
+}
 
 
 def _mask(text: str) -> str:
@@ -391,14 +402,56 @@ def _under_git(path, cwd):
         probe = parent
     return False
 
+
+#: TASK 116 R8.7: the characters a rewrite may add to a link; any other is counted.
+_LINK_SAFE = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._~/%-")
+
+
+def _adds_characters(authored, new):
+    """True when `new` holds a character outside `_LINK_SAFE` more often than `authored` does.
+
+    Each character is counted on its own (TASK 116 R8.7). A link to a file named with a space,
+    authored as `<a b.md>`, keeps its space when it is rebased.
+    """
+    def counts(text):
+        found = {}
+        for ch in text:
+            if ch not in _LINK_SAFE:
+                found[ch] = found.get(ch, 0) + 1
+        return found
+    before = counts(authored)
+    return any(n > before.get(ch, 0) for ch, n in counts(new).items())
+
+
+def _adds_parts(record):
+    """True when a part of the new target's path is not one its author wrote (TASK 116 R8.7).
+
+    A part, between `/`, other than `.` and `..`, must be a part of the authored target's path,
+    or, for a slot link, of the archive it names. A rewrite may drop parts and add `..`.
+    """
+    def parts(target):
+        if target.startswith("<") and target.endswith(">"):
+            target = target[1:-1]
+        return set(_split_fragment(target)[0].split("/")) - {"", ".", ".."}
+    known = parts(record.authored)
+    if record.action == "SLOT_RESOLVED":
+        known |= parts(record.denotes_old)
+    return not parts(record.new_target) <= known
+
+
 def _refuse_operand(path):
-    """Why `_main` refuses to rewrite this file operand, or None (TASK 112 R4.1).
+    """Why `_main` refuses to rewrite this file operand, or None (TASK 112 R4.1, TASK 116 R1.1).
 
     `Bash(python3 .agent/tools/rebase_links.py *)` approves any operand, and the rewrite writes the
     file in place. A file outside the working directory, by its absolute path normalised without
     resolving links, is refused; so is a file under `.git/` (`_under_git`), a symbolic link, and a
-    file with a second hard link, which would write through to another name. `rebase_file()` keeps
-    no such guard: `archive_protocol.py` calls it with temporary paths.
+    file with a second hard link, which would write through to another name. Then a file whose
+    directory resolves outside the working directory, both by real path, is refused: a directory
+    link would carry the write there. The directory is the operand's own, resolved as the kernel
+    resolves it, each link before the `..` that follows it. Last, an operand that does not lie
+    under `docs/`, and then a name that does not end in `.md`, is refused (TASK 116 R8.2): only
+    a markdown file under `docs/` is this script's to rewrite. `rebase_file()` keeps no such
+    guard: `archive_protocol.py` calls it with temporary paths.
     """
     cwd = os.getcwd()
     absolute = os.path.normpath(os.path.join(cwd, path))
@@ -410,7 +463,110 @@ def _refuse_operand(path):
         return "is a symbolic link"
     if os.path.exists(path) and os.lstat(path).st_nlink != 1:
         return "has a second hard link"
+    real_cwd = os.path.realpath(cwd)
+    directory = os.path.realpath(os.path.dirname(os.path.join(cwd, path)))
+    if os.path.commonpath([directory, real_cwd]) != real_cwd:
+        return "its directory resolves outside the working directory"
+    if os.path.relpath(absolute, cwd).split(os.sep)[0] != "docs":
+        return "does not lie under docs/"
+    if not path.endswith(".md"):
+        return "is not a markdown file"
     return None
+
+
+class _Unsafe(Exception):
+    """An operand that the file mode refuses to read or to write (TASK 116 R7)."""
+
+
+def _check_descriptor(fd, path, cwd):
+    """The `fstat` of `fd`, if it is the regular file at `path`'s real path (TASK 116 R7.2).
+
+    The real path is `path` joined to `cwd` and resolved as the kernel resolves it. The directory
+    of the descriptor's own path (`_descriptor_path`), or of the real path where the platform
+    gives none, lies inside `cwd` by real path. Any other descriptor raises `_Unsafe` with its
+    reason.
+    """
+    st = os.fstat(fd)
+    if not stat.S_ISREG(st.st_mode):
+        raise _Unsafe("is not a regular file")
+    if st.st_nlink != 1:
+        raise _Unsafe(f"has {st.st_nlink} hard links")
+    try:
+        real = os.path.realpath(os.path.join(cwd, path))
+        now = os.stat(real)
+    except (OSError, ValueError):
+        raise _Unsafe("is not the file at its real path") from None
+    if (now.st_dev, now.st_ino) != (st.st_dev, st.st_ino):
+        raise _Unsafe("is not the file at its real path")
+    try:
+        where = _descriptor_path(fd) or real
+    except OSError:
+        raise _Unsafe("is not the file at its real path") from None
+    real_cwd = os.path.realpath(cwd)
+    if os.path.commonpath([os.path.dirname(where), real_cwd]) != real_cwd:
+        raise _Unsafe("its directory resolves outside the working directory")
+    return st
+
+
+def _descriptor_path(fd):
+    """The path the kernel holds for `fd`, or None where the platform gives none (TASK 116 R7.2).
+
+    `fcntl.F_GETPATH` gives it on darwin, and the link `/proc/self/fd/<fd>` on Linux. It is one
+    lookup, so no swap of a directory between two lookups by name can change it, as one can
+    between `realpath` and `stat`. A failed lookup raises `OSError`.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        fcntl = None
+    if hasattr(fcntl, "F_GETPATH"):
+        return os.fsdecode(fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024)).split(b"\0", 1)[0])
+    if os.path.isdir("/proc/self/fd"):
+        return os.readlink(f"/proc/self/fd/{fd}")
+    return None
+
+
+def _open_checked(path, cwd, flags):
+    """`(descriptor, fstat)` of `path` opened with `flags` and no link followed (TASK 116 R7.1)."""
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    if nofollow is None:
+        raise _Unsafe("this platform has no O_NOFOLLOW")
+    try:
+        fd = os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
+    except OSError as exc:
+        raise _Unsafe(f"cannot open it: {exc.strerror or exc}") from None
+    try:
+        return fd, _check_descriptor(fd, path, cwd)
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def _read_descriptor(fd):
+    """Every byte of the file open on `fd`, from its start."""
+    chunks = []
+    while chunk := os.read(fd, 1 << 16):
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _write_checked(path, cwd, read_st, data):
+    """Write `data` over `path` through a second descriptor of the inode read (TASK 116 R7.3).
+
+    The file is truncated first, as the base's `open(path, "w")` truncates it, so a write that
+    fails leaves a prefix of `data`.
+    """
+    fd, st = _open_checked(path, cwd, os.O_WRONLY)
+    try:
+        if (st.st_dev, st.st_ino) != (read_st.st_dev, read_st.st_ino):
+            raise _Unsafe("changed during the run")
+        os.ftruncate(fd, 0)
+        view, written = memoryview(data), 0
+        while written < len(data):
+            written += os.write(fd, view[written:])
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def _load_siblings():
@@ -454,15 +610,19 @@ def _main(argv=None):
                "[--plan docs/plans/plan-<ID>-<slug>.md] [--since <rev>] [--dry-run] [--json] "
                "re-targets the slot links an archived task wrote in other documents "
                "(TASK 115, skill-archive-task Step 8).")
-    ap.add_argument("files", nargs="+", help="moved markdown file(s)")
+    ap.add_argument("files", nargs="+",
+                    help="moved markdown file(s) under docs/; any other operand is refused")
     ap.add_argument("--from", dest="from_dir", required=True,
                     help="directory the file used to live in (repo-relative)")
     ap.add_argument("--to", dest="to_dir", required=True,
                     help="directory it lives in now (repo-relative)")
-    ap.add_argument("--repo-root", default=".")
+    ap.add_argument("--repo-root", default=".",
+                    help="the working directory, the only root the file mode takes")
     ap.add_argument("--slot", action="append", default=[], metavar="SLOT=ARCHIVE",
                     help="a mutable slot and the archive identity it held, e.g. "
-                         "docs/PLAN.md=docs/plans/plan-096-x.md. Repeatable. "
+                         "docs/PLAN.md=docs/plans/plan-096-x.md. Repeatable. SLOT is "
+                         "docs/TASK.md, with ARCHIVE docs/tasks/task-<ID>-<slug>.md, or "
+                         "docs/PLAN.md, with ARCHIVE docs/plans/plan-<ID>-<slug>.md. "
                          "Resolved before any filesystem probe, so it still "
                          "works once the slot file has been moved away.")
     ap.add_argument("--slot-must-exist", action="store_true",
@@ -475,6 +635,18 @@ def _main(argv=None):
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
+    # TASK 116 R8.6: a rewritten link is built from these paths, so each stays in the tree.
+    if os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
+        problem = "--repo-root is not the working directory"
+    else:
+        problem = next((f"{name} does not lie inside the working directory"
+                        for name, value in (("--from", args.from_dir), ("--to", args.to_dir))
+                        if os.path.isabs(value)
+                        or os.path.normpath(value).split(os.sep)[0] == ".."), None)
+    if problem:
+        print(json.dumps({"ok": False, "error": problem}), file=sys.stderr)
+        return 2
+
     slot_map = {}
     for pair in args.slot:
         if "=" not in pair:
@@ -482,8 +654,30 @@ def _main(argv=None):
                               "error": f"--slot expects SLOT=ARCHIVE, got {pair!r}"}),
                   file=sys.stderr)
             return 2
-        slot, archive = pair.split("=", 1)
-        slot_map[slot.strip()] = archive.strip()
+        slot, archive = (part.strip() for part in pair.split("=", 1))
+        # TASK 116 R8.1: the allow rule approves any argument, and ARCHIVE is written as a link.
+        known = _SLOT_ARCHIVES.get(slot)
+        if known is None:
+            problem = "its slot is not docs/TASK.md or docs/PLAN.md"
+        elif not known[1].fullmatch(archive):
+            problem = f"its archive is not {known[0]}"
+        else:
+            slot_map[slot] = archive
+            continue
+        print(json.dumps({"ok": False, "error": f"--slot {pair!r}: {problem}"}), file=sys.stderr)
+        return 2
+
+    opened = []
+    try:
+        return _file_mode(args, slot_map, opened)
+    finally:
+        for _path, fd, _st in opened:
+            os.close(fd)
+
+
+def _file_mode(args, slot_map, opened):
+    """The file mode of `_main`; each descriptor it opens is appended to `opened` (TASK 116 R7)."""
+    import json
 
     for path in args.files:
         reason = _refuse_operand(path)
@@ -491,13 +685,45 @@ def _main(argv=None):
             print(json.dumps({"ok": False, "error": f"{path}: {reason}"}), file=sys.stderr)
             return 2
 
-    report, warned, failed, pending = [], False, False, []
+    # TASK 116 R7.1: every operand is open and checked before any of them is read.
+    cwd = os.getcwd()
     for path in args.files:
         try:
-            changed, records = rebase_file(path, args.from_dir, args.to_dir,
-                                           args.repo_root, args.dry_run,
-                                           slot_map)
-        except OSError as exc:
+            fd, st = _open_checked(path, cwd, os.O_RDONLY)
+        except _Unsafe as exc:
+            print(json.dumps({"ok": False, "error": f"{path}: {exc}"}), file=sys.stderr)
+            return 2
+        opened.append((path, fd, st))
+
+    report, warned, failed, pending = [], False, False, []
+    for path, fd, st in opened:
+        try:
+            text = _read_descriptor(fd).decode("utf-8")
+            new_text, records = rebase_document_links(text, args.from_dir, args.to_dir,
+                                                      args.repo_root, slot_map)
+            changed = new_text != text
+            # TASK 116 R8.7, in a dry run too: a rewrite adds no character that ends a link.
+            added = [r.line for r in records if r.action in _WROTE
+                     and _adds_characters(r.authored, r.new_target)]
+            if added:
+                print(json.dumps({"ok": False, "error": f"{path}:{added[0]}: a rewritten link "
+                                  "holds text that its authored link does not"}),
+                      file=sys.stderr)
+                return 2
+            parts = [r.line for r in records if r.action in _WROTE and _adds_parts(r)]
+            if parts:
+                print(json.dumps({"ok": False, "error": f"{path}:{parts[0]}: a rewritten link "
+                                  "holds a path part that its authored link does not"}),
+                      file=sys.stderr)
+                return 2
+            # Overlapping links are spliced one into the other: the text gains no character either.
+            if _adds_characters(text, new_text):
+                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text holds a "
+                                  "character that the text did not"}), file=sys.stderr)
+                return 2
+            if changed and not args.dry_run:
+                _write_checked(path, cwd, st, new_text.encode("utf-8"))
+        except (OSError, _Unsafe) as exc:
             print(json.dumps({"ok": False, "error": f"{path}: {exc}"}),
                   file=sys.stderr)
             return 2

@@ -20,9 +20,11 @@ from .config import (
     SKIP_DIRS,
 )
 from .helpers import (
+    LockfileCopyError,
     find_npm_lockfiles,
     is_self_path,
     npm_audit_dir,
+    printable,
     shannon_entropy,
     sort_findings_by_severity,
 )
@@ -38,70 +40,98 @@ from .patterns import (
 #: Seconds one `npm audit` may run before its lockfile is reported as not audited (TASK 111 R5.2).
 NPM_AUDIT_TIMEOUT = 60
 
+#: npm's advisory severity → the scanner's severity (TASK 118 R3.1).
+NPM_SEVERITY = {"critical": "critical", "high": "high", "moderate": "medium", "low": "low",
+                "info": "info"}
 
-def _npm_audit(lockfile: Path, project_path: str) -> list:
-    """The findings of `npm audit` for one lockfile (TASK 111 R5.2, R5.3, R5.6).
+
+def _npm_audit(lockfile: Path, project_path: str):
+    """`(rel, findings, counts)` of `npm audit` for one lockfile (TASK 111 R5.2, R5.3, R5.6).
 
     `--package-lock-only` reads the lockfile without `node_modules`, in a temporary copy of the
     lockfile and its `package.json`. An audit that does not finish yields an `info` finding naming
-    the lockfile and the reason, never a silent pass.
+    the lockfile and the reason, never a silent pass; its `counts` is `None` (TASK 118 R3.3).
     """
     rel = os.path.relpath(lockfile, project_path).replace(os.sep, "/")
-    with npm_audit_dir(lockfile) as workdir:
-        if workdir is None:
-            return [_not_audited(rel, "no package.json beside it")]
-        try:
-            result = subprocess.run(
-                ["npm", "audit", "--json", "--package-lock-only"],
-                cwd=workdir, capture_output=True, text=True, timeout=NPM_AUDIT_TIMEOUT,
-            )
-        except FileNotFoundError:
-            return [_not_audited(rel, "npm is not installed")]
-        except subprocess.TimeoutExpired:
-            return [_not_audited(rel, f"npm audit ran past {NPM_AUDIT_TIMEOUT} s")]
+    try:
+        with npm_audit_dir(lockfile) as workdir:
+            if workdir is None:
+                return rel, [_not_audited(rel, "no package.json beside it")], None
+            try:
+                result = subprocess.run(
+                    ["npm", "audit", "--json", "--package-lock-only"],
+                    cwd=workdir, capture_output=True, text=True, timeout=NPM_AUDIT_TIMEOUT,
+                )
+            except FileNotFoundError:
+                return rel, [_not_audited(rel, "npm is not installed")], None
+            except subprocess.TimeoutExpired:
+                return rel, [_not_audited(rel, f"npm audit ran past {NPM_AUDIT_TIMEOUT} s")], None
+    except LockfileCopyError:
+        return rel, [_not_audited(rel, "the lockfile could not be copied")], None
     try:
         audit_data = json.loads(result.stdout)
     except json.JSONDecodeError:
-        return [_not_audited(rel, "npm audit printed no JSON")]
+        return rel, [_not_audited(rel, "npm audit printed no JSON")], None
     if not isinstance(audit_data, dict):
-        return [_not_audited(rel, "npm audit printed no JSON object")]
+        return rel, [_not_audited(rel, "npm audit printed no JSON object")], None
     if "error" in audit_data:
         error = audit_data["error"]
         detail = (error.get("code") if isinstance(error, dict) else None) or audit_data.get("message")
-        return [_not_audited(rel, f"npm audit reported an error ({str(detail or 'no detail')[:120]})")]
+        reason = f"npm audit reported an error ({str(detail or 'no detail')[:120]})"
+        return rel, [_not_audited(rel, reason)], None
     vulnerabilities = audit_data.get("vulnerabilities")
     if vulnerabilities is not None and not isinstance(vulnerabilities, dict):
-        return [_not_audited(rel, "npm audit printed no vulnerability map")]
-    return _npm_audit_findings(audit_data, rel)
+        return rel, [_not_audited(rel, "npm audit printed no vulnerability map")], None
+    return rel, _npm_audit_findings(audit_data, rel), _npm_audit_counts(audit_data)
 
 
 def _not_audited(rel: str, reason: str) -> dict:
+    """The `info` finding of a lockfile that was not audited; `audited` marks it (TASK 118 R3.4)."""
     return {
         "type": "npm audit",
         "severity": "info",
         "cwe": "CWE-1104",
         "message": f"{rel}: not audited, {reason}",
+        "audited": False,
     }
 
 
-def _npm_audit_findings(audit_data: dict, rel: str) -> list:
-    """One finding per severity, critical and high, of a finished `npm audit`."""
-    severity_count = {"critical": 0, "high": 0}
+def _npm_audit_counts(audit_data: dict) -> dict:
+    """The counts of a finished `npm audit` per npm severity, and `unknown` (TASK 118 R3.2, R3.3).
+
+    An entry that is not a map, or holds no severity, counts as `low`, as before TASK 118; a
+    severity outside npm's five counts as `unknown`.
+    """
+    counts = dict.fromkeys((*NPM_SEVERITY, "unknown"), 0)
     for vuln in (audit_data.get("vulnerabilities") or {}).values():
-        sev = str(vuln.get("severity", "low")).lower() if isinstance(vuln, dict) else "low"
-        if sev in severity_count:
-            severity_count[sev] += 1
-    return [{
+        sev = str(vuln.get("severity") or "low").lower() if isinstance(vuln, dict) else "low"
+        counts[sev if sev in NPM_SEVERITY else "unknown"] += 1
+    return counts
+
+
+def _npm_audit_findings(audit_data: dict, rel: str) -> list:
+    """One finding per npm severity of a finished `npm audit`, at every severity (TASK 118 R3.1)."""
+    counts = _npm_audit_counts(audit_data)
+    findings = [{
         "type": "npm audit",
-        "severity": sev,
+        "severity": NPM_SEVERITY[sev],
         "cwe": "CWE-1104",
         "message": f"{rel}: {count} {sev} vulnerabilities in dependencies",
-    } for sev, count in severity_count.items() if count]
+    } for sev, count in counts.items() if sev in NPM_SEVERITY and count]
+    if counts["unknown"]:
+        findings.append({
+            "type": "npm audit",
+            "severity": "low",
+            "cwe": "CWE-1104",
+            "message": f"{rel}: {counts['unknown']} vulnerabilities of unknown severity",
+        })
+    return findings
 
 
 def scan_dependencies(project_path: str) -> Dict[str, Any]:
     """Validate supply chain security (OWASP A03:2025 Software Supply Chain Failures, CWE-1104)."""
-    results = {"tool": "dependency_scanner", "findings": [], "status": "[OK] Secure"}
+    results = {"tool": "dependency_scanner", "findings": [], "status": "[OK] Secure",
+               "npm_audit_counts": {}}
 
     # Ecosystem -> (type markers, accepted lock files).
     # `requirements.txt` lists deps but does NOT pin a full transitive graph
@@ -159,19 +189,25 @@ def scan_dependencies(project_path: str) -> Dict[str, Any]:
     # and a failed run produced no finding, so an offline scan read as a clean one.
     not_audited = 0
     for lockfile in find_npm_lockfiles(project_path):
-        found = _npm_audit(lockfile, project_path)
-        not_audited += sum(1 for f in found if f["severity"] == "info")
+        rel, found, counts = _npm_audit(lockfile, project_path)
+        not_audited += sum(1 for f in found if f.get("audited") is False)
         results["findings"].extend(found)
-    if not_audited:
-        # A critical or high finding below still sets its own status (TASK 111 R5.7).
-        results["status"] = f"[?] Not audited: {not_audited} npm lockfile(s)"
+        if counts is not None:
+            results["npm_audit_counts"][rel] = counts
+    results["findings"] = sort_findings_by_severity(results["findings"])
 
-    if results["findings"]:
-        max_sev = min(SEVERITY_ORDER.get(f.get("severity", "low"), 99) for f in results["findings"])
-        if max_sev == 0:
-            results["status"] = "[!!] Critical vulnerabilities"
-        elif max_sev == 1:
-            results["status"] = "[!] HIGH: Dependency issues"
+    # The first match sets the status (TASK 118 R3.5): a critical or high finding outranks an
+    # unaudited lockfile (TASK 111 R5.7), which outranks a finding below high.
+    max_sev = min((SEVERITY_ORDER.get(f.get("severity", "low"), 99) for f in results["findings"]),
+                  default=99)
+    if max_sev == 0:
+        results["status"] = "[!!] Critical vulnerabilities"
+    elif max_sev == 1:
+        results["status"] = "[!] HIGH: Dependency issues"
+    elif not_audited:
+        results["status"] = f"[?] Not audited: {not_audited} npm lockfile(s)"
+    elif any(f.get("severity") in ("medium", "low") for f in results["findings"]):
+        results["status"] = "[?] Dependency issues below high"
 
     return results
 
@@ -203,7 +239,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
             try:
                 if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
-                    print(f"[WARN] Skipped {filepath}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
+                    print(f"[WARN] Skipped {printable(filepath)}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
                     continue
             except OSError:
                 continue
@@ -227,7 +263,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
                     # no trailing empty element — emitting a phantom "skipped 1 line" WARN.)
                     skipped_lines = len(all_lines) - len(safe_lines)
                     if skipped_lines > 0:
-                        print(f"[WARN] {filepath}: skipped {skipped_lines} line(s) > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
+                        print(f"[WARN] {printable(filepath)}: skipped {skipped_lines} line(s) > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
                     for pattern, secret_type, severity, cwe in SECRET_PATTERNS:
                         matches = re.findall(pattern, safe_content, re.IGNORECASE)
                         if matches:
@@ -258,7 +294,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
                             results["by_severity"]["high"] += 1
             except Exception as e:
                 results["skipped_files"] += 1
-                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+                print(f"[WARN] Skipped {printable(filepath)}: {e}", file=sys.stderr)
 
     results["findings"] = sort_findings_by_severity(results["findings"])
 
@@ -296,7 +332,7 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
             try:
                 if filepath.stat().st_size > _config.MAX_FILE_SIZE:
                     results["skipped_files"] += 1
-                    print(f"[WARN] Skipped {filepath}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
+                    print(f"[WARN] Skipped {printable(filepath)}: exceeds {_config.MAX_FILE_SIZE // (1024*1024)}MB limit", file=sys.stderr)
                     continue
             except OSError:
                 continue
@@ -323,7 +359,7 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
                                 })
             except Exception as e:
                 results["skipped_files"] += 1
-                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+                print(f"[WARN] Skipped {printable(filepath)}: {e}", file=sys.stderr)
 
     results["findings"] = sort_findings_by_severity(results["findings"])
 
@@ -376,7 +412,7 @@ def scan_configuration(project_path: str) -> Dict[str, Any]:
                             })
             except Exception as e:
                 results["skipped_files"] += 1
-                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+                print(f"[WARN] Skipped {printable(filepath)}: {e}", file=sys.stderr)
 
     results["findings"] = sort_findings_by_severity(results["findings"])
 
@@ -431,7 +467,7 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
                     # never has >4k-char lines; only minified blobs do.
                     if any(len(ln) > _config.MAX_LINE_LENGTH for ln in content.splitlines()):
                         results["skipped_files"] += 1
-                        print(f"[WARN] Skipped IaC {filepath}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
+                        print(f"[WARN] Skipped IaC {printable(filepath)}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
                         continue
 
                     # Heuristic: for generic YAML/JSON files, only apply patterns
@@ -465,7 +501,7 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
                             })
             except Exception as e:
                 results["skipped_files"] += 1
-                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+                print(f"[WARN] Skipped {printable(filepath)}: {e}", file=sys.stderr)
 
     results["findings"] = sort_findings_by_severity(results["findings"])
 
@@ -596,7 +632,7 @@ def scan_mcp_agentic(project_path: str) -> Dict[str, Any]:
                 # classes, so (IaC-style) skip the entire file on pathological lines.
                 if any(len(ln) > _config.MAX_LINE_LENGTH for ln in content.splitlines()):
                     results["skipped_files"] += 1
-                    print(f"[WARN] Skipped MCP scan of {filepath}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
+                    print(f"[WARN] Skipped MCP scan of {printable(filepath)}: line > {_config.MAX_LINE_LENGTH} chars (ReDoS guard)", file=sys.stderr)
                     continue
 
                 lines = content.splitlines()
@@ -615,7 +651,7 @@ def scan_mcp_agentic(project_path: str) -> Dict[str, Any]:
                         })
             except Exception as e:
                 results["skipped_files"] += 1
-                print(f"[WARN] Skipped {filepath}: {e}", file=sys.stderr)
+                print(f"[WARN] Skipped {printable(filepath)}: {e}", file=sys.stderr)
 
     results["findings"] = sort_findings_by_severity(results["findings"])
 

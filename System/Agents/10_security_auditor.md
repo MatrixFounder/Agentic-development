@@ -89,6 +89,10 @@ findings under these headings, spelled exactly as written:
   never `"PASS"`. Without it a scan-less audit is machine-
   indistinguishable from a clean one, and every consumer that branches on this footer treats
   "we did not look" as "we looked and it was fine".
+- The scanner sets the floor of `scan_status`. Exit 3, or a `summary.not_run` list that is not
+  empty, gives `"NOT_RUN"`. A `summary.tool_exits` list that is not empty gives at least
+  `"findings"`, and `"NOT_RUN"` when the tool's output shows an error (`security-audit` §2). A run
+  that prints no report, such as exit 1 with a JSON `error` or exit 2, gives `"NOT_RUN"`.
 - **Spawned as the `security-auditor` subagent?** Then you do NOT write the report file — omit
   `audit_file` and return the report as text; the orchestrator persists it. That wrapper's
   adaptations override this step, and this sentence is here so "follow strictly" no longer sends the

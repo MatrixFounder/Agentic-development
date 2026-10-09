@@ -73,8 +73,10 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-51** [Residual routes of the TASK 118 scanner review](backlog/wi-51-residual-routes-of-the-task-118-scanner-review.md) — effort `M`, status `open`, opened 2026-10-09
+- **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
+- **WI-49** [The history secret scan runs git in the scanned tree's repository](backlog/wi-49-the-history-secret-scan-runs-git-in-the-scanned-trees-repository.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08
-- **WI-42** [Security-audit scans hide what did not run](backlog/wi-42-security-audit-scans-hide-what-did-not-run.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-41** [KaTeX advisory GHSA-238p-pmpm-9mq7 in the renderer lockfiles](backlog/wi-41-katex-advisory-ghsa-238p-pmpm-9mq7-in-the-renderer-lockfiles.md) — effort `S`, status `open`, opened 2026-10-08
 - **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-36** [Command substitution inside an allow-approved command](backlog/wi-36-command-substitution-inside-an-allow-approved-command.md) — effort `S`, status `open`, opened 2026-10-06
@@ -90,6 +92,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-42** [Security-audit scans hide what did not run](backlog/wi-42-security-audit-scans-hide-what-did-not-run.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-09** (TASK 118): a status per tool, exit 3, every npm severity, `--no-git`
 - **WI-48** [Stage 2 of framework-upgrade has no bound on its review rounds](backlog/wi-48-stage-2-of-framework-upgrade-has-no-bound-on-its-review-rounds.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-09** (TASK 117): loop `stage2-review-retry`, max 3 rounds; a rule for LOW routes of a fixed class
 - **WI-47** [rebase_links.py can still write a chosen slug into a slot link](backlog/wi-47-rebase-links-py-can-still-write-a-chosen-slug-into-a-slot-link.md) — effort `S`, status `done`, opened 2026-10-08 · **done 2026-10-09** (TASK 117): a slot archive bound to the operand's name, a tail test of parts, a length test of the text
 - **WI-46** [rebase_links.py opens a checked path again to write it](backlog/wi-46-rebase-links-py-opens-a-checked-path-again-to-write-it.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-08** (TASK 116): both modes write through the descriptor they checked

@@ -10,7 +10,10 @@ stopped, and the operator deferred the hook to WI-34. This file pins the rules w
 * `security-audit` §6.2, whole: the three verdicts, one re-run per part, the operator's decision,
   no unverified control, tests are not the hunt (``TC-2``);
 * each place that routes an audit, as the whole paragraph, list item or table row that holds its
-  pointer, and `full-robust` §3's gate on `audit_status: PASS` and a scan that ran (``TC-3``).
+  pointer, and `full-robust` §3's gate on `audit_status: PASS` and a scan that ran (``TC-3``);
+* each place that turns the scanner's exit code and summary into `scan_status`, as a block of its
+  own: exit 3 or `summary.not_run` gives `NOT_RUN`, and `summary.tool_exits` gives at least
+  `findings` (``TC-3b``, TASK 118 R5.5).
 
 The pinned texts below are written as they stand in their files, wrapped; the tests compare them
 with whitespace collapsed. A change to a pinned rule changes this file in the same edit, where a
@@ -184,15 +187,16 @@ POINTERS = {
         passed".""",
     ),
     "System/Docs/SKILLS.md": (
-        """| **`security-audit`** | Vulnerability assessment v3.11 (two-layer model: deterministic
+        """| **`security-audit`** | Vulnerability assessment v3.12 (two-layer model: deterministic
         regex floor + LLM semantic pass): OWASP Top 10:2025 (final taxonomy, 2021→2025 mapping
         table included), **MCP/agentic (OWASP ASI Top 10 2026)** — config provenance,
         auto-approve, unpinned servers, tool-poisoning heuristics, smart contracts (Solidity
         reentrancy, delegatecall, oracle manipulation), secrets (28 patterns + entropy), IaC
         (Docker/K8s/Terraform), SBOM, CI/CD gates. 148 automated regex patterns + external tool
-        integrations (incl. `snyk-agent-scan`), private disclosure of a dependency finding (§6.1),
-        an unfinished review reported as `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or
-        HIGH issue (§6.2). | `security-audit`, `full-robust` | Security Auditor |""",
+        integrations (incl. `snyk-agent-scan`), a status for each external tool and exit 3 for a
+        scan part that did not run, private disclosure of a dependency finding (§6.1), an
+        unfinished review reported as `INCOMPLETE`, or `FAIL` when a part found a CRITICAL or HIGH
+        issue (§6.2). | `security-audit`, `full-robust` | Security Auditor |""",
     ),
     "System/Docs/WORKFLOWS.md": (
         """| **Security Audit** | Runs the security auditor agent. Remediation loop bounded at **max
@@ -200,6 +204,33 @@ POINTERS = {
         definition of "clean". A `scan_status: NOT_RUN` yields `INCOMPLETE`, or `FAIL` when the
         manual review found a CRITICAL or HIGH issue, never clean (`security-audit` §6.2). | `run
         security-audit` |""",
+    ),
+}
+
+#: TC-3b (TASK 118 R5.5): each router that reads the scanner states how its exit code and summary
+#: set `scan_status`, in a block outside the blocks of `POINTERS`.
+SCAN_STATUS_POINTERS = {
+    WRAPPER: (
+        """- **The scanner's exit code and summary set the floor of `scan_status`.** Exit 3, or a
+        `summary.not_run` list that is not empty, means a part of the scan did not run:
+        `scan_status: "NOT_RUN"`. A `summary.tool_exits` list that is not empty means an external
+        tool reported a finding or failed: `scan_status` is at least `"findings"`, and
+        `"NOT_RUN"` when the tool's output shows an error (`security-audit` §2). A run that prints
+        no report, such as exit 1 with a JSON `error` or exit 2, is `"NOT_RUN"`.""",
+    ),
+    "System/Agents/10_security_auditor.md": (
+        """- The scanner sets the floor of `scan_status`. Exit 3, or a `summary.not_run` list that
+        is not empty, gives `"NOT_RUN"`. A `summary.tool_exits` list that is not empty gives at
+        least `"findings"`, and `"NOT_RUN"` when the tool's output shows an error
+        (`security-audit` §2). A run that prints no report, such as exit 1 with a JSON `error` or
+        exit 2, gives `"NOT_RUN"`.""",
+    ),
+    ".agent/workflows/security-audit.md": (
+        """- **A partial scan is `NOT_RUN`.** Exit 3, or a `summary.not_run` list that is not
+        empty, records `scan_status: NOT_RUN (<the parts it names>)`. A `summary.tool_exits` list
+        that is not empty records at least `scan_status: findings`, and `scan_status: NOT_RUN`
+        when the tool's output shows an error (`security-audit` §2). A run that prints no report,
+        such as exit 1 with a JSON `error` or exit 2, records `scan_status: NOT_RUN`.""",
     ),
 }
 
@@ -285,6 +316,15 @@ class TestPointers(unittest.TestCase):
 
     def test_each_router_states_the_rule_whole(self):
         for rel, expected in POINTERS.items():
+            blocks = _blocks(_read(rel))
+            for block in expected:
+                block = _flat(block)
+                with self.subTest(file=rel, block=block[:50]):
+                    self.assertIn(block, blocks)
+
+    def test_each_router_maps_the_scanner_status(self):
+        """TC-3b (TASK 118 R5.5)."""
+        for rel, expected in SCAN_STATUS_POINTERS.items():
             blocks = _blocks(_read(rel))
             for block in expected:
                 block = _flat(block)

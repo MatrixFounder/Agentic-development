@@ -16,6 +16,59 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.40.0 — the security-audit scan reports for each tool whether it ran, reports npm advisories at every severity, and scans the working tree for secrets (TASK 118)**
+
+#### Changed
+
+- **`security-audit` 3.12: the scan says which part ran** (WI-42). The external layer returns one
+  record per tool, with `ran` and its exit code, `not_installed`, `timed_out`, `not_run` or
+  `not_applicable`. The report holds them under `external`, also for `--scan-type external`, which
+  printed no report before. A part that did not run is listed in `summary.not_run`.
+- **Behaviour changes for a repository that installs the skill.** Each item can change the exit
+  code or the output that a gate reads:
+  - `run_audit.py` exits 3 when a requested part did not run: a tool not installed or timed out,
+    or an npm lockfile not audited. Before, it exited 0. stderr prints `[INCOMPLETE]` and the
+    parts. A `--fail-on` cause, exit 1, takes precedence;
+  - under `--fail-on`, an external tool's non-zero exit gives exit 1, pip-audit's and yarn's
+    included. The scanner cannot rank such an exit, so it fails the gate. trufflehog runs with
+    `--fail` and trivy with `--exit-code 1`, so their findings exit non-zero;
+  - under `--fail-on`, npm runs with `--audit-level` at the threshold (`medium` as `moderate`);
+  - the deps scan reports npm advisories at every severity: `moderate` as `medium`, `low` and
+    `info`, with `npm_audit_counts` per lockfile. `--fail-on medium` now fails on a moderate
+    advisory. The section status reads `[?] Dependency issues below high` for such findings;
+  - the `[GATE]` line and the tools' own output go to stderr, so `--output json` prints one JSON
+    document on stdout;
+  - the JSON gains `external`, `summary.low`, `summary.info`, `summary.not_run`,
+    `summary.scan_complete` and `summary.tool_exits`; `overall_status` reads
+    `[?] INCOMPLETE: <N> part(s) did not run` for an incomplete scan;
+  - the secret scan reads the working tree with `gitleaks detect --no-git`, ignored files such as
+    `.env` included. The history scan runs gitleaks in git mode when the scanned root or a parent
+    holds `.git` or is a bare repository, and has no fallback: `trufflehog git` executed a scanned
+    repository's `core.fsmonitor` command (CVE-2025-41390);
+  - the external layer runs for a project with no detected type, such as one of `.tsx` files only;
+  - a tool killed by a signal records `killed`, and its slot is a part not run;
+  - in the dependency scan and the external layer, a lockfile that cannot be copied, such as a
+    FIFO, is not audited; the scanner used to stop with exit 1 and no report. The other in-process
+    scans still open such a file (WI-51);
+  - in the scanner's own lines, paths and messages from the scanned tree are printed with control,
+    format and separator characters escaped; the external tools' own output is printed as is;
+  - a bare repository that holds a link is `not_run` for the history scan.
+- **Where the external layer runs.** `security-audit` §2 names the slots, the tools of a complete
+  local run and their install commands. No CI job runs the external layer.
+- **Exposures that stay, now stated in §2.** Git mode runs git in the scanned tree's repository,
+  whose configuration can name commands that git runs (WI-49). `cargo clippy`, `slither` and
+  `checkov` can execute the project's code or configuration (WI-37, dropped). Configuration files
+  in the scanned tree can silence a tool (WI-50).
+- The `security-auditor` role, the `security-audit` workflow and `System/Agents/10_security_auditor.md`
+  state that exit 3 or a non-empty `summary.not_run` is `scan_status: NOT_RUN`, and a non-empty
+  `summary.tool_exits` at least `findings`, or `NOT_RUN` when the tool's output shows an error.
+
+#### Fixed
+
+- The summary and the `--fail-on` gate counted findings after each section was cut to 30, and the
+  deps scan did not sort its findings, so a critical finding past the cut could pass the gate. The
+  summary now counts every finding, and the deps findings are sorted.
+
 ### **v3.39.1 — the file mode refuses a slot archive of another task, reordered parts and spliced links, and stage 2 of framework-upgrade has a bound (TASK 117)**
 
 #### Fixed

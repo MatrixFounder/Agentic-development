@@ -17,12 +17,20 @@ python3 .agent/skills/security-audit/scripts/run_audit.py . --output summary
 **Output**:
 ```text
 ============================================================
-Security Scan: /path/to/project
+Security Scan v3.12: /path/to/project
+Timestamp: 2026-10-09T12:00:00
 ============================================================
 Status: [!] HIGH RISK ISSUES
 Total Findings: 3
   Critical: 0
   High: 3
+  Medium: 0
+  Low: 0
+  Info: 0
+Not run:
+  - external python-sast: bandit not_installed
+Tool exits:
+  - semgrep exited 1 (sast)
 ============================================================
 
 SECRETS: [!] HIGH: Secrets found
@@ -33,7 +41,20 @@ DEPENDENCIES: [OK] Secure
 
 CODE_PATTERNS: [?] Patterns found
   - [HIGH] eval() usage in src/utils.js:45
+
+EXTERNAL: PARTIAL
+  - sast: semgrep ran (exit 1)
+  - secrets-tree: gitleaks ran (exit 0)
+  - secrets-history: gitleaks ran (exit 0)
+  - python-sast: bandit not_installed
+  - python-deps: pip-audit ran (exit 0)
+  - npm-audit:package-lock.json: npm ran (exit 0)
 ```
+
+The scan exits 3: bandit is not installed, so slot `python-sast` did not run, and stderr repeats
+it under `[INCOMPLETE]`. semgrep exited 1, which is a finding or an error; its output on stderr
+says which. With `--fail-on high`, the three high findings and the semgrep exit give exit 1
+instead (`security-audit` §2, **Exit codes and summary**).
 
 ### Step 2: Analysis & "Think Like a Hacker"
 

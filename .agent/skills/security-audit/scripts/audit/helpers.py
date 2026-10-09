@@ -2,6 +2,7 @@
 
 import math
 import os
+import unicodedata
 import shutil
 import subprocess
 import sys
@@ -19,30 +20,68 @@ from .config import (
 )
 
 
-def run_command(cmd, cwd=None, shell=False, capture=False, timeout=600) -> Optional[subprocess.CompletedProcess]:
-    """Run a shell command, capture exit code, and report status.
+#: Seconds one external tool may run before its record says `timed_out` (TASK 118 R1.1).
+#: `run_tool` reads it at each call. External SAST tools like semgrep can exceed 120 s on a
+#: non-trivial repository; a shorter limit killed them mid-scan.
+TOOL_TIMEOUT = 600
 
-    timeout: seconds (default 600s / 10min). External SAST tools like semgrep can easily
-    exceed 120s on non-trivial repos; earlier default silently killed them mid-scan.
+
+def run_tool(cmd: List[str], cwd: str, slot: str, where: str = ".") -> Dict:
+    """Run one external tool and return its tool record (TASK 118 R1.1).
+
+    The record's `status` is `ran` with the tool's `exit_code`, `not_installed` when the executable
+    is not found, or `timed_out` past `TOOL_TIMEOUT`. The tool's stdout goes to file descriptor 2,
+    beside its stderr, so the scanner's stdout holds its report alone (R1.9).
     """
-    cmd_str = ' '.join(cmd) if isinstance(cmd, list) else cmd
+    record = {"slot": slot, "tool": cmd[0], "command": list(cmd), "where": where,
+              "status": "ran", "exit_code": None, "reason": None}
+    cmd_str = " ".join(cmd)
     print(f"[*] Running: {cmd_str}", file=sys.stderr)
+    sys.stderr.flush()
     try:
-        result = subprocess.run(
-            cmd, cwd=cwd, shell=shell, check=False, timeout=timeout,
-            capture_output=capture, text=capture
-        )
-        if result.returncode != 0:
-            print(f"[!] {cmd_str} exited with code {result.returncode}", file=sys.stderr)
-        return result
+        result = subprocess.run(cmd, cwd=cwd, check=False, timeout=TOOL_TIMEOUT, stdout=2)
     except FileNotFoundError:
-        tool_name = cmd[0] if isinstance(cmd, list) else cmd.split()[0]
-        print(f"[!] Tool not found: {tool_name}", file=sys.stderr)
-        print(f"    Install: see project docs or run via Docker", file=sys.stderr)
-        return None
+        print(f"[!] Tool not found: {cmd[0]}", file=sys.stderr)
+        record["status"] = "not_installed"
+        return record
     except subprocess.TimeoutExpired:
-        print(f"[!] Timeout: {cmd_str} exceeded {timeout}s limit", file=sys.stderr)
-        return None
+        print(f"[!] Timeout: {cmd_str} exceeded {TOOL_TIMEOUT}s limit", file=sys.stderr)
+        record["status"] = "timed_out"
+        return record
+    record["exit_code"] = result.returncode
+    if result.returncode < 0:
+        # A signal ended the process: the tool did not finish its scan (TASK 118 D13).
+        record["status"] = "killed"
+        print(f"[!] {cmd_str} was killed by signal {-result.returncode}", file=sys.stderr)
+    elif result.returncode != 0:
+        print(f"[!] {cmd_str} exited with code {result.returncode}", file=sys.stderr)
+    return record
+
+
+#: The Unicode categories `printable` escapes: control, format, line and paragraph separator.
+ESCAPED_CATEGORIES = ("Cc", "Cf", "Zl", "Zp")
+
+
+def printable(text) -> str:
+    """`text` with each control, format or separator character escaped (TASK 118 R1.10).
+
+    A path or a message from the scanned tree can hold a newline, an ANSI escape, a bidirectional
+    override or a line separator, and with it forge a line of the scanner's output. The categories
+    of `ESCAPED_CATEGORIES` become `\\xNN`, `\\uNNNN` or `\\UNNNNNNNN`.
+    """
+    out = []
+    for char in str(text):
+        if unicodedata.category(char) in ESCAPED_CATEGORIES:
+            code = ord(char)
+            if code <= 0xFF:
+                out.append(f"\\x{code:02x}")
+            elif code <= 0xFFFF:
+                out.append(f"\\u{code:04x}")
+            else:
+                out.append(f"\\U{code:08x}")
+        else:
+            out.append(char)
+    return "".join(out)
 
 
 def is_self_path(filepath: str) -> bool:
@@ -88,6 +127,10 @@ def find_npm_lockfiles(root_dir: str) -> List[Path]:
     return found
 
 
+class LockfileCopyError(Exception):
+    """The lockfile or its `package.json` could not be copied, such as a FIFO (TASK 118 D16)."""
+
+
 @contextmanager
 def npm_audit_dir(lockfile: Path) -> Iterator[Optional[Path]]:
     """A temporary directory holding copies of `lockfile` and its `package.json` (TASK 111 R5.2).
@@ -95,15 +138,19 @@ def npm_audit_dir(lockfile: Path) -> Iterator[Optional[Path]]:
     npm reads `.npmrc` from the directory it runs in, and an audited subdirectory may be vendored
     code: its `.npmrc` could redirect the registry or the cache. A copy leaves it behind; the
     operator's own npm configuration still applies. Yields `None` when no regular `package.json`
-    stands beside the lockfile (R5.6): npm would then audit an ancestor's project instead.
+    stands beside the lockfile (R5.6): npm would then audit an ancestor's project instead. Raises
+    `LockfileCopyError` when a copy raises `OSError`; `shutil` refuses a FIFO before it opens one.
     """
     package = lockfile.parent / "package.json"
     if not package.is_file() or package.is_symlink():
         yield None
         return
     with tempfile.TemporaryDirectory(prefix="npm-audit-") as tmp:
-        shutil.copyfile(lockfile, Path(tmp) / lockfile.name)
-        shutil.copyfile(package, Path(tmp) / "package.json")
+        try:
+            shutil.copyfile(lockfile, Path(tmp) / lockfile.name)
+            shutil.copyfile(package, Path(tmp) / "package.json")
+        except OSError as exc:
+            raise LockfileCopyError(str(exc)) from exc
         yield Path(tmp)
 
 

@@ -2,10 +2,10 @@
 name: security-audit
 description: Use when performing security vulnerability assessment (OWASP, secrets, dependencies, IaC, LLM, API, MCP/agentic) or when "thinking like a hacker" to find exploits.
 tier: 2
-version: 3.11
+version: 3.12
 ---
 
-# Security Audit v3.11
+# Security Audit v3.12
 
 ## 0. Methodology — Two Layers (audit-067 C-10)
 
@@ -54,8 +54,12 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
       a temporary copy of the lockfile and its `package.json`; SKIP_DIRS are skipped
     - a lockfile without its own `package.json` is not audited; npm would audit an ancestor's
       project
-    - an audit that does not finish is an `info` finding naming its lockfile, and the section status
-      counts them
+    - a finished audit yields one finding per npm severity with a non-zero count: `critical`,
+      `high`, `moderate` as `medium`, `low` and `info`; a severity outside the five is a `low`
+      finding "of unknown severity"
+    - `npm_audit_counts` holds the six counts of each finished audit, also when every count is 0
+    - an audit that does not finish is an `info` finding naming its lockfile, with
+      `"audited": false`; the section status counts them, and each is a part not run (exit 3)
   - Code Patterns / Injection (OWASP A05:2025, CWE-79/89/78) — eval, XSS, SQLi, SSTI, SSRF, path traversal, prototype pollution, deserialization
   - **Smart Contract / Solidity** — reentrancy, delegatecall, selfdestruct (EIP-6780), tx.origin, oracle manipulation, unchecked returns, unprotected initializers
   - **Rust** — `unsafe{}`, `transmute`, `mem::forget`, `unwrap_unchecked`, weak RNG
@@ -65,17 +69,117 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
   - IaC / Containers — Docker, Kubernetes, Terraform, CloudFormation patterns
   - **MCP / Agentic (OWASP ASI Top 10 2026)** — MCP config provenance (`mcp.json`, `.mcp.json`, `claude_desktop_config.json`, incl. `.vscode/`), auto-approve keys, permission-bypass flags, unpinned `npx -y`/`uvx` servers, `mcp-remote`, cleartext MCP URLs, inline env secrets, shell-spawning servers, tool-description poisoning heuristics — all findings CWE+ASI tagged
   - SBOM — recursive Software Bill of Materials presence check (honors SKIP_DIRS)
-- **External Tools** (when `--scan-type all` or `--scan-type external`): Auto-runs `semgrep --config auto`, `gitleaks` (or `trufflehog` fallback), `slither`, `bandit`, `pip-audit`, `npm audit`, `cargo audit`, `govulncheck`, `gosec`, `checkov`, `trivy` if detected; `snyk-agent-scan` (ex-Invariant `mcp-scan`) when MCP config artifacts are detected — never with auto-start flags (servers stay consent-gated).
+- **External Tools** (when `--scan-type all` or `--scan-type external`): one record per tool in the
+  report's `external` section, also for a project with no detected type. MCP servers are never
+  started: `snyk-agent-scan` runs with no auto-start flag (servers stay consent-gated). See
+  **External layer** below.
 - **`npm audit` (external)** runs in each npm lockfile directory, as the dependency scan does.
 - **`yarn audit` (external)** runs in a temporary copy of the root `yarn.lock` and its
   `package.json`, so the project's `.yarnrc` and `.yarnrc.yml` take no part (TASK 112 R5.1).
 - **`--scan-type external`** runs **ONLY** external tools and SKIPS the in-process regex scans. Use `--scan-type all` (default) to run both.
-- **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines.
+- **CI/CD Gate**: Use `--fail-on critical` to exit with code 1 in CI pipelines. See **Exit codes**
+  below.
 - **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).
 - **ReDoS guard**: lines longer than 4000 chars are skipped during pattern scanning (prevents catastrophic backtracking on minified code).
 - **Self-Exclusion**: The scanner skips its own source files to prevent false positives.
 - **CWE Mapping**: All findings include CWE identifiers for compliance integration.
 - **Known Limitation**: The scanner uses **regex-only** (no AST parsing). It WILL match patterns inside comments, docstrings, and string literals. This is a deliberate trade-off: false positives on comments are preferable to false negatives on real vulnerabilities. Always **manually verify** findings before acting.
+
+### External layer (TASK 118)
+
+Each external tool fills a **slot**. A fallback tool fills the slot of the tool it replaces, and
+starts only when the first tool is not installed or timed out. A slot is selected when it holds a
+record.
+
+| Slot | Tools, first to fallback | Selected for |
+| :--- | :--- | :--- |
+| `sast` | semgrep | every scan |
+| `secrets-tree` | gitleaks, trufflehog | every scan |
+| `secrets-history` | gitleaks | every scan |
+| `solidity` | slither | type solidity |
+| `python-sast` | bandit | type python |
+| `python-deps` | pip-audit | type python |
+| `npm-audit:<lockfile>` | npm | each npm lockfile |
+| `yarn-audit` | yarn | type javascript, with a root `yarn.lock` |
+| `rust-deps`, `rust-lint` | cargo audit, cargo clippy | type rust |
+| `go-deps`, `go-sast` | govulncheck, gosec | type go |
+| `iac`, `iac-misconfig` | checkov, trivy | type iac |
+| `mcp` | snyk-agent-scan, mcp-scan | type mcp |
+
+- **Record.** Each record holds `slot`, `tool`, `command`, `where`, `status`, `exit_code` and
+  `reason`. `status` is `ran` (with the exit code), `killed` (a signal ended it; a negative exit
+  code), `not_installed`, `timed_out` (600 s), `not_run` (the scanner declined, with a reason) or
+  `not_applicable` (no input, with a reason). A `killed` record does not complete its slot.
+- **Lockfiles.** A lockfile or `package.json` whose copy fails, such as a FIFO, is not audited:
+  reason `the lockfile could not be copied`.
+- **Section status.** `NOT_RUN` when no tool ran; `COMPLETE` when every selected slot has a `ran`
+  or `not_applicable` record; `PARTIAL` otherwise.
+- **Secrets.** `secrets-tree` runs `gitleaks detect --no-git`, which reads the files of the working
+  tree, uncommitted and ignored ones included; its fallback is `trufflehog filesystem --fail`.
+  `secrets-history` runs gitleaks in git mode when the scanned root, or a parent of its real path,
+  holds a `.git` directory or file or is a bare repository. A `.git` link, a special file, an
+  unreadable `.git` or a bare repository that holds a link is `not_run`; no repository on the path
+  is `not_applicable`.
+- **Git mode runs git in the scanned tree's repository.** git reads that repository's
+  configuration, and the configuration can name commands that git runs. Scan the history of an
+  untrusted tree only in an isolated environment, such as a container that holds no credentials
+  (WI-49).
+- **No `trufflehog git`.** No slot runs trufflehog's `git` mode: CVE-2025-41390 (Talos
+  TALOS-2025-2243) executed the `core.fsmonitor` command of a scanned repository's `.git/config`.
+  trufflehog runs in `filesystem` mode only. The bullet above still applies to gitleaks.
+- **Tools that run project code.** `cargo clippy` builds the crate and runs its `build.rs`;
+  `slither` compiles through the project's build framework; `checkov` reads the project's
+  configuration and can load checks from it (WI-37, dropped).
+- **Configuration in the scanned tree.** A tool can read configuration files that the tree holds,
+  such as `.gitleaks.toml`, `.gitleaksignore`, `.semgrepignore` and `.trivyignore`. Such a file can
+  silence the tool, which then exits 0 (WI-50).
+- **Text from the tree.** In the scanner's own lines, paths and messages from the scanned tree are
+  printed with each control, format, line-separator or paragraph-separator character escaped as
+  `\xNN`, `\uNNNN` or `\UNNNNNNNN`; the JSON keeps the escaping of `json.dumps`. The external
+  tools' own output reaches stderr as they print it, unescaped.
+- **Exit on a finding.** trufflehog runs with `--fail` and trivy with `--exit-code 1`, so a finding
+  exits non-zero. Under `--fail-on`, npm runs with `--audit-level` at the threshold (`medium` as
+  `moderate`). yarn's exit is not ranked: any advisory exits non-zero.
+- **Output.** A tool's stdout and stderr go to the scanner's stderr, so `--output json` prints one
+  JSON document on stdout.
+
+**Toolset of a complete local run.** A run is complete when each selected slot has one installed
+tool that finishes within 600 s; a `not_applicable` slot needs none. Every scan selects `sast`,
+`secrets-tree` and `secrets-history`; a Python project also selects `python-sast` and
+`python-deps`. With Homebrew:
+
+```bash
+brew install semgrep gitleaks trufflehog bandit pip-audit
+```
+
+The Python tools also install with `pipx install semgrep`, `pipx install bandit` and
+`pipx install pip-audit`. No CI job of this repository runs the external layer; a missing tool
+leaves the scan incomplete.
+
+### Exit codes and summary (TASK 118)
+
+| Exit | Condition |
+| :--- | :--- |
+| 0 | every requested part ran, and no `--fail-on` cause |
+| 1 | `--fail-on` given, and a finding at the threshold or above, or a non-empty `summary.tool_exits` |
+| 3 | no `--fail-on` cause, and a requested part did not run (`summary.scan_complete` is `false`) |
+| 1 | a JSON `error` and no report: a missing directory or a non-positive `--max-size` |
+| 2 | a usage error, from argparse |
+
+- `summary` holds `total_findings`, `critical`, `high`, `medium`, `low`, `info`, `not_run`,
+  `scan_complete`, `tool_exits` and `overall_status` for every scan type, counted before each
+  section is cut to 30 findings.
+- `summary.not_run` names each part that did not run: `external <slot>: <tool> <status>`, or
+  `dependencies: <message>` for an unaudited lockfile. A non-empty list prints `[INCOMPLETE]` and
+  the list on stderr, on exit 3 and beside `[GATE]` on exit 1.
+- `summary.tool_exits` names each tool that ran and exited non-zero: `<tool> exited <N> (<slot>)`.
+  The exit is a finding or an error; the tool's output says which. Exit 1 prints `[GATE]` and its
+  causes on stderr.
+- `overall_status` is never `[OK] SECURE` while a part did not run or a tool exited non-zero. A
+  critical or high finding still ranks first (§6.2: `FAIL` before `INCOMPLETE`).
+- A scan with exit 3, or a non-empty `summary.not_run`, is `scan_status: NOT_RUN` for an auditor;
+  a non-empty `summary.tool_exits` is at least `scan_status: findings`, and `NOT_RUN` when the
+  tool's output shows an error.
 
 ## 3. "Think Like a Hacker" (Adversarial Review)
 

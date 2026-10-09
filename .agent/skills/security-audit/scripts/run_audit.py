@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """
 Skill: security-audit
-Script: run_audit.py v3.11
+Script: run_audit.py v3.12
 Purpose: CLI entry point for security audit scanner.
 Usage: python run_audit.py [project_path] [--scan-type all|deps|secrets|patterns|config|iac|mcp|external|sbom]
        [--fail-on critical|high|medium] [--output json|summary] [--no-limit]
+Exit: 0 every requested part ran and no gate cause; 1 a `--fail-on` cause (a finding at the
+      threshold or above, or an external tool's non-zero exit), or a JSON `error` for a missing
+      directory or a non-positive `--max-size`; 2 a usage error (argparse); 3 a requested part did
+      not run.
 """
 import argparse
 import json
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 # Fix Windows console encoding for Unicode output
 try:
@@ -24,6 +28,9 @@ from audit import (
     SEVERITY_ORDER,
     __version__ as AUDIT_VERSION,
     detect_project_types,
+    external_section,
+    incomplete_slots,
+    printable,
     run_external_tools,
     scan_code_patterns,
     scan_configuration,
@@ -35,21 +42,26 @@ from audit import (
 )
 from audit import config as _audit_config
 
+#: The severities the summary counts (TASK 118 R2.4).
+SUMMARY_SEVERITIES = ("critical", "high", "medium", "low", "info")
+#: Findings each section keeps unless `--no-limit` is given; the summary counts all of them.
+MAX_FINDINGS = 30
 
-def run_full_scan(project_path: str, scan_type: str = "all", no_limit: bool = False) -> Dict[str, Any]:
-    """Execute security validation scans and produce a unified report."""
+
+def run_full_scan(project_path: str, scan_type: str = "all", no_limit: bool = False,
+                  fail_on=None) -> Dict[str, Any]:
+    """Execute the requested scans and produce a unified report.
+
+    The in-process scans of `scan_type` run first, then the external layer for `all` and
+    `external`, also for a project with no detected type (TASK 118 R1.4). The summary counts every
+    finding before each section is cut to `MAX_FINDINGS` (R2.5). `fail_on` sets npm's
+    `--audit-level` (R2.10).
+    """
     report = {
         "project": project_path,
         "timestamp": datetime.now().isoformat(),
         "scan_type": scan_type,
         "scans": {},
-        "summary": {
-            "total_findings": 0,
-            "critical": 0,
-            "high": 0,
-            "medium": 0,
-            "overall_status": "[OK] SECURE"
-        }
     }
 
     scanners = {
@@ -62,48 +74,95 @@ def run_full_scan(project_path: str, scan_type: str = "all", no_limit: bool = Fa
         "sbom": ("sbom", scan_sbom),
     }
 
-    max_findings = 999999 if no_limit else 30
-
     for key, (name, scanner) in scanners.items():
         if scan_type == "all" or scan_type == key:
             print(f"[*] Running {name} scan...", file=sys.stderr)
-            result = scanner(project_path)
+            report["scans"][name] = scanner(project_path)
 
-            # Truncate findings (already sorted by severity)
-            if len(result.get("findings", [])) > max_findings:
-                truncated = len(result["findings"]) - max_findings
-                result["findings"] = result["findings"][:max_findings]
-                result["truncated"] = truncated
+    if scan_type in ("all", "external"):
+        types = detect_project_types(project_path)
+        report["external"] = external_section(run_external_tools(project_path, types, fail_on))
 
-            report["scans"][name] = result
+    report["summary"] = summarize(report)
 
-            for finding in result.get("findings", []):
-                sev = finding.get("severity", "low")
-                report["summary"]["total_findings"] += 1
-                if sev in report["summary"]:
-                    report["summary"][sev] += 1
-
-    if report["summary"]["critical"] > 0:
-        report["summary"]["overall_status"] = "[!!] CRITICAL ISSUES FOUND"
-    elif report["summary"]["high"] > 0:
-        report["summary"]["overall_status"] = "[!] HIGH RISK ISSUES"
-    elif report["summary"]["total_findings"] > 0:
-        report["summary"]["overall_status"] = "[?] REVIEW RECOMMENDED"
+    # Truncate findings (already sorted by severity), after the summary counted them all.
+    if not no_limit:
+        for result in report["scans"].values():
+            if len(result.get("findings", [])) > MAX_FINDINGS:
+                result["truncated"] = len(result["findings"]) - MAX_FINDINGS
+                result["findings"] = result["findings"][:MAX_FINDINGS]
 
     return report
 
 
+def summarize(report: Dict[str, Any]) -> Dict[str, Any]:
+    """The summary of a report (TASK 118 R2.1 to R2.4, R2.9)."""
+    summary = {"total_findings": 0, **dict.fromkeys(SUMMARY_SEVERITIES, 0)}
+    not_run: List[str] = []
+    for name, result in report["scans"].items():
+        for finding in result.get("findings", []):
+            summary["total_findings"] += 1
+            sev = finding.get("severity", "low")
+            if sev in summary:
+                summary[sev] += 1
+            if finding.get("audited") is False:
+                not_run.append(f"{name}: {finding.get('message')}")
+
+    records = report.get("external", {}).get("tools", [])
+    for slot, last in incomplete_slots(records):
+        entry = f"external {slot}: {last['tool']} {last['status']}"
+        if last["status"] == "not_run":
+            entry += f", {last['reason']}"
+        not_run.append(entry)
+    tool_exits = [f"{r['tool']} exited {r['exit_code']} ({r['slot']})"
+                  for r in records if r["status"] == "ran" and r["exit_code"] != 0]
+
+    summary["not_run"] = not_run
+    summary["scan_complete"] = not not_run
+    summary["tool_exits"] = tool_exits
+
+    if summary["critical"] > 0:
+        summary["overall_status"] = "[!!] CRITICAL ISSUES FOUND"
+    elif summary["high"] > 0:
+        summary["overall_status"] = "[!] HIGH RISK ISSUES"
+    elif not_run:
+        summary["overall_status"] = f"[?] INCOMPLETE: {len(not_run)} part(s) did not run"
+    elif summary["total_findings"] > 0 or tool_exits:
+        summary["overall_status"] = "[?] REVIEW RECOMMENDED"
+    else:
+        summary["overall_status"] = "[OK] SECURE"
+    return summary
+
+
+def gate_causes(report: Dict[str, Any], fail_on) -> List[str]:
+    """Each cause of exit 1 under `--fail-on` (TASK 118 R2.6, R2.8); empty without `fail_on`."""
+    if not fail_on:
+        return []
+    summary = report["summary"]
+    threshold = SEVERITY_ORDER[fail_on]
+    causes = [f"{summary[sev]} {sev} finding(s)" for sev, order in SEVERITY_ORDER.items()
+              if order <= threshold and summary.get(sev, 0) > 0]
+    return causes + list(summary["tool_exits"])
+
+
+def exit_code(report: Dict[str, Any], fail_on) -> int:
+    """1 on a `--fail-on` cause, else 3 when a requested part did not run, else 0 (R2.6, R2.7)."""
+    if gate_causes(report, fail_on):
+        return 1
+    return 0 if report["summary"]["scan_complete"] else 3
+
+
 def print_summary(report: Dict[str, Any]):
-    """Print human-readable summary to stdout."""
+    """Print human-readable summary to stdout; text from the scanned tree is escaped (R1.10)."""
+    summary = report["summary"]
     print(f"\n{'='*60}")
-    print(f"Security Scan v{AUDIT_VERSION}: {report['project']}")
+    print(f"Security Scan v{AUDIT_VERSION}: {printable(report['project'])}")
     print(f"Timestamp: {report['timestamp']}")
     print(f"{'='*60}")
-    print(f"Status: {report['summary']['overall_status']}")
-    print(f"Total Findings: {report['summary']['total_findings']}")
-    print(f"  Critical: {report['summary']['critical']}")
-    print(f"  High: {report['summary']['high']}")
-    print(f"  Medium: {report['summary']['medium']}")
+    print(f"Status: {summary['overall_status']}")
+    print(f"Total Findings: {summary['total_findings']}")
+    for sev in SUMMARY_SEVERITIES:
+        print(f"  {sev.capitalize()}: {summary[sev]}")
 
     total_skipped = sum(s.get('skipped_files', 0) for s in report['scans'].values())
     if total_skipped > 0:
@@ -113,10 +172,19 @@ def print_summary(report: Dict[str, Any]):
     if total_truncated > 0:
         print(f"  Truncated: {total_truncated} findings hidden (use --no-limit)")
 
+    if summary["not_run"]:
+        print("Not run:")
+        for entry in summary["not_run"]:
+            print(f"  - {printable(entry)}")
+    if summary["tool_exits"]:
+        print("Tool exits:")
+        for entry in summary["tool_exits"]:
+            print(f"  - {printable(entry)}")
+
     print(f"{'='*60}\n")
 
     for scan_name, scan_result in report['scans'].items():
-        print(f"\n{scan_name.upper()}: {scan_result['status']}")
+        print(f"\n{scan_name.upper()}: {printable(scan_result['status'])}")
         for finding in scan_result.get('findings', [])[:10]:
             sev = finding.get('severity', 'INFO').upper()
             desc = finding.get('type') or finding.get('pattern') or finding.get('issue')
@@ -130,10 +198,20 @@ def print_summary(report: Dict[str, Any]):
                 f_str += f":{finding['line']}"
             if 'message' in finding:
                 f_str += f" - {finding['message']}"
-            print(f_str)
+            print(printable(f_str))
+
+    if "external" in report:
+        print(f"\nEXTERNAL: {report['external']['status']}")
+        for record in report["external"]["tools"]:
+            line = f"  - {record['slot']}: {record['tool']} {record['status']}"
+            if record["status"] in ("ran", "killed"):
+                line += f" (exit {record['exit_code']})"
+            elif record["reason"]:
+                line += f" ({record['reason']})"
+            print(printable(line))
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=f"Security Audit Tool v{AUDIT_VERSION}")
     parser.add_argument("project_path", nargs="?", default=".", help="Project directory")
     parser.add_argument("--scan-type",
@@ -142,14 +220,15 @@ def main():
     parser.add_argument("--output", choices=["json", "summary"], default="summary",
                         help="Output format")
     parser.add_argument("--fail-on", choices=["critical", "high", "medium"],
-                        default=None, help="Exit with code 1 if findings >= this severity (for CI/CD)")
+                        default=None, help="Exit with code 1 if findings >= this severity, or an "
+                                           "external tool exits non-zero (for CI/CD)")
     parser.add_argument("--no-limit", action="store_true",
                         help="Do not truncate findings list")
     parser.add_argument("--max-size", type=int, default=None, metavar="MB",
                         help=f"Max file size to scan in MB (default: {_audit_config.MAX_FILE_SIZE // (1024*1024)}). "
                              "Increase for large minified bundles.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.max_size is not None:
         if args.max_size <= 0:
@@ -161,33 +240,26 @@ def main():
         print(json.dumps({"error": f"Directory not found: {args.project_path}"}))
         sys.exit(1)
 
-    exit_code = 0
+    report = run_full_scan(args.project_path, args.scan_type, args.no_limit, args.fail_on)
 
-    # Run Pattern Matching Scans
-    if args.scan_type != "external":
-        result = run_full_scan(args.project_path, args.scan_type, args.no_limit)
+    if args.output == "summary":
+        print_summary(report)
+    else:
+        print(json.dumps(report, indent=2))
+    sys.stdout.flush()
 
-        if args.output == "summary":
-            print_summary(result)
-        else:
-            print(json.dumps(result, indent=2))
+    code = exit_code(report, args.fail_on)
+    causes = gate_causes(report, args.fail_on)
+    if causes:
+        print(f"\n[GATE] --fail-on {args.fail_on}:", file=sys.stderr)
+        for cause in causes:
+            print(f"  - {printable(cause)}", file=sys.stderr)
+    if not report["summary"]["scan_complete"]:
+        print("\n[INCOMPLETE]", file=sys.stderr)
+        for entry in report["summary"]["not_run"]:
+            print(f"  - {printable(entry)}", file=sys.stderr)
 
-        # CI/CD gate: exit with error if findings meet threshold
-        if args.fail_on:
-            threshold = SEVERITY_ORDER[args.fail_on]
-            for sev_name, sev_order in SEVERITY_ORDER.items():
-                if sev_order <= threshold and result["summary"].get(sev_name, 0) > 0:
-                    exit_code = 1
-                    print(f"\n[GATE] --fail-on {args.fail_on}: Found {sev_name} issues. Exit code 1.")
-                    break
-
-    # Run External Tools
-    if args.scan_type == "all" or args.scan_type == "external":
-        types = detect_project_types(args.project_path)
-        if types:
-            run_external_tools(args.project_path, types)
-
-    sys.exit(exit_code)
+    sys.exit(code)
 
 
 if __name__ == "__main__":

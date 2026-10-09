@@ -35,6 +35,11 @@ Run after implementation (and optionally after VDD-Adversarial) for critical pro
      report. **Never invent the output** (`security-audit` §1). `NOT_RUN` makes the audit
      `INCOMPLETE`, or `FAIL` when step 3 finds a CRITICAL or HIGH issue, never `PASS` — step 4's
      "until clean" loop cannot be satisfied by a scan that never ran.
+   - **A partial scan is `NOT_RUN`.** Exit 3, or a `summary.not_run` list that is not empty,
+     records `scan_status: NOT_RUN (<the parts it names>)`. A `summary.tool_exits` list that is
+     not empty records at least `scan_status: findings`, and `scan_status: NOT_RUN` when the
+     tool's output shows an error (`security-audit` §2). A run that prints no report, such as
+     exit 1 with a JSON `error` or exit 2, records `scan_status: NOT_RUN`.
 
 3. **Manual Adversarial Review ("Think Like a Hacker")**
    - Refer to `.agent/skills/security-audit/SKILL.md` Section 3.

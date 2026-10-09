@@ -85,6 +85,14 @@ STEP_4 = _flat("""
         round: the scope of each route as a residual in the TASK, and one backlog record that
         holds them. The operator chooses between that record and one more round. TASK 116 ran
         seven rounds; from round 4 on, each found a narrower route of one class (WI-48).
+      - **Boundary.** A review round checks the change against its TASK and the lines it touches.
+        Code that the change makes run, or run without a prompt, is among those lines. Any other
+        finding, unless the change causes it as a regression, is one line in the audit record, with
+        its severity, marked as before the task. Such a finding does not set the round's verdict;
+        one of CRITICAL or HIGH severity is named to the operator when the round ends. A new backlog
+        record needs the operator's decision. Each reviewer's brief states this boundary. TASK 119
+        filed two records from such findings, and the operator removed them. WI-52 records this
+        rule.
    3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
       into its file, or the new code over the code it replaces, and removes the copy under the new
       name. Only the retro's records follow this edit. The same edit adds a settings test that

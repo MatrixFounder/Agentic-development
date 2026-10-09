@@ -16,6 +16,17 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.41.0 — stage 2 of framework-upgrade holds its reviews to the TASK and the lines the change touches (TASK 120)**
+
+#### Changed
+
+- **Stage 2 of `/framework-upgrade` holds its reviews to the TASK and the lines the change
+  touches** (WI-52). Code that the change makes run, or run without a prompt, counts among
+  those lines. Any other finding, unless the change causes it as a regression, is one line in
+  the audit record, with its severity, marked as before the task. It does not set the round's
+  verdict, and a CRITICAL or HIGH one is named to the operator. A new backlog record needs the
+  operator's decision. Each reviewer's brief states the boundary.
+
 ### **v3.40.1 — the in-process scans skip a file that is not regular, and printable escapes the backslash (TASK 119)**
 
 #### Fixed

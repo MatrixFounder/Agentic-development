@@ -380,6 +380,12 @@ labelled with the answer.
    confirms, it removes the declared created files, restores the declared paths with
    `git restore --source=<base>`, and checks that only the audit remains. No copy is written
    outside version control.
+5. **Review Boundary:** Stage-2 reviews (`framework-upgrade` §3 step 4) check the change against
+   its TASK and the lines it touches. Code that the change makes run, or run without a prompt,
+   is among those lines. Any other finding, unless the change causes it as a regression, is one
+   line in the audit record, with its severity, and does not set the round's verdict. A CRITICAL
+   or HIGH finding of that kind is named to the operator. A new backlog record needs the
+   operator's decision.
 
 ### ✅ Recommended Strategy
 For critical system updates, follow this **Hybrid Verification Loop**:

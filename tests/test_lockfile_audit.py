@@ -41,7 +41,20 @@ on the runner does not start. This file pins:
   lockfile that cannot be copied is not audited, and the scanner still prints its report
   (``TC-D8``);
 * a tool killed by a signal leaves its slot a part not run (``TC-E18``), and text from the scanned
-  tree reaches printed output with its control characters escaped (``TC-E19``).
+  tree reaches printed output with its control characters escaped (``TC-E19``, ``TC-E19b``).
+
+TASK 119 (WI-51) adds:
+
+* an in-process scan skips a file that is not regular, such as a FIFO, and counts it in
+  `skipped_files`; the run never blocks on it (``TC-F1``, ``TC-F2``); a link to a regular file in
+  the scanned root is still read (``TC-F3``), and one whose real path leaves the root is skipped
+  (``TC-F9``);
+* `AuditTestCase` runs the fake `npm` with `PATH` the fake `bin`, `/usr/bin` and `/bin` only
+  (``TC-F4``);
+* `printable` escapes the backslash (``TC-F5``);
+* `open_regular_text` opens with `O_BINARY` and `O_NOCTTY` where the platform has them, closes the
+  descriptor of a refused file, and checks the size limit on the opened descriptor (``TC-F6`` to
+  ``TC-F8``).
 
 `RUN_AUDIT_PATH` and `RUN_AUDIT_CMD` name the `run_audit.py` that the tests load and start; a test
 reads them at call time. The in-process cases stop the `.git` walk at their temporary directory;
@@ -131,7 +144,9 @@ class AuditTestCase(unittest.TestCase):
         self.log = self.tmp / "npm.log"
         self.reply = self.tmp / "reply.json"
         self.set_reply({"vulnerabilities": {}})
-        env = {"PATH": f"{self.bin}{os.pathsep}{os.environ.get('PATH', '')}",
+        # The fake `npm` calls `ls`, `tr`, `cat` and `grep`; a tool installed elsewhere, such as
+        # under `/opt/homebrew/bin`, must not start in a case (TASK 119 R2).
+        env = {"PATH": os.pathsep.join((str(self.bin), "/usr/bin", "/bin")),
                "FAKE_NPM_LOG": str(self.log), "FAKE_NPM_REPLY": str(self.reply)}
         patcher = mock.patch.dict(os.environ, env)
         patcher.start()
@@ -928,6 +943,123 @@ class TestRunAudit(ToolCase):
                          (31, 1))
         self.assertEqual(len(report["scans"]["secrets"]["findings"]), 30)
         self.assertEqual(run_audit.exit_code(report, "critical"), 1)
+
+
+class TestNonRegularFiles(ToolCase):
+    """TC-F1 to TC-F3 (TASK 119 R1): a subprocess per scan type, `PATH` the fake `bin` only."""
+
+    #: FIFOs under the scanned root, and how many of them each in-process scan reads.
+    FIFOS = ("app.js", "config.json", "main.tf", ".mcp.json")
+    READS = {"secrets": 3, "code_patterns": 1, "configuration": 2, "iac": 3, "mcp_agentic": 3}
+    TYPES = {"secrets": "secrets", "code_patterns": "patterns", "configuration": "config",
+             "iac": "iac", "mcp_agentic": "mcp"}
+
+    def scan(self, scan_type):
+        """`run_audit.py --scan-type <type>` with a 20 s timeout; a blocked scan fails the case."""
+        env = {"PATH": str(self.bin), "PYTHONDONTWRITEBYTECODE": "1"}
+        return subprocess.run([*RUN_AUDIT_CMD, str(self.project), "--scan-type", scan_type,
+                               "--output", "json"], env=env, capture_output=True, text=True,
+                              timeout=20)
+
+    def test_f1_each_scan_skips_a_fifo(self):
+        for name in self.FIFOS:
+            os.mkfifo(self.project / name)
+        for section, scan_type in self.TYPES.items():
+            with self.subTest(scan=scan_type):
+                proc = self.scan(scan_type)
+                report = json.loads(proc.stdout)
+                self.assertEqual(report["scans"][section]["skipped_files"], self.READS[section],
+                                 proc.stderr)
+                self.assertEqual(proc.stderr.count("not a regular file"), self.READS[section],
+                                 proc.stderr)
+
+    def test_f2_a_fifo_requirements_txt_is_not_a_hash_pinned_lock(self):
+        (self.project / "pyproject.toml").write_text('[project]\nname = "x"\n')
+        os.mkfifo(self.project / "requirements.txt")
+        report = json.loads(self.scan("deps").stdout)
+        self.assertTrue(any(f.get("type") == "Missing Lock File" and "python" in f["message"]
+                            for f in report["scans"]["dependencies"]["findings"]), report)
+
+    @staticmethod
+    def secret(path):
+        path.write_text('const key = "' + "AKIA" + "Z" * 16 + '";\n')
+
+    def test_f3_a_link_to_a_regular_file_is_still_read(self):
+        (self.project / "sub").mkdir()
+        self.secret(self.project / "sub" / "real.txt")
+        (self.project / "link.js").symlink_to(self.project / "sub" / "real.txt")
+        report = json.loads(self.scan("secrets").stdout)
+        findings = report["scans"]["secrets"]["findings"]
+        self.assertTrue(any(f.get("file", "").endswith("link.js") for f in findings), findings)
+
+    def test_f9_a_link_out_of_the_root_is_skipped(self):
+        self.secret(self.tmp / "outside.txt")
+        (self.project / "out.js").symlink_to(self.tmp / "outside.txt")
+        proc = self.scan("secrets")
+        section = json.loads(proc.stdout)["scans"]["secrets"]
+        self.assertEqual(section["findings"], [], section)
+        self.assertEqual(section["skipped_files"], 1)
+        self.assertIn("outside the scanned root", proc.stderr)
+
+
+class TestHelperPath(AuditTestCase):
+    """TC-F4 (TASK 119 R2): the fake `npm` sees the system directories, not the machine's tools."""
+
+    def test_f4_path_is_the_fake_bin_and_the_system_directories(self):
+        self.assertEqual(os.environ["PATH"].split(os.pathsep), [str(self.bin), "/usr/bin", "/bin"])
+
+
+class TestOpenRegularText(unittest.TestCase):
+    """TC-F6 to TC-F8 (TASK 119 R1.1)."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+
+    def test_f6_open_passes_binary_and_noctty(self):
+        seen = []
+
+        def fake_open(path, flags, *args, **kwargs):
+            seen.append(flags)
+            raise OSError("stop")
+
+        with mock.patch.object(helpers.os, "O_BINARY", 0x10000, create=True), \
+                mock.patch.object(helpers.os, "O_NOCTTY", 0x20000, create=True), \
+                mock.patch.object(helpers.os, "open", side_effect=fake_open):
+            with self.assertRaises(OSError):
+                helpers.open_regular_text(self.tmp / "x.js")
+        self.assertEqual(seen[0] & 0x30000, 0x30000, hex(seen[0]))
+
+    def test_f7_a_refusal_closes_the_descriptor(self):
+        link = self.tmp / "null.js"
+        link.symlink_to("/dev/null")
+        before = len(os.listdir("/dev/fd"))
+        for _ in range(1000):
+            with self.assertRaisesRegex(OSError, "not a regular file"):
+                helpers.open_regular_text(link)
+        self.assertEqual(len(os.listdir("/dev/fd")), before)
+
+    def test_f8_size_limit_on_the_descriptor_and_a_blocking_stream(self):
+        big = self.tmp / "big.js"
+        big.write_text("x" * 100)
+        config = importlib.import_module(f"{NAME}.config")
+        with mock.patch.object(config, "MAX_FILE_SIZE", 10):
+            with self.assertRaisesRegex(OSError, "exceeds the size limit"):
+                helpers.open_regular_text(big)
+        with helpers.open_regular_text(big) as stream:
+            if hasattr(os, "O_NONBLOCK"):
+                import fcntl
+                self.assertFalse(fcntl.fcntl(stream.fileno(), fcntl.F_GETFL) & os.O_NONBLOCK)
+            self.assertEqual(stream.read(), "x" * 100)
+
+
+class TestPrintableBackslash(unittest.TestCase):
+    """TC-F5 (TASK 119 R3)."""
+
+    def test_f5_printable_doubles_the_backslash(self):
+        self.assertEqual(helpers.printable("\\"), "\\\\")
+        self.assertEqual(helpers.printable("a\\x0ab"), "a\\\\x0ab")
+        self.assertEqual(helpers.printable("a\x1bb"), "a\\x1bb")
 
 
 if __name__ == "__main__":

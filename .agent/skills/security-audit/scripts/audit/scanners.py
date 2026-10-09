@@ -24,6 +24,7 @@ from .helpers import (
     find_npm_lockfiles,
     is_self_path,
     npm_audit_dir,
+    open_regular_text,
     printable,
     shannon_entropy,
     sort_findings_by_severity,
@@ -162,7 +163,7 @@ def scan_dependencies(project_path: str) -> Dict[str, Any]:
         if not req.exists():
             return False
         try:
-            with open(req, 'r', encoding='utf-8', errors='ignore') as f:
+            with open_regular_text(req, base) as f:
                 # Stop scanning after 1MB; hash lines appear early in real pip-compile output.
                 sample = f.read(1024 * 1024)
             return '--hash=sha256:' in sample
@@ -247,7 +248,7 @@ def scan_secrets(project_path: str) -> Dict[str, Any]:
             results["scanned_files"] += 1
 
             try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                with open_regular_text(filepath, project_path) as f:
                     content = f.read()
                     # ReDoS guard: filter out pathologically long lines before regex.
                     # All SECRET_PATTERNS are line-local (no multi-line matches in the
@@ -340,7 +341,7 @@ def scan_code_patterns(project_path: str) -> Dict[str, Any]:
             results["scanned_files"] += 1
 
             try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                with open_regular_text(filepath, project_path) as f:
                     lines = f.readlines()
                     for line_num, line in enumerate(lines, 1):
                         # ReDoS guard: skip pathologically long lines (minified bundles, token blobs).
@@ -400,7 +401,7 @@ def scan_configuration(project_path: str) -> Dict[str, Any]:
                 continue
 
             try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                with open_regular_text(filepath, project_path) as f:
                     content = f.read()
                     for pattern, issue, severity, cwe in CONFIG_PATTERNS:
                         if re.search(pattern, content, re.IGNORECASE):
@@ -458,7 +459,7 @@ def scan_iac(project_path: str) -> Dict[str, Any]:
             results["scanned_files"] += 1
 
             try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                with open_regular_text(filepath, project_path) as f:
                     content = f.read()
 
                     # ReDoS guard: IaC patterns may span lines (re.MULTILINE). Instead of
@@ -612,7 +613,7 @@ def scan_mcp_agentic(project_path: str) -> Dict[str, Any]:
             results["scanned_files"] += 1
 
             try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                with open_regular_text(filepath, project_path) as f:
                     content = f.read()
 
                 rel = str(filepath.relative_to(project_path))

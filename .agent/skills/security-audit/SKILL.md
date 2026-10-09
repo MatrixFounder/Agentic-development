@@ -82,6 +82,11 @@ python3 .agent/skills/security-audit/scripts/run_audit.py [project_path] \
 - **`--max-size MB`**: default 15 MB per file. Increase for large minified bundles (vendor.js/bundle.js can be 20+ MB).
 - **ReDoS guard**: lines longer than 4000 chars are skipped during pattern scanning (prevents catastrophic backtracking on minified code).
 - **Self-Exclusion**: The scanner skips its own source files to prevent false positives.
+- **Files that are not regular**: the in-process scans read a file only when it is a regular file
+  within the size limit, checked on the opened file. A FIFO, a device or a socket, or a link to
+  one, is skipped and counted in `skipped_files`, and stderr names the reason; the scan does not
+  wait on it. A link to a regular file inside the scanned root is read; a file whose real path
+  leaves the root is skipped and counted, with the reason `outside the scanned root`.
 - **CWE Mapping**: All findings include CWE identifiers for compliance integration.
 - **Known Limitation**: The scanner uses **regex-only** (no AST parsing). It WILL match patterns inside comments, docstrings, and string literals. This is a deliberate trade-off: false positives on comments are preferable to false negatives on real vulnerabilities. Always **manually verify** findings before acting.
 
@@ -135,8 +140,10 @@ record.
   silence the tool, which then exits 0 (WI-50).
 - **Text from the tree.** In the scanner's own lines, paths and messages from the scanned tree are
   printed with each control, format, line-separator or paragraph-separator character escaped as
-  `\xNN`, `\uNNNN` or `\UNNNNNNNN`; the JSON keeps the escaping of `json.dumps`. The external
-  tools' own output reaches stderr as they print it, unescaped.
+  `\xNN`, `\uNNNN` or `\UNNNNNNNN`, and a backslash is doubled; the JSON keeps the escaping of
+  `json.dumps`. The external tools' own output reaches stderr as they print it, unescaped.
+- **`mcp-scan` fallback.** It runs with no argument. Whether it then scans the scanned tree or the
+  operator's own MCP configuration is not verified.
 - **Exit on a finding.** trufflehog runs with `--fail` and trivy with `--exit-code 1`, so a finding
   exits non-zero. Under `--fail-on`, npm runs with `--audit-level` at the threshold (`medium` as
   `moderate`). yarn's exit is not ranked: any advisory exits non-zero.
@@ -179,7 +186,8 @@ leaves the scan incomplete.
   critical or high finding still ranks first (§6.2: `FAIL` before `INCOMPLETE`).
 - A scan with exit 3, or a non-empty `summary.not_run`, is `scan_status: NOT_RUN` for an auditor;
   a non-empty `summary.tool_exits` is at least `scan_status: findings`, and `NOT_RUN` when the
-  tool's output shows an error.
+  tool's output shows an error. A run that prints no report, such as exit 1 with a JSON `error` or
+  exit 2, is `NOT_RUN`.
 
 ## 3. "Think Like a Hacker" (Adversarial Review)
 

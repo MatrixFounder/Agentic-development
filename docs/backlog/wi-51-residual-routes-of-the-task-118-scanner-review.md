@@ -1,16 +1,29 @@
 ---
 id: WI-51
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-09
 slug: wi-51-residual-routes-of-the-task-118-scanner-review
 effort: M
 value: 'a security-audit scan never blocks on, or reads complete after, a part it did not scan'
 source: 'TASK 118 stage 2, round 2 (D18)'
 component: '.agent/skills/security-audit/scripts/'
+resolved_at: 2026-10-09
+resolved_by: 'TASK 119'
 ---
 
 # WI-51 — Residual routes of the TASK 118 scanner review
+
+> **Done 2026-10-09 (TASK 119).** Five routes are fixed:
+>
+> - the in-process scans open a file without waiting and read it only when it is regular and its
+>   real path stays in the scanned root; a FIFO is skipped and counted in `skipped_files`;
+> - the test helper's `PATH` holds the fake `bin`, `/usr/bin` and `/bin` only;
+> - `printable` doubles the backslash;
+> - the test docstring lists TC-E19b; §2 states that a run with no report is `NOT_RUN`.
+>
+> The other two close without a fix: the wrapper's positive exit code is covered by D13 of TASK
+> 118; §2 states that the target of the `mcp-scan` fallback is not verified.
 
 **Signal.** Stage 2 of TASK 118 left four routes outside its fix rounds. Each was found by a
 reviewer of that run and is recorded in `docs/reviews/framework-audit-118.md`:

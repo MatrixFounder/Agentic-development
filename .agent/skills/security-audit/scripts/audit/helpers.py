@@ -4,6 +4,7 @@ import math
 import os
 import unicodedata
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional
 
+from . import config as _config
 from .config import (
     MCP_CONFIG_FILENAMES,
     SELF_DIR,
@@ -67,11 +69,14 @@ def printable(text) -> str:
 
     A path or a message from the scanned tree can hold a newline, an ANSI escape, a bidirectional
     override or a line separator, and with it forge a line of the scanner's output. The categories
-    of `ESCAPED_CATEGORIES` become `\\xNN`, `\\uNNNN` or `\\UNNNNNNNN`.
+    of `ESCAPED_CATEGORIES` become `\\xNN`, `\\uNNNN` or `\\UNNNNNNNN`, and a backslash is doubled.
     """
     out = []
     for char in str(text):
-        if unicodedata.category(char) in ESCAPED_CATEGORIES:
+        if char == "\\":
+            # A literal backslash is doubled, so it never reads as an escape (TASK 119 R3).
+            out.append("\\\\")
+        elif unicodedata.category(char) in ESCAPED_CATEGORIES:
             code = ord(char)
             if code <= 0xFF:
                 out.append(f"\\x{code:02x}")
@@ -125,6 +130,44 @@ def find_npm_lockfiles(root_dir: str) -> List[Path]:
                 found.append(path)
                 break
     return found
+
+
+#: Flags of `open_regular_text`, each where the platform has it: a FIFO does not wait, a terminal
+#: does not become the controlling one, and Windows reads past a 0x1A byte, as `open()` does.
+_OPEN_FLAGS = ("O_NONBLOCK", "O_NOCTTY", "O_BINARY")
+
+
+def open_regular_text(path, root=None):
+    """A UTF-8 text stream of `path` when it is a regular file (TASK 119 R1).
+
+    With `root`, a path whose real path leaves the real path of `root` is refused before any open,
+    and the real path is opened (D6). The open does not wait on a FIFO. `fstat` then checks the
+    opened descriptor: its type, which cannot change after the open, and its size at the open. A
+    link to a regular file inside `root` is followed, as `open()` does. Each refusal raises
+    `OSError`, which each caller already reports as a skipped file.
+    """
+    if root is not None:
+        real = os.path.realpath(path)
+        base = os.path.realpath(root)
+        if real != base and not real.startswith(base.rstrip(os.sep) + os.sep):
+            raise OSError("outside the scanned root")
+        path = real
+    flags = os.O_RDONLY
+    for name in _OPEN_FLAGS:
+        flags |= getattr(os, name, 0)
+    fd = os.open(path, flags)
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise OSError("not a regular file")
+        if info.st_size > _config.MAX_FILE_SIZE:
+            raise OSError("exceeds the size limit")
+        if getattr(os, "O_NONBLOCK", 0):
+            os.set_blocking(fd, True)
+        return os.fdopen(fd, "r", encoding="utf-8", errors="ignore")
+    except BaseException:
+        os.close(fd)
+        raise
 
 
 class LockfileCopyError(Exception):

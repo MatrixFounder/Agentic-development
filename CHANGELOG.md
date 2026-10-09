@@ -16,6 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.40.1 — the in-process scans skip a file that is not regular, and printable escapes the backslash (TASK 119)**
+
+#### Fixed
+
+- **A FIFO no longer blocks a security-audit scan** (WI-51). The secrets, patterns, configuration,
+  IaC and MCP scans, and the `requirements.txt` check of the dependency scan, opened each file
+  with `open()`, which waits on a FIFO for a writer. They now open it without waiting and read it
+  only when it is a regular file within the size limit, both checked on the opened file. In the
+  five scans any other file is skipped and counted in `skipped_files`, and stderr names the reason;
+  the `requirements.txt` check treats it as no lock. A link to a regular file is still read. On
+  Windows the file opens in binary mode, as `open()` did.
+- **A file outside the scanned tree is no longer read through a link.** The same scans skip and
+  count a file whose real path leaves the scanned root; a link inside the tree is still read.
+- **`printable` doubles the backslash**, so a file name that holds the text `\x0a` no longer prints
+  as an escaped newline does.
+- **The scanner's tests run no installed tool**: the fake `npm` of the dependency tests sees
+  `/usr/bin` and `/bin` only.
+- `security-audit` §2 states that a run with no report is `NOT_RUN`, as the auditor routers do.
+
 ### **v3.40.0 — the security-audit scan reports for each tool whether it ran, reports npm advisories at every severity, and scans the working tree for secrets (TASK 118)**
 
 #### Changed

@@ -140,7 +140,7 @@ Driver logs, gate logs and scratch figures stay in the session's scratchpad unti
 - **A2:** `cp -p` copies; bytes and mode `-rw-r--r--` equal; no rule, hook, test or `System/` file
   names a staged name.
 - **A3:** `base`: 650 passed, 1 skipped; `next --no-prelude`: 650 passed, 1 skipped;
-  `next-selftest`: 225 of 225 rows. The skipped test is `test_render_check.py:811`, "APFS keeps
+  `next-selftest`: 225 of 225 rows. The skipped test is `test_render_check.py:811@b6362e3`, "APFS keeps
   every file name valid UTF-8", before the task.
 - **B1, red:** the R6.5 test failed against the base notation (1 failed, 17 passed).
 - **B2:** the R6.5 test passed; `test_settings_lines` and `test_settings_lines_found` failed until

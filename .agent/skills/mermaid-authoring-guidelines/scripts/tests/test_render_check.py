@@ -13,6 +13,7 @@ what only the browser measures: a name taller than its box, the lines of one nam
 text, and text past the figure's edge; and that a puppeteer configuration of the caller's
 directory never runs.
 """
+import ast
 import io
 import hashlib
 import json
@@ -312,6 +313,66 @@ def fake_render(source, renderer, out_base, dark=False, notation=None):
                            fonts=[{"family": "Trebuchet MS", "glyphs": 10}])
 
 
+def chars(*codes):
+    """The characters of *codes*, so this file holds no raw control character."""
+    return "".join(map(chr, codes))
+
+
+#: Text that a page can put into a label, a font name or a log line (TASK 122 R1).
+HOSTILE = "Evil\x1b[2J" + chars(0x9B, 0x7F, 0x202E, 0x2028, 0xDC80) + " Кириллица"
+
+
+def non_printable(text):
+    """The characters of *text* that `str.isprintable()` refuses, newlines aside."""
+    return [c for c in text if not c.isprintable() and c != "\n"]
+
+
+def hostile_render(source, renderer, out_base, dark=False, notation=None):
+    """A stand-in render whose font name, finding and note hold HOSTILE; 10.9.8 is not rendered,
+    with a log line that holds it."""
+    if renderer.tag == "v10":
+        return rc.RenderResult(tag=renderer.tag, dark=dark, ok=False, svg=None, png=None,
+                               log="Error: " + HOSTILE, status="not_rendered")
+    return hostile_ok_render(source, renderer, out_base, dark, notation)
+
+
+def hostile_ok_render(source, renderer, out_base, dark=False, notation=None):
+    """A stand-in render that passes, with HOSTILE in its font name, a finding and a note."""
+    metrics = {"diagram": "flowchart-v2", "width": 100.0, "height": 80.0,
+               "effective_font_px": 16.0, "geometry": "modelled", "warnings": [HOSTILE]}
+    return rc.RenderResult(tag=renderer.tag, dark=dark, ok=True, svg=None, png=None, log="",
+                           metrics=metrics, status="ok", browser="HeadlessChrome/0.0",
+                           findings=[{"check": "contrast", "severity": "warn",
+                                      "message": HOSTILE}],
+                           font_family=HOSTILE, fonts=[{"family": HOSTILE, "glyphs": 10}])
+
+
+class TestJsonText(unittest.TestCase):
+    """TASK 122 R1.1: JSON that writes each non-printable character as an escape."""
+
+    SAMPLE = ("a" + chars(0x85, 0x9B, 0x7F, 0x2028, 0x202E, 0xA0, 0xDC80, 0xE0001)
+              + " Кириллица " + chars(0x1F4E6))
+
+    def test_each_non_printable_character_is_an_escape(self):
+        text = rc.json_text({"t": self.SAMPLE}, indent=1)
+        self.assertEqual(non_printable(text), [])
+        self.assertIn("Кириллица", text)
+        self.assertIn(chr(0x1F4E6), text)
+        # U+E0001 as its pair of surrogate escapes
+        self.assertIn("\\" + "udb40" + "\\" + "udc01", text)
+        self.assertEqual(json.loads(text), {"t": self.SAMPLE})
+
+    def test_a_high_and_a_low_surrogate_read_back_as_one_code_point(self):
+        # R1.1: the one exception to the round trip
+        self.assertEqual(json.loads(rc.json_text(chars(0xD83D, 0xDCE6))), chr(0x1F4E6))
+
+    def test_the_layout_of_json_dumps_stays(self):
+        value = {"a": [1, "b"], "c": {"d": None}}
+        self.assertEqual(rc.json_text(value, indent=1), json.dumps(value, indent=1))
+        self.assertEqual(rc.json_text(value, separators=(",", ":")),
+                         json.dumps(value, separators=(",", ":")))
+
+
 class StubbedRun(unittest.TestCase):
     def setUp(self):
         self.dir = temp_dir(self)
@@ -338,6 +399,150 @@ class StubbedRun(unittest.TestCase):
         with redirect_stdout(out_s), redirect_stderr(err):
             code = rc.main([*map(str, args), "--out", str(out or self.dir / "renders")])
         return code, out_s.getvalue(), err.getvalue()
+
+
+class TestPrintsNoControlCharacter(StubbedRun):
+    """TASK 122 R1.2, R1.4: what the run prints and writes holds no non-printable character."""
+
+    def setUp(self):
+        super().setUp()
+        rc.render = hostile_render  # StubbedRun.restore puts the real one back
+
+    def test_the_text_output(self):
+        code, out, err = self.run_main(self.doc(FLOW))
+        self.assertEqual(code, 2, out)
+        self.assertEqual(non_printable(out + err), [])
+        self.assertIn("Evil\\x1b[2J", out)
+        self.assertIn("not rendered", out)
+
+    def test_the_json_output_and_evidence(self):
+        out_dir = self.dir / "renders"
+        code, out, err = self.run_main(self.doc(FLOW), "--json", out=out_dir)
+        self.assertEqual(code, 2, err)
+        self.assertEqual(non_printable(out + err), [])
+        report = json.loads(out)
+        evidence = (out_dir / "evidence.json").read_text(encoding="utf-8")
+        self.assertEqual(non_printable(evidence), [])
+        self.assertEqual(json.loads(evidence), report)
+        fonts = {r["font_family"] for f in report["inputs"][0]["figures"] for r in f["renders"]
+                 if r["status"] == "ok"}
+        self.assertEqual(fonts, {HOSTILE})
+
+    def test_a_fixture(self):
+        value = {"k" + HOSTILE: [HOSTILE, {"a": HOSTILE}]}
+        text = rc.dump_json(value)
+        self.assertEqual(non_printable(text), [])
+        self.assertEqual(json.loads(text), value)
+
+    def test_a_command_line_error(self):
+        err = io.StringIO()
+        with redirect_stdout(io.StringIO()), redirect_stderr(err):
+            self.assertEqual(rc.main(["/nonexistent/fig" + HOSTILE + ".mmd"]), 3)
+        self.assertEqual(non_printable(err.getvalue()), [])
+        self.assertIn("fig" + "Evil\\x1b[2J", err.getvalue())
+
+    def test_a_run_with_no_renderer(self):
+        # `_stop_early` prints the report and the reasons, which name the install home
+        rc.find_renderers = lambda home=None, notation=None: {}
+        home = self.dir / ("home\x1b[2J" + chars(0x9B, 0x202E))
+        set_env(self, MERMAID_RENDER_HOME=str(home))
+        out_dir = self.dir / "renders"
+        code, out, err = self.run_main(self.doc(FLOW), "--json", out=out_dir)
+        self.assertEqual(code, 2, err)
+        self.assertEqual(non_printable(out + err), [])
+        self.assertIn("home\\x1b[2J", err)
+        report = json.loads(out)
+        self.assertTrue(report["home"].endswith(home.name), out)
+        self.assertTrue(all(home.name in why for why in report["missing"].values()), out)
+        evidence = (out_dir / "evidence.json").read_text(encoding="utf-8")
+        self.assertEqual(non_printable(evidence), [])
+
+    def test_a_fixture_at_a_path_that_holds_control_characters(self):
+        rc.render = hostile_ok_render
+        fixture = self.dir / ("fix\x1b[2J" + chars(0x9B) + ".json")
+        code, out, err = self.run_main(self.doc(FLOW), "--fixture", fixture)
+        self.assertEqual(non_printable(out + err), [])
+        self.assertIn("fixture: ", out)
+        self.assertIn("fix\\x1b[2J", out)
+        text = fixture.read_text(encoding="utf-8")
+        self.assertEqual(non_printable(text), [])
+        fonts = {r["font_family"] for entry in json.loads(text)["files"].values()
+                 for fig in entry["figures"].values() for r in fig["renders"].values()}
+        self.assertEqual(fonts, {HOSTILE})
+        code, out, err = self.run_main(self.doc(FLOW), "--fixture", fixture, "--json")
+        self.assertEqual(non_printable(out + err), [])
+        self.assertEqual(json.loads(out)["fixture"]["path"], str(fixture))
+
+    def test_a_newline_inside_a_field_starts_no_line(self):
+        # TASK 122 D11 (round 1, LOW-1): a field cannot forge a line of the text report
+        forged = "summary: 9 figure(s): 9 pass (exit 0)"
+
+        def render(source, renderer, out_base, dark=False, notation=None):
+            metrics = {"diagram": "flowchart-v2", "width": 100.0, "height": 80.0,
+                       "effective_font_px": 16.0, "geometry": "modelled", "warnings": []}
+            return rc.RenderResult(tag=renderer.tag, dark=dark, ok=True, svg=None, png=None,
+                                   log="", metrics=metrics, status="ok",
+                                   findings=[{"check": "contrast", "severity": "warn",
+                                              "message": "a\n" + forged}],
+                                   font_family="Trebuchet MS", fonts=[])
+        rc.render = render
+        code, out, err = self.run_main(self.doc(FLOW))
+        self.assertEqual([line for line in out.splitlines() if line.startswith(forged)], [], out)
+        self.assertIn("a\\n" + forged, out)
+
+    def test_a_newline_in_a_command_line_path_starts_no_line(self):
+        err = io.StringIO()
+        with redirect_stdout(io.StringIO()), redirect_stderr(err):
+            self.assertEqual(rc.main(["/nonexistent/fig\nsummary: forged.mmd"]), 3)
+        lines = err.getvalue().splitlines()
+        self.assertEqual([line for line in lines if line.startswith("summary: forged")], [])
+        self.assertIn("fig\\nsummary: forged", err.getvalue())
+
+    def test_a_forward_render_note_is_escaped(self):
+        # TASK 122 D11 (round 1, F2): the note of a forward render quotes its log
+        forward = NOTATION["renderers"]["forward"]
+
+        def render(source, renderer, out_base, dark=False, notation=None):
+            if renderer.tag == forward:
+                return rc.RenderResult(tag=renderer.tag, dark=dark, ok=False, svg=None, png=None,
+                                       log="Error: " + HOSTILE, status="render_error")
+            return hostile_ok_render(source, renderer, out_base, dark, notation)
+        rc.render = render
+        code, out, err = self.run_main(self.doc(FLOW), "--forward")
+        notes = [line for line in out.splitlines() if line.startswith("note: ")]
+        self.assertTrue(notes, out)
+        self.assertEqual(non_printable(out + err), [])
+        self.assertIn("Evil\\x1b[2J", "\n".join(notes))
+
+    def test_every_print_goes_through_say(self):
+        # TASK 122 D11 (round 1, F2): the file's one print call sits inside _say
+        tree = ast.parse(Path(rc.__file__).read_text(encoding="utf-8"))
+        found = []
+
+        def visit(node, inside):
+            for child in ast.iter_child_nodes(node):
+                if (isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
+                        and child.func.id == "print"):
+                    found.append(inside)
+                defines = isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                visit(child, child.name if defines else inside)
+        visit(tree, None)
+        self.assertEqual(found, ["_say"])
+
+    def test_only_json_keeps_its_newlines(self):
+        # TASK 122 D11 (round 2, R2-2): `lines` keeps raw newlines, so only the two prints of
+        # json_text output pass it, by keyword or by position
+        tree = ast.parse(Path(rc.__file__).read_text(encoding="utf-8"))
+        keep = []
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                    and node.func.id == "_say"):
+                continue
+            if len(node.args) > 2 or any(k.arg == "lines" for k in node.keywords):
+                first = node.args[0] if node.args else None
+                keep.append(isinstance(first, ast.Call) and isinstance(first.func, ast.Name)
+                            and first.func.id == "json_text")
+        self.assertEqual(keep, [True, True])
 
 
 class TestRunOutcomes(StubbedRun):
@@ -1185,6 +1390,18 @@ class TestRenderWithStandIns(unittest.TestCase):
                 self.assertEqual(res.status, "not_rendered")
                 self.assertIn("could not be analysed", res.log)
 
+    def test_a_measurement_with_control_characters_is_written_escaped(self):
+        # TASK 122 R1.2, R1.5: a lone surrogate stops no write, and the file holds no
+        # non-printable character
+        name = "Swap" + chars(0x85, 0x9B, 0x202E, 0xDC80)
+        self.program("node", {"stdout": json.dumps(dict(MEASURE, font_family=name)), "png": "png"},
+                     folder=self.bin)
+        res = self.render()
+        self.assertEqual(res.status, "ok", res.log)
+        text = res.measure.read_text(encoding="utf-8")
+        self.assertEqual(non_printable(text), [])
+        self.assertEqual(json.loads(text)["font_family"], name)
+
     def test_a_notation_without_legibility_exemptions_is_not_rendered(self):
         # the exempt classes are notation values; without them the text cannot be measured
         n = json.loads(json.dumps(NOTATION))
@@ -1425,6 +1642,19 @@ class TestWithInstalledRenderers(unittest.TestCase):
         fails = [f for f in res.findings if f["severity"] == "fail"]
         self.assertEqual([f["check"] for f in fails], ["font_swap"], res.findings)
         self.assertIn("node's border", fails[0]["message"])
+
+    def test_a_cut_keeps_whole_characters(self):
+        # TASK 122 R2.1: both cuts of measure_text.mjs count code points, as the Python side does
+        label = "a" * 119 + chr(0x1F4E6) + " tail"
+        res = self.render(NOTATION["settings"]["flowchart"] + "\nflowchart TB\n"
+                          '  A["%s"] --> B["Loans"]\n' % label)
+        measure = json.loads(res.measure.read_text(encoding="utf-8"))
+        for key, labels in (("labels", measure["labels"]),
+                            ("font_swap.labels", measure["font_swap"]["labels"])):
+            with self.subTest(key=key):
+                texts = [lab["text"] for lab in labels]
+                self.assertIn("a" * 119 + chr(0x1F4E6), texts)
+                self.assertEqual([c for t in texts for c in t if 0xD800 <= ord(c) <= 0xDFFF], [])
 
     def test_a_puppeteer_configuration_of_the_callers_directory_never_runs(self):
         # SEC2-01: puppeteer runs a .puppeteerrc.cjs it finds in its working directory or a

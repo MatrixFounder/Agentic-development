@@ -1,6 +1,8 @@
 import json
 import shlex
 import shutil
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -8,22 +10,35 @@ from unittest import mock
 from System.scripts import tool_runner
 from System.scripts.tool_runner import execute_tool
 
+sys.path.append(str(Path(__file__).resolve().parent))
+from _scratch import repo_scratch_dir  # noqa: E402 - needs the path append above
+
 
 class TestToolRunner(unittest.TestCase):
     def setUp(self):
-        self.test_dir = Path("tests/temp_tool_test")
-        self.test_dir.mkdir(exist_ok=True)
-        (self.test_dir / "test.txt").write_text("hello world")
         self.repo_root = Path.cwd().resolve()
+        # an in-repo directory that git ignores: the tool runner reads only repository paths,
+        # and an interrupted run then leaves no untracked path (TASK 122 R3.4)
+        self.test_dir = repo_scratch_dir("tool_").resolve()
+        self.rel = self.test_dir.relative_to(self.repo_root).as_posix()
+        (self.test_dir / "test.txt").write_text("hello world")
 
     def tearDown(self):
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
+    @unittest.skipIf(shutil.which("git") is None, "git is not on PATH")
+    def test_the_scratch_directory_is_ignored(self):
+        # TASK 122 R3.4: the allowed bare pytest runs this test, so its files stay where git
+        # ignores them, and an interrupted run leaves no untracked path
+        done = subprocess.run(["git", "check-ignore", "-q", str(self.test_dir)],
+                              cwd=str(self.repo_root))
+        self.assertEqual(done.returncode, 0)
+
     def test_read_file_success(self):
         tool_call = {
             "name": "read_file",
-            "arguments": json.dumps({"path": "tests/temp_tool_test/test.txt"}),
+            "arguments": json.dumps({"path": f"{self.rel}/test.txt"}),
         }
         result = execute_tool(tool_call)
         self.assertTrue(result["success"])
@@ -32,7 +47,7 @@ class TestToolRunner(unittest.TestCase):
     def test_read_file_not_found(self):
         tool_call = {
             "name": "read_file",
-            "arguments": json.dumps({"path": "tests/temp_tool_test/missing.txt"}),
+            "arguments": json.dumps({"path": f"{self.rel}/missing.txt"}),
         }
         result = execute_tool(tool_call)
         self.assertFalse(result["success"])
@@ -61,22 +76,22 @@ class TestToolRunner(unittest.TestCase):
         tool_call = {
             "name": "write_file",
             "arguments": json.dumps({
-                "path": "tests/temp_tool_test/new.txt",
+                "path": f"{self.rel}/new.txt",
                 "content": "new content",
             }),
         }
         result = execute_tool(tool_call)
         self.assertTrue(result["success"])
-        self.assertTrue((Path("tests/temp_tool_test/new.txt")).exists())
+        self.assertTrue((self.test_dir / "new.txt").exists())
 
     def test_list_directory(self):
         tool_call = {
             "name": "list_directory",
-            "arguments": {"path": "tests/temp_tool_test"},
+            "arguments": {"path": self.rel},
         }
         result = execute_tool(tool_call)
         self.assertTrue(result["success"])
-        self.assertIn("tests/temp_tool_test/test.txt", result["files"])
+        self.assertIn(f"{self.rel}/test.txt", result["files"])
 
     def test_unknown_tool(self):
         tool_call = {"name": "fake_tool", "arguments": {}}

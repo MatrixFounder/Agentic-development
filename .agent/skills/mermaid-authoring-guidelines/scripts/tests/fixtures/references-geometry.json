@@ -3,8 +3,8 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/ascii.md": {
-   "generated": "2026-10-14T21:10:37Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:24:20Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -19,8 +19,8 @@
    "figures": {}
   },
   "references/eval-results.md": {
-   "generated": "2026-10-14T21:10:37Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:24:20Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -35,8 +35,8 @@
    "figures": {}
   },
   "references/flowchart.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -808,8 +808,8 @@
    }
   },
   "references/gantt.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -1407,8 +1407,8 @@
    }
   },
   "references/layout-and-planarity.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -2117,8 +2117,8 @@
    }
   },
   "references/other-kinds.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -3458,8 +3458,8 @@
    }
   },
   "references/renderer-facts.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -6241,8 +6241,8 @@
    }
   },
   "references/review-checklist.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -6429,8 +6429,8 @@
    }
   },
   "references/sequence.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
@@ -6738,8 +6738,8 @@
    }
   },
   "references/state.md": {
-   "generated": "2026-10-14T21:09:16Z",
-   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "generated": "2026-10-15T09:22:43Z",
+   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,

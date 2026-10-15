@@ -745,6 +745,13 @@ scripts only.
   letters, digits, spaces and the characters `*{}:;,!".-` only, and exits 3 on any other. It
   inserts the stylesheet as the text of a `style` element, in the page that runs no script and
   fetches nothing.
+- `render_check.py` escapes each non-printable character in what it writes as JSON and in each
+  line it prints itself, a newline inside a field included. The measurement file, `evidence.json`,
+  a fixture and `--json` take a JSON `\u` escape, and only the layout of the JSON keeps a newline.
+  A printed line takes a Python escape, and the text report prints its lines one by one. argparse's
+  usage and errors stay as they are (TASK 122 D8). A label or a font name from a page therefore
+  drives no terminal and forges no line of the report, and a lone surrogate stops no run. The
+  `.mmd`, SVG and PNG of a render keep the figure's text as written.
 - `run_evals.py` spends tokens and stays off the safe-command list, like `run_authoring.py`.
 
 ### 10.8 Out of scope

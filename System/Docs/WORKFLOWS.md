@@ -295,25 +295,54 @@ run 04-update-docs
 
 ### Quick Reference: Choosing Your Approach
 
+**Figure: choosing your approach.** Four questions route a task to light mode, iterative design, a
+one-step pipeline or a multi-step workflow.
+
 ```mermaid
-graph TD
-    A[New Task] --> T{Trivial Task?}
-    T -->|Yes: typo, bugfix, UI tweak| L[run light]
-    T -->|No| B{Task Complexity?}
-    B -->|Simple/Well-defined| C{Trust Automation?}
-    B -->|Complex/Ambiguous| D[Multi-Step Approach]
-    B -->|Concept/Design| ITER[run iterative-design]
-    C -->|Yes| E[run base-stub-first]
-    C -->|No| D
-    D --> F{Need Adversarial Review?}
-    F -->|Yes| G[VDD Multi-Step]
-    F -->|No| H[TDD Multi-Step]
-    
-    E --> I{Criticality?}
-    I -->|Standard| E
-    I -->|High Quality| J[run vdd-enhanced]
-    I -->|Mission Critical| K[run full-robust]
-    I -->|Max QA/Critics| M[run vdd-multi]
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
+flowchart TB
+  accTitle: Choosing your approach
+  accDescr: Four questions route a task to light mode, iterative design, a one-step pipeline or a multi-step workflow.
+  T{"Trivial task?"}
+  L("run light")
+  CON{"Concept to refine?"}
+  ITER("run iterative-design")
+  AUTO{"Trust automation?"}
+  P("One-Step pipeline<br/>chosen in the next figure")
+  ADV{"Adversarial review?"}
+  G("VDD Multi-Step")
+  H("TDD Multi-Step")
+  T -->|"yes: typo, bugfix"| L
+  T -->|no| CON
+  CON -->|yes| ITER
+  CON -->|no| AUTO
+  AUTO -->|yes| P
+  AUTO -->|"no: learning, debugging"| ADV
+  ADV -->|yes| G
+  ADV -->|no| H
+  class T,L,CON,ITER,AUTO,P,ADV,G,H wf
+  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47
+```
+
+**Figure: choosing the one-step pipeline.** The scenario picks one of four one-step commands, as
+the Summary Table lists them.
+
+```mermaid
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
+flowchart TB
+  accTitle: Choosing the one-step pipeline
+  accDescr: The scenario picks one of four one-step commands, as the Summary Table lists them.
+  S{"Which scenario?"}
+  E("run base-stub-first")
+  J("run vdd-enhanced")
+  K("run full-robust")
+  M("run vdd-multi")
+  S -->|"quick feature"| E
+  S -->|"high-quality code"| J
+  S -->|"security-critical"| K
+  S -->|"max quality: 3 critics"| M
+  class S,E,J,K,M wf
+  classDef wf fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47
 ```
 
 ### Choosing Product Approach (Phase 0)

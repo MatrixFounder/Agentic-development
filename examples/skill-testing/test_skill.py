@@ -2,13 +2,8 @@ import os
 from pathlib import Path
 
 # Note: This is a standalone script to demonstrate skill testing.
-# It requires the 'openai' package: pip install openai
-
-try:
-    import openai
-except ImportError:
-    print("Error: 'openai' package not found. Please install it using: pip install openai")
-    exit(1)
+# Querying a model requires the 'openai' package: pip install openai. It is imported only then,
+# so pytest, which collects files named test_*.py, can import this module without it.
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 ROLES_DIR = REPO_ROOT / ".agent" / "roles" # Adjust path based on actual repo structure if needed
@@ -82,6 +77,12 @@ def query_model(prompt: str, model: str = "gpt-4o"):
         print("--- PROMPT PREVIEW ---")
         print(prompt[:500] + "\n...[truncated]...")
         return "Dry run complete."
+
+    try:
+        import openai
+    except ImportError:
+        print("Error: 'openai' package not found. Please install it using: pip install openai")
+        raise SystemExit(1)
 
     client = openai.OpenAI(api_key=api_key, base_url=base_url)
     

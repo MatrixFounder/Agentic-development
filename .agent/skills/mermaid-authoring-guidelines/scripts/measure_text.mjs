@@ -13,6 +13,9 @@
 //    "kind": aria-roledescription, "browser": version, "png": path | null,
 //    "page": "#rrggbb", "fonts": [{"family", "glyphs"}], "font_family": family | null}
 //
+// Text. `text` is the element's text with its whitespace collapsed, cut at its first 120 code
+// points, as svg_geometry.py cuts it; a cut never splits a surrogate pair (TASK 122).
+//
 // Geometry. `bbox` is where the glyphs end; `box` the space mermaid reserved for them: the
 // foreignObject of an HTML label, the rectangle of a note, an actor or a gantt bar.
 // svg_geometry.py uses `bbox` for title crossings and `bbox` beyond `box` (`clipped_px`, the
@@ -213,7 +216,9 @@ function measureInPage() {
     const m = toRoot(el);
     return Math.abs(m.b) > 1e-6 || Math.abs(m.c) > 1e-6 ? { rotated: true } : {};
   };
-  const text = (el) => el.textContent.replace(/\s+/g, " ").trim().slice(0, 120);
+  // The first 120 code points of the collapsed text, as `_line_anchor` of svg_geometry.py
+  // cuts it: a cut never splits a surrogate pair (TASK 122 R2.1).
+  const text = (el) => Array.from(el.textContent.replace(/\s+/g, " ").trim()).slice(0, 120).join("");
   const classesNear = (el) => {
     const out = [];
     for (let e = el, k = 0; e && e !== svg && k < 4; e = e.parentElement, k++) {
@@ -598,7 +603,8 @@ function swapInPage() {
   });
   const labels = [];
   Array.from(svg.querySelectorAll("foreignObject")).forEach((fo, n) => {
-    const t = fo.textContent.replace(/\s+/g, " ").trim().slice(0, 120);
+    // 120 code points, as in measureInPage (TASK 122 R2.1)
+    const t = Array.from(fo.textContent.replace(/\s+/g, " ").trim()).slice(0, 120).join("");
     if (!t) return;
     const lines = [];
     let holder = null;

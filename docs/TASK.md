@@ -1,4 +1,4 @@
-# TASK 121 — The render check redraws HTML labels in GitHub's font, and the settings lines keep them whole
+# TASK 122 — The render check prints no raw control character, a bare pytest run collects, and the quick-reference figure is redrawn
 
 <!-- contract:meta -->
 
@@ -6,41 +6,49 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 121 |
-| Slug | github-font-swap |
+| Task ID | 122 |
+| Slug | render-output-pytest-figure |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | WI-53; the operator's request of 2026-10-14, quoted below the table |
-| Base revision | `eea6a96a53985b17a19cf5b8268fc35054644932` |
-| Closes | WI-53 |
-| Archive name | `task-121-github-font-swap.md` |
-| Revision | 5 |
+| Source | Findings of TASK 121 marked as before the task; the operator's request of 2026-10-15 |
+| Base revision | `b6362e3444eaa1b9109a104a445b100f7e4e964d` |
+| Closes | none: no backlog record holds these findings |
+| Archive name | `task-122-render-output-pytest-figure.md` |
+| Revision | 7 |
 
-**Record.** [WI-53](backlog/wi-53-mermaid-html-labels-are-cut-on-github.md)
+**Request.** The operator listed five findings of TASK 121 and asked which need a fix. The answer
+named four: the two outputs of `render_check.py`, the bare pytest run and the legacy figure. It
+called the nine positional-reference errors optional. The operator then wrote "Я сделал коммит,
+выполни доработки".
 
-**Request.** "реализуй доработки docs/backlog/wi-53-mermaid-html-labels-are-cut-on-github.md"
-
-**Revision 2** applies the findings of Mode A round 1 (F1 to F6, m1 to m12) and the operator's
-decision D8. **Revision 3** applies N1 to N3 of round 2. **Revision 4** applies the findings of
-stage-2 round 1 (D10), and **revision 5** those of stage-2 round 2 (D11).
+**Revision 2** applies the findings of Mode A round 1: M1, M2 and m1 to m7, and the notes.
+**Revision 3** applies r2-1 and the notes N1 to N8 of round 2. **Revision 4** follows M1 of Mode B
+round 1: `svg_geometry.py` stays unedited (D10). **Revision 5** applies r3-1 of Mode A round 3, r2-3
+of Mode B round 2, and the notes of both. **Revision 6** applies review round 1 (D11), and
+**revision 7** review round 2 (D12) and the wording of round 3.
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-GitHub shows the HTML labels of a Mermaid figure cut at the right edge of their boxes. VS Code
-shows the same figures whole, and `render_check.py` passes them in 11.17.2, 10.9.8 and dark.
-
-Mechanism, from WI-53 and the measurements of this run (§8):
-
-1. Mermaid measures each HTML label once, in its own font, and fixes the label's `foreignObject` to
-   that size. A `<small>` second line is measured smaller.
-2. GitHub then shows the labels in its own font, with `<small>` at full size. The text grows wider
-   than its `foreignObject`, which clips it.
-3. The render check draws on a clean page, where no font changes after the drawing.
-
-The defect reaches every figure kind that draws HTML labels in 11.17.2: flowchart, state, ER,
-class, requirement and mindmap. Sequence, gantt, timeline, quadrant and gitGraph figures draw SVG
-text. Journey figures wrap their text. Neither loses a label.
+1. **The render check prints control characters raw.** Its JSON is `json.dumps(…,
+   ensure_ascii=False)`. That form leaves U+0085, U+009B, U+007F, U+00A0, U+2028 and U+202E raw
+   (§8). Label text and font names come from the page, so a figure can put a terminal control
+   sequence into the output. The text report prints the clean font name and the error lines of
+   mmdc raw as well.
+2. **A long label can stop the whole run.** `measure_text.mjs` cuts label text with
+   `.slice(0, 120)`, which counts UTF-16 units. A cut through an emoji leaves a lone surrogate.
+   `render_check.py` then writes the measurement as UTF-8 and raises `UnicodeEncodeError`. The
+   render catches only `OSError`, so the run ends at that render with one traceback and prints no
+   figure's report.
+3. **A bare pytest run collects nothing.** Two allow rules run `python3 -m pytest` and `python -m
+   pytest` without a prompt. From the repository root, the run stops with `INTERNALERROR` and exit
+   3. `examples/skill-testing/test_skill.py` calls `exit(1)` at import when `openai` is absent, and
+   pytest collects the file by its name.
+4. **The quick-reference figure of `System/Docs/WORKFLOWS.md` is cut on GitHub.** The `graph TD`
+   figure under "Quick Reference: Choosing Your Approach" has no settings line. In GitHub's font,
+   15 of its labels are hidden (TASK 121, F8). The lint reports 18 warnings on it, and one more on
+   the next figure, whose settings line differs from it (§8). The figure also draws a cycle: `run
+   base-stub-first` leads to the criticality question, whose `Standard` answer leads back to it.
 
 <!-- contract:rtm -->
 
@@ -48,511 +56,367 @@ text. Journey figures wrap their text. Neither loses a label.
 
 | ID | Requirement | MVP? | Sub-features | Acceptance |
 | :--- | :--- | :--- | :--- | :--- |
-| R1 | The settings lines keep HTML labels whole | Y | R1.1–R1.4 | A1 |
-| R2 | A node's second line is plain text | Y | R2.1–R2.3 | A4 |
-| R3 | The render check redraws labels in GitHub's font | Y | R3.1–R3.6 | A2, A3 |
-| R4 | The lint warns before the render | Y | R4.1–R4.3 | A4, A7 |
-| R5 | The skill's documents and figures follow | Y | R5.1–R5.9 | A1, A2, A6 |
-| R6 | Evidence, tests and the eval instrument | Y | R6.1–R6.7 | A2, A3, A5, A8 |
-| R7 | Documents and records | Y | R7.1–R7.4 | A6 |
-| R8 | Staging (`framework-upgrade` §3 step 4) | Y | R8.1–R8.7 | A5, A7, A8 |
+| R1 | The JSON files and printed lines of the render check hold no raw non-printable character | Y | R1.1–R1.5 | A1, A2 |
+| R2 | A cut never splits a surrogate pair | Y | R2.1–R2.2 | A2 |
+| R3 | A bare pytest run collects, and writes no live state | Y | R3.1–R3.4 | A3 |
+| R4 | The quick-reference figures pass | Y | R4.1–R4.5 | A4 |
+| R5 | Evidence, tests and records | Y | R5.1–R5.7 | A1–A6 |
 
 ## 3. Requirements
 
-All paths below are relative to `.agent/skills/mermaid-authoring-guidelines/`, unless they start
-with `docs/`, `System/` or `tests/`.
+A character is **non-printable** when `str.isprintable()` returns false for it.
 
-### R1 — settings lines (`assets/notation.json`)
+### R1 — the output of the render check
 
-- **R1.1** The settings lines of `flowchart`, `state`, `er`, `class` and `requirement` end with the
-  key `"themeCSS": "foreignObject { overflow: visible; }"`. The new lines:
+- **R1.1** `scripts/render_check.py` gains `json_text(value, **kw)`. It returns
+  `json.dumps(value, ensure_ascii=False, **kw)` with each non-printable character other than a
+  newline written as a JSON `\u` escape.
+  - A non-printable code point above U+FFFF, such as U+E0001, becomes its pair of surrogate
+    escapes. A printable one, such as U+1F4E6, stays as it is.
+  - `json.loads` of the result equals *value*. The one exception is a high surrogate followed
+    directly by a low surrogate as two code points: `json.loads` joins their escapes into one.
+- **R1.2** Each JSON file that `scripts/render_check.py` writes, and each JSON it prints, comes
+  from `json_text`:
+  - the measurement file of each render;
+  - `mermaid-config.json` of each render;
+  - `evidence.json`;
+  - the report of `--json`, at both of its print sites;
+  - the keys and values of `dump_json`, which writes a fixture.
 
-  ```text
-  flowchart:
-  %%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
-  state, er, class, requirement:
-  %%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
-  ```
+  `browser_stat_digest` keeps `json.dumps(row, ensure_ascii=False, …)`. It hashes the rows that
+  `setup_renderers.sh` hashes with `JSON.stringify`, and it writes and prints nothing.
+- **R1.3** Withdrawn in revision 4 (D10): `svg_geometry.py` is not edited, its command line among
+  its parts.
+- **R1.4** Each `print` call of `render_check.py` passes its text through `_shown` of that file,
+  which writes each non-printable character, a newline among them, as its Python escape,
+  `ascii(ch)[1:-1]`. A backslash stays single (D5).
+  - The text report prints its lines one by one, so a newline inside a field cannot start a line.
+  - A JSON print keeps the newlines that lay out its JSON; `json_text` escapes any other.
+  - The only `print` call of the file is the one inside `_say`.
 
-- **R1.2** `settings.mindmap` is a new line:
-  `%%{init: {"look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%`.
-- **R1.3** `renderers.font_swap` is a new object with two keys:
-  - `tags`: `["v11"]`, the tag of the version GitHub runs; each tag is a key of
-    `renderers.installs`;
-  - `css`: `* { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
-    sans-serif !important; } small { font-size: inherit !important; }`, on one line.
+  The calls print:
+  - the text report, its notes and the `fixture:` line;
+  - each `not rendered` reason;
+  - each command-line error, the error of reading `notation.json` among them.
 
-  The css holds only letters, digits, spaces and the characters `*{}:;,!".-`.
-- **R1.4** No threshold key is added. The findings of R3.4 count against
-  `thresholds.max_clipped_labels` (D4).
+  argparse prints its usage and its errors itself, and stays as it is (D8).
+- **R1.5** A measurement that holds a lone surrogate leaves its render `ok`, and the run writes the
+  measurement file. Three files keep the figure's text as written: the `.mmd` copy of a fence, the
+  SVG that mmdc writes and the PNG that `measure_text.mjs` writes. They are the renderer's input
+  and output.
 
-### R2 — second lines
+### R2 — the cut of `measure_text.mjs`
 
-- **R2.1** A node's second line is plain text after `<br/>`. Outside a negative fence, no label of a
-  flowchart, state or ER figure holds `<small>` in these files and figures:
-  - `SKILL.md` and `references/*.md`;
-  - `evals/fixtures/*/pass.md`;
-  - the figures of R5.9: `System/Docs/WORKFLOWS.md:324` and `System/Docs/PRODUCT_DEVELOPMENT.md:30`.
-- **R2.2** `labels.node_second_line_chars_max` stays 40. The limit counts a line drawn at full
-  size.
-- **R2.3** A label line breaks at `<br/>` only, as before.
+- **R2.1** Both cuts of label text count code points: the clean measurement's text of each element,
+  and the text of each swapped `foreignObject`. Each keeps the first 120 code points of the
+  collapsed text, as `_line_anchor` of `svg_geometry.py` does with `[:120]`.
+- **R2.2** The header comment of `measure_text.mjs` states the cut in code points.
 
-### R3 — the font-swap probe
+### R3 — the bare pytest run
 
-- **R3.1** `scripts/measure_text.mjs` takes the option `--font-swap <css>`. After the clean
-  measurement and the PNG, it runs four steps:
-  1. it adds a `style` element whose text is `<css>` to the page's `head` element;
-  2. it waits for the fonts, as it does before the clean measurement;
-  3. it measures every `foreignObject` that holds text again;
-  4. it reads the platform fonts of the measured labels again.
+- **R3.1** `examples/skill-testing/test_skill.py` imports `openai` inside `query_model`, after its
+  dry-run branch. Importing the module without `openai` neither exits nor raises.
+- **R3.2** `query_model` without an API key returns the dry-run text and imports nothing. No key
+  means that neither `OPENAI_API_KEY` nor `XAI_API_KEY` is set. With a key set and without
+  `openai`, it prints the install message and exits 1.
+- **R3.3** A new test module `tests/test_bare_pytest.py`:
+  - runs pytest's collection from the repository root in a subprocess, with `import openai`
+    failing, and asserts exit 0 and no `INTERNALERROR` in the output;
+  - checks R3.1 and both branches of R3.2 in subprocesses, with `import openai` failing. Each
+    subprocess prints a marker after the import, so an exit at import fails the check. The branch
+    without a key clears both variables of R3.2, and the branch with a placeholder key clears
+    `OPENAI_BASE_URL`.
 
-  The JSON gains the key `font_swap`: `{"labels": [...], "fonts": [...], "font_family": ...}`.
-  `fonts` and `font_family` have the form of the clean measurement's keys. Each label holds:
-  - `text`, `kind`, `id`, `owner` and `n`, as the clean measurement gives them;
-  - `overflow`: the computed `overflow` of the `foreignObject`;
-  - `clipped_px`: the largest overrun of the text's line boxes past the `foreignObject`, on any
-    side, in root units;
-  - `outside_px`: the largest overrun of the text past the `viewBox`;
-  - `past_shape_px`: for a label inside `g.node`, how far its text runs past the shapes of that
-    node, in root units. A label outside a node, and a label of a node that draws no shape,
-    hold `null`. The measurement:
-    1. each corner of each line box is taken 1 px inside the box vertically;
-    2. the corner moves toward the line's middle in steps of 0.25 px, up to half the line's width;
-    3. it stops where it lies in the fill or the stroke of a shape of the node;
-    4. the value is the largest move of any corner.
+  The tooling step of `.github/workflows/framework-gates.yml` lists the module.
+- **R3.4** The bare run writes no live state, and leaves no path that git does not ignore (D11):
+  - `tests/test_mock_agent.py` runs its mock in a sandbox of a temporary directory, with an empty
+    `.git` and a copy of `update_state.py`, and removes the sandbox. It asserts that the bytes of
+    the live `.agent/sessions/latest.yaml` stay as they were;
+  - `tests/test_tool_runner.py` writes under `tests/.scratch`, which git ignores, and asserts that
+    `git check-ignore` accepts its directory.
 
-  Without `--font-swap` the JSON holds no `font_swap` key. A `<css>` that holds any other
-  character than those of R1.3 ends the script with exit 3, before the browser starts.
-- **R3.2** `scripts/render_check.py` passes `--font-swap` with `renderers.font_swap.css` to the
-  measurement of every render whose tag is in `renderers.font_swap.tags`: the light and the dark
-  11.17.2 render. `render_settings()` holds `font_swap`, so evidence measured under other swap
-  settings reads as stale. A measurement that exits non-zero, a refused stylesheet included, leaves
-  its render `not rendered`, as today, and the run exits 2.
-- **R3.3** `scripts/svg_geometry.py`: `analyze_svg` adds the metric `font_swap`:
-  `{"probed": bool, "font_family": str, "hidden": [...], "past_border": [...]}`.
-  - `hidden` holds `{"label", "kind", "overflow_px", "where"}` for each label whose text runs more
-    than `CLIP_TOL_PX` past its `foreignObject` while its `overflow` is not `visible`, or more
-    than `CLIP_TOL_PX` past the `viewBox`. `where` is `its box` or `the figure's edge`.
-  - `past_border` holds `{"label", "overflow_px"}` for each node label whose `overflow` is
-    `visible` and whose `past_shape_px` exceeds `CLIP_TOL_PX`.
-  - A measurement without `font_swap` gives `{"probed": false, "font_family": "", "hidden": [],
-    "past_border": []}`. `METRIC_KEYS` and `_empty_metrics()` hold the key.
-  - `font_family` doubles each backslash, as `printable` of `security-audit` does, and writes each
-    other character that `str.isprintable()` refuses as its Python escape. A font name then cannot
-    drive the terminal that shows a finding or the report, nor print as an escape it does not hold
-    (CWE-150, D10, D11).
-  - A length that is not a JSON number, or whose float is not finite, raises `ValueError`, and so
-    does `labels` that is not a list: the render is `not rendered` (D10, D11). A length of `null`
-    reads as 0.
-- **R3.4** `evaluate()` reports the check `font_swap`. It stands in `CHECKS` and `GATE_CHECKS`
-  directly after `clipped_labels`.
-  - Each `hidden` and each `past_border` entry is one finding.
-  - The severity is `fail` when the number of entries exceeds `thresholds.max_clipped_labels`,
-    and `warn` otherwise.
-  - Metrics whose `font_swap.probed` is false or absent give no finding. A stored `font_swap`
-    that is missing or `null` reads as absent; any other value that is not an object raises
-    `ValueError` (D10, D11).
-  - A `hidden` message names the text, the overrun, and the fix: the settings line of the kind and
-    no `<small>`. A `past_border` message names the text, the overrun, and the fix: a shorter line.
-- **R3.5** `scripts/mermaid_model.py`: `RENDER_CHECK_NAMES` holds `font_swap` (staged, R8).
-- **R3.6** The text report of `render_check.py` names the swap font of each probed render, next to
-  the font it names today.
+### R4 — the quick-reference figures of `System/Docs/WORKFLOWS.md`
 
-### R4 — the lint (staged, R8)
+- **R4.1** The figure under "Quick Reference: Choosing Your Approach" becomes two figures (D3):
+  - "choosing your approach": 9 nodes and 8 edges. Four questions lead to `run light`,
+    `run iterative-design`, a one-step pipeline, VDD Multi-Step or TDD Multi-Step;
+  - "choosing the one-step pipeline": 5 nodes and 4 edges. The scenario question leads to
+    `run base-stub-first`, `run vdd-enhanced`, `run full-robust` or `run vdd-multi`.
+- **R4.2** Each figure opens with the flowchart settings line of `assets/notation.json`. It holds
+  `accTitle` and `accDescr`, and the document's class `wf` with its `classDef` as written.
+- **R4.3** A caption paragraph sits directly above each fence, in the form of the document's
+  product-approach caption.
+- **R4.4** Each node and edge label has a supporting line in `WORKFLOWS.md` (§8, fidelity table).
+- **R4.5** No figure of the document draws a cycle that the text does not state.
 
-- **R4.1** New rule `MA-LABEL-14`, severity `warn`, titled "`<small>` in a flowchart, state or ER
-  label". It reports each label that holds `<small`, in any case:
-  - a flowchart node label, a subgraph title or an edge label;
-  - a state label or a transition label;
-  - an ER entity label or a relation label.
+### R5 — evidence, tests and records
 
-  Hint: "Write the second line as plain text after <br/>: GitHub shows <small> at full size in a
-  box that mermaid sized for small text." The rule has a probe pair, as every rule has. The
-  finding quotes the label as R3.3 writes `font_family`: each backslash doubled, and each
-  character that `str.isprintable()` refuses written as its Python escape (D10, D11).
-- **R4.2** `MA-SET-06` checks `themeCSS` as it checks `layout` and `look`, for every kind whose
-  settings line in `notation.json` holds the key: the kinds of R1.1 and R1.2, and `gantt` (D9).
-  - A figure whose `themeCSS` differs from the line gets the finding
-    `missing "themeCSS": "<value>"`. A value over 60 characters is named as
-    `missing "themeCSS" of settings.<kind>`.
-  - The title becomes "Settings line without the pinned layout, look and themeCSS".
-  - `_SETTINGS_KEY` gains `mindmap`.
-- **R4.3** The hints of `MA-PARSE-04`, `MA-LABEL-01` and `MA-LABEL-08`, the quiet probe of
-  `MA-PARSE-04` and the second-line probe of `MA-LABEL-02` show a plain second line, not `<small>`.
+- **R5.1** `render_check.py --fixture` writes `scripts/tests/fixtures/references-geometry.json` and
+  `scripts/tests/fixtures/paired-examples-geometry.json` anew. The instrument hash changes with R1
+  and R2.
+- **R5.2** Tests, each run red against its base code first (R5.6):
+  - `test_render_check.py`: `json_text` escapes C1 controls, DEL, U+2028, U+202E, NBSP, a lone
+    surrogate and U+E0001. It keeps Cyrillic and U+1F4E6. `json.loads` reads each result back.
+  - `test_render_check.py`, stubbed runs. The clean font name, a finding, a note, a render's
+    error line and a `not rendered` reason hold control characters and a lone surrogate. The
+    text output, the `--json` output, `evidence.json` and `dump_json` then hold no non-printable
+    character but newlines. Three more cases hold none either:
+    - a command-line error that names a path with a control character;
+    - a run with no renderer, whose install home holds ESC and U+009B in its name: the `home` and
+      `missing` of its `--json` report, and its `not rendered` lines;
+    - a run with `--fixture` at a path that holds ESC and U+009B: the `fixture.path` of its
+      `--json` report, the `fixture:` line and the written fixture.
+  - `test_render_check.py`, a stand-in measurement whose font name holds C1 controls, U+202E and a
+    lone surrogate: the render is `ok`. The measurement file holds no non-printable character but
+    newlines, and reads back.
+  - `test_render_check.py`, installed renderers: a label of 119 letters and an emoji is measured
+    as those 120 code points, in `labels` and in `font_swap.labels`, with no lone surrogate.
+  - `tests/test_bare_pytest.py` of R3.3.
+  - `test_render_check.py`, for D11:
+    - a finding that holds a newline prints as one line;
+    - a command-line error whose path holds a newline prints as one line too;
+    - a forward render whose log holds control characters prints its `note:` line escaped;
+    - an AST check finds one `print` call, inside `_say`;
+    - an AST check finds `lines` passed at two `_say` calls, each printing `json_text(…)`.
+  - the two tests of R3.4.
+- **R5.3** `docs/ARCHITECTURE.md` §10.7 states R1: the JSON files and printed lines of the render
+  check hold no raw non-printable character.
+- **R5.4** `CHANGELOG.md` and `CHANGELOG.ru.md` get v3.42.1, titled "the render check prints no raw
+  control character, a bare pytest run collects, and the quick-reference figure is redrawn
+  (TASK 122)".
+- **R5.5** No code that a committed allow rule names changes (D12), and no listed script runs or
+  imports the edited code:
+  - no committed rule names `render_check.py`, `measure_text.mjs` or the example;
+  - no guarded script imports `render_check.py` before its guard, and no listed script runs
+    `measure_text.mjs`;
+  - `tests/test_bare_pytest.py`, `tests/test_mock_agent.py` and `tests/test_tool_runner.py` are
+    test modules that `tests/run_tests.py` does not run.
 
-### R5 — the skill's documents and figures
+  `svg_geometry.py` runs without a prompt: `tests/run_tests.py` runs `test_python_floor`, whose
+  TC-04 runs `evals/grade_figures.py`. The grader imports `svg_geometry` before the guard of the
+  `run_evals` it imports next (§8).
+  The run therefore leaves `svg_geometry.py` unedited (D10).
 
-- **R5.1** `SKILL.md` takes version 1.2, and four edits:
-  - Red Flag "It renders in my preview" names GitHub's font swap and RF-23;
-  - Step 5.1 names the `themeCSS` key of the settings lines;
-  - Step 5.3 states the second line as plain text after `<br/>`, never `<small>`, its 40
-    characters counted at full size;
-  - Step 8.3 states that the render check redraws the 11.17.2 renders in GitHub's font, and fails a
-    label that the swap hides or pushes past its node's border.
+  The rules `python3 -m pytest` and `python -m pytest` name no path. After R3.1 they run the test
+  modules of `tests/`, which no committed rule names by path; `framework-upgrade` §3 step 4
+  exempts those (D12).
+  A3 requires the bare run to collect. §8 records that the suite passes with `--ignore=examples`;
+  the gates of the PLAN run the bare run after R3.1.
+- **R5.6** Stub first: each new test fails against the base text of the code it tests before that
+  code is edited. The audit record holds each red run, or names why a test passes on the base.
+- **R5.7** `System/Docs/SKILLS.md` changes only where it states a fact this task changes. Its
+  `mermaid-authoring-guidelines` row and note state none of R1 or R2.
 
-  `SKILL.md` holds 2864 words at the base; TC-ME-32 caps it below 3000.
-- **R5.2** Each settings line of a kind of R1.1 that `SKILL.md` and `references/*.md` quote takes
-  the new line of R1.1. This covers mermaid fences, `text` listings of Mermaid source, and code
-  spans in prose, such as `references/state.md:10` and the listing of
-  `references/review-checklist.md`. These fences keep their line:
-  - a fence whose defect is its settings line, such as the font and theme examples of
-    `renderer-facts.md`;
-  - the negative fence of RF-23 (R5.5).
-- **R5.3** `<small>` leaves every label of the fences of R5.2 (R2.1). N6 of `paired-examples.md`,
-  "P1 drawn left to right", takes the labels of the reworked P1 (R5.7).
-- **R5.4** Negative fences and `font_swap`:
-  - a negative fence that keeps its line or has none names `font_swap` in its marker when the
-    check fails on it in a required render;
-  - §8 measured six such fences, all in `renderer-facts.md`: RF-01, RF-02, RF-03, RF-04, RF-07
-    and RF-08;
-  - every negative fence fails only the render checks its marker names (A2).
-- **R5.5** `references/renderer-facts.md` gains RF-23, "GitHub draws HTML labels in its own font
-  after mermaid sized them". It holds:
-  - a negative fence of the old form, the settings line without `themeCSS` and a `<small>` second
-    line, marked `%% negative: font_swap, MA-SET-06, MA-SET-07, MA-LABEL-14`;
-  - the same figure in the form of R1.1 and R2.1, positive;
-  - the variants WI-53 measured, and the numbers of this run;
-  - the viewers: GitHub swaps the font; VS Code showed the figures whole; JetBrains was not
-    observed.
-
-  The sentence that names Figures 1 and 2 (RF-12) as the file's only fences that follow every rule
-  names the positive fence of RF-23 too. The list of safe label markup
-  (`renderer-facts.md:712@eea6a96`) points to RF-23 for `<small>`.
-- **R5.6** The prose follows the figures:
-  - `flowchart.md` §3 gains a `themeCSS` row;
-  - `flowchart.md` §5.1 and §6 state the second line as plain text after `<br/>`, its 40
-    characters counted at full size;
-  - `other-kinds.md` §1 states the settings lines of ER, class, requirement and mindmap, and its
-    mindmap figure carries its line;
-  - `layout-and-planarity.md` §6 drops the 13.3 px `<small>` size and measures the second line at
-    full size.
-- **R5.7** P1 of `paired-examples.md` passes every render check, `font_swap` included. A Rework
-  note states what failed, what changed, and the numbers before and after per version. Every
-  element of P1 keeps a supporting source line.
-- **R5.8** The prose numbers of a fence whose geometry changes are measured again and dated. This
-  covers the template table of `flowchart.md` §5, P1, N6, the figure and the listing of
-  `review-checklist.md` with its widths and its claim that the lint reports nothing, and RF-09.
-  `themeCSS` changes no layout (§8), so a fence that only takes the new line keeps its numbers.
-- **R5.9** The two figures outside the skill that carry the old flowchart line take the new line of
-  R1.1: the fences that open at `System/Docs/WORKFLOWS.md:324` and
-  `System/Docs/PRODUCT_DEVELOPMENT.md:30`.
-
-### R6 — evidence, tests and the eval instrument
-
-- **R6.1** `render_check.py --fixture` writes `scripts/tests/fixtures/references-geometry.json` and
-  `scripts/tests/fixtures/paired-examples-geometry.json` anew, from every file they cover.
-- **R6.2** `scripts/tests/test_svg_geometry.py` covers R3.3 and R3.4 with synthetic measurements:
-  - a hidden label and a visible one;
-  - a label past the `viewBox`;
-  - a label past its node's border;
-  - a measurement without `font_swap`;
-  - the `fail` and `warn` threshold;
-  - a label that runs past the `viewBox` and past its node's border is one `hidden` entry, and a
-    clipping box gives no `past_border` entry (D10);
-  - a malformed length, `labels` or stored metric raises `ValueError`, and a control character
-    of the font name is escaped (D10);
-  - a numeric string, an integer too large for a float, and each falsy stored metric that is not
-    an object raise `ValueError`, and a backslash of the font name is doubled (D11).
-- **R6.3** `scripts/tests/test_render_check.py` covers R3.1, R3.2 and R3.6:
-  - the measurement command of a `v11` render carries `--font-swap`; a `v10` render's does not;
-  - `render_settings()` holds `font_swap`;
-  - the text report names the swap font;
-  - `measure_text.mjs` exits 3 on a css with a refused character. The test skips without `node`;
-  - a stand-in measurement that exits 3 leaves the render `not rendered`, as in
-    `TestRenderWithStandIns`;
-  - with the installed renderers, the old form fails `font_swap` in 11.17.2 and the form of R1.1
-    and R2.1 passes. The test skips without the installs, as its class does;
-  - with the installed renderers, a `<small>` second line under the line of R1.1 runs past its
-    node's border in 11.17.2: one `past_border` entry, and `font_swap` fails (D10).
-- **R6.4** `scripts/tests/test_lint_mermaid.py` covers R4.1 and R4.2: `MA-LABEL-14` on each label
-  kind of R4.1, and its silence on a plain second line; `MA-SET-06` on a settings line without
-  `themeCSS`. `TestWritesNoFile` gains the module attribute `GUARD_PRELUDE`, empty by default,
-  which the driver of R8.3 sets. Per D10: a `themeCSS` of 60 characters is quoted and one of 61 is
-  named; `MA-LABEL-14` escapes a control character of the label it quotes. Per D11: it doubles a
-  backslash, and the two copies of the escape give the same output.
-- **R6.5** `scripts/tests/test_notation_consistency.py`: `SETTINGS_KEY` gains `mindmap`. A test
-  checks R1.3: the tags are installs, and the css holds only the characters of R1.3.
-- **R6.6** The committed campaign `evals/corpus/2026-10-opus55-xhigh-r1/` gains `notation.json`, a
-  byte copy of `assets/notation.json` at the base: the notation its gradings derive under.
-  `t_committed` of `evals/selftest_figure_evals.py` grades a campaign under the `notation.json`
-  its directory holds, and under the live notation when it holds none (D8). The selftest's
-  docstring states this rule and the residual of D8.
-- **R6.7** `evals/fixtures/{c0,c1,c3,c5,c6,c7,c8}/pass.md` take the new lines of R1.1, and their
-  labels lose `<small>` (TC-ME-17b). `grade_figures.py`, `evals/README.md` and every file that
-  `evals/PROVENANCE.txt` pins stay unchanged.
-
-### R7 — documents and records
-
-- **R7.1** `docs/ARCHITECTURE.md`:
-  - §10.1 and §10.2 step 4 name the font-swap probe;
-  - §10.4 states that the selftest grades a committed campaign under the `notation.json` it holds,
-    and the residual of D8;
-  - §10.7 states that `measure_text.mjs` takes a swap stylesheet of the characters of R1.3 only,
-    and inserts it as the text of a `style` element.
-- **R7.2** `CHANGELOG.md` and `CHANGELOG.ru.md` get v3.42.0, titled "the render check redraws
-  HTML labels in GitHub's font, and the settings lines keep them whole (TASK 121)".
-- **R7.3** WI-53 gets `status: done`, `resolved_at`, `resolved_by: 'TASK 121'` and a resolution
-  blockquote; its index line moves under `## Closed`.
-- **R7.4** The `mermaid-authoring-guidelines` row of `System/Docs/SKILLS.md` changes only where it
-  states a fact this task changes.
-
-### R8 — staging
-
-- **R8.1** Stage 1 writes the new text of these files under staged names:
-
-  | Final path | Staged name |
-  | :--- | :--- |
-  | `scripts/lint_mermaid.py` | `scripts/lint_mermaid_next.py` |
-  | `scripts/mermaid_model.py` | `scripts/mermaid_model_next.py` |
-
-  The basis:
-  - a committed allow rule names `lint_mermaid.py`; another names `plan_gantt.py --check`. Both
-    import `mermaid_model.py`;
-  - `planarity.py` and `plan_gantt.py` are not edited;
-  - `notation.json` is data that the lint, `plan_gantt.py --check` and the curated
-    `tests/test_mermaid_wiring.py` read. Its new keys hold no new numeric tree, and the base
-    `MA-SET-06` reads only `layout` and `look`. It is edited in place;
-  - no allow rule, hook or listed script imports `svg_geometry.py`, `render_check.py` or the eval
-    scripts. `measure_text.mjs` runs only under `render_check.py`, which asks for approval;
-  - the hook's `validate_skill.py` runs no skill code;
-  - no registration exists, so stage 3 adds no settings test.
-
-  No allow rule, hook or listed script names or imports a staged name. pytest's default patterns
-  match no staged name.
-- **R8.2** The text under a staged name is the final text. Stage 3 renames it over its final path
-  unchanged. The audit record holds the SHA-256 of each staged file and of its final file after
-  stage 3; the two are equal.
-- **R8.3** A driver in the session's scratchpad runs the instruments against the staged files. The
-  command asks for approval. Its modes:
-  - `next` registers the staged files under the names `mermaid_model` and `lint_mermaid` before a
-    test module imports them, and sets `GUARD_PRELUDE` of R6.4, so that the subprocess of
-    `TestWritesNoFile` registers them too. It runs the skill's test modules;
-  - `next-selftest` registers them the same way and runs `evals/selftest_figure_evals.py`;
-  - `next-lint` registers them and runs the staged lint;
-  - `base` runs the tests against the base files.
-
-  The `next` modes assert that each registered module's `__file__` is its staged file.
-- **R8.4** Stub first. Each new test is written, and run red against its base code, before that code
-  is edited:
-  - the lint tests of R6.4 fail in mode `base`;
-  - the tests of R6.2, R6.3 and R6.5 fail against the base text of the file they test.
-
-  The audit record holds each red run, or names why a test passes on the base.
-- **R8.5** Stage 3, after §4.5, is one edit: the two renames of R8.1. Every other edit lands
-  before stage 3. The gates run again after it:
-  - `python3 tests/run_tests.py`;
-  - the pytest list of CI and the skill's unit tests;
-  - `lint_mermaid.py --probe` and the lint of `references/*.md`;
-  - `evals/selftest_figure_evals.py`;
-  - the skill validators;
-  - `check_positional_refs.py --all docs/*.md docs/issues docs/backlog`.
-- **R8.6** Stage 2 is one code review and one security audit at one fingerprint. They review the
-  staged code, `measure_text.mjs`, `render_check.py`, `svg_geometry.py`, `notation.json`, the eval
-  changes of R6.6 and R6.7, the tests and this TASK. The bound is 3 rounds
-  (`stage2-review-retry`), and the boundary of §3 step 4 applies. Stage 4 is a code review and a
-  security audit of the stage-3 diff on the new fingerprint.
-- **R8.7** The Failure rule of §3 step 4 applies as written. If stage 3 is restored, or the run
-  stops before it, the audit record lists under `Pending after restore` each edit that landed
-  before stage 3. The operator decides on each.
+**Migration.** No session state, notation key or command changes. The instrument hash of the render
+check changes with R1 and R2, so render evidence written before this task reads as stale and is
+written anew (R5.1).
 
 <!-- contract:use-cases -->
 
 ## 4. Use cases
 
-### UC-1 — An agent draws a new flowchart
+### UC-1 — An agent renders a figure whose label holds an emoji at the cut
 
-**Actors:** an agent, `lint_mermaid.py`, `render_check.py`.
+**Precondition.** The pinned renderers are installed. A label holds 119 letters and then an emoji.
 
-**Preconditions:** the renderers of `setup_renderers.sh` are installed.
+1. `measure_text.mjs` keeps the 120 code points, the emoji whole.
+2. `render_check.py` writes the measurement file and reports the figure.
 
-**Main scenario:**
+**Postcondition.** The measurement file holds no lone surrogate, and the run reports every figure.
 
-1. The agent copies `settings.flowchart` and writes each second line after `<br/>`.
-2. The lint reports neither `MA-LABEL-14` nor `MA-SET-06`.
-3. The render check redraws the 11.17.2 renders in GitHub's font. No label is hidden and none
-   crosses its node's border.
-4. The hand-off line states the pass.
+**Alternative A.** A measurement holds a lone surrogate from another source. `json_text` writes it
+as an escape, and the run continues.
 
-**Alternatives:**
+### UC-2 — A figure puts control characters into a label or a font name
 
-- A. The renderers are absent: the render check reports `not rendered: <reason>` and exits 2. The
-  hand-off line says `not rendered`.
-- B. `renderers.font_swap.css` holds a refused character: `measure_text.mjs` exits 3, and the render
-  check reports the render as not rendered, exit 2.
-- C. The swap stylesheet resolves to another font on another platform. The overruns differ from §8;
-  the evidence names the swap font of each render.
+**Precondition.** A render completes; its label text or font name holds ESC or C1 characters.
 
-**Postconditions:** GitHub shows every label whole.
+1. The run prints its report and writes `evidence.json`.
+2. Each control character prints as an escape: `\x1b` in the text output, a `\u` escape in the
+   JSON.
 
-### UC-2 — An agent checks a figure of the old form
+**Postcondition.** The terminal shows the escape and runs no control sequence.
 
-**Actors:** an agent, `lint_mermaid.py`, `render_check.py`.
+### UC-3 — An agent runs the allowed bare pytest
 
-**Preconditions:** the figure carries the old settings line and `<small>` second lines.
+**Precondition.** The repository root is the working directory; `openai` is not installed.
 
-**Main scenario:**
+1. `python3 -m pytest` collects from the root, and the import of the example does not exit.
+2. The run executes the tests of `tests/`.
 
-1. The lint warns `MA-SET-06` (`missing "themeCSS"`) and `MA-LABEL-14`.
-2. The render check fails the figure on `font_swap` in the light and dark 11.17.2 renders. Each
-   finding names a hidden label and its overrun.
-3. The agent copies the new line and writes plain second lines.
-4. The lint reports neither rule, and the render check passes.
-
-**Postconditions:** the figure has the form of UC-1.
-
-### UC-3 — The swap pushes a label past its node's border
-
-**Actors:** an agent, `render_check.py`.
-
-**Preconditions:** the figure has the new form; one line fills its node.
-
-**Main scenario:**
-
-1. The render check reports `font_swap`: the text runs past its node's border by the overrun.
-2. The agent shortens the line, or moves words between the two lines, and renders again.
-3. The render check passes.
-
-**Postconditions:** no label crosses its node's border in GitHub's font.
+**Postcondition.** The run reports its results; no `INTERNALERROR` occurs.
 
 <!-- contract:acceptance -->
 
 ## 5. Acceptance criteria
 
-- **A1** — `notation.json` holds the lines of R1.1 and R1.2 and the object of R1.3.
-  `test_notation_consistency.py` passes: every quoted settings line equals its line.
-- **A2** — `test_paired_examples.py` passes on the fixtures of R6.1:
-  - the negative fence of RF-23 fails `font_swap` in the light and the dark 11.17.2 render;
-  - every negative fence fails only the render checks its marker names;
-  - every positive fence of `references/*.md` passes every render check in every required render.
-
-  In the `render_check.py --json` report of each file of R5.9, the figure of R5.9 has the status
-  `pass`.
-- **A3** — the tests of R6.2 and R6.3 pass. The installed-renderer test of R6.3 ran, rather than
-  skipped, in the run that wrote the fixtures.
-- **A4** — after stage 3:
-  - `lint_mermaid.py --probe` exits 0, and the lint of `references/*.md` exits 0;
-  - the lint reports no `MA-LABEL-14` and no `MA-SET-06` in the files and figures of R2.1, outside
-    a negative fence;
-  - the tests of R6.4 pass.
-- **A5** — after stage 3, every gate of R8.5 passes.
-- **A6** — the documents and records of R5, R7.1 to R7.4 hold the stated content.
-  `scan_register.py` reports no `WARN` on an added line of `docs/TASK.md` or the CHANGELOG entries.
-  `SKILL.md` holds fewer than 3000 words, and each routed bundle fewer than 16000.
-- **A7** — before stage 3, each red run of R8.4 is recorded, and each new test passes in mode
-  `next` or against its edited code.
-- **A8** — before stage 3, `evals/selftest_figure_evals.py` passes in mode `next-selftest`, and
-  TC-ME-17b, TC-ME-22 and TC-ME-23 pass in it. The audit record holds its summary line.
+- **A1** — the tests of R5.2 for R1 pass. In a stubbed run with control characters, the text
+  output, the `--json` output, `evidence.json` and a fixture hold no non-printable character but
+  newlines. In the stand-in run of R1.5, the measurement file holds none either.
+- **A2** — the stand-in test of R1.5 and the installed-renderer test of R2.1 pass. The full suite
+  of the skill passes: `python3 -m pytest -p no:cacheprovider scripts/tests -q` from the skill's
+  directory.
+- **A3** — `python3 -m pytest --co -q -p no:cacheprovider` from the repository root exits 0 with
+  `openai` absent, and `tests/test_bare_pytest.py` passes. A bare run from the root leaves the
+  sha256 of `.agent/sessions/latest.yaml` as it was.
+- **A4** — `lint_mermaid.py System/Docs/WORKFLOWS.md` reports 0 errors and 0 warnings.
+  `render_check.py System/Docs/WORKFLOWS.md` exits 0, every figure `pass`.
+- **A5** — every step of `.github/workflows/framework-gates.yml` passes as CI runs it.
+- **A6** — each red run of R5.6 is in the audit record, and every path of `git status` is a
+  declared path of the PLAN.
 
 <!-- contract:open-questions -->
 
 ## 6. Open questions
 
-None. The scope questions were answered (D1, D2, D8).
+None.
 
 ## 7. Decisions
 
-- **D1**, 2026-10-14, operator: the fix and the probe cover every kind that draws HTML labels in
-  11.17.2: flowchart, state, ER, class, requirement and mindmap. Answer "Все виды с
-  HTML-подписями". Rejected: flowchart and state only, as WI-53 states. The probe would then pass
-  hidden labels of the other four kinds.
-- **D2**, 2026-10-14, operator: `MA-SET-06` checks `themeCSS` as it checks `layout` and `look`.
-  Answer "Да, MA-SET-06 проверяет themeCSS". Rejected: the `<small>` warning alone. A missing key
-  would then show only in a render.
-- **D3**, 2026-10-14, orchestrator: the probe runs in the renders of the version GitHub runs,
-  11.17.2, light and dark. Rejected: every render. 10.9.8 stands for JetBrains IDEs, where no font
-  swap was observed.
-- **D4**, 2026-10-14, orchestrator: `font_swap` counts against `thresholds.max_clipped_labels`.
-  Rejected: a new threshold key. Its name needs a unit word in `tests/test_mermaid_wiring.py`, a
-  module that a listed script runs, and it would limit the same quantity: text a reader cannot see
-  whole.
-- **D5**, 2026-10-14, orchestrator: the swap stylesheet is the one WI-53 measured, which reproduced
-  the operator's screenshot. Rejected: a guessed copy of GitHub's current font stack.
-- **D6**, 2026-10-14, orchestrator: both probe tests use `CLIP_TOL_PX` (2.0 px).
-  - Measured: `past_shape_px` 0.00 in every clean render of 102 SVGs.
-  - Measured: 3.75 px and 2.50 px on two stadium labels whose swapped PNGs show the text touching
-    the border.
-  - Rejected: points at a quarter of the line's height. They gave 1.25 px and 0.25 px on the same
-    two labels, under the tolerance.
-- **D7**, 2026-10-14, orchestrator: a negative fence that quotes a settings line takes the new line
-  and loses `<small>`, as a positive one does. Rule 3 of `paired-examples.md` says a negative
-  carries the settings line of its kind. Rejected: keeping the old line in the negatives. They
-  would then fail `font_swap`, a check they do not show.
-- **D8**, 2026-10-14, operator: the committed campaign is graded under the notation its gradings
-  derive under (R6.6), and the `pass.md` fixtures take the new lines (R6.7). Answer "Снимок
-  нотации кампании". Rejected: re-deriving the campaign's gradings under the new notation. K01
-  would then record a failure for 17 `with_skill` answers that copied the line their skill gave
-  them, and the A/B result would change after the fact. This decision replaces revision 1's D8,
-  whose premise round 1 disproved: the eval selftest reads the live settings lines.
-  - Residual: the grader's CLI, `grade_figures.py --corpus`, keeps the live notation. Run on the
-    committed campaign, it records those K01 failures. R6.6 and R7.1 state this residual.
-- **D9**, 2026-10-14, orchestrator: `MA-SET-06` checks the `themeCSS` of `settings.gantt` as well.
-  The gantt line pins it for its bar labels, and `plan_gantt.py` writes the whole line. Rejected:
-  excluding gantt, which would make the rule check one key in five kinds and skip it in a sixth.
-- **D10**, 2026-10-14, orchestrator: stage-2 round 1 passed with one MEDIUM and six LOW findings of
-  the code review and one LOW of the security audit, all in the touched lines. Fix round 1 applies
-  them, as TASK 120 D3 did. The MEDIUM one leaves the border search, the half of the probe that
-  UC-3 needs, guarded by synthetic data only. Rejected: shipping on round 1.
-  - The escape covers the two routes this task adds: the swap font name and the label that
-    `MA-LABEL-14` quotes. The base routes of the same class stay as they are, before the task.
-- **D11**, 2026-10-15, orchestrator: in stage-2 round 2 the security audit passed, and the code
-  review failed on N1, a LOW finding that breaks R3.4. It found four more LOW items, N2 to N5. Fix
-  round 2 applies all five, and round 3 is the last of the bound. Stage 2's rule for LOW routes of
-  a fixed class does not apply, since N4 and N5 are new items. Rejected: residuals for N1 to N3,
-  which would leave R3.4 unmet.
-  - The escape stays in two copies, `svg_geometry.py` and the lint. A shared module would be a new
-    module that the staged lint imports, so stage 3 would have to stage it too. Meanwhile the live
-    `svg_geometry.py` imports only the live files. A test pins the two copies to one output.
-  - The escape keeps the set that `str.isprintable()` refuses. It is wider than the categories of
-    `printable` (Cc, Cf, Zl, Zp): it also escapes a lone surrogate, which a UTF-8 terminal cannot
-    print.
-- **D12**, 2026-10-15, operator: stage 3 was restored under the Failure rule, after the stage-4 code
-  review rejected the orchestrator's decision to keep it past a failed gate run (S4-1). The same
-  patch is applied again; the gates and stage 4 then run on the new fingerprint. A gate that fails
-  again restores stage 3 and returns the decision to the operator. Answer "Применить заново".
-  Rejected: one re-run of a timing failure outside the change, and stopping with stage 3 restored.
+- **D1**, 2026-10-15, orchestrator: one `/framework-upgrade` run carries the four fixes.
+  `framework-upgrade` §0 needs a clean tree. A `/light` run first would leave its edits for the
+  operator's commit before this run could start. Rejected: `/light` for the figure and pytest, then
+  `/framework-upgrade` for the render check.
+- **D2**, 2026-10-15, orchestrator: the nine positional-reference errors stay out of scope. The
+  answer to the operator called them optional, and the request asked for the fixes that answer
+  named. Rejected: fixing them in this run. Eight are references in old changelog entries to files
+  of another repository, one is in a review record, and no gate reads them. The end-of-run report
+  names them as open.
+- **D3**, 2026-10-15, orchestrator: the legacy figure becomes two figures, split by concern. It has
+  15 nodes and 16 edges, over the soft budget of 12. The scenario question follows the one-step
+  answer, so the cycle goes. Each label takes the words of a line of the document (§8). Rejected:
+  one figure of 13 nodes, which stays over the budget.
+- **D4**, 2026-10-15, orchestrator: the JSON keeps printable non-ASCII text as it is. Rejected:
+  `ensure_ascii=True`, which writes every Cyrillic letter of a label as an escape in `evidence.json`
+  and in the fixtures.
+- **D5**, 2026-10-15, orchestrator: `_shown` writes no doubled backslash. Paths and the `%r` quotes
+  of the findings keep their form. The fields that TASK 121 escaped keep their doubled backslash.
+  Rejected: doubling at the print boundary, which would double each backslash of a quoted label
+  again.
+  - Residual: in a line `_shown` escapes, the literal text `\x1b` prints as an escaped ESC does.
+    No control character reaches the terminal.
+- **D6**, 2026-10-15, orchestrator: the cut counts code points. Rejected: dropping a trailing high
+  surrogate after a cut of 120 units, which keeps a cut shorter than the Python side's for text with
+  emoji.
+- **D7**, 2026-10-15, orchestrator: the example imports `openai` where it uses it. Rejected:
+  renaming the file, which the changelogs name, and a `collect_ignore` in a new root `conftest.py`,
+  which hides the example and leaves its exit at import.
+- **D8**, 2026-10-15, orchestrator: argparse's own usage and errors stay as they are. Python 3.14
+  colours them with escape sequences of its own, which `_shown` would print as text. Rejected:
+  routing them through `_shown`.
+  - Residual: an option-like argument that holds a control character prints raw in argparse's
+    error. It comes from the caller's command line, or from a glob over a file whose name starts
+    with `-`. Low risk.
+- **D9**, 2026-10-15, orchestrator: the nested collection of R3.3 runs under both Python versions of
+  the CI matrix, 3.11 and 3.14. It is measured on 3.14.8, and under the 3.11 grammar statically
+  (§8). Rejected: skipping the test below 3.12, which would hide a failure of the bare run on the
+  framework's minimum Python.
+  - Residual: no 3.11 interpreter is installed here, and `ast.parse(feature_version=…)` is best
+    effort. The 3.11 run of A5 happens first in CI.
+- **D10**, 2026-10-15, orchestrator: `json_text` lives in `render_check.py`, and `svg_geometry.py`
+  stays unedited. Its module body runs without a prompt (R5.5), so an edit would need the four
+  stages of `framework-upgrade` §3 step 4. Rejected: staging it, since the fixtures bind its
+  hash and stage 3 would leave them stale. Rejected as well: an operator's exception for an edit
+  that adds one function. Once R1.3 is withdrawn, `render_check.py` is the only caller of
+  `json_text`.
+- **D11**, 2026-10-15, orchestrator: review round 1 found that the bare run, which this task
+  unblocks, rewrites the live session state through `tests/test_mock_agent.py` (F1). Fix round 1
+  isolates that test and moves the scratch of `tests/test_tool_runner.py` (R3.4). It also escapes
+  a newline inside a printed field (LOW-1) and pins each `_say` site. The orchestrator restores the
+  live state and drops its test records. Rejected: a residual with a backlog record, which would
+  leave each allowed bare run rewriting the state that the next session restores.
+- **D12**, 2026-10-15, orchestrator: the edit of `tests/test_tool_runner.py` stays unstaged (R2-1
+  of review round 2). An allow rule of `.claude/settings.local.json`, which git ignores, names
+  that test.
+  - `framework-upgrade` §3 step 4 lists "a script that a committed allow rule names", and exempts
+    only "test modules and fixtures that no rule names by path". The two sentences disagree on a
+    local rule. Their reading is the operator's call, and the end-of-run report names it.
+  - The edit moves the test's scratch into `tests/.scratch` and adds a `git check-ignore`. Review
+    rounds 2 and 3 checked it.
+  - Rejected: the four stages for a test module that no committed rule names.
+
+- **D13**, 2026-10-15, operator: the allow rules that `framework-upgrade` §3 step 4 counts include
+  those of `.claude/settings.local.json`. Two items of the retro become TASK 123, after the
+  operator's commit of this task:
+  - the text of §3 step 4 on local rules;
+  - a check of what a change newly makes run without a prompt.
+
+  A curated test pins that text, so TASK 123 stages it.
+  Answers "И settings.local.json" and "TASK 123 после коммита". Rejected: extending this task,
+  which had passed its reviews, and counting committed rules only.
+  - Under this reading, the edit of `tests/test_tool_runner.py` (D12) would have taken the four
+    stages. It stays as review rounds 2 and 3 checked it.
 
 ## 8. Measurements of this run
 
-Taken in the session's scratchpad on 2026-10-14, with the pinned renderers and chrome-headless-shell
-150.0.7871.24. The swap stylesheet of R1.3 resolved to `.SF NS` on macOS.
+- From the repository root, `python3 -m pytest --co -q -p no:cacheprovider` exits 3 with
+  `INTERNALERROR` and "no tests collected". With `--ignore=examples` it collects 709 tests and exits
+  0, and a run with `--ignore=examples` gives "709 passed".
+- The 39 test files of that collection parse under `ast.parse(…, feature_version=(3, 11))`, and
+  none imports a name added after 3.11 at module level. CI's tooling job runs 3.11 and 3.14.
+- `json.dumps(…, ensure_ascii=False)` leaves U+0085, U+009B, U+007F, U+00A0, U+2028 and U+202E raw.
+  `ensure_ascii=True` leaves none, and writes Cyrillic as escapes.
+- Writing `json.dumps(…, ensure_ascii=False)` of a lone surrogate to a UTF-8 file raises
+  `UnicodeEncodeError`.
+- In node, `.slice(0, 120)` of 119 letters and U+1F4E6 ends on U+D83D, a lone surrogate.
+  `Array.from` keeps the emoji whole.
+- The lint of `WORKFLOWS.md`: "0 error / 19 warn". The legacy figure holds 18:
+  - `MA-SET-06` once;
+  - `MA-BUDGET-01` twice (15 nodes, 16 edges);
+  - `MA-DOC-01` once;
+  - `MA-LABEL-03` once;
+  - `MA-LABEL-07` thirteen times.
 
-- Old form, Figure 1 of `flowchart.md`: 12 of 17 labels hidden after the swap. Second lines
-  overran by 22 to 42 px.
-- Forms of R1.1 and R2.1 on the 13 positive flowchart and state figures of `references/` that
-  carry the settings line: 0 hidden labels in 11.17.2, its dark render and 10.9.8. One label
-  crossed its node's border: the stadium of P1, by 3.75 px.
-- `themeCSS` changes no layout: every figure without `<small>` kept its `viewBox` width, to 0.05 px.
-- The same forms make P1 1493 px wide in 11.17.2, an effective font of 9.6 px, below the 10 px
-  floor. It was 1372 px and 10.5 px. A rework that passes was measured:
-  - one invisible link marked `%% layout only` gives 1255 px and 11.5 px in 11.17.2, and 1181 px
-    and 12.2 px in 10.9.8;
-  - the stadium label "Client apps · CRM · MMA" over "dashboard · MacWhisper" gives
-    `past_shape_px` 0.00 in both versions.
-- Negatives of `references/` in 11.17.2, with a 2 px tolerance:
-  - the eight that take the new line under D7: 0 hidden, 0 past their border. N6, with the labels
-    of the measured P1 rework, still fails `legibility` and `title_crossings`: 2348 px and 6.1 px
-    in 11.17.2, 2240 px and 6.4 px in 10.9.8;
-  - those that keep their line or have none: RF-01 3 hidden, RF-02 3, RF-03 6, RF-04 3, RF-07 2,
-    RF-08 4; RF-05 and RF-09 0. The sequence negatives draw no HTML label.
-- ER, class, requirement and mindmap in 11.17.2: 5 to 10 labels hidden per figure, by 1.2 to 9 px.
-  With `themeCSS`: 0 hidden, 0 past their border. In 10.9.8 only the class figure draws HTML
-  labels.
-- `System/Docs/WORKFLOWS.md` and `PRODUCT_DEVELOPMENT.md` hold one flowchart each with the old
-  line. `WORKFLOWS.md` also holds a `graph TD` figure with no settings line (§9).
-- At the base, `SKILL.md` holds 2864 words; the routed bundles hold 5173 to 15408 words.
+  The 19th is `MA-SET-07` on the product-approach figure: its settings differ from the legacy one.
+- The two new figures, written to a scratch file first: lint "0 error / 0 warn". Both pass the
+  render check in 11.17.2, dark and 10.9.8. The swap font is `.SF NS`. Widths and heights:
+  - "choosing your approach": 653×1085 px (11.17.2) and 618×1025 px (10.9.8);
+  - "choosing the one-step pipeline": 746×317 px and 694×287 px.
+- No allow rule names `render_check.py`, `svg_geometry.py`, `measure_text.mjs` or the example.
+  `tests/test_mermaid_wiring.py`, a curated module, names `render_check.py` and never runs or
+  imports it.
+- `evals/grade_figures.py` imports `mermaid_model`, `lint_mermaid`, `svg_geometry`, `fidelity`
+  and `stats` before `run_evals`, whose guard stops an old Python. TC-04 of
+  `tests/test_python_floor.py` runs the grader under a faked 3.9.
+
+**Fidelity table of R4.4.** Each label, and the line of `WORKFLOWS.md` that supports it:
+
+| Label | Supporting line |
+| :--- | :--- |
+| Trivial task, `yes: typo, bugfix`, `run light` | Summary Table, "Trivial task (typo, bugfix)" |
+| Concept to refine, `run iterative-design` | §1 Pipelines, "Iterative Design … Concept Refinement Loop" |
+| Trust automation, One-Step pipeline | Approaches Overview, "One-Step (Pipeline) … trusted automation" |
+| `no: learning, debugging` | Approaches Overview, "Multi-Step (Manual) … Learning, debugging" |
+| Adversarial review, VDD Multi-Step | FAQ, "adversarial review per task"; VDD Examples, "Multi-Step Approach" |
+| TDD Multi-Step | TDD Examples, "Multi-Step Approach (Manual Control)" |
+| Which scenario | Summary Table, its column "Scenario" |
+| `quick feature`, `run base-stub-first` | Summary Table, "Quick feature, trusted automation" |
+| `high-quality code`, `run vdd-enhanced` | Summary Table, "High-quality production code" |
+| `security-critical`, `run full-robust` | Summary Table, "Security-critical feature" |
+| `max quality: 3 critics`, `run vdd-multi` | Summary Table, "Maximum code quality (3 parallel critics)" |
+
+The second line "chosen in the next figure" and the `yes` and `no` answers are the figure's own
+navigation and state no fact.
+
+<!-- contract:out-of-scope -->
 
 ## 9. Out of scope
 
-- Figures that do not carry a settings line of the skill, such as the figure of `README.md` and
-  the `graph TD` figure at `System/Docs/WORKFLOWS.md:298`.
-- Labels that the swap widens over an edge or over each other; ER attribute columns.
-- A subgraph title that the swap pushes past its cluster's border.
-- The views of VS Code and JetBrains IDEs.
-- The forward render of 12.1.0.
-- `htmlLabels: false`: WI-53 records its overlaps and its contrast in dark.
-- The grader `grade_figures.py`, its CLI, and the files `evals/PROVENANCE.txt` pins (D8 and its
-  residual).
-
-**Migration.** A consumer project's figures of the old form get `MA-SET-06` and `MA-LABEL-14`
-warnings, and fail `font_swap` in the render check. The fix is the new settings line and plain
-second lines; one consumer project applied it to 15 figures before this task (WI-53).
+- The nine positional-reference errors in old changelog entries and in
+  `docs/reviews/review-095-independent.md` (D2), and two more of the same coordinates in
+  `docs/reviews/framework-audit-105.md`.
+- The example sends `XAI_API_KEY` to the default OpenAI URL when only that key is set. Its
+  `__main__` fails before `query_model`.
+- Raw invisible characters in the string literals of `test_ledger_hardening.py` of `run-feedback`.
+- The mock of `tests/test_mock_agent.py` runs `python3` from PATH, and it sleeps 5 s.
+- The `__main__` block of the example names `08_agent_developer.md` and two skills with a
+  `skill-` prefix, none of which exists. Run as a script, it ends in `FileNotFoundError`. Before the
+  task; the operator did not ask for it.
+- The quoting rules of `lint_mermaid.py` that print label text raw, and its `--json` output, which
+  is `json.dumps(…, ensure_ascii=False)`. Before TASK 121; the lint is code that an allow rule
+  names.
+- The join of a label's lines with no separator in `measure_text.mjs`.
+- The debug command line of `svg_geometry.py`, which prints its JSON with `ensure_ascii=False`
+  (D10).
+- `evals/render_corpus.py`, which writes the metrics of each render, `geometry.json`, with
+  `ensure_ascii=False`, so a lone surrogate still stops a corpus render. Before the task.

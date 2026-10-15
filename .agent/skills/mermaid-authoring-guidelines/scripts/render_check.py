@@ -481,6 +481,43 @@ def _major(version: str) -> int:
     return int(m.group(1)) if m else 0
 
 
+def json_text(value, **kw) -> str:
+    """`json.dumps(value, ensure_ascii=False, **kw)` with each character that `str.isprintable()`
+    refuses, a newline aside, written as a JSON escape (TASK 122 R1.1). A non-printable code point
+    above U+FFFF becomes its pair of surrogate escapes; printable text, Cyrillic or an emoji, stays
+    as it is. The JSON reads back to *value*, save one case: a high surrogate followed by a low one,
+    as two code points, reads back joined into one. No control character, bidirectional mark or
+    lone surrogate reaches a terminal or a file. svg_geometry.py is not edited for it: its module
+    body runs without a prompt (TASK 122 D10)."""
+    out = []
+    for ch in json.dumps(value, ensure_ascii=False, **kw):
+        if ch.isprintable() or ch == "\n":
+            out.append(ch)
+            continue
+        code = ord(ch)
+        if code > 0xFFFF:
+            code -= 0x10000
+            out.append("\\u%04x\\u%04x" % (0xD800 + (code >> 10), 0xDC00 + (code & 0x3FF)))
+        else:
+            out.append("\\u%04x" % code)
+    return "".join(out)
+
+
+def _shown(text: str, lines: bool = False) -> str:
+    """*text* as this script prints it: each character that `str.isprintable()` refuses, a newline
+    among them, written as its Python escape (TASK 122 R1.4). A label, a font name or a log line
+    from a page then drives no terminal and starts no line of its own. With *lines*, a newline
+    stays: the text is JSON from `json_text`, whose newlines only lay it out. A backslash stays
+    single, so paths and the `%r` quotes of the findings keep their form (D5)."""
+    return "".join(ch if ch.isprintable() or (lines and ch == "\n") else ascii(ch)[1:-1]
+                   for ch in text)
+
+
+def _say(text: str, file=None, lines: bool = False) -> None:
+    """Print *text* through `_shown`: every line this script prints goes through here."""
+    print(_shown(text, lines), file=file)
+
+
 def _first_line(text: str, limit: int = 300) -> str:
     for line in (text or "").splitlines():
         if line.strip():
@@ -719,7 +756,7 @@ def _render_files(source: str, renderer: Renderer, out_base: Path, dark: bool, n
     measure_path = out_base.parent / (out_base.name + ".measure.json")
     config = out_base.parent / "mermaid-config.json"
     mmd.write_text(source if source.endswith("\n") else source + "\n", encoding="utf-8")
-    config.write_text(json.dumps({"securityLevel": n["render"]["security_level"]}) + "\n",
+    config.write_text(json_text({"securityLevel": n["render"]["security_level"]}) + "\n",
                       encoding="utf-8")
     background = n["renderers"]["dark"]["background"] if dark else "white"
     theme = n["renderers"]["dark"]["theme"] if dark else None
@@ -752,7 +789,7 @@ def _render_files(source: str, renderer: Renderer, out_base: Path, dark: bool, n
         measure = json.loads(out)
     except ValueError:
         return result(False, "not_rendered", "text measurement printed no JSON", svg=svg)
-    measure_path.write_text(json.dumps(measure, indent=1, ensure_ascii=False) + "\n",
+    measure_path.write_text(json_text(measure, indent=1) + "\n",
                             encoding="utf-8")
     try:
         metrics = sg.analyze_svg(svg_text, column, measure, sg.author_colours(source), n)
@@ -1055,13 +1092,13 @@ def dump_json(value, indent: int = 0) -> str:
 
     pad, inner = " " * indent, " " * (indent + 1)
     if isinstance(value, dict) and value and not leaf(value):
-        items = ["%s%s: %s" % (inner, json.dumps(k, ensure_ascii=False), dump_json(v, indent + 1))
+        items = ["%s%s: %s" % (inner, json_text(k), dump_json(v, indent + 1))
                  for k, v in value.items()]
         return "{\n" + ",\n".join(items) + "\n" + pad + "}"
     if isinstance(value, list) and value and not leaf(value):
         items = [inner + dump_json(v, indent + 1) for v in value]
         return "[\n" + ",\n".join(items) + "\n" + pad + "]"
-    return json.dumps(value, ensure_ascii=False)
+    return json_text(value)
 
 
 def _read_fixture(path: Path) -> tuple:
@@ -1255,7 +1292,7 @@ def _write_evidence(out_dir: Path, report: dict) -> Optional[str]:
     try:
         Path(out_dir).mkdir(mode=0o700, parents=True, exist_ok=True)
         (Path(out_dir) / "evidence.json").write_text(
-            json.dumps(report, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            json_text(report, indent=1) + "\n", encoding="utf-8")
     except OSError as exc:
         return "cannot write renders to %s: %s" % (out_dir, exc)
     return None
@@ -1267,9 +1304,9 @@ def _stop_early(report: dict, as_json: bool, reasons: list) -> int:
     if not report["summary"]:
         report["summary"] = _summary([], [])
     if as_json:
-        print(json.dumps(report, indent=1, ensure_ascii=False))
+        _say(json_text(report, indent=1), lines=True)
     for reason in reasons:
-        print("not rendered: %s" % reason, file=sys.stderr if as_json else sys.stdout)
+        _say("not rendered: %s" % reason, file=sys.stderr if as_json else sys.stdout)
     return EXIT_NOT_RENDERED
 
 
@@ -1285,34 +1322,34 @@ def main(argv: Optional[list] = None) -> int:
     try:
         n = mm.load_notation()
     except (OSError, ValueError) as exc:
-        print("render_check.py: cannot read notation.json: %s" % exc, file=sys.stderr)
+        _say("render_check.py: cannot read notation.json: %s" % exc, file=sys.stderr)
         return EXIT_NOT_RENDERED
     installs = n["renderers"]["installs"]
     paths = [Path(x) for x in args.paths]
     for path in paths:
         if not path.is_file():
-            print("render_check.py: no such file: %s" % path, file=sys.stderr)
+            _say("render_check.py: no such file: %s" % path, file=sys.stderr)
             return EXIT_USAGE
         if path.suffix.lower() not in (".md", ".markdown", ".mmd"):
-            print("render_check.py: %s is neither .md nor .mmd" % path, file=sys.stderr)
+            _say("render_check.py: %s is neither .md nor .mmd" % path, file=sys.stderr)
             return EXIT_USAGE
     fixture = None
     if args.fixture:
         fixture = Path(args.fixture).expanduser().absolute()
         if fixture.suffix.lower() != ".json" or not fixture.parent.is_dir():
-            print("render_check.py: --fixture %s must be a .json file in an existing directory"
+            _say("render_check.py: --fixture %s must be a .json file in an existing directory"
                   % fixture, file=sys.stderr)
             return EXIT_USAGE
         problem = fixture_target_problem(fixture)
         if problem:
-            print("render_check.py: --fixture %s: %s; fix or delete it" % (fixture, problem),
+            _say("render_check.py: --fixture %s: %s; fix or delete it" % (fixture, problem),
                   file=sys.stderr)
             return EXIT_USAGE
     if args.versions:
         tags = [t.strip() for t in args.versions.split(",") if t.strip()]
         unknown = [t for t in tags if t not in installs]
         if not tags or unknown:
-            print("render_check.py: unknown version tag(s): %s; known: %s"
+            _say("render_check.py: unknown version tag(s): %s; known: %s"
                   % (", ".join(unknown) or "(none)", ", ".join(installs)), file=sys.stderr)
             return EXIT_USAGE
     else:
@@ -1326,16 +1363,16 @@ def main(argv: Optional[list] = None) -> int:
         out_dir = Path(args.out).expanduser().absolute()
         problem = out_dir_problem(out_dir)
         if problem:
-            print("render_check.py: --out: %s" % problem, file=sys.stderr)
+            _say("render_check.py: --out: %s" % problem, file=sys.stderr)
             return EXIT_USAGE
         problem = private_dir_problem(out_dir)
         if problem:
-            print("render_check.py: --out %s: %s; renders are written only where no other user "
+            _say("render_check.py: --out %s: %s; renders are written only where no other user "
                   "may plant a file: pass a directory of your own, such as one `mktemp -d` makes"
                   % (out_dir, problem), file=sys.stderr)
             return EXIT_USAGE
         if inside_git_work_tree(out_dir):
-            print("render_check.py: --out %s lies inside a git work tree; renders are written "
+            _say("render_check.py: --out %s lies inside a git work tree; renders are written "
                   "outside every repository" % out_dir, file=sys.stderr)
             return EXIT_USAGE
     home = render_home()
@@ -1363,13 +1400,13 @@ def main(argv: Optional[list] = None) -> int:
         if out_dir is None:
             base = home / "renders"
             if inside_git_work_tree(base):
-                print("render_check.py: %s lies inside a git work tree; set MERMAID_RENDER_HOME "
+                _say("render_check.py: %s lies inside a git work tree; set MERMAID_RENDER_HOME "
                       "outside every repository or pass --out" % base, file=sys.stderr)
                 return EXIT_USAGE
             base.mkdir(mode=0o700, parents=True, exist_ok=True)
             problem = private_dir_problem(base)
             if problem:
-                print("render_check.py: %s; set MERMAID_RENDER_HOME to a directory of your own "
+                _say("render_check.py: %s; set MERMAID_RENDER_HOME to a directory of your own "
                       "or pass --out" % problem, file=sys.stderr)
                 return EXIT_USAGE
             prune_renders(base, RENDER_KEEP - 1)
@@ -1414,18 +1451,19 @@ def main(argv: Optional[list] = None) -> int:
             if code == EXIT_PASS:
                 code = EXIT_NOT_RENDERED
             report["exit"] = code
-        print(json.dumps(report, indent=1, ensure_ascii=False))
+        _say(json_text(report, indent=1), lines=True)
         stream = sys.stderr
     else:
-        print("\n".join(_text_report(report, out_dir)))
+        for line in _text_report(report, out_dir):
+            _say(line)
         stream = sys.stdout
     if fixture is not None:
-        print("fixture: %s %s" % (fixture, "written" if fixture_problem is None
+        _say("fixture: %s %s" % (fixture, "written" if fixture_problem is None
                                   else "not written: %s" % fixture_problem), file=stream)
     for line in info:
-        print("note: %s" % line, file=stream)
+        _say("note: %s" % line, file=stream)
     for line in not_rendered:
-        print("not rendered: %s" % line, file=stream)
+        _say("not rendered: %s" % line, file=stream)
     return code
 
 

@@ -16,6 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.42.1 — the render check prints no raw control character, a bare pytest run collects, and the quick-reference figure is redrawn (TASK 122)**
+
+#### Fixed
+
+- **The render check prints and writes no raw control character.** Its JSON files and its
+  `--json` output write each non-printable character as a `\u` escape. Printable text, Cyrillic
+  included, stays as it is. Each line it prints writes such a character as a Python escape, a
+  newline inside a field among them. A label or a font name from a page therefore neither drives
+  the terminal nor forges a line of the report. argparse's own usage and errors stay as they are.
+- **A long label with an emoji no longer stops the run.** `measure_text.mjs` cuts label text at 120
+  code points, as the Python side does, so a cut never splits a surrogate pair.
+- **A bare `python3 -m pytest` from the repository root collects.** The skill-testing example
+  imports `openai` only to query a model, and a new test checks the collection in CI.
+- **The bare run leaves the live session state alone.** `tests/test_mock_agent.py` runs its mock
+  in a sandbox, and `tests/test_tool_runner.py` writes under `tests/.scratch`, which git ignores.
+- **The quick-reference figure of `System/Docs/WORKFLOWS.md` is redrawn as two figures.** Each
+  carries the settings line that keeps labels whole in GitHub's font, a caption, and the
+  document's own words. The cycle through `run base-stub-first` is gone.
+
 ### **v3.42.0 — the render check redraws HTML labels in GitHub's font, and the settings lines keep them whole (TASK 121)**
 
 #### Added

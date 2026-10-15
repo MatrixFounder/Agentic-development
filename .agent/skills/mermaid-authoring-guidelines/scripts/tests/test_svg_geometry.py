@@ -1188,6 +1188,169 @@ class TestContrastFromMeasure(unittest.TestCase):
         self.assertTrue(any("not gated" in w for w in m["warnings"]))
 
 
+def swap_label(text, overflow="hidden", clipped_px=0.0, outside_px=0.0, past_shape_px=None,
+               kind="node"):
+    """One HTML label as `measure_text.mjs --font-swap` prints it under `font_swap`."""
+    return {"text": text, "kind": kind, "id": "", "owner": "", "el": "foreignObject", "n": 0,
+            "overflow": overflow, "clipped_px": clipped_px, "outside_px": outside_px,
+            "past_shape_px": past_shape_px}
+
+
+class TestFontSwap(unittest.TestCase):
+    """TASK 121 R3.3, R3.4, R6.2: labels redrawn in GitHub's font, read without a browser."""
+
+    def analyze(self, *labels, swap=True):
+        measure = measure_of()
+        if swap:
+            measure["font_swap"] = {"labels": list(labels), "fonts": [{"family": ".SF NS",
+                                                                        "glyphs": 40}],
+                                    "font_family": ".SF NS"}
+        # fx-tree fails no check of its own, so a failing check here is the swap's
+        return sg.analyze_svg(fixture_svg("fx-tree", "v11"), 900, measure)
+
+    def test_the_metric_is_a_key_of_every_analysis(self):
+        self.assertIn("font_swap", sg.METRIC_KEYS)
+        self.assertEqual(sg._empty_metrics()["font_swap"],
+                         {"probed": False, "font_family": "", "hidden": [], "past_border": []})
+        self.assertEqual(sg.CHECKS.index("font_swap"), sg.CHECKS.index("clipped_labels") + 1)
+        self.assertEqual(sg.GATE_CHECKS.index("font_swap"),
+                         sg.GATE_CHECKS.index("clipped_labels") + 1)
+
+    def test_a_label_its_box_clips_is_hidden(self):
+        m = self.analyze(swap_label("Library clients catalogue site", clipped_px=42.0))
+        swap = m["font_swap"]
+        self.assertEqual((swap["probed"], swap["font_family"]), (True, ".SF NS"))
+        self.assertEqual([(h["label"], h["overflow_px"], h["where"]) for h in swap["hidden"]],
+                         [("Library clients catalogue site", 42.0, "its box")])
+        self.assertEqual(swap["past_border"], [])
+        self.assertEqual(checks(sg.evaluate(m, NOTATION), "fail"), ["font_swap"])
+
+    def test_a_visible_overrun_is_not_hidden(self):
+        # with `overflow: visible` the box no longer clips; only the node's border can be crossed
+        m = self.analyze(swap_label("Library clients catalogue site", overflow="visible",
+                                    clipped_px=42.0, past_shape_px=0.0))
+        self.assertEqual((m["font_swap"]["hidden"], m["font_swap"]["past_border"]), ([], []))
+        self.assertEqual(checks(sg.evaluate(m, NOTATION), "fail"), [])
+
+    def test_the_clip_tolerance_holds_for_the_box(self):
+        for over, hidden in ((sg.CLIP_TOL_PX - 0.1, False), (sg.CLIP_TOL_PX + 0.1, True)):
+            with self.subTest(over=over):
+                m = self.analyze(swap_label("Loan API", clipped_px=over))
+                self.assertEqual(bool(m["font_swap"]["hidden"]), hidden)
+
+    def test_a_label_past_the_figure_edge_is_hidden_even_when_visible(self):
+        m = self.analyze(swap_label("send reminder", overflow="visible", outside_px=6.5,
+                                    kind="edge"))
+        self.assertEqual([(h["label"], h["where"]) for h in m["font_swap"]["hidden"]],
+                         [("send reminder", "the figure's edge")])
+
+    def test_a_label_past_its_node_border_fails(self):
+        m = self.analyze(swap_label("Client apps CRM dashboard MMA MacWhisper",
+                                    overflow="visible", past_shape_px=3.75))
+        self.assertEqual(m["font_swap"]["hidden"], [])
+        self.assertEqual([(p["label"], p["overflow_px"]) for p in m["font_swap"]["past_border"]],
+                         [("Client apps CRM dashboard MMA MacWhisper", 3.8)])
+        fails = [f for f in sg.evaluate(m, NOTATION) if f["severity"] == "fail"]
+        self.assertEqual([f["check"] for f in fails], ["font_swap"])
+        self.assertIn("border", fails[0]["message"])
+
+    def test_the_clip_tolerance_holds_for_the_border(self):
+        for over, past in ((sg.CLIP_TOL_PX - 0.1, False), (sg.CLIP_TOL_PX + 0.1, True)):
+            with self.subTest(over=over):
+                m = self.analyze(swap_label("Client apps", overflow="visible",
+                                            past_shape_px=over))
+                self.assertEqual(bool(m["font_swap"]["past_border"]), past)
+
+    def test_a_label_outside_a_node_has_no_border(self):
+        m = self.analyze(swap_label("nudge", overflow="visible", past_shape_px=None,
+                                    kind="edge"))
+        self.assertEqual((m["font_swap"]["hidden"], m["font_swap"]["past_border"]), ([], []))
+
+    def test_a_measurement_without_the_swap_gives_no_finding(self):
+        m = self.analyze(swap=False)
+        self.assertEqual(m["font_swap"]["probed"], False)
+        self.assertNotIn("font_swap", [f["check"] for f in sg.evaluate(m, NOTATION)])
+        # metrics stored before TASK 121 hold no font_swap key at all
+        old = base_metrics()
+        del old["font_swap"]
+        self.assertNotIn("font_swap", [f["check"] for f in sg.evaluate(old, NOTATION)])
+
+    def test_the_threshold_decides_fail_or_warn(self):
+        m = self.analyze(swap_label("Loan API", clipped_px=3.0))
+        n = json.loads(json.dumps(NOTATION))
+        n["thresholds"]["max_clipped_labels"] = 1
+        self.assertEqual(checks(sg.evaluate(m, n), "fail"), [])
+        self.assertIn("font_swap", checks(sg.evaluate(m, n), "warn"))
+        self.assertEqual(checks(sg.evaluate(m, NOTATION), "fail"), ["font_swap"])
+
+    def test_the_hidden_message_names_the_fix(self):
+        m = self.analyze(swap_label("Loan tables items loans holds", clipped_px=22.5))
+        message = next(f["message"] for f in sg.evaluate(m, NOTATION) if f["check"] == "font_swap")
+        for words in ("Loan tables items loans holds", "22.5", "settings line", "<small>"):
+            self.assertIn(words, message)
+
+    def test_a_label_hidden_and_past_its_border_counts_once(self):
+        # TASK 121 D10 (stage 2 F2): a hidden label gives no past_border entry as well
+        m = self.analyze(swap_label("send reminder", overflow="visible", outside_px=6.5,
+                                    past_shape_px=9.0))
+        self.assertEqual([(h["label"], h["where"]) for h in m["font_swap"]["hidden"]],
+                         [("send reminder", "the figure's edge")])
+        self.assertEqual(m["font_swap"]["past_border"], [])
+
+    def test_a_clipping_box_gives_no_border_entry(self):
+        # R3.3: past_border holds labels whose overflow is visible; text that a box clips within
+        # the tolerance hides nothing and crosses no border
+        m = self.analyze(swap_label("Client apps", clipped_px=sg.CLIP_TOL_PX - 0.5,
+                                    past_shape_px=9.0))
+        self.assertEqual((m["font_swap"]["hidden"], m["font_swap"]["past_border"]), ([], []))
+
+    def test_a_malformed_measurement_raises_value_error(self):
+        # TASK 121 D10, D11 (stage 2 F5, N2): render_check.py turns a ValueError into `not
+        # rendered`; a length is a JSON number whose float is finite
+        for field, value in (("clipped_px", [3.0]), ("outside_px", {"px": 1}),
+                             ("past_shape_px", [9.0]), ("clipped_px", True),
+                             ("outside_px", float("nan")), ("past_shape_px", float("inf")),
+                             ("past_shape_px", "wide"), ("clipped_px", "3.5"),
+                             ("outside_px", 10 ** 400)):
+            with self.subTest(field=field, value=value):
+                label = swap_label("Loan API", overflow="visible", past_shape_px=0.0)
+                label[field] = value
+                with self.assertRaises(ValueError):
+                    self.analyze(label)
+        for swap in ({"labels": 3, "font_family": ".SF NS"}, {"labels": "Loan API"}, ["labels"]):
+            with self.subTest(swap=swap):
+                measure = measure_of()
+                measure["font_swap"] = swap
+                with self.assertRaises(ValueError):
+                    sg.analyze_svg(fixture_svg("fx-tree", "v11"), 900, measure)
+
+    def test_a_stored_metric_that_is_no_object_raises_value_error(self):
+        # grade_figures.py turns it into an instrument error, render_check.py into `not rendered`;
+        # only a missing key or null reads as a render the swap did not run in (D11, stage 2 N1)
+        for value in ([], "", 0, False, ["probed"], "x"):
+            with self.subTest(value=value):
+                m = base_metrics()
+                m["font_swap"] = value
+                with self.assertRaises(ValueError):
+                    sg.evaluate(m, NOTATION)
+        m = base_metrics()
+        m["font_swap"] = None
+        self.assertNotIn("font_swap", [f["check"] for f in sg.evaluate(m, NOTATION)])
+
+    def test_a_control_character_of_the_font_name_is_escaped(self):
+        # TASK 121 D10, D11 (stage 2 security F1, CWE-150; N3): the name is printed in each
+        # finding and in the report of render_check.py. A backslash is doubled, so the text \x1b
+        # never reads as an escaped ESC
+        measure = measure_of()
+        measure["font_swap"] = {"labels": [swap_label("Loan API", clipped_px=9.0)],
+                                "font_family": "Swap\x1b[2J\x9bFont\u2028 \\x1b"}
+        m = sg.analyze_svg(fixture_svg("fx-tree", "v11"), 900, measure)
+        self.assertEqual(m["font_swap"]["font_family"], "Swap\\x1b[2J\\x9bFont\\u2028 \\\\x1b")
+        message = next(f["message"] for f in sg.evaluate(m, NOTATION) if f["check"] == "font_swap")
+        self.assertIn("Swap\\x1b[2J", message)
+        self.assertNotRegex(message, "[\x00-\x1f\x7f-\x9f\u2028]")
+
+
 class TestFired(unittest.TestCase):
     def test_gate_checks_need_a_fail(self):
         warn = [{"check": "crossings", "severity": "warn", "message": ""}]

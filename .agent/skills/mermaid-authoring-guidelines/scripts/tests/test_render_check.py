@@ -246,6 +246,29 @@ class TestSourceReading(unittest.TestCase):
         self.assertNotIn("-t", v11)
         self.assertEqual(v11[v11.index("-w") + 1], "1800")
 
+    def test_measure_command_line(self):
+        # TASK 121 R3.2: the renders of the version GitHub runs redraw their labels in its font
+        def renderer(tag):
+            return rc.Renderer(tag=tag, mermaid="x", mmdc=Path("mmdc"),
+                               puppeteer_config=Path("p.json"), root=Path("."), cli="11.17.0")
+        p = Path("f")
+        css = NOTATION["renderers"]["font_swap"]["css"]
+        v11 = rc.measure_command(renderer("v11"), p, p, "white", NOTATION)
+        self.assertEqual(v11[:2], ["node", str(rc.MEASURE_SCRIPT)])
+        self.assertEqual(v11[v11.index("--font-swap") + 1], css)
+        v10 = rc.measure_command(renderer("v10"), p, p, "#0d1117", NOTATION)
+        self.assertNotIn("--font-swap", v10)
+        self.assertEqual(v10[v10.index("--background") + 1], "#0d1117")
+        bare = json.loads(json.dumps(NOTATION))
+        del bare["renderers"]["font_swap"]
+        self.assertNotIn("--font-swap", rc.measure_command(renderer("v11"), p, p, "white", bare))
+
+    def test_render_settings_hold_the_font_swap(self):
+        # evidence measured under another swap stylesheet reads as stale (TASK 121 R3.2)
+        swap = NOTATION["renderers"]["font_swap"]
+        self.assertEqual(rc.render_settings(NOTATION)["font_swap"],
+                         {"tags": sorted(swap["tags"]), "css": swap["css"]})
+
     def test_negative_render_check_names_are_the_gate_checks(self):
         # the lint (MA-NEG-02) and the render check accept the same render check names
         self.assertEqual(set(mm.RENDER_CHECK_NAMES), set(sg.GATE_CHECKS))
@@ -338,6 +361,23 @@ class TestRunOutcomes(StubbedRun):
     def test_a_failure_wins_over_a_skipped_render(self):
         code, out, _ = self.run_main(self.doc(FLOW + "%% FAILS crossings\n"), "--no-dark")
         self.assertEqual(code, 1, out)
+
+    def test_the_report_names_the_swap_font(self):
+        # TASK 121 R3.6: a probed render names the font GitHub's stylesheet resolved to
+        def swapped(source, renderer, out_base, dark=False, notation=None):
+            res = fake_render(source, renderer, out_base, dark, notation)
+            if renderer.tag == "v11":
+                res.metrics["font_swap"] = {"probed": True, "font_family": ".SF NS",
+                                            "hidden": [], "past_border": []}
+            return res
+        rc.render = swapped
+        code, out, _ = self.run_main(self.doc(FLOW))
+        self.assertEqual(code, 0, out)
+        lines = [x for x in out.splitlines() if " mermaid " in x]
+        v11 = [x for x in lines if x.strip().startswith("v11")]
+        v10 = [x for x in lines if x.strip().startswith("v10")]
+        self.assertTrue(v11 and all("font Trebuchet MS, swap font .SF NS" in x for x in v11), out)
+        self.assertTrue(v10 and not any("swap font" in x for x in v10), out)
 
     def test_a_parse_error_fails_the_figure(self):
         code, out, _ = self.run_main(self.doc(FLOW + "%% PARSE-ERROR-IN-v10\n"))
@@ -973,6 +1013,9 @@ args = sys.argv[1:]
 if spec.get("cwd_log"):
     with open(spec["cwd_log"], "a") as fh:
         fh.write(os.getcwd() + "\\n")
+if spec.get("argv_log"):
+    with open(spec["argv_log"], "a") as fh:
+        fh.write(json.dumps(args) + "\\n")
 time.sleep(spec.get("sleep", 0))
 for flag, key in (("-o", "svg"), ("--png", "png")):
     if spec.get(key) is not None and flag in args:
@@ -1117,6 +1160,31 @@ class TestRenderWithStandIns(unittest.TestCase):
                 self.assertEqual(res.status, "not_rendered")
                 self.assertIn(words, res.log)
 
+    def test_a_refused_stylesheet_leaves_the_render_not_rendered(self):
+        # TASK 121 R3.2: the 11.17.2 measurement carries the swap stylesheet; a measurement that
+        # exits 3 on it says nothing about the figure
+        log = self.dir / "argv.log"
+        self.program("node", {"exit": 3, "argv_log": str(log),
+                              "log": "measure_text.mjs: --font-swap holds a refused character"},
+                     folder=self.bin)
+        res = self.render()
+        self.assertEqual(res.status, "not_rendered")
+        self.assertIn("text measurement failed", res.log)
+        argv = json.loads(log.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(argv[argv.index("--font-swap") + 1],
+                         NOTATION["renderers"]["font_swap"]["css"])
+
+    def test_a_malformed_swap_measurement_is_not_rendered(self):
+        # TASK 121 D10 (stage 2 F5): the run reports the render; it does not end in a traceback
+        for swap in ({"labels": 3}, ["labels"],
+                     {"labels": [{"text": "A", "overflow": "visible", "clipped_px": [1.0]}]}):
+            with self.subTest(swap=swap):
+                self.program("node", {"stdout": json.dumps(dict(MEASURE, font_swap=swap)),
+                                      "png": "png"}, folder=self.bin)
+                res = self.render()
+                self.assertEqual(res.status, "not_rendered")
+                self.assertIn("could not be analysed", res.log)
+
     def test_a_notation_without_legibility_exemptions_is_not_rendered(self):
         # the exempt classes are notation values; without them the text cannot be measured
         n = json.loads(json.dumps(NOTATION))
@@ -1212,6 +1280,35 @@ def installed_v11():
     return installed("v11")
 
 
+class TestMeasureScriptOptions(unittest.TestCase):
+    """measure_text.mjs checks the swap stylesheet before it reads a file or starts a browser
+    (TASK 121 R3.1). Needs node only."""
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not on PATH")
+
+    def run_measure(self, css):
+        d = temp_dir(self)
+        return subprocess.run(["node", str(rc.MEASURE_SCRIPT), str(d / "missing.json"),
+                               str(d / "missing.svg"), "--font-swap", css],
+                              capture_output=True, text=True, timeout=60)
+
+    def test_a_refused_character_exits_3(self):
+        for css in ("* { background: url(x) }", "@import x;", "a { b: c } </style>",
+                    "a { b: \\75 rl(x) }", "a { b: image-set(x) }"):
+            with self.subTest(css=css):
+                run = self.run_measure(css)
+                self.assertEqual(run.returncode, 3, run.stderr)
+                self.assertIn("--font-swap", run.stderr)
+
+    def test_the_notation_stylesheet_is_accepted(self):
+        # the option check passes; the missing puppeteer config then ends the run with exit 2
+        run = self.run_measure(NOTATION["renderers"]["font_swap"]["css"])
+        self.assertEqual(run.returncode, 2, run.stderr)
+        self.assertIn("puppeteer config", run.stderr)
+
+
 class TestWithInstalledRenderers(unittest.TestCase):
     """measure_text.mjs runs in a browser, so its measurements are checked on real renders."""
 
@@ -1286,6 +1383,48 @@ class TestWithInstalledRenderers(unittest.TestCase):
         clipped = [c for c in res.metrics["clipped_labels"] if c["label"].startswith("Campaign")]
         self.assertEqual([c["where"] for c in clipped], ["the figure's edge"])
         self.assertIn("clipped_labels", [f["check"] for f in res.findings if f["severity"] == "fail"])
+
+    def test_github_font_swap_cuts_the_old_form_and_keeps_the_new_one(self):
+        # TASK 121 R6.3: the old settings line with <small> second lines loses label text once
+        # the labels take GitHub's font; the line of R1.1 with plain second lines keeps it whole
+        old_line = ('%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": '
+                    '45, "rankSpacing": 55, "wrappingWidth": 400}}}%%')
+        body = ('flowchart TB\n'
+                '  CLI(["Library clients<br/>%scatalogue site · self-service kiosk%s"])\n'
+                '  FN[["Loan functions<br/>%scheckout() · renew() · give_back()%s"]]\n'
+                '  CLI --> FN\n')
+        old = self.render(old_line + "\n" + body % ("<small>", "</small>", "<small>", "</small>"))
+        swap = old.metrics["font_swap"]
+        self.assertTrue(swap["probed"], old.metrics)
+        self.assertTrue(swap["font_family"])
+        self.assertTrue(swap["hidden"], swap)
+        self.assertIn("font_swap", [f["check"] for f in old.findings if f["severity"] == "fail"])
+        new = self.render(NOTATION["settings"]["flowchart"] + "\n" + body % ("", "", "", ""))
+        swap = new.metrics["font_swap"]
+        self.assertTrue(swap["probed"], new.metrics)
+        self.assertEqual((swap["hidden"], swap["past_border"]), ([], []))
+        self.assertTrue(sg.passes(new.findings), new.findings)
+
+    def test_github_font_swap_finds_text_past_its_node_border(self):
+        # TASK 121 D10 (stage 2 F1): the border search of R3.1 on a real render. Under the line
+        # of R1.1 no box clips, so a <small> line that GitHub draws at full size runs past its
+        # node's border; the wider node above keeps that text inside the figure's edge
+        res = self.render(NOTATION["settings"]["flowchart"] + "\n"
+                          "flowchart TB\n"
+                          '  W["Interlibrary loan network and regional catalogue partners"]\n'
+                          '  A["Library clients<br/><small>catalogue site · mobile app · '
+                          'self-service kiosk</small>"]\n'
+                          '  B["Loans"]\n'
+                          "  W --> A --> B\n")
+        swap = res.metrics["font_swap"]
+        self.assertTrue(swap["probed"], res.metrics)
+        self.assertEqual(swap["hidden"], [], swap)
+        self.assertEqual(len(swap["past_border"]), 1, swap)
+        self.assertTrue(swap["past_border"][0]["label"].startswith("Library clients"), swap)
+        self.assertGreater(swap["past_border"][0]["overflow_px"], sg.CLIP_TOL_PX)
+        fails = [f for f in res.findings if f["severity"] == "fail"]
+        self.assertEqual([f["check"] for f in fails], ["font_swap"], res.findings)
+        self.assertIn("node's border", fails[0]["message"])
 
     def test_a_puppeteer_configuration_of_the_callers_directory_never_runs(self):
         # SEC2-01: puppeteer runs a .puppeteerrc.cjs it finds in its working directory or a

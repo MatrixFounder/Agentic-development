@@ -1,7 +1,7 @@
 **Рисунок 1.** Развёртывание МедЗаписи — узлы основного ЦОД-1 и резервного ЦОД-2, запросы и потоки данных между ними.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
     accTitle: Развёртывание МедЗаписи
     accDescr: Узлы основного ЦОД-1 и резервного ЦОД-2, запросы и потоки данных между ними.
@@ -10,14 +10,14 @@ flowchart TB
     subgraph DC1["ЦОД-1"]
         WAF["WAF"]
         VPN["VPN-шлюз"]
-        LB["Балансировщик<br/><small>HAProxy, пара active/passive</small>"]
-        APP("Узлы приложения<br/><small>app-01 · app-02 · app-03</small>")
-        DB1[("СУБД основная<br/><small>PostgreSQL 15</small>")]
-        MON["Сервер мониторинга<br/><small>Zabbix</small>"]
+        LB["Балансировщик<br/>HAProxy, пара active/passive"]
+        APP("Узлы приложения<br/>app-01 · app-02 · app-03")
+        DB1[("СУБД основная<br/>PostgreSQL 15")]
+        MON["Сервер мониторинга<br/>Zabbix"]
     end
     subgraph DC2["ЦОД-2"]
         DB2[("СУБД резервная")]
-        BAK{{"Сервер резервных копий<br/><small>хранит копии 14 дней</small>"}}
+        BAK{{"Сервер резервных копий<br/>хранит копии 14 дней"}}
     end
     PAT -->|"по HTTPS"| WAF
     REG --> VPN

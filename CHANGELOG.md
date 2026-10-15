@@ -16,6 +16,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.42.0 — the render check redraws HTML labels in GitHub's font, and the settings lines keep them whole (TASK 121)**
+
+#### Added
+
+- **The render check redraws HTML labels in GitHub's font** (WI-53). For the 11.17.2 renders,
+  light and dark, `render_check.py` passes the stylesheet of `renderers.font_swap` to
+  `measure_text.mjs`. The new check `font_swap` fails a label that the swapped font hides past its
+  box or the figure's edge, or pushes past its node's border. The text report names the swap
+  font.
+- **MA-LABEL-14** warns on `<small>` in a flowchart, state or ER label.
+
+#### Changed
+
+- **The settings lines of flowchart, state, ER, class and requirement figures carry
+  `"themeCSS": "foreignObject { overflow: visible; }"`, and mindmap has a line of its own.**
+  GitHub draws HTML labels in its own font after mermaid sized them; the rule keeps the wider text
+  visible (`renderer-facts.md` RF-23). A figure of the old form gets MA-SET-06 and MA-LABEL-14
+  warnings and fails `font_swap`: copy the new settings line and write plain second lines.
+- **A node's second line is plain text after `<br/>`, never `<small>`.** Its 40 characters count at
+  full size. The figures of the references, the eval fixtures and two figures of `System/Docs`
+  follow. P1 of the paired examples is reworked to stay above the 10 px floor.
+- **MA-SET-06 checks `themeCSS`** as it checks `layout` and `look`, for every kind whose settings
+  line holds it, gantt included.
+- **The committed eval campaign is graded under the notation it ran with**, which its directory now
+  holds. The grader's CLI still reads the live notation.
+
 ### **v3.41.0 — stage 2 of framework-upgrade holds its reviews to the TASK and the lines the change touches (TASK 120)**
 
 #### Changed

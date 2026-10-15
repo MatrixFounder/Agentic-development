@@ -2,7 +2,7 @@
 bus, and which service owns which database.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Container view of Larkspur WMS
   accDescr: The two client apps call the API gateway, which calls the Picking service and the Inventory service. The Picking service reserves stock, prints labels and publishes pick.completed. The Slotting service consumes stock.changed and stores slot assignments through the Inventory service.

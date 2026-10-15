@@ -1,16 +1,28 @@
 ---
 id: WI-53
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-14
 slug: wi-53-mermaid-html-labels-are-cut-on-github
 effort: M
 value: 'a figure that passes the render check is not cut on GitHub'
 source: 'the operator, n8n-lazy-loading-skills, 2026-10-14'
 component: '.claude/skills/mermaid-authoring-guidelines'
+resolved_at: 2026-10-14
+resolved_by: 'TASK 121'
 ---
 
 # WI-53 — Mermaid's HTML labels are cut on GitHub, and the render check cannot see it
+
+> **Done 2026-10-14 (TASK 121).** The proposal, widened to every kind that draws HTML labels in
+> 11.17.2 (TASK D1, D2). The settings lines of flowchart, state, ER, class and requirement carry
+> `"themeCSS": "foreignObject { overflow: visible; }"`, and mindmap has a line of its own. A node's
+> second line is plain text after `<br/>`; MA-LABEL-14 warns on `<small>`, and MA-SET-06 on a line
+> without the pinned `themeCSS`. `render_check.py` redraws the 11.17.2 renders with the stylesheet
+> of `renderers.font_swap`, and its check `font_swap` fails a label that the swap hides or pushes
+> past its node's border. The references, the eval fixtures and two figures of `System/Docs` follow;
+> `renderer-facts.md` RF-23 records the facts. The committed eval campaign is graded under the
+> notation it ran with (TASK D8).
 
 **Seen.** On GitHub's web view, every flowchart and state figure of the n8n-lazy-loading-skills documents had labels
 cut at the right edge of their boxes ("the delivery runne", "Execute Workflow Tri"). The same figures were whole in

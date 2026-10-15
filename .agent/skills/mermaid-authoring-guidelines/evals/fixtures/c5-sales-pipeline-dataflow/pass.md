@@ -1,20 +1,20 @@
 **Figure 1.** Sales data flow — how sales records move from the three sources to the dashboards, the forecast and the quality monitor.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
     accTitle: Sales data flow
     accDescr: How sales records move from the three sources to the dashboards, the forecast and the quality monitor.
-    SRC(["Sources<br/><small>12 POS feeds · Web orders · Loyalty CSV</small>"])
+    SRC(["Sources<br/>12 POS feeds · Web orders · Loyalty CSV"])
     RAW[("Raw zone")]
-    NORM("Normalizer<br/><small>hourly</small>")
+    NORM("Normalizer<br/>hourly")
     STG[("Staging tables")]
-    DEDUP("Deduplicator<br/><small>hourly</small>")
+    DEDUP("Deduplicator<br/>hourly")
     CLEAN[("Clean sales")]
-    LOAD("Warehouse loader<br/><small>nightly</small>")
+    LOAD("Warehouse loader<br/>nightly")
     WH[("Sales warehouse")]
     DASH(["Finance dashboards"])
-    FC("Demand forecast job<br/><small>weekly</small>")
+    FC("Demand forecast job<br/>weekly")
     PLAN["Planning system"]
     DQ("Data quality monitor")
     SRC ==> RAW

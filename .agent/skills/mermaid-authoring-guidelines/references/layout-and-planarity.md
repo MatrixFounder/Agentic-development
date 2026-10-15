@@ -111,7 +111,7 @@ No edge order, direction or engine removes the crossing of a non-planar figure. 
 stores.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   Fld("Field gateway") --> Raw[("Raw archive")]
   Fld --> Ts[("Time series")]
@@ -135,11 +135,11 @@ graph is K3,3, so no layout removes every crossing.
 **Figure 2.** Gateways and stores — the three stores drawn as one node.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Gateways and stores
   accDescr: The three stores drawn as one node.
-  Fld("Field gateway") --> Sto[("Telemetry stores<br/><small>raw archive · time series · alert log</small>")]
+  Fld("Field gateway") --> Sto[("Telemetry stores<br/>raw archive · time series · alert log")]
   Lab("Lab gateway") --> Sto
   Flt("Fleet gateway") --> Sto
   class Fld,Lab,Flt wf
@@ -203,7 +203,7 @@ without groups.
 included.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   P1("Job model") --> P2("Queue store")
   P1 --> P3("Device registry")
@@ -231,7 +231,7 @@ Measured: 5 crossings in each version. The graph is not planar (§2.1).
 after it.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Build order of the print service
   accDescr: Each package with the packages built directly after it.
@@ -353,7 +353,8 @@ never the PNG size. A figure passes when its smallest text keeps at least 10 px 
 - The settings line sets no font size. The default and dark themes draw labels at 16 px in both
   versions.
 - 1440 px = 900 × 16 / 10: the widest figure whose 16 px labels keep 10 px.
-- A `<small>` second line renders at 13.3 px. It keeps 10 px up to 1200 px = 900 × 13.3 / 10.
+- A node's second line renders at the same 16 px: it is plain text after `<br/>`. GitHub would
+  show a `<small>` line at full size in a box sized for small text (`renderer-facts.md` RF-23).
 
 One 12-node container view with edges in reading order, drawn both ways:
 
@@ -378,8 +379,8 @@ Wrapping differs between the versions:
 | :--- | ---: | :--- |
 | edge label at its limit | 24 | 175 px |
 | node first line at its limit | 32 | 234 px |
-| `<small>` second line at its limit | 40 | 249 px |
-| `<small>` second line over its limit | 78 | 472 px in 10.9.8; wrapped at 400 px in 11.17.2 |
+| node second line at its limit | 40 | 276 px, measured 2026-10-14 |
+| node second line over its limit | 78 | 541 px in 10.9.8; wrapped at 400 px in 11.17.2; measured 2026-10-14 |
 
 The limits keep every line under the 400 px wrap, so both versions draw the same lines.
 

@@ -657,6 +657,19 @@ def mmdc_command(renderer: Renderer, mmd: Path, svg: Path, config: Path, backgro
     return cmd
 
 
+def measure_command(renderer: Renderer, svg: Path, png: Path, background: str,
+                    notation: dict) -> list:
+    """The `measure_text.mjs` command line of one render. A render whose tag is in
+    `renderers.font_swap.tags` also passes `--font-swap` with its stylesheet: the script then
+    redraws the HTML labels in GitHub's font and measures them again (TASK 121 R3.2)."""
+    cmd = ["node", str(MEASURE_SCRIPT), str(renderer.puppeteer_config), str(svg),
+           "--png", str(png), "--scale", str(PNG_SCALE), "--background", background]
+    swap = (notation.get("renderers") or {}).get("font_swap") or {}
+    if renderer.tag in (swap.get("tags") or []) and swap.get("css"):
+        cmd += ["--font-swap", str(swap["css"])]
+    return cmd
+
+
 def _mmdc(renderer: Renderer, mmd: Path, svg: Path, config: Path, background: str,
           theme: Optional[str], width: int) -> tuple:
     cmd = mmdc_command(renderer, mmd, svg, config, background, theme, width)
@@ -730,8 +743,7 @@ def _render_files(source: str, renderer: Renderer, out_base: Path, dark: bool, n
         svg_text = svg.read_text(encoding="utf-8")
     if png.exists():
         png.unlink()
-    rc, out, err = _run(["node", str(MEASURE_SCRIPT), str(renderer.puppeteer_config), str(svg),
-                         "--png", str(png), "--scale", str(PNG_SCALE), "--background", background],
+    rc, out, err = _run(measure_command(renderer, svg, png, background, n),
                         MEASURE_TIMEOUT_S, renderer.root)
     if rc != 0:
         return result(False, "not_rendered", "text measurement failed: %s"
@@ -979,14 +991,18 @@ def instrument_sha256(skill_dir: Path = SKILL_DIR) -> str:
 def render_settings(notation: dict) -> dict:
     """The notation values that shaped a render: the fixture test compares them (TASK R9.5).
 
-    The legibility exemptions count: they decide the smallest text the stored metrics hold."""
+    The legibility exemptions count: they decide the smallest text the stored metrics hold. So
+    does `renderers.font_swap`: its tags and stylesheet decide the swapped-font labels (TASK 121)."""
     r = notation["renderers"]
     exempt = (notation.get("thresholds") or {}).get("legibility_exempt_classes")
+    swap = r.get("font_swap") or {}
     return {"column_px": notation["column_px"], "render_width_px": r["render_width_px"],
             "dark": {"theme": r["dark"]["theme"], "background": r["dark"]["background"]},
             "security_level": notation["render"]["security_level"],
             "legibility_exempt_classes": (sorted(exempt, key=str) if isinstance(exempt, list)
-                                          else exempt)}
+                                          else exempt),
+            "font_swap": {"tags": sorted(swap.get("tags") or [], key=str),
+                          "css": swap.get("css")}}
 
 
 def _fixture_key(path: Path) -> str:
@@ -1211,9 +1227,14 @@ def _text_report(report: dict, out_dir: Optional[Path]) -> list:
                 low = float(m.get("smallest_effective_font_px") or 0)
                 if 0 < low < float(m.get("effective_font_px") or 0):
                     text += ", smallest %.1f px (%r)" % (low, m.get("smallest_text") or "")
+                swap = m.get("font_swap") or {}
+                font = r.get("font_family") or "?"
+                if swap.get("probed"):
+                    # the font GitHub's stylesheet resolved to on this machine (TASK 121 R3.6)
+                    font += ", swap font %s" % (swap.get("font_family") or "?")
                 lines.append("    %-9s mermaid %-7s %s  %.0fx%.0f px, %s, font %s%s"
                              % (label, r["mermaid"], verdict, m.get("width", 0), m.get("height", 0),
-                                text, r.get("font_family") or "?", aside))
+                                text, font, aside))
                 for f in r["findings"]:
                     lines.append("      %-4s %s: %s" % (f["severity"], f["check"], f["message"]))
                 for w in m.get("warnings") or []:

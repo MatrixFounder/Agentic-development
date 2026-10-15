@@ -602,12 +602,12 @@ needs no load.
 | :--- | :--- | :--- | :--- |
 | `SKILL.md` | prompt | Step 0 form choice, the authoring contract, the process, the routing table | — |
 | `references/*.md` | prompt | notation per kind, renderer facts, layout, ASCII, paired examples, review | — |
-| `assets/notation.json` | data | budgets, thresholds, settings lines, palette, allowed and avoided kinds | read by tests |
+| `assets/notation.json` | data | budgets, thresholds, settings lines, palette, allowed and avoided kinds, the swap stylesheet | read by tests |
 | `scripts/mermaid_model.py` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII | unit tests |
 | `scripts/lint_mermaid.py` | CLI | static rules with probe pairs; `--inventory` worksheet | yes |
 | `scripts/planarity.py` | library | exact planarity test of a flowchart's simple graph | unit tests |
-| `scripts/svg_geometry.py` | library | crossings, edges through nodes and titles, overlaps, size, from an SVG | fixture tests |
-| `scripts/render_check.py` | CLI | renders with pinned installs, measures text, calls `svg_geometry` | no |
+| `scripts/svg_geometry.py` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG | fixture tests |
+| `scripts/render_check.py` | CLI | renders with pinned installs, measures text, swaps the font of the 11.17.2 renders, calls `svg_geometry` | no |
 | `scripts/setup_renderers.sh` | CLI | installs the pinned renderers into a cache outside the repository | no |
 | `assets/renderers/<tag>/` | data | `package.json` and lockfile per pinned renderer, installed with `npm ci` | — |
 | `assets/renderers/browsers.json` | data | tree sha256 of each browser build the setup accepts without the operator's hash | read by tests |
@@ -626,6 +626,10 @@ two places drifts in one of them.
 3. `lint_mermaid.py` reports static findings. Postcondition: 0 `error`.
 4. `render_check.py` renders in mermaid 11.17.2 and 10.9.8, plus a dark 11.17.2 render.
    Postcondition: exit 0, or exit 2 with `not rendered: <reason>` stated in the hand-off.
+   - In the 11.17.2 renders it then applies GitHub's font, the stylesheet of
+     `renderers.font_swap`, and measures every HTML label again (TASK 121).
+   - The check `font_swap` fails a label that the swap hides past its box or pushes past its
+     node's border.
 5. `lint_mermaid.py --inventory` lists every element; the agent cites a supporting line for each.
 6. The agent inserts caption, fence and legend, and runs the lint on the document.
 
@@ -667,6 +671,11 @@ bundle that `SKILL.md`'s routing table names for the case's figure kind. Keys ar
 any run. The grader imports `lint_mermaid` and `svg_geometry` and restates no threshold. Rendering
 happens once, in `render_corpus.py`, so the grader is a function of committed files and its pin
 runs in CI. The decision rule is TASK 108 D8.
+
+The selftest grades a committed campaign under the `notation.json` its directory holds: the
+notation its gradings derive under (TASK 121 D8). The grader's CLI reads the live notation. Run on
+a committed campaign after a settings line changed, it records K01 failures that the campaign's
+own notation does not give.
 
 ### 10.5 Invariant
 
@@ -732,6 +741,10 @@ scripts only.
   `MERMAID_RENDER_NO_SANDBOX=1` is set.
 - Renders and PNGs are written outside the repository, so a review round's tree fingerprint does
   not change.
+- `measure_text.mjs` takes the swap stylesheet of `renderers.font_swap` as an argument. It accepts
+  letters, digits, spaces and the characters `*{}:;,!".-` only, and exits 3 on any other. It
+  inserts the stylesheet as the text of a `style` element, in the page that runs no script and
+  fetches nothing.
 - `run_evals.py` spends tokens and stays off the safe-command list, like `run_authoring.py`.
 
 ### 10.8 Out of scope

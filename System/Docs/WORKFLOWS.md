@@ -322,7 +322,7 @@ graph TD
 short ones can lead into the full one.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Choosing the product approach
   accDescr: Two questions pick one of the three product workflows; the two short ones can lead into the full one.

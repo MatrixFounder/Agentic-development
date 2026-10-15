@@ -1,7 +1,7 @@
 // Measure rendered text in the browser for render_check.py (TASK 108, R7.5, R7.6, R7.8).
 //
 // Usage: node measure_text.mjs <puppeteer.json> <figure.svg> [--png <out.png>] [--scale <n>]
-//                              [--background <css colour>]
+//                              [--background <css colour>] [--font-swap <css>]
 // Loads the SVG in the pinned chrome-headless-shell through the puppeteer bundled with the
 // mermaid-cli install (the directory that holds <puppeteer.json>), and prints JSON on stdout:
 //   {"labels": [{"text", "kind", "id", "owner", "el", "n", "cls", "bbox": [x, y, w, h],
@@ -49,6 +49,19 @@
 // With --png the SVG is also screenshotted at its natural size times --scale (default 2) on
 // --background (default white), so render_check.py needs one browser start per render.
 //
+// GitHub's font (TASK 121). With --font-swap <css>, after the measurement and the PNG, the script
+// adds a style element whose text is <css> and measures every foreignObject that holds text again,
+// as GitHub shows it: in its own font, <small> at full size, after mermaid sized each box. The
+// JSON then holds "font_swap": {"labels": [{"text", "kind", "id", "owner", "el", "n", "overflow",
+// "clipped_px", "outside_px", "past_shape_px"}], "fonts": [...], "font_family": family | null}.
+// `overflow` is the computed overflow of the foreignObject; `clipped_px` and `outside_px` are the
+// overruns of the swapped text past the foreignObject and past the viewBox; `past_shape_px` is,
+// for a node label, the largest distance a corner of a line box (1 px inside it vertically) lies
+// outside the fill and stroke of every shape of its node, searched in 0.25 px steps along the
+// line, and null for any other label and for a node that draws no shape. The css holds letters,
+// digits, spaces and *{}:;,!".- only; any other character ends the script with exit 3 before a
+// file is read.
+//
 // Safety: page scripts are disabled, and every request except data: URLs is aborted, on top
 // of the network block in puppeteer.json. The SVG is only parsed, laid out and measured. The
 // script works in the directory of <puppeteer.json>, the install directory, before it loads
@@ -67,10 +80,10 @@ function fail(code, message) {
 
 const argv = process.argv.slice(2);
 const positional = [];
-const options = { png: null, scale: 2, background: "white" };
+const options = { png: null, scale: 2, background: "white", "font-swap": null };
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
-  if (a === "--png" || a === "--scale" || a === "--background") {
+  if (a === "--png" || a === "--scale" || a === "--background" || a === "--font-swap") {
     if (i + 1 >= argv.length) fail(3, `${a} needs a value`);
     options[a.slice(2)] = argv[++i];
   } else if (a.startsWith("--")) {
@@ -80,12 +93,18 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 if (positional.length !== 2) {
-  fail(3, "usage: node measure_text.mjs <puppeteer.json> <figure.svg> [--png out.png] [--scale n] [--background colour]");
+  fail(3, "usage: node measure_text.mjs <puppeteer.json> <figure.svg> [--png out.png] [--scale n] [--background colour] [--font-swap css]");
 }
 const scale = Number(options.scale);
 if (!(scale > 0 && scale <= 4)) fail(3, "--scale must be a number in (0, 4]");
 if (!/^(#[0-9A-Fa-f]{3,8}|[A-Za-z]{3,20})$/.test(options.background)) {
   fail(3, "--background must be a hex colour or a colour name");
+}
+// The swap stylesheet holds letters, digits, spaces and *{}:;,!".- only: no url(), no @import,
+// no escape and no markup, so it can neither fetch nor close its style element (TASK 121 R3.1).
+const fontSwap = options["font-swap"];
+if (fontSwap !== null && !/^[A-Za-z0-9 *{}:;,!".-]+$/.test(fontSwap)) {
+  fail(3, "--font-swap holds a character other than letters, digits, spaces and *{}:;,!\".-");
 }
 
 // Every path is resolved before the script leaves the caller's directory.
@@ -539,21 +558,126 @@ function measureInPage() {
   return { labels, titles, font_px: fontPx, kind: figureKind, page: hex(base) };
 }
 
-// The platform fonts that drew the text of each marked element (data-mt), through the DevTools
+// Runs in the page after the swap stylesheet is in place (TASK 121 R3.1). Measures every
+// foreignObject that holds text again, in the font the stylesheet now draws it in. Returns
+// {"labels": [...]}; every measured text holder gets data-ms="<label index>" for the font lookup.
+function swapInPage() {
+  const svg = document.querySelector("svg");
+  const inv = svg.getScreenCTM().inverse();
+  const unit = Math.hypot(inv.a, inv.b) || 1; // root units per client px along the line
+  const corners = (m, x, y, w, h) => {
+    const ps = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]].map(([px, py]) => {
+      const p = new DOMPoint(px, py).matrixTransform(m);
+      return [p.x, p.y];
+    });
+    const xs = ps.map((p) => p[0]);
+    const ys = ps.map((p) => p[1]);
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  };
+  const toRoot = (el) => inv.multiply(el.getScreenCTM());
+  const boxOf = (el) => {
+    const b = el.getBBox();
+    if (!(b.width > 0 && b.height > 0)) return null;
+    return corners(toRoot(el), b.x, b.y, b.width, b.height);
+  };
+  const overflow = (paint, box) => (paint && box
+    ? Math.max(0, box[0] - paint[0], paint[2] - box[2], box[1] - paint[1], paint[3] - box[3]) : 0);
+  const vb = svg.viewBox && svg.viewBox.baseVal;
+  const canvas = vb && vb.width > 0 && vb.height > 0 ? [vb.x, vb.y, vb.x + vb.width, vb.y + vb.height] : null;
+  const round2 = (v) => Math.round(v * 100) / 100;
+  const SHAPES = "rect, circle, ellipse, path, polygon, polyline";
+  // A client point lies on the node when it is in the fill or the stroke of one of its shapes.
+  // A shape that cannot be hit-tested counts as covering the point, so it reports no overrun.
+  const onShape = (shapes, x, y) => shapes.some((s) => {
+    try {
+      const p = new DOMPoint(x, y).matrixTransform(s.getScreenCTM().inverse());
+      return s.isPointInFill(p) || s.isPointInStroke(p);
+    } catch (e) {
+      return true;
+    }
+  });
+  const labels = [];
+  Array.from(svg.querySelectorAll("foreignObject")).forEach((fo, n) => {
+    const t = fo.textContent.replace(/\s+/g, " ").trim().slice(0, 120);
+    if (!t) return;
+    const lines = [];
+    let holder = null;
+    const walker = document.createTreeWalker(fo, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!node.textContent.trim() || !node.parentElement) continue;
+      holder = holder || node.parentElement;
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) lines.push(r);
+    }
+    if (!lines.length) return;
+    const client = [Math.min(...lines.map((r) => r.left)), Math.min(...lines.map((r) => r.top)),
+      Math.max(...lines.map((r) => r.right)), Math.max(...lines.map((r) => r.bottom))];
+    const paint = corners(inv, client[0], client[1], client[2] - client[0], client[3] - client[1]);
+    let kind = "other", id = "", owner = "";
+    const clusterLabel = fo.closest("g.cluster-label");
+    const node = fo.closest("g.node");
+    if (clusterLabel) {
+      kind = "title";
+      const cluster = clusterLabel.closest("g.cluster, g.statediagram-cluster");
+      id = cluster ? cluster.id : "";
+      owner = cluster ? cluster.getAttribute("data-id") || "" : "";
+    } else if (fo.closest("g.edgeLabel")) {
+      kind = "edge";
+      const holderOfId = fo.closest("[data-id]");
+      id = holderOfId ? holderOfId.getAttribute("data-id") : "";
+      owner = id;
+    } else if (node) {
+      kind = "node";
+      id = node.id;
+      owner = node.getAttribute("data-id") || "";
+    }
+    // How far the text runs past its node's shapes: each corner of each line box, 1 px inside
+    // the box vertically, moves toward the line's middle in 0.25 px steps, up to half the line's
+    // width, until it lies on a shape. The largest move, in root units.
+    let past = null;
+    if (kind === "node") {
+      const shapes = Array.from(node.querySelectorAll(SHAPES))
+        .filter((s) => !s.closest("foreignObject") && !s.closest("g.label"));
+      if (shapes.length) {
+        past = 0;
+        for (const r of lines) {
+          const limit = r.width / 2;
+          for (const [x, y, dir] of [[r.left, r.top + 1, 1], [r.right, r.top + 1, -1],
+            [r.left, r.bottom - 1, 1], [r.right, r.bottom - 1, -1]]) {
+            let d = 0;
+            while (d < limit && !onShape(shapes, x + dir * d, y)) d += 0.25;
+            past = Math.max(past, d);
+          }
+        }
+        past = round2(past * unit);
+      }
+    }
+    holder.setAttribute("data-ms", String(labels.length));
+    labels.push({ text: t, kind, id, owner, el: "foreignObject", n,
+                  overflow: getComputedStyle(fo).overflow,
+                  clipped_px: round2(overflow(paint, boxOf(fo))),
+                  outside_px: round2(overflow(paint, canvas)),
+                  past_shape_px: past });
+  });
+  return { labels };
+}
+
+// The platform fonts that drew the text of each element marked with *attr*, through the DevTools
 // protocol: no page script runs. Returns {"byLabel": {index: family}, "fonts": [{family, glyphs}]}.
-async function platformFonts(page, limit) {
+async function platformFonts(page, limit, attr = "data-mt") {
   const client = typeof page.createCDPSession === "function"
     ? await page.createCDPSession() : await page.target().createCDPSession();
   try {
     await client.send("DOM.enable");
     await client.send("CSS.enable");
     const { root } = await client.send("DOM.getDocument", { depth: -1 });
-    const { nodeIds } = await client.send("DOM.querySelectorAll", { nodeId: root.nodeId, selector: "[data-mt]" });
+    const { nodeIds } = await client.send("DOM.querySelectorAll", { nodeId: root.nodeId, selector: `[${attr}]` });
     const byLabel = {};
     const totals = new Map();
     for (const nodeId of nodeIds.slice(0, limit)) {
       const { attributes } = await client.send("DOM.getAttributes", { nodeId });
-      const at = attributes.indexOf("data-mt");
+      const at = attributes.indexOf(attr);
       const label = at >= 0 ? attributes[at + 1] : null;
       const { fonts } = await client.send("CSS.getPlatformFontsForNode", { nodeId });
       let top = null, topCount = -1;
@@ -636,6 +760,32 @@ try {
     await page.screenshot({ path: pngPath,
                             clip: { x: 0, y: 0, width: vb[2] || width, height: vb[3] || height } });
     result.png = pngPath;
+  }
+  if (fontSwap !== null) {
+    // GitHub's view: its stylesheet arrives after mermaid sized every label (TASK 121 R3.1).
+    // The stylesheet is the text of a style element; the page runs no script and fetches nothing.
+    await page.evaluate((css) => {
+      const style = document.createElement("style");
+      style.setAttribute("data-font-swap", "");
+      style.textContent = css;
+      document.head.appendChild(style);
+    }, fontSwap);
+    for (let i = 0; i < 150; i++) {
+      const status = await page.evaluate(() => (document.fonts ? document.fonts.status : "loaded"));
+      if (status === "loaded") break;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    const swapped = await page.evaluate(swapInPage);
+    try {
+      const fonts = await platformFonts(page, FONT_LOOKUP_LIMIT, "data-ms");
+      swapped.fonts = fonts.fonts;
+      swapped.font_family = fonts.fonts.length ? fonts.fonts[0].family : null;
+    } catch (e) {
+      swapped.fonts = [];
+      swapped.font_family = null;
+      swapped.font_error = String(e.message || e).split("\n")[0];
+    }
+    result.font_swap = swapped;
   }
 } catch (e) {
   await browser.close().catch(() => {});

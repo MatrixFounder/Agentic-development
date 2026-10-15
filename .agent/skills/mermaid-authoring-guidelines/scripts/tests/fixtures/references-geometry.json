@@ -3,43 +3,55 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/ascii.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:10:37Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {}
   },
   "references/eval-results.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:10:37Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {}
   },
   "references/flowchart.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
-    "156": {
-     "fence_end": 196,
-     "sha256": "ecbad0d730d516686245d77b95c60f4c7eba2906b92a8434e40424131885abe9",
+    "158": {
+     "fence_end": 198,
+     "sha256": "ab2c71559a357c9f3b8089dfd3b0e4e59c772053c681051ea2154de78a5d3d7d",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -55,8 +67,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 810.1,
-        "height": 503.0,
+        "width": 879.3,
+        "height": 506.1,
         "nodes": 8,
         "edges": 7,
         "crossings": 0,
@@ -66,6 +78,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -113,8 +126,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 810.1,
-        "height": 503.0,
+        "width": 879.3,
+        "height": 506.1,
         "nodes": 8,
         "edges": 7,
         "crossings": 0,
@@ -124,6 +137,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -173,8 +187,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 757.4,
-        "height": 453.0,
+        "width": 819.9,
+        "height": 456.1,
         "nodes": 8,
         "edges": 7,
         "crossings": 0,
@@ -184,6 +198,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -223,9 +238,9 @@
       }
      }
     },
-    "214": {
-     "fence_end": 248,
-     "sha256": "bb9e6fcb7fb769a582893d6eb7f7874e1d75e0978f5a025f507436425128d0b2",
+    "216": {
+     "fence_end": 250,
+     "sha256": "25e5a7c51a5bb2cf8e2cd88162f4284efee4806c23e429aa8a50b91cda36c4d6",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -241,8 +256,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 405.5,
-        "height": 1137.4,
+        "width": 426.9,
+        "height": 1140.4,
         "nodes": 10,
         "edges": 9,
         "crossings": 0,
@@ -252,6 +267,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -301,8 +317,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 405.5,
-        "height": 1137.4,
+        "width": 426.9,
+        "height": 1140.4,
         "nodes": 10,
         "edges": 9,
         "crossings": 0,
@@ -312,6 +328,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -363,8 +380,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 399.6,
-        "height": 967.4,
+        "width": 421.0,
+        "height": 970.4,
         "nodes": 10,
         "edges": 9,
         "crossings": 0,
@@ -374,6 +391,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -415,9 +433,9 @@
       }
      }
     },
-    "268": {
-     "fence_end": 309,
-     "sha256": "962ea713fad0fc70867c12933f90db30de64101c717a86534b13e38365d876f6",
+    "270": {
+     "fence_end": 311,
+     "sha256": "0e94450d8ed1e5abcbf41d168bafb729faa817801950da465d705501f272a21b",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -433,7 +451,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 997.1,
+        "width": 1064.2,
         "height": 918.8,
         "nodes": 8,
         "edges": 7,
@@ -444,12 +462,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 14.44,
+        "effective_font_px": 13.53,
         "smallest_font_px": 16.0,
         "smallest_text": "Zone B",
-        "smallest_effective_font_px": 14.44,
+        "smallest_effective_font_px": 13.53,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -492,7 +511,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 997.1,
+        "width": 1064.2,
         "height": 918.8,
         "nodes": 8,
         "edges": 7,
@@ -503,12 +522,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 14.44,
+        "effective_font_px": 13.53,
         "smallest_font_px": 16.0,
         "smallest_text": "Zone B",
-        "smallest_effective_font_px": 14.44,
+        "smallest_effective_font_px": 13.53,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -553,7 +573,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 908.4,
+        "width": 975.4,
         "height": 818.8,
         "nodes": 8,
         "edges": 7,
@@ -564,12 +584,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 15.85,
+        "effective_font_px": 14.76,
         "smallest_font_px": 16.0,
         "smallest_text": "Zone B",
-        "smallest_effective_font_px": 15.85,
+        "smallest_effective_font_px": 14.76,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -604,9 +625,9 @@
       }
      }
     },
-    "331": {
-     "fence_end": 356,
-     "sha256": "f1ec8aff8599d3f5dc5fb23714c48011315b3562902eed5a0013bb20cf1f59af",
+    "333": {
+     "fence_end": 358,
+     "sha256": "e7db3472d8c8198952de9c131034ad212eecc7671773dd1e5219dfd4a76aa0c4",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -622,7 +643,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 497.5,
+        "width": 546.2,
         "height": 1001.6,
         "nodes": 7,
         "edges": 7,
@@ -633,6 +654,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -677,7 +699,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 497.5,
+        "width": 546.2,
         "height": 1001.6,
         "nodes": 7,
         "edges": 7,
@@ -688,6 +710,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -734,7 +757,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 465.0,
+        "width": 513.7,
         "height": 936.6,
         "nodes": 7,
         "edges": 7,
@@ -745,6 +768,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -784,14 +808,18 @@
    }
   },
   "references/gantt.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
     "393": {
@@ -823,6 +851,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -887,6 +916,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -951,6 +981,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1025,6 +1056,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1078,6 +1110,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1131,6 +1164,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1194,6 +1228,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1258,6 +1293,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1322,6 +1358,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -1370,19 +1407,23 @@
    }
   },
   "references/layout-and-planarity.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
     "113": {
      "fence_end": 130,
-     "sha256": "86b2b651515a2692c71852822c714a21aab385b9e59c4c1175c5eed4e630cbea",
+     "sha256": "08e9f2be5b14f76a86ee7ad2c1e49036af258b761e57c59fb94685f1f9b91240",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-FLOW-05", "crossings", "edges_through_nodes"],
@@ -1420,6 +1461,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1482,6 +1524,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1546,6 +1589,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1580,7 +1624,7 @@
     },
     "137": {
      "fence_end": 149,
-     "sha256": "095da96dc40b1319715c89bb11e537445b1e21e4786ea544f4dd088533e2af73",
+     "sha256": "be16605a4f81f1ce478740d6510b58883e155571c7bfb0cb7eea79dabb4d4acf",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -1597,7 +1641,7 @@
        "metrics": {
         "diagram": "flowchart-v2",
         "width": 487.3,
-        "height": 236.4,
+        "height": 239.2,
         "nodes": 4,
         "edges": 3,
         "crossings": 0,
@@ -1607,6 +1651,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1642,7 +1687,7 @@
        "metrics": {
         "diagram": "flowchart-v2",
         "width": 487.3,
-        "height": 236.4,
+        "height": 239.2,
         "nodes": 4,
         "edges": 3,
         "crossings": 0,
@@ -1652,6 +1697,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1687,7 +1733,7 @@
        "metrics": {
         "diagram": "flowchart-v2",
         "width": 442.3,
-        "height": 206.4,
+        "height": 209.2,
         "nodes": 4,
         "edges": 3,
         "crossings": 0,
@@ -1697,6 +1743,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1725,7 +1772,7 @@
     },
     "205": {
      "fence_end": 226,
-     "sha256": "36cbc1b57817b7bb5cfa0954987390abae893b5f1c5af050d0127e1c5e11d07d",
+     "sha256": "97175ebcbce64df81a07260c6487ad7f79a8295ba80f45c50d0d1fe3f5624b10",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-FLOW-05", "crossings", "MA-BUDGET-01"],
@@ -1758,6 +1805,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1815,6 +1863,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1872,6 +1921,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1906,7 +1956,7 @@
     },
     "233": {
      "fence_end": 250,
-     "sha256": "e17306fecb050af96a0b0cb89d5bf8a0273bf57e660ca66e29e811eab6c28627",
+     "sha256": "dd57b82b8427b34955b77deb7e72664a1d75569890627f1c48cb7d727cff09ce",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -1933,6 +1983,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1982,6 +2033,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2031,6 +2083,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2064,19 +2117,23 @@
    }
   },
   "references/other-kinds.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
-    "96": {
-     "fence_end": 104,
-     "sha256": "87167b5df3aa72f3f401cf9cfd2189043c953f95a7bf5b9c2712c366ccd031ab",
+    "100": {
+     "fence_end": 108,
+     "sha256": "99a9c9dc662433084a01d406dc742b97f611051f5b8274bad4c781caceef1b58",
      "kind": "er",
      "negative": false,
      "negative_names": [],
@@ -2103,6 +2160,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2151,6 +2209,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2201,6 +2260,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 12.0,
         "effective_font_px": 12.0,
@@ -2232,9 +2292,9 @@
       }
      }
     },
-    "130": {
-     "fence_end": 145,
-     "sha256": "bb3b5b49b75b8e79d1f7850138b0f7c5b6f68edbe0d506ff3c4a61afcd34092a",
+    "134": {
+     "fence_end": 149,
+     "sha256": "952823b42e92db10a404ad61c2a2f84028b7b548ca627be6a2ff3d2500358581",
      "kind": "classDiagram",
      "negative": false,
      "negative_names": [],
@@ -2261,6 +2321,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2309,6 +2370,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2357,6 +2419,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2386,9 +2449,9 @@
       }
      }
     },
-    "163": {
-     "fence_end": 182,
-     "sha256": "94428a7e39fe7aad8300a671f400746845a00be6b89401016a79a290a54881f3",
+    "167": {
+     "fence_end": 186,
+     "sha256": "e5899376e16faa8b12930c358fc2dc1e27c6c0819ba281abea559bba0f121c65",
      "kind": "requirement",
      "negative": false,
      "negative_names": [],
@@ -2415,6 +2478,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2470,6 +2534,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2527,6 +2592,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2559,8 +2625,8 @@
       }
      }
     },
-    "198": {
-     "fence_end": 212,
+    "202": {
+     "fence_end": 216,
      "sha256": "4aab7398d54563d18d57ed6b99062d859a218cf3599c34a04c7b3aa3ec3519ff",
      "kind": "gitGraph",
      "negative": false,
@@ -2588,6 +2654,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 10.0,
         "effective_font_px": 10.0,
@@ -2638,6 +2705,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 10.0,
         "effective_font_px": 10.0,
@@ -2689,6 +2757,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 10.0,
         "effective_font_px": 10.0,
@@ -2720,8 +2789,8 @@
       }
      }
     },
-    "237": {
-     "fence_end": 242,
+    "241": {
+     "fence_end": 246,
      "sha256": "8b18991b91e1795246426bfa74d22dbe3bd07b78fe5f46bf3f6c28bbe8151f50",
      "kind": "timeline",
      "negative": false,
@@ -2749,6 +2818,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 14.55,
@@ -2799,6 +2869,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 14.55,
@@ -2848,6 +2919,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2879,8 +2951,8 @@
       }
      }
     },
-    "258": {
-     "fence_end": 271,
+    "262": {
+     "fence_end": 275,
      "sha256": "1b4c0f3b528098816b4abead99d3de5e82337b8d9fc13d72db72c4f21106f996",
      "kind": "quadrantChart",
      "negative": false,
@@ -2908,6 +2980,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2962,6 +3035,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3016,6 +3090,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3051,8 +3126,8 @@
       }
      }
     },
-    "288": {
-     "fence_end": 297,
+    "292": {
+     "fence_end": 301,
      "sha256": "fd52de566c1e56c602d7d88f8f4773d1b85b083f8b586f3e7ae509964e84b886",
      "kind": "journey",
      "negative": false,
@@ -3080,6 +3155,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3130,6 +3206,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3180,6 +3257,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3211,9 +3289,9 @@
       }
      }
     },
-    "320": {
-     "fence_end": 329,
-     "sha256": "69cfd2bddbba9460e5ced22bffae744e840b5143ff4d0bdc8548574579c916b7",
+    "324": {
+     "fence_end": 334,
+     "sha256": "95f42529812694e50e594d9e1a6e319c6a9a38d08359ddddae00cf2256d4d10e",
      "kind": "mindmap",
      "negative": false,
      "negative_names": [],
@@ -3240,6 +3318,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3291,6 +3370,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3342,6 +3422,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3377,22 +3458,26 @@
    }
   },
   "references/renderer-facts.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
-    "100": {
-     "fence_end": 107,
-     "sha256": "91176d572545b2f068c078b18e7b028422f46472a3e0108c037bf11942f1b8be",
+    "102": {
+     "fence_end": 109,
+     "sha256": "c3a2e6762a91ba3f84f226a6cf68465d51a41d441f6d79baac9f0d977640a38e",
      "kind": "flowchart-v2",
      "negative": true,
-     "negative_names": ["MA-SET-06", "MA-SET-07"],
+     "negative_names": ["MA-SET-06", "MA-SET-07", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -3401,7 +3486,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -3416,6 +3501,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Loan desk", "kind": "node", "overflow_px": 3.2, "where": "its box"},
+          {"label": "Catalogue", "kind": "node", "overflow_px": 2.3, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 4.8, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3438,7 +3533,11 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan desk' runs 3.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Catalogue' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 4.8 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v11-dark": {
        "status": "ok",
@@ -3446,7 +3545,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -3461,6 +3560,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Loan desk", "kind": "node", "overflow_px": 3.2, "where": "its box"},
+          {"label": "Catalogue", "kind": "node", "overflow_px": 2.3, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 4.8, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3483,7 +3592,11 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan desk' runs 3.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Catalogue' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 4.8 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v10": {
        "status": "ok",
@@ -3506,6 +3619,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3532,12 +3646,12 @@
       }
      }
     },
-    "128": {
-     "fence_end": 136,
-     "sha256": "11c0b50be83596ea499e0d8a17d7f66bf7d402be1cc17a94edf790ac17f4ca0e",
+    "130": {
+     "fence_end": 138,
+     "sha256": "52bfd848bf78d84d1affc1123ab74546308fe5e92d7cb7cea480e074177f3e0b",
      "kind": "flowchart-v2",
      "negative": true,
-     "negative_names": ["title_crossings", "MA-FLOW-03", "MA-SET-06", "MA-SET-07"],
+     "negative_names": ["title_crossings", "MA-FLOW-03", "MA-SET-06", "MA-SET-07", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -3563,6 +3677,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Reader app", "kind": "node", "overflow_px": 2.3, "where": "its box"},
+          {"label": "Loan API", "kind": "node", "overflow_px": 3.0, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 4.8, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3587,7 +3711,10 @@
         "warnings": []
        },
        "findings": [
-        {"check": "title_crossings", "severity": "fail", "message": "edge Reader->Api crosses the title 'Platform · production cluster'"}
+        {"check": "title_crossings", "severity": "fail", "message": "edge Reader->Api crosses the title 'Platform · production cluster'"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Reader app' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan API' runs 3.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 4.8 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
        ]
       },
       "v11-dark": {
@@ -3613,6 +3740,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Reader app", "kind": "node", "overflow_px": 2.3, "where": "its box"},
+          {"label": "Loan API", "kind": "node", "overflow_px": 3.0, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 4.8, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3638,6 +3775,9 @@
        },
        "findings": [
         {"check": "title_crossings", "severity": "fail", "message": "edge Reader->Api crosses the title 'Platform · production cluster'"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Reader app' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan API' runs 3.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 4.8 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
         {"check": "contrast", "severity": "info", "message": "1 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('request', #cccccc on #585858); reported, not gated"}
        ]
       },
@@ -3664,6 +3804,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3693,12 +3834,12 @@
       }
      }
     },
-    "166": {
-     "fence_end": 181,
-     "sha256": "eceb77c2c05573ff2608e97a559e496a1e0213789531dbc5a00512dad35c1e0c",
+    "168": {
+     "fence_end": 183,
+     "sha256": "0afb03775abb3fb19cecbf34e670f00e027899be6cfe3c6dcc862190aeaac9ce",
      "kind": "flowchart-v2",
      "negative": true,
-     "negative_names": ["MA-FLOW-02", "MA-SET-06", "MA-SET-07"],
+     "negative_names": ["MA-FLOW-02", "MA-SET-06", "MA-SET-07", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -3707,7 +3848,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -3722,6 +3863,19 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "SQL calls", "kind": "edge", "overflow_px": 4.5, "where": "its box"},
+          {"label": "HTTP calls", "kind": "edge", "overflow_px": 3.2, "where": "its box"},
+          {"label": "Seats DB", "kind": "node", "overflow_px": 5.0, "where": "its box"},
+          {"label": "Booking service", "kind": "title", "overflow_px": 4.5, "where": "its box"},
+          {"label": "Web", "kind": "node", "overflow_px": 2.2, "where": "its box"},
+          {"label": "Scheduler", "kind": "node", "overflow_px": 2.9, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3750,7 +3904,14 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'SQL calls' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'HTTP calls' runs 3.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Seats DB' runs 5.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Booking service' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Web' runs 2.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Scheduler' runs 2.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v11-dark": {
        "status": "ok",
@@ -3758,7 +3919,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -3773,6 +3934,19 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "SQL calls", "kind": "edge", "overflow_px": 4.5, "where": "its box"},
+          {"label": "HTTP calls", "kind": "edge", "overflow_px": 3.2, "where": "its box"},
+          {"label": "Seats DB", "kind": "node", "overflow_px": 5.0, "where": "its box"},
+          {"label": "Booking service", "kind": "title", "overflow_px": 4.5, "where": "its box"},
+          {"label": "Web", "kind": "node", "overflow_px": 2.2, "where": "its box"},
+          {"label": "Scheduler", "kind": "node", "overflow_px": 2.9, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3802,6 +3976,12 @@
         "warnings": []
        },
        "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'SQL calls' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'HTTP calls' runs 3.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Seats DB' runs 5.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Booking service' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Web' runs 2.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Scheduler' runs 2.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
         {"check": "contrast", "severity": "info", "message": "2 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('SQL calls', #cccccc on #585858); reported, not gated"}
        ]
       },
@@ -3826,6 +4006,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3858,12 +4039,12 @@
       }
      }
     },
-    "202": {
-     "fence_end": 216,
-     "sha256": "4d3d2a15c3f6e8015378300faccaa22a1a77ff415d1c35f5f9c74b1cc9f362e4",
+    "204": {
+     "fence_end": 218,
+     "sha256": "9779f16385b9df4b8bdf5c4be26691621cb732ef618a2124a89ece87c49dae5e",
      "kind": "stateDiagram",
      "negative": true,
-     "negative_names": ["MA-STATE-01", "MA-SET-06"],
+     "negative_names": ["MA-STATE-01", "MA-SET-06", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -3872,7 +4053,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "stateDiagram",
@@ -3887,6 +4068,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "timer passes", "kind": "edge", "overflow_px": 2.9, "where": "its box"},
+          {"label": "reschedule()", "kind": "edge", "overflow_px": 2.0, "where": "its box"},
+          {"label": "pending", "kind": "node", "overflow_px": 2.3, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3919,7 +4110,11 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'timer passes' runs 2.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'reschedule()' runs 2.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'pending' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v11-dark": {
        "status": "ok",
@@ -3927,7 +4122,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Trebuchet MS",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "stateDiagram",
@@ -3942,6 +4137,16 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "timer passes", "kind": "edge", "overflow_px": 2.9, "where": "its box"},
+          {"label": "reschedule()", "kind": "edge", "overflow_px": 2.0, "where": "its box"},
+          {"label": "pending", "kind": "node", "overflow_px": 2.3, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3975,6 +4180,9 @@
         "warnings": []
        },
        "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'timer passes' runs 2.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'reschedule()' runs 2.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'pending' runs 2.3 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
         {"check": "contrast", "severity": "info", "message": "6 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('request()', #cccccc on #585858); reported, not gated"}
        ]
       },
@@ -3999,6 +4207,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4035,8 +4244,8 @@
       }
      }
     },
-    "239": {
-     "fence_end": 248,
+    "241": {
+     "fence_end": 250,
      "sha256": "058eeec5423b8ff3d7d2b7c3d2a472467f06adc3798b9084ec60b31fba6ec0f1",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4064,6 +4273,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4109,6 +4319,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4154,6 +4365,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4180,8 +4392,8 @@
       }
      }
     },
-    "267": {
-     "fence_end": 277,
+    "269": {
+     "fence_end": 279,
      "sha256": "48b4601ea4e8df454d27d1eac5ede44a593b20a7ca24eee807481fcee91111bf",
      "kind": "sequence",
      "negative": true,
@@ -4209,6 +4421,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 15.53,
@@ -4271,6 +4484,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 15.53,
@@ -4333,6 +4547,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 15.53,
@@ -4376,12 +4591,12 @@
       }
      }
     },
-    "311": {
-     "fence_end": 316,
-     "sha256": "e2e2ea68bb685f4239ab1447ddd93536bdab89733fc104475d3337febebf4180",
+    "313": {
+     "fence_end": 318,
+     "sha256": "5df17a173e18f0fac26baa4daa0de289c4f241c0e96e2cc2d3cd43a9d374bec1",
      "kind": "flowchart-v2",
      "negative": true,
-     "negative_names": ["MA-SET-03", "MA-SET-06", "MA-SET-07"],
+     "negative_names": ["MA-SET-03", "MA-SET-06", "MA-SET-07", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -4390,7 +4605,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Times New Roman",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -4405,6 +4620,15 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Loan desk", "kind": "node", "overflow_px": 3.9, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 5.2, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 14.0,
         "effective_font_px": 14.0,
@@ -4425,7 +4649,10 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan desk' runs 3.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 5.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v11-dark": {
        "status": "ok",
@@ -4433,7 +4660,7 @@
        "mermaid_cli": "11.17.0",
        "browser": "HeadlessChrome/150.0.7871.24",
        "font_family": "Times New Roman",
-       "pass": true,
+       "pass": false,
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
@@ -4448,6 +4675,15 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Loan desk", "kind": "node", "overflow_px": 3.9, "where": "its box"},
+          {"label": "Loans DB", "kind": "node", "overflow_px": 5.2, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 14.0,
         "effective_font_px": 14.0,
@@ -4468,7 +4704,10 @@
         "measured": true,
         "warnings": []
        },
-       "findings": []
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan desk' runs 3.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loans DB' runs 5.2 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
       },
       "v10": {
        "status": "ok",
@@ -4491,6 +4730,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 14.0,
         "effective_font_px": 14.0,
@@ -4515,12 +4755,12 @@
       }
      }
     },
-    "348": {
-     "fence_end": 367,
-     "sha256": "a2fa1a93a7d18a12e279ad4721c0dc40c4be7b0865ed845a49f1c3a2ceb906ec",
+    "350": {
+     "fence_end": 369,
+     "sha256": "b26bb897778b523907858a8800758cad12ebd2961d5f972ac193311c7aa6354b",
      "kind": "flowchart-v2",
      "negative": true,
-     "negative_names": ["edges_through_nodes", "MA-FLOW-03", "MA-LABEL-08", "MA-SET-06", "MA-SET-07"],
+     "negative_names": ["edges_through_nodes", "MA-FLOW-03", "MA-LABEL-08", "MA-SET-06", "MA-SET-07", "font_swap"],
      "status": "expected",
      "renders": {
       "v11": {
@@ -4546,6 +4786,17 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Sensor hub", "kind": "title", "overflow_px": 4.9, "where": "its box"},
+          {"label": "push mode", "kind": "edge", "overflow_px": 3.7, "where": "its box"},
+          {"label": "spawns", "kind": "edge", "overflow_px": 3.9, "where": "its box"},
+          {"label": "zip-libcompression", "kind": "node", "overflow_px": 4.5, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 15.66,
@@ -4578,7 +4829,11 @@
         "warnings": []
        },
        "findings": [
-        {"check": "edges_through_nodes", "severity": "fail", "message": "edge push->mqtt runs 140.1 px inside node zip"}
+        {"check": "edges_through_nodes", "severity": "fail", "message": "edge push->mqtt runs 140.1 px inside node zip"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Sensor hub' runs 4.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'push mode' runs 3.7 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'spawns' runs 3.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'zip-libcompression' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
        ]
       },
       "v11-dark": {
@@ -4604,6 +4859,17 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Sensor hub", "kind": "title", "overflow_px": 4.9, "where": "its box"},
+          {"label": "push mode", "kind": "edge", "overflow_px": 3.7, "where": "its box"},
+          {"label": "spawns", "kind": "edge", "overflow_px": 3.9, "where": "its box"},
+          {"label": "zip-libcompression", "kind": "node", "overflow_px": 4.5, "where": "its box"}
+         ],
+         "past_border": []
+        },
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 15.66,
@@ -4637,6 +4903,10 @@
        },
        "findings": [
         {"check": "edges_through_nodes", "severity": "fail", "message": "edge push->mqtt runs 140.1 px inside node zip"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Sensor hub' runs 4.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'push mode' runs 3.7 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'spawns' runs 3.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'zip-libcompression' runs 4.5 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
         {"check": "contrast", "severity": "info", "message": "3 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('push mode', #cccccc on #585858); reported, not gated"}
        ]
       },
@@ -4663,6 +4933,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4700,8 +4971,8 @@
       }
      }
     },
-    "386": {
-     "fence_end": 390,
+    "388": {
+     "fence_end": 392,
      "sha256": "bacd4d84b5da1d8bfc5e42c6c199037481d3c59a476d0b4f80b6b571fe0a3588",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4729,6 +5000,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4771,6 +5043,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4813,6 +5086,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -4836,8 +5110,8 @@
       }
      }
     },
-    "415": {
-     "fence_end": 432,
+    "420": {
+     "fence_end": 437,
      "sha256": "f4fb8e0feff2fed66a91fec2a1e6bd0ecf7d6403eea09cc2f1da06a3da9134b7",
      "kind": "sequence",
      "negative": true,
@@ -4865,6 +5139,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 9.93,
@@ -4939,6 +5214,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 9.93,
@@ -5013,6 +5289,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 9.93,
@@ -5068,8 +5345,8 @@
       }
      }
     },
-    "459": {
-     "fence_end": 471,
+    "464": {
+     "fence_end": 476,
      "sha256": "9d159ff18a63d967c26e7f1fbc64f3d188f6bb017cbcde17cfd6ace3eef9ca2a",
      "kind": "sequence",
      "negative": true,
@@ -5097,6 +5374,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5159,6 +5437,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5227,6 +5506,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5270,9 +5550,9 @@
       }
      }
     },
-    "529": {
-     "fence_end": 556,
-     "sha256": "a5ef456cc7265efc83ea2a8c41351356b4f117a1d2e4de5e0a166bae20c8b902",
+    "534": {
+     "fence_end": 561,
+     "sha256": "cc7e7f87ecd91ce688222ae7dd3356a375ed11ee2bdb66c932b30c8696f3456b",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -5288,7 +5568,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 393.4,
+        "width": 415.7,
         "height": 554.5,
         "nodes": 6,
         "edges": 5,
@@ -5299,6 +5579,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5341,7 +5622,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 393.4,
+        "width": 415.7,
         "height": 554.5,
         "nodes": 6,
         "edges": 5,
@@ -5352,6 +5633,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5396,7 +5678,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 361.3,
+        "width": 385.7,
         "height": 484.5,
         "nodes": 6,
         "edges": 5,
@@ -5407,6 +5689,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5441,8 +5724,8 @@
       }
      }
     },
-    "566": {
-     "fence_end": 581,
+    "571": {
+     "fence_end": 586,
      "sha256": "eb0c653d86baf181b2089ad48c2cf506ef5995d5baf77ffb3fedda30034d1b41",
      "kind": "sequence",
      "negative": false,
@@ -5470,6 +5753,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5532,6 +5816,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5594,6 +5879,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5636,23 +5922,178 @@
        "findings": []
       }
      }
-    }
-   }
-  },
-  "references/review-checklist.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
-   "settings": {
-    "column_px": 900,
-    "render_width_px": 1800,
-    "dark": {"theme": "dark", "background": "#0d1117"},
-    "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
-   },
-   "figures": {
-    "423": {
-     "fence_end": 449,
-     "sha256": "1514c139d7c50b23f46ac3c4301f932827380990c32689bed164d25253f4e123",
+    },
+    "855": {
+     "fence_end": 862,
+     "sha256": "07187bf35b3f9f995e4564359557eadfea495905974233554d9a540a8ee7026e",
+     "kind": "flowchart-v2",
+     "negative": true,
+     "negative_names": ["font_swap", "MA-SET-06", "MA-SET-07", "MA-LABEL-14"],
+     "status": "expected",
+     "renders": {
+      "v11": {
+       "status": "ok",
+       "mermaid": "11.17.2",
+       "mermaid_cli": "11.17.0",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": false,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 252.4,
+        "height": 221.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Library clientscatalogue site · self-service kiosk", "kind": "node", "overflow_px": 42.0, "where": "its box"},
+          {"label": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "overflow_px": 39.9, "where": "its box"}
+         ],
+         "past_border": []
+        },
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#ffffff",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Library clientscatalogue site · self-service kiosk' runs 42.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan functionscheckout() · renew() · give_back()' runs 39.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"}
+       ]
+      },
+      "v11-dark": {
+       "status": "ok",
+       "mermaid": "11.17.2",
+       "mermaid_cli": "11.17.0",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": false,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 252.4,
+        "height": 221.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {
+         "probed": true,
+         "font_family": ".SF NS",
+         "hidden": [
+          {"label": "Library clientscatalogue site · self-service kiosk", "kind": "node", "overflow_px": 42.0, "where": "its box"},
+          {"label": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "overflow_px": 39.9, "where": "its box"}
+         ],
+         "past_border": []
+        },
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#0d1117",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": [
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Library clientscatalogue site · self-service kiosk' runs 42.0 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "font_swap", "severity": "fail", "message": "in GitHub's font (.SF NS) text 'Loan functionscheckout() · renew() · give_back()' runs 39.9 px past its box and is cut; copy the settings line of the kind, which keeps HTML labels visible, and write the second line without <small>"},
+        {"check": "contrast", "severity": "info", "message": "1 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('borrow · renew', #cccccc on #585858); reported, not gated"}
+       ]
+      },
+      "v10": {
+       "status": "ok",
+       "mermaid": "10.9.8",
+       "mermaid_cli": "10.9.1",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": true,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 252.4,
+        "height": 196.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#ffffff",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": []
+      }
+     }
+    },
+    "870": {
+     "fence_end": 882,
+     "sha256": "998dda6af0e9e53977eea30d382ee65f9faebaeaf1c3914781634777951b9f07",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -5668,7 +6109,171 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 459.6,
+        "width": 293.5,
+        "height": 221.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#ffffff",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": []
+      },
+      "v11-dark": {
+       "status": "ok",
+       "mermaid": "11.17.2",
+       "mermaid_cli": "11.17.0",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": true,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 293.5,
+        "height": 221.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#0d1117",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": [
+        {"check": "contrast", "severity": "info", "message": "1 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('borrow · renew', #cccccc on #585858); reported, not gated"}
+       ]
+      },
+      "v10": {
+       "status": "ok",
+       "mermaid": "10.9.8",
+       "mermaid_cli": "10.9.1",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": true,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 293.5,
+        "height": 196.0,
+        "nodes": 2,
+        "edges": 1,
+        "crossings": 0,
+        "crossing_pairs": [],
+        "edges_through_nodes": [],
+        "title_crossings": [],
+        "edges_through_labels": [],
+        "label_overlaps": [],
+        "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
+        "duplicate_edges": [],
+        "font_px": 16.0,
+        "effective_font_px": 16.0,
+        "smallest_font_px": 16.0,
+        "smallest_text": "borrow · renew",
+        "smallest_effective_font_px": 16.0,
+        "geometry": "modelled",
+        "sequence": {},
+        "gantt": {},
+        "contrast": {
+         "page": "#ffffff",
+         "texts": [
+          {"text": "borrow · renew", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
+          {"text": "Library clientscatalogue site · self-service kiosk", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Loan functionscheckout() · renew() · give_back()", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"}
+         ],
+         "measured": true
+        },
+        "measured": true,
+        "warnings": []
+       },
+       "findings": []
+      }
+     }
+    }
+   }
+  },
+  "references/review-checklist.md": {
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
+   "settings": {
+    "column_px": 900,
+    "render_width_px": 1800,
+    "dark": {"theme": "dark", "background": "#0d1117"},
+    "security_level": "strict",
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
+   },
+   "figures": {
+    "424": {
+     "fence_end": 450,
+     "sha256": "a7c6e5d45c24d6384d8e674dfe1130c40ba6dec4ffe1a4bde4c5b0f0f9fe76cc",
+     "kind": "flowchart-v2",
+     "negative": false,
+     "negative_names": [],
+     "status": "pass",
+     "renders": {
+      "v11": {
+       "status": "ok",
+       "mermaid": "11.17.2",
+       "mermaid_cli": "11.17.0",
+       "browser": "HeadlessChrome/150.0.7871.24",
+       "font_family": "Trebuchet MS",
+       "pass": true,
+       "error": null,
+       "metrics": {
+        "diagram": "flowchart-v2",
+        "width": 474.0,
         "height": 345.7,
         "nodes": 6,
         "edges": 5,
@@ -5679,6 +6284,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5720,7 +6326,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 459.6,
+        "width": 474.0,
         "height": 345.7,
         "nodes": 6,
         "edges": 5,
@@ -5731,6 +6337,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5774,7 +6381,7 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 434.3,
+        "width": 449.0,
         "height": 315.7,
         "nodes": 6,
         "edges": 5,
@@ -5785,6 +6392,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -5821,14 +6429,18 @@
    }
   },
   "references/sequence.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
     "237": {
@@ -5860,6 +6472,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -5953,6 +6566,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -6046,6 +6660,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -6123,19 +6738,23 @@
    }
   },
   "references/state.md": {
-   "generated": "2026-10-05T11:20:40Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:09:16Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
-    "172": {
-     "fence_end": 194,
-     "sha256": "ec20bc02f33c8edf01bc7be877d2f42602fbac6058d85bdcda482cb981d5d3be",
+    "174": {
+     "fence_end": 196,
+     "sha256": "002f99575513034f887a0d7ae1e2792bcb69ed7ca22ebdc2e6c5089ab3c55585",
      "kind": "stateDiagram",
      "negative": false,
      "negative_names": [],
@@ -6162,6 +6781,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -6221,6 +6841,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -6282,6 +6903,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,

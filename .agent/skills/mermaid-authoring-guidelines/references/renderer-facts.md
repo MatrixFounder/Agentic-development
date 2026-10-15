@@ -41,7 +41,7 @@ names the lint rules, lint families and render checks that fail on it.
 - The marker counts only in this skill's `references/` and `scripts/tests/fixtures/`. In any other
   file the lint reports it as the error MA-NEG-03, and both checks grade the fence as a figure.
 
-Figures 1 and 2 (RF-12) are the only fences here that follow every rule.
+Figures 1 and 2 (RF-12) and Figure 3 (RF-23) are the only fences here that follow every rule.
 
 **10.9.3 against 10.9.8.** Each fact whose Versions line names 10.9.3 gave the same result in both
 versions: the same error, an equal SVG tree, or a pixel-equal PNG. RF-15, RF-16 and RF-17 name no
@@ -71,6 +71,8 @@ draws it. The four installs printed v10.9.3, v10.9.8, v11.17.2 and v12.1.0.
 
 - GitHub initializes theme `dark` on its dark page and `default` on its light page (RF-10).
 - GitHub registers the layouts `dagre`, `cose-bilkent` and `swimlane`. It registers no ELK.
+- GitHub draws HTML labels in its own font after mermaid sized them; VS Code showed the same
+  figures whole (RF-23).
 - GitLab self-managed 16.11 to 18.10 runs 10.7.0, below the 10.9 floor. The skill does not
   support it.
 
@@ -103,7 +105,7 @@ flowchart TB
   Desk --> Hold("Hold queue")
   Cat --> Store[("Loans DB")]
   Hold --> Store
-  %% negative: MA-SET-06, MA-SET-07
+  %% negative: MA-SET-06, MA-SET-07, font_swap
 ```
 
 **Observed.**
@@ -132,7 +134,7 @@ flowchart TB
     Api("Loan API")
   end
   Api --> Db[("Loans DB")]
-  %% negative: title_crossings, MA-FLOW-03, MA-SET-06, MA-SET-07
+  %% negative: title_crossings, MA-FLOW-03, MA-SET-06, MA-SET-07, font_swap
 ```
 
 **Observed.**
@@ -177,7 +179,7 @@ flowchart TB
   Mail["Mail relay"]
   App -->|"SQL calls"| Data
   App -->|"HTTP calls"| Mail
-  %% negative: MA-FLOW-02, MA-SET-06, MA-SET-07
+  %% negative: MA-FLOW-02, MA-SET-06, MA-SET-07, font_swap
 ```
 
 **Observed.**
@@ -212,7 +214,7 @@ stateDiagram-v2
   }
   queued --> reserved : allocate()
   confirmed --> deferred : reschedule()
-  %% negative: MA-STATE-01, MA-SET-06
+  %% negative: MA-STATE-01, MA-SET-06, font_swap
 ```
 
 **Observed.**
@@ -312,7 +314,7 @@ the text's table.
 %%{init: {"themeVariables": {"fontFamily": "Helvetica, Arial, sans-serif", "fontSize": "14px"}}}%%
 flowchart TB
   Desk("Loan desk") --> Store[("Loans DB")]
-  %% negative: MA-SET-03, MA-SET-06, MA-SET-07
+  %% negative: MA-SET-03, MA-SET-06, MA-SET-07, font_swap
 ```
 
 **Observed.**
@@ -363,7 +365,7 @@ flowchart TB
   push -->|"publish"| mqtt
   prep --> store
   zip -->|"spawns"| packer
-  %% negative: edges_through_nodes, MA-FLOW-03, MA-LABEL-08, MA-SET-06, MA-SET-07
+  %% negative: edges_through_nodes, MA-FLOW-03, MA-LABEL-08, MA-SET-06, MA-SET-07, font_swap
 ```
 
 **Observed.**
@@ -399,12 +401,15 @@ flowchart TB
 | markdown string, `wrappingWidth` 400 | wrapped at 400 px | wrapped at 400 px | wrapped at 400 px |
 | `<small>` line of 39 characters, no settings line | 1 line | wrapped at 200 px | wrapped at 120 px |
 
-- With the settings line, a 32-character first line over a 40-character `<small>` line stayed on
-  2 lines in every version. The wider line measured at most 248 px in Latin, 278 px in Cyrillic.
+- With the settings line, a 32-character first line over a 40-character plain second line stayed
+  on 2 lines in 10.9.8 and 11.17.2 (2026-10-14). The wider line measured 276 px in Latin and
+  326 px in Cyrillic. A `<small>` second line measured at most 248 px and 278 px (2026-10-02);
+  GitHub shows it at full size (RF-23).
 - 10.9.x never wraps a plain label or a `<small>` line. Their length sets the node's width.
 
 **Rule.** The flowchart settings line sets `wrappingWidth` 400. Break lines with `<br/>`, within
-`labels.node_line1_chars_max` 32 and `labels.node_second_line_chars_max` 40.
+`labels.node_line1_chars_max` 32 and `labels.node_second_line_chars_max` 40. A second line is
+plain text (RF-23).
 
 ### RF-20 — sequence width, participant names and note colours
 
@@ -527,14 +532,14 @@ wide, with 16 px text in 10.9.x and 11.17.2.
 **Figure 1.** Telemetry pipeline — five relations between six components, drawn with the palette.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Telemetry pipeline
   accDescr: Five relations between six components, drawn with the palette.
   Probe(["Field sensor"])
   Gate("Telemetry gateway")
   subgraph Proc["Processing"]
-    Norm("Normaliser<br/><small>units and clock fixes</small>")
+    Norm("Normaliser<br/>units and clock fixes")
     Rule("Rule engine")
   end
   Store[("Readings store")]
@@ -710,6 +715,8 @@ Each item rendered with no error and as written in all four versions.
 - Flowchart shapes: `("…")`, `(["…"])`, `[["…"]]`, `[("…")]`, `["…"]`, `{{"…"}}`.
 - Flowchart edges: `-->`, `-.->`, `==>`, `<-.->`, `~~~`, and labels as `-->|"…"|`.
 - Label markup: `<br/>`, `<small>`, and the entities `#quot;`, `#35;`, `#59;`, `#lt;`, `#gt;`.
+  `<small>` renders in every version, and GitHub shows it at full size: the skill writes none
+  (RF-23).
 - Classes and groups: a named `classDef` with `class`, and `style` on a subgraph id.
 - Sequence: aliases, `autonumber`, `box rgba(…)`, `rect rgba(…)`, `+` and `-` activations, `alt`,
   `loop`, `opt`, `par`, `critical`, `break`, `Note over`, `create` and `destroy`.
@@ -821,6 +828,87 @@ browser build. The setup selects headless mode `shell` for puppeteer 22 or newer
 
 **Rule.** Keep the override while v10 renders with mermaid-cli 10.9.1. Render every reference in
 10.9.8 again after any change of the v10 lockfile.
+
+### RF-23 — GitHub draws HTML labels in its own font after mermaid sized them
+
+**Versions.** 11.17.2 on GitHub, observed 2026-10-14; reproduced with the pinned 11.17.2 and
+10.9.8.
+
+**Observed.** On GitHub, flowchart and state labels were cut at the right edge of their boxes.
+VS Code showed the same figures whole, and the render check passed them in 11.17.2, 10.9.8 and
+dark. Sequence figures were whole.
+
+**Mechanism.**
+
+1. Mermaid measures each HTML label once, in its own font (`"trebuchet ms"`, 16 px), and fixes the
+   label's `foreignObject` to that size. A `<small>` line is measured smaller.
+2. GitHub then shows the labels in its own font, and `<small>` at full size. The text grows wider
+   than its `foreignObject`, which clips it.
+3. A stylesheet present before the drawing clips nothing: the defect is the font change after it.
+4. SVG text has no box that clips it: sequence, gantt, timeline, quadrant and gitGraph figures
+   keep every label.
+5. In 11.17.2, ER, class, requirement and mindmap figures draw HTML labels too. In 10.9.8 only
+   class figures do.
+
+**Negative reproduction.** The settings line before `themeCSS`, and `<small>` second lines.
+
+```mermaid
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+flowchart TB
+  CLI(["Library clients<br/><small>catalogue site · self-service kiosk</small>"])
+  FN[["Loan functions<br/><small>checkout() · renew() · give_back()</small>"]]
+  CLI -->|"borrow · renew"| FN
+  %% negative: font_swap, MA-SET-06, MA-SET-07, MA-LABEL-14
+```
+
+The render check redraws the 11.17.2 renders with the stylesheet of `renderers.font_swap`. Both
+second lines then run past their boxes, and the check `font_swap` fails.
+
+**Figure 3.** Library clients and loan functions — the fix: the settings line with `themeCSS` and
+plain second lines.
+
+```mermaid
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
+flowchart TB
+  accTitle: Library clients and loan functions
+  accDescr: The fix: the settings line with themeCSS and plain second lines.
+  CLI(["Library clients<br/>catalogue site · self-service kiosk"])
+  FN[["Loan functions<br/>checkout() · renew() · give_back()"]]
+  CLI -->|"borrow · renew"| FN
+  class CLI ext
+  class FN fn
+  classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3
+  classDef fn fill:#EEF7EE,stroke:#2E7D32,color:#12361A
+```
+
+Legend: dashed stadium = clients; subroutine box = database functions; arrow = a call.
+
+**Measured.** Variants of 13 figures of one project, each redrawn after the drawing in a GitHub-like
+font with `<small>` at full size:
+
+| Variant | Labels hidden | Text past its node's border |
+| :--- | :--- | :--- |
+| as before | 2 to 27 per figure | — |
+| `htmlLabels: false` | 0 | 0; state transition labels overlap in 11.17, subgraph titles fall to 1.01:1 in dark |
+| more `flowchart.padding` | as before | — |
+| no `<small>` only | fewer | — |
+| `themeCSS` `foreignObject { overflow: visible; }` only | 0 | on the right border |
+| `themeCSS` and no `<small>` | 0 | 0 |
+
+- On GitHub itself, a temporary branch showed four variants. The operator confirmed that the
+  last one renders whole.
+- The same two changes cleared ER, class, requirement and mindmap figures in 11.17.2: 5 to 10
+  hidden labels before, 0 after.
+- The text grows by the font's width, not by a fixed amount. A long second line with capitals
+  can still cross a round border, as the stadium of P1 did by 3.75 px (`paired-examples.md`).
+
+**Viewers.** GitHub swaps the font. VS Code 1.140 showed the figures whole. JetBrains IDEs were not
+observed.
+
+**Rule.** The settings line of each kind that draws HTML labels carries
+`"themeCSS": "foreignObject { overflow: visible; }"`. A node's second line is plain text after
+`<br/>`; the lint reports `<small>` as MA-LABEL-14. The render check fails a label that GitHub's
+font hides or pushes past its node's border (`font_swap`).
 
 ## 8. Gantt facts
 

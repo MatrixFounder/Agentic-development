@@ -21,13 +21,15 @@ of the automation tool n8n do the work. The Postgres schema `cvj` holds the step
    `references/` and `scripts/tests/fixtures/`. The paragraph under the fence gives the measured
    numbers.
 3. A negative carries the settings line of its kind, except N8, which is shown as found. The
-   settings line is then no part of the defect.
+   settings line is then no part of the defect. Since 2026-10-14 it is the line with `themeCSS`
+   (`renderer-facts.md` RF-23), and a node's second line is plain text after `<br/>`.
 4. A positive figure starts with the settings line of its kind from `assets/notation.json` and uses
    the palette of its kind. Its caption sits directly above the fence. Its legend sits directly
    below the fence, because each positive uses two or more encodings.
-5. Numbers come from renders in mermaid 10.9.8 and 11.17.2 in a 900 px column, on 2026-10-02.
-   Every positive was also rendered dark: 11.17.2, theme `dark`, background `#0d1117`. Every label
-   stays legible there.
+5. Numbers come from renders in mermaid 10.9.8 and 11.17.2 in a 900 px column, on 2026-10-02;
+   P1, N6 and P6 were rendered again on 2026-10-14. `themeCSS` moves no node, so the other
+   numbers hold. Every positive was also rendered dark: 11.17.2, theme `dark`, background
+   `#0d1117`. Every label stays legible there.
 6. A **Rework** note follows each positive that failed as drafted. It states what failed, what
    changed, and the numbers before and after per version.
 
@@ -70,7 +72,7 @@ into the database. It has no group and no legend. A timer appears as a node, and
 invented (N2).
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   IN[CRM, web, MMA, MacWhisper] --> SUB[ConversationSubmit, ConversationMmaAdapter]
   SUB -->|job_enqueue| DB[(Postgres cvj)]
@@ -109,26 +111,26 @@ source lines name, groups nodes by system and draws only the relations the sourc
 and the database, sidecar and host script around them.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Container view
   accDescr: The workflows that nudge ConversationDispatch, the two it starts, and the database, sidecar and host script around them.
-  CLI(["Client apps<br/><small>CRM · dashboard · MMA · MacWhisper</small>"])
+  CLI(["Client apps · CRM · MMA<br/>dashboard · MacWhisper"])
   subgraph N8N["n8n-worker"]
-    INTAKE("Intake workflows<br/><small>Submit · MMA adapter</small>")
-    EH("Error handler<br/><small>ConversationOrchestratorErrorHandler</small>")
+    INTAKE("Intake workflows<br/>Submit · MMA adapter")
+    EH("Error handler<br/>ConversationOrchestratorErrorHandler")
     API("ConversationApi")
-    DSP("ConversationDispatch<br/><small>new · each minute and on a nudge</small>")
+    DSP("ConversationDispatch<br/>new · each minute and on a nudge")
     TW("TranscribeWorker")
-    RUN("ConversationOrchestrator<br/><small>the runner</small>")
-    CH("Step children<br/><small>GenerateProtocol · ScoreConversation</small>")
+    RUN("ConversationOrchestrator<br/>the runner")
+    CH("Step children<br/>GenerateProtocol · ScoreConversation")
   end
   subgraph PG["cvj"]
-    FN[["Admission functions<br/><small>only writers of admission columns</small>"]]
-    TBL[("cvj tables<br/><small>steps · settings · host_*</small>")]
+    TBL[("cvj tables<br/>steps · settings · host_*")]
+    FN[["Admission functions<br/>only writers of admission columns"]]
   end
-  SE["skills-executor<br/><small>sidecar · LLM gate</small>"]
-  HOST{{"disk-report.sh<br/><small>host · each minute</small>"}}
+  SE["skills-executor<br/>sidecar · LLM gate"]
+  HOST{{"disk-report.sh<br/>host · each minute"}}
   CLI -->|submit| INTAKE
   INTAKE -.->|nudge| DSP
   EH -.->|nudge| DSP
@@ -141,6 +143,8 @@ flowchart TB
   RUN -->|"claim · finish"| FN
   CH -->|"llm-call"| SE
   HOST -->|"disk · process starts"| TBL
+  %% layout only
+  CH ~~~ FN
   classDef ext fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3
   classDef wfNew fill:#FFF4E0,stroke:#B36B00,color:#4A2C00,stroke-width:2px
   classDef fn fill:#EEF7EE,stroke:#2E7D32,color:#12361A
@@ -179,6 +183,15 @@ GenerateProtocol waits for.
 - After: 1337 × 828 px and 10.8 px in 10.9.8; 1372 × 973 px and 10.5 px in 11.17.2. Both versions:
   0 crossings, 0 edges through nodes, 0 title crossings, 0 label overlaps. The dark render is
   legible.
+- Failed again on 2026-10-14, with the settings line of `renderer-facts.md` RF-23 and second
+  lines at full size. It measured 1493 px and 9.6 px in 11.17.2, and 1441 px and 10.0 px in
+  10.9.8. In GitHub's font the clients' second line ran 3.75 px past the stadium's border.
+- Changed: the cvj tables are declared before the admission functions, and one invisible link,
+  `CH ~~~ FN` with `%% layout only`, puts the schema under the worker. Two client names moved to
+  the stadium's first line.
+- After: 1128 × 859 px and 12.8 px in 10.9.8; 1222 × 1004 px and 11.8 px in 11.17.2. Both
+  versions: 0 crossings, 0 edges through nodes, 0 title crossings, 0 label overlaps. In GitHub's
+  font no label is hidden, and none crosses its node's border.
 
 ### N2 → P2. An invented relation
 
@@ -211,7 +224,7 @@ The verifier of `references/review-checklist.md` rejects an element without a li
 **Negative N3.** Two edges start at the subgraph id `N8N`.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   subgraph N8N["n8n-worker"]
     INTAKE("Intake workflows")
@@ -249,7 +262,7 @@ sentence, from S15.
 **Negative N4.** The edge into ConversationApi enters the node under the title of its group.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   CLI(["Client apps"])
   subgraph N8N["n8n · n8n-worker"]
@@ -275,7 +288,7 @@ inside the title box.
 ConversationApi, and no client edge enters the error handler.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Clients and the n8n-worker group
   accDescr: The client edges enter the intake workflows and ConversationApi, and no client edge enters the error handler.
@@ -313,8 +326,8 @@ Legend:
   from the title.
 - In P1 that edge order left ConversationApi under the title. Its client edge passed 9 px (10.9.8)
   and 4 px (11.17.2) from the title. Declaring the error handler between the intake workflows and
-  ConversationApi moved the error handler there, in both versions. The nearest client edge then
-  passes 86 px and 89 px from the title.
+  ConversationApi moved the error handler there, in both versions. In the rework of P1 of
+  2026-10-14, the nearest client edge passes 75 px (10.9.8) and 80 px (11.17.2) from the title.
 
 **Why.** A shorter title clears the edge only in the font it was measured with. A title above a
 node that no external edge enters stays clear in every font. The edge order moved a node in P4 and
@@ -326,7 +339,7 @@ not in P1; the declaration order moved one in P1 and not in P4. Re-render after 
 **Negative N5.** The sidecar sits alone in a `Sidecars` boundary.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   RUN("ConversationOrchestrator")
   CH("Step children")
@@ -348,13 +361,13 @@ edge enters at the top centre and runs 17 px (10.9.8) and 22 px (11.17.2) inside
 skills-executor.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Step children and the sidecar
   accDescr: The runner waits for the step children, which call skills-executor.
   RUN("ConversationOrchestrator")
   CH("Step children")
-  SE["skills-executor<br/><small>sidecar · LLM gate</small>"]
+  SE["skills-executor<br/>sidecar · LLM gate"]
   RUN -->|"waited call"| CH
   CH -->|"llm-call"| SE
   classDef wfNew fill:#FFF4E0,stroke:#B36B00,color:#4A2C00,stroke-width:2px
@@ -371,24 +384,24 @@ Legend: amber rounded box = workflow · grey rectangle = sidecar · solid arrow 
 `Postgres · cvj`.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart LR
-  CLI(["Client apps<br/><small>CRM · dashboard · MMA · MacWhisper</small>"])
+  CLI(["Client apps · CRM · MMA<br/>dashboard · MacWhisper"])
   subgraph N8N["n8n-worker"]
-    INTAKE("Intake workflows<br/><small>Submit · MMA adapter</small>")
-    EH("Error handler<br/><small>ConversationOrchestratorErrorHandler</small>")
+    INTAKE("Intake workflows<br/>Submit · MMA adapter")
+    EH("Error handler<br/>ConversationOrchestratorErrorHandler")
     API("ConversationApi")
-    DSP("ConversationDispatch<br/><small>new · each minute and on a nudge</small>")
+    DSP("ConversationDispatch<br/>new · each minute and on a nudge")
     TW("TranscribeWorker")
-    RUN("ConversationOrchestrator<br/><small>the runner</small>")
-    CH("Step children<br/><small>GenerateProtocol · ScoreConversation</small>")
+    RUN("ConversationOrchestrator<br/>the runner")
+    CH("Step children<br/>GenerateProtocol · ScoreConversation")
   end
   subgraph PG["Postgres · cvj"]
-    FN[["Admission functions<br/><small>only writers of admission columns</small>"]]
-    TBL[("cvj tables<br/><small>steps · settings · host_*</small>")]
+    FN[["Admission functions<br/>only writers of admission columns"]]
+    TBL[("cvj tables<br/>steps · settings · host_*")]
   end
-  SE["skills-executor<br/><small>sidecar · LLM gate</small>"]
-  HOST{{"disk-report.sh<br/><small>host · each minute</small>"}}
+  SE["skills-executor<br/>sidecar · LLM gate"]
+  HOST{{"disk-report.sh<br/>host · each minute"}}
   CLI -->|submit| INTAKE
   INTAKE -.->|nudge| DSP
   EH -.->|nudge| DSP
@@ -404,12 +417,12 @@ flowchart LR
   %% negative: MA-FLOW-06, legibility, title_crossings
 ```
 
-Fails: MA-FLOW-06, 12 nodes against a limit of 6. Render: legibility, 2133 × 637 px and 6.8 px in
-10.9.8; 2241 × 735 px and 6.4 px in 11.17.2. title_crossings: in each version one edge crosses the
-title "Postgres · cvj".
+Fails: MA-FLOW-06, 12 nodes against a limit of 6. Render, 2026-10-14, with the labels of P1:
+legibility, 2240 × 640 px and 6.4 px in 10.9.8; 2348 × 738 px and 6.1 px in 11.17.2.
+title_crossings: in each version one edge crosses the title "Postgres · cvj".
 
 **Positive P6.** P1 itself, top to bottom: clients on top, workflows in the middle, data and
-services below. Effective font: 10.8 px (10.9.8) and 10.5 px (11.17.2).
+services below. Effective font: 12.8 px (10.9.8) and 11.8 px (11.17.2).
 
 ## 2. The life of one step: N7, N8
 
@@ -692,7 +705,7 @@ Legend:
 **Negative N9.** Two composite states, with transitions into and out of them.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 stateDiagram-v2
     direction TB
     state "waits · holds no place" as Wait {
@@ -719,7 +732,7 @@ border, and the legend names them.
 condition where the source names no writer.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 stateDiagram-v2
     accTitle: The states of a step
     accDescr: Each transition labelled with its writer, or with its condition where the source names no writer.

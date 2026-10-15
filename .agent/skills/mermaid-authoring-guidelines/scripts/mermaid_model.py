@@ -53,8 +53,8 @@ FIGURE_LANGS = ("mermaid", "text figure")
 #: Render check names a negative-fence marker may name (TASK R9.4). `render_check.py` evaluates
 #: them; the lint accepts them in a marker and leaves them to the render check.
 RENDER_CHECK_NAMES = ("crossings", "edges_through_nodes", "title_crossings",
-                      "edges_through_labels", "label_overlaps", "clipped_labels", "legibility",
-                      "contrast", "lifeline_through_label", "gantt_overflow")
+                      "edges_through_labels", "label_overlaps", "clipped_labels", "font_swap",
+                      "legibility", "contrast", "lifeline_through_label", "gantt_overflow")
 
 #: The negative-fence marker: a Mermaid comment `%% negative: <names>`, the last body line of a
 #: fence that shows a defect on purpose. Names are comma-separated.

@@ -28,7 +28,7 @@ The flow is sequential, strictly gated, and human-supervised.
 Director sends the work back.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: The Product Discovery pipeline
   accDescr: Who passes which artifact to whom, and where the Director sends the work back.

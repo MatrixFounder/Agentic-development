@@ -1,11 +1,11 @@
 **Figure 1.** Front-ends and domain services — who calls which domain service.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Front-ends and domain services
   accDescr: Each front-end calls each domain service. Stock service calls Pricing service and imports the Warehouse feed. The Admin console writes to Catalog service and Pricing service.
-  FE("Front-ends<br/><small>Web shop · Mobile BFF · Partner API</small>")
+  FE("Front-ends<br/>Web shop · Mobile BFF · Partner API")
   CAT("Catalog service")
   PRI("Pricing service")
   STK("Stock service")

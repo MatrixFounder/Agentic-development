@@ -352,7 +352,7 @@ verifier finds. The lint reads the source and never the text; the render check m
   fails here.
 
 ```text
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Print path
   accDescr: Every interaction that this section states.
@@ -360,7 +360,7 @@ flowchart TB
   SPOOL("Spooler")
   QUOTA("Quota service")
   JOBS[("jobs table")]
-  AGENT{{"Printer agent<br/><small>host process · every 60 s</small>"}}
+  AGENT{{"Printer agent<br/>host process · every 60 s"}}
   PRN["printer"]
   APP -->|print| SPOOL
   QUOTA -->|"read jobs"| JOBS
@@ -401,9 +401,9 @@ flowchart TB
 
 | Render | Crossings | Through nodes | Through titles | Label overlaps | Cut text | Width px | Font px | Verdict |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
-| 11.17.2 light | 0 | 0 | 0 | 0 | 0 | 511 | 16 | pass |
-| 10.9.8 light | 0 | 0 | 0 | 0 | 0 | 476 | 16 | pass |
-| 11.17.2 dark | 0 | 0 | 0 | 0 | 0 | 511 | 16 | pass |
+| 11.17.2 light | 0 | 0 | 0 | 0 | 0 | 540 | 16 | pass |
+| 10.9.8 light | 0 | 0 | 0 | 0 | 0 | 505 | 16 | pass |
+| 11.17.2 dark | 0 | 0 | 0 | 0 | 0 | 540 | 16 | pass |
 
 ```markdown
 Fidelity: fail · unsupported 1 · contradicted 3 · renamed 0 · missing 1
@@ -414,14 +414,15 @@ The orchestrator records `Fidelity: fail · corroborated` and returns rows 6, 9,
 the author. Each of them is MAJOR (section 4).
 
 **The fix.** The figure below passes the same verifier. Each element has a line, nothing is
-missing, and the caption is true. Measured on 2026-10-02: 0 crossings, 0 edges through nodes,
-0 title crossings, 0 label overlaps and 0 cut labels in 11.17.2, 10.9.8 and the dark 11.17.2.
-Width is 460 px in 11.17.2 and 434 px in 10.9.8; effective text is 16 px.
+missing, and the caption is true. Measured on 2026-10-14: 0 crossings, 0 edges through nodes,
+0 title crossings, 0 label overlaps and 0 cut labels in 11.17.2, 10.9.8 and the dark 11.17.2, and
+no label cut in GitHub's font. Width is 474 px in 11.17.2 and 449 px in 10.9.8; effective text is
+16 px.
 
 **Figure 1.** Print path — every interaction that this section states.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Print path
   accDescr: Every interaction that this section states.
@@ -429,7 +430,7 @@ flowchart TB
   SPOOL("Spooler")
   QUOTA("Quota service")
   JOBS[("jobs table")]
-  AGENT{{"Printer agent<br/><small>host process · every 30 s</small>"}}
+  AGENT{{"Printer agent<br/>host process · every 30 s"}}
   PRN["printer"]
   APP -->|print| SPOOL
   SPOOL -->|"check quota"| QUOTA

@@ -1,0 +1,287 @@
+{
+  "schema": "mermaid-notation/v1",
+  "column_px": 900,
+  "min_effective_font_px": 10,
+  "contrast_min": 4.5,
+  "renderers": {
+    "check_pair": [
+      "v11",
+      "v10"
+    ],
+    "forward": "v12",
+    "installs": {
+      "v10": {
+        "cli": "10.9.1",
+        "mermaid": "10.9.8"
+      },
+      "v11": {
+        "cli": "11.17.0",
+        "mermaid": "11.17.2"
+      },
+      "v12": {
+        "cli": "12.0.0",
+        "mermaid": "12.1.0"
+      }
+    },
+    "dark": {
+      "theme": "dark",
+      "background": "#0d1117"
+    },
+    "render_width_px": 1800
+  },
+  "thresholds": {
+    "max_crossings": 2,
+    "max_edges_through_nodes": 0,
+    "through_node_min_depth_px": 10,
+    "max_title_crossings": 0,
+    "max_label_overlaps": 0,
+    "max_clipped_labels": 0,
+    "max_lifeline_gap_ratio": 2.0,
+    "contrast_scope": "author_set",
+    "legibility_exempt_classes": [
+      "sequenceNumber"
+    ]
+  },
+  "budgets": {
+    "flowchart": {
+      "nodes": [
+        12,
+        18
+      ],
+      "edges": [
+        12,
+        18
+      ]
+    },
+    "sequence": {
+      "participants": [
+        6,
+        6
+      ],
+      "messages": [
+        18,
+        24
+      ],
+      "phase_blocks": [
+        3,
+        4
+      ]
+    },
+    "state": {
+      "states": [
+        12,
+        16
+      ]
+    },
+    "gantt": {
+      "bars": [
+        40,
+        60
+      ]
+    },
+    "er": {
+      "entities": [
+        8,
+        10
+      ]
+    },
+    "ascii": {
+      "elements": [
+        8,
+        12
+      ]
+    },
+    "class": {
+      "classes": [
+        8,
+        10
+      ]
+    },
+    "mindmap": {
+      "nodes": [
+        12,
+        18
+      ]
+    },
+    "timeline": {
+      "periods": [
+        5,
+        5
+      ]
+    },
+    "journey": {
+      "tasks": [
+        4,
+        5
+      ]
+    },
+    "gitgraph": {
+      "commits": [
+        15,
+        20
+      ]
+    }
+  },
+  "labels": {
+    "node_line1_chars_max": 32,
+    "node_second_line_chars_max": 40,
+    "edge_label_chars_max": 24,
+    "sequence_message_chars_max": 24,
+    "note_chars_max": 48,
+    "gantt_label_chars_max": 32,
+    "sequence_message_lines_max": 2,
+    "note_lines_max": 3,
+    "node_label_lines_max": 2,
+    "edge_label_lines_max": 2,
+    "participant_chars_max": 18,
+    "participant_lines_max": 1
+  },
+  "structure": {
+    "lr_max_nodes": 6
+  },
+  "ascii": {
+    "max_columns": 100
+  },
+  "settings": {
+    "flowchart": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%",
+    "state": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
+    "sequence": "%%{init: {\"look\": \"classic\", \"themeVariables\": {\"noteBkgColor\": \"#FFF8E1\", \"noteTextColor\": \"#263238\", \"noteBorderColor\": \"#C9A227\"}, \"sequence\": {\"wrap\": true}}}%%",
+    "er": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
+    "gantt": "%%{init: {\"look\": \"classic\", \"themeVariables\": {\"doneTaskBkgColor\": \"#C8E6C9\", \"doneTaskBorderColor\": \"#2E7D32\", \"activeTaskBkgColor\": \"#FFF3C4\", \"activeTaskBorderColor\": \"#F9A825\", \"taskBkgColor\": \"#FFFFFF\", \"taskBorderColor\": \"#9E9E9E\", \"critBkgColor\": \"#FFFFFF\", \"critBorderColor\": \"#C62828\", \"taskTextColor\": \"#212121\", \"taskTextDarkColor\": \"#212121\"}, \"gantt\": {\"barHeight\": 16, \"barGap\": 4, \"topPadding\": 50, \"fontSize\": 12, \"sectionFontSize\": 12, \"numberSectionStyles\": 2, \"useWidth\": 900}, \"themeCSS\": \".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }\"}}%%",
+    "class": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
+    "requirement": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%"
+  },
+  "palette": {
+    "flowchart": {
+      "ext": "fill:#FFFFFF,stroke:#607D8B,color:#263238,stroke-dasharray:4 3",
+      "wf": "fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47",
+      "wfNew": "fill:#FFF4E0,stroke:#B36B00,color:#4A2C00,stroke-width:2px",
+      "fn": "fill:#EEF7EE,stroke:#2E7D32,color:#12361A",
+      "db": "fill:#F3EEF9,stroke:#5E35B1,color:#2A1653",
+      "svc": "fill:#F5F5F5,stroke:#546E7A,color:#1F2A30",
+      "infra": "fill:#FAFAFA,stroke:#8D6E63,color:#3E2723"
+    },
+    "cluster": "fill:#7F7F7F0D,stroke:#90A4AE",
+    "cluster_band": "fill:#7F7F7F0D,stroke:#90A4AE,stroke-dasharray:6 4",
+    "state": {
+      "hold": "fill:#E8F0FB,stroke:#2E5A8A,color:#0F2A47,stroke-width:2px",
+      "wait": "fill:#FFFFFF,stroke:#607D8B,color:#263238",
+      "final": "fill:#ECEFF1,stroke:#37474F,color:#263238,stroke-dasharray:4 3"
+    },
+    "sequence": {
+      "box": "rgba(127,127,127,0.08)",
+      "phase": "rgba(127,127,127,0.10)"
+    }
+  },
+  "kinds": {
+    "preferred": [
+      "flowchart",
+      "graph",
+      "sequenceDiagram",
+      "stateDiagram-v2",
+      "gantt",
+      "erDiagram"
+    ],
+    "allowed": [
+      "classDiagram",
+      "timeline",
+      "mindmap",
+      "quadrantChart",
+      "journey",
+      "gitGraph",
+      "requirementDiagram"
+    ],
+    "avoid": [
+      "architecture-beta",
+      "block-beta",
+      "block",
+      "C4Context",
+      "C4Container",
+      "C4Component",
+      "C4Dynamic",
+      "C4Deployment",
+      "kanban",
+      "packet-beta",
+      "packet",
+      "radar-beta",
+      "treemap-beta",
+      "pie",
+      "xychart-beta",
+      "xychart",
+      "sankey-beta",
+      "sankey",
+      "venn-beta",
+      "ishikawa-beta",
+      "stateDiagram"
+    ]
+  },
+  "render": {
+    "security_level": "strict",
+    "dark_default": true
+  },
+  "lint": {
+    "theme_value_pattern": "^[\\d \"#%(),.;A-Za-z]+$",
+    "id_pattern": "^[A-Za-z0-9]+$",
+    "unsupported_v10_kinds": [
+      "architecture-beta",
+      "architecture",
+      "block",
+      "kanban",
+      "packet-beta",
+      "packet",
+      "radar-beta",
+      "radar",
+      "treemap-beta",
+      "treemap",
+      "xychart",
+      "sankey",
+      "venn-beta",
+      "venn",
+      "ishikawa-beta",
+      "ishikawa",
+      "treeView-beta",
+      "wardley-beta",
+      "eventmodeling",
+      "swimlane-beta",
+      "cynefin-beta",
+      "railroad-beta",
+      "railroad-ebnf-beta",
+      "railroad-abnf-beta",
+      "railroad-peg-beta",
+      "usecase-beta",
+      "agentflow-beta"
+    ],
+    "numbered_edge_labels_min": 2,
+    "acronym_max_chars": 5,
+    "legend_min_classes": 2,
+    "legend_min_edge_styles": 2,
+    "legend_min_shapes": 3,
+    "theme_text_colours": {
+      "default": "#333333",
+      "dark": "#CCCCCC"
+    },
+    "settings_per_chart_keys": {
+      "gantt": [
+        "useWidth",
+        "leftPadding",
+        "rightPadding",
+        "topAxis"
+      ]
+    }
+  },
+  "shapes": {
+    "flowchart": {
+      "ext": "stadium",
+      "wf": "round",
+      "wfNew": "round",
+      "fn": "subroutine",
+      "db": "cylinder",
+      "svc": "rect",
+      "infra": "hexagon"
+    },
+    "decision_check": {
+      "shape": "rhombus",
+      "classes": ["wf", "wfNew"]
+    }
+  }
+}

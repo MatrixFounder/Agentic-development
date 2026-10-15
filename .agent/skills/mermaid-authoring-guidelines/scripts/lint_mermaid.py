@@ -200,9 +200,9 @@ rule("MA-PARSE-03", "error", "Edge label that the parser rejects",
     _hazard_check("edge-label-bracket", "edge-label-dotted-dot", "edge-label-double-dash"))
 
 rule("MA-PARSE-04", "error", "Tag-like text that the renderer strips from a label",
-     "Write #lt; and #gt; for angle brackets; the tags a label may hold are <br/>, <small>, <b>, <i>.",
+     "Write #lt; and #gt; for angle brackets; the tags a label may hold are <br/>, <b>, <i>.",
      _doc('flowchart TB\n  A["List<T> x"] --> B'),
-     _doc('flowchart TB\n  A["List #lt;T#gt;<br/><small>x</small>"] --> B'))(
+     _doc('flowchart TB\n  A["List #lt;T#gt;<br/>x"] --> B'))(
     _hazard_check("html-tag"))
 
 rule("MA-PARSE-05", "error", "The keyword `end` used as an id",
@@ -460,7 +460,8 @@ def _check_theme(fig, ctx):
 
 
 _SETTINGS_KEY = {"flowchart": "flowchart", "state": "state", "sequence": "sequence", "er": "er",
-                 "gantt": "gantt", "class": "class", "requirementDiagram": "requirement"}
+                 "gantt": "gantt", "class": "class", "requirementDiagram": "requirement",
+                 "mindmap": "mindmap"}
 
 
 def _notation_settings(notation: dict, kind: str) -> Optional[dict]:
@@ -482,19 +483,39 @@ def _settings_probe(fire: bool) -> Callable:
     return make
 
 
-@rule("MA-SET-06", "warn", "Settings line without the pinned layout and look",
+def _no_themecss_probe(notation):
+    """The flowchart settings line without its themeCSS key: the line before TASK 121."""
+    want = _notation_settings(notation, "flowchart") or {}
+    want.pop("themeCSS", None)
+    return _doc("%%{init: " + json.dumps(want) + "}%%\nflowchart TB\n  A --> B")
+
+
+#: The keys MA-SET-06 pins wherever the kind's settings line in notation.json holds them.
+_PINNED_SETTINGS = ("layout", "look", "themeCSS")
+#: A pinned value longer than this is named by its settings entry, not quoted (TASK 121 D9).
+_QUOTED_SETTING_MAX = 60
+
+
+@rule("MA-SET-06", "warn", "Settings line without the pinned layout, look and themeCSS",
       "Copy the settings line of the kind from notation.json; it pins dagre and classic, which "
-      "mermaid 12 changed.",
-      _settings_probe(True), _settings_probe(False))
+      "mermaid 12 changed, and the themeCSS that keeps HTML labels whole in GitHub's font.",
+      (_settings_probe(True), _no_themecss_probe), _settings_probe(False))
 def _check_pinned(fig, ctx):
     want = _notation_settings(ctx.notation, fig.kind)
     if not want:
         return []
-    required = {k: want[k] for k in ("layout", "look") if k in want}
+    required = {k: want[k] for k in _PINNED_SETTINGS if k in want}
     if not required:
         return []
     have = fig.settings.config if fig.settings and isinstance(fig.settings.config, dict) else {}
-    missing = [f'"{k}": "{v}"' for k, v in required.items() if have.get(k) != v]
+    missing = []
+    for key, value in required.items():
+        if have.get(key) == value:
+            continue
+        if isinstance(value, str) and len(value) > _QUOTED_SETTING_MAX:
+            missing.append(f'"{key}" of settings.{_SETTINGS_KEY.get(fig.kind, fig.kind)}')
+        else:
+            missing.append(f'"{key}": "{value}"')
     if missing:
         line = fig.settings.line if fig.settings else _fig_line(fig)
         return [(line, "missing " + ", ".join(missing))]
@@ -949,7 +970,7 @@ def _label_probe(where: str, key: str, fire: bool) -> Callable:
         text = "x" * n
         bodies = {
             "node1": f'flowchart TB\n  A["{text}"] --> B',
-            "node2": f'flowchart TB\n  A["short<br/><small>{text}</small>"] --> B',
+            "node2": f'flowchart TB\n  A["short<br/>{text}"] --> B',
             "edge": f'flowchart TB\n  A -->|"{text}"| B',
             "message": f"sequenceDiagram\n  participant A\n  participant B\n  A->>B: {text}",
             "note": f"sequenceDiagram\n  participant A\n  Note over A: {text}",
@@ -1003,7 +1024,7 @@ def _edge_label_items(fig) -> list:
 
 
 @rule("MA-LABEL-01", "warn", "Node label first line over the character limit",
-      "Keep the name to about 4 words; move the role to a <small> second line.",
+      "Keep the name to about 4 words; move the role to a second line after <br/>.",
       _label_probe("node1", "node_line1_chars_max", True), _label_probe("node1", "node_line1_chars_max", False))
 def _check_node_line1(fig, ctx):
     limit = int(ctx.notation["labels"]["node_line1_chars_max"])
@@ -1120,7 +1141,7 @@ def _check_edge_case(fig, ctx):
 
 
 @rule("MA-LABEL-08", "warn", "Node label with more lines than the limit",
-      "Keep a name line and one <small> role line; further detail belongs in the text.",
+      "Keep a name line and one role line; further detail belongs in the text.",
       _lines_probe("node", "node_label_lines_max", True), _lines_probe("node", "node_label_lines_max", False))
 def _check_node_lines(fig, ctx):
     limit = int(ctx.notation["labels"]["node_label_lines_max"])
@@ -1185,6 +1206,45 @@ def _check_participant_lines(fig, ctx):
     limit = int(ctx.notation["labels"]["participant_lines_max"])
     return [(p.line, f"`{p.id}`: {len(_lines_of(p.label, p.id))} lines > {limit}")
             for p in fig.sequence.participants if len(_lines_of(p.label, p.id)) > limit]
+
+
+def _html_label_items(fig) -> list:
+    """(line, label as written) of every label the parsed kinds draw as HTML: flowchart nodes,
+    subgraph titles and edges, states and transitions, ER entities and relations (TASK 121 R4.1)."""
+    out = []
+    if fig.flowchart:
+        out += [(n.line, n.label) for n in fig.flowchart.nodes.values() if n.label]
+        out += [(s.line, s.title) for s in fig.flowchart.subgraphs.values() if s.title]
+        out += [(e.line, e.label) for e in fig.flowchart.edges if e.label]
+    if fig.state:
+        out += [(s.line, s.label) for s in fig.state.states.values() if s.label]
+        out += [(t.line, t.label) for t in fig.state.transitions if t.label]
+    if fig.er:
+        out += [(e.line, e.alias) for e in fig.er.entities.values() if e.alias]
+        out += [(r.line, r.label) for r in fig.er.relations if r.label]
+    return out
+
+
+_SMALL_TAG = re.compile(r"<\s*small\b", re.IGNORECASE)
+
+
+def _escaped(text: str) -> str:
+    """*text* with each backslash doubled and each character that `str.isprintable()` refuses
+    written as its Python escape, so a label quoted from the linted document cannot drive the
+    terminal, nor print as an escape it does not hold (CWE-150, TASK 121 D11). svg_geometry.py
+    holds the same function; a test pins the two to one output."""
+    return "".join("\\\\" if ch == "\\" else ch if ch.isprintable() else ascii(ch)[1:-1]
+                   for ch in text)
+
+
+@rule("MA-LABEL-14", "warn", "`<small>` in a flowchart, state or ER label",
+      "Write the second line as plain text after <br/>: GitHub shows <small> at full size in a "
+      "box that mermaid sized for small text.",
+      _doc('flowchart TB\n  A["Loan API<br/><small>host app-a</small>"] --> B'),
+      _doc('flowchart TB\n  A["Loan API<br/>host app-a"] --> B'))
+def _check_small(fig, ctx):
+    return [(line, f"<small> in `{_escaped(' '.join(label.split())[:60])}`")
+            for line, label in _html_label_items(fig) if _SMALL_TAG.search(label)]
 
 
 # =========================================================================== CLASS

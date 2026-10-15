@@ -3,19 +3,23 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/paired-examples.md": {
-   "generated": "2026-10-05T11:20:01Z",
-   "instruments": "87698752eee12e61e11c1bdccbe8afed178d85641ccacf645d66be41f1081de7",
+   "generated": "2026-10-14T21:08:44Z",
+   "instruments": "5e07ead23c5e915ef8857e9a5f38d6d093bf1daaff836cfa868e286688ad76ad",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,
     "dark": {"theme": "dark", "background": "#0d1117"},
     "security_level": "strict",
-    "legibility_exempt_classes": ["sequenceNumber"]
+    "legibility_exempt_classes": ["sequenceNumber"],
+    "font_swap": {
+     "tags": ["v11"],
+     "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    }
    },
    "figures": {
-    "72": {
-     "fence_end": 98,
-     "sha256": "daae01b971f670a8ee049ed7ea1892be2da3f2b7ee692031973b79fa8be602bb",
+    "74": {
+     "fence_end": 100,
+     "sha256": "59d2235224ded52d6cdd2a11ef4a7ca84ecda286967bf1be464f1bbb1d969fe8",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-BUDGET-02", "crossings", "edges_through_nodes", "edges_through_labels", "legibility", "MA-BUDGET-01", "MA-FLOW-01", "MA-LABEL-01", "MA-LABEL-03"],
@@ -51,6 +55,7 @@
         ],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [
          {
           "pair": ["DSP", "TW"],
@@ -148,6 +153,7 @@
         ],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [
          {
           "pair": ["DSP", "TW"],
@@ -244,6 +250,7 @@
         ],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [
          {
           "pair": ["DSP", "TW"],
@@ -312,9 +319,9 @@
       }
      }
     },
-    "111": {
-     "fence_end": 158,
-     "sha256": "72ffc198bddb54e68eec627452206220643790fb662c69688a709a7e803ec154",
+    "113": {
+     "fence_end": 162,
+     "sha256": "841aff73892357176550fefeb1c439f25478f8846b939ebffeb0223e80610a25",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -330,8 +337,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 1372.3,
-        "height": 973.0,
+        "width": 1222.5,
+        "height": 1003.6,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
@@ -341,12 +348,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 10.49,
+        "effective_font_px": 11.78,
         "smallest_font_px": 16.0,
         "smallest_text": "cvj",
-        "smallest_effective_font_px": 10.49,
+        "smallest_effective_font_px": 11.78,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -367,7 +375,7 @@
           {"text": "claim · finish", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "llm-call", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "disk · process starts", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
           {"text": "Intake workflowsSubmit · MMA adapter", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Error handlerConversationOrchestratorErrorHandler", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationApi", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
@@ -375,8 +383,8 @@
           {"text": "TranscribeWorker", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationOrchestratorthe runner", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Step childrenGenerateProtocol · ScoreConversation", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
-          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "cvj tablessteps · settings · host_*", "kind": "node", "fg": "#2a1653", "bg": "#f3eef9", "ratio": 13.75, "scope": "author"},
+          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "skills-executorsidecar · LLM gate", "kind": "node", "fg": "#1f2a30", "bg": "#f5f5f5", "ratio": 13.44, "scope": "author"},
           {"text": "disk-report.shhost · each minute", "kind": "node", "fg": "#3e2723", "bg": "#fafafa", "ratio": 13.24, "scope": "author"}
          ],
@@ -397,8 +405,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 1372.3,
-        "height": 973.0,
+        "width": 1222.5,
+        "height": 1003.6,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
@@ -408,12 +416,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 10.49,
+        "effective_font_px": 11.78,
         "smallest_font_px": 16.0,
         "smallest_text": "cvj",
-        "smallest_effective_font_px": 10.49,
+        "smallest_effective_font_px": 11.78,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -434,7 +443,7 @@
           {"text": "claim · finish", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
           {"text": "llm-call", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
           {"text": "disk · process starts", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
           {"text": "Intake workflowsSubmit · MMA adapter", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Error handlerConversationOrchestratorErrorHandler", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationApi", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
@@ -442,8 +451,8 @@
           {"text": "TranscribeWorker", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationOrchestratorthe runner", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Step childrenGenerateProtocol · ScoreConversation", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
-          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "cvj tablessteps · settings · host_*", "kind": "node", "fg": "#2a1653", "bg": "#f3eef9", "ratio": 13.75, "scope": "author"},
+          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "skills-executorsidecar · LLM gate", "kind": "node", "fg": "#1f2a30", "bg": "#f5f5f5", "ratio": 13.44, "scope": "author"},
           {"text": "disk-report.shhost · each minute", "kind": "node", "fg": "#3e2723", "bg": "#fafafa", "ratio": 13.24, "scope": "author"}
          ],
@@ -466,8 +475,8 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 1336.6,
-        "height": 828.0,
+        "width": 1127.6,
+        "height": 858.6,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
@@ -477,12 +486,13 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 10.77,
+        "effective_font_px": 12.77,
         "smallest_font_px": 16.0,
         "smallest_text": "cvj",
-        "smallest_effective_font_px": 10.77,
+        "smallest_effective_font_px": 12.77,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -503,8 +513,8 @@
           {"text": "claim · finish", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "llm-call", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "disk · process starts", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
-          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "cvj tablessteps · settings · host_*", "kind": "node", "fg": "#2a1653", "bg": "#f3eef9", "ratio": 13.75, "scope": "author"},
+          {"text": "Admission functionsonly writers of admission columns", "kind": "node", "fg": "#12361a", "bg": "#eef7ee", "ratio": 12.22, "scope": "author"},
           {"text": "Intake workflowsSubmit · MMA adapter", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Error handlerConversationOrchestratorErrorHandler", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationApi", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
@@ -512,7 +522,7 @@
           {"text": "TranscribeWorker", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "ConversationOrchestratorthe runner", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
           {"text": "Step childrenGenerateProtocol · ScoreConversation", "kind": "node", "fg": "#4a2c00", "bg": "#fff4e0", "ratio": 11.66, "scope": "author"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#263238", "bg": "#ffffff", "ratio": 13.15, "scope": "author"},
           {"text": "skills-executorsidecar · LLM gate", "kind": "node", "fg": "#1f2a30", "bg": "#f5f5f5", "ratio": 13.44, "scope": "author"},
           {"text": "disk-report.shhost · each minute", "kind": "node", "fg": "#3e2723", "bg": "#fafafa", "ratio": 13.24, "scope": "author"}
          ],
@@ -525,9 +535,9 @@
       }
      }
     },
-    "213": {
-     "fence_end": 233,
-     "sha256": "ec9e25703b4001a27fe733570f4d05210f2618e4c35b821d97972493cead02ec",
+    "226": {
+     "fence_end": 246,
+     "sha256": "967a5b8f187e86bbb92fb8696f94880f380361a67dd792c88504ef6ab0443cee",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-FLOW-02"],
@@ -554,6 +564,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.75,
@@ -609,6 +620,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.75,
@@ -666,6 +678,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 13.77,
@@ -702,9 +715,9 @@
       }
      }
     },
-    "251": {
-     "fence_end": 267,
-     "sha256": "aa8b031a55f3eda6646ae847c5c45602270ea990ff826e77b1fafcafc6ac4d1f",
+    "264": {
+     "fence_end": 280,
+     "sha256": "e8d0ba161f9adc59cd4e8e92eff45d4e0a05ef0f43128f2bacd9bb552a9276b7",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["title_crossings"],
@@ -733,6 +746,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -789,6 +803,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -846,6 +861,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -881,9 +897,9 @@
       }
      }
     },
-    "277": {
-     "fence_end": 299,
-     "sha256": "f6a4ba148e24c5adfe330f72e26b60a0a4280f3aeaee450a2b7030dac6811410",
+    "290": {
+     "fence_end": 312,
+     "sha256": "73dbef1366f86a2cba1f3afff0fb1a9e506d19f5f47bc84000ad2c123f3b6310",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -910,6 +926,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -962,6 +979,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1016,6 +1034,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1049,9 +1068,9 @@
       }
      }
     },
-    "328": {
-     "fence_end": 339,
-     "sha256": "0a8b3ea6c32288d150e584a0a1c07cae05c8c786c5586cd15d78f138b6f7d73d",
+    "341": {
+     "fence_end": 352,
+     "sha256": "c71773238e5be14f5863f9738dd0357210bab663c42c6994351b013e70d98e51",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-FLOW-03", "title_crossings"],
@@ -1080,6 +1099,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1131,6 +1151,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1183,6 +1204,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1213,9 +1235,9 @@
       }
      }
     },
-    "350": {
-     "fence_end": 364,
-     "sha256": "4a407b5048b60c87bad4d87615ce89f5b9cc3184449b205abe52e10cfe61e3f3",
+    "363": {
+     "fence_end": 377,
+     "sha256": "34155b16f8c5de2dbb2875e7428c9a555da453bc174d29c0e2fdcd966379ee63",
      "kind": "flowchart-v2",
      "negative": false,
      "negative_names": [],
@@ -1242,6 +1264,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1288,6 +1311,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1336,6 +1360,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1363,9 +1388,9 @@
       }
      }
     },
-    "373": {
-     "fence_end": 405,
-     "sha256": "684f52f1ca80bd23b5b25d6d1de95dd9fd5dde0c10d7a41487dbf2edf7caa6e8",
+    "386": {
+     "fence_end": 418,
+     "sha256": "2e6d78e846ca63806fa287a5217e106374ff274b95bb40eef6d9065ddff070a8",
      "kind": "flowchart-v2",
      "negative": true,
      "negative_names": ["MA-FLOW-06", "legibility", "title_crossings"],
@@ -1381,26 +1406,26 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 2240.8,
-        "height": 734.5,
+        "width": 2347.6,
+        "height": 737.6,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
         "crossing_pairs": [],
         "edges_through_nodes": [],
         "title_crossings": [
-         {"edge": "DSP->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": true, "inside_px": 0.0},
-         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 11.3}
+         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 2.4}
         ],
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 6.43,
+        "effective_font_px": 6.13,
         "smallest_font_px": 16.0,
         "smallest_text": "Postgres · cvj",
-        "smallest_effective_font_px": 6.43,
+        "smallest_effective_font_px": 6.13,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -1421,7 +1446,7 @@
           {"text": "claim · finish", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "llm-call", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
           {"text": "disk · process starts", "kind": "edge", "fg": "#333333", "bg": "#e8e8e8", "ratio": 10.31, "scope": "theme"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "Intake workflowsSubmit · MMA adapter", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "Error handlerConversationOrchestratorErrorHandler", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "ConversationApi", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
@@ -1441,8 +1466,7 @@
        },
        "findings": [
         {"check": "title_crossings", "severity": "fail", "message": "edge RUN->FN crosses the title 'Postgres · cvj'"},
-        {"check": "legibility", "severity": "fail", "message": "text renders at 6.4 px in a 900 px column (figure 2241 px wide, font 16.0 px); the floor is 10 px"},
-        {"check": "title_near_miss", "severity": "warn", "message": "edge DSP->FN passes within the box reserved for the title 'Postgres · cvj'"}
+        {"check": "legibility", "severity": "fail", "message": "text renders at 6.1 px in a 900 px column (figure 2348 px wide, font 16.0 px); the floor is 10 px"}
        ]
       },
       "v11-dark": {
@@ -1455,26 +1479,26 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 2240.8,
-        "height": 734.5,
+        "width": 2347.6,
+        "height": 737.6,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
         "crossing_pairs": [],
         "edges_through_nodes": [],
         "title_crossings": [
-         {"edge": "DSP->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": true, "inside_px": 0.0},
-         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 11.3}
+         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 2.4}
         ],
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 6.43,
+        "effective_font_px": 6.13,
         "smallest_font_px": 16.0,
         "smallest_text": "Postgres · cvj",
-        "smallest_effective_font_px": 6.43,
+        "smallest_effective_font_px": 6.13,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -1495,7 +1519,7 @@
           {"text": "claim · finish", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
           {"text": "llm-call", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
           {"text": "disk · process starts", "kind": "edge", "fg": "#cccccc", "bg": "#585858", "ratio": 4.43, "scope": "theme"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
           {"text": "Intake workflowsSubmit · MMA adapter", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
           {"text": "Error handlerConversationOrchestratorErrorHandler", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
           {"text": "ConversationApi", "kind": "node", "fg": "#cccccc", "bg": "#1f2020", "ratio": 10.17, "scope": "theme"},
@@ -1515,8 +1539,7 @@
        },
        "findings": [
         {"check": "title_crossings", "severity": "fail", "message": "edge RUN->FN crosses the title 'Postgres · cvj'"},
-        {"check": "legibility", "severity": "fail", "message": "text renders at 6.4 px in a 900 px column (figure 2241 px wide, font 16.0 px); the floor is 10 px"},
-        {"check": "title_near_miss", "severity": "warn", "message": "edge DSP->FN passes within the box reserved for the title 'Postgres · cvj'"},
+        {"check": "legibility", "severity": "fail", "message": "text renders at 6.1 px in a 900 px column (figure 2348 px wide, font 16.0 px); the floor is 10 px"},
         {"check": "contrast", "severity": "info", "message": "12 edge text(s) in the viewer's theme colours below 4.5:1, lowest 4.43:1 ('submit', #cccccc on #585858); reported, not gated"}
        ]
       },
@@ -1530,26 +1553,26 @@
        "error": null,
        "metrics": {
         "diagram": "flowchart-v2",
-        "width": 2133.3,
-        "height": 637.0,
+        "width": 2240.1,
+        "height": 640.1,
         "nodes": 12,
         "edges": 12,
         "crossings": 0,
         "crossing_pairs": [],
         "edges_through_nodes": [],
         "title_crossings": [
-         {"edge": "DSP->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": true, "inside_px": 0.0},
-         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 12.2}
+         {"edge": "RUN->FN", "title": "Postgres · cvj", "cluster": "PG", "near_miss": false, "inside_px": 3.2}
         ],
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
-        "effective_font_px": 6.75,
+        "effective_font_px": 6.43,
         "smallest_font_px": 16.0,
         "smallest_text": "Postgres · cvj",
-        "smallest_effective_font_px": 6.75,
+        "smallest_effective_font_px": 6.43,
         "geometry": "modelled",
         "sequence": {},
         "gantt": {},
@@ -1579,7 +1602,7 @@
           {"text": "TranscribeWorker", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "ConversationOrchestratorthe runner", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "Step childrenGenerateProtocol · ScoreConversation", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
-          {"text": "Client appsCRM · dashboard · MMA · MacWhisper", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
+          {"text": "Client apps · CRM · MMAdashboard · MacWhisper", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "skills-executorsidecar · LLM gate", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"},
           {"text": "disk-report.shhost · each minute", "kind": "node", "fg": "#333333", "bg": "#ececff", "ratio": 10.83, "scope": "theme"}
          ],
@@ -1590,14 +1613,13 @@
        },
        "findings": [
         {"check": "title_crossings", "severity": "fail", "message": "edge RUN->FN crosses the title 'Postgres · cvj'"},
-        {"check": "legibility", "severity": "fail", "message": "text renders at 6.8 px in a 900 px column (figure 2133 px wide, font 16.0 px); the floor is 10 px"},
-        {"check": "title_near_miss", "severity": "warn", "message": "edge DSP->FN passes within the box reserved for the title 'Postgres · cvj'"}
+        {"check": "legibility", "severity": "fail", "message": "text renders at 6.4 px in a 900 px column (figure 2240 px wide, font 16.0 px); the floor is 10 px"}
        ]
       }
      }
     },
-    "438": {
-     "fence_end": 451,
+    "451": {
+     "fence_end": 464,
      "sha256": "e131b583e59b820563f2edbcd1d58c24ef0ce2c83420bf3f7c9d0f56e4d182ac",
      "kind": "sequence",
      "negative": true,
@@ -1625,6 +1647,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1717,6 +1740,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1809,6 +1833,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1882,8 +1907,8 @@
       }
      }
     },
-    "465": {
-     "fence_end": 473,
+    "478": {
+     "fence_end": 486,
      "sha256": "4890e196c3d2fc71dd01acf1c9d60d84856d4e2b9e2eb794886b9b72713de304",
      "kind": "sequence",
      "negative": true,
@@ -1913,6 +1938,7 @@
         "clipped_labels": [
          {"label": "step queued, waits for admission · no execution exists", "overflow_px": 54.1, "kind": "note", "where": "its box"}
         ],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -1977,6 +2003,7 @@
         "clipped_labels": [
          {"label": "step queued, waits for admission · no execution exists", "overflow_px": 54.1, "kind": "note", "where": "its box"}
         ],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2042,6 +2069,7 @@
         "clipped_labels": [
          {"label": "step queued, waits for admission · no execution exists", "overflow_px": 54.1, "kind": "note", "where": "its box"}
         ],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2085,8 +2113,8 @@
       }
      }
     },
-    "487": {
-     "fence_end": 528,
+    "500": {
+     "fence_end": 541,
      "sha256": "f14e3c4fc3b156419a6fe04d6553ff5d552415eb7d7d56018027606f0631724f",
      "kind": "sequence",
      "negative": false,
@@ -2114,6 +2142,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -2240,6 +2269,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -2366,6 +2396,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.52,
@@ -2473,8 +2504,8 @@
       }
      }
     },
-    "599": {
-     "fence_end": 647,
+    "612": {
+     "fence_end": 660,
      "sha256": "0d2d11bca9e80bf8d352bf2865e62e8f0a2ebc05f368a9545c910eaf172f17f9",
      "kind": "sequence",
      "negative": false,
@@ -2502,6 +2533,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.47,
@@ -2622,6 +2654,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.47,
@@ -2742,6 +2775,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 11.47,
@@ -2843,9 +2877,9 @@
       }
      }
     },
-    "694": {
-     "fence_end": 709,
-     "sha256": "20a6344338c392972c920d29a697fcbb3b834c60dacde1b719765d6f43bdffae",
+    "707": {
+     "fence_end": 722,
+     "sha256": "fead076801b993229848abcbf0dab3e2ba5e8f154f57cc932062ae820e046323",
      "kind": "stateDiagram",
      "negative": true,
      "negative_names": ["MA-STATE-01"],
@@ -2872,6 +2906,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2927,6 +2962,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -2984,6 +3020,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3020,9 +3057,9 @@
       }
      }
     },
-    "721": {
-     "fence_end": 750,
-     "sha256": "8c480238f3a113a789bd448bcd2598491722dc98782110c5698fc51b8237332b",
+    "734": {
+     "fence_end": 763,
+     "sha256": "0417688e35302ab46ac865d86215d48cc5f3be05dad80b598d6ae4b46fc4a563",
      "kind": "stateDiagram",
      "negative": false,
      "negative_names": [],
@@ -3049,6 +3086,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3114,6 +3152,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": true, "font_family": ".SF NS", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,
@@ -3181,6 +3220,7 @@
         "edges_through_labels": [],
         "label_overlaps": [],
         "clipped_labels": [],
+        "font_swap": {"probed": false, "font_family": "", "hidden": [], "past_border": []},
         "duplicate_edges": [],
         "font_px": 16.0,
         "effective_font_px": 16.0,

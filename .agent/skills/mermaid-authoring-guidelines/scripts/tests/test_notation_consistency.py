@@ -65,7 +65,8 @@ FILE_SETTINGS = {
 #: Figure kind of `mermaid_model` -> key of `settings`. The lint keeps its own map (MA-SET-06);
 #: this one is written out again so that the two checks stay independent.
 SETTINGS_KEY = {"flowchart": "flowchart", "state": "state", "sequence": "sequence", "er": "er",
-                "gantt": "gantt", "class": "class", "requirementDiagram": "requirement"}
+                "gantt": "gantt", "class": "class", "requirementDiagram": "requirement",
+                "mindmap": "mindmap"}
 
 #: First cell of a budget-table row, lowercased, without backticks -> kind of `budgets`. A kind
 #: that `budgets` does not name has no budget, and its row says "none". The kinds of
@@ -905,6 +906,18 @@ class TestNotationShape(unittest.TestCase):
             for key, value in cfg.get("themeVariables", {}).items():
                 self.assertRegex(str(value), r'^[\d "#%(),.;A-Za-z]+$', f"{kind}.{key}")
             self.assertNotIn("theme", cfg, f"{kind}: no theme key (dark mode, TASK D4)")
+
+    def test_font_swap_names_installs_and_a_plain_stylesheet(self):
+        # TASK 121 R1.3, R6.5: the probe runs in pinned installs, and measure_text.mjs refuses a
+        # stylesheet with any other character, so a value here that it would refuse fails now
+        swap = self.n["renderers"].get("font_swap")
+        self.assertIsInstance(swap, dict, "renderers.font_swap is missing")
+        self.assertTrue(swap.get("tags"), "renderers.font_swap.tags is empty")
+        for tag in swap["tags"]:
+            self.assertIn(tag, self.n["renderers"]["installs"], f"font_swap tag {tag}")
+        # \A and \Z: `$` would also match before a final newline, which measure_text.mjs refuses
+        self.assertRegex(swap.get("css") or "", r'\A[A-Za-z0-9 *{}:;,!".-]+\Z',
+                         "renderers.font_swap.css holds a character measure_text.mjs refuses")
 
 
 class TestQuotedValues(unittest.TestCase):

@@ -7,12 +7,14 @@ are copied from `assets/notation.json`.
 ## 1. Settings line and direction
 
 1. The fence's first line is the state settings line of `notation.json`:
-   `%%{init: {"layout": "dagre", "look": "classic"}}%%`.
+   `%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%`.
 2. The second line is `stateDiagram-v2`. `stateDiagram` is on the avoid list of `notation.json`.
 3. `accTitle` and `accDescr` follow, then `direction TB`.
 4. Add no `theme` and no font (`SKILL.md` Step 5).
 
-**Why.** With these two keys, 12.x lays out the figure as 11.17 does; 10.9 ignores both keys.
+**Why.** With `layout` and `look`, 12.x lays out the figure as 11.17 does; 10.9 ignores both
+keys. `themeCSS` keeps each state label whole when GitHub redraws it in its own font
+(`renderer-facts.md` RF-23).
 Top to bottom places the start at the top and the final states below it.
 
 ## 2. A flat graph; categories as classes
@@ -170,7 +172,7 @@ The lines a specification states, with the element each line supports:
 where the text names no writer.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 stateDiagram-v2
     accTitle: Print job states
     accDescr: Each transition labelled with its writer, or with its condition where the text names no writer.

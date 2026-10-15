@@ -1,16 +1,16 @@
 **Figure 1.** Refund decision — how R6.1 to R6.6 approve or decline a refund request.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
     accTitle: Refund decision
     accDescr: How R6.1 to R6.6 approve or decline a refund request.
-    R61{"R6.1<br/><small>defect reported? over 30 days?</small>"}
-    R62{"R6.2<br/><small>digital good, downloaded?</small>"}
-    R63{"R6.3<br/><small>$50 or less?</small>"}
-    AG{"Support agent approves?<br/><small>R6.4</small>"}
-    TL{"Team lead approves?<br/><small>R6.5</small>"}
-    APP("Approved<br/><small>R6.6 · to the original payment method</small>")
+    R61{"R6.1<br/>defect reported? over 30 days?"}
+    R62{"R6.2<br/>digital good, downloaded?"}
+    R63{"R6.3<br/>$50 or less?"}
+    AG{"Support agent approves?<br/>R6.4"}
+    TL{"Team lead approves?<br/>R6.5"}
+    APP("Approved<br/>R6.6 · to the original payment method")
     DEC("Declined")
     %% edge order chosen for the layout
     R63 -->|"no"| AG

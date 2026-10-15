@@ -27,6 +27,12 @@
       "theme": "dark",
       "background": "#0d1117"
     },
+    "font_swap": {
+      "tags": [
+        "v11"
+      ],
+      "css": "* { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; } small { font-size: inherit !important; }"
+    },
     "render_width_px": 1800
   },
   "thresholds": {
@@ -143,13 +149,14 @@
     "max_columns": 100
   },
   "settings": {
-    "flowchart": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}}}%%",
-    "state": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
+    "flowchart": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"flowchart\": {\"nodeSpacing\": 45, \"rankSpacing\": 55, \"wrappingWidth\": 400}, \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%",
+    "state": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%",
     "sequence": "%%{init: {\"look\": \"classic\", \"themeVariables\": {\"noteBkgColor\": \"#FFF8E1\", \"noteTextColor\": \"#263238\", \"noteBorderColor\": \"#C9A227\"}, \"sequence\": {\"wrap\": true}}}%%",
-    "er": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
+    "er": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%",
     "gantt": "%%{init: {\"look\": \"classic\", \"themeVariables\": {\"doneTaskBkgColor\": \"#C8E6C9\", \"doneTaskBorderColor\": \"#2E7D32\", \"activeTaskBkgColor\": \"#FFF3C4\", \"activeTaskBorderColor\": \"#F9A825\", \"taskBkgColor\": \"#FFFFFF\", \"taskBorderColor\": \"#9E9E9E\", \"critBkgColor\": \"#FFFFFF\", \"critBorderColor\": \"#C62828\", \"taskTextColor\": \"#212121\", \"taskTextDarkColor\": \"#212121\"}, \"gantt\": {\"barHeight\": 16, \"barGap\": 4, \"topPadding\": 50, \"fontSize\": 12, \"sectionFontSize\": 12, \"numberSectionStyles\": 2, \"useWidth\": 900}, \"themeCSS\": \".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }\"}}%%",
-    "class": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%",
-    "requirement": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\"}}%%"
+    "class": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%",
+    "requirement": "%%{init: {\"layout\": \"dagre\", \"look\": \"classic\", \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%",
+    "mindmap": "%%{init: {\"look\": \"classic\", \"themeCSS\": \"foreignObject { overflow: visible; }\"}}%%"
   },
   "palette": {
     "flowchart": {

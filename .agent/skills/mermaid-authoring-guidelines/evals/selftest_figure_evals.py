@@ -26,7 +26,11 @@ What it pins:
   * the calibration: a seeded stratified worksheet with no detector verdict, the top-up, and V2
     from a synthetic labels file;
   * the statistics on toy data;
-  * a committed campaign, when one exists: its report and gradings re-derive;
+  * a committed campaign, when one exists: its report and gradings re-derive, under the
+    `notation.json` its directory holds, the notation its gradings derive under, or under the
+    live notation when it holds none (TASK 121 D8). The grader's CLI, `grade_figures.py
+    --corpus`, reads the live notation: after a settings line changes, it records K01 failures
+    on a committed campaign that the campaign's own notation does not give;
   * the fixes of review round 1 (EI-*, SEC-*): the D8 numbers read from the README rows and
     the predicates at their boundaries; ASCII figures outside fences and labels on ASCII links;
     duplicates, parts, captions, gantt dates, number decoys, edges to invented nodes; the
@@ -3305,7 +3309,10 @@ def t_committed():
     for camp in camps:
         committed = json.loads((camp / "report.json").read_text(encoding="utf-8"))
         base = (committed.get("round") or {}).get("baseline_campaign")
-        runs, report = gf.grade_corpus(camp, ev, NOTATION,
+        # the notation the campaign's gradings derive under (TASK 121 D8), else the live one
+        own = camp / "notation.json"
+        notation = json.loads(own.read_text(encoding="utf-8")) if own.is_file() else NOTATION
+        runs, report = gf.grade_corpus(camp, ev, notation,
                                        baseline=camp.parent / base if base else None)
         if json.dumps(committed, sort_keys=True) != json.dumps(json.loads(json.dumps(report)), sort_keys=True):
             drift_r.append(camp.name)

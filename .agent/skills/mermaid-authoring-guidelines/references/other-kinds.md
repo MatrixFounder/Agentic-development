@@ -16,11 +16,13 @@ Budgets come from `budgets` of `notation.json`.
 1. Run Step 0 of `SKILL.md` first. An attribute set, a full schema, a traceability matrix and a
    numeric series are tables.
 2. `erDiagram` starts with `settings.er` of `notation.json`:
-   `%%{init: {"layout": "dagre", "look": "classic"}}%%`.
+   `%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%`.
 3. `classDiagram` starts with `settings.class`, and `requirementDiagram` with
-   `settings.requirement`. Both lines hold the same two keys as `settings.er`:
-   `%%{init: {"layout": "dagre", "look": "classic"}}%%`.
-4. The chart kinds take no settings line: `timeline`, `mindmap`, `quadrantChart`, `journey`,
+   `settings.requirement`. Both lines hold the same three keys as `settings.er`:
+   `%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%`.
+4. `mindmap` starts with `settings.mindmap`:
+   `%%{init: {"look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%`.
+   The other chart kinds take no settings line: `timeline`, `quadrantChart`, `journey`,
    `gitGraph`.
 5. Write no `theme`, no `classDef` and no `style`, and assign no style class with `:::`. These
    kinds draw in the viewer's theme colours.
@@ -35,7 +37,9 @@ Budgets come from `budgets` of `notation.json`.
 
 **Why.** Mermaid 12.1.0 lays out class and requirement diagrams with ELK and the `neo` look,
 unless the line pins `dagre` and `classic`. It draws the chart kinds as 11.17.2 does: their SVG
-output matched in structure and fills. Mermaid 10.9.8 rejects `classDef` in ER, class and
+output matched in structure and fills. In 11.17.2 ER, class, requirement and mindmap figures draw
+HTML labels, so their lines carry the `themeCSS` that keeps a label whole in GitHub's font
+(`renderer-facts.md` RF-23). Mermaid 10.9.8 rejects `classDef` in ER, class and
 requirement diagrams with a parse error. The chart kinds have no class syntax. GitHub draws the
 `default` theme on a light page and `dark` on a dark page. A colour the author does not set
 therefore marks no category.
@@ -94,7 +98,7 @@ non-identifying relationship.
 **Figure 1.** Library loans — members, copies and titles, with the cardinality of each relation.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 erDiagram
   accTitle: Library loans
   accDescr: Members, copies and titles, with the cardinality of each relation.
@@ -128,7 +132,7 @@ defines.
 **Figure 2.** Reading decoders — two classes implement `Decoder`, which returns a `Reading`.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 classDiagram
   accTitle: Reading decoders
   accDescr: Two classes implement Decoder, which returns a Reading.
@@ -161,7 +165,7 @@ traceability matrix of many requirements is a table (Step 0).
 **Figure 3.** Requirement R3 — the loan service satisfies it and the loan tests verify it.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 requirementDiagram
   accTitle: Requirement R3
   accDescr: The loan service satisfies it and the loan tests verify it.
@@ -318,6 +322,7 @@ specification.
 **Figure 8.** Print server — its parts as a mind map.
 
 ```mermaid
+%%{init: {"look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 mindmap
   root(Print server)
     Spooler

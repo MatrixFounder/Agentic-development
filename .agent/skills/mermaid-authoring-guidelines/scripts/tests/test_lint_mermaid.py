@@ -21,6 +21,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
 import lint_mermaid as lm  # noqa: E402
 import mermaid_model as mm  # noqa: E402
+import svg_geometry as sg  # noqa: E402
 
 NOTATION = mm.load_notation()
 
@@ -39,7 +40,7 @@ RULE_IDS = {
     "MA-SEQ-01", "MA-SEQ-02", "MA-SEQ-03",
     "MA-LABEL-01", "MA-LABEL-02", "MA-LABEL-03", "MA-LABEL-04", "MA-LABEL-05", "MA-LABEL-06",
     "MA-LABEL-07", "MA-LABEL-08", "MA-LABEL-09", "MA-LABEL-10", "MA-LABEL-11",
-    "MA-LABEL-12", "MA-LABEL-13",
+    "MA-LABEL-12", "MA-LABEL-13", "MA-LABEL-14",
     "MA-CLASS-01", "MA-CLASS-02", "MA-CLASS-03", "MA-CLASS-04", "MA-CLASS-05", "MA-CLASS-06",
     "MA-CLASS-07",
     "MA-GANTT-01", "MA-GANTT-02", "MA-GANTT-03", "MA-GANTT-04", "MA-GANTT-05", "MA-GANTT-06",
@@ -157,7 +158,7 @@ CASES = {
     "MA-SET-05": (doc("---\nconfig:\n  theme: dark\n---\nflowchart TB\n  A --> B"),
                   doc("---\nconfig:\n  look: classic\n---\nflowchart TB\n  A --> B")),
     "MA-SET-06": (doc('%%{init: {"look": "classic"}}%%\nflowchart TB\n  A --> B'),
-                  doc('%%{init: {"layout": "dagre", "look": "classic"}}%%\nflowchart TB\n  A --> B')),
+                  doc(NOTATION["settings"]["flowchart"] + "\nflowchart TB\n  A --> B")),
     "MA-SET-07": (doc('%%{init: {"look": "classic"}}%%\nsequenceDiagram\n  A->>B: x') + "\n"
                   + doc('%%{init: {"look": "classic", "sequence": {"wrap": true}}}%%\nsequenceDiagram\n  A->>B: y'),
                   doc('%%{init: {"look": "classic"}}%%\nsequenceDiagram\n  A->>B: x') + "\n"
@@ -229,6 +230,8 @@ CASES = {
                         + "\n  P->>P: x"),
                     doc("sequenceDiagram\n  participant P as " + br_lines(LABELS["participant_lines_max"])
                         + "\n  P->>P: x")),
+    "MA-LABEL-14": (doc('flowchart TB\n  A["Loan API<br/><small>host app-a</small>"] --> B'),
+                    doc('flowchart TB\n  A["Loan API<br/>host app-a"] --> B')),
     "MA-CLASS-01": (doc("flowchart TB\n  A --> B\n  style A fill:#777777,color:#888888"),
                     doc("flowchart TB\n  A --> B\n  style A fill:#FFFFFF,color:#263238")),
     "MA-CLASS-02": (doc("flowchart TB\n  A --> B\n  class A ghost"),
@@ -503,7 +506,8 @@ class TestRuleDetails(unittest.TestCase):
         bodies = {"flowchart": "flowchart TB\n  A --> B", "state": "stateDiagram-v2\n  a --> b",
                   "sequence": "sequenceDiagram\n  A->>B: x", "er": "erDiagram\n  A ||--o{ B : has",
                   "gantt": GANTT + "  section S\n  t1 :a, 0, 3ms", "class": "classDiagram\n  A <|-- B",
-                  "requirement": "requirementDiagram\n  element e1 {\n    type: service\n  }"}
+                  "requirement": "requirementDiagram\n  element e1 {\n    type: service\n  }",
+                  "mindmap": "mindmap\n  root((Print server))\n    Spooler"}
         for kind, body in bodies.items():
             with self.subTest(kind=kind):
                 text = doc(NOTATION["settings"][kind] + "\n" + body)
@@ -581,6 +585,118 @@ class TestRuleDetails(unittest.TestCase):
         settings = [f for f in found if f.rule == "MA-SET-06"]
         self.assertEqual(settings[0].line, 0)
         self.assertFalse({"MA-DOC-01", "MA-DOC-02", "MA-DOC-05"} & set(ids(found)))
+
+
+class TestGitHubFontSwapRules(unittest.TestCase):
+    """TASK 121 R4.1, R4.2, R6.4: the lint warns on <small> and on a settings line without the
+    themeCSS that keeps HTML labels whole in GitHub's font."""
+
+    OLD_FLOW = ('%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, '
+                '"rankSpacing": 55, "wrappingWidth": 400}}}%%')
+
+    def test_small_is_reported_in_every_label_kind_it_reaches(self):
+        small = "<small>role</small>"
+        bodies = {
+            "flowchart node": f'flowchart TB\n  A["Name<br/>{small}"] --> B',
+            "subgraph title": f'flowchart TB\n  subgraph S["Zone {small}"]\n    A\n    B\n  end',
+            "edge label": f'flowchart TB\n  A -->|"call {small}"| B',
+            "state label": f"stateDiagram-v2\n  a : Ready {small}\n  a --> b",
+            "transition label": f"stateDiagram-v2\n  a --> b : start {small}",
+            "ER entity label": f'erDiagram\n  C["Customer {small}"] {{\n    int id\n  }}',
+            "ER relation label": f'erDiagram\n  A ||--o{{ B : "has {small}"',
+        }
+        for where, body in bodies.items():
+            with self.subTest(where=where):
+                found = run(doc(body), "MA-LABEL-14")
+                self.assertTrue(found, where)
+                self.assertIn("<small>", found[0].message)
+
+    def test_small_in_any_case_and_with_attributes(self):
+        for tag in ("<SMALL>x</SMALL>", '<small class="x">x</small>', "< small>x</small>"):
+            with self.subTest(tag=tag):
+                self.assertTrue(run(doc(f'flowchart TB\n  A["Name<br/>{tag}"] --> B'), "MA-LABEL-14"))
+
+    def test_a_plain_second_line_is_quiet(self):
+        for body in ('flowchart TB\n  A["Name<br/>role"] --> B',
+                     'flowchart TB\n  A["smaller parts<br/>small print"] --> B',
+                     "sequenceDiagram\n  participant A\n  participant B\n  A->>B: <small>x</small>"):
+            with self.subTest(body=body):
+                self.assertEqual(run(doc(body), "MA-LABEL-14"), [])
+
+    def test_a_settings_line_without_themecss_is_reported(self):
+        found = run(doc(self.OLD_FLOW + "\nflowchart TB\n  A --> B"), "MA-SET-06")
+        self.assertEqual(len(found), 1, found)
+        self.assertIn('missing "themeCSS": "foreignObject { overflow: visible; }"', found[0].message)
+        self.assertEqual(run(doc(NOTATION["settings"]["flowchart"] + "\nflowchart TB\n  A --> B"),
+                             "MA-SET-06"), [])
+
+    def test_every_kind_with_the_key_is_checked(self):
+        bodies = {"state": "stateDiagram-v2\n  a --> b", "er": "erDiagram\n  A ||--o{ B : has",
+                  "class": "classDiagram\n  A <|-- B",
+                  "requirement": "requirementDiagram\n  element e1 {\n    type: service\n  }",
+                  "mindmap": "mindmap\n  root((Print server))\n    Spooler"}
+        for kind, body in bodies.items():
+            with self.subTest(kind=kind):
+                line = NOTATION["settings"][kind]
+                bare = line.replace(', "themeCSS": "foreignObject { overflow: visible; }"', "")
+                self.assertNotEqual(bare, line, kind)
+                self.assertTrue(run(doc(bare + "\n" + body), "MA-SET-06"), kind)
+                self.assertEqual(run(doc(line + "\n" + body), "MA-SET-06"), [], kind)
+
+    def test_a_long_themecss_is_named_by_its_settings_entry(self):
+        # TASK 121 D9: the gantt line pins a themeCSS of over 1000 characters
+        line = NOTATION["settings"]["gantt"]
+        start = line.index(', "themeCSS"')
+        bare = line[:start] + "}}%%"
+        body = GANTT + "  section S\n  t1 :a, 0, 3ms"
+        found = run(doc(bare + "\n" + body), "MA-SET-06")
+        self.assertEqual(len(found), 1, found)
+        self.assertIn('"themeCSS" of settings.gantt', found[0].message)
+        self.assertLess(len(found[0].message), 200)
+
+    def test_the_hints_name_no_small(self):
+        for rule_id in ("MA-PARSE-04", "MA-LABEL-01", "MA-LABEL-08"):
+            with self.subTest(rule=rule_id):
+                self.assertNotIn("<small>", rule(rule_id).hint)
+
+    def test_a_value_of_60_characters_is_quoted_and_one_of_61_is_named(self):
+        # TASK 121 D10 (stage 2 F3): the limit of R4.2 at its edge
+        self.assertEqual(lm._QUOTED_SETTING_MAX, 60)
+        for size, named in ((60, False), (61, True)):
+            with self.subTest(size=size):
+                css = "p" * (size - 4) + " { }"
+                notation = json.loads(json.dumps(NOTATION))
+                line = notation["settings"]["flowchart"]
+                notation["settings"]["flowchart"] = line.replace(
+                    '"foreignObject { overflow: visible; }"', json.dumps(css))
+                found = lm.lint_text(doc(self.OLD_FLOW + "\nflowchart TB\n  A --> B"), "<test>",
+                                     notation=notation, rules=[rule("MA-SET-06")])
+                self.assertEqual(len(found), 1, found)
+                if named:
+                    self.assertIn('missing "themeCSS" of settings.flowchart', found[0].message)
+                else:
+                    self.assertIn('missing "themeCSS": "%s"' % css, found[0].message)
+
+    def test_a_control_character_of_the_quoted_label_is_escaped(self):
+        # TASK 121 D10, D11 (stage 2 security F1, CWE-150; N3): the finding quotes the linted
+        # document. A backslash is doubled, so the text \x1b never reads as an escaped ESC
+        found = run(doc('flowchart TB\n  A["Name\x1b[2J \\x1b<br/><small>role\x9b</small>"] --> B'),
+                    "MA-LABEL-14")
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("Name\\x1b[2J \\\\x1b", found[0].message)
+        self.assertIn("role\\x9b", found[0].message)
+        self.assertNotRegex(found[0].message, "[\x00-\x1f\x7f-\x9f]")
+
+    def test_both_copies_of_the_escape_agree(self):
+        # TASK 121 D11: svg_geometry.py and the lint each hold the escape and give one output
+        probe = ("C:\\path \\x1b " + "".join(chr(c) for c in (
+            0x1b, 0x07, 0x9b, 0x7f, 0x202e, 0x2066, 0x200b, 0xa0, 0x2028, 0x09, 0x0a, 0xe0041,
+            0xd800)) + " Кириллица 漢字")
+        shown = lm._escaped(probe)
+        self.assertEqual(shown, sg._escaped(probe))
+        self.assertTrue(shown.isprintable(), shown)
+        self.assertTrue(shown.startswith("C:\\\\path \\\\x1b \\x1b\\x07\\x9b\\x7f"), shown)
+        self.assertTrue(shown.endswith(" Кириллица 漢字"), shown)
 
 
 class TestTextFigureMarker(unittest.TestCase):
@@ -1311,14 +1427,20 @@ def hook(event, args):
     elif event in CHANGES:
         seen.append([event, str(args[0]) if args else ""])
 sys.addaudithook(hook)
+{prelude}
 {body}
 sys.stderr.write("\nGUARD " + json.dumps({{"code": code, "writes": seen}}) + "\n")
 """
 
 
+#: Code the guard runs before its body. Empty here; the stage driver of TASK 121 (R8.3) sets it
+#: to register staged modules under their final names, so the subprocess lints with them.
+GUARD_PRELUDE = ""
+
+
 class TestWritesNoFile(unittest.TestCase):
     def guard(self, body, cwd):
-        code = GUARD.format(scripts=str(SCRIPTS), body=body)
+        code = GUARD.format(scripts=str(SCRIPTS), prelude=GUARD_PRELUDE, body=body)
         proc = subprocess.run([sys.executable, "-B", "-c", code], cwd=cwd, capture_output=True, text=True,
                               timeout=120)
         line = next(x for x in proc.stderr.splitlines() if x.startswith("GUARD "))

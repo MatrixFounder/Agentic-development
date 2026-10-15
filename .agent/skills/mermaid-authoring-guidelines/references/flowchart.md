@@ -79,6 +79,7 @@ than retyped. The four templates of §5 start with it.
 | `look` | `"classic"` | 12.x draws the `neo` look by default, with drop shadows and gradient borders |
 | `nodeSpacing`, `rankSpacing` | `45`, `55` | dagre spacing in px; ELK ignores both keys |
 | `wrappingWidth` | `400` | 11.x wraps a plain label at 200 px and 12.x at 120 px; at 400 both follow `<br/>` |
+| `themeCSS` | `foreignObject { overflow: visible; }` | GitHub redraws HTML labels in its own font; wider text stays visible (`renderer-facts.md` RF-23) |
 | `theme` | absent | the viewer's theme applies |
 | font | absent | the viewer's font applies |
 
@@ -125,18 +126,19 @@ inside a subgraph is ignored once a member links outside it.
 
 ## 5. Templates
 
-Each template was rendered on 2026-10-02 in 11.17.2, 10.9.8 and a dark 11.17.2, and measured:
+Each template was rendered on 2026-10-14 in 11.17.2, 10.9.8 and a dark 11.17.2, and measured:
 
 | Figure | Width, 11.17.2 / 10.9.8 | Crossings | Edges through nodes or titles | Effective font |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 Container view | 810 / 757 px | 0 | 0 | 16 / 16 px |
-| 2 Data flow | 406 / 400 px | 0 | 0 | 16 / 16 px |
-| 3 Deployment view | 997 / 908 px | 0 | 0 | 14.4 / 15.9 px |
-| 4 Decision flow | 498 / 465 px | 0 | 0 | 16 / 16 px |
+| 1 Container view | 879 / 820 px | 0 | 0 | 16 / 16 px |
+| 2 Data flow | 427 / 421 px | 0 | 0 | 16 / 16 px |
+| 3 Deployment view | 1064 / 975 px | 0 | 0 | 13.5 / 14.8 px |
+| 4 Decision flow | 546 / 514 px | 0 | 0 | 16 / 16 px |
 
 - Effective font = font size × min(1, 900 / width), for a 900 px column (`column_px`). The floor
   is 10 px (`min_effective_font_px`).
-- The dark render gave the same geometry. A forward render in 12.1.0 passed as well.
+- The dark render gave the same geometry. Redrawn in GitHub's font, no label is hidden and none
+  crosses its node's border.
 
 To reuse a template, keep its settings line. Copy the `classDef` lines of §1 for the classes the
 new figure applies, and the `style` lines of §4. Replace names, nodes and edges with the facts of
@@ -148,28 +150,28 @@ below it.
 - `flowchart TB`. Callers sit on top: clients and host timers. Services the project owns sit in the
   middle. Data and external services sit at the bottom.
 - A group of like members is one node: the group name on the first line, the members on the
-  `<small>` line.
+  second line.
 - A boundary that an outside edge enters has two or more nodes in its top row.
 
 **Figure 1.** Loan system containers — who calls whom, from the clients down to the stores.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Loan system containers
   accDescr: Who calls whom, from the clients down to the stores.
-  CLI(["Library clients<br/><small>catalogue site · self-service kiosk</small>"])
-  SWEEP{{"overdue-sweep<br/><small>host timer · each night</small>"}}
+  CLI(["Library clients<br/>catalogue site · self-service kiosk"])
+  SWEEP{{"overdue-sweep<br/>host timer · each night"}}
   subgraph LOAN["Loan service"]
     API("Loan API")
     SRCH("Catalogue search")
     REM("Reminder mailer")
   end
   subgraph DATA["loans DB"]
-    FN[["Loan functions<br/><small>checkout() · renew() · give_back()</small>"]]
-    TBL[("Loan tables<br/><small>items · loans · holds</small>")]
+    FN[["Loan functions<br/>checkout() · renew() · give_back()"]]
+    TBL[("Loan tables<br/>items · loans · holds")]
   end
-  MAIL["Mail relay<br/><small>external SMTP service</small>"]
+  MAIL["Mail relay<br/>external SMTP service"]
   CLI -->|"borrow · renew · return"| API
   CLI -->|"search"| SRCH
   SWEEP -.->|"start"| REM
@@ -212,20 +214,20 @@ Legend:
 **Figure 2.** Telemetry data flow — where a reading goes, and what reads the store.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Telemetry data flow
   accDescr: Where a reading goes, and what reads the store.
-  SENS(["Field sensors<br/><small>temperature probes · door contacts</small>"])
-  GW["Site gateway<br/><small>one per site · MQTT broker</small>"]
+  SENS(["Field sensors<br/>temperature probes · door contacts"])
+  GW["Site gateway<br/>one per site · MQTT broker"]
   ING("Ingest API")
   QUE[("Readings queue")]
   CAL[("Calibration table")]
   NORM("Normaliser")
-  TS[("Time-series store<br/><small>raw readings · 1-minute rollups</small>")]
+  TS[("Time-series store<br/>raw readings · 1-minute rollups")]
   ALR("Alert rules")
   DASH(["Operator dashboards"])
-  PAGE["Paging service<br/><small>external · on-call rota</small>"]
+  PAGE["Paging service<br/>external · on-call rota"]
   SENS ==>|"readings"| GW
   GW ==>|"batches"| ING
   ING ==>|"raw readings"| QUE
@@ -266,23 +268,23 @@ Legend:
 replication.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Booking deployment
   accDescr: The zones, the shared provider services and the database replication.
-  CLI(["Booking clients<br/><small>web site · mobile app</small>"])
+  CLI(["Booking clients<br/>web site · mobile app"])
   subgraph PROV["Provider services"]
-    DNS["DNS<br/><small>managed · both zones</small>"]
-    LB["Load balancer<br/><small>managed · both zones</small>"]
+    DNS["DNS<br/>managed · both zones"]
+    LB["Load balancer<br/>managed · both zones"]
   end
   subgraph ZA["Zone A"]
-    API("Booking API<br/><small>host app-a · 2 processes</small>")
-    HOLD("Hold expirer<br/><small>host app-a</small>")
-    PGA[("Postgres primary<br/><small>host db-a</small>")]
+    API("Booking API<br/>host app-a · 2 processes")
+    HOLD("Hold expirer<br/>host app-a")
+    PGA[("Postgres primary<br/>host db-a")]
   end
   subgraph ZB["Zone B"]
-    DUMP{{"nightly-dump<br/><small>host db-b · each night</small>"}}
-    PGB[("Postgres replica<br/><small>host db-b</small>")]
+    DUMP{{"nightly-dump<br/>host db-b · each night"}}
+    PGB[("Postgres replica<br/>host db-b")]
   end
   CLI -->|"resolve name"| DNS
   CLI -->|"https"| LB
@@ -329,7 +331,7 @@ Legend:
 three outcomes.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Print job admission
   accDescr: The three checks in the order the server runs them, and the three outcomes.
@@ -337,8 +339,8 @@ flowchart TB
   TYPE{"File type supported?"}
   QUOTA{"Pages within quota?"}
   ONLINE{"Printer online?"}
-  REJ("Rejected<br/><small>owner gets a notice</small>")
-  HELD("Held in queue<br/><small>until an operator releases it</small>")
+  REJ("Rejected<br/>owner gets a notice")
+  HELD("Held in queue<br/>until an operator releases it")
   DONE("Printed")
   STAFF -->|"print job"| TYPE
   TYPE -->|"no"| REJ
@@ -366,15 +368,18 @@ Legend:
 | Label | Limit, `notation.json` `labels` | Writing guidance |
 | :--- | :--- | :--- |
 | Node, first line | 32 characters, `node_line1_chars_max` | about 4 words; the name as the text writes it |
-| Node, `<small>` second line | 40 characters, `node_second_line_chars_max` | members, role or host, joined by `·` |
+| Node, second line | 40 characters, `node_second_line_chars_max` | members, role or host, joined by `·`; plain text after `<br/>` |
 | Edge | 24 characters, `edge_label_chars_max` | about 3 words, lowercase in cased scripts |
 
 - The lint counts characters per line, so the limits hold in any script.
-- A node label holds at most 2 lines (`node_label_lines_max`): the name and one `<small>` line. An
+- A node label holds at most 2 lines (`node_label_lines_max`): the name and one second line. An
   edge label holds one line. The lint allows two (`edge_label_lines_max`) for the two writers of
   a state transition (`state.md` §4).
-- A line breaks at `<br/>` only. 10.9.8 never wraps a `<small>` line, so its length sets the width
+- A line breaks at `<br/>` only. 10.9.8 never wraps a second line, so its length sets the width
   of the node.
+- A second line is plain text, never `<small>`, and its 40 characters count at full size. GitHub
+  shows `<small>` at full size in a box that mermaid sized for small text (RF-23); the lint reports
+  it as MA-LABEL-14.
 - Quote every node label and edge label that holds punctuation: any character other than a letter,
   a digit or a space. The templates quote every label.
 - Unquoted `( )`, `[ ]`, a leading `/` or a `"` is a parse error in both versions.
@@ -415,7 +420,7 @@ One rule for every figure kind keeps a label valid when it moves into a sequence
 - [ ] Each category differs by shape or stroke style, and the legend names it.
 - [ ] Ids are letters and digits; a label with punctuation is quoted; `"`, `#`, `;`, `<` and `>`
   are entities.
-- [ ] Label lines stay within 32, 40 and 24 characters.
+- [ ] Label lines stay within 32, 40 and 24 characters; no `<small>`.
 - [ ] One edge per node pair; no edge to a subgraph id; no single-node subgraph.
 - [ ] No outside edge enters the node under a title's centre.
 - [ ] At most one `==>` chain; `~~~` only for spacing.

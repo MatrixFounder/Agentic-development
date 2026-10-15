@@ -2,7 +2,7 @@
 указан исполнитель, а где текст его не называет, — условие.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic"}}%%
+%%{init: {"layout": "dagre", "look": "classic", "themeCSS": "foreignObject { overflow: visible; }"}}%%
 stateDiagram-v2
   accTitle: Жизненный цикл заявки на отпуск
   accDescr: Девять состояний заявки на отпуск и переходы между ними. На переходе указан исполнитель, а где текст его не называет, условие.

@@ -2,7 +2,7 @@
 bucket.
 
 ```mermaid
-%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}}}%%
+%%{init: {"layout": "dagre", "look": "classic", "flowchart": {"nodeSpacing": 45, "rankSpacing": 55, "wrappingWidth": 400}, "themeCSS": "foreignObject { overflow: visible; }"}}%%
 flowchart TB
   accTitle: Media storage
   accDescr: The Upload API writes originals to the Media bucket, the Thumbnail service reads originals and writes thumbnails, and the CDN reads thumbnails.

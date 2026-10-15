@@ -6,7 +6,7 @@ description: >-
   figures, or fixing a figure that is a mess of boxes and arrows. Chooses
   list, table, ASCII or Mermaid first; checks layout, legend and fidelity.
 tier: 2
-version: 1.1
+version: 1.2
 ---
 
 # Mermaid authoring guidelines
@@ -35,7 +35,9 @@ language: scripts find caption and legend by their position, never by a word.
 - **"The colours explain themselves."** A legend sits below the fence and names the notation this
   figure uses. Colour never carries a category alone.
 - **"It renders in my preview."** GitHub runs 11.17, JetBrains 10.9, and 12.x changed every
-  default. Check both pinned versions, or write `not rendered` in the hand-off.
+  default. GitHub also redraws HTML labels in its own font after mermaid sized them (RF-23 of
+  `references/renderer-facts.md`). Check both pinned versions, or write `not rendered` in the
+  hand-off.
 - **"LR fits better."** Width sets the text size: a 900 px column shrinks the text of an 1800 px
   figure to half. A flowchart of more than 6 nodes runs top to bottom.
 - **"I'll set the font and the theme for a consistent look."** Mermaid blanks any theme value
@@ -207,13 +209,14 @@ Techniques with measured effects: `references/layout-and-planarity.md`.
 ### Step 5 — notation
 
 1. The settings line of the kind is the fence's first line, copied from `assets/notation.json`. It
-   pins `"look": "classic"`, and `"layout": "dagre"` for the kinds dagre lays out. It sets no
-   `theme` and no font. A kind without a line there takes none.
+   pins `"look": "classic"`, and `"layout": "dagre"` for the kinds dagre lays out. For a kind with
+   HTML labels it pins `themeCSS`, which keeps a label whole in GitHub's font. It sets no `theme`
+   and no font. A kind without a line there takes none.
 2. Classes come from the palette of the kind's reference. Each category differs by shape or stroke
    style as well as by colour, and the legend names it.
 3. Label limits, counted in characters per line so they hold in any script:
-   - a node label: about 4 words, at most 32 characters, plus an optional `<small>` second line of
-     at most 40;
+   - a node label: about 4 words, at most 32 characters, plus an optional second line of at most
+     40 at full size: plain text after `<br/>`, never `<small>`;
    - an edge label: about 3 words, at most 24 characters, lowercase in cased scripts, names
      excepted;
    - a sequence message: at most 24 characters per line and 2 lines, broken with `<br/>`. A label
@@ -257,7 +260,8 @@ Techniques with measured effects: `references/layout-and-planarity.md`.
    Postcondition: 0 `error`.
 3. `python3 .agent/skills/mermaid-authoring-guidelines/scripts/render_check.py fig.mmd`.
    Postcondition: exit 0. Open the 11.17, 10.9 and dark PNGs and look for crossings, edges through
-   titles, cut text and width.
+   titles, cut text and width. The check also redraws the 11.17 renders in GitHub's font and fails
+   a label that the swap hides or pushes past its node's border (`font_swap`).
 4. Fix what the pictures show. After 3 render rounds, take the next simpler form of Step 0 — split,
    aggregate, or a table — instead of nudging.
 5. Insert caption, fence and legend; run the lint on the whole document.

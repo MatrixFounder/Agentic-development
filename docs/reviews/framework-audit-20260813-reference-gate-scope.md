@@ -43,7 +43,7 @@ positional references (docs/)" шёл красным (exit 1) и до неё, и
 | `REFERENT_ABSENT` | 3 | `review-095-independent.md:35`, `vdd-adversarial-known-issues-format.md:15` (×2) | Цель отредактирована после того, как ревью было написано, поэтому запись описывает состояние на момент наблюдения |
 
 Две из шести порождены строкой, которая **объясняет неисправимость первого класса**:
-`framework-audit-105.md:65` цитирует `get-token.ts:117` и `wallet-balances.ts:92` как иллюстрацию.
+`framework-audit-105.md:65` цитирует `get-token.ts:117@77fa89c` и `wallet-balances.ts:92@77fa89c` как иллюстрацию.
 После сужения `docs/reviews/` — advisory, и такая цитата в записи больше не роняет прогон.
 
 ### Проведённая граница

@@ -415,6 +415,12 @@ labelled with the answer.
    line in the audit record, with its severity, and does not set the round's verdict. A CRITICAL
    or HIGH finding of that kind is named to the operator. A new backlog record needs the
    operator's decision.
+6. **Allowed Commands:** `framework-upgrade` §3 step 4 counts the allow rules of
+   `.claude/settings.json`, `.claude/settings.local.json`, the user's `~/.claude/settings.json` and
+   the `allowed-tools` of skills and commands. When an allowed command runs code of the change, the
+   run lists the tree before and after one run of that command, ignored files included. A file
+   that the code writes and is not meant to write fails the check. The run puts back what step 4
+   lets it put back, and names every other difference to the operator.
 
 ### ✅ Recommended Strategy
 For critical system updates, follow this **Hybrid Verification Loop**:

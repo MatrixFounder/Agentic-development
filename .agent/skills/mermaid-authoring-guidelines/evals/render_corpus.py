@@ -469,7 +469,7 @@ def process_run(root: Path, rd: Path, plan: list, renderers: dict, absent: dict,
         geometry[fig] = {key: geometry[fig][key] for key in order + extra if key in geometry[fig]}
     tmp = path.with_name(f"geometry.json.tmp.{os.getpid()}")
     with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(geometry, fh, ensure_ascii=False, indent=1)
+        fh.write(rc.json_text(geometry, indent=1))  # no raw control character (TASK 123 R5)
         fh.write("\n")
     os.replace(tmp, path)
     for fig in geometry.values():

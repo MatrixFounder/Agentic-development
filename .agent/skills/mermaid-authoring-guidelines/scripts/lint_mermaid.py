@@ -2227,6 +2227,40 @@ def _summary(c: dict) -> str:
     return f"{c['error']} error / {c['warn']} warn / {c['expected']} expected"
 
 
+def _json_text(value, **kw) -> str:
+    """`json.dumps(value, ensure_ascii=False, **kw)` with each character that `str.isprintable()`
+    refuses, a newline aside, written as a JSON escape. A copy of `json_text` of render_check.py,
+    which the lint does not import: the lint's allow rule would then run render_check.py and
+    svg_geometry.py (TASK 123 R3.1, D7). A test pins the two to one output."""
+    out = []
+    for ch in json.dumps(value, ensure_ascii=False, **kw):
+        if ch.isprintable() or ch == "\n":
+            out.append(ch)
+            continue
+        code = ord(ch)
+        if code > 0xFFFF:
+            code -= 0x10000
+            out.append("\\u%04x\\u%04x" % (0xD800 + (code >> 10), 0xDC00 + (code & 0x3FF)))
+        else:
+            out.append("\\u%04x" % code)
+    return "".join(out)
+
+
+def _shown(text: str, lines: bool = False) -> str:
+    """*text* as the lint prints it: each character that `str.isprintable()` refuses, a newline
+    among them, written as its Python escape. With *lines*, a newline stays: the text is JSON from
+    `_json_text`, or lines that `_format_text` or `_format_inventory` escaped one by one. A
+    backslash stays single (TASK 122 D5). A copy of `_shown` of render_check.py (TASK 123 R3.1); a
+    test pins the two to one output."""
+    return "".join(ch if ch.isprintable() or (lines and ch == "\n") else ascii(ch)[1:-1]
+                   for ch in text)
+
+
+def _say(text: str, file=None, lines: bool = False) -> None:
+    """Print *text* through `_shown`: the only `print` of the lint (TASK 123 R3.2)."""
+    print(_shown(text, lines), file=file)
+
+
 def _finding_line(f: Finding) -> str:
     fence = f" [fence {f.fence}]" if f.fence else ""
     return f"{f.path}:{f.line}: {f.severity} {f.rule}{fence} {f.message}"
@@ -2252,7 +2286,7 @@ def _format_text(findings: list, paths: Optional[list] = None) -> str:
     if paths and len(paths) > 1:
         out += [f"{p}: {_summary(counts([f for f in findings if f.path == p]))}" for p in paths]
     out.append(_summary(counts(findings)))
-    return "\n".join(out)
+    return "\n".join(_shown(line) for line in out)
 
 
 def _cell(value) -> str:
@@ -2273,7 +2307,7 @@ def _format_inventory(blocks: list) -> str:
         for r in block["rows"]:
             out.append(f"| {_cell(r['kind'])} | {_cell(r['id'])} | {_cell(r['text'])} | {r['line']} |  |")
         out.append("")
-    return "\n".join(out)
+    return "\n".join(_shown(line) for line in out)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -2302,21 +2336,21 @@ def main(argv: Optional[list] = None, notation_path: Optional[Path] = None) -> i
         return EXIT_USAGE
     if args.probe and (args.paths or args.json or args.inventory):
         # a CI line `--probe docs/*.md` would otherwise pass without linting a file
-        print("usage error: --probe takes no paths and no other option; run the lint without --probe",
-              file=sys.stderr)
+        _say("usage error: --probe takes no paths and no other option; run the lint without --probe",
+             file=sys.stderr)
         return EXIT_USAGE
     try:
         notation = mm.load_notation(notation_path)
     except (OSError, ValueError) as exc:
-        print(f"internal error: notation unreadable: {exc}", file=sys.stderr)
+        _say(f"internal error: notation unreadable: {exc}", file=sys.stderr)
         return EXIT_INTERNAL
     dead = run_probes(notation=notation)
     if dead:
-        print(f"dead rule(s): {', '.join(dead)} — a probe pair failed; the lint reports nothing",
-              file=sys.stderr)
+        _say(f"dead rule(s): {', '.join(dead)} — a probe pair failed; the lint reports nothing",
+             file=sys.stderr)
         return EXIT_INTERNAL
     if args.probe:
-        print(f"{len(RULES)}/{len(RULES)} rules live")
+        _say(f"{len(RULES)}/{len(RULES)} rules live")
         return EXIT_OK
     texts = []
     for raw in args.paths:
@@ -2324,7 +2358,7 @@ def main(argv: Optional[list] = None, notation_path: Optional[Path] = None) -> i
         try:
             texts.append((raw, path.read_text(encoding="utf-8"), path.suffix.lower() == ".mmd"))
         except (OSError, UnicodeDecodeError) as exc:
-            print(f"usage error: cannot read {raw}: {exc}", file=sys.stderr)
+            _say(f"usage error: cannot read {raw}: {exc}", file=sys.stderr)
             return EXIT_USAGE
     try:
         if args.inventory:
@@ -2338,19 +2372,21 @@ def main(argv: Optional[list] = None, notation_path: Optional[Path] = None) -> i
                         raise LintInternalError(f"{raw}:{broken['line']}: {broken['message']}")
                     blocks.append({"path": raw, "figure_line": fig.fence.start, "figure_kind": fig.kind,
                                    "inventoried": inventoried(fig), "rows": inventory(fig)})
-            print(json.dumps({"schema": "mermaid-inventory/v1", "figures": blocks}, ensure_ascii=False, indent=2)
-                  if args.json else _format_inventory(blocks))
+            if args.json:
+                _say(_json_text({"schema": "mermaid-inventory/v1", "figures": blocks}, indent=2), lines=True)
+            else:
+                _say(_format_inventory(blocks), lines=True)
             return EXIT_OK
         findings = []
         for raw, text, is_mmd in texts:
             findings.extend(lint_text(text, raw, is_mmd=is_mmd, notation=notation))
     except LintInternalError as exc:
-        print(f"internal error: {exc}", file=sys.stderr)
+        _say(f"internal error: {exc}", file=sys.stderr)
         return EXIT_INTERNAL
     paths = [raw for raw, _t, _m in texts]
     total = counts(findings)
     if args.json:
-        print(json.dumps({
+        _say(_json_text({
             "schema": "mermaid-lint/v1",
             "files": paths,
             "rules": len(RULES),
@@ -2358,9 +2394,9 @@ def main(argv: Optional[list] = None, notation_path: Optional[Path] = None) -> i
             "per_file": {p: counts([f for f in findings if f.path == p]) for p in paths},
             "findings": [_finding_dict(f) for f in findings if not f.expected],
             "expected": [_finding_dict(f) for f in findings if f.expected],
-        }, ensure_ascii=False, indent=2))
+        }, indent=2), lines=True)
     else:
-        print(_format_text(findings, paths))
+        _say(_format_text(findings, paths), lines=True)
     return EXIT_FINDINGS if total["error"] else EXIT_OK
 
 

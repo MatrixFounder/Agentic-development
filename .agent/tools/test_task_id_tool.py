@@ -298,7 +298,7 @@ class TestSubTaskByH1:
         assert get_parent_archive_ids(str(tasks_dir)) == []
 
     @pytest.mark.parametrize("body, parents", [
-        ("﻿# Task 033-05a: after a BOM\n", []),
+        ("\ufeff# Task 033-05a: after a BOM\n", []),
         ("<!--\n# Task 033-05a: inside an unclosed comment\n", [33]),
         ("~~~\n# Task 033-05a: inside an unclosed fence\n", [33]),
         ("# Task " + "0" * 5000 + "33-05a: a digit run past the int limit\n", []),

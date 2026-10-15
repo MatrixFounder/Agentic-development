@@ -2233,7 +2233,8 @@ def fired(findings: list, check: str) -> bool:
 
 def main(argv: Optional[list] = None) -> int:
     """Debug entry point: `svg_geometry.py FIG.svg [MEASURE.json] [--source FIG.mmd]` prints
-    metrics and findings; `--source` scopes text contrast by the figure's own colours."""
+    metrics and findings; `--source` scopes text contrast by the figure's own colours. The JSON is
+    ASCII, and an error line escapes what it quotes (TASK 123 R4.1)."""
     args = list(sys.argv[1:] if argv is None else argv)
     usage = "usage: svg_geometry.py FIG.svg [MEASURE.json] [--column PX] [--source FIG.mmd]"
     if not args or args[0] in ("-h", "--help"):
@@ -2254,7 +2255,7 @@ def main(argv: Optional[list] = None) -> int:
         print(usage, file=sys.stderr)
         return 3
     except OSError as exc:
-        print("svg_geometry.py: %s" % exc, file=sys.stderr)
+        print("svg_geometry.py: %s" % _escaped(str(exc)), file=sys.stderr)
         return 2
     try:
         svg_text = Path(args[0]).read_text(encoding="utf-8")
@@ -2262,11 +2263,11 @@ def main(argv: Optional[list] = None) -> int:
         metrics = analyze_svg(svg_text, column, measure,
                               author_colours(source) if source is not None else None)
     except (OSError, ValueError) as exc:
-        print("svg_geometry.py: %s" % exc, file=sys.stderr)
+        print("svg_geometry.py: %s" % _escaped(str(exc)), file=sys.stderr)
         return 2
     findings = evaluate(metrics)
     print(json.dumps({"metrics": metrics, "findings": findings, "pass": passes(findings)},
-                     indent=1, ensure_ascii=False))
+                     indent=1, ensure_ascii=True))
     return 0 if passes(findings) else 1
 
 

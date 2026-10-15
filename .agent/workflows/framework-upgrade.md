@@ -108,18 +108,68 @@ therefore taken here, before §1. Git holds every state this run can return to.
    change that alters what runs, or what runs without a prompt. The list is not exhaustive:
    - a hook in a settings file, or in the frontmatter of an agent or a skill;
    - the script of a registered hook, code that script calls, and a new module it would import;
-   - a script that a committed allow rule names, code that script calls, and a new module it
-     would import;
+   - a script that an allow rule names, code that script calls, and a new module it would import;
    - a permission rule, `additionalDirectories` or the permission mode, an agent's
      `permissionMode` and the `allowed-tools` of a skill or a command among them;
    - a settings key that names a command, such as `statusLine`, or sets a command's environment,
      `env`;
    - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
 
+   The allow rules are those of `.claude/settings.json`, `.claude/settings.local.json` and the
+   user's `~/.claude/settings.json`, and the `allowed-tools` of a skill or a command. A command that
+   one of them approves is an allowed command, and a rule names a file also through a symbolic link
+   that resolves to it. Rules that managed settings or plugins add, and the commands that the Auto
+   mode classifier approves, lie outside this count; the operator answers for them. Git holds
+   neither the local file nor the user's, and Claude Code adds a rule to one of them when the
+   operator approves a command permanently. The run reads both when §2.2 writes the PLAN, again at
+   §4.5, and again after the gates of stage 3. A rule added since the first reading that runs a
+   file the change adds or edits in place, directly or through other code, stops the run for the
+   operator. The audit record names each file of the change that a rule of either file runs,
+   directly or through other code, and quotes no such rule.
+
    Test modules and fixtures that no rule names by path are exempt, and so is code that runs
-   without a prompt only through them. A test module is a `test_*.py` or `conftest.py` file that no
-   hook or listed script runs or imports; a fixture is a data file that a test reads.
+   without a prompt only through them. A rule that names a directory, such as `discover -s tests`,
+   names no module in it. A test module is a `test_*.py` or `conftest.py` file that no hook or
+   listed script runs or imports; a fixture is a data file that a test reads.
    `tests/run_tests.py` is named by a rule and is not exempt.
+
+   **What the change runs.** The run checks what code of the change writes when an allowed command
+   runs it. That code is what the change adds or edits, test modules among them. It is also what an
+   allowed command first reaches through the change, such as a test that a collection error had
+   blocked. A rule with a wildcard, or one whose command runs other code from another directory,
+   gives one command for each option, input or directory that reaches code the change adds or
+   edits. For each command, one process lists every file and directory under the repository root,
+   each regular file with its SHA-256, ignored files included and no link followed. Of `.git` it
+   lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
+   `refs/stash`, which holds every stash. It adds the output of `git rev-parse HEAD` and
+   `git ls-files -s -v`, and lists the user's `~/.gitconfig`, `~/.config/git/config` and
+   `~/.claude/settings.json`. Each git command of the check and of the put-back runs with
+   `-c core.fsmonitor=false`, so that git runs no file-system monitor that the checked command
+   configured. The process then runs the command as the rule approves it, with
+   `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
+   lists again. The audit record names the code that wrote each difference, read from that code or
+   from the command's output.
+   - A difference that the command is meant to write, such as the state that `update_state.py`
+     records, passes the check.
+   - Any other difference that code of the change writes fails the check. Before the change lands,
+     that code writes into a temporary directory, which it removes.
+   - A difference that other code writes is a finding before the task.
+
+   After the check, the run puts back each difference that the command was not meant to write. A
+   difference under `.git` or in a file of the user, or a file of the first listing that the second
+   lacks, stops the run. The run names each difference to the operator and runs no further git
+   command. Otherwise:
+   - it removes each file that the command created, and then each directory that it created;
+   - it restores a tracked file that no kind of §5 step 1 declares, with
+     `git restore --source=<base> --staged --worktree -- ':(literal)<path>'`, and checks that the
+     file hashes as in the first listing;
+   - it records a changed session state again through `update_state.py`;
+   - it names every other difference to the operator, the run's own records among them.
+
+   The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
+   where a failed check is a failed gate. The audit record holds each command, with its paths
+   relative to the repository root, and its result. TASK 122 unblocked the bare pytest run, and a
+   test it reached rewrote the live session state.
 
    A change that only narrows what runs without a prompt, such as a removed allow rule, may land
    at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that

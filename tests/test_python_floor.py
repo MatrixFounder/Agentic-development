@@ -19,7 +19,9 @@ preflight, and the benchmark scripts of ``skill-creator`` and of the figure eval
   it runs, such as ``dataclass(slots=True)`` in an imported module, is out of its reach;
 * each guarded script and the grader, run under a faked 3.9.6 in an empty directory, exit 2, name
   the script that was run and both versions, and write nothing, in that directory or in the
-  skills; the preflight reports FAIL and names both versions (``TC-04``);
+  skills; the grader runs with a stub for each local module it imports before ``run_evals``, and
+  holds none of their files at its exit; the preflight reports FAIL and names both versions
+  (``TC-04``);
 * the installer, given a ``python3`` that reports 3.9.6, exits 2 and names both versions
   (``TC-05``);
 * no living document or script claims support for Python 3.10 or older (``TC-06``);
@@ -30,6 +32,12 @@ The grader carries no guard of its own. Every committed campaign report records 
 ``grade_figures.py``, and the eval selftest re-derives each report from its corpus (TC-ME-22), so an
 edit to the grader would turn every stored report stale. It imports ``run_evals`` at its top,
 before it reads an argument or writes a file, and that guard stops it (TASK D6).
+
+TC-04 stubs the local modules that the grader imports before ``run_evals``, so the allowed runs
+of this file execute none of their bodies (TASK 123 R2). Under the fake those bodies would run on
+the current interpreter and prove nothing about 3.9, and TC-03 parses them. The residual: TC-04
+no longer checks them for a write at import, which a real 3.9 would run before the guard. None
+of them writes or reads ``sys.version_info`` today.
 
 ``TC-06`` is a tripwire for the known spellings of a claim, not a parser of intent.
 """
@@ -201,10 +209,49 @@ def _snapshot(dirs):
     return state
 
 
-def _run_under_old(path, cwd):
-    code = f"{FAKE_VERSION}; import runpy; runpy.run_path({str(path)!r}, run_name='__main__')"
+def _run_under_old(path, cwd, prelude=""):
+    """*path* run as `__main__` under the faked 3.9.6, after the child code *prelude*."""
+    code = (f"{FAKE_VERSION}\n{prelude}import runpy\n"
+            f"runpy.run_path({str(path)!r}, run_name='__main__')\n")
     return subprocess.run([sys.executable, "-B", "-c", code], cwd=cwd, capture_output=True,
                           text=True, timeout=120)
+
+
+#: What the grader's child writes at its exit: the files of `GRADER_PATH` that `sys.modules`
+#: holds then, the grader aside (TASK 123 R2.2).
+LOADED = "held from GRADER_PATH: "
+
+
+def _grader_local_imports():
+    """The modules that the grader imports at module level before `run_evals`, from a directory of
+    `GRADER_PATH`, found in its source as TC-03 finds them. TC-04 stubs each one (TASK 123 R2.1)."""
+    tree = ast.parse(GRADER.read_text(encoding="utf-8"))
+    names = []
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            if any(a.name == GRADER_GUARD for a in node.names):
+                break
+            names.extend(_top(a.name) for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0:
+            names.append(_top(node.module))
+    return tuple(n for n in dict.fromkeys(names)
+                 if any((d / f"{n}.py").is_file() for d in GRADER_PATH))
+
+
+def _stubs_and_report(stubs):
+    """Child code: an empty module in `sys.modules` for each name of *stubs*, and a report at exit
+    of each module whose file lies in a directory of `GRADER_PATH`, the grader aside."""
+    dirs = tuple(str(d) + os.sep for d in GRADER_PATH)
+    return ("import atexit, types\n"
+            f"for _name in {tuple(stubs)!r}:\n"
+            "    sys.modules[_name] = types.ModuleType(_name)\n"
+            "def _report():\n"
+            "    held = sorted(m.__file__ for m in list(sys.modules.values())\n"
+            "                  if isinstance(getattr(m, '__file__', None), str)\n"
+            f"                  and m.__file__.startswith({dirs!r})\n"
+            f"                  and m.__file__ != {str(GRADER)!r})\n"
+            f"    sys.stderr.write({LOADED!r} + repr(held) + '\\n')\n"
+            "atexit.register(_report)\n")
 
 
 def _minimal_env(first_dir):
@@ -348,16 +395,21 @@ class TC03GuardsAreReached(unittest.TestCase):
 class TC04GuardedScriptsStopAndWriteNothing(unittest.TestCase):
     def test_each_script_and_the_grader_under_a_faked_3_9(self):
         minimum, main = stated()
+        stubs = _grader_local_imports()
         for path in GUARDED + (GRADER,):
             with self.subTest(script=path.name), tempfile.TemporaryDirectory() as tmp:
                 before = _snapshot(WATCHED)
-                proc = _run_under_old(path, tmp)
+                prelude = _stubs_and_report(stubs) if path == GRADER else ""
+                proc = _run_under_old(path, tmp, prelude)
                 self.assertEqual(proc.returncode, 2, proc.stderr[-400:])
                 for needle in (f"{path.name} needs Python", _version(minimum), _version(main),
                                "this is Python 3.9"):
                     self.assertIn(needle, proc.stderr)
                 self.assertEqual(os.listdir(tmp), [])
                 self.assertEqual(_snapshot(WATCHED), before, "a guarded run wrote into the skills")
+                if path == GRADER:
+                    # TASK 123 R2.2: no module body of the grader's local imports ran
+                    self.assertIn(LOADED + "[]", proc.stderr, proc.stderr[-800:])
 
     def test_under_python_m_each_guard_names_its_own_module(self):
         # `python -m <package>` leaves `__main__.py` in argv[0]; that name would tell nothing.

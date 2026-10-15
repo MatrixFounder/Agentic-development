@@ -4,6 +4,9 @@ The allow rules `python3 -m pytest` and `python -m pytest` run pytest with no pa
 every `test_*.py` file it finds from the root. Before TASK 122 the skill-testing example called
 `exit(1)` at import when `openai` was absent, and the run stopped with INTERNALERROR. Each check
 runs in a subprocess in which `import openai` fails, whether or not the package is installed.
+
+TASK 123 R6 adds two checks of the example: it runs as a script, and an xAI key alone reaches no
+server, since `query_model` reads `OPENAI_API_KEY` only.
 """
 import os
 import subprocess
@@ -15,7 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE = ROOT / "examples" / "skill-testing" / "test_skill.py"
 #: Makes `import openai` fail in the child, as on a machine without the package.
 NO_OPENAI = "import sys\nsys.modules['openai'] = None\n"
-#: The variables `query_model` reads for an API key and a server (R3.2); a child gets none.
+#: The variables of an API key and a server, `XAI_API_KEY` among them, which `query_model` read
+#: before TASK 123 R6.2; a child gets none of them.
 KEYS = ("OPENAI_API_KEY", "XAI_API_KEY", "OPENAI_BASE_URL")
 LOAD = ("import importlib.util\n"
         "spec = importlib.util.spec_from_file_location('skill_example', %r)\n"
@@ -57,6 +61,24 @@ class TestBarePytest(unittest.TestCase):
         self.assertIn("imported", done.stdout)
         self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
         self.assertIn("pip install openai", done.stdout)
+
+    def test_only_an_xai_key_gives_the_dry_run(self):
+        # TASK 123 R6.2: no line reads XAI_API_KEY, so that key reaches no server
+        done = run(LOAD + "print(mod.query_model('prompt text'))\n", env={"XAI_API_KEY": "test-key"})
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        self.assertIn("Dry run complete.", done.stdout)
+        self.assertNotIn("pip install openai", done.stdout)
+
+    def test_the_example_runs_as_a_script(self):
+        # TASK 123 R6.1: the role file and the two skills that __main__ names exist
+        done = run("import runpy\nrunpy.run_path(%r, run_name='__main__')\n" % str(EXAMPLE))
+        out = done.stdout + done.stderr
+        self.assertEqual(done.returncode, 0, out[-2000:])
+        for rel in ("System/Agents/08_developer_prompt.md", ".agent/skills/tdd-stub-first/SKILL.md",
+                    ".agent/skills/documentation-standards/SKILL.md"):
+            self.assertIn(str(ROOT / rel), out)
+        self.assertNotIn("File not found", out)
+        self.assertNotIn("Warning: Skill", out)
 
 
 if __name__ == "__main__":

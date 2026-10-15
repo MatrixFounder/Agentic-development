@@ -487,8 +487,9 @@ def json_text(value, **kw) -> str:
     above U+FFFF becomes its pair of surrogate escapes; printable text, Cyrillic or an emoji, stays
     as it is. The JSON reads back to *value*, save one case: a high surrogate followed by a low one,
     as two code points, reads back joined into one. No control character, bidirectional mark or
-    lone surrogate reaches a terminal or a file. svg_geometry.py is not edited for it: its module
-    body runs without a prompt (TASK 122 D10)."""
+    lone surrogate reaches a terminal or a file. TASK 122 left svg_geometry.py unedited for it,
+    since that module's body then ran without a prompt (D10). lint_mermaid.py holds copies of this
+    function and of `_shown`; a test pins each pair to one output (TASK 123)."""
     out = []
     for ch in json.dumps(value, ensure_ascii=False, **kw):
         if ch.isprintable() or ch == "\n":

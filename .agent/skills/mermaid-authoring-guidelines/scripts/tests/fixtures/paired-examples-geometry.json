@@ -3,8 +3,8 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/paired-examples.md": {
-   "generated": "2026-10-15T09:22:01Z",
-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
+   "generated": "2026-10-15T14:53:03Z",
+   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
    "settings": {
     "column_px": 900,
     "render_width_px": 1800,

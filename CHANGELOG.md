@@ -16,6 +16,52 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.43.0 — framework-upgrade counts local allow rules and checks what a change runs (TASK 123)**
+
+#### Changed
+
+- **`framework-upgrade` §3 step 4 counts the allow rules of every settings file the session
+  applies.** They are those of `.claude/settings.json`, `.claude/settings.local.json` and the
+  user's `~/.claude/settings.json`, and the `allowed-tools` of skills and commands. A rule names a
+  file also through a symbolic link. The run reads the two files that git does not hold when it
+  writes the PLAN, at §4.5 and after the gates of stage 3. A rule added since then stops the run
+  when it runs a file that the change adds or edits in place, directly or through other code. The
+  audit record names the files of the change that a rule of either file runs, and quotes no rule.
+  A rule that names a directory names no module in it. Managed settings, plugins and the Auto mode
+  classifier stay outside this count.
+- **The step checks what a change runs.** For each allowed command that runs code of the change,
+  one process lists the tree, its directories and ignored files included, with a SHA-256 per
+  regular file. The listing also takes the files of `.git` through which a later git command runs
+  code or sees other work, and the user's `~/.gitconfig`, `~/.config/git/config` and
+  `~/.claude/settings.json`. It runs the command and lists again, and each git command of the check
+  runs with `-c core.fsmonitor=false`. A file that the code writes and is not meant to write fails
+  the check. A difference under `.git` or in a file of the user, or a file that is gone, stops the
+  run. Otherwise the run removes what the command created and restores each tracked file that it
+  does not declare, and it names any other difference to the operator. TASK 122 unblocked the bare
+  pytest run, and a test it reached rewrote the live session state.
+- `System/Docs/WORKFLOWS.md` §5 gains item 6 of the Safety Protocol, which states both rules.
+
+#### Fixed
+
+- **TC-04 no longer runs `svg_geometry.py`, `fidelity.py` or `stats.py`.** It runs the grader under
+  the faked Python 3.9 with a stub for each local module that the grader imports before
+  `run_evals`, and checks that none of their files loaded. An edit of those modules no longer takes
+  the four stages.
+- **The lint prints and writes no raw control character, argparse's own usage and errors aside.**
+  Its text output, `--json` and both forms of `--inventory` escape each non-printable character, as
+  the render check does. A finding stays on one line, and Cyrillic prints as it is.
+- **The debug command line of `svg_geometry.py`** prints ASCII JSON and escapes its error lines.
+- **A lone surrogate no longer stops a corpus render.** `render_corpus.py` writes `geometry.json`
+  with the escapes of the render check.
+- **The skill-testing example runs as a script.** Its `__main__` names the developer prompt and two
+  skills that exist. `query_model` reads `OPENAI_API_KEY` only, so an xAI key alone reaches no
+  server.
+- **Four test files hold no raw invisible character.** Each such character of a string literal is
+  written as its escape, and every string holds the same characters as before.
+- **The positional references of old records resolve or are pinned.** Coordinates in another
+  repository take that repository's revision. Two quotations of a misread list become prose, and two
+  quotations of an earlier state take their revisions.
+
 ### **v3.42.1 — the render check prints no raw control character, a bare pytest run collects, and the quick-reference figure is redrawn (TASK 122)**
 
 #### Fixed
@@ -1053,8 +1099,8 @@ references are correct records.
   file can satisfy. Three are referents whose target was edited after the review citing it was
   written. Two of the six are
   produced by the line that *explains* why the first class is unfixable: `framework-audit-105.md:65`
-  quotes `get-token.ts:117` as the illustration. **A gate that fails correct documents is a gate
-  that gets switched off** — §4.2's own bound, applied to the gate §4.2 governs.
+  quotes `get-token.ts:117@77fa89c` as the illustration. **A gate that fails correct documents is
+  a gate that gets switched off** — §4.2's own bound, applied to the gate §4.2 governs.
 - **`authoring-contract.md:123` ran 37 words against a 35-word budget**, so `TC-SHIP-06` — "the
   skill's own documents scan at zero warn" — reported 191/192 and took three later steps down with
   it in both matrix jobs. The sentence arrived with the **Positional reference** bullet in
@@ -1174,9 +1220,9 @@ TASK 105 OQ-1 and written beside the example rather than left for a reader to di
 
 Found while migrating the first consumer corpus (`onchain-analytics` WI-45). The referent rule binds
 "the code span immediately after the reference, separated by nothing but whitespace and at most one
-comma" — which is **exactly the shape of a comma-separated list of coordinates**. So
-`` `get-token.ts:117`, `wallet-balances.ts:92` `` was read as "117 quotes the text
-`wallet-balances.ts:92`", which is nowhere in the target, and the document was reported broken.
+comma" — which is **exactly the shape of a comma-separated list of coordinates**. So a list of two
+coordinates, line 117 of `get-token.ts` and line 92 of `wallet-balances.ts`, was read as "117 quotes
+the text of the second". That text is nowhere in the target, and the document was reported broken.
 
 This is the §4.2 bound applied to the rule's own reader: **a gate that fails correct documents is
 switched off**. The measurements say it was not a corner case — in the consumer corpus **12 of 12**

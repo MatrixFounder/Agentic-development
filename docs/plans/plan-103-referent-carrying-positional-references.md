@@ -192,7 +192,7 @@ python3 .agent/skills/documentation-standards/scripts/check_positional_refs.py \
 ```
 
 **First run: exit 1, four errors — all four in this task's own artifacts.** Every one was a
-cross-repository coordinate (`registry.ts:1083`, three onchain-analytics paths) read as a local
+cross-repository coordinate (`registry.ts:1083@e95b909`, three onchain-analytics paths) read as a local
 reference and reported `UNRESOLVABLE`. Fixed with the mechanism §4.1 already provides and this task
 did not have to invent: an `@e95b909` pin, which is *true* — those are claims about another
 repository at the revision this task measured. A pinned reference is skipped before resolution.

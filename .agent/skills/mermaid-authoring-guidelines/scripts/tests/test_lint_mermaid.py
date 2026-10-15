@@ -1527,10 +1527,10 @@ class TestFences(unittest.TestCase):
         self.assertEqual(fences[0].info, "mermaid title=x")
 
     def test_crlf_and_byte_order_mark(self):
-        fences = mm.extract_fences("﻿Caption.\r\n\r\n```mermaid\r\nflowchart TB\r\n  A --> B\r\n```\r\nLegend.\r\n")
+        fences = mm.extract_fences("\ufeffCaption.\r\n\r\n```mermaid\r\nflowchart TB\r\n  A --> B\r\n```\r\nLegend.\r\n")
         self.assertEqual((fences[0].start, fences[0].end, fences[0].body), (3, 6, "flowchart TB\n  A --> B"))
         self.assertEqual(fences[0].after.text, "Legend.")
-        fig = mm.parse_figure(mm.figure_from_mmd("﻿flowchart TB\r\n  A --> B\r\n"))
+        fig = mm.parse_figure(mm.figure_from_mmd("\ufeffflowchart TB\r\n  A --> B\r\n"))
         self.assertEqual((fig.kind, len(fig.flowchart.edges)), ("flowchart", 1))
 
     def test_fence_inside_a_longer_fence_is_not_a_figure(self):

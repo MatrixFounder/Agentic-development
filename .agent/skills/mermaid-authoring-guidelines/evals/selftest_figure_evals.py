@@ -105,7 +105,7 @@ sys.path.insert(0, str(SKILL.parent / "skill-creator" / "scripts"))
 
 #: Rows this battery prints, pinned as a literal. Deriving it from the run would let a deleted
 #: row agree with itself.
-EXPECTED_CASES = 225
+EXPECTED_CASES = 226
 
 #: The cases of eval delta 4, by slug and id. A case missing from evals.json fails its rows.
 CASES = (("c0-control-thumbnails", 0), ("c1-wms-container-view", 1),
@@ -3181,6 +3181,35 @@ def t_render():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def t_geometry_json():
+    """TASK 123 R5: `geometry.json` takes a JSON escape for each non-printable character."""
+    name = ("TC-ME-49 render_corpus writes geometry.json with a JSON escape for each non-printable "
+            "character: a lone surrogate, ESC and U+2028 in an entry neither stop the run nor reach "
+            "the file raw, and the file reads back (TASK 123 R5)")
+    tmp = Path(tempfile.mkdtemp(prefix="mfe-geom-"))
+    saved = render_corpus.render_one
+    text = "log " + chr(0x1B) + "[2J" + chr(0x2028) + "x" + chr(0xD800)
+    try:
+        rd = tmp / "camp" / "run-1"
+        (rd / "outputs").mkdir(parents=True)
+        (rd / "outputs" / "answer.md").write_text("```mermaid\nflowchart TB\n  A --> B\n```\n",
+                                                  encoding="utf-8")
+        # a stand-in render: the battery renders nothing (TC-ME-26)
+        render_corpus.render_one = lambda *args: {"status": "rendered", "log_head": text}
+        try:
+            render_corpus.process_run(tmp / "camp", rd, [("v11", "v11", False)], {"v11": None}, {},
+                                      NOTATION, tmp / "renders", False, 0, 1, "i")
+            raw = (rd / "outputs" / "geometry.json").read_text(encoding="utf-8")
+            back = json.loads(raw)["fig-1"]["v11"]["log_head"]
+            bad = sorted({hex(ord(c)) for c in raw if not c.isprintable() and c != "\n"})
+            check(name, back == text and not bad, f"raw characters {bad}; reads back: {back == text}")
+        except (OSError, ValueError) as exc:
+            check(name, False, f"{type(exc).__name__}: {exc}")
+    finally:
+        render_corpus.render_one = saved
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 # =========================================================================== statistics
 
 
@@ -3379,7 +3408,8 @@ def main() -> int:
                t_gantt_dates, t_parts, t_number_subjects, t_invented_ends, t_ascii_budget,
                t_list_marker_fence, t_fences, t_forms, t_grader, t_sequence_legend,
                t_corpus, t_scores, t_report_completeness, t_calibration, t_provenance,
-               t_amendment_a1, t_executor, t_render, t_cli, t_stats, t_heuristics, t_committed,
+               t_amendment_a1, t_executor, t_render, t_geometry_json, t_cli, t_stats,
+               t_heuristics, t_committed,
                t_bundle_words, t_envelope_error, t_zero):
         try:
             fn()

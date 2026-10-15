@@ -621,8 +621,8 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
                 (ledger_issues, fx.INDEX_FIXTURE, "docs/KNOWN_ISSUES.md")):
             with self.subTest(module=module.__name__):
                 path = fx.write(self.root / relative,
-                                fixture.replace("# ", "#  odd ", 1))
-                before = path.read_text(encoding="utf-8").count(" ")
+                                fixture.replace("# ", "# \u2028odd ", 1))
+                before = path.read_text(encoding="utf-8").count("\u2028")
                 cfg = fx.load_cfg(self.root)
                 if module is ledger_backlog:
                     (self.root / "docs" / "backlog").mkdir(parents=True,
@@ -633,7 +633,7 @@ class TestNewlineFidelityBothLedgers(unittest.TestCase):
                     module.file_defect(cfg, "RF-6", "rf-6-x", "T", "robustness",
                                        fx.DEFECT_BODY, opened_at="2026-07-30")
                 after = path.read_text(encoding="utf-8")
-                self.assertEqual(after.count(" "), before,
+                self.assertEqual(after.count("\u2028"), before,
                                  "U+2028 was consumed as a line break")
 
 

@@ -1,40 +1,57 @@
-# PLAN 122 — The render check prints no raw control character, a bare pytest run collects, and the quick-reference figure is redrawn
+# PLAN 123 — `framework-upgrade` counts local allow rules and checks what a change runs; the findings that TASK 122 left open are fixed
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 7) · **Covers:** R1–R5 · **Acceptance:** A1–A6.
+**TASK:** [docs/TASK.md](TASK.md) (revision 8) · **Covers:** R1–R9 · **Acceptance:** A1–A10.
 
-**Revision:** 5, per review round 2 (TASK D12). Revision 4 followed review round 1 (TASK D11). Revision 3 followed Mode B round 2 (r2-1, r2-2
-and the notes). Revision 2 followed Mode B round 1
-(M1, m1 to m8, and the notes).
+**Revision:** 7, per the operator's choice after round 3 of stage 2 (TASK D20): I2 files WI-54,
+and the check of H3 and J3 stops at the first listing that differs. Revision 6 followed fix round 2
+(TASK D19): H3 lists as revision 7 of the TASK states, and H4 runs the gates on the patched tree.
+Revision 5 followed fix round 1 (TASK D18). Revision 4 followed Mode B round 3 (L1 to L4 and its
+notes), which passed, with no further round. Revision 3 followed Mode B round 2 (F1 to F8).
+Revision 2 followed Mode B round 1 (M1 to M4, m1 to m13, N1 to N3).
 
 <!-- contract:sequence -->
 
 ## Sequencing rule
 
-Stub first (TASK R5.6): each cluster writes its tests and runs them red against the base code,
-then edits the code (Green). No step is staged: the run edits no code that §3 step 4 covers.
-Of the edited files, only the example and the new test module run without a prompt, as test
-modules that §3 step 4 exempts (TASK R5.5).
-- `tests/run_tests.py`, which an allow rule names, runs `test_python_floor`. Its TC-04 runs
-  `evals/grade_figures.py`, which imports `svg_geometry` before its version guard.
-- So `svg_geometry.py` stays unedited (TASK D10). C2 checks that. Each review brief names the
-  chain, and the two test modules that run without a prompt.
+The change runs the four stages of `framework-upgrade` §3 step 4 (TASK R9.1, D11). Stage 1 writes
+each staged copy, the tests first. Each new test runs red against the base code, then green against
+the staged code (TASK R9.3); the audit record holds each red run. `stage_driver.py` runs a staged
+test module with the staged modules loaded under their final names. The in-place edits of TASK R9.2
+follow the same order, red first. Stage 2 reviews the whole change at one fingerprint. Stage 3
+applies the patch after §4.5, and stage 4 reviews the applied patch.
 
-No `docs/tasks/task-122-*.md` file is written, on the precedent of PLAN 111 to PLAN 121.
+No `docs/tasks/task-123-*.md` file is written, on the precedent of PLAN 111 to PLAN 122.
 
 In the steps, `S/` stands for `.agent/skills/mermaid-authoring-guidelines/`. The declared paths
-below are written in full.
+below are written in full. Every Python run passes `-B` or sets `PYTHONDONTWRITEBYTECODE=1`, so no
+bytecode lands in the tree or the scratchpad. Every pytest run passes `-p no:cacheprovider` or sets
+`PYTEST_ADDOPTS=-p no:cacheprovider`.
+
+The check of TASK R1.1 runs its commands through `listing.py`. The operator approves that command
+once, not permanently (TASK D4). Neither `listing.py` nor `rerender.py` runs through the local rule
+that runs standard input as Python (TASK §9): each runs as `python3 <its path>`.
+
+The audit record, and the PLAN's ticks, schedule status and chart, are records of the run, not an
+edit of the change. After stage 3 the run writes only those and the retro's records. It settles the
+PLAN's status and writes its chart again before the fingerprint of J4, which runs
+`plan_gantt.py --check`.
 
 | Order | Cluster | Covers |
 | :--- | :--- | :--- |
-| A | Base check | R5.5 |
-| B | Tests (Red) | R1, R2, R3, R5.2, R5.6 |
-| C | Code (Green) | R1, R2, R3, A1–A3 |
-| D | The quick-reference figures | R4, A4 |
-| E | Evidence | R5.1, A2 |
-| F | Documents and records | R5.3, R5.4, R5.7 |
-| G | Gates | A5, A6 |
-| H | Reviews | all |
-| I | §4.5 and the retro | A6 |
+| A | Base check and the rules of the settings | R1.5, R9.1, R9.2 |
+| B | Stage 1: the copies | R9.1 |
+| C | The pin and the workflow text | R1.1–R1.3 |
+| D | TC-04 | R2 |
+| E | The lint and `svg_geometry.py` | R3, R4.1, R4.2 |
+| F | The fixtures | R4.4 |
+| G | Edits in place | R5–R8, R1.4, R9.5, R9.8 |
+| H | Patch, gates and the check | R4.3, R9.6, A2, A10 |
+| I | Stage 2: reviews | all |
+| J | §4.5, stage 3 and stage 4 | R1.5, A1–A10 |
+| K | Retro | — |
+
+`docs/ARCHITECTURE.md` §10.7 took the bullet of TASK R9.7 at `framework-upgrade` §2.1, before this
+PLAN.
 
 <!-- contract:coverage -->
 
@@ -42,199 +59,310 @@ below are written in full.
 
 | Requirement | Steps |
 | :--- | :--- |
-| R1 | B1, B2, B3, C1, C2 (R1.3 withdrawn, TASK D10) |
-| R2 | B4, C3 |
-| R3 | B5, C4, C5 |
-| R4 | D1, D2 |
-| R5 | A1, B1–B5, E1, E2, F1–F4, G1 |
+| R1 | A2, C1, C2, G5, G8, H1, H3, H4, J1–J3 |
+| R2 | D1, D2, H1, J2 |
+| R3 | E1–E3, H1, J2 |
+| R4 | E1–E3, F1, F2, H1, J2 |
+| R5 | G1 |
+| R6 | G2 |
+| R7 | G3 |
+| R8 | G4, J1 |
+| R9 | A1, B1, G5–G8, H1–H4, I1, J1–J4; R9.7 done at §2.1 |
 
 ### Tests known red until a later step
 
-The skill's whole suite runs only at E2 and in the gates of G1, so one test is red between steps
-by design:
-
 | Test | Red from | Green at | Reason |
 | :--- | :--- | :--- | :--- |
-| `test_paired_examples.py`, `test_evidence_was_measured_by_the_current_instruments` | C1 | E1 | the instruments change |
+| the staged tests of C, D and E, run against the base code | B1 | stage 3 | they test the staged code |
+
+The tree holds no red test. A staged test module is named `staged_*.py`, which pytest and unittest
+collect only when it is named on their command line.
 
 <!-- contract:paths -->
 
 ## Declared paths
 
-Edited:
+Edited by the stage-3 patch:
 
+- `.agent/workflows/framework-upgrade.md`
+- `tests/test_run_safety_rules.py`
+- `tests/test_python_floor.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py`
 - `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/measure_text.mjs`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_render_check.py`
-- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json`
 - `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json`
-- `examples/skill-testing/test_skill.py`
-- `.github/workflows/framework-gates.yml`
-- `System/Docs/WORKFLOWS.md`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json`
+
+Edited in place:
+
 - `docs/ARCHITECTURE.md`
+- `.agent/skills/mermaid-authoring-guidelines/evals/render_corpus.py`
+- `.agent/skills/mermaid-authoring-guidelines/evals/selftest_figure_evals.py`
+- `examples/skill-testing/test_skill.py`
+- `tests/test_bare_pytest.py`
+- `.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py`
+- `.agent/skills/run-feedback/scripts/tests/test_wi_tail.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_lint_mermaid.py`
+- `.agent/tools/test_task_id_tool.py`
 - `CHANGELOG.md`
 - `CHANGELOG.ru.md`
+- `docs/reviews/framework-audit-105.md`
+- `docs/reviews/framework-audit-20260813-reference-gate-scope.md`
+- `docs/plans/plan-103-referent-carrying-positional-references.md`
+- `docs/reviews/review-095-independent.md`
+- `docs/reviews/vdd-adversarial-known-issues-format.md`
+- `System/Docs/WORKFLOWS.md`
+- `docs/BACKLOG.md`, by I2
 
-- `tests/test_mock_agent.py` (fix round 1, TASK R3.4)
-- `tests/test_tool_runner.py` (fix round 1, TASK R3.4)
+Created at stage 1 and removed at stage 3:
+
+- `tests/staged_run_safety_rules.py`
+- `tests/staged_python_floor.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/staged_lint_mermaid.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/staged_svg_geometry.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/staged_printed_output.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/staged_paired-examples-geometry.json`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/staged_references-geometry.json`
 
 Created:
 
-- `tests/test_bare_pytest.py`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_printed_output.py`, by the patch
+- `docs/reviews/framework-audit-123-stage3.diff`
+- `docs/backlog/wi-54-residual-routes-of-the-task-123-put-back.md`, by I2
 
-The run's `docs/TASK.md`, `docs/PLAN.md`, the audit record `docs/reviews/framework-audit-122.md`
-and the TASK 121 archive pair are declared by `framework-upgrade` §5.
+The run's `docs/TASK.md`, `docs/PLAN.md`, the audit record `docs/reviews/framework-audit-123.md`
+and the TASK 122 archive pair are declared by `framework-upgrade` §5.
 
-**Rollback point.** Base `b6362e3444eaa1b9109a104a445b100f7e4e964d`.
+**Rollback point.** Base `09765e1d1379bd70eae996fe87e483ce73cf96fa`.
 
 - No file outside the repository is edited except the scratchpad and the render cache of
   `setup_renderers.sh`, whose `check-*` directories `render_check.py` prunes.
-- The scratchpad holds the gate runner, the scratch figures and their renders, the logs, and the
-  audit text that waits during a review round. Each file is deleted after I, or when the run stops.
-- Every Python run in the repository sets `PYTHONDONTWRITEBYTECODE=1`, and every pytest run passes
-  `-p no:cacheprovider`.
-- While a review round runs, nothing under review is written (`skill-parallel-orchestration`
+- The scratchpad holds the tools of this run and their logs: `staging.py`, `stage_driver.py`,
+  `rerender.py`, `replay.py`, `listing.py`, `h3.sh`, `gen_stage3_patch.py`, `run_gates.sh`,
+  `regcheck.py`, `make_stage1.py`, `make_inplace.py`, `dryrun.py` and `rules_check.py`. `make_stage1.py` and
+  `make_inplace.py` hold the code and text they write into the tree, and no whole repository
+  file; `dryrun.py` runs them on an overlay in memory and writes nothing. It also holds
+  `printed_output_draft.py`, the text of the new test module, which E1 deletes once it has written
+  the staged module. `rules_22.json` holds the SHA-256 of each allow rule that the reading at §2.2
+  found, and no rule's text.
+- While a review round runs, the scratchpad also holds the audit text that waits for the round to
+  end. Each file is deleted after K, or when the run stops.
+- H4 adds a git worktree under the scratchpad, `patched/`, and its entry under `.git/worktrees`.
+  H4 removes both with `git worktree remove --force` of that path, and `git worktree list` then
+  names no `patched/` (TASK D19).
+- While a review round runs, nothing in the tree is written (`skill-parallel-orchestration`
   §2.4.1).
 
-## Cluster A — base check
+## Cluster A — base check and the rules of the settings
 
-- [x] A1 Every check of `framework-upgrade` §3.1:
-  - `HEAD` equals the base;
-  - each edited path is tracked, and `git check-ignore` exits 1 for `tests/test_bare_pytest.py`;
-  - each declared path matches `[A-Za-z0-9._/-]+`, has no `.git` or `..` segment, and does not
-    start with `/`.
+- [x] A1 Every check of `framework-upgrade` §3.1: `HEAD` equals the base, and each edited path
+      passes `git ls-files --error-unmatch`. Each created path gives `git check-ignore -q` exit 1.
+      Each path matches `[A-Za-z0-9._/-]+`, has no `.git` or `..` segment, and does not start with
+      `/`.
+- [x] A2 `rules_check.py compare`, given the full scratchpad path of `rules_22.json`, reads
+      `.claude/settings.local.json` and the user's `~/.claude/settings.json` again (TASK R1.5, D13,
+      D16). The SHA-256 of each equals that of the reading at §2.2. The audit record holds that
+      reading: the SHA-256 of each file, and the first 16 hex digits of the SHA-256 of each rule
+      that runs a file of the change, with the files it runs. A changed file takes the steps of
+      J1.
 
-## Cluster B — tests (Red)
+## Cluster B — stage 1: the copies
 
-Each step writes its tests and runs them against the base code; the audit records each red run.
-Every run sets `PYTHONDONTWRITEBYTECODE=1` and passes `-p no:cacheprovider`.
+- [x] B1 Each staged code file starts as a byte copy of its base file, and `cmp` shows it equal:
+      `tests/staged_run_safety_rules.py`, `tests/staged_python_floor.py`,
+      `S/scripts/staged_lint_mermaid.py` and `S/scripts/staged_svg_geometry.py`.
+      `stage_driver.py pin base` passes every case on the byte copy.
 
-- [x] B1 `S/scripts/tests/test_render_check.py`: the `json_text` tests of R5.2. Red: `json_text`
-      does not exist.
-- [x] B2 `S/scripts/tests/test_render_check.py`, `StubbedRun` cases:
-  - the clean font name, a finding, a note, a render's error line and a `not rendered` reason hold
-    control characters and a lone surrogate. The text output, the `--json` output and
-    `evidence.json` then hold no non-printable character but newlines;
-  - `dump_json` of such a value;
-  - a command-line error naming a path with ESC;
-  - a run with no renderer whose install home holds ESC and U+009B: the `home` and `missing` of
-    the `--json` report of `_stop_early`, and its `not rendered` lines;
-  - a run with `--fixture` at a path that holds ESC and U+009B: the `fixture.path` of the
-    `--json` report, the `fixture:` line and the written fixture.
+## Cluster C — the pin and the workflow text
 
-  Red: the raw characters print; with `--json`, the lone surrogate makes `_write_evidence` raise.
-- [x] B3 `S/scripts/tests/test_render_check.py`, `TestRenderWithStandIns`: a stand-in measurement
-      whose font name holds C1 controls, U+202E and a lone surrogate leaves the render `ok`. The
-      measurement file holds no non-printable character but newlines, and reads back (R1.5). Red:
-      `UnicodeEncodeError` at the write.
-- [x] B4 `S/scripts/tests/test_render_check.py`, `TestWithInstalledRenderers`: a label of 119
-      letters and an emoji is measured as those 120 code points, in `labels` and in
-      `font_swap.labels` (R2.1). Red: the write of the measurement raises before the cut is
-      checked; the red run for the cut itself is C2's postcondition. `-rs` shows that the test
-      ran and did not skip.
-- [x] B5 `tests/test_bare_pytest.py` (R3.3): the nested collection, `--co -q -p
-      no:cacheprovider`; the import of the example; `query_model` without a key and with a
-      placeholder key. Each child runs with `import openai` failing, `PYTHONDONTWRITEBYTECODE=1`,
-      and `OPENAI_BASE_URL` cleared, and prints a marker after the import. Red: exit 3 with
-      `INTERNALERROR`, and the exit at import before the marker.
+`staging.py` reads the fences of TASK R1.1 and R4.3, so no second copy of either text exists. Its
+`patched_workflow(text)` replaces the span of R1.1, and fails unless each anchor occurs once.
 
-## Cluster C — code (Green)
+- [x] C1 Tests first: the staged pin's `STEP_4` takes the text of the R1.1 fence at its place, and
+      its docstring names the two new parts (TASK R1.3).
+- [x] C2 `stage_driver.py pin base`: `test_step_4_is_the_reviewed_text_to_the_end_of_section_3`
+      fails, every other case passes. `pin patched`: every case passes. `pin old-pin`, the base
+      pin against the patched text: the same case fails, every other case passes (A1).
 
-- [x] C1 `S/scripts/render_check.py`: `json_text` (R1.1).
-- [x] C2 `S/scripts/render_check.py`: `_shown` and `_say` (R1.4); every `print` call goes through
-      `_say`. The measurement file, `mermaid-config.json`, `evidence.json`, both `--json` prints
-      and `dump_json` go through `json_text` (R1.2). `browser_stat_digest` and argparse stay as
-      they are (R1.2, D8). Postconditions:
-  - B1 to B3 pass;
-  - B4 still fails, now on the text: its last code point is a lone U+D83D, not U+1F4E6. The audit
-    records that run as the red run for C3;
-  - `git diff --quiet <base> -- S/scripts/svg_geometry.py` exits 0 (TASK D10).
-- [x] C3 `S/scripts/measure_text.mjs`: both cuts count code points; the header states it (R2).
-      B4 passes, and `-rs` shows that it ran.
-- [x] C4 `examples/skill-testing/test_skill.py`: `openai` is imported in `query_model` (R3.1,
-      R3.2).
-- [x] C5 `.github/workflows/framework-gates.yml`: the tooling step lists
-      `tests/test_bare_pytest.py` (R3.3).
-- [x] C6 Postcondition: B5 passes. `python3 -c "import openai"` fails here, and
-      `python3 -m pytest --co -q -p no:cacheprovider` from the repository root exits 0 (A3).
+## Cluster D — TC-04
 
-## Cluster D — the quick-reference figures
+- [x] D1 Tests first: in `tests/staged_python_floor.py`, the grader's child reports at its exit the
+      files of `GRADER_PATH` in `sys.modules`. TC-04 asserts that it holds none, the grader aside
+      (TASK R2.2). `stage_driver.py floor nostub` empties the stubs, as the base TC-04 has none,
+      and fails when the staged module has no `_grader_local_imports`. There the assertion fails
+      and names the six modules of TASK §8 (A3, TASK R9.3).
+- [x] D2 The stubs of TASK R2.1, found by `_grader_local_imports`, and the docstring of R2.3.
+      `stage_driver.py floor staged`: every case passes.
 
-- [x] D1 `System/Docs/WORKFLOWS.md`: the two figures of R4.1 to R4.3 replace the legacy figure,
-      each with its caption paragraph. The fences are those measured in TASK §8.
-- [x] D2 `lint_mermaid.py System/Docs/WORKFLOWS.md`: 0 errors and 0 warnings.
-      `render_check.py System/Docs/WORKFLOWS.md`: exit 0, every figure `pass` (A4).
+## Cluster E — the lint and `svg_geometry.py`
 
-## Cluster E — evidence
+- [x] E1 Tests first: `S/scripts/tests/staged_printed_output.py` holds the tests of TASK R9.4 for R3
+      and R4.1. Among them are the usage error of `--probe` with a path and the internal-error
+      line. Each test reaches the code in the process, and reads a source through the module's
+      `__file__`. The newline of R9.4 reaches the output through a finding's message that quotes a
+      label, through a path and through the error lines. The module holds no raw non-printable
+      character but newlines. Once it is written, `printed_output_draft.py` is deleted.
+      `stage_driver.py printed base`: each test fails against the base lint and
+      `svg_geometry.py`.
+- [x] E2 The staged lint: `_json_text`, `_shown` and `_say`, built from the source text of
+      `render_check.py`, so no escape is typed again. Every `print` goes through `_say`, and the
+      two formatters pass each line through `_shown` (TASK R3.1–R3.3). The staged
+      `svg_geometry.py`: the JSON and the two error lines of `main()` (R4.1).
+      `stage_driver.py svgdiff` shows that every changed line lies in `main` (R4.2).
+- [x] E3 `stage_driver.py printed staged`: every case passes. `stage_driver.py regress`, the skill's
+      whole suite with the staged modules: every case passes. In `regress`, `GUARD_PRELUDE` of
+      `test_lint_mermaid.py` loads the staged lint in the child of `TestWritesNoFile`. A collection
+      hook shows that pytest collected the module that holds the prelude, and
+      `stage_driver.py probe` shows that child holding `staged_lint_mermaid.py`. The staged lint
+      also runs by its own path as CI runs the lint: `--probe`, and the references of the skill.
 
-- [x] E1 From the skill's directory: `render_check.py references/paired-examples.md --fixture
-      scripts/tests/fixtures/paired-examples-geometry.json`; every other `references/*.md` into
-      `references-geometry.json`. Exit 0 for each file with a fence, exit 2 for the two without.
-      Both fixtures hold the instrument hash of the current files (R5.1).
-- [x] E2 The skill's whole suite passes (A2), and `-rs` shows that the installed-renderer tests
-      ran; `evals/selftest_figure_evals.py` passes.
+## Cluster F — the fixtures
 
-## Cluster F — documents and records
+- [x] F1 From the skill's directory, `rerender.py` renders `references/paired-examples.md` with
+      `--fixture scripts/tests/fixtures/staged_paired-examples-geometry.json`, and every other
+      `references/*.md` into `staged_references-geometry.json`. Exit 0 for each file with a
+      fence, and exit 2 for the two without, as PLAN 122 E1.
+- [x] F2 `replay.py` of each staged fixture against its base fixture: every file key and figure
+      entry equal, and only `instruments` and `generated` differ per file (TASK R4.4, A5). Every
+      `instruments` value equals `rerender.py --hash`.
 
-- [x] F1 `docs/ARCHITECTURE.md` §10.7: one bullet for R1 (R5.3), written at `framework-upgrade`
-      §2.1, before this PLAN.
-- [x] F2 `CHANGELOG.md` and `CHANGELOG.ru.md`: v3.42.1 (R5.4).
-- [x] F3 `System/Docs/SKILLS.md` states no fact this task changes; not edited (R5.7).
-- [x] F4 No register `WARN` on an added line of the changed documents.
+## Cluster G — edits in place
 
-## Cluster G — gates
+- [x] G1 TC-ME-49 first, red against the base write of `render_corpus.py`; then `rc.json_text`, and
+      `EXPECTED_CASES` 226. `evals/selftest_figure_evals.py` passes (TASK R5, A6).
+- [x] G2 The two tests of TASK R6.3 first, red against the base example; then R6.1 and R6.2.
+      `tests/test_bare_pytest.py` passes, and the example as a script exits 0 (A7).
+- [x] G3 TASK R7: `make_inplace.py r7` writes each raw non-printable character of the named lines as
+      its escape. `ast.dump` of each file equals that of its base text; no non-printable character
+      but a newline remains; the suite of each file passes (A8).
+- [x] G4 TASK R8: the pins of R8.1 and R8.3, and the prose of R8.2; no line count changes.
+      `check_positional_refs.py --all docs .` reports none of the 16 errors (A9).
+- [x] G5 `System/Docs/WORKFLOWS.md` item 6 from the fence of TASK R1.4.
+- [x] G6 `CHANGELOG.md` and `CHANGELOG.ru.md`: v3.43.0 (TASK R9.5).
+- [x] G7 `git diff --quiet <base> -- System/Docs/SKILLS.md` exits 0 (TASK R9.8).
+- [x] G8 `regcheck.py` of every changed document: no `WARN` on an added line (A2). The scanner skips
+      fenced text, so `staging.py scan` pipes `patched_workflow(base)` through `scan_register.py`
+      on stdin. The span of TASK R1.1 holds lines 111 to 172 of the patched text, and no `WARN`
+      falls in it. Each fix round repeats both.
 
-- [x] G1 The CI steps of `.github/workflows/framework-gates.yml`, run from the scratchpad runner,
-      which reads the tooling step's arguments from that file: every step passes. Then the bare
-      `python3 -m pytest -p no:cacheprovider` from the repository root: every test passes (R5.5).
-      Every path of `git status` is a declared path (A5, A6). The sha256 of
-      `.agent/sessions/latest.yaml` is the same before and after the bare run (A3).
+## Cluster H — the patch, the gates and the check
 
-## Cluster H — reviews
+- [x] H1 `gen_stage3_patch.py docs/reviews/framework-audit-123-stage3.diff`. The patch gives each
+      file on the right of TASK R9.1 the bytes of its staged copy, and the workflow and
+      `render_check.py` the texts of `staging.py` (R1.1, R4.3). It touches no other path, the
+      staged copies stay out of it (TASK D17), and it holds no raw non-printable character but
+      newlines. `git apply --check` passes. The generator prints the SHA-256 of the patch, of each
+      staged copy and of each file after the patch.
+- [x] H2 `run_gates.sh`, the steps of `.github/workflows/framework-gates.yml`: every step passes.
+      Only the step that CI marks `continue-on-error` may exit non-zero. Every path of `git status`
+      is declared.
+- [x] H3 The check of TASK R1.1 before stage 3, with `listing.py <repo> [--cwd DIR] -- <command>`.
+      Its listing holds every file and directory under the root, each regular file with its
+      SHA-256, ignored files included and no link followed. Of `.git` it holds every file but
+      `index` and those under `objects` and `logs`, and of `logs` the file `refs/stash`. It holds
+      the output of `git rev-parse HEAD` and `git ls-files -s -v`, and the user's `~/.gitconfig`,
+      `~/.config/git/config` and `~/.claude/settings.json` (TASK D18, D19). Each git command of
+      the check and of the put-back runs with `-c core.fsmonitor=false`. The command runs with
+      `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider`. First,
+      `listing.py <repo> --show-git` names the top entries of `.git` that it lists, and the five
+      views. Then `h3.sh <repo> <log dir>` runs each command of TASK R9.6 but the lint, in this
+      order, and stops at the first listing that differs. The run puts back as TASK R1.1 states,
+      and then runs `h3.sh` again from the next command (TASK D20):
+  - `python3 -m pytest` from the repository root, `S/`, `.agent/skills/run-feedback` and
+    `.agent/tools`;
+  - `python3 tests/run_tests.py` and `python3 -m unittest discover -s tests -v`, from the root;
+  - `python3 -m unittest discover -s scripts/tests`, from `S/`;
+  - `bash -x tests/test_e2e.sh`, from `.agent/skills/run-feedback/scripts`.
 
-- [x] H1 A `code-reviewer` and a `security-auditor` at one fingerprint (CLAUDE.md, Self-Improvement
-      Mode). Each brief states the boundary of `framework-upgrade` §3 step 4. The bound is 3 rounds.
-      A fix round runs B and C of the fix first, then E1 when an instrument changes, and D2 when
-      a fence of `WORKFLOWS.md` or an instrument changes. Then E2, F4 and G1.
+  The audit record names the code that wrote each difference, and the run puts back each
+  difference the command was not meant to write, or stops, as TASK R1.1 states. A difference that
+  code of the change writes fails the check: the fix returns to its cluster, red first, then H1 to
+  H4, and a second check holds equal listings. Any other difference is a finding before the task,
+  named to the operator. The audit record holds each command with its paths relative to the
+  repository root, and its result.
+- [x] H4 `run_gates.sh` on the patched tree (TASK D19). `git worktree add --detach` of the base
+      makes `patched/` under the scratchpad. Into it go the tracked changes of the repository, as
+      `git diff --binary <base>` applies them, and each declared file that git does not track,
+      the staged copies aside. The patch of H1 is then applied there with `git apply`. Every step
+      of `run_gates.sh <scratchpad>/patched <log dir>` passes, as H2 states, with
+      `tests/test_git_rollback_contract.py` and the pin among them. Then
+      `git worktree remove --force` of that path, and `git worktree list` names no `patched/`.
+
+## Cluster I — stage 2: the reviews
+
+- [x] I1 A `code-reviewer` and a `security-auditor` at one fingerprint, with the SHA-256 values of
+      H1. Each brief states the boundary of `framework-upgrade` §3 step 4, and that the staged
+      copies and the patched texts are what lands. The bound is 3 rounds.
+  - A fix round runs the steps of the clusters it touches, red first, then G8 and H1 to H4.
+  - A fix round that changes `staged_svg_geometry.py` or the fence of TASK R4.3 runs F again.
   - An `INCOMPLETE` security audit is not a round: `security-audit` §6.2 re-runs the unfinished
     part once, and then the operator decides.
   - A round may find only LOW routes of a class that an earlier round fixed. The operator then
     chooses a residual in the TASK with one backlog record, or one more round.
+- [x] I2 Round 3 passed with only such routes, and the operator chose the record (TASK D20). The
+      routes in the text of R1.1 go to §9 of the TASK. WI-54 holds them, as `known-issues-format`
+      Registry B states, in the file
+      `docs/backlog/wi-54-residual-routes-of-the-task-123-put-back.md` and its line after the
+      anchor of `docs/BACKLOG.md`. A1's checks pass for both paths. The run fixes the round's
+      findings in its records and tools; the patch and the staged copies keep the SHA-256 values
+      of round 3, which J2 step 1 checks.
 
-### Fix round 1 (TASK D11)
+## Cluster J — §4.5, stage 3 and stage 4
 
-Red runs first, each recorded in the audit:
-- against the current code: the newline tests of `test_render_check.py`, and the live-state
-  assertion of `test_mock_agent.py` and the `git check-ignore` assertion of `test_tool_runner.py`,
-  each before its test changes how it runs;
-- against a copy of the base `render_check.py`: the forward `note:` test;
-- the AST test against a copy with one `_say` call turned back into `print`.
+- [x] J1 §4.5: `check_positional_refs.py --targets-changed`, then with `--fix`; the audit record
+      lists every file a repair touched. No document of the living corpus cites a line inside the
+      span that the patch replaces, so the run before the patch misses no coordinate. Then the
+      local file and the user's are read again with `rules_check.py compare` (TASK R1.5, D13). It
+      prints each rule that the reading at §2.2 lacks. A new rule that runs a file the change adds
+      or edits in place, directly or through other code, stops the run for the operator. A new rule
+      that runs only a file of the patch adds its commands, with relative paths, to the check of J3.
+      Exit 2, a changed file with no new allow rule, names each changed key to the operator, such
+      as a hook or a deny rule. The audit record names the outcome and quotes no rule (TASK D3).
+      `--targets-changed` reports no error in a line that TASK R8 names (A9).
+- [x] J2 Stage 3:
+  1. the patch and each staged copy hash to the values that I1 quoted;
+  2. the audit record holds the patch text in a `~~~~diff` fence, the SHA-256 of each staged copy,
+     and the SHA-256 and mode of every file the patch touches;
+  3. `git diff --quiet <base> --` each file the patch edits exits 0; then
+     `git apply --whitespace=nowarn` of the patch;
+  4. postcondition: each file on the right of TASK R9.1 hashes to its staged copy. Each file the
+     patch edits hashes to the value of H1 and keeps its mode, and the new test module has mode
+     `100644`. `git apply --check -R` passes;
+  5. `rm --` each staged copy, one file at a time, and the audit record lists each removal. A
+     failed `rm` is a failed postcondition.
 
-Then the edits: `_shown` and `_say` of `render_check.py`, the docstring of `json_text`, the two
-test modules, the changelogs and the ARCHITECTURE bullet. The order of H1 follows: E1 and D2,
-since `render_check.py` changes, then E2, F4 and G1. Round 2 resumes both reviewers. The live
-session state is written anew, and its test records are dropped.
+  A mismatch at step 1 means STOP: the patch returns to I1. A non-zero exit at step 3 means STOP
+  and report; `git apply` is atomic, so nothing was applied.
+- [x] J3 The gates again, from the repository root: `run_gates.sh`; `regcheck.py` of the changed
+      documents, `.agent/workflows/framework-upgrade.md` among them; and the check of TASK R1.1 for
+      every command of R9.6, with `h3.sh <repo> <log dir> 1 lint`. Those are the commands of H3,
+      and these runs of `S/scripts/lint_mermaid.py`: the text output, `--json`, `--inventory` and
+      `--inventory --json` of `S/references/paired-examples.md`, `--probe`, `--probe` with a path,
+      and a path that does not exist. A listing that differs stops `h3.sh`, as at H3. A failed
+      check is a failed gate of stage 3. Then both settings files are read again, as at J1 (TASK
+      D13); a rule that this reading finds first goes to the operator. Every path of `git status`
+      is declared.
+- [x] J4 Stage 4: a `code-reviewer` and a `security-auditor` on the applied patch, at the new
+      fingerprint. Each brief states the boundary of `framework-upgrade` §3 step 4.
 
-### Fix round 2 (TASK D12)
+**Failure** (`framework-upgrade` §3 step 4, TASK D17):
 
-The round passed; the run applies its LOW findings in the touched lines, then round 3, the last.
-- The AST check of `lines` runs red against a copy that passes `lines=True` to the `note:` line.
-- `tests/test_mock_agent.py` builds its sandbox in a `TemporaryDirectory`, which removes it.
-- The audit record gives the replay of the fixtures; TASK §9 and D12 are written.
-- Then E2, F4 and G1; no instrument changes, so E1 and D2 do not run.
+- A failed postcondition or gate of J2 or J3, or a J4 review that is rejected or `FAIL`: the run
+  writes back only the copies that J2 step 5 removed. Each comes from the file on its right, and
+  only when that file still hashes to the copy's SHA-256 in the audit record; a mismatch means
+  STOP. Then `git apply -R --whitespace=nowarn` of the same patch. Each file's SHA-256 and mode then
+  equal those of J2 step 2, and the new test module is absent; a mismatch, or a non-zero exit,
+  means STOP. The audit record lists R1 to
+  R4, R9.5 and R9.7 under `Pending after restore`, and the operator decides.
+- An `INCOMPLETE` J4 security audit as the only failure: the same restore, then `security-audit`
+  §6.2 re-runs the unfinished part with the recorded patch. On a pass, J1 to J3 run again with
+  every step, and then J4; otherwise the operator decides.
 
-## Cluster I — §4.5 and the retro
+## Cluster K — the retro
 
-- [x] I1 §4.5: `check_positional_refs.py --targets-changed`, then with `--fix`; the audit record
-      lists every file a repair touched. When a repair lands, the `refs-living` step of G1 and the
-      `git status` check run again.
-- [x] I2 `framework-upgrade` §6 with the run id `framework-upgrade-render-output-pytest-figure`.
+- [x] K1 `framework-upgrade` §6 with the run id `framework-upgrade-staging-rules-and-loose-ends`.
       The audit record lists any record the retro files. Such a record is no declared path, so a
       fallback after the retro stops at §5 step 1 and asks the operator.
-
-**Failure.** A failed gate of G1, or a review round that does not pass, returns the run to a fix
-round, inside the bound of H1. A run that stops leaves every edit in the tree; the audit record
-lists them under `Pending`, and the operator decides on each.
 
 ## Schedule
 
@@ -244,15 +372,17 @@ lists them under `Pending`, and the operator decides on each.
 {
   "schema": "plan-schedule/v1",
   "tasks": [
-    {"id": "122.A", "title": "Base check", "stage": "Build", "est": 1, "deps": [], "status": "done"},
-    {"id": "122.B", "title": "Tests (Red)", "stage": "Build", "est": 1, "deps": ["122.A"], "status": "done"},
-    {"id": "122.C", "title": "Code (Green)", "stage": "Build", "est": 2, "deps": ["122.B"], "status": "done"},
-    {"id": "122.D", "title": "Quick-reference figures", "stage": "Build", "est": 1, "deps": ["122.C"], "status": "done"},
-    {"id": "122.E", "title": "Evidence", "stage": "Build", "est": 1, "deps": ["122.C"], "status": "done"},
-    {"id": "122.F", "title": "Documents and records", "stage": "Build", "est": 1, "deps": ["122.C", "122.D"], "status": "done"},
-    {"id": "122.G", "title": "Gates", "stage": "Closure", "est": 1, "deps": ["122.E", "122.F"], "status": "done"},
-    {"id": "122.H", "title": "Reviews", "stage": "Closure", "est": 1, "deps": ["122.G"], "status": "done"},
-    {"id": "122.I", "title": "Refs and retro", "stage": "Closure", "est": 1, "deps": ["122.H"], "status": "done"}
+    {"id": "123.A", "title": "Base check", "stage": "Build", "est": 1, "deps": [], "status": "done"},
+    {"id": "123.B", "title": "Stage 1 copies", "stage": "Build", "est": 1, "deps": ["123.A"], "status": "done"},
+    {"id": "123.C", "title": "Pin and workflow text", "stage": "Build", "est": 1, "deps": ["123.B"], "status": "done"},
+    {"id": "123.D", "title": "TC-04 stubs", "stage": "Build", "est": 1, "deps": ["123.B"], "status": "done"},
+    {"id": "123.E", "title": "Lint and svg_geometry", "stage": "Build", "est": 2, "deps": ["123.B"], "status": "done"},
+    {"id": "123.F", "title": "Fixtures", "stage": "Build", "est": 1, "deps": ["123.E"], "status": "done"},
+    {"id": "123.G", "title": "Edits in place", "stage": "Build", "est": 2, "deps": ["123.A"], "status": "done"},
+    {"id": "123.H", "title": "Patch, gates, check", "stage": "Closure", "est": 1, "deps": ["123.C", "123.D", "123.F", "123.G"], "status": "done"},
+    {"id": "123.I", "title": "Stage 2 reviews", "stage": "Closure", "est": 1, "deps": ["123.H"], "status": "done"},
+    {"id": "123.J", "title": "Stage 3 and 4", "stage": "Closure", "est": 1, "deps": ["123.I"], "status": "done"},
+    {"id": "123.K", "title": "Retro", "stage": "Closure", "est": 1, "deps": ["123.J"], "status": "done"}
   ]
 }
 ```
@@ -262,7 +392,7 @@ lists them under `Pending`, and the operator decides on each.
 **Plan chart.** Each bar starts when its last dependency ends and lasts its estimate; the axis counts estimate hours from the start, not dates.
 
 ```mermaid
-%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 214}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
+%%{init: {"look": "classic", "themeVariables": {"doneTaskBkgColor": "#C8E6C9", "doneTaskBorderColor": "#2E7D32", "activeTaskBkgColor": "#FFF3C4", "activeTaskBorderColor": "#F9A825", "taskBkgColor": "#FFFFFF", "taskBorderColor": "#9E9E9E", "critBkgColor": "#FFFFFF", "critBorderColor": "#C62828", "taskTextColor": "#212121", "taskTextDarkColor": "#212121"}, "gantt": {"barHeight": 16, "barGap": 4, "topPadding": 50, "fontSize": 12, "sectionFontSize": 12, "numberSectionStyles": 2, "useWidth": 900, "leftPadding": 140, "rightPadding": 150}, "themeCSS": ".grid .tick line { stroke-opacity: 0.25; } .activeText0.taskTextOutsideRight, .activeText1.taskTextOutsideRight, .activeText2.taskTextOutsideRight, .activeText3.taskTextOutsideRight, .activeCritText0.taskTextOutsideRight, .activeCritText1.taskTextOutsideRight, .activeCritText2.taskTextOutsideRight, .activeCritText3.taskTextOutsideRight, .doneText0.taskTextOutsideRight, .doneText1.taskTextOutsideRight, .doneText2.taskTextOutsideRight, .doneText3.taskTextOutsideRight, .doneCritText0.taskTextOutsideRight, .doneCritText1.taskTextOutsideRight, .doneCritText2.taskTextOutsideRight, .doneCritText3.taskTextOutsideRight, .activeText0.taskTextOutsideLeft, .activeText1.taskTextOutsideLeft, .activeText2.taskTextOutsideLeft, .activeText3.taskTextOutsideLeft, .activeCritText0.taskTextOutsideLeft, .activeCritText1.taskTextOutsideLeft, .activeCritText2.taskTextOutsideLeft, .activeCritText3.taskTextOutsideLeft, .doneText0.taskTextOutsideLeft, .doneText1.taskTextOutsideLeft, .doneText2.taskTextOutsideLeft, .doneText3.taskTextOutsideLeft, .doneCritText0.taskTextOutsideLeft, .doneCritText1.taskTextOutsideLeft, .doneCritText2.taskTextOutsideLeft, .doneCritText3.taskTextOutsideLeft { fill: #ffffff !important; mix-blend-mode: difference; }"}}%%
 gantt
   accTitle: Plan chart
   accDescr: Each bar starts when its last dependency ends and lasts its estimate, the axis counts estimate hours from the start, not dates.
@@ -271,22 +401,24 @@ gantt
   tickInterval 1millisecond
   todayMarker off
   section Build
-    122.A Base check:done, crit, t122xA, 0, 1ms
-    122.B Tests (Red):done, crit, t122xB, 1, 1ms
-    122.C Code (Green):done, crit, t122xC, 2, 2ms
-    122.D Quick-reference figures:done, crit, t122xD, 4, 1ms
-    122.E Evidence:done, t122xE, 4, 1ms
-    122.F Documents and records:done, crit, t122xF, 5, 1ms
+    123.A Base check:done, crit, t123xA, 0, 1ms
+    123.B Stage 1 copies:done, crit, t123xB, 1, 1ms
+    123.G Edits in place:done, t123xG, 1, 2ms
+    123.C Pin and workflow text:done, t123xC, 2, 1ms
+    123.D TC-04 stubs:done, t123xD, 2, 1ms
+    123.E Lint and svg_geometry:done, crit, t123xE, 2, 2ms
+    123.F Fixtures:done, crit, t123xF, 4, 1ms
   section Closure
-    122.G Gates:done, crit, t122xG, 6, 1ms
-    122.H Reviews:done, crit, t122xH, 7, 1ms
-    122.I Refs and retro:done, crit, t122xI, 8, 1ms
+    123.H Patch, gates, check:done, crit, t123xH, 5, 1ms
+    123.I Stage 2 reviews:done, crit, t123xI, 6, 1ms
+    123.J Stage 3 and 4:done, crit, t123xJ, 7, 1ms
+    123.K Retro:done, crit, t123xK, 8, 1ms
 ```
 
 Legend: green fill — done · red border — critical path.
 
 Ready to start: none.
 
-Critical path — 9 h by estimates, 8 of 8 tasks done, 0 h remaining: 122.A → 122.B → 122.C → 122.D → 122.F → 122.G → 122.H → 122.I.
+Critical path — 9 h by estimates, 8 of 8 tasks done, 0 h remaining: 123.A → 123.B → 123.E → 123.F → 123.H → 123.I → 123.J → 123.K.
 
 <!-- generated:plan-gantt-end -->

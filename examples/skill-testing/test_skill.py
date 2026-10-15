@@ -2,8 +2,10 @@ import os
 from pathlib import Path
 
 # Note: This is a standalone script to demonstrate skill testing.
-# Querying a model requires the 'openai' package: pip install openai. It is imported only then,
-# so pytest, which collects files named test_*.py, can import this module without it.
+# Querying a model requires the 'openai' package (pip install openai) and OPENAI_API_KEY. To
+# query another OpenAI-compatible server, set OPENAI_API_KEY to its key and OPENAI_BASE_URL to
+# its address. The package is imported only to query a model, so pytest, which collects files
+# named test_*.py, can import this module without it.
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 ROLES_DIR = REPO_ROOT / ".agent" / "roles" # Adjust path based on actual repo structure if needed
@@ -66,13 +68,14 @@ IMPORTANT: Analyze the task using your skills and provide the response.
     return prompt
 
 def query_model(prompt: str, model: str = "gpt-4o"):
-    """Sends the prompt to an LLM."""
-    # Ensure OPENAI_API_KEY or compatible is set
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("XAI_API_KEY")
+    """Sends the prompt to the server of OPENAI_BASE_URL, with the key of OPENAI_API_KEY."""
+    # A key goes only to the server named beside it, so no other key is read (TASK 123)
+    api_key = os.getenv("OPENAI_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1") 
     
     if not api_key:
-        print("Warning: No API Key found in environment variables (OPENAI_API_KEY or XAI_API_KEY).")
+        print("Warning: OPENAI_API_KEY is not set. For another OpenAI-compatible server, set it "
+              "to that server's key and OPENAI_BASE_URL to its address.")
         print("Model query will perform a dry run (printing prompt length).")
         print("--- PROMPT PREVIEW ---")
         print(prompt[:500] + "\n...[truncated]...")
@@ -99,8 +102,8 @@ def query_model(prompt: str, model: str = "gpt-4o"):
 if __name__ == "__main__":
     # --- CONFIGURATION ---
     # Change these values to test different variations
-    ROLE_FILE = "08_agent_developer.md" 
-    TARGET_SKILLS = ["skill-tdd-stub-first", "skill-documentation-standards"]
+    ROLE_FILE = "08_developer_prompt.md"
+    TARGET_SKILLS = ["tdd-stub-first", "documentation-standards"]
     TEST_TASK = """
     Implement a Python function `calculate_fibonacci(n: int) -> int` 
     that returns the nth Fibonacci number. 

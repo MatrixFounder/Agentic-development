@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `open`, opened 2026-10-15
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-49** [The history secret scan runs git in the scanned tree's repository](backlog/wi-49-the-history-secret-scan-runs-git-in-the-scanned-trees-repository.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08

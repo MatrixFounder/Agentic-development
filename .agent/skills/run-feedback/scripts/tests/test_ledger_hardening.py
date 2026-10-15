@@ -65,7 +65,7 @@ class TestFrontmatterInjection(unittest.TestCase):
     #: validate against. The first fix checked "\n\r" only, so one character
     #: reopened the exploit (iteration 2, V-01).
     READER_BREAKS = ("\n", "\r", "\x0b", "\x0c", "\x1c", "\x1d", "\x1e",
-                     "\x85", " ", " ")
+                     "\x85", "\u2028", "\u2029")
 
     def test_every_reader_line_break_is_refused_in_a_scalar(self):
         for sep in self.READER_BREAKS:
@@ -84,7 +84,7 @@ class TestFrontmatterInjection(unittest.TestCase):
                         {"evidence_paths": ["a%sstatus: done #" % sep]})
 
     def test_invisible_and_bidi_characters_are_refused(self):
-        for ch in ("‮", "⁦", "​", "­"):
+        for ch in ("\u202e", "\u2066", "\u200b", "\u00ad"):
             with self.subTest(ch=repr(ch)):
                 with self.assertRaises(CliError):
                     frontmatter.serialize({"component": "a%sb" % ch})

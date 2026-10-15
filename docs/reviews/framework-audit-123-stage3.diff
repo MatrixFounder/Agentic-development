@@ -1,0 +1,848 @@
+diff --git a/tests/test_run_safety_rules.py b/tests/test_run_safety_rules.py
+--- a/tests/test_run_safety_rules.py
++++ b/tests/test_run_safety_rules.py
+@@ -5,8 +5,9 @@
+ stopped, and the operator deferred the hook to WI-34. This file pins the rules whole:
+ 
+ * `framework-upgrade` §3 step 4, whole and up to the end of §3: what takes effect at once, the
+-  scripts that allow rules run, the test-module exemption, the four stages, the failure branch;
+-  and §3.1's fixture exception (``TC-1``);
++  allow rules of every settings file and the scripts they run, the test-module exemption, the
++  check of what a change runs (TASK 123), the four stages, the failure branch; and §3.1's
++  fixture exception (``TC-1``);
+ * `security-audit` §6.2, whole: the three verdicts, one re-run per part, the operator's decision,
+   no unverified control, tests are not the hunt (``TC-2``);
+ * each place that routes an audit, as the whole paragraph, list item or table row that holds its
+@@ -39,18 +40,68 @@
+    change that alters what runs, or what runs without a prompt. The list is not exhaustive:
+    - a hook in a settings file, or in the frontmatter of an agent or a skill;
+    - the script of a registered hook, code that script calls, and a new module it would import;
+-   - a script that a committed allow rule names, code that script calls, and a new module it
+-     would import;
++   - a script that an allow rule names, code that script calls, and a new module it would import;
+    - a permission rule, `additionalDirectories` or the permission mode, an agent's
+      `permissionMode` and the `allowed-tools` of a skill or a command among them;
+    - a settings key that names a command, such as `statusLine`, or sets a command's environment,
+      `env`;
+    - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
+ 
++   The allow rules are those of `.claude/settings.json`, `.claude/settings.local.json` and the
++   user's `~/.claude/settings.json`, and the `allowed-tools` of a skill or a command. A command that
++   one of them approves is an allowed command, and a rule names a file also through a symbolic link
++   that resolves to it. Rules that managed settings or plugins add, and the commands that the Auto
++   mode classifier approves, lie outside this count; the operator answers for them. Git holds
++   neither the local file nor the user's, and Claude Code adds a rule to one of them when the
++   operator approves a command permanently. The run reads both when §2.2 writes the PLAN, again at
++   §4.5, and again after the gates of stage 3. A rule added since the first reading that runs a
++   file the change adds or edits in place, directly or through other code, stops the run for the
++   operator. The audit record names each file of the change that a rule of either file runs,
++   directly or through other code, and quotes no such rule.
++
+    Test modules and fixtures that no rule names by path are exempt, and so is code that runs
+-   without a prompt only through them. A test module is a `test_*.py` or `conftest.py` file that no
+-   hook or listed script runs or imports; a fixture is a data file that a test reads.
++   without a prompt only through them. A rule that names a directory, such as `discover -s tests`,
++   names no module in it. A test module is a `test_*.py` or `conftest.py` file that no hook or
++   listed script runs or imports; a fixture is a data file that a test reads.
+    `tests/run_tests.py` is named by a rule and is not exempt.
++
++   **What the change runs.** The run checks what code of the change writes when an allowed command
++   runs it. That code is what the change adds or edits, test modules among them. It is also what an
++   allowed command first reaches through the change, such as a test that a collection error had
++   blocked. A rule with a wildcard, or one whose command runs other code from another directory,
++   gives one command for each option, input or directory that reaches code the change adds or
++   edits. For each command, one process lists every file and directory under the repository root,
++   each regular file with its SHA-256, ignored files included and no link followed. Of `.git` it
++   lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
++   `refs/stash`, which holds every stash. It adds the output of `git rev-parse HEAD` and
++   `git ls-files -s -v`, and lists the user's `~/.gitconfig`, `~/.config/git/config` and
++   `~/.claude/settings.json`. Each git command of the check and of the put-back runs with
++   `-c core.fsmonitor=false`, so that git runs no file-system monitor that the checked command
++   configured. The process then runs the command as the rule approves it, with
++   `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
++   lists again. The audit record names the code that wrote each difference, read from that code or
++   from the command's output.
++   - A difference that the command is meant to write, such as the state that `update_state.py`
++     records, passes the check.
++   - Any other difference that code of the change writes fails the check. Before the change lands,
++     that code writes into a temporary directory, which it removes.
++   - A difference that other code writes is a finding before the task.
++
++   After the check, the run puts back each difference that the command was not meant to write. A
++   difference under `.git` or in a file of the user, or a file of the first listing that the second
++   lacks, stops the run. The run names each difference to the operator and runs no further git
++   command. Otherwise:
++   - it removes each file that the command created, and then each directory that it created;
++   - it restores a tracked file that no kind of §5 step 1 declares, with
++     `git restore --source=<base> --staged --worktree -- ':(literal)<path>'`, and checks that the
++     file hashes as in the first listing;
++   - it records a changed session state again through `update_state.py`;
++   - it names every other difference to the operator, the run's own records among them.
++
++   The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
++   where a failed check is a failed gate. The audit record holds each command, with its paths
++   relative to the repository root, and its result. TASK 122 unblocked the bare pytest run, and a
++   test it reached rewrote the live session state.
+ 
+    A change that only narrows what runs without a prompt, such as a removed allow rule, may land
+    at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
+diff --git a/tests/test_python_floor.py b/tests/test_python_floor.py
+--- a/tests/test_python_floor.py
++++ b/tests/test_python_floor.py
+@@ -19,7 +19,9 @@
+   it runs, such as ``dataclass(slots=True)`` in an imported module, is out of its reach;
+ * each guarded script and the grader, run under a faked 3.9.6 in an empty directory, exit 2, name
+   the script that was run and both versions, and write nothing, in that directory or in the
+-  skills; the preflight reports FAIL and names both versions (``TC-04``);
++  skills; the grader runs with a stub for each local module it imports before ``run_evals``, and
++  holds none of their files at its exit; the preflight reports FAIL and names both versions
++  (``TC-04``);
+ * the installer, given a ``python3`` that reports 3.9.6, exits 2 and names both versions
+   (``TC-05``);
+ * no living document or script claims support for Python 3.10 or older (``TC-06``);
+@@ -30,6 +32,12 @@
+ ``grade_figures.py``, and the eval selftest re-derives each report from its corpus (TC-ME-22), so an
+ edit to the grader would turn every stored report stale. It imports ``run_evals`` at its top,
+ before it reads an argument or writes a file, and that guard stops it (TASK D6).
++
++TC-04 stubs the local modules that the grader imports before ``run_evals``, so the allowed runs
++of this file execute none of their bodies (TASK 123 R2). Under the fake those bodies would run on
++the current interpreter and prove nothing about 3.9, and TC-03 parses them. The residual: TC-04
++no longer checks them for a write at import, which a real 3.9 would run before the guard. None
++of them writes or reads ``sys.version_info`` today.
+ 
+ ``TC-06`` is a tripwire for the known spellings of a claim, not a parser of intent.
+ """
+@@ -201,10 +209,49 @@
+     return state
+ 
+ 
+-def _run_under_old(path, cwd):
+-    code = f"{FAKE_VERSION}; import runpy; runpy.run_path({str(path)!r}, run_name='__main__')"
++def _run_under_old(path, cwd, prelude=""):
++    """*path* run as `__main__` under the faked 3.9.6, after the child code *prelude*."""
++    code = (f"{FAKE_VERSION}\n{prelude}import runpy\n"
++            f"runpy.run_path({str(path)!r}, run_name='__main__')\n")
+     return subprocess.run([sys.executable, "-B", "-c", code], cwd=cwd, capture_output=True,
+                           text=True, timeout=120)
++
++
++#: What the grader's child writes at its exit: the files of `GRADER_PATH` that `sys.modules`
++#: holds then, the grader aside (TASK 123 R2.2).
++LOADED = "held from GRADER_PATH: "
++
++
++def _grader_local_imports():
++    """The modules that the grader imports at module level before `run_evals`, from a directory of
++    `GRADER_PATH`, found in its source as TC-03 finds them. TC-04 stubs each one (TASK 123 R2.1)."""
++    tree = ast.parse(GRADER.read_text(encoding="utf-8"))
++    names = []
++    for node in tree.body:
++        if isinstance(node, ast.Import):
++            if any(a.name == GRADER_GUARD for a in node.names):
++                break
++            names.extend(_top(a.name) for a in node.names)
++        elif isinstance(node, ast.ImportFrom) and node.level == 0:
++            names.append(_top(node.module))
++    return tuple(n for n in dict.fromkeys(names)
++                 if any((d / f"{n}.py").is_file() for d in GRADER_PATH))
++
++
++def _stubs_and_report(stubs):
++    """Child code: an empty module in `sys.modules` for each name of *stubs*, and a report at exit
++    of each module whose file lies in a directory of `GRADER_PATH`, the grader aside."""
++    dirs = tuple(str(d) + os.sep for d in GRADER_PATH)
++    return ("import atexit, types\n"
++            f"for _name in {tuple(stubs)!r}:\n"
++            "    sys.modules[_name] = types.ModuleType(_name)\n"
++            "def _report():\n"
++            "    held = sorted(m.__file__ for m in list(sys.modules.values())\n"
++            "                  if isinstance(getattr(m, '__file__', None), str)\n"
++            f"                  and m.__file__.startswith({dirs!r})\n"
++            f"                  and m.__file__ != {str(GRADER)!r})\n"
++            f"    sys.stderr.write({LOADED!r} + repr(held) + '\\n')\n"
++            "atexit.register(_report)\n")
+ 
+ 
+ def _minimal_env(first_dir):
+@@ -348,16 +395,21 @@
+ class TC04GuardedScriptsStopAndWriteNothing(unittest.TestCase):
+     def test_each_script_and_the_grader_under_a_faked_3_9(self):
+         minimum, main = stated()
++        stubs = _grader_local_imports()
+         for path in GUARDED + (GRADER,):
+             with self.subTest(script=path.name), tempfile.TemporaryDirectory() as tmp:
+                 before = _snapshot(WATCHED)
+-                proc = _run_under_old(path, tmp)
++                prelude = _stubs_and_report(stubs) if path == GRADER else ""
++                proc = _run_under_old(path, tmp, prelude)
+                 self.assertEqual(proc.returncode, 2, proc.stderr[-400:])
+                 for needle in (f"{path.name} needs Python", _version(minimum), _version(main),
+                                "this is Python 3.9"):
+                     self.assertIn(needle, proc.stderr)
+                 self.assertEqual(os.listdir(tmp), [])
+                 self.assertEqual(_snapshot(WATCHED), before, "a guarded run wrote into the skills")
++                if path == GRADER:
++                    # TASK 123 R2.2: no module body of the grader's local imports ran
++                    self.assertIn(LOADED + "[]", proc.stderr, proc.stderr[-800:])
+ 
+     def test_under_python_m_each_guard_names_its_own_module(self):
+         # `python -m <package>` leaves `__main__.py` in argv[0]; that name would tell nothing.
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py b/.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py
+--- a/.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py
+@@ -2227,6 +2227,40 @@
+     return f"{c['error']} error / {c['warn']} warn / {c['expected']} expected"
+ 
+ 
++def _json_text(value, **kw) -> str:
++    """`json.dumps(value, ensure_ascii=False, **kw)` with each character that `str.isprintable()`
++    refuses, a newline aside, written as a JSON escape. A copy of `json_text` of render_check.py,
++    which the lint does not import: the lint's allow rule would then run render_check.py and
++    svg_geometry.py (TASK 123 R3.1, D7). A test pins the two to one output."""
++    out = []
++    for ch in json.dumps(value, ensure_ascii=False, **kw):
++        if ch.isprintable() or ch == "\n":
++            out.append(ch)
++            continue
++        code = ord(ch)
++        if code > 0xFFFF:
++            code -= 0x10000
++            out.append("\\u%04x\\u%04x" % (0xD800 + (code >> 10), 0xDC00 + (code & 0x3FF)))
++        else:
++            out.append("\\u%04x" % code)
++    return "".join(out)
++
++
++def _shown(text: str, lines: bool = False) -> str:
++    """*text* as the lint prints it: each character that `str.isprintable()` refuses, a newline
++    among them, written as its Python escape. With *lines*, a newline stays: the text is JSON from
++    `_json_text`, or lines that `_format_text` or `_format_inventory` escaped one by one. A
++    backslash stays single (TASK 122 D5). A copy of `_shown` of render_check.py (TASK 123 R3.1); a
++    test pins the two to one output."""
++    return "".join(ch if ch.isprintable() or (lines and ch == "\n") else ascii(ch)[1:-1]
++                   for ch in text)
++
++
++def _say(text: str, file=None, lines: bool = False) -> None:
++    """Print *text* through `_shown`: the only `print` of the lint (TASK 123 R3.2)."""
++    print(_shown(text, lines), file=file)
++
++
+ def _finding_line(f: Finding) -> str:
+     fence = f" [fence {f.fence}]" if f.fence else ""
+     return f"{f.path}:{f.line}: {f.severity} {f.rule}{fence} {f.message}"
+@@ -2252,7 +2286,7 @@
+     if paths and len(paths) > 1:
+         out += [f"{p}: {_summary(counts([f for f in findings if f.path == p]))}" for p in paths]
+     out.append(_summary(counts(findings)))
+-    return "\n".join(out)
++    return "\n".join(_shown(line) for line in out)
+ 
+ 
+ def _cell(value) -> str:
+@@ -2273,7 +2307,7 @@
+         for r in block["rows"]:
+             out.append(f"| {_cell(r['kind'])} | {_cell(r['id'])} | {_cell(r['text'])} | {r['line']} |  |")
+         out.append("")
+-    return "\n".join(out)
++    return "\n".join(_shown(line) for line in out)
+ 
+ 
+ def build_parser() -> argparse.ArgumentParser:
+@@ -2302,21 +2336,21 @@
+         return EXIT_USAGE
+     if args.probe and (args.paths or args.json or args.inventory):
+         # a CI line `--probe docs/*.md` would otherwise pass without linting a file
+-        print("usage error: --probe takes no paths and no other option; run the lint without --probe",
+-              file=sys.stderr)
++        _say("usage error: --probe takes no paths and no other option; run the lint without --probe",
++             file=sys.stderr)
+         return EXIT_USAGE
+     try:
+         notation = mm.load_notation(notation_path)
+     except (OSError, ValueError) as exc:
+-        print(f"internal error: notation unreadable: {exc}", file=sys.stderr)
++        _say(f"internal error: notation unreadable: {exc}", file=sys.stderr)
+         return EXIT_INTERNAL
+     dead = run_probes(notation=notation)
+     if dead:
+-        print(f"dead rule(s): {', '.join(dead)} — a probe pair failed; the lint reports nothing",
+-              file=sys.stderr)
++        _say(f"dead rule(s): {', '.join(dead)} — a probe pair failed; the lint reports nothing",
++             file=sys.stderr)
+         return EXIT_INTERNAL
+     if args.probe:
+-        print(f"{len(RULES)}/{len(RULES)} rules live")
++        _say(f"{len(RULES)}/{len(RULES)} rules live")
+         return EXIT_OK
+     texts = []
+     for raw in args.paths:
+@@ -2324,7 +2358,7 @@
+         try:
+             texts.append((raw, path.read_text(encoding="utf-8"), path.suffix.lower() == ".mmd"))
+         except (OSError, UnicodeDecodeError) as exc:
+-            print(f"usage error: cannot read {raw}: {exc}", file=sys.stderr)
++            _say(f"usage error: cannot read {raw}: {exc}", file=sys.stderr)
+             return EXIT_USAGE
+     try:
+         if args.inventory:
+@@ -2338,19 +2372,21 @@
+                         raise LintInternalError(f"{raw}:{broken['line']}: {broken['message']}")
+                     blocks.append({"path": raw, "figure_line": fig.fence.start, "figure_kind": fig.kind,
+                                    "inventoried": inventoried(fig), "rows": inventory(fig)})
+-            print(json.dumps({"schema": "mermaid-inventory/v1", "figures": blocks}, ensure_ascii=False, indent=2)
+-                  if args.json else _format_inventory(blocks))
++            if args.json:
++                _say(_json_text({"schema": "mermaid-inventory/v1", "figures": blocks}, indent=2), lines=True)
++            else:
++                _say(_format_inventory(blocks), lines=True)
+             return EXIT_OK
+         findings = []
+         for raw, text, is_mmd in texts:
+             findings.extend(lint_text(text, raw, is_mmd=is_mmd, notation=notation))
+     except LintInternalError as exc:
+-        print(f"internal error: {exc}", file=sys.stderr)
++        _say(f"internal error: {exc}", file=sys.stderr)
+         return EXIT_INTERNAL
+     paths = [raw for raw, _t, _m in texts]
+     total = counts(findings)
+     if args.json:
+-        print(json.dumps({
++        _say(_json_text({
+             "schema": "mermaid-lint/v1",
+             "files": paths,
+             "rules": len(RULES),
+@@ -2358,9 +2394,9 @@
+             "per_file": {p: counts([f for f in findings if f.path == p]) for p in paths},
+             "findings": [_finding_dict(f) for f in findings if not f.expected],
+             "expected": [_finding_dict(f) for f in findings if f.expected],
+-        }, ensure_ascii=False, indent=2))
++        }, indent=2), lines=True)
+     else:
+-        print(_format_text(findings, paths))
++        _say(_format_text(findings, paths), lines=True)
+     return EXIT_FINDINGS if total["error"] else EXIT_OK
+ 
+ 
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py b/.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py
+--- a/.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/svg_geometry.py
+@@ -2233,7 +2233,8 @@
+ 
+ def main(argv: Optional[list] = None) -> int:
+     """Debug entry point: `svg_geometry.py FIG.svg [MEASURE.json] [--source FIG.mmd]` prints
+-    metrics and findings; `--source` scopes text contrast by the figure's own colours."""
++    metrics and findings; `--source` scopes text contrast by the figure's own colours. The JSON is
++    ASCII, and an error line escapes what it quotes (TASK 123 R4.1)."""
+     args = list(sys.argv[1:] if argv is None else argv)
+     usage = "usage: svg_geometry.py FIG.svg [MEASURE.json] [--column PX] [--source FIG.mmd]"
+     if not args or args[0] in ("-h", "--help"):
+@@ -2254,7 +2255,7 @@
+         print(usage, file=sys.stderr)
+         return 3
+     except OSError as exc:
+-        print("svg_geometry.py: %s" % exc, file=sys.stderr)
++        print("svg_geometry.py: %s" % _escaped(str(exc)), file=sys.stderr)
+         return 2
+     try:
+         svg_text = Path(args[0]).read_text(encoding="utf-8")
+@@ -2262,11 +2263,11 @@
+         metrics = analyze_svg(svg_text, column, measure,
+                               author_colours(source) if source is not None else None)
+     except (OSError, ValueError) as exc:
+-        print("svg_geometry.py: %s" % exc, file=sys.stderr)
++        print("svg_geometry.py: %s" % _escaped(str(exc)), file=sys.stderr)
+         return 2
+     findings = evaluate(metrics)
+     print(json.dumps({"metrics": metrics, "findings": findings, "pass": passes(findings)},
+-                     indent=1, ensure_ascii=False))
++                     indent=1, ensure_ascii=True))
+     return 0 if passes(findings) else 1
+ 
+ 
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_printed_output.py b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_printed_output.py
+new file mode 100644
+--- /dev/null
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_printed_output.py
+@@ -0,0 +1,262 @@
++"""What the lint and the debug command line of svg_geometry.py print (TASK 123 R3, R4.1).
++
++The lint quotes label text, ids and names in its findings and in its inventory. Before TASK 123 it
++printed that text raw, and its `--json` left U+2028 and U+202E raw, so a figure could put a
++terminal control sequence into the output. Now a printed line writes each non-printable character
++as its Python escape, and JSON writes it as a JSON escape. Printable text, Cyrillic among it,
++prints as it is. The lint holds copies of `json_text` and `_shown` of render_check.py, which it
++does not import (TASK 123 D7); a test here pins each pair to one output.
++
++The debug command line of svg_geometry.py prints ASCII JSON, and escapes its error lines with the
++`_escaped` that the file holds (TASK 123 R4.1).
++"""
++import ast
++import contextlib
++import io
++import json
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++from unittest import mock
++
++HERE = Path(__file__).resolve().parent
++sys.path.insert(0, str(HERE.parent))
++
++import lint_mermaid as lm  # noqa: E402
++import render_check as rc  # noqa: E402
++import svg_geometry as sg  # noqa: E402
++
++
++def chars(*codes):
++    return "".join(chr(c) for c in codes)
++
++
++ESC, CSI, RLO, LSEP = chars(0x1B), chars(0x9B), chars(0x202E), chars(0x2028)
++CYRILLIC = "Кириллица"
++#: Label text with control characters, a bidirectional mark and a line separator. As an edge label
++#: it is longer than the limit, so MA-LABEL-03 quotes it in its message.
++HOSTILE = "Evil" + ESC + "[2J" + CSI + "7m" + RLO + "Z" + LSEP + " " + CYRILLIC + " words"
++
++
++def non_printable(text):
++    """The non-printable characters of *text*, a newline aside, as code points."""
++    return sorted({hex(ord(ch)) for ch in text if not ch.isprintable() and ch != "\n"})
++
++
++def call_lint(argv):
++    out, err = io.StringIO(), io.StringIO()
++    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
++        code = lm.main(argv)
++    return code, out.getvalue(), err.getvalue()
++
++
++def figure(body):
++    return "## Figure\n\n```mermaid\nflowchart TB\n" + body + "\n```\n"
++
++
++class LintCase(unittest.TestCase):
++    def setUp(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        self.dir = Path(tmp.name)
++
++    def write(self, name, text):
++        path = self.dir / name
++        path.write_text(text, encoding="utf-8")
++        return str(path)
++
++
++class TestTheLintPrintsNoControlCharacter(LintCase):
++    def test_a_finding_quotes_the_label_with_escapes(self):
++        code, out, err = call_lint([self.write("edge.md", figure("  A -->|" + HOSTILE + "| B"))])
++        self.assertEqual(non_printable(out + err), [])
++        lines = [line for line in out.split("\n") if "MA-LABEL-03" in line]
++        self.assertEqual(len(lines), 1, out)
++        for ch in (ESC, CSI, RLO, LSEP):
++            self.assertIn(ascii(ch)[1:-1], lines[0])
++        self.assertIn(CYRILLIC, lines[0])
++
++    def test_json_reads_back_to_the_message(self):
++        code, out, err = call_lint(["--json", self.write("edge.md", figure("  A -->|" + HOSTILE + "| B"))])
++        self.assertEqual(non_printable(out), [])
++        self.assertIn(CYRILLIC, out)
++        data = json.loads(out)
++        message = next(f["message"] for f in data["findings"] if f["rule"] == "MA-LABEL-03")
++        self.assertIn(ESC + "[2J" + CSI, message)
++        self.assertIn(RLO + "Z" + LSEP, message)
++
++    def test_the_inventory_table_and_its_json(self):
++        path = self.write("node.md", figure('  A["' + HOSTILE + '"] --> B'))
++        code, out, err = call_lint(["--inventory", path])
++        self.assertEqual(non_printable(out + err), [])
++        rows = [line for line in out.split("\n") if line.startswith("| node")]
++        self.assertTrue(rows, out)
++        code, out, err = call_lint(["--inventory", "--json", path])
++        self.assertEqual(non_printable(out), [])
++        texts = [row["text"] for block in json.loads(out)["figures"] for row in block["rows"]]
++        self.assertIn(HOSTILE, texts)
++
++    def test_a_newline_in_a_quoted_label_starts_no_line(self):
++        # A finding quotes label text in its message, and a label of a markdown string may span
++        # lines; the text output escapes the newline of the message (TASK 123 R3.3)
++        label = HOSTILE + "\nsecond line"
++        found = lm.Finding(rule="MA-LABEL-03", severity="warn", path="doc.md", line=5,
++                           message="`" + label + "`: 52 characters > 24", hint="Keep it short.")
++        text = lm._format_text([found], ["doc.md"])
++        self.assertEqual(non_printable(text), [])
++        lines = [line for line in text.split("\n") if "MA-LABEL-03" in line]
++        self.assertEqual(len(lines), 1, text)
++        self.assertIn(ascii("\n")[1:-1] + "second line", lines[0])
++        self.assertNotIn("\nsecond line", text)
++
++    def test_the_inventory_of_a_path_with_a_newline_forges_no_line(self):
++        # `_cell` turns a newline of a label into a space; the header of a block quotes the path,
++        # so only the escape of each line keeps a newline there from starting a line (TASK 123 R3.3)
++        path = self.write("a\nFORGED" + ESC + ".md", figure('  A["' + HOSTILE + '"] --> B'))
++        code, out, err = call_lint(["--inventory", path])
++        self.assertEqual(non_printable(out + err), [])
++        self.assertFalse([line for line in out.split("\n") if line.startswith("FORGED")], out)
++        self.assertIn("a" + ascii("\n")[1:-1] + "FORGED" + ascii(ESC)[1:-1], out)
++        rows = [line for line in out.split("\n") if line.startswith("| node")]
++        self.assertTrue(any(ascii(ESC)[1:-1] in row for row in rows), rows)
++        code, out, err = call_lint(["--inventory", "--json", path])
++        self.assertEqual(non_printable(out), [])
++        self.assertEqual(json.loads(out)["figures"][0]["path"], path)
++
++    def test_a_newline_in_a_path_starts_no_line(self):
++        path = self.write("a\nb" + ESC + ".md", figure("  A -->|" + HOSTILE + "| B"))
++        code, out, err = call_lint([path])
++        self.assertEqual(non_printable(out + err), [])
++        self.assertNotIn("\nb", out)
++        self.assertIn("a" + ascii("\n")[1:-1] + "b" + ascii(ESC)[1:-1], out)
++
++    def test_the_usage_error_of_a_path_it_cannot_read(self):
++        missing = str(self.dir / ("gone\n" + ESC + ".md"))
++        code, out, err = call_lint([missing])
++        self.assertEqual(code, lm.EXIT_USAGE)
++        self.assertEqual(non_printable(err), [])
++        self.assertEqual(err.count("\n"), 1, err)
++
++    def test_the_usage_error_of_probe_with_a_path_goes_through_shown(self):
++        # The line quotes no input; it goes through `_shown` as every line does (TASK 123 R3.2)
++        with mock.patch.object(lm, "_shown", wraps=lm._shown) as shown:
++            code, out, err = call_lint(["--probe", str(self.dir / ("x" + ESC + ".md"))])
++        self.assertEqual(code, lm.EXIT_USAGE)
++        self.assertEqual(non_printable(err), [])
++        self.assertTrue(any("--probe takes no paths" in str(c.args[0]) for c in shown.call_args_list),
++                        shown.call_args_list)
++
++    def test_the_internal_error_line(self):
++        failure = lm.LintInternalError("rule MA-X failed on " + HOSTILE + "\nforged line")
++        # the probes run lint_text too; they stay live, so the failure reaches the linted file
++        with mock.patch.object(lm, "run_probes", return_value=[]), \
++                mock.patch.object(lm, "lint_text", side_effect=failure):
++            code, out, err = call_lint([self.write("doc.md", figure("  A --> B"))])
++        self.assertEqual(code, lm.EXIT_INTERNAL)
++        self.assertEqual(non_printable(err), [])
++        self.assertEqual(err.count("\n"), 1, err)
++
++
++class TestOnlySayPrints(unittest.TestCase):
++    """TASK 123 R3.2, R3.3: every line of the lint goes through `_say`."""
++
++    @classmethod
++    def setUpClass(cls):
++        cls.tree = ast.parse(Path(lm.__file__).read_text(encoding="utf-8"))
++
++    def test_the_only_print_is_the_one_in_say(self):
++        # every call of the module, at any depth: each `print` lies in `_say`, and nothing writes
++        # to `sys.stdout` or `sys.stderr` directly
++        owner = {}
++        for fn in ast.walk(self.tree):
++            if isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
++                for node in ast.walk(fn):
++                    owner.setdefault(id(node), fn.name)
++        prints, writes = [], []
++        for node in ast.walk(self.tree):
++            if not isinstance(node, ast.Call):
++                continue
++            if isinstance(node.func, ast.Name) and node.func.id == "print":
++                prints.append(owner.get(id(node), "<module>"))
++            text = ast.unparse(node.func)
++            if text in ("sys.stdout.write", "sys.stderr.write"):
++                writes.append(owner.get(id(node), "<module>") + ": " + text)
++        self.assertEqual(prints, ["_say"])
++        self.assertEqual(writes, [])
++        # TASK 123 D7: the lint holds its own copies, so its rule runs neither of these
++        imported = set()
++        for node in ast.walk(self.tree):
++            if isinstance(node, ast.Import):
++                imported.update(a.name.split(".")[0] for a in node.names)
++            elif isinstance(node, ast.ImportFrom) and node.module:
++                imported.add(node.module.split(".")[0])
++        self.assertEqual(sorted(imported & {"render_check", "svg_geometry"}), [])
++
++    def test_lines_go_only_with_json_or_escaped_lines(self):
++        allowed = {"_json_text", "_format_text", "_format_inventory"}
++        kept = []
++        for node in ast.walk(self.tree):
++            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
++                    and node.func.id == "_say"):
++                continue
++            keeps = any(k.arg == "lines" for k in node.keywords) or len(node.args) > 2
++            if keeps:
++                first = node.args[0]
++                kept.append(first.func.id if isinstance(first, ast.Call)
++                            and isinstance(first.func, ast.Name) else ast.unparse(first))
++        self.assertTrue(kept)
++        self.assertEqual(sorted(set(kept) - allowed), [])
++
++
++class TestTheCopiesAgree(unittest.TestCase):
++    """TASK 123 D7: the lint's copies give the output of render_check.py's functions."""
++
++    PROBE = "".join(chr(c) for c in range(0x110000))
++
++    def test_json_text(self):
++        self.assertEqual(lm._json_text(self.PROBE), rc.json_text(self.PROBE))
++        self.assertEqual(lm._json_text({"k": [self.PROBE]}, indent=2),
++                         rc.json_text({"k": [self.PROBE]}, indent=2))
++
++    def test_shown(self):
++        self.assertEqual(lm._shown(self.PROBE), rc._shown(self.PROBE))
++        self.assertEqual(lm._shown(self.PROBE, True), rc._shown(self.PROBE, True))
++
++
++class TestSvgGeometryCommandLine(unittest.TestCase):
++    """TASK 123 R4.1: the debug command line prints ASCII JSON and escaped error lines."""
++
++    def setUp(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        self.svg = Path(tmp.name) / "fig.svg"
++        self.svg.write_text("<svg xmlns='http://www.w3.org/2000/svg'/>", encoding="utf-8")
++
++    def run_main(self, argv):
++        out, err = io.StringIO(), io.StringIO()
++        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
++            code = sg.main(argv)
++        return code, out.getvalue(), err.getvalue()
++
++    def test_the_json_is_ascii_and_reads_back(self):
++        metrics = {"labels": [HOSTILE + chr(0xD800)]}
++        with mock.patch.object(sg, "analyze_svg", return_value=metrics), \
++                mock.patch.object(sg, "evaluate", return_value=[]), \
++                mock.patch.object(sg, "passes", return_value=True):
++            code, out, err = self.run_main([str(self.svg)])
++        self.assertEqual(code, 0, err)
++        self.assertTrue(out.isascii(), out[:200])
++        self.assertEqual(json.loads(out)["metrics"], metrics)
++
++    def test_an_error_line_holds_no_control_character(self):
++        failure = ValueError("bad path data near " + HOSTILE + "\nforged line")
++        with mock.patch.object(sg, "analyze_svg", side_effect=failure):
++            code, out, err = self.run_main([str(self.svg)])
++        self.assertEqual(code, 2)
++        self.assertEqual(non_printable(err), [])
++        self.assertEqual(err.count("\n"), 1, err)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json
+--- a/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/paired-examples-geometry.json
+@@ -3,8 +3,8 @@
+  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
+  "files": {
+   "references/paired-examples.md": {
+-   "generated": "2026-10-15T09:22:01Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:53:03Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json
+--- a/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/tests/fixtures/references-geometry.json
+@@ -3,8 +3,8 @@
+  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
+  "files": {
+   "references/ascii.md": {
+-   "generated": "2026-10-15T09:24:20Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:53:50Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -19,8 +19,8 @@
+    "figures": {}
+   },
+   "references/eval-results.md": {
+-   "generated": "2026-10-15T09:24:20Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:53:50Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -35,8 +35,8 @@
+    "figures": {}
+   },
+   "references/flowchart.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:53:50Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -808,8 +808,8 @@
+    }
+   },
+   "references/gantt.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:54:04Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -1407,8 +1407,8 @@
+    }
+   },
+   "references/layout-and-planarity.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:54:13Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -2117,8 +2117,8 @@
+    }
+   },
+   "references/other-kinds.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:54:27Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -3458,8 +3458,8 @@
+    }
+   },
+   "references/renderer-facts.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:54:51Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -6241,8 +6241,8 @@
+    }
+   },
+   "references/review-checklist.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:55:31Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -6429,8 +6429,8 @@
+    }
+   },
+   "references/sequence.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:55:34Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+@@ -6738,8 +6738,8 @@
+    }
+   },
+   "references/state.md": {
+-   "generated": "2026-10-15T09:22:43Z",
+-   "instruments": "ceef084dc985af09d2c42082616631ac6211c9517b210a966c530a88e3101b10",
++   "generated": "2026-10-15T14:55:37Z",
++   "instruments": "7b29e01af879b87dc05b98ec56cb78204110530ed8adb730218a02f3c1238ba9",
+    "settings": {
+     "column_px": 900,
+     "render_width_px": 1800,
+diff --git a/.agent/workflows/framework-upgrade.md b/.agent/workflows/framework-upgrade.md
+--- a/.agent/workflows/framework-upgrade.md
++++ b/.agent/workflows/framework-upgrade.md
+@@ -108,18 +108,68 @@
+    change that alters what runs, or what runs without a prompt. The list is not exhaustive:
+    - a hook in a settings file, or in the frontmatter of an agent or a skill;
+    - the script of a registered hook, code that script calls, and a new module it would import;
+-   - a script that a committed allow rule names, code that script calls, and a new module it
+-     would import;
++   - a script that an allow rule names, code that script calls, and a new module it would import;
+    - a permission rule, `additionalDirectories` or the permission mode, an agent's
+      `permissionMode` and the `allowed-tools` of a skill or a command among them;
+    - a settings key that names a command, such as `statusLine`, or sets a command's environment,
+      `env`;
+    - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
+ 
++   The allow rules are those of `.claude/settings.json`, `.claude/settings.local.json` and the
++   user's `~/.claude/settings.json`, and the `allowed-tools` of a skill or a command. A command that
++   one of them approves is an allowed command, and a rule names a file also through a symbolic link
++   that resolves to it. Rules that managed settings or plugins add, and the commands that the Auto
++   mode classifier approves, lie outside this count; the operator answers for them. Git holds
++   neither the local file nor the user's, and Claude Code adds a rule to one of them when the
++   operator approves a command permanently. The run reads both when §2.2 writes the PLAN, again at
++   §4.5, and again after the gates of stage 3. A rule added since the first reading that runs a
++   file the change adds or edits in place, directly or through other code, stops the run for the
++   operator. The audit record names each file of the change that a rule of either file runs,
++   directly or through other code, and quotes no such rule.
++
+    Test modules and fixtures that no rule names by path are exempt, and so is code that runs
+-   without a prompt only through them. A test module is a `test_*.py` or `conftest.py` file that no
+-   hook or listed script runs or imports; a fixture is a data file that a test reads.
++   without a prompt only through them. A rule that names a directory, such as `discover -s tests`,
++   names no module in it. A test module is a `test_*.py` or `conftest.py` file that no hook or
++   listed script runs or imports; a fixture is a data file that a test reads.
+    `tests/run_tests.py` is named by a rule and is not exempt.
++
++   **What the change runs.** The run checks what code of the change writes when an allowed command
++   runs it. That code is what the change adds or edits, test modules among them. It is also what an
++   allowed command first reaches through the change, such as a test that a collection error had
++   blocked. A rule with a wildcard, or one whose command runs other code from another directory,
++   gives one command for each option, input or directory that reaches code the change adds or
++   edits. For each command, one process lists every file and directory under the repository root,
++   each regular file with its SHA-256, ignored files included and no link followed. Of `.git` it
++   lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
++   `refs/stash`, which holds every stash. It adds the output of `git rev-parse HEAD` and
++   `git ls-files -s -v`, and lists the user's `~/.gitconfig`, `~/.config/git/config` and
++   `~/.claude/settings.json`. Each git command of the check and of the put-back runs with
++   `-c core.fsmonitor=false`, so that git runs no file-system monitor that the checked command
++   configured. The process then runs the command as the rule approves it, with
++   `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
++   lists again. The audit record names the code that wrote each difference, read from that code or
++   from the command's output.
++   - A difference that the command is meant to write, such as the state that `update_state.py`
++     records, passes the check.
++   - Any other difference that code of the change writes fails the check. Before the change lands,
++     that code writes into a temporary directory, which it removes.
++   - A difference that other code writes is a finding before the task.
++
++   After the check, the run puts back each difference that the command was not meant to write. A
++   difference under `.git` or in a file of the user, or a file of the first listing that the second
++   lacks, stops the run. The run names each difference to the operator and runs no further git
++   command. Otherwise:
++   - it removes each file that the command created, and then each directory that it created;
++   - it restores a tracked file that no kind of §5 step 1 declares, with
++     `git restore --source=<base> --staged --worktree -- ':(literal)<path>'`, and checks that the
++     file hashes as in the first listing;
++   - it records a changed session state again through `update_state.py`;
++   - it names every other difference to the operator, the run's own records among them.
++
++   The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
++   where a failed check is a failed gate. The audit record holds each command, with its paths
++   relative to the repository root, and its result. TASK 122 unblocked the bare pytest run, and a
++   test it reached rewrote the live session state.
+ 
+    A change that only narrows what runs without a prompt, such as a removed allow rule, may land
+    at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
+diff --git a/.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py b/.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py
+--- a/.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py
++++ b/.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py
+@@ -487,8 +487,9 @@
+     above U+FFFF becomes its pair of surrogate escapes; printable text, Cyrillic or an emoji, stays
+     as it is. The JSON reads back to *value*, save one case: a high surrogate followed by a low one,
+     as two code points, reads back joined into one. No control character, bidirectional mark or
+-    lone surrogate reaches a terminal or a file. svg_geometry.py is not edited for it: its module
+-    body runs without a prompt (TASK 122 D10)."""
++    lone surrogate reaches a terminal or a file. TASK 122 left svg_geometry.py unedited for it,
++    since that module's body then ran without a prompt (D10). lint_mermaid.py holds copies of this
++    function and of `_shown`; a test pins each pair to one output (TASK 123)."""
+     out = []
+     for ch in json.dumps(value, ensure_ascii=False, **kw):
+         if ch.isprintable() or ch == "\n":

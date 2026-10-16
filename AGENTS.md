@@ -121,3 +121,18 @@ For trivial tasks (typos, UI tweaks, simple bugfixes), use `/light` workflow:
 - **Requires:** Analysis (with `[LIGHT]` tag), Development, Code Review.
 - **Skill:** Load `light-mode` (Tier 2) for specific instructions.
 - **Escalation:** If complexity increases, switch to standard pipeline.
+
+## SELF-IMPROVEMENT MODE
+
+Current task: Refinement and improvement of the framework. Permit modifications to files in `/System/Agents/`, `.agent/skills/`, and the `AGENTS.md` file itself.
+
+**Scope.** The mode covers the key components: the system prompts (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`), `System/Agents/`, `.agent/workflows/`, and the skills of TIER 0 and TIER 1, which the session boot and the pipeline's phases load (`skill-phase-context`). A change to a key component follows the requirements below.
+
+**Exceptions.** An auxiliary skill (TIER 2+, such as `mermaid-authoring-guidelines`) and a minor documentation edit do not use this mode. They take the standard pipeline, or `/light` for a mechanical change such as a split of a script or a wording fix. They need no meta-audit, and no security audit unless the change adds an input or a dependency.
+
+Mandatory requirement for a key component:
+1. **Meta-Audit**: You MUST use `skill-self-improvement-verificator` to validate your PLAN before executing changes.
+2. **Workflow**: Prefer using the `/framework-upgrade` workflow (`.agent/workflows/framework-upgrade.md`) for safe execution.
+3. **Review**: After any changes to key components, run a full review pipeline (Code Reviewer + Security Auditor).
+
+Prohibited: Deleting or removing the `core-principles` or `artifact-management` skills without explicit approval.

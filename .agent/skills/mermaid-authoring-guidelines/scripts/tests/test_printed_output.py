@@ -159,11 +159,17 @@ class TestTheLintPrintsNoControlCharacter(LintCase):
 
 
 class TestOnlySayPrints(unittest.TestCase):
-    """TASK 123 R3.2, R3.3: every line of the lint goes through `_say`."""
+    """TASK 123 R3.2, R3.3: every line of the lint goes through `_say`. The lint's code is the thin
+    file and every module of `lint_mermaid_parts` (TASK 126 R3)."""
 
     @classmethod
     def setUpClass(cls):
-        cls.tree = ast.parse(Path(lm.__file__).read_text(encoding="utf-8"))
+        thin = Path(lm.__file__)
+        package = sorted((thin.parent / "lint_mermaid_parts").glob("*.py"))
+        assert package, "lint_mermaid_parts holds no module"
+        cls.tree = ast.Module(body=[node for path in [thin, *package]
+                                    for node in ast.parse(path.read_text(encoding="utf-8")).body],
+                              type_ignores=[])
 
     def test_the_only_print_is_the_one_in_say(self):
         # every call of the module, at any depth: each `print` lies in `_say`, and nothing writes

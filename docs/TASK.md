@@ -1,4 +1,4 @@
-# TASK 125 — [LIGHT] `svg_geometry.py` stays a thin file, and its sections move to `svg_geometry_parts/`
+# TASK 126 — [LIGHT] `lint_mermaid.py` keeps its command line, and its sections move to `lint_mermaid_parts/`
 
 <!-- contract:meta -->
 
@@ -6,16 +6,16 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 125 |
-| Slug | svg-geometry-package |
+| Task ID | 126 |
+| Slug | lint-mermaid-package |
 | Type | Refactoring, Light Mode (an auxiliary skill) |
-| Source | TASK 124 D1, and the operator's answers of 2026-10-16 |
-| Base revision | `15408c4f37e76d15db3a40ed7070b41927d4c607` |
-| Archive name | `task-125-svg-geometry-package.md` |
+| Source | TASK 124 D1, TASK 125 D2, and the operator's answers of 2026-10-16 |
+| Base revision | `ee278ca0b1340af8e53a09d6e9534a8fc1a42328` |
+| Archive name | `task-126-lint-mermaid-package.md` |
 
-**Request.** The operator split the three large scripts of the figure skill one per task (TASK 124
-D1). This task takes `svg_geometry.py`. Before it started, the operator chose the layout, the
-package's name and the cut (D1 to D3), and the light process (D4).
+**Request.** This task takes the last of the three large scripts of the figure skill (TASK 124 D1).
+TASK 125 D2 named the package. Before the work started, the operator chose what the thin file
+keeps, the cut and a shared module for the package tests (D1 to D3).
 
 In this document `S/` stands for `.agent/skills/mermaid-authoring-guidelines/`.
 
@@ -23,113 +23,116 @@ In this document `S/` stands for `.agent/skills/mermaid-authoring-guidelines/`.
 
 ## 1. Problem
 
-`S/scripts/svg_geometry.py` is one module of 2,275 lines. It binds 120 top-level names: 73
-functions, 2 classes and 45 assigned names. A header and 11 sections, each opened by a comment
-line, divide it. The last section, the public API, ends with the debug command line `main`.
+`S/scripts/lint_mermaid.py` is one module of 2,404 lines. It binds 169 top-level names: 144
+functions, 4 classes and 21 assigned names. A header and 16 sections, each opened by a comment
+line, divide it: one section per family of rules, and the engine. The engine ends with the
+command line.
 
-- 9 files import it: `render_check.py`, `S/evals/grade_figures.py`, `S/evals/render_corpus.py`,
-  `S/evals/selftest_figure_evals.py` and 5 test modules. They read 6 private names, such as
-  `_Svg` and `_extract_graph`.
-- The grader is pinned by its SHA-256 (TC-ME-22), so it stays unedited.
-- `test_printed_output.py` patches `analyze_svg`, `evaluate` and `passes` on the module, and the
-  debug command line `main` calls them.
-- `render_check.INSTRUMENT_FILES` and `render_corpus.INSTRUMENT_FILES` name the file. The two
-  geometry fixtures record the SHA-256 of `render_check.INSTRUMENT_FILES`.
+- A committed allow rule and the CI gates run the file by its path, so the file stays.
+- 5 files import it: `S/evals/grade_figures.py`, `S/evals/selftest_figure_evals.py` and 3 test
+  modules. They read 13 private names. The grader is pinned by its SHA-256 (TC-ME-22).
+- `test_printed_output.py` patches `run_probes`, `lint_text` and `_shown` on the module. `main`
+  calls the first two, and `_say` calls `_shown`.
+- `TestOnlySayPrints` of `test_printed_output.py` reads the lint's source. It pins that only `_say`
+  prints and that the lint imports no geometry code.
+- The rules register themselves into `RULES` as their module runs, in the order of the file.
+- The helpers of `test_mermaid_model_package.py` and `test_svg_geometry_package.py` are copies of
+  one another (TASK 125 D6, review INFO-6).
 
 <!-- contract:rtm -->
 
 ## 2. Requirements
 
-- **R1 — the package.** `S/scripts/svg_geometry_parts/` holds `__init__.py`, a docstring only,
-  and these 12 modules, one per section, in this order:
+- **R1 — the package.** `S/scripts/lint_mermaid_parts/` holds `__init__.py`, a docstring only,
+  and these 17 modules, one per section, in this order:
 
   | Module | Section | Names |
   | :--- | :--- | :--- |
-  | `base.py` | the header's names | 5 |
-  | `tolerances.py` | instrument tolerances | 17 |
-  | `transforms.py` | affine transforms | 6 |
-  | `flattening.py` | path flattening | 6 |
-  | `plane.py` | plane geometry | 20 |
-  | `text_estimate.py` | text estimate | 2 |
-  | `svg_model.py` | SVG model | 6 |
-  | `graph.py` | graph figures | 11 |
-  | `sequence.py` | sequence figures | 3 |
-  | `gantt.py` | gantt figures | 1 |
-  | `contrast.py` | text contrast | 27 |
-  | `api.py` | public API, `main` aside | 15 |
+  | `base.py` | the header's names | 16 |
+  | `parse.py` | PARSE | 1 |
+  | `syntax.py` | SYN | 6 |
+  | `settings.py` | SET | 15 |
+  | `ids.py` | ID | 3 |
+  | `budget.py` | BUDGET | 7 |
+  | `flowchart.py` | FLOW | 12 |
+  | `state.py` | STATE | 3 |
+  | `sequence.py` | SEQ | 3 |
+  | `labels.py` | LABEL | 24 |
+  | `classes.py` | CLASS | 18 |
+  | `gantt.py` | GANTT | 7 |
+  | `ascii_figures.py` | ASCII | 10 |
+  | `doc.py` | DOC | 10 |
+  | `model.py` | MODEL | 1 |
+  | `negatives.py` | NEG | 11 |
+  | `engine.py` | engine, up to the command line | 11 |
 
   Each module holds a docstring that names its section, `from __future__ import annotations`, the
-  imports that its code uses, and the lines of its section byte for byte, without the comment line
-  that opens the section. A module imports only the standard library, `mermaid_model` and modules
-  above it in the table, so the package holds no import cycle.
-- **R2 — the thin file.** `S/scripts/svg_geometry.py` keeps its docstring, with one added paragraph
-  that names the package. It keeps the imports and the `sys.path` line that the command line
-  needs. One `from svg_geometry_parts.<module> import …` statement per module binds all 119 names
-  of the package, private ones included, and `__all__` lists them with `main`. Then come `main`
-  and the `__main__` block, byte for byte.
-  Callers keep `import svg_geometry`, and `python3 svg_geometry.py FIG.svg` works as before.
-- **R3 — the instruments.** `render_check.INSTRUMENT_FILES` and `render_corpus.INSTRUMENT_FILES`
-  name the thin file and the 13 files of the package. The two geometry fixtures are rendered
-  again with `render_check.py --fixture`. The comment of `render_check.py` that names
-  `mermaid_model.py` names the package (TASK 124 §9).
-- **R4 — a test module.** `S/scripts/tests/test_svg_geometry_package.py` checks the package's
-  files and order, the imports of each module, exactly the names that its code reads, and each
-  of the 120 names: bound on `svg_geometry` to the object of the module that defines it. It also
-  checks that both `INSTRUMENT_FILES` name every file of the package.
-- **R5 — records.** The row of `docs/ARCHITECTURE.md` §10.1 names the package. `CHANGELOG.md` and
-  `CHANGELOG.ru.md` gain an entry v3.45.0.
+  imports that its code reads, and the lines of its section byte for byte, without the comment
+  line that opens it. Two texts change. The docstring of `_escaped` in `labels.py` says that
+  `svg_geometry.py` binds its twin, which `svg_geometry_parts/api.py` holds. The comment of
+  `RULES` in `base.py` says that the modules fill it in the order of the thin file's imports. A
+  module imports only the standard library, `mermaid_model`, `planarity` and modules above it in
+  the table.
+- **R2 — the thin file.** `S/scripts/lint_mermaid.py` keeps its docstring, with one added paragraph
+  that names the package. It keeps the imports and the `sys.path` line that its code needs. One
+  `from lint_mermaid_parts.<module> import …` statement per module binds all 158 names of the
+  package, private ones included, and `__all__` lists the 169 names. Then come the 11 names of the
+  command line, from `_summary` to `main`, and the `__main__` block, byte for byte. The thin file
+  imports the modules in the order of R1, so `RULES` holds the rules in the order of the base file.
+- **R3 — tests.**
+  - `S/scripts/tests/package_checks.py` holds the helpers that the package tests share.
+    `test_mermaid_model_package.py` and `test_svg_geometry_package.py` use it, and the former
+    gains the check that each module imports exactly the names that its code reads.
+  - `S/scripts/tests/test_lint_mermaid_package.py` checks the package's files and order and the
+    imports of each module. It checks that each of the 169 names is bound on `lint_mermaid` to the
+    object of the module that defines it. It also checks that `RULES` lists the rules in the order
+    of the modules and of their sources.
+  - `TestOnlySayPrints` reads the thin file and every module of the package.
+- **R4 — records.** `docs/ARCHITECTURE.md` §10.1 lists the thin file and the package. `CHANGELOG.md`
+  and `CHANGELOG.ru.md` gain an entry v3.46.0.
 
 <!-- contract:acceptance -->
 
 ## 3. Acceptance criteria
 
-- **A1** — a move check: each module's body after its imports equals its section, and the thin
-  file's `main` and `__main__` block equal the base lines.
+- **A1** — a move check: each module's body after its imports equals its section, but the two
+  texts of R1, and the thin file's command line equals the base lines.
 - **A2** — the skill's suite, `tests/run_tests.py`, `tests/test_python_floor.py` and the eval
-  selftest pass. One existing test changes: the guard of `test_printed_output.py` that keeps
-  the geometry's code out of the lint names the package too (D6).
-- **A3** — a behaviour check: `analyze_svg` and `evaluate` give the same output before and after
-  for every committed SVG of the skill.
+  selftest pass.
+- **A3** — a behaviour check: the base file and the thin file give the same output and exit. The
+  runs are the text, `--json`, `--inventory` and `--inventory --json` runs over the Markdown files
+  of the behaviour check of TASK 124, a run per `.mmd` fixture, and `--probe`.
 - **A4** — the steps of `.github/workflows/framework-gates.yml` pass.
 - **A5** — one code review approves the change.
 
 ## 4. Decisions
 
-- **D1**, 2026-10-16, operator: a thin `svg_geometry.py` beside a package of another name, over a
-  package of the same name. The command line and the patches of the tests keep working, and this
-  is the operator's usual form.
-- **D2**, 2026-10-16, operator: the package is `svg_geometry_parts/`. TASK 126 takes
-  `lint_mermaid_parts/`.
-- **D3**, 2026-10-16, operator: one module per section, as the rule of `docs/ARCHITECTURE.md`
-  §10.1 states.
-- **D4**, 2026-10-16, operator: the light process. The Self-Improvement Mode of the system prompts
-  names a split of a script as a case for `/light`. The limits of the `light-mode` skill on new
-  files and on 30 minutes do not fit a split.
-- **D5**, 2026-10-16, orchestrator: `main` stays in the thin file. It reads `analyze_svg`,
-  `evaluate` and `passes` from the namespace that the tests patch.
-- **D6**, 2026-10-16, orchestrator: the fix pass of the code review, which approved the change.
-  - The guard of `test_printed_output.py` that keeps the geometry's code out of the lint names
-    `svg_geometry_parts` too (MINOR-1).
-  - TC-02 checks that each module imports exactly the names that its code reads, and that
-    `__init__.py` holds a docstring only (MINOR-2).
-  - The thin file's paragraph says where a name that the package looks up is replaced. Each
-    module keeps two blank lines after its imports, and the two fixtures were rendered again
-    (INFO-1, INFO-5).
-  - `docs/reviews/framework-audit-103.md` pins its reference to the §7 of TASK 103 (INFO-2).
-  - After the review, the operator saw Pylance mark the thin file in VS Code. Its imports showed
-    as unresolved because the language server held a stale index: it still listed files that
-    TASK 124 removed. Its re-exported names showed as not accessed, so `__all__` now lists them,
-    and the fixtures were rendered once more.
-
-  Not taken: one helper shared by the two package tests (INFO-6), which TASK 126 can raise.
-- **D7**, 2026-10-16, operator: at the retro, "Поправить light-mode". The `light-mode` skill, now
-  version 1.1, admits a behaviour-preserving split of a script of an auxiliary skill. Its own
-  limits on new files and on 30 minutes contradicted the system prompts (D4). The gaps that
-  `skill-enhancer`'s `analyze_gaps.py` reports for the skill predate this edit and stay.
+- **D1**, 2026-10-16, operator: the thin file keeps the command line, the tail of the engine
+  section from `_summary` to `main`. The patches of `test_printed_output.py` keep working, and the
+  file that commands run holds the command line. Rejected: `main` alone, which moves the patch of
+  `_shown` to another module.
+- **D2**, 2026-10-16, operator: one module per section, 17 modules, as the rule of
+  `docs/ARCHITECTURE.md` §10.1 states. Rejected: MODEL merged into PARSE.
+- **D3**, 2026-10-16, operator: the package tests share `package_checks.py`. Rejected: a third
+  copy of the helpers.
+- **D4**, 2026-10-16, orchestrator: the light process, as TASK 125 D4 and `light-mode` 1.1 state.
+  `INSTRUMENT_FILES` names no file of the lint, so no fixture is rendered again.
+- **D5**, 2026-10-16, orchestrator: the fix pass of the code review. The review found no
+  blocking issue and confirmed the behaviour.
+  - TC-04 compares `RULES` with every rule that the modules register, in order, the 35 rules that
+    a plain `rule(...)(check)` call registers among them. Each rule lies in the module of its
+    family (MAJOR-1).
+  - TC-03 checks that the thin file imports each name from the module that defines it, in the
+    order of R1 (MINOR-1).
+  - The docstrings of `__init__.py` and `engine.py` say that a module imported alone sees only
+    the rules of the modules imported so far (MINOR-2).
+  - `reads()` of `package_checks.py` adds the names that the compiled code loads. A read of an
+    imported name inside a comprehension at the top level then counts on Python 3.12 and later.
+    Only the module attributes stay aside, where all dunder names did (MINOR-3).
+  - The changelogs and §10.1 name the header module, and the changelogs name the two changed
+    texts. The comment of `RULES` is the second text of R1 (MINOR-4, MINOR-5).
 
 ## 5. Out of scope
 
-- `S/scripts/lint_mermaid.py` (TASK 126), its comment that `svg_geometry.py` holds `_escaped`
-  among it; `S/evals/grade_figures.py`, pinned by its SHA-256.
-- The committed corpus renders keep their instrument hash, as in TASK 124 D8.
+- `S/evals/grade_figures.py`, pinned by its SHA-256.
 - Any work for Python 3.9. The floor test runs as it is.

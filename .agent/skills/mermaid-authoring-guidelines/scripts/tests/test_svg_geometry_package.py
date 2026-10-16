@@ -13,21 +13,19 @@ command line `main` (TASK 125 R1, R2). These tests pin:
 * `INSTRUMENT_FILES` of `scripts/render_check.py` and of `evals/render_corpus.py`, read by AST,
   name the thin file and each file of the package once (``TC-04``).
 
-A top-level name is one that a top-level `def`, `class` or assignment binds, each name of a tuple
-target included and imported names excluded (TASK 124 §0).
+The helpers that the package tests share lie in `package_checks.py` (TASK 126 R3).
 """
-import ast
-import builtins
 import importlib
-import symtable
 import sys
 import unittest
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 SKILL = SCRIPTS.parent
-sys.path.insert(0, str(SCRIPTS))
+sys.path[:0] = [str(SCRIPTS), str(Path(__file__).resolve().parent)]
 import svg_geometry as sg  # noqa: E402
+from package_checks import (bound_at_top, docstring_only, import_mismatch,  # noqa: E402
+                            imports, instrument_files)
 
 PACKAGE = SCRIPTS / "svg_geometry_parts"
 #: TASK 125 R1: the modules of the package, in order; each imports only from those above it.
@@ -72,85 +70,6 @@ NAMES = {
 }
 
 
-def _imports(path):
-    """(line, level, module) of each import statement of *path*, at any depth."""
-    found = []
-    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-        if isinstance(node, ast.ImportFrom):
-            found.append((node.lineno, node.level, node.module))
-        elif isinstance(node, ast.Import):
-            found.extend((node.lineno, 0, a.name) for a in node.names)
-    return found
-
-
-def _bound_at_top(path):
-    """The names that a top-level `def`, `class` or assignment of *path* binds."""
-    names = set()
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            names.add(node.name)
-        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
-            stack = list(node.targets) if isinstance(node, ast.Assign) else [node.target]
-            while stack:
-                target = stack.pop()
-                if isinstance(target, ast.Name):
-                    names.add(target.id)
-                elif isinstance(target, (ast.Tuple, ast.List)):
-                    stack.extend(target.elts)
-                elif isinstance(target, ast.Starred):
-                    stack.append(target.value)
-    return names
-
-
-#: Names that a module reads with no import or definition of its own.
-_MODULE_ATTRS = {"__name__", "__file__", "__doc__", "__spec__", "__package__", "__loader__",
-                 "__builtins__"}
-
-
-def _reads(source):
-    """The global names that *source* reads, annotations included, builtins aside."""
-    reads = set()
-
-    def walk(table, top):
-        for sym in table.get_symbols():
-            if sym.is_referenced() and (top or sym.is_global()):
-                reads.add(sym.get_name())
-        for child in table.get_children():
-            walk(child, False)
-
-    walk(symtable.symtable(source, "<module>", "exec"), True)
-    for node in ast.walk(ast.parse(source)):
-        notes = []
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            args = node.args
-            notes = [node.returns] + [a.annotation for a in args.posonlyargs + args.args
-                                      + args.kwonlyargs + [args.vararg, args.kwarg] if a]
-        elif isinstance(node, ast.AnnAssign):
-            notes = [node.annotation]
-        for note in filter(None, notes):
-            reads.update(n.id for n in ast.walk(note) if isinstance(n, ast.Name))
-    return reads - set(dir(builtins)) - _MODULE_ATTRS
-
-
-def _imported(tree):
-    """The names that the top-level imports of *tree* bind, `from __future__` aside."""
-    names = set()
-    for node in tree.body:
-        if isinstance(node, ast.Import):
-            names.update(a.asname or a.name.split(".")[0] for a in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module != "__future__":
-            names.update(a.asname or a.name for a in node.names)
-    return names
-
-
-def _instrument_files(path):
-    """The value of `INSTRUMENT_FILES` in *path*, read by AST."""
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if (isinstance(node, ast.Assign) and len(node.targets) == 1
-                and getattr(node.targets[0], "id", "") == "INSTRUMENT_FILES"):
-            return ast.literal_eval(node.value)
-    raise AssertionError(f"{path.name} binds no INSTRUMENT_FILES")
-
 
 class TestPackageFiles(unittest.TestCase):
     """TC-01 — the files of the package."""
@@ -165,7 +84,7 @@ class TestImports(unittest.TestCase):
 
     def test_each_module_imports_only_modules_above_it(self):
         for index, module in enumerate(MODULES):
-            for line, level, target in _imports(PACKAGE / f"{module}.py"):
+            for line, level, target, _names in imports(PACKAGE / f"{module}.py"):
                 with self.subTest(module=module, line=line):
                     if level:
                         self.assertEqual(level, 1)
@@ -178,20 +97,15 @@ class TestImports(unittest.TestCase):
 
     def test_each_module_imports_exactly_the_names_its_code_reads(self):
         for module in MODULES:
-            path = PACKAGE / f"{module}.py"
-            source = path.read_text(encoding="utf-8")
-            reads, imported = _reads(source), _imported(ast.parse(source))
+            unused, missing = import_mismatch(PACKAGE / f"{module}.py")
             with self.subTest(module=module):
-                self.assertEqual(sorted(imported - reads), [],
-                                 f"{module}.py imports names that its code never reads")
-                self.assertEqual(sorted(reads - imported - _bound_at_top(path)), [],
-                                 f"{module}.py reads names that it neither defines nor imports")
+                self.assertEqual(unused, [], f"{module}.py imports names that its code never reads")
+                self.assertEqual(missing, [], f"{module}.py reads names that it neither defines "
+                                              "nor imports")
 
     def test_init_holds_a_docstring_only(self):
-        body = ast.parse((PACKAGE / "__init__.py").read_text(encoding="utf-8")).body
-        self.assertEqual(len(body), 1, "__init__.py holds more than its docstring")
-        self.assertIsInstance(body[0], ast.Expr)
-        self.assertIsInstance(getattr(body[0].value, "value", None), str)
+        self.assertTrue(docstring_only(PACKAGE / "__init__.py"),
+                        "__init__.py holds more than its docstring")
 
 
 class TestNames(unittest.TestCase):
@@ -203,13 +117,13 @@ class TestNames(unittest.TestCase):
         for module, names in NAMES.items():
             defining = importlib.import_module(f"svg_geometry_parts.{module}")
             with self.subTest(module=module):
-                self.assertEqual(_bound_at_top(PACKAGE / f"{module}.py"), set(names))
+                self.assertEqual(bound_at_top(PACKAGE / f"{module}.py"), set(names))
             for name in names:
                 with self.subTest(module=module, name=name):
                     self.assertIs(getattr(sg, name), getattr(defining, name))
 
     def test_the_thin_file_defines_main_and_lists_every_name(self):
-        self.assertEqual(_bound_at_top(SCRIPTS / "svg_geometry.py"), {"main", "__all__"})
+        self.assertEqual(bound_at_top(SCRIPTS / "svg_geometry.py"), {"main", "__all__"})
         self.assertEqual(sg.main.__module__, "svg_geometry")
         every = [name for names in NAMES.values() for name in names] + ["main"]
         self.assertEqual(sg.__all__, every)
@@ -220,7 +134,7 @@ class TestInstrumentFiles(unittest.TestCase):
 
     def test_both_lists_name_each_file_of_the_package_once(self):
         for path in (SCRIPTS / "render_check.py", SKILL / "evals" / "render_corpus.py"):
-            listed = _instrument_files(path)
+            listed = instrument_files(path)
             for rel in PACKAGE_FILES:
                 with self.subTest(list=path.name, file=rel):
                     self.assertEqual(listed.count(rel), 1)

@@ -604,7 +604,8 @@ needs no load.
 | `references/*.md` | prompt | notation per kind, renderer facts, layout, ASCII, paired examples, review | — |
 | `assets/notation.json` | data | budgets, thresholds, settings lines, palette, allowed and avoided kinds, the swap stylesheet | read by tests |
 | `scripts/mermaid_model/` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII; one module per section | unit tests |
-| `scripts/lint_mermaid.py` | CLI | static rules with probe pairs; `--inventory` worksheet | yes |
+| `scripts/lint_mermaid.py` | CLI | the command line over `lint_mermaid_parts/`: findings, `--probe`, `--inventory` | yes |
+| `scripts/lint_mermaid_parts/` | library | one module per section: the header, the rules of each family with probe pairs, the engine | unit tests |
 | `scripts/planarity.py` | library | exact planarity test of a flowchart's simple graph | unit tests |
 | `scripts/svg_geometry.py` | library | a thin file over `svg_geometry_parts/`: binds every name of its modules, holds the debug command line | fixture tests |
 | `scripts/svg_geometry_parts/` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG; one module per section | fixture tests |

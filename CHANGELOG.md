@@ -16,6 +16,23 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.46.0 — `lint_mermaid.py` of the figure skill keeps its command line over a package (TASK 126)**
+
+#### Changed
+
+- **The sections of `scripts/lint_mermaid.py` of `mermaid-authoring-guidelines` move to the
+  package `scripts/lint_mermaid_parts/`**, one module per section: the header, one module per
+  family of rules, and the engine. Each moved verbatim, but for one docstring and one comment.
+  `lint_mermaid.py` keeps the command line: the output, the argument parser and `main`. It
+  imports the 17 modules in order, so the rules keep their order, binds all 169 top-level names
+  and lists them in `__all__`. The allow rule, the CI gates, the grader and the tests run and
+  import `lint_mermaid` as before.
+- **The package tests share `scripts/tests/package_checks.py`.** The test of `mermaid_model` now
+  also checks that each module imports exactly the names that its code reads.
+- **The test of the lint's output reads the package too:** only `_say` prints, and no module of
+  the lint imports the geometry's code.
+- `docs/ARCHITECTURE.md` §10.1 lists the thin file and the package.
+
 ### **v3.45.0 — `svg_geometry.py` of the figure skill becomes a thin file over a package (TASK 125)**
 
 #### Changed

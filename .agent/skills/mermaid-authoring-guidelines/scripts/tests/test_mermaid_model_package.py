@@ -18,7 +18,8 @@ former file, and `__init__.py`, which holds the entry points and binds every top
   the package names a standard-library module or a module of `scripts/` (``TC-07``).
 
 A top-level name is one that a top-level `def`, `class` or assignment binds, each name of a tuple
-target included and imported names excluded (TASK 124 §0).
+target included and imported names excluded (TASK 124 §0). The helpers that the package
+tests share lie in `package_checks.py` (TASK 126 R3).
 """
 import ast
 import importlib
@@ -30,8 +31,9 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 SKILL = SCRIPTS.parent
-sys.path.insert(0, str(SCRIPTS))
+sys.path[:0] = [str(SCRIPTS), str(Path(__file__).resolve().parent)]
 import mermaid_model as mm  # noqa: E402
+from package_checks import bound_at_top, import_mismatch, imports  # noqa: E402
 
 PACKAGE = SCRIPTS / "mermaid_model"
 #: TASK 124 R1.1: the modules of the package; each imports only from those above it.
@@ -101,37 +103,6 @@ NAMES = {
 }
 
 
-def _imports(path):
-    """(line, level, module, names) of each import statement of *path*, at any depth."""
-    found = []
-    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-        if isinstance(node, ast.ImportFrom):
-            found.append((node.lineno, node.level, node.module, tuple(a.name for a in node.names)))
-        elif isinstance(node, ast.Import):
-            found.extend((node.lineno, 0, a.name, ()) for a in node.names)
-    return found
-
-
-def _bound_at_top(path):
-    """The names that a top-level `def`, `class` or assignment of *path* binds, each name of a
-    tuple target included; an imported name is not among them."""
-    names = set()
-    for node in ast.parse(path.read_text(encoding="utf-8")).body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            names.add(node.name)
-        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
-            stack = list(node.targets) if isinstance(node, ast.Assign) else [node.target]
-            while stack:
-                target = stack.pop()
-                if isinstance(target, ast.Name):
-                    names.add(target.id)
-                elif isinstance(target, (ast.Tuple, ast.List)):
-                    stack.extend(target.elts)
-                elif isinstance(target, ast.Starred):
-                    stack.append(target.value)
-    return names
-
-
 class TestPackageFiles(unittest.TestCase):
     """TC-01 — the files of the package."""
 
@@ -149,7 +120,7 @@ class TestImportOrder(unittest.TestCase):
     def test_each_module_imports_only_modules_above_it(self):
         for k, module in enumerate(MODULES):
             with self.subTest(module=module):
-                for line, level, target, _names in _imports(PACKAGE / f"{module}.py"):
+                for line, level, target, _names in imports(PACKAGE / f"{module}.py"):
                     if level == 0:
                         self.assertNotEqual((target or "").split(".")[0], "mermaid_model",
                                             f"{module}.py:{line} imports the package itself")
@@ -158,8 +129,16 @@ class TestImportOrder(unittest.TestCase):
                     self.assertIn(target, MODULES[:k],
                                   f"{module}.py:{line} imports {target!r}, not a module above it")
 
+    def test_each_module_imports_exactly_the_names_its_code_reads(self):
+        for module in MODULES:
+            unused, missing = import_mismatch(PACKAGE / f"{module}.py")
+            with self.subTest(module=module):
+                self.assertEqual(unused, [], f"{module}.py imports names that its code never reads")
+                self.assertEqual(missing, [], f"{module}.py reads names that it neither defines "
+                                              "nor imports")
+
     def test_init_imports_each_module_in_order(self):
-        targets = [t for _l, level, t, _n in _imports(PACKAGE / "__init__.py") if level == 1]
+        targets = [t for _l, level, t, _n in imports(PACKAGE / "__init__.py") if level == 1]
         self.assertEqual(targets, list(MODULES))
 
 
@@ -172,7 +151,7 @@ class TestNames(unittest.TestCase):
             full = "mermaid_model" if module == "__init__" else f"mermaid_model.{module}"
             with self.subTest(module=module):
                 sub = importlib.import_module(full)
-                bound = _bound_at_top(PACKAGE / f"{module}.py")
+                bound = bound_at_top(PACKAGE / f"{module}.py")
                 for name in names:
                     self.assertIn(name, bound, f"{full} imports {name} and does not define it")
                     self.assertTrue(hasattr(sub, name), f"{full} lacks {name}")
@@ -235,7 +214,7 @@ class TestSelfContained(unittest.TestCase):
         files = sorted(SCRIPTS.glob("*.py")) + sorted(PACKAGE.glob("*.py"))
         self.assertTrue(files, "no script found")
         for path in files:
-            for line, level, target, _names in _imports(path):
+            for line, level, target, _names in imports(path):
                 if level:
                     continue  # TC-02 reads the relative imports of the package
                 top = (target or "").split(".")[0]

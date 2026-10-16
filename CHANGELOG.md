@@ -16,6 +16,32 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.44.0 — `mermaid_model.py` of the figure skill becomes a package, one module per section (TASK 124)**
+
+#### Changed
+
+- **`scripts/mermaid_model.py` of `mermaid-authoring-guidelines` is now the package
+  `scripts/mermaid_model/`.** Its 15 modules hold the 15 sections of the former file, each moved
+  verbatim but for the line of `SKILL_DIR`, and `__init__.py` holds the entry points.
+  `__init__.py` binds all 230 top-level names, so the lint, the render check, `plan_gantt.py`, the
+  grader and the tests import `mermaid_model` as before. A module imports only from the modules
+  above it, and a test pins that order.
+- **The package stays inside the skill.** Its modules import only the standard library and the
+  skill's own modules, and a test checks that for every script of the skill's `scripts/`.
+- **A test that replaces a name of the model assigns it on the module whose code looks it up**,
+  through `sys.modules[<function>.__module__]`. `test_markers_are_read_once_per_fence` now also
+  checks that its counting function ran.
+- **The floor test reads a package.** `tests/test_python_floor.py` resolves a local module as
+  Python does, a package first, and parses each module of the package under the 3.9 grammar. It
+  fails on a file by which Python would run code that it never parsed, such as a link or a
+  compiled module. It also fails on a local module named after a standard-library module that the
+  checked code imports.
+- **`render_corpus.INSTRUMENT_FILES` names the 16 files of the package.** The instrument hash that
+  the committed corpus renders record no longer matches, so the next corpus run renders their
+  figures again.
+- `docs/ARCHITECTURE.md` §10.1 states the layout rule that the next splits follow: those of
+  `svg_geometry.py` and `lint_mermaid.py`.
+
 ### **v3.43.0 — framework-upgrade counts local allow rules and checks what a change runs (TASK 123)**
 
 #### Changed

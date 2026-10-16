@@ -15,8 +15,14 @@ preflight, and the benchmark scripts of ``skill-creator`` and of the figure eval
 * each guard runs before anything but the docstring, ``__future__`` and standard-library imports
   of modules and names that Python 3.9 has; each guarded file, the grader and the modules the
   grader imports first parse under the 3.9 grammar and import only such names, so an old
-  interpreter reaches the guard and prints its message (``TC-03``). A feature that fails only when
-  it runs, such as ``dataclass(slots=True)`` in an imported module, is out of its reach;
+  interpreter reaches the guard and prints its message (``TC-03``). A local name resolves as
+  Python resolves it, a package's ``__init__.py`` first, and no local module stands in for a
+  standard-library one. TC-03 parses every ``*.py`` module of a package that it reaches. It fails
+  on each static form by which Python would run code that it never parsed: a link, a compiled or
+  extension module, a Windows ``*.pyw`` source, and a module that spells ``__path__`` or
+  ``submodule_search_locations`` (TASK 124 R2.4, D14 to D16). TC-03 is static: code that runs to
+  import, such as ``importlib`` or a change of ``sys.path``, is out of its reach. So is a feature
+  that fails only when it runs, such as ``dataclass(slots=True)`` in an imported module;
 * each guarded script and the grader, run under a faked 3.9.6 in an empty directory, exit 2, name
   the script that was run and both versions, and write nothing, in that directory or in the
   skills; the grader runs with a stub for each local module it imports before ``run_evals``, and
@@ -222,6 +228,109 @@ def _run_under_old(path, cwd, prelude=""):
 LOADED = "held from GRADER_PATH: "
 
 
+def _local_module(name, dirs=GRADER_PATH):
+    """The file that `import <name>` loads from *dirs*, the directories of `GRADER_PATH` unless
+    given, as Python resolves it: in each directory, a package's `__init__.py` before a module of
+    that name (TASK 124 R2.4). None for a name that no directory holds."""
+    for d in dirs:
+        for path in (d / name / "__init__.py", d / f"{name}.py"):
+            if path.is_file():
+                return path
+    return None
+
+
+#: A statement that parses on Python 3.10 and later only.
+MATCH_3_10 = "match 1:\n    case 1:\n        pass\n"
+#: The suffixes of the modules that Python imports on Linux, macOS or Windows without a source
+#: that TC-03 parses: a Windows source, a compiled module and two kinds of extension module. Only
+#: an extension module's name carries a platform tag before its suffix. The sets are fixed, so
+#: that the walk does not depend on the interpreter that runs it (TASK 124 D15, D16).
+UNPARSED_SUFFIXES = (".pyw", ".pyc", ".pyd", ".so")
+TAGGED_SUFFIXES = (".pyd", ".so")
+#: The names by which a module changes where a package finds its modules (TASK 124 D15, D16).
+SEARCH_PATH_NAMES = frozenset({"__path__", "submodule_search_locations"})
+
+
+def _module_kind(name):
+    """How Python can import a file of this *name*: "source" for a `*.py` module, which TC-03
+    parses, "unparsed" for a module of `UNPARSED_SUFFIXES`, and None for no module. The module name,
+    up to the first dot, is one that an import statement can spell. A cache in `__pycache__/`
+    carries a cache tag before `.pyc`, so it is no module (TASK 124 D16)."""
+    stem, dot, rest = name.partition(".")
+    if not (stem.isidentifier() and dot):
+        return None
+    if rest == "py":
+        return "source"
+    if "." + rest in UNPARSED_SUFFIXES or name.endswith(TAGGED_SUFFIXES):
+        return "unparsed"
+    return None
+
+
+def _module_files(name, dirs):
+    """`(path, kind)` for each file by which Python on Linux, macOS or Windows can import `<name>`
+    from *dirs*: a package's `__init__` or a module of that name (TASK 124 D16)."""
+    found = []
+    for d in dirs:
+        for path in sorted(d.glob(f"{name}/__init__.*")) + sorted(d.glob(f"{name}.*")):
+            kind = _module_kind(path.name)
+            if kind:
+                found.append((path, kind))
+    return found
+
+
+def _package_modules(init):
+    """Every `*.py` module of the package whose `__init__.py` is *init*, subpackages included, in a
+    fixed order with *init* first. TC-03 parses each one, whatever import reaches it: an absolute
+    import of a module of the package names only the package to `_top` (TASK 124 R2.4).
+
+    An entry counts when an import statement can spell it: each directory on its way, and its
+    module name (`_module_kind`). `__pycache__/` counts, since Python imports it as a subpackage.
+    Raises ValueError on each entry that counts and by which Python would run code that TC-03
+    never parsed: a package directory that is a symbolic link, a link in it, and a module of
+    `UNPARSED_SUFFIXES`. Python imports through a link that `rglob` does not follow. Also raises
+    on a `*.py` entry that is no regular file, which Python skips and TC-03 would open: a FIFO
+    would hang the read (TASK 124 D14 to D16)."""
+    if init.parent.is_symlink():
+        raise ValueError(f"{_label(init.parent)}: a package that TC-03 walks is a symbolic link")
+    found = []
+    for entry in sorted(init.parent.rglob("*")):
+        if not all(part.isidentifier() for part in entry.relative_to(init.parent).parts[:-1]):
+            continue
+        kind = _module_kind(entry.name)
+        if entry.is_symlink():
+            if kind or entry.name.isidentifier():
+                raise ValueError(f"{_label(entry)}: a symbolic link in a package that TC-03 walks")
+        elif kind == "unparsed":
+            raise ValueError(f"{_label(entry)}: a module that TC-03 cannot parse: compiled, an "
+                             "extension or a Windows source")
+        elif kind == "source" and entry != init:
+            if not entry.is_file():
+                raise ValueError(f"{_label(entry)}: a module entry that is no regular file")
+            found.append(entry)
+    return [init] + found
+
+
+def _search_path_spellings(tree):
+    """`<line>:<name>` for each place where *tree* spells a name of `SEARCH_PATH_NAMES`: as a name,
+    an attribute, a keyword, an imported name or a string. A computed spelling is out of reach
+    (TASK 124 D16)."""
+    found = []
+    for node in ast.walk(tree):
+        for _field, value in ast.iter_fields(node):
+            for item in value if isinstance(value, list) else [value]:
+                if isinstance(item, str) and item in SEARCH_PATH_NAMES:
+                    found.append(f"{getattr(node, 'lineno', '?')}:{item}")
+    return found
+
+
+def _label(path):
+    """*path* relative to the project root when it lies inside it, else as it is."""
+    try:
+        return str(Path(path).relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def _grader_local_imports():
     """The modules that the grader imports at module level before `run_evals`, from a directory of
     `GRADER_PATH`, found in its source as TC-03 finds them. TC-04 stubs each one (TASK 123 R2.1)."""
@@ -234,8 +343,7 @@ def _grader_local_imports():
             names.extend(_top(a.name) for a in node.names)
         elif isinstance(node, ast.ImportFrom) and node.level == 0:
             names.append(_top(node.module))
-    return tuple(n for n in dict.fromkeys(names)
-                 if any((d / f"{n}.py").is_file() for d in GRADER_PATH))
+    return tuple(n for n in dict.fromkeys(names) if _local_module(n) is not None)
 
 
 def _stubs_and_report(stubs):
@@ -263,6 +371,12 @@ def _minimal_env(first_dir):
 def _executable(path, body):
     path.write_text(body, encoding="utf-8")
     path.chmod(0o755)
+
+
+def _put(path, data=b""):
+    """Write *data* at *path*, its directories first."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
 
 
 class TC01ThePairIsStated(unittest.TestCase):
@@ -329,20 +443,31 @@ class TC03GuardsAreReached(unittest.TestCase):
     def test_only_docstring_future_and_3_9_stdlib_imports_precede_each_guard(self):
         for path in GUARDED:
             with self.subTest(script=path.name):
-                index, _floor, tree = guard(path)
-                for pos, node in enumerate(tree.body[:index]):
-                    if (pos == 0 and isinstance(node, ast.Expr)
-                            and isinstance(node.value, ast.Constant)
-                            and isinstance(node.value.value, str)):
-                        continue
-                    if isinstance(node, ast.Import) and all(
-                            _top(a.name) in STDLIB_3_9 for a in node.names):
-                        continue
-                    if (isinstance(node, ast.ImportFrom) and node.level == 0
-                            and all((node.module, a.name) in FROM_3_9 for a in node.names)):
-                        continue
-                    self.fail(f"{path.name}:{node.lineno} runs before the version guard and "
-                              f"may be missing on 3.9: {ast.unparse(node)[:80]}")
+                self._check_before_guard(path)
+
+    def _check_before_guard(self, path):
+        """Only the docstring, `__future__` and imports of `STDLIB_3_9` precede the guard of
+        *path*, and no module beside *path* stands in for one of them: Python looks in a script's
+        own directory first (TASK 124 D16)."""
+        index, _floor, tree = guard(path)
+        for pos, node in enumerate(tree.body[:index]):
+            if (pos == 0 and isinstance(node, ast.Expr)
+                    and isinstance(node.value, ast.Constant)
+                    and isinstance(node.value.value, str)):
+                continue
+            if isinstance(node, ast.Import) and all(
+                    _top(a.name) in STDLIB_3_9 for a in node.names):
+                names = [_top(a.name) for a in node.names]
+            elif (isinstance(node, ast.ImportFrom) and node.level == 0
+                    and all((node.module, a.name) in FROM_3_9 for a in node.names)):
+                names = [_top(node.module)]
+            else:
+                self.fail(f"{path.name}:{node.lineno} runs before the version guard and "
+                          f"may be missing on 3.9: {ast.unparse(node)[:80]}")
+            for name in names:
+                self.assertEqual([_label(p) for p, _kind in _module_files(name, (path.parent,))],
+                                 [], f"{path.name}:{node.lineno}: a module beside the script "
+                                     f"stands in for the standard library's {name!r}")
 
     def test_guarded_files_parse_under_the_3_9_grammar(self):
         for path in GUARDED:
@@ -366,23 +491,266 @@ class TC03GuardsAreReached(unittest.TestCase):
             elif isinstance(node, ast.ImportFrom) and node.level == 0:
                 self._names_exist_in_3_9(node, "grade_figures.py")
                 pending.append(_top(node.module))
+        self._walk_names(pending)
+
+    def _walk_names(self, pending, dirs=GRADER_PATH):
+        """Walk each module name of *pending*, and the names that its modules import in turn, as
+        `import` resolves them from *dirs*. A name of `STDLIB_3_9` has no file in *dirs*, which
+        Python would import in its place. A local name has no module there of
+        `UNPARSED_SUFFIXES`, which Python may try before the source (TASK 124 D16)."""
         seen = set()
         while pending:
             name = pending.pop()
-            if name in seen or name in STDLIB_3_9:
+            if name in seen:
                 continue
             seen.add(name)
-            files = [d / f"{name}.py" for d in GRADER_PATH if (d / f"{name}.py").is_file()]
-            self.assertTrue(files, f"the grader imports {name!r} before run_evals: neither a "
-                                   f"3.9 standard-library module nor a local one")
-            with self.subTest(module=name):
-                sub = ast.parse(files[0].read_text(encoding="utf-8"), feature_version=(3, 9))
-                for node in _import_time_imports(sub):
-                    if isinstance(node, ast.Import):
-                        pending.extend(_top(a.name) for a in node.names)
-                    elif node.level == 0:
-                        self._names_exist_in_3_9(node, files[0].name)
-                        pending.append(_top(node.module))
+            files = _module_files(name, dirs)
+            if name in STDLIB_3_9:
+                self.assertEqual([_label(p) for p, _kind in files], [],
+                                 f"a local module stands in for the standard library's {name!r}")
+                continue
+            self.assertEqual([_label(p) for p, kind in files if kind != "source"], [],
+                             f"Python can import {name!r} from a module that TC-03 cannot parse")
+            path = _local_module(name, dirs)
+            self.assertIsNotNone(path, f"the grader imports {name!r} before run_evals: neither a "
+                                       f"3.9 standard-library module nor a local one")
+            self._walk_local(path, pending, set())
+
+    def test_every_module_of_a_package_is_walked(self):
+        """TC-03 walks every module file of a package it reaches, a module that the package reaches
+        only by an absolute import or one of a subpackage among them (TASK 124 R2.4)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp, "pkg")
+            (pkg / "sub").mkdir(parents=True)
+            for rel in ("__init__.py", "hidden.py", "sub/__init__.py", "sub/deep.py"):
+                (pkg / rel).write_text("import pkg.hidden\n", encoding="utf-8")
+            walked = [p.relative_to(pkg).as_posix() for p in _package_modules(pkg / "__init__.py")]
+            self.assertEqual(walked, ["__init__.py", "hidden.py", "sub/__init__.py", "sub/deep.py"])
+            (pkg / "link.py").symlink_to(pkg / "hidden.py")
+            with self.assertRaises(ValueError):
+                _package_modules(pkg / "__init__.py")
+
+    def test_a_package_that_python_imports_otherwise_fails_the_walk(self):
+        """Each form that Python imports from a package but TC-03 cannot parse fails
+        `_package_modules`; Python's own `__pycache__/` and a data file do not (TASK 124 D15)."""
+        def package(tmp):
+            pkg = Path(tmp, "pkg")
+            pkg.mkdir()
+            (pkg / "__init__.py").write_text("import pkg.hidden\n", encoding="utf-8")
+            return pkg
+        cases = {
+            "a compiled module beside the sources":
+                lambda pkg: (pkg / "hidden.pyc").write_bytes(b""),
+            "an extension module": lambda pkg: (pkg / "hidden.so").write_bytes(b""),
+            "an extension module of Linux":
+                lambda pkg: _put(pkg / "hidden.cpython-311-x86_64-linux-gnu.so"),
+            "an extension module of Windows": lambda pkg: _put(pkg / "hidden.cp311-win_amd64.pyd"),
+            "a source module of Windows": lambda pkg: _put(pkg / "hidden.pyw"),
+            "a compiled module in __pycache__/":
+                lambda pkg: _put(pkg / "__pycache__" / "hidden.pyc"),
+            "a __pycache__/ that is a link":
+                lambda pkg: (pkg / "__pycache__").symlink_to(pkg.parent, target_is_directory=True),
+            "a module entry that is a directory": lambda pkg: (pkg / "hidden.py").mkdir(),
+        }
+        if hasattr(os, "mkfifo"):
+            cases["a module entry that is a FIFO"] = lambda pkg: os.mkfifo(pkg / "hidden.py")
+        for name, plant in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                pkg = package(tmp)
+                plant(pkg)
+                with self.assertRaises(ValueError):
+                    _package_modules(pkg / "__init__.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = package(tmp)
+            linked = Path(tmp, "linked")
+            linked.symlink_to(pkg, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                _package_modules(linked / "__init__.py")
+            (pkg / "__pycache__").mkdir()
+            (pkg / "__pycache__" / "hidden.cpython-39.pyc").write_bytes(b"")
+            (pkg / "README.md").write_text("data\n", encoding="utf-8")
+            self.assertEqual(_package_modules(pkg / "__init__.py"), [pkg / "__init__.py"])
+
+    def test_the_walk_lists_each_module_that_an_import_statement_can_name(self):
+        """The walk lists each `*.py` module whose name and directories an import statement can
+        spell, in `__pycache__/` too, which Python imports as a subpackage. It leaves aside each
+        entry that no import statement names (TASK 124 D16)."""
+        def package(tmp):
+            pkg = Path(tmp, "pkg")
+            pkg.mkdir()
+            (pkg / "__init__.py").write_text("import pkg.hidden\n", encoding="utf-8")
+            return pkg
+        aside = {
+            "an editor's lock, a dangling link":
+                lambda pkg: (pkg / ".#hidden.py").symlink_to("user@host.1234"),
+            "an AppleDouble file": lambda pkg: _put(pkg / "._hidden.py", b"\x00\x05\x16\x07"),
+            "an editor's copy": lambda pkg: _put(pkg / "hidden.orig.py", MATCH_3_10.encode()),
+            "a module below a directory that no import names":
+                lambda pkg: _put(pkg / ".venv" / "lib" / "hidden.py", MATCH_3_10.encode()),
+            "a cache in __pycache__/":
+                lambda pkg: _put(pkg / "__pycache__" / "hidden.cpython-39.pyc"),
+            "data": lambda pkg: _put(pkg / ".DS_Store"),
+        }
+        for name, plant in aside.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                pkg = package(tmp)
+                plant(pkg)
+                self.assertEqual(_package_modules(pkg / "__init__.py"), [pkg / "__init__.py"])
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = package(tmp)
+            for rel in ("__pycache__/__init__.py", "__pycache__/cached.py"):
+                _put(pkg / rel, b"import pkg.hidden\n")
+            walked = [p.relative_to(pkg).as_posix() for p in _package_modules(pkg / "__init__.py")]
+            self.assertEqual(walked, ["__init__.py", "__pycache__/__init__.py",
+                                      "__pycache__/cached.py"])
+
+    def test_the_walk_fails_on_each_static_spelling_of_a_search_path_change(self):
+        """A module that changes where a package finds its modules can import one that TC-03 never
+        lists. Each static spelling fails the walk, in any module that it walks. The plain name in
+        an `__init__.py` is the case of `test_the_walk_fails_on_an_init_that_changes_its_path`
+        (TASK 124 D16)."""
+        cases = {
+            "an attribute of the module object":
+                ("__init__.py", "import sys\nsys.modules[__name__].__path__.append('elsewhere')\n"),
+            "the search locations of the spec":
+                ("__init__.py", "__spec__.submodule_search_locations.append('elsewhere')\n"),
+            "a string": ("__init__.py", "globals()['__path__'].append('elsewhere')\n"),
+            "a keyword": ("__init__.py", "import importlib.util\nimportlib.util."
+                                         "spec_from_file_location('x', 'y', "
+                                         "submodule_search_locations=[])\n"),
+            "another module of the package":
+                ("hidden.py", "import pkg\npkg.__path__.append('elsewhere')\n"),
+        }
+        walker = TC03GuardsAreReached("test_the_grader_reaches_the_run_evals_guard")
+        for name, (rel, text) in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                pkg = Path(tmp, "pkg")
+                pkg.mkdir()
+                (pkg / "__init__.py").write_text("import pkg.hidden\n", encoding="utf-8")
+                (pkg / rel).write_text(text, encoding="utf-8")
+                with self.assertRaises(AssertionError):
+                    walker._walk_local(pkg / "__init__.py", [], set())
+        with self.subTest(case="a module outside the package"), \
+                tempfile.TemporaryDirectory() as tmp:
+            module = Path(tmp, "mod.py")
+            module.write_text("import pkg\npkg.__path__.append('elsewhere')\n", encoding="utf-8")
+            with self.assertRaises(AssertionError):
+                walker._walk_local(module, [], set())
+
+    def test_a_module_that_python_finds_before_the_source_fails_the_walk(self):
+        """Python tries a compiled or extension module before a source of the same name, and the
+        directories of `GRADER_PATH` before the standard library. Either form of a name that the
+        walk reaches fails it (TASK 124 D16)."""
+        cases = {
+            "an extension module beside the source":
+                ("second", "mod.cpython-311-x86_64-linux-gnu.so", "mod"),
+            "a compiled module in an earlier directory": ("first", "mod.pyc", "mod"),
+            "a local module of a standard-library name": ("second", "json.py", "json"),
+            "a local package of a standard-library name": ("first", "json/__init__.py", "json"),
+        }
+        walker = TC03GuardsAreReached("test_the_grader_reaches_the_run_evals_guard")
+        for name, (where, rel, imported) in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                dirs = (Path(tmp, "first"), Path(tmp, "second"))
+                _put(dirs[1] / "mod.py", b"import json\n")
+                dirs[0].mkdir()
+                _put(Path(tmp, where, rel))
+                with self.assertRaises(AssertionError):
+                    walker._walk_names([imported], dirs)
+        with self.subTest(case="the source alone"), tempfile.TemporaryDirectory() as tmp:
+            dirs = (Path(tmp, "first"), Path(tmp, "second"))
+            _put(dirs[1] / "mod.py", b"import json\n")
+            dirs[0].mkdir()
+            walker._walk_names(["mod"], dirs)
+
+    def test_a_module_beside_a_guarded_script_cannot_stand_in_for_the_standard_library(self):
+        """A guarded script imports the standard library before its guard, and Python looks in the
+        script's own directory first. A module of such a name there fails TC-03 (TASK 124 D16)."""
+        checker = TC03GuardsAreReached(
+            "test_only_docstring_future_and_3_9_stdlib_imports_precede_each_guard")
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp, "script.py")
+            script.write_text("import argparse\nimport sys\nif sys.version_info < (3, 11):\n"
+                              "    sys.exit(2)\n", encoding="utf-8")
+            checker._check_before_guard(script)
+            _put(Path(tmp, "argparse.py"))
+            with self.assertRaises(AssertionError):
+                checker._check_before_guard(script)
+
+    def test_the_walk_fails_on_an_init_that_changes_its_path(self):
+        """An `__init__.py` that names `__path__` can import a module that TC-03 never lists, and
+        fails the walk of TC-03 (TASK 124 D15)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp, "pkg")
+            pkg.mkdir()
+            (pkg / "__init__.py").write_text("__path__.append('elsewhere')\n", encoding="utf-8")
+            walker = TC03GuardsAreReached("test_the_grader_reaches_the_run_evals_guard")
+            with self.assertRaises(AssertionError):
+                walker._walk_local(pkg / "__init__.py", [], set())
+
+    def test_the_walk_parses_a_module_reached_only_by_an_absolute_import(self):
+        """A module that its package reaches only through `import pkg.hidden`, and that does not
+        parse under the 3.9 grammar, fails the walk of TC-03 (TASK 124 D14)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg = Path(tmp, "pkg")
+            pkg.mkdir()
+            (pkg / "__init__.py").write_text("import pkg.hidden\n", encoding="utf-8")
+            (pkg / "hidden.py").write_text(MATCH_3_10, encoding="utf-8")
+            walker = TC03GuardsAreReached("test_the_grader_reaches_the_run_evals_guard")
+            with self.assertRaises(SyntaxError):
+                walker._walk_local(pkg / "__init__.py", [], set())
+
+    def test_the_walk_fails_on_a_link_in_a_package(self):
+        """A subpackage that its package reaches through a symbolic link fails the walk of TC-03:
+        Python imports through the link, which `rglob` does not follow (TASK 124 D14)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pkg, real = Path(tmp, "pkg"), Path(tmp, "real")
+            pkg.mkdir()
+            real.mkdir()
+            (real / "__init__.py").write_text(MATCH_3_10, encoding="utf-8")
+            (pkg / "__init__.py").write_text("import pkg.sub\n", encoding="utf-8")
+            (pkg / "sub").symlink_to(real, target_is_directory=True)
+            walker = TC03GuardsAreReached("test_the_grader_reaches_the_run_evals_guard")
+            with self.assertRaises(AssertionError):
+                walker._walk_local(pkg / "__init__.py", [], set())
+
+    def _walk_local(self, path, pending, walked):
+        """Parse *path* under the 3.9 grammar and queue its imports. A module of a package also
+        walks each module of the package that it imports relatively, and a package's `__init__.py`
+        walks every module of its package. An entry of that package that `_package_modules`
+        refuses, or a module that spells a name of `SEARCH_PATH_NAMES`, fails the walk (TASK 124
+        R2.4, D14 to D16)."""
+        if path in walked:
+            return
+        walked.add(path)
+        if path.name == "__init__.py":
+            try:
+                modules = _package_modules(path)[1:]
+            except ValueError as exc:
+                self.fail(str(exc))
+            for module in modules:
+                self._walk_local(module, pending, walked)
+        with self.subTest(module=_label(path)):
+            sub = ast.parse(path.read_text(encoding="utf-8"), feature_version=(3, 9))
+            self.assertEqual(_search_path_spellings(sub), [],
+                             f"{_label(path)} changes where a package finds its modules, so it can "
+                             "import a module that TC-03 does not list (TASK 124 D15, D16)")
+            for node in _import_time_imports(sub):
+                if isinstance(node, ast.Import):
+                    pending.extend(_top(a.name) for a in node.names)
+                elif node.level == 0:
+                    self._names_exist_in_3_9(node, path.name)
+                    pending.append(_top(node.module))
+                else:
+                    self.assertTrue(node.level == 1 and (path.parent / "__init__.py").is_file(),
+                                    f"{path.name}:{node.lineno} imports relatively outside a "
+                                    "package")
+                    targets = [node.module] if node.module else [a.name for a in node.names]
+                    for target in targets:
+                        module = path.parent / f"{_top(target)}.py"
+                        self.assertTrue(module.is_file(),
+                                        f"{path.name}:{node.lineno}: the package lacks {target!r}")
+                        self._walk_local(module, pending, walked)
 
     def _names_exist_in_3_9(self, node, where):
         if _top(node.module) not in STDLIB_3_9:

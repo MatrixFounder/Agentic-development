@@ -603,7 +603,7 @@ needs no load.
 | `SKILL.md` | prompt | Step 0 form choice, the authoring contract, the process, the routing table | — |
 | `references/*.md` | prompt | notation per kind, renderer facts, layout, ASCII, paired examples, review | — |
 | `assets/notation.json` | data | budgets, thresholds, settings lines, palette, allowed and avoided kinds, the swap stylesheet | read by tests |
-| `scripts/mermaid_model.py` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII | unit tests |
+| `scripts/mermaid_model/` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII; one module per section | unit tests |
 | `scripts/lint_mermaid.py` | CLI | static rules with probe pairs; `--inventory` worksheet | yes |
 | `scripts/planarity.py` | library | exact planarity test of a flowchart's simple graph | unit tests |
 | `scripts/svg_geometry.py` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG | fixture tests |
@@ -617,6 +617,25 @@ needs no load.
 **Why one data file.** The lint, the render check and the eval grader read every threshold from
 `assets/notation.json`. A test pins that the references quote the same values. A threshold held in
 two places drifts in one of them.
+
+**Script packages (TASK 124).** The skill stays self-contained. Its scripts lie in its own
+`scripts/` directory, `.agent/skills/mermaid-authoring-guidelines/scripts/`, and import only the
+standard library and modules of that directory. A script there that holds several sections becomes
+a package in that same directory, one module per section:
+- a script that a command runs by its path keeps that file, and its package takes another name. A
+  command runs a script by its path when an allow rule, a document of the framework or a test names
+  the file in a command line. A package and a module of one name in one directory import as the
+  package;
+- the name that callers import binds every top-level name of the script, so callers keep their
+  imports. That name is the package's `__init__.py`, or the file that the script keeps;
+- a module imports only from modules above it in the package's order, so the package has no import
+  cycle;
+- a test reads and assigns a name on the module whose code looks it up, through
+  `sys.modules[<function>.__module__]`;
+- a test that reads a property of the scripts from `scripts/*.py`, such as an anchor literal, reads
+  the package's modules too once a package holds that property;
+- the package lies in that same directory, and its modules import only the standard library,
+  modules of that directory and modules of their own package.
 
 ### 10.2 Authoring flow
 
@@ -658,7 +677,7 @@ fence as an ordinary figure. A parse or render error in 11.17.2 or 10.9.8 fails 
 unless its marker names a parse rule. The render check calls the fence broken, exit 1, when it
 names render checks and none of them fails, or when a render check it does not name fails. A
 marker that names no render check has its renders graded as a positive figure. The lint and the
-render check read the marker and its scope through one definition in `mermaid_model.py`. A figure of a kind whose geometry the check does not
+render check read the marker and its scope through one definition in `mermaid_model`. A figure of a kind whose geometry the check does not
 model passes as `pass, geometry not checked`; the PNG answers for its crossings and overlaps.
 `--fixture FILE` merges hash-bound evidence into `FILE`: the sha256 of the fence lines, the
 renderer versions, the browser build, and the metrics of each render. The unit tests read it

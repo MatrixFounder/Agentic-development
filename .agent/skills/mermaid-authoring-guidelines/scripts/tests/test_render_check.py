@@ -37,6 +37,9 @@ import render_check as rc  # noqa: E402
 import svg_geometry as sg  # noqa: E402
 
 NOTATION = mm.load_notation()
+#: The module whose code looks up NEGATIVE_ROOTS: a test reads and assigns the name there, so the
+#: assignment reaches `negative_allowed` in one module or in a package (TASK 124 R2.2).
+ROOTS_HOME = sys.modules[mm.negative_allowed.__module__]
 SCRIPT = SCRIPTS / "render_check.py"
 FLOW = "flowchart TB\n  A --> B\n"
 TREE_SVG = (HERE / "fixtures" / "fx-tree-v11.svg").read_text(encoding="utf-8")
@@ -376,15 +379,15 @@ class TestJsonText(unittest.TestCase):
 class StubbedRun(unittest.TestCase):
     def setUp(self):
         self.dir = temp_dir(self)
-        self.saved = (rc.find_renderers, rc.render, mm.NEGATIVE_ROOTS)
+        self.saved = (rc.find_renderers, rc.render, ROOTS_HOME.NEGATIVE_ROOTS)
         rc.find_renderers = lambda home=None, notation=None: fake_renderers()
         rc.render = fake_render
         # the documents of these tests stand in for the skill's teaching files
-        mm.NEGATIVE_ROOTS = mm.NEGATIVE_ROOTS + (self.dir,)
+        ROOTS_HOME.NEGATIVE_ROOTS = ROOTS_HOME.NEGATIVE_ROOTS + (self.dir,)
         self.addCleanup(self.restore)
 
     def restore(self):
-        rc.find_renderers, rc.render, mm.NEGATIVE_ROOTS = self.saved
+        rc.find_renderers, rc.render, ROOTS_HOME.NEGATIVE_ROOTS = self.saved
 
     def doc(self, *bodies, name="doc.md", where=None):
         path = (where or self.dir) / name
@@ -662,11 +665,11 @@ class TestRunOutcomes(StubbedRun):
                          ("fail", ["crossings"], ["legibility"]))
 
     def test_the_marker_scope_is_the_lints(self):
-        # R6: render_check reads mermaid_model.NEGATIVE_ROOTS through negative_allowed
+        # R6: render_check reads NEGATIVE_ROOTS of the module of negative_allowed, ROOTS_HOME
         elsewhere = temp_dir(self)
         path = self.doc(FLOW + "%% FAILS crossings\n%% negative: crossings\n", where=elsewhere)
         self.assertEqual(self.run_main(path)[0], 1)
-        mm.NEGATIVE_ROOTS = mm.NEGATIVE_ROOTS + (elsewhere,)
+        ROOTS_HOME.NEGATIVE_ROOTS = ROOTS_HOME.NEGATIVE_ROOTS + (elsewhere,)
         code, out, _ = self.run_main(path)
         self.assertEqual(code, 0, out)
         self.assertIn("EXPECTED", out)

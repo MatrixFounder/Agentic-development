@@ -1,4 +1,4 @@
-# TASK 123 — `framework-upgrade` counts local allow rules and checks what a change runs; the findings that TASK 122 left open are fixed
+# TASK 124 — `mermaid_model.py` becomes the package `mermaid_model/`, one module per section
 
 <!-- contract:meta -->
 
@@ -6,81 +6,68 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 123 |
-| Slug | staging-rules-and-loose-ends |
+| Task ID | 124 |
+| Slug | mermaid-model-package |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | TASK 122 D13 (operator); the findings before the task that TASK 122 recorded; the operator's request of 2026-10-15 |
-| Base revision | `09765e1d1379bd70eae996fe87e483ce73cf96fa` |
-| Closes | none: no backlog record holds these items |
-| Opens | WI-54, the residual routes of the put-back (D20) |
-| Archive name | `task-123-staging-rules-and-loose-ends.md` |
-| Revision | 8 |
+| Source | the operator's requests of 2026-10-15: during TASK 123, at its retro, and the scope answer of TASK 124 |
+| Base revision | `44520ba6197264c744b105ecf428b93496ba428f` |
+| Closes | none: no backlog record holds this item |
+| Archive name | `task-124-mermaid-model-package.md` |
+| Revision | 9 |
 
-**Request.** The operator committed and pushed TASK 122, and CI passed. They then wrote "запускай
-TASK-123 и добавь еще эти 4 пункта в работу". TASK 123 holds the two items of TASK 122 D13 and
-the four groups that the answer to "что осталось сделать?" listed:
-- the positional-reference errors in old records;
-- the test through which `svg_geometry.py` runs without a prompt, and its debug command line;
-- the skill-testing example;
-- the raw invisible characters of `test_ledger_hardening.py`, the JSON of `render_corpus.py`, and
-  the output of the lint.
+**Request.** During TASK 123 the operator wrote: "если финальные скрипты будут огромными, то
+по-правильному их надо отрефакторить и разбить на модули для дальнейшего развития и поддержки".
+They named `lint_mermaid.py` and `svg_geometry.py`, and added "mermaid_model.py тоже надо". At the
+retro of TASK 123 they chose "TASK 124 следом". Asked how to cut the work, they answered "По одному
+модулю". TASK 124 splits `mermaid_model.py` and sets the layout that TASK 125 (`svg_geometry.py`)
+and TASK 126 (`lint_mermaid.py`) follow.
 
-During Mode A round 2 the operator added the user's settings to the rules that step 4 counts: "Да,
-и пользовательские" (D16).
+**Revision 2** applies M1 to M5, m1 to m16 and N2, N3, N4, N6 and N7 of Mode A round 1.
+**Revision 3** applies m17 to m21 and N10 to N18 of round 2, which passed, with no further round,
+on the precedent of TASK 122 and TASK 123. **Revision 4** adds the operator's requirement that the
+skill stays self-contained: D12, R1.8, TC-07 and the last point of R5.2. It also adds a lint run of
+a `.mmd` file to R6.7 (Mode B round 1, N7). **Revision 5** records fix round 1 of stage 2 (D13),
+**revision 6** fix round 2 (D14), **revision 7** fix round 3 (D15), and **revision 8** fix round 4
+(D16). **Revision 9** records the close of stage 2 at round 5 (D17) and the operator's answer on
+the layout (D18).
 
-**Revision 2** applied M1 to M5, m1 to m13 and N1 of Mode A round 1. **Revision 3** applies M6 to
-M8 and m14 to m20 of round 2, D16, and the shape of the stage-3 patch (D17). **Revision 4** applies
-L1 to L8 of round 3, which passed, with no further round, on the precedent of TASK 122.
-**Revision 5** splits one sentence of the English fence of R8.2, which the register scan of the
-changelog found at 36 words (PLAN G8). It also names the two skills of Problem 6 without the prefix
-that resolves to nothing, as `test_skill_refs` requires of a living document (PLAN H2).
-**Revision 6** applies the LOW findings of stage-2 round 1, which passed (D18). **Revision 7**
-applies the findings of round 2, whose code review failed on the view that named the stash (D19).
-**Revision 8** records the operator's choice after round 3, which passed: its LOW routes in the
-text of R1.1 stay residuals, and WI-54 holds them (D20).
+In this document `S/` stands for `.agent/skills/mermaid-authoring-guidelines/`. A coordinate into
+a file that this task moves or edits carries the pin `@44520ba`, the base revision. A top-level
+name of a module is a name that a top-level `def`, `class` or assignment binds, each name of a
+tuple target included and imported names excluded.
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-1. **Step 4 disagrees with itself on a local rule.** `framework-upgrade` §3 step 4 lists "a script
-   that a committed allow rule names". Its exemption covers "test modules and fixtures that no rule
-   names by path". An allow rule of the ignored `.claude/settings.local.json` names
-   `tests/test_tool_runner.py`. TASK 122 D12 left the reading to the operator, and D13 counts the
-   local rules. The text still says "committed". The user's `~/.claude/settings.json` also holds
-   allow rules, which the session applies in this repository (§8).
-2. **No step checks what newly run code writes.** TASK 122 let the bare `python3 -m pytest` collect
-   again. A test that the run then reached, `tests/test_mock_agent.py`, rewrote the live
-   `.agent/sessions/latest.yaml` at every allowed run. Review round 1 found it (TASK 122 F1); no
-   step of the workflow asks for that check. Git ignores the session state, so `git status` does
-   not show the write.
-3. **`svg_geometry.py` runs without a prompt through a test.** `tests/run_tests.py`, which an allow
-   rule names, runs `test_python_floor`. Its TC-04 runs `evals/grade_figures.py` under a faked
-   Python 3.9.6. The grader imports five local modules before the `run_evals` whose guard stops
-   it, and the lint imports a sixth (§8). Their module bodies run, so an edit of `svg_geometry.py`,
-   `fidelity.py` or `stats.py` takes the four stages. The debug command line of `svg_geometry.py`
-   prints its JSON with `ensure_ascii=False`.
-4. **The lint prints label text raw.** Rules such as MA-LABEL-03 quote the label in their message.
-   The text output then prints ESC, U+202E and U+2028 raw, and `--json` leaves U+2028 and U+202E
-   raw (§8). The inventory prints label text raw in its table. Only MA-LABEL-14 escapes its
-   quotation (TASK 121 D11).
-5. **A lone surrogate stops a corpus render.** `evals/render_corpus.py` writes `geometry.json` with
-   `json.dump(…, ensure_ascii=False)`. Written that way to a UTF-8 file, a lone surrogate raises
-   `UnicodeEncodeError` (TASK 122 §8). The file also keeps non-printable characters raw.
-6. **The skill-testing example fails as a script, and can send a key to the wrong server.** Its
-   `__main__` names `08_agent_developer.md`, and two skills by names that add a `skill-` prefix to
-   `tdd-stub-first` and `documentation-standards`. None exists, and a run ends in
-   `FileNotFoundError` (§8). With only `XAI_API_KEY` set, `query_model` sends that key to the
-   default `https://api.openai.com/v1` (CWE-201).
-7. **Test sources hold raw invisible characters.** Lines 68 and 87 of `test_ledger_hardening.py`
-   hold U+2028, U+2029, U+202E, U+2066, U+200B and U+00AD raw in string literals. Three more test
-   files hold U+2028 or U+FEFF raw (§8). A reader and a diff do not show them, and U+202E reorders
-   the line on screen (CVE-2021-42574).
-8. **Old records hold positional references that fail.** With `--targets-changed`,
-   `check_positional_refs.py` reports 11 errors whenever a change touches a file that the
-   changelogs cite.
-   Ten are coordinates in another repository; one quotes a line that was edited later. A scan of
-   `docs` and the root finds five more of the same two classes in old records (§8).
+`S/scripts/mermaid_model.py` is one module of 3,708 lines. It defines 230 top-level names: 97
+functions, 33 classes and 100 assigned names. Comment lines divide it into 16 sections, from the
+module header to the entry points (§8).
+
+- To edit one diagram kind's parser, an agent opens a file that holds 15 other sections.
+- 16 files import it as `mermaid_model`: 8 scripts and 8 test modules. They read 36 of its names,
+  9 of them private. The grader reads 4 names through `getattr`. A missing private one stops it
+  with exit 2, and a missing `NEGATIVE_MARKER` changes its result without an error (§8).
+- A committed allow rule runs `S/scripts/lint_mermaid.py`, and two run `S/scripts/plan_gantt.py`.
+  Both import the module, so `framework-upgrade` §3 step 4 stages each edit of it.
+
+Seven couplings constrain a split:
+1. Tests assign three names on the module object: `NEGATIVE_ROOTS`, `negative_markers` and
+   `_parse_er`. After a split, an assignment takes effect only when it lands on the module whose
+   code looks the name up. `test_markers_are_read_once_per_fence` then counts no call and passes.
+2. `SKILL_DIR` is `Path(__file__).resolve().parent.parent`. One directory deeper, it names
+   `S/scripts/`.
+3. `tests/test_python_floor.py` finds a local module only as a `<name>.py` file. A package fails
+   TC-03, and TC-04 does not stub it. `tests/run_tests.py` runs that module, so its edit is staged.
+4. `render_corpus.INSTRUMENT_FILES` names `scripts/mermaid_model.py`, and `instrument_sha256`
+   records `absent` for a file that does not exist.
+5. The grader records the SHA-256 of `grade_figures.py` and of `fidelity.py` in every report, and
+   the eval selftest compares each committed report with a new one (TC-ME-22).
+6. TC-12 of `tests/test_mermaid_wiring.py` requires each path of the `docs/ARCHITECTURE.md` §10.1
+   table to exist. The row of the module changes with the package, at stage 3.
+7. `test_every_anchor_a_script_reads_is_registered` of `tests/test_mermaid_wiring.py` reads anchor
+   literals from `S/scripts/*.py` and `S/evals/*.py`, and from no package's modules. The base
+   module holds no anchor literal.
 
 <!-- contract:rtm -->
 
@@ -88,711 +75,524 @@ text of R1.1 stay residuals, and WI-54 holds them (D20).
 
 | ID | Requirement | MVP? | Sub-features | Acceptance |
 | :--- | :--- | :--- | :--- | :--- |
-| R1 | §3 step 4 counts the rules of every settings file the session applies, and checks what a change runs | Y | R1.1–R1.5 | A1, A2, A10 |
-| R2 | TC-04 runs no module body of the grader's local imports | Y | R2.1–R2.3 | A3 |
-| R3 | The lint prints and writes no raw non-printable character | Y | R3.1–R3.5 | A4 |
-| R4 | The debug command line of `svg_geometry.py` prints no raw non-printable character | Y | R4.1–R4.4 | A4, A5 |
-| R5 | A corpus render writes `geometry.json` with escapes | Y | R5.1–R5.2 | A6 |
-| R6 | The example runs as a script and sends no key to another server | Y | R6.1–R6.3 | A7 |
-| R7 | Test sources hold no raw invisible character | Y | R7.1–R7.2 | A8 |
-| R8 | The positional references of old records resolve or are pinned | Y | R8.1–R8.3 | A9 |
-| R9 | Staging, evidence and records | Y | R9.1–R9.8 | A2, A10 |
+| R1 | The package `S/scripts/mermaid_model/` | yes | one module per section; verbatim text; full re-export; no cycle; old file removed; self-contained | A1, A2, A3 |
+| R2 | Callers and tests | yes | no import line of a caller changes; patches land where names are looked up; the floor test reads packages | A3, A4 |
+| R3 | The instruments of a corpus render | yes | the package files in `INSTRUMENT_FILES`; a test ties the list to the package; the corpus renders kept | A3, A8 |
+| R4 | A test module of the package | yes | modules and order; import graph; names; `SKILL_DIR`; the instrument list | A3 |
+| R5 | The layout rule and the records | yes | `docs/ARCHITECTURE.md` §10; the changelogs; `System/Docs` unedited; migration | A7, A8 |
+| R6 | Staging, evidence and records | yes | stage-1 copies; the stage-3 patch; the move check; the behaviour check; the gates and the check; the settings | A2, A5, A6, A9, A10 |
 
 ## 3. Requirements
 
-A character is **non-printable** when `str.isprintable()` returns false for it.
+### R1 — the package `S/scripts/mermaid_model/`
 
-### R1 — `framework-upgrade` §3 step 4
+- **R1.1** `S/scripts/mermaid_model/` holds `__init__.py` and these 15 modules, one per section of
+  the base file, in this order:
 
-- **R1.1** In `.agent/workflows/framework-upgrade.md`, §3 step 4 holds a span that runs from the
-  line `   - a script that a committed allow rule names, code that script calls, and a new module it`
-  to the line `` `tests/run_tests.py` is named by a rule and is not exempt.``, both included. The span
-  becomes the text of the fence below, line for line. Every other line of the file stays as it is.
+  | Module | Section of the base file | Lines at the base |
+  | :--- | :--- | :--- |
+  | `base.py` | the header's names: paths, constants, `negative_allowed`, `load_notation` | 44–93 |
+  | `document.py` | document level | 94–724 |
+  | `figure.py` | figure level | 725–989 |
+  | `hazards.py` | hazard codes | 990–1069 |
+  | `labels.py` | labels | 1070–1148 |
+  | `kinds.py` | kinds | 1149–1197 |
+  | `settings.py` | settings | 1198–1524 |
+  | `preprocessing.py` | preprocessing | 1525–1667 |
+  | `flowchart.py` | flowchart | 1668–2318 |
+  | `sequence.py` | sequence | 2319–2494 |
+  | `state.py` | state | 2495–2707 |
+  | `gantt.py` | gantt | 2708–2782 |
+  | `er.py` | er | 2783–2875 |
+  | `other_kinds.py` | other kinds | 2876–3174 |
+  | `ascii_figures.py` | ascii | 3175–3624 |
 
-```text
-   - a script that an allow rule names, code that script calls, and a new module it would import;
-   - a permission rule, `additionalDirectories` or the permission mode, an agent's
-     `permissionMode` and the `allowed-tools` of a skill or a command among them;
-   - a settings key that names a command, such as `statusLine`, or sets a command's environment,
-     `env`;
-   - the MCP servers of `.mcp.json` or a settings file, and `enableAllProjectMcpServers`.
+  `__init__.py` holds the entry points, lines 3625–3708. Base line 1, the shebang, goes to no
+  module. The docstring of lines 2–28 goes to `__init__.py` (R1.3), and each module writes its own
+  imports in place of lines 29–43.
+- **R1.2** Each of the 15 modules holds, in this order:
+  1. a module docstring of one paragraph that names its section;
+  2. `from __future__ import annotations`;
+  3. the imports that its code uses, annotations included: standard-library names, and names of
+     modules above it in R1.1;
+  4. the lines of its section, byte for byte, without the comment line that opens the section.
 
-   The allow rules are those of `.claude/settings.json`, `.claude/settings.local.json` and the
-   user's `~/.claude/settings.json`, and the `allowed-tools` of a skill or a command. A command that
-   one of them approves is an allowed command, and a rule names a file also through a symbolic link
-   that resolves to it. Rules that managed settings or plugins add, and the commands that the Auto
-   mode classifier approves, lie outside this count; the operator answers for them. Git holds
-   neither the local file nor the user's, and Claude Code adds a rule to one of them when the
-   operator approves a command permanently. The run reads both when §2.2 writes the PLAN, again at
-   §4.5, and again after the gates of stage 3. A rule added since the first reading that runs a
-   file the change adds or edits in place, directly or through other code, stops the run for the
-   operator. The audit record names each file of the change that a rule of either file runs,
-   directly or through other code, and quotes no such rule.
+  One line differs from the base: `base.py` sets `SKILL_DIR = Path(__file__).resolve().parents[2]`.
+- **R1.3** `__init__.py` holds, in this order:
+  1. the docstring of base lines 2–28, with one added paragraph that names the 15 modules;
+  2. `from __future__ import annotations` and the standard-library imports of the entry points;
+  3. one `from .<module> import …` statement per module of R1.1, in that order. Together they bind
+     every top-level name of the 15 modules;
+  4. the lines of the entry-points section, byte for byte, without its opening comment line.
+- **R1.4** A module of R1.1 imports only from modules above it in R1.1. No module of the package
+  imports `__init__.py`.
+- **R1.5** Each of the 230 top-level names of the base module is bound on `mermaid_model`, to the
+  object of the module that defines it. R6.5 shows that each definition keeps its text.
+- **R1.6** `S/scripts/mermaid_model.py` is removed.
+- **R1.7** Every module of the package parses under the Python 3.9 grammar. At import time it
+  imports only modules of the package and modules that `STDLIB_3_9` of `tests/test_python_floor.py`
+  lists. From a standard-library module it imports only the names that `FROM_3_9` lists.
+- **R1.8** The skill stays self-contained. Every file that the change adds to the skill lies under
+  `S/`, and the package lies in `S/scripts/`, where `mermaid_model.py` was. Each script of
+  `S/scripts/` and each module of the package imports only standard-library modules and modules of
+  `S/scripts/`. No file of the skill moves out of `S/`.
 
-   Test modules and fixtures that no rule names by path are exempt, and so is code that runs
-   without a prompt only through them. A rule that names a directory, such as `discover -s tests`,
-   names no module in it. A test module is a `test_*.py` or `conftest.py` file that no hook or
-   listed script runs or imports; a fixture is a data file that a test reads.
-   `tests/run_tests.py` is named by a rule and is not exempt.
+### R2 — callers and tests
 
-   **What the change runs.** The run checks what code of the change writes when an allowed command
-   runs it. That code is what the change adds or edits, test modules among them. It is also what an
-   allowed command first reaches through the change, such as a test that a collection error had
-   blocked. A rule with a wildcard, or one whose command runs other code from another directory,
-   gives one command for each option, input or directory that reaches code the change adds or
-   edits. For each command, one process lists every file and directory under the repository root,
-   each regular file with its SHA-256, ignored files included and no link followed. Of `.git` it
-   lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
-   `refs/stash`, which holds every stash. It adds the output of `git rev-parse HEAD` and
-   `git ls-files -s -v`, and lists the user's `~/.gitconfig`, `~/.config/git/config` and
-   `~/.claude/settings.json`. Each git command of the check and of the put-back runs with
-   `-c core.fsmonitor=false`, so that git runs no file-system monitor that the checked command
-   configured. The process then runs the command as the rule approves it, with
-   `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
-   lists again. The audit record names the code that wrote each difference, read from that code or
-   from the command's output.
-   - A difference that the command is meant to write, such as the state that `update_state.py`
-     records, passes the check.
-   - Any other difference that code of the change writes fails the check. Before the change lands,
-     that code writes into a temporary directory, which it removes.
-   - A difference that other code writes is a finding before the task.
+- **R2.1** No import statement of a caller changes. The 8 scripts and 8 test modules of §8 import
+  `mermaid_model` as at the base.
+- **R2.2** A test that assigns a name of the package reads and assigns it through one expression,
+  which names the module that looks the name up:
+  - `NEGATIVE_ROOTS` through `sys.modules[mm.negative_allowed.__module__]`, at the 11 lines of §8;
+  - `negative_markers` through `sys.modules[mm.Fence.__module__]`, at the 3 lines of §8.
 
-   After the check, the run puts back each difference that the command was not meant to write. A
-   difference under `.git` or in a file of the user, or a file of the first listing that the second
-   lacks, stops the run. The run names each difference to the operator and runs no further git
-   command. Otherwise:
-   - it removes each file that the command created, and then each directory that it created;
-   - it restores a tracked file that no kind of §5 step 1 declares, with
-     `git restore --source=<base> --staged --worktree -- ':(literal)<path>'`, and checks that the
-     file hashes as in the first listing;
-   - it records a changed session state again through `update_state.py`;
-   - it names every other difference to the operator, the run's own records among them.
+  The 6 lines of §8 that read and assign `_parse_er` stay as they are (D5).
 
-   The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
-   where a failed check is a failed gate. The audit record holds each command, with its paths
-   relative to the repository root, and its result. TASK 122 unblocked the bare pytest run, and a
-   test it reached rewrote the live session state.
-```
+  **Why.** At the base both expressions name `mermaid_model` itself, so the edited tests pass
+  before stage 3 and after it.
+- **R2.3** `test_markers_are_read_once_per_fence` also asserts that the counting function ran at
+  least once. Fails when: the assignment lands on a module that the code does not read.
+- **R2.4** In `tests/test_python_floor.py`, `_grader_local_imports()` and TC-03 resolve a local
+  name as Python does: first `<dir>/<name>/__init__.py`, then `<dir>/<name>.py`, for each
+  directory of `GRADER_PATH`. TC-03 parses every `*.py` module of a package that it reaches, under
+  the 3.9 grammar. It walks in turn the imports at the module's top level and in its `try` and
+  `if` blocks. An entry counts when an import statement can spell its name and each directory on
+  its way. TC-03 fails on these static forms, by which Python would run code that it never parsed
+  (D14 to D16):
+  - a package directory that is a symbolic link, or a link in the package;
+  - a compiled or extension module, or a Windows `*.pyw` source, in the package or by a local
+    name. A cache in `__pycache__/` is no module;
+  - a module that spells `__path__` or `submodule_search_locations`: as a name, an attribute, a
+    keyword, an imported name or a string;
+  - a local module named after a standard-library module that the walked code or a guarded
+    script imports, in `GRADER_PATH` or beside that script.
 
-- **R1.2** The new text states five things:
-  - the allow rules are those of both project files, the user's `~/.claude/settings.json` and the
-    `allowed-tools` of a skill or a command. A command that one of them approves is an allowed
-    command, and a rule names a file also through a symbolic link (D15, D16). Managed settings,
-    plugins and the Auto mode classifier lie outside this count (D18);
-  - the run reads the local file and the user's at §2.2, at §4.5 and after the gates of stage 3. A
-    rule added since the first reading stops the run when it runs a file that the change adds or
-    edits in place (D13);
-  - the audit record names the files that a rule of those two files runs, and quotes no such rule.
-    It records each command of the check with paths relative to the repository root, even when
-    the command's text matches a rule (D3);
-  - a rule that names a directory names no module in it (D2);
-  - the check of what the change runs: the commands it picks and what it lists, `.git` and three
-    files of the user among it. Its git commands turn off the file-system monitor, and the run
-    puts back what the command was not meant to write, or stops (D4, D18, D19).
-- **R1.3** `STEP_4` of `tests/test_run_safety_rules.py` holds the new text of step 4 whole. Its
-  module docstring names the two new parts: the rules of every settings file, and the check of what
-  a change runs. The pin test passes against the patched workflow and fails against the base text.
-- **R1.4** `System/Docs/WORKFLOWS.md`, the **Safety Protocol** list of §5, gains item 6. No other
-  line changes:
+  It also fails on a `*.py` entry that is no regular file, which it does not open. §9 states what
+  lies out of its reach (D17). The edit is staged (R6.1).
+- **R2.5** The docstring of `S/scripts/tests/test_lint_mermaid.py` names the package in place of
+  `mermaid_model.py`.
+
+### R3 — the instruments of a corpus render
+
+- **R3.1** `INSTRUMENT_FILES` of `S/evals/render_corpus.py` takes the text of this fence. The other
+  lines of the file stay as they are.
 
 ```text
-6. **Allowed Commands:** `framework-upgrade` §3 step 4 counts the allow rules of
-   `.claude/settings.json`, `.claude/settings.local.json`, the user's `~/.claude/settings.json` and
-   the `allowed-tools` of skills and commands. When an allowed command runs code of the change, the
-   run lists the tree before and after one run of that command, ignored files included. A file
-   that the code writes and is not meant to write fails the check. The run puts back what step 4
-   lets it put back, and names every other difference to the operator.
+INSTRUMENT_FILES = ("scripts/render_check.py", "scripts/svg_geometry.py",
+                    "scripts/measure_text.mjs", "scripts/mermaid_model/__init__.py",
+                    "scripts/mermaid_model/base.py", "scripts/mermaid_model/document.py",
+                    "scripts/mermaid_model/figure.py", "scripts/mermaid_model/hazards.py",
+                    "scripts/mermaid_model/labels.py", "scripts/mermaid_model/kinds.py",
+                    "scripts/mermaid_model/settings.py", "scripts/mermaid_model/preprocessing.py",
+                    "scripts/mermaid_model/flowchart.py", "scripts/mermaid_model/sequence.py",
+                    "scripts/mermaid_model/state.py", "scripts/mermaid_model/gantt.py",
+                    "scripts/mermaid_model/er.py", "scripts/mermaid_model/other_kinds.py",
+                    "scripts/mermaid_model/ascii_figures.py", "assets/notation.json")
 ```
 
-- **R1.5** This run applies the text of R1.1 to itself:
-  - its audit record names each file of the change that a rule of the local or the user's file
-    runs; §8 lists them;
-  - it reads both files again at §4.5 and after the gates of stage 3;
-  - its gates run the check of R1.1 for the commands of R9.6.
+- **R3.2** The 66 committed `geometry.json` files of `S/evals/corpus/` stay as they are. Their
+  `instrument_sha256` then differs from the current one, so the next corpus run renders their
+  figures again (D8).
 
-### R2 — TC-04 runs no module body of the grader's local imports
+### R4 — a test module of the package
 
-- **R2.1** TC-04 of `tests/test_python_floor.py` runs the grader with a stub in `sys.modules` for
-  each module that the grader imports at module level before `run_evals`, from a directory of
-  `GRADER_PATH`. The test finds those modules in the grader's source, as TC-03 finds them. A stub
-  is an empty module.
-- **R2.2** Under the faked 3.9.6 the grader still exits 2, names itself and both versions, and
-  writes nothing. At the child's exit, `sys.modules` holds no module whose file lies in a directory
-  of `GRADER_PATH`, the grader aside; TC-04 asserts it from the child's report. The top of
-  `run_evals.py` runs up to its guard, and the guard's exit removes that module from
-  `sys.modules`.
-- **R2.3** The docstring of `test_python_floor.py` states the stubs, their reason and their
-  residual. The allowed runs of the test then execute none of those module bodies (TASK 123).
-  TC-04 no longer checks those bodies for a write at import, which a real 3.9 would run before the
-  guard; none writes or reads `sys.version_info` today. After R2, no allowed command runs
-  `svg_geometry.py`, `fidelity.py` or `stats.py` but through test modules that step 4 exempts
-  (§8). `mermaid_model.py`, `lint_mermaid.py` and `planarity.py` still run through the rules of the
-  lint and of `plan_gantt.py --check`.
+- **R4.1** `S/scripts/tests/test_mermaid_model_package.py` holds these tests:
+  - TC-01 — the files of the package → `__init__.py` and the 15 modules of R1.1; fails when a
+    module is added, removed or renamed without an edit of the test;
+  - TC-02 — the relative imports of each module → only modules above it in R1.1, and none of
+    `__init__`; fails when a module imports one below it;
+  - TC-03 — the 230 names of §8, listed by module in the test → each defined in its module and
+    bound on `mermaid_model` to the same object. Fails when a name moves or is dropped;
+  - TC-04 — `SKILL_DIR` → the skill directory, and `NOTATION_PATH` → an existing file; fails when
+    `SKILL_DIR` keeps `.parent.parent`;
+  - TC-05 — `INSTRUMENT_FILES`, read from the source of `render_corpus.py` by AST → each of the 16
+    files of TC-01 once, and no `scripts/mermaid_model.py`. Fails when a module of the package is
+    missing from the list;
+  - TC-06 — `NEGATIVE_ROOTS` assigned through the expression of R2.2 → `negative_allowed` reads
+    it; fails when that expression names a module that `negative_allowed` does not read;
+  - TC-07 — each absolute import of each script of `S/scripts/` and of each module of the package,
+    read by AST → a module of `sys.stdlib_module_names` or a module of `S/scripts/` (R1.8). Fails
+    when a module imports a name from outside the skill and the standard library.
+- **R4.2** Against the base layout, TC-01, TC-02, TC-03 and TC-05 fail or raise an error, and
+  TC-04, TC-06 and TC-07 pass. The audit record holds that run. A mutation in the throwaway
+  worktree of R6.6 makes each of TC-04, TC-06 and TC-07 fail, and the audit record holds those
+  runs.
+- **R4.3** The test module imports no module of `S/evals/` and runs on Python 3.11 and 3.14, the
+  versions of the CI matrix. This machine has no Python 3.11, so CI checks 3.11 after the commit.
 
-### R3 — the output of the lint
+### R5 — the layout rule and the records
 
-- **R3.1** `lint_mermaid.py` gains three functions, copies of those of `render_check.py`:
-  - `_json_text(value, **kw)`, as `json_text` (TASK 122 R1.1);
-  - `_shown(text, lines=False)`, as `_shown`: each non-printable character, a newline among them,
-    takes its Python escape, and a backslash stays single (TASK 122 D5);
-  - `_say(text, file=None, lines=False)`, which prints `_shown(text, lines)`.
-
-  The lint does not import `render_check.py` (D7).
-- **R3.2** The only `print` call of the lint is the one inside `_say`. Its calls print:
-  - the findings of the text output, and the table of `--inventory`;
-  - `--json` of the findings and of the inventory, as `_json_text(…, indent=2)`;
-  - the probe line, and each usage and internal error.
-
-  argparse prints its usage and its errors itself, and stays as it is.
-- **R3.3** `_format_text` and `_format_inventory` pass each line they build through `_shown` before
-  they join the lines. A newline inside a message, a path or a cell then starts no line. `main`
-  passes `lines=True` only with the text of `_json_text`, `_format_text` or `_format_inventory`.
-- **R3.4** `lint_text` and the messages of its findings stay as they are. The grader reads
-  `Finding.message` into its reports (D6), so the escape stays in the command line. A message of
-  MA-LABEL-14 is printable already, and prints as before.
-- **R3.5** Printable text prints as before: Cyrillic, `→` and the backslash of a hint among it.
-  `json.loads` of each JSON output equals the dictionary that `main` builds.
-
-### R4 — the debug command line of `svg_geometry.py`
-
-- **R4.1** `main()` of `svg_geometry.py` prints its JSON with `ensure_ascii=True` (D8). Its two
-  error lines print `_escaped(str(exc))`, the escape that the file already holds (TASK 121 D11).
-- **R4.2** No line of `svg_geometry.py` outside `main` changes.
-- **R4.3** In `scripts/render_check.py`, the docstring of `json_text` ends with the three lines
-  below. They replace lines 490 and 491, which end in "its module" and "(TASK 122 D10).". No other
-  line of the file changes:
+- **R5.1** In `docs/ARCHITECTURE.md` §10.1, the row of `scripts/mermaid_model.py` takes the text of
+  this fence, at stage 3 (D11). §10.3 names `mermaid_model` where it names `mermaid_model.py`.
 
 ```text
-    lone surrogate reaches a terminal or a file. TASK 122 left svg_geometry.py unedited for it,
-    since that module's body then ran without a prompt (D10). lint_mermaid.py holds copies of this
-    function and of `_shown`; a test pins each pair to one output (TASK 123)."""
+| `scripts/mermaid_model/` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII; one module per section | unit tests |
 ```
 
-- **R4.4** R4.1 and R4.3 change the instrument hash of `render_check.py`. Both fixtures,
-  `paired-examples-geometry.json` and `references-geometry.json`, are rendered again with the
-  staged `svg_geometry.py` and the patched `render_check.py` (D9). Each holds the instrument hash of
-  the files after stage 3. In each, every file key and figure entry equals that of the base
-  fixture; only `instruments` and `generated` differ per file.
+- **R5.2** `docs/ARCHITECTURE.md` §10.1 gains, below its table, the layout rule that TASK 125 and
+  TASK 126 follow:
+  - a script of `S/scripts/` that holds several sections becomes a package, one module per section;
+  - a script that a command runs by its path keeps that file, and its package takes another name.
+    A command runs a script by its path when an allow rule, a document of the framework or a test
+    names the file in a command line. A package and a module of one name in one directory import
+    as the package;
+  - the name that callers import binds every top-level name of the script, and callers keep their
+    imports. That name is the package's `__init__.py`, or the file that the script keeps;
+  - a module imports only from modules above it, so the package has no import cycle;
+  - a test reads and assigns a name on the module whose code looks it up;
+  - a test that reads a property of the scripts from `S/scripts/*.py`, such as an anchor literal,
+    reads the package's modules too once a package holds that property;
+  - the skill stays self-contained: the package lies in `S/scripts/`, and its modules import only
+    the standard library and modules of `S/scripts/` (D12).
+- **R5.3** `CHANGELOG.md` and `CHANGELOG.ru.md` gain an entry v3.44.0 under **Changed**.
+- **R5.4** `System/Docs/` names no file that this task moves or edits, and stays unedited.
+- **R5.5** Migration. No session state, command, setting or notation value changes. An install by
+  the default per-item symlinks reads the package at once. The installer copies a file only where
+  the target lacks it, and keeps an existing framework copy whole, with `--force` too. A copy
+  install made before this task therefore runs the old `mermaid_model.py` until that copy is
+  removed and made again.
 
-### R5 — the metrics file of a corpus render
+### R6 — staging, evidence and records
 
-- **R5.1** `evals/render_corpus.py` writes `geometry.json` as `rc.json_text(geometry, indent=1)`
-  and a newline. `rc` is its import of `render_check` at line 109, and the write lies below the
-  guard of the file (§8). The import line of `find_renderers` and `render` stays as it is.
-- **R5.2** A new check of the eval selftest, TC-ME-49, renders one run with a stand-in render. Its
-  entry holds a lone surrogate, ESC and U+2028. The run writes `geometry.json` and goes on. The
-  file holds no non-printable character but newlines, and `json.loads` of it equals the geometry.
-  `EXPECTED_CASES` of the selftest goes from 225 to 226.
+- **R6.1** Stage 1 writes these copies under new names. Nothing imports them, and no test runner
+  collects them:
+  - the 16 files of R1 under `S/scripts/staged_mermaid_model/`;
+  - `tests/staged_python_floor.py`, a copy of `tests/test_python_floor.py` with R2.4;
+  - `S/scripts/tests/staged_test_mermaid_model_package.py`, the module of R4.
+- **R6.2** The change runs the four stages of `framework-upgrade` §3 step 4. The stage-3 patch:
+  1. creates the 16 files of R1 and the module of R4, with the bytes of their staged copies;
+  2. gives `tests/test_python_floor.py` the bytes of its staged copy;
+  3. removes `S/scripts/mermaid_model.py`;
+  4. applies R3.1 to `S/evals/render_corpus.py` and the row of R5.1 to `docs/ARCHITECTURE.md`.
 
-### R6 — the skill-testing example
+  It touches no other path, and it holds no staged copy. Stage 3 removes each copy once its file
+  hashes to it, and then the empty `S/scripts/staged_mermaid_model/`. Stage 3 adds no settings
+  test.
 
-- **R6.1** The `__main__` block of `examples/skill-testing/test_skill.py` names
-  `08_developer_prompt.md` and the skills `tdd-stub-first` and `documentation-standards`.
-- **R6.2** `query_model` reads its key from `OPENAI_API_KEY` only, and its server from
-  `OPENAI_BASE_URL`, with the default `https://api.openai.com/v1`. No line reads `XAI_API_KEY`
-  (D10). Without `OPENAI_API_KEY` the function returns the dry-run text and imports nothing. Its
-  warning and the comment at the top name `OPENAI_API_KEY` and `OPENAI_BASE_URL`.
-- **R6.3** `tests/test_bare_pytest.py` gains two tests. Each runs a child in which `import openai`
-  fails, with no key but the one the test sets:
-  - with only `XAI_API_KEY` set, `query_model` returns "Dry run complete.", which the child prints,
-    and the child exits 0 without the message of a failed `import openai`;
-  - run as a script from the repository root with no key, the example exits 0. Its output names
-    the role file and both skill files, and holds neither "File not found" nor "Warning: Skill".
-
-  The test of TASK 122 with `OPENAI_API_KEY` set stays and passes.
-
-### R7 — raw invisible characters in test sources
-
-- **R7.1** Each raw non-printable character of a string literal becomes its `\u` escape of four hex
-  digits, in these files and lines:
-  - `.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py`, lines 68 and 87;
-  - `.agent/skills/run-feedback/scripts/tests/test_wi_tail.py`, lines 624, 625 and 636;
-  - `.agent/skills/mermaid-authoring-guidelines/scripts/tests/test_lint_mermaid.py`, lines 1530 and
-    1533;
-  - `.agent/tools/test_task_id_tool.py`, line 301.
-- **R7.2** `ast.dump` of each file equals that of its base text, so each module runs the same
-  statements with the same values. Each file holds no non-printable character but newlines. The
-  suite of each file passes.
-
-### R8 — positional references in old records
-
-- **R8.1** A coordinate in the `onchain-analytics` repository takes a pin of that repository's
-  revision, as TASK 103 pinned its own with `@e95b909` (D14):
-  - the coordinates of line 117 of `get-token.ts` and line 92 of `wallet-balances.ts` take
-    `@77fa89c` in `CHANGELOG.md` line 1056, `CHANGELOG.ru.md` line 1093,
-    `docs/reviews/framework-audit-105.md` line 65, and
-    `docs/reviews/framework-audit-20260813-reference-gate-scope.md` line 46;
-  - the coordinate of line 1083 of `registry.ts` takes `@e95b909` in
-    `docs/plans/plan-103-referent-carrying-positional-references.md` line 195.
-
-  In each changelog, the next line takes the word that the pin pushes past the 100th column, and no
-  line count changes. In each record under `docs/`, the pinned line keeps its place and may pass the
-  100th column, so that no coordinate into a record moves.
-- **R8.2** Two lines quote the list that the referent rule misread, and become prose (D14):
-  - `CHANGELOG.md` lines 1177 to 1179 become:
-
-```text
-comma" — which is **exactly the shape of a comma-separated list of coordinates**. So a list of two
-coordinates, line 117 of `get-token.ts` and line 92 of `wallet-balances.ts`, was read as "117 quotes
-the text of the second". That text is nowhere in the target, and the document was reported broken.
-```
-
-  - `CHANGELOG.ru.md` lines 1211 to 1213 become:
-
-```text
-**ровно форма перечисления координат через запятую**. Поэтому перечень двух координат, строка 117
-файла `get-token.ts` и строка 92 файла `wallet-balances.ts`, читался как «117 цитирует текст второй
-координаты», которого в цели нет, и верный документ объявлялся сломанным.
-```
-
-- **R8.3** A quotation of an earlier state of this repository takes the pin of the revision whose
-  line it quotes:
-  - `docs/reviews/review-095-independent.md:35`: `check_prompt_references.py:21@b0d78f9`;
-  - `docs/reviews/vdd-adversarial-known-issues-format.md:15`: the coordinates `:51` and `:49` of
-    `.agent/skills/known-issues-format/SKILL.md`, each with `@1ca49cf`.
-
-  At each pinned revision the cited line holds the quoted text, and each revision precedes the
-  commit that added its record (§8). `check_positional_refs.py --all docs .` then reports none of
-  the 16 errors of R8.
-
-### R9 — staging, evidence and records
-
-- **R9.1** The four stages of §3 step 4 carry this change (D11). Stage 1 writes these copies. The
-  stage-3 patch gives each file on the right the bytes of its copy, and stage 3 then removes the
-  copy (D17):
-  - `tests/staged_run_safety_rules.py` → `tests/test_run_safety_rules.py`;
-  - `tests/staged_python_floor.py` → `tests/test_python_floor.py`;
-  - `scripts/staged_lint_mermaid.py` → `scripts/lint_mermaid.py`;
-  - `scripts/staged_svg_geometry.py` → `scripts/svg_geometry.py`;
-  - `scripts/tests/staged_printed_output.py` → `scripts/tests/test_printed_output.py`, a new file;
-  - `scripts/tests/fixtures/staged_paired-examples-geometry.json` →
-    `paired-examples-geometry.json`;
-  - `scripts/tests/fixtures/staged_references-geometry.json` → `references-geometry.json`.
-
-  A `scripts/` path lies in `.agent/skills/mermaid-authoring-guidelines/`. The patch also carries
-  R1.1 and R4.3, as texts built from the fences of this TASK. The new test module and the fixtures
-  are staged because they hold to the staged code, and would fail against the base.
-- **R9.2** The run edits these files in place, each for the reason given:
-  - the example and `tests/test_bare_pytest.py` are test modules that no rule names by path and no
-    listed script runs (R1.1);
-  - the change of R7 alters nothing that runs, since `ast.dump` of each file stays as it was
-    (R7.2). `test_e2e.sh`, which rules of the user's settings name, runs two of the four files
-    (§8);
-  - TC-04 runs `render_corpus.py` and `selftest_figure_evals.py` under a faked 3.9.6, and the guard
-    of each stops it above the edited lines. No allowed command runs them otherwise (TASK 122
-    R5.5);
-  - the documents of R1.4, R8 and R9.5 to R9.7 hold no code.
-- **R9.3** Stub first: each new test fails against the base text of the code it tests, and the
-  audit record holds each red run. A staged test runs red against the base modules and green
-  against the staged ones. TC-04 is the exception: its stubs make it pass against the unedited
-  grader, so its red run is the base child of A3.
-- **R9.4** The tests:
-  - `test_printed_output.py`: the text output, `--json`, both inventory forms and the error lines
-    of the lint, for a label with ESC, U+009B, U+202E, U+2028, a newline and Cyrillic. Each line
-    holds no non-printable character, and each JSON reads back. The error lines include the usage
-    error of `--probe` with a path, and the internal error, raised in the process by a stand-in
-    failure whose message holds such text;
-  - in the same file, an AST check that the only `print` call of the lint is the one in `_say`, and
-    that `lines=True` goes only with the three texts of R3.3;
-  - in the same file, `main()` of `svg_geometry.py` with a stand-in analysis that returns such text:
-    its JSON is ASCII and reads back, and an error line holds no non-printable character;
-  - in the same file, the copies of R3.1 against `render_check.py`: equal output for a string of
-    every code point;
-  - TC-04 of R2, the pin of R1.3, TC-ME-49 of R5.2 and the two tests of R6.3.
-- **R9.5** `CHANGELOG.md` and `CHANGELOG.ru.md` get v3.43.0, titled "framework-upgrade counts local
-  allow rules and checks what a change runs (TASK 123)". R1 goes under Changed, and R2 to R8 under
-  Fixed.
-- **R9.6** The check of R1.1 runs for these commands:
-  - `python3 -m pytest`, from four directories: the repository root, the skill's directory,
-    `.agent/skills/run-feedback` and `.agent/tools`. The rule names no path, so each directory
-    gives other tests. The committed `python -m pytest` runs the same interpreter here (§8);
-  - `python3 tests/run_tests.py` and `python3 -m unittest discover -s tests -v`;
-  - the lint, once for each option or input whose code R3 edits: the text output, `--json`,
-    `--inventory` and `--inventory --json` of `references/paired-examples.md`, `--probe`, `--probe`
-    with a path, and a path that does not exist. No known input reaches an internal error; the
-    tests of R9.4 run those lines in the process;
-  - two commands that rules of the user's settings approve, given as commands of the check (D3):
-    `python3 -m unittest discover -s scripts/tests` from the skill's directory, and
-    `bash -x tests/test_e2e.sh` from `.agent/skills/run-feedback/scripts`. The E2E script runs from
-    `tests/` too, as the same code.
-
-  `plan_gantt.py --check` is left out: it runs `mermaid_model.py` only, which the change does not
-  edit. Before stage 3 the check runs for every command but the lint. Those commands reach the
-  example, `tests/test_bare_pytest.py` and the four files of R7. Through TC-04 they also run
-  `render_corpus.py` and `selftest_figure_evals.py` up to their guards. With the gates of stage 3
-  the check runs for every command of the list. A difference fails the check when code of the
-  change writes it, and is a finding before the task otherwise (R1.1).
-- **R9.7** `docs/ARCHITECTURE.md` §10.7: the bullet of TASK 122 on the escapes of the render check
-  names the lint and `render_corpus.py` as well. It states that the debug command line of
-  `svg_geometry.py` prints ASCII JSON.
-- **R9.8** `System/Docs/SKILLS.md` is not edited: its lines 99 to 108 on
-  `mermaid-authoring-guidelines` state no fact this task changes.
-
-**Migration.** No session state, notation key or command changes. The lint's text output changes
-only where it held a non-printable character, and a consumer of `--json` reads the same values.
-The debug JSON of `svg_geometry.py` writes every character beyond ASCII as a `\u` escape, Cyrillic
-included.
+  **Why.** No registration changes.
+- **R6.3** On a failure of stage 3 or stage 4, the run recreates `S/scripts/staged_mermaid_model/`.
+  It writes back each removed copy from its file, when that file still hashes to the copy, and
+  then runs `git apply -R` of the patch. A file that hashes otherwise, or a failed
+  `git apply -R`, stops the run for the operator. After the restore an ignored `__pycache__/` can
+  keep `S/scripts/mermaid_model/` on disk; Python then imports `mermaid_model.py`.
+- **R6.4** The edits of R2.2, R2.3, R2.5, the §10.3 wording of R5.1, R5.2, R5.3 and the records
+  land in place before stage 3.
+- **R6.5** The move check compares the base file with the staged package:
+  - the body of each module of R1.1, after its imports, equals the lines of its section without
+    the opening comment line. `SKILL_DIR`'s line is the one exception;
+  - the docstring of `__init__.py` begins with base lines 2–27, and its body after the imports
+    equals the entry-points lines without the opening comment line.
+- **R6.6** The behaviour check compares the live tree before stage 3 with the patched tree. The
+  patched tree is a throwaway worktree outside the repository that holds the live tree's files
+  and the stage-3 patch. Each run starts in its tree's root and names files by paths relative to
+  it. The run writes nothing in the tree from the creation of the worktree to the end of the
+  check. It compares:
+  - the bytes of `S/scripts/lint_mermaid.py --json` and `--inventory --json` for each Markdown file
+    of the list of §8;
+  - the output and exit of `S/scripts/plan_gantt.py --check docs/PLAN.md docs/PLAN.md`;
+  - the eval selftest, 226 of 226 on both.
+- **R6.7** The gates of `.github/workflows/framework-gates.yml` pass on the patched tree in that
+  worktree. The check of `framework-upgrade` §3 step 4 runs for these commands, from the
+  repository root unless a directory is named:
+  - before stage 3: `python3 -m pytest` from the root and from `S/`; `python3 tests/run_tests.py`;
+    `python3 -m unittest discover -s tests -v`; and `python3 -m unittest discover -s scripts/tests`
+    from `S/`;
+  - after stage 3: those commands, `python3 S/scripts/lint_mermaid.py` with the text output,
+    `--json`, `--inventory` and `--inventory --json` of `S/references/paired-examples.md`, the
+    text output of `S/scripts/tests/fixtures/fx-k33.mmd`, `--probe` alone, and
+    `python3 S/scripts/plan_gantt.py --check docs/PLAN.md docs/PLAN.md`.
+- **R6.8** The run reads `.claude/settings.local.json` and the user's `~/.claude/settings.json` at
+  §2.2, at §4.5 and after the gates of stage 3. The audit record names each file of the change
+  that a rule of either file runs, and quotes no rule (`framework-upgrade` §3 step 4).
 
 <!-- contract:use-cases -->
 
 ## 4. Use cases
 
-### UC-1 — An agent edits `svg_geometry.py` after this task
+### UC-1 — An agent edits the flowchart parser after this task
 
-**Precondition.** TASK 123 is committed. A task edits a function of `svg_geometry.py`.
+- **Precondition.** TASK 124 has landed.
+1. The agent opens `S/scripts/mermaid_model/flowchart.py`, the 650 lines of one section.
+2. It edits the parser. The callers still import `mermaid_model`, and the package binds the name.
+3. If the edit imports a module below `flowchart.py`, TC-02 fails.
+- **Postcondition.** The edit touches one module of the package, and the callers stay unedited.
 
-1. The agent checks which allowed command runs the file. TC-04 stubs it, and only test modules that
-   step 4 exempts import it.
-2. The edit takes no stage of §3 step 4, and the fixtures are rendered again as before.
+### UC-2 — A test replaces the roots of negative fences
 
-**Postcondition.** The edit lands in place, reviewed as any change.
+- **Precondition.** A test needs a temporary directory to count as a teaching file.
+1. The test reads and assigns `NEGATIVE_ROOTS` through `sys.modules[mm.negative_allowed.__module__]`.
+2. `negative_allowed` reads the new roots.
+- **Postcondition.** The test's document counts, and the test restores the roots through the same
+  expression.
 
-### UC-2 — An agent lints a document whose label holds a control sequence
+### UC-3 — The floor test runs the grader under a faked Python 3.9
 
-**Precondition.** An edge label of a figure holds ESC, U+202E and U+2028.
+- **Precondition.** TASK 124 has landed.
+1. TC-03 finds `mermaid_model/__init__.py` and parses each module that it imports.
+2. TC-04 stubs `mermaid_model`, so no module body of the package runs.
+- **Postcondition.** The grader exits 2 and names both versions, as at the base.
 
-1. `lint_mermaid.py` reports MA-LABEL-03 with the label quoted.
-2. Each of the three characters prints as its Python escape, and the finding stays on one line.
+### UC-4 — TASK 125 splits `svg_geometry.py`
 
-**Postcondition.** The terminal shows the escapes and runs no control sequence. `--json` holds
-`\u` escapes and reads back to the same message.
-
-### UC-3 — A change lets an allowed command reach a test that writes
-
-**Precondition.** A change removes a collection error, so `python3 -m pytest` reaches a test that
-writes the live session state.
-
-1. The run lists the tree, runs the command, and lists the tree again.
-2. The listings differ at `.agent/sessions/latest.yaml`. The run reads the test and names it as
-   the writer, and the check fails.
-3. The run records the session state again through `update_state.py`.
-4. Before the change lands, the test writes into a temporary directory, and a second check holds
-   two equal listings.
-
-**Postcondition.** The allowed command leaves the tree as it found it.
-
-### UC-4 — An operator with only an xAI key runs the example
-
-**Precondition.** `XAI_API_KEY` is set; `OPENAI_API_KEY` is not.
-
-1. `python3 examples/skill-testing/test_skill.py` builds the prompt from the role and two skills.
-2. `query_model` finds no `OPENAI_API_KEY` and returns the dry run.
-
-**Postcondition.** No key leaves the machine. The warning names the two variables that point the
-example at a server.
+- **Precondition.** TASK 124 has landed, and its rule stands in `docs/ARCHITECTURE.md` §10.1.
+1. TASK 125 reads the rule.
+2. If a command runs `svg_geometry.py` by its path, TASK 125 keeps that file, which binds every
+   top-level name, and gives the package another name.
+3. Otherwise `svg_geometry` becomes a package of the same name, whose `__init__.py` binds every
+   top-level name.
+- **Postcondition.** TASK 125's package follows the points of R5.2.
 
 <!-- contract:acceptance -->
 
 ## 5. Acceptance criteria
 
-- **A1** — with the stage-3 patch applied, `tests/test_run_safety_rules.py` passes. Its staged copy
-  fails against the base text of the workflow, and the audit record holds that red run.
-- **A2** — the documents: `System/Docs/WORKFLOWS.md` holds item 6 as R1.4 states. The changelogs
-  hold v3.43.0 (R9.5), `docs/ARCHITECTURE.md` §10.7 holds the bullet of R9.7, and
-  `System/Docs/SKILLS.md` is unchanged (R9.8). The register check finds no `WARN` on an added line
-  of a changed document.
-- **A3** — `tests/test_python_floor.py` passes. At the exit of its TC-04 child, `sys.modules`
-  holds no module whose file lies in a directory of `GRADER_PATH`, the grader aside. The base TC-04
-  child holds the six modules of §8, and the audit record holds that run.
-- **A4** — `test_printed_output.py` passes, and so does the full suite of the skill:
-  `python3 -m pytest -p no:cacheprovider scripts/tests -q` from the skill's directory. The lint of
-  a document with ESC, U+202E and U+2028 in an edge label prints no non-printable character but
-  newlines, in
-  each of its four outputs.
-- **A5** — `test_paired_examples.py` passes after stage 3: both fixtures hold the instrument hash
-  of the files. In each fixture every file key and figure entry equals that of the base fixture,
-  and only `instruments` and `generated` differ per file.
-- **A6** — `evals/selftest_figure_evals.py` passes with 226 cases, TC-ME-49 among them.
-- **A7** — `tests/test_bare_pytest.py` passes, and the example run as a script exits 0.
-- **A8** — R7.2 holds for each of the four files.
-- **A9** — `check_positional_refs.py --all docs .` reports none of the 16 errors of R8.
-  `--targets-changed` at §4.5 reports no error in a line that R8 names.
-- **A10** — the run:
-  - every step of `.github/workflows/framework-gates.yml` passes as CI runs it;
-  - every path of `git status` is declared;
-  - the audit record names the files of §8 that a rule of the local or the user's file runs, and
-    the result of reading both files again at §4.5 (R1.5);
-  - no check of R9.6 finds a difference that code of the change writes. Any other difference is
-    a finding before the task, named to the operator.
+- **A1** — `S/scripts/mermaid_model/` holds the 16 files of R1.1, and `S/scripts/mermaid_model.py`
+  does not exist.
+- **A2** — the move check of R6.5 passes, with `SKILL_DIR`'s line as the only difference.
+- **A3** — `S/scripts/tests/test_mermaid_model_package.py` passes on the patched tree. Against the
+  base layout its tests fail and pass as R4.2 states.
+- **A4** — the skill's test suite, `tests/run_tests.py`, `tests/test_python_floor.py` and the eval
+  selftest pass on the patched tree. Before stage 3, the base `tests/test_python_floor.py`, placed
+  in the worktree's `tests/`, fails TC-03 and TC-04 on the patched tree. Its staged copy passes on
+  both trees.
+- **A5** — the behaviour check of R6.6 finds no difference.
+- **A6** — the gates and the check of R6.7 pass, and after stage 3 they pass on the tree.
+- **A7** — `docs/ARCHITECTURE.md` §10.1 holds the row of R5.1 and the rule of R5.2, and the
+  changelogs hold v3.44.0.
+- **A8** — `git diff --quiet <base> --` exits 0 for `S/evals/grade_figures.py`, `S/evals/fidelity.py`,
+  `S/scripts/render_check.py`, `S/evals/corpus` and `System/Docs`.
+- **A9** — before stage 3, `python3 -m pytest --co` from the root and from `S/`, and both unittest
+  discoveries of R6.7, list no staged file.
+- **A10** — the audit record holds the three readings of R6.8 and names the files of the change
+  that a rule of either settings file runs.
 
 <!-- contract:open-questions -->
 
 ## 6. Open questions
 
-None.
+None. The operator answered the scope (D1).
 
 ## 7. Decisions
 
-- **D1**, 2026-10-15, orchestrator: the scope. It holds the two items of TASK 122 D13 and the four
-  groups the operator named. Two groups take more members of the same class:
-  - five more positional-reference errors in old records, found by a scan of `docs` and the root;
-  - three more test files with raw invisible characters, found by a scan of the tracked sources.
+- **D1**, 2026-10-15, operator: one module per task, `mermaid_model.py` first. Answer "По одному
+  модулю". Rejected: the three scripts in one task, about 8,400 moved lines with three kinds of risk
+  in one review.
+- **D2**, 2026-10-15, orchestrator: `mermaid_model` becomes a package of the same name. No command
+  runs the file by its path, so callers keep `import mermaid_model` and need no edit. Rejected: the
+  file kept as a facade beside a package of another name, which adds a second name for one module.
+- **D3**, 2026-10-15, orchestrator: one module per section of the base file, in a flat package.
+  Each section reads only names of sections above it (§8), so the order of R1.1 holds no cycle.
+  The ASCII section becomes `ascii_figures.py`: an `ascii.py` would bind `ascii` in `__init__.py`
+  and hide the built-in function there. Rejected: a subpackage for the diagram parsers, which adds
+  an import level and no boundary that the sections lack.
+- **D4**, 2026-10-15, orchestrator: `__init__.py` binds every top-level name of the base module,
+  private ones included. 6 callers read 9 private names. Rejected: a public subset, which would
+  edit those 6 callers; the grader would stop with exit 2 at each private name that it reads
+  through `getattr`.
+- **D5**, 2026-10-15, orchestrator: the entry points stay in `__init__.py`. No section uses them,
+  and `parse_figure` then looks `_parse_er` up in the package's own namespace. The two tests that
+  assign `mm._parse_er` keep working unedited.
+- **D6**, 2026-10-15, orchestrator: a test names the module that looks a name up as
+  `sys.modules[<function>.__module__]`. The expression names `mermaid_model` at the base and the
+  defining module after the split, so the edits land before stage 3. Rejected: test copies staged
+  beside the package, about 4,000 more staged lines.
+- **D7**, 2026-10-15, orchestrator: `S/evals/grade_figures.py`, `S/evals/fidelity.py` and
+  `S/scripts/render_check.py` stay unedited. Every committed campaign report records the SHA-256
+  of the first two (TC-ME-22). `render_check.INSTRUMENT_FILES` binds the two geometry fixtures,
+  and `render_check.py` is one of those files. Their texts that name `mermaid_model.py` stay (§9).
+- **D8**, 2026-10-15, orchestrator: the corpus instrument hash changes with the file list, and the
+  committed corpus renders keep the old hash as their record. Rejected: a hash that ignores a move,
+  which would also ignore an edit of the moved text.
+- **D9**, 2026-10-15, orchestrator: the staged files are checked in a throwaway worktree with the
+  patch applied. The floor test and the callers read the files at their final paths, which no
+  module loader of the run can stand in for. TASK 123 D19 added that worktree for the gates.
+- **D10**, 2026-10-15, orchestrator: the edit of `tests/test_python_floor.py` is staged.
+  `tests/run_tests.py`, which an allow rule names, runs it, so it is no exempt test module
+  (`framework-upgrade` §3 step 4). TASK 123 staged the same file.
+- **D11**, 2026-10-15, orchestrator: the row of R5.1 lands in the stage-3 patch. TC-12 of
+  `tests/test_mermaid_wiring.py` fails before stage 3 if the row names the package, and after it if
+  the row names the file. The rule of R5.2 sits below the table, which TC-12 does not read, and
+  lands in place.
+- **D12**, 2026-10-15, operator: the skill stays self-contained, and its scripts stay inside it.
+  The operator's words: "скилл должен быть самодостаточным и его скрипты должны оставаться внутри
+  скила". R1.8, TC-07 and the last point of R5.2 state it. Every script of `S/scripts/` imports only
+  the standard library and modules of `S/scripts/` at the base (§8).
+- **D13**, 2026-10-16, orchestrator: fix round 1 of stage 2. Both reviews of round 1 passed, and
+  the run applies their LOW findings before round 2, on the precedent of TASK 123 D18:
+  - TC-03 of the floor test walks every module file of a package that it reaches. An absolute
+    import of a module of a package names only the package to `_top`, so such a module escaped it
+    (security LOW-1). A test of `_package_modules` ran red first;
+  - TC-03 of the package test requires each name to be bound by a top-level `def`, `class` or
+    assignment of its module, not by an import (code review L1);
+  - a comment of `test_render_check.py`, the changelogs and R5.5 state what the code does (L2 to
+    L4); §9 names the reach of TC-07 and the eval scripts that import from another skill.
 
-  Rejected: the 11 errors and one test file only, which would leave defects of the same class that
-  the same scans report.
-- **D2**, 2026-10-15, orchestrator: a rule that names a directory names no module in it by path.
-  The local rule `ca2c33383ded254c`, unittest discovery over `tests/`, then reads as the committed
-  `python3 -m pytest`, which names no path. Rejected: the reading that a directory names each
-  module in it, which would stage nearly every edit of a test.
-- **D3**, 2026-10-15, orchestrator: the audit record names the files of the change that a rule of
-  the local or the user's file runs, and quotes no such rule. Those files hold absolute paths of
-  the operator's machine, and the audit record is committed. A command of the check is recorded
-  with paths relative to the repository root, even when its text matches a rule. Rejected: a copy
-  of those rules in the record.
-- **D4**, 2026-10-15, orchestrator: the check of what the change runs.
-  - It lists the whole tree with a SHA-256 per file, ignored files included. `git status` does not
-    show an ignored file, and the session state is one. Of `.git` it lists every file but `index`
-    and those under `objects` and `logs`. Through `commondir`, a hook, `config` or a ref, a later
-    git command runs other code or sees other work. The index changes at each `git status`, so the
-    output of `git ls-files -s -v` stands in for it, beside `git rev-parse HEAD` (D18). Of `logs`
-    it lists `refs/stash`, which holds every stash (D19).
-  - It also lists the user's `~/.gitconfig`, `~/.config/git/config` and `~/.claude/settings.json`,
-    three files outside the tree through which a later command runs code (D18, D19).
-  - A rule whose command runs other code from another directory, such as `python3 -m pytest`, gives
-    one command for each directory that reaches code of the change.
-  - One process holds both listings in memory and runs the command between them, so a variable in
-    its environment adds no text to the command. The run starts that process with a command of its
-    own, which asks or which Auto mode decides. The operator approves it once, not permanently. A
-    permanent approval is a new local rule, which the next reading finds (D13).
-  - Neither that process nor the script of D9 runs through the local rule `881e39b164a546fa`,
-    which runs standard input as Python.
-  - The run attributes each difference by reading the code or the command's output. A difference
-    under `.git` or in a file of the user, or a missing file, stops the run (D19). Otherwise the
-    run removes what the command created and restores each tracked file that it does not declare,
-    since a listing of hashes cannot restore a file. Every other difference goes to the operator.
+  Rejected: the round's LOW findings left as residuals. TC-03 of the floor test would then pass a
+  module that it never parsed (LOW-1), and TC-03 of the package test a name that a module imports
+  (L1).
+- **D14**, 2026-10-16, operator: fix round 2 of stage 2, then round 3, the last of the bound. Both
+  reviews of round 2 passed, and every finding was a LOW route of a class that round 1 fixed. The
+  operator chose one more round over a residual with a backlog record: "Ещё один раунд".
+  - `_package_modules` fails on a symbolic link anywhere in a package that TC-03 walks, and on a
+    module entry that is no regular file. Python imports through a link that `rglob` does not
+    follow (security R2-LOW-1), and a device or a FIFO would be opened (R2-INFO-1);
+  - two tests drive the walk itself: a module reached only by `import pkg.hidden`, and a
+    subpackage behind a link, each fail it (code review N1, R2-INFO-2). The walker's subtests name
+    a path outside the project as it is;
+  - §9 names the subprocesses of `render_check.py` (N2); the PLAN cites this revision (N3); two
+    changelog lines are rewrapped (N4); R2.4 and the floor test's docstring state the walk (I1).
 
-  Rejected: `git status` alone; a check of the session state alone; flags or a variable prefix on
-  the command line, which would make it another command than the rule approves.
-- **D5**, 2026-10-15, orchestrator: TC-04 stubs the grader's local imports, and the grader stays
-  unedited. Every committed campaign report records the SHA-256 of `grade_figures.py`, and the eval
-  selftest re-derives each report (TC-ME-22). Under the fake, the module bodies run on the current
-  interpreter and prove nothing about 3.9; TC-03 parses them. The residual: TC-04 no longer checks
-  those bodies for a write at import. Rejected: the guard moved above the grader's imports; each
-  edit of those modules staged.
-- **D6**, 2026-10-15, orchestrator: the lint escapes at its command line, not in `lint_text`. The
-  grader reads `Finding.message` into the problems of its reports, so an escape in the messages
-  could change a re-derived report. The residual: `_shown` keeps a backslash single, so a label
-  that holds the text `\x1b` prints as an escaped ESC does (TASK 122 D5). A message of MA-LABEL-14
-  doubles its backslashes (TASK 121 D11), so one output can hold both forms. Rejected: an escape at
-  the creation of each finding.
-- **D7**, 2026-10-15, orchestrator: the lint holds its own copies of `json_text` and `_shown`. An
-  import of `render_check.py` would make it and `svg_geometry.py` run under the lint's rule. TASK
-  121 D11 set the precedent: two copies of `_escaped` and a test that pins them to one output.
-  Rejected: the functions moved into `mermaid_model.py`, which the lint and `plan_gantt.py`
-  import; that would stage `mermaid_model.py` and put `render_check.py` into the stage-3 patch.
-- **D8**, 2026-10-15, orchestrator: the debug command line of `svg_geometry.py` prints ASCII JSON,
-  and escapes its error lines with the `_escaped` it holds. It is a developer's tool, so Cyrillic as
-  `\u` escapes costs little. The residual: `_escaped(str(exc))` doubles the backslashes that `%r`
-  already wrote into the file name of an `OSError`, the doubling TASK 122 D5 rejected for the
-  render check. Rejected: a third copy of `json_text`.
-- **D9**, 2026-10-15, orchestrator: the fixtures are rendered again inside the change.
-  - A script in the scratchpad builds the patched `render_check.py` in memory, from its base bytes
-    and the fence of R4.3. It loads that text and the staged `svg_geometry.py` under their own
-    names.
-  - It hashes the bytes that stage 3 writes, with the algorithm of `instrument_sha256`, and writes
-    no copy of a repository file. Its renders land outside the repository, as every render does.
-  - The staged file and the file after the patch hold the same bytes, so the hash names the code
-    that measured.
-  - A fix round that changes `staged_svg_geometry.py` or the fence of R4.3 renders both fixtures
-    again.
+  Rejected: the routes left as a residual of §9 with one backlog record. Round 3 then found two
+  narrower routes of the class, a compiled module and a change of `__path__`. D15 closes the first
+  and the plain spelling of the second, and D16 the other static spellings.
+- **D15**, 2026-10-16, operator: round 3 of stage 2, the last of the bound, passed, and its
+  findings were again LOW routes of the class of LOW-1. The operator's answer: "закрой рефакторинг
+  без work items. ты же всегда рефакторил сразу". The run fixes the routes in fix round 3, and a
+  fourth round reviews the fix; no backlog record is filed.
+  - `_package_modules` also fails on a package directory that is a link and on a compiled or
+    extension module, and leaves `__pycache__/` aside. The walk fails on an `__init__.py` that names
+    `__path__` (security R3-LOW-1, R3-INFO-1; code review R3-2);
+  - one test plants each of these forms, a directory and a FIFO named `*.py` among them, which pin
+    the check of regular files (R3-1, R3-INFO-2). Each new case ran red first, but those two, which
+    the check of round 2 already refused;
+  - D14's last sentence, R2.4 and the floor test's docstring state what the walk refuses (R3-2).
 
-  Rejected: an instrument hash written without a render; the debug command line moved to a TASK
-  124, after the operator asked for it here.
-- **D10**, 2026-10-15, orchestrator: the example reads `OPENAI_API_KEY` only. An operator with an
-  xAI key sets it there, with `OPENAI_BASE_URL` naming the xAI server. Rejected: a fixed xAI server
-  for `XAI_API_KEY`, which would also need a model name for that server.
-- **D11**, 2026-10-15, orchestrator: the staging of R9.1. Three files are code that an allowed
-  command runs at the base: the pin test, `test_python_floor.py` and the lint. `svg_geometry.py`
-  joins them through TC-04 at the base. The new test module and both fixtures follow the code they
-  hold to. The patch carries the workflow text and the docstring of `render_check.py` as texts.
-- **D12**, 2026-10-15, orchestrator: the version is v3.43.0. R1 changes a rule of a workflow, as
-  v3.41.0 did.
-- **D13**, 2026-10-15, orchestrator: the run reads the local file and the user's again at §4.5, and
-  after the gates of stage 3. Claude Code writes an approval that the operator makes permanent into
-  one of them and applies it at once, so a rule can appear during the gates. Stage 3 starts the
-  check's process after §4.5. Rejected: one reading at §2.2.
-- **D14**, 2026-10-15, orchestrator: the references of R8.
-  - A coordinate in another repository takes that repository's revision as its pin. TASK 103 did so
-    with `@e95b909` (`docs/plans/plan-103-referent-carrying-positional-references.md`, lines 195 to
-    197).
-  - A pin keeps the coordinate and states its revision. The CI comment on the living corpus names
-    that form for a record (`framework-gates.yml`, lines 203 to 205). `framework-audit-105.md:66`
-    called the coordinate of review-095 "reported, not rewritten"; a pin rewrites no number.
-  - The two changelog passages that quote the misread list become prose. A pin inside the
-    quotation would change the text that the rule misread.
+  Rejected: a residual of §9 with one backlog record, which the operator declined.
+- **D16**, 2026-10-16, orchestrator: fix round 4 of stage 2, under D15. Both reviews of round 4
+  passed. The run fixes their findings and closes two static forms of the class that no review
+  had named yet:
+  - TC-03 counts only an entry whose name an import statement can spell. An editor's lock file
+    or an AppleDouble file no longer fails it (code review R4-1, security R4-INFO-2);
+  - every module that TC-03 walks fails on each static spelling of `__path__` and
+    `submodule_search_locations` (R4-2, R4-LOW-1);
+  - `__pycache__/` counts as the subpackage that Python imports there, and its caches stay aside.
+    A link of that name now fails TC-03 (R4-INFO-1);
+  - the suffixes are fixed sets for Linux, macOS and Windows, and a `*.pyw` source fails TC-03
+    (R4-INFO-3, I2);
+  - a compiled or extension module by a local name fails TC-03. Python may import it in place of
+    the source: an extension module first in its directory, a compiled one from an earlier
+    directory. A local module named after a standard-library module that the walked code imports
+    fails too, in `GRADER_PATH` or beside a guarded script;
+  - R2.4, the floor test's docstring and §9 state TC-03's reach (R4-2). PLAN line 7 is
+    rewrapped (I1).
 
-  Rejected: prose for every external coordinate, which drops the revision that makes it true.
-- **D15**, 2026-10-15, orchestrator: the `allowed-tools` of a skill or a command count among the
-  allow rules. The list of step 4 already names them as permission rules, and a command they
-  approve runs without a prompt. None exists in the repository today. Rejected: the settings files
-  alone, which would narrow the rule.
-- **D16**, 2026-10-15, operator: the allow rules of the user's `~/.claude/settings.json` count as
-  those of the local file do. The session applies them in this repository. A relative rule matches
-  its command text in any directory, and some rules name files of this repository through the
-  symbolic links of another one (§8). Answer "Да, и пользовательские". Rejected: the two project
-  files only, with the user's rules left to the operator.
-- **D17**, 2026-10-15, orchestrator: the stage-3 patch gives each file of R9.1 the bytes of its copy
-  and leaves the copies out. The audit record holds the SHA-256 of each copy. Stage 3 removes each
-  copy once its file hashes to it. On a failure the run writes back only the copies that stage 3
-  removed, each from its file, and only when that file still hashes to the copy; then
-  `git apply -R`. A patch that deleted the copies would hold each text a second time, over 16,000
-  lines with the two fixtures. Rejected: the deletions inside the patch, as TASK 120 and TASK 121
-  did.
+  Rejected: a check of every dynamic spelling, which no static check can make (both reviews of
+  round 4). Rejected again: a residual with a backlog record, which the operator declined (D15).
+- **D17**, 2026-10-16, operator: stage 2 closes at round 5, and both reviews of that round passed.
+  The operator's words: "не надо оптимизировать ничего под Python 3.9 - он старый", and then
+  "давай закрывать задачу уже. Кажется, что делается лишняя работа".
+  - Security R5-LOW-1, code review R5-1 and its I1 name routes by which only an interpreter below
+    the minimum stops before its guard. R5-2 asks for one more case of TC-03. None is fixed. §9
+    states the limits, and no backlog record is filed;
+  - R5-3, R5-INFO-1 and R5-INFO-2 correct wording. R2.4, D16, §9 and the audit record change in
+    place. The floor test's docstring keeps its sentence on compiled modules: a change there would
+    alter a staged copy after its review.
 
-- **D18**, 2026-10-15, orchestrator: fix round 1 of stage 2. Both reviews of round 1 passed, and
-  the run applies their LOW findings before round 2, on the precedent of TASK 122:
-  - the check lists every file of `.git` but `index`, `objects` and `logs`, the output of three git
-    commands, and the user's `~/.gitconfig` and `~/.claude/settings.json` (S1-1, S1-4);
-  - the put-back restores the index too, takes a path literally, and checks the restored hash
-    (S1-3); item 6 of `WORKFLOWS.md` no longer claims that the run puts every file back;
-  - managed settings, plugins and the Auto mode classifier are named as outside the count (S1-2);
-  - the records name a rule by its class and hash, and quote none (S1-5);
-  - a test of the inventory with a newline in a path, and an AST check of every call (R1-1, R1-2);
-  - the changelogs match the workflow's stop rule and name argparse as the residual of the lint
-    (R1-4, R1-5).
-
-  Rejected: the round's LOW findings left as residuals, since the check that R1.1 adds would then
-  miss the route through `commondir` that the security audit showed.
-- **D19**, 2026-10-15, orchestrator: fix round 2 of stage 2. Its code review failed on R2-1, and
-  its security audit passed with four LOW findings. The run applies all of them before round 3:
-  - the listing drops the third git view of D18. Its command matches a pattern of
-    `tests/test_git_rollback_contract.py`, which allows that command in three sentences of the
-    workflow only, so the patched workflow failed that test (R2-1). Of `logs` the listing takes
-    `refs/stash` instead, which holds every stash; the ref `refs/stash` was listed already;
-  - each git command of the check and of the put-back runs with `-c core.fsmonitor=false`. A
-    difference under `.git` or in a file of the user, or a file that the second listing lacks,
-    stops the run before any further git command and before any removal (R2-4, S2-1). A created
-    file that the put-back removed could have been the only copy of a moved one;
-  - the listing holds each directory and hashes only regular files, so a FIFO under `.git` no
-    longer blocks it (R2-5, S2-3). The put-back removes each directory that the command created;
-  - the listing takes `~/.config/git/config` too, and §9 names the files of the user that it
-    leaves out (R2-7);
-  - the changelogs and item 6 state the put-back as step 4 does (R2-3, S2-4);
-  - the audit record names the user's rules by hash, as D3 asks (R2-2), and the PLAN cites the
-    current revision of this TASK (R2-6);
-  - PLAN H4 runs the gates on the patched tree, in a throwaway worktree outside the repository.
-    H2 runs them on the unpatched tree, which is why it missed R2-1.
-
-  Rejected: the view kept under a name without the matched words, a second listing of what the
-  file `logs/refs/stash` holds.
-- **D20**, 2026-10-15, operator: round 3 of stage 2 passed, and each of its LOW findings is a route
-  of a class that an earlier round fixed. Those in the text of R1.1 stay residuals of §9, and
-  WI-54 holds them: S3-1, S3-2, R3-2, and the wordings of R3-4 and I-2. No fourth round runs. The
-  run fixes the findings in its own records and tools: the audit's account of H3, `h3.sh`,
-  `listing.py`, D4 and §9 (R3-1, R3-3, R3-5, S3-3, I-3). Answer "Остаток + backlog". Rejected: a
-  fourth round, since each round of this review found a narrower route of one class (WI-48).
+  Rejected: a fifth fix round and a sixth review round, which the operator declined.
+- **D18**, 2026-10-16, operator: the layout of D2 stays. After stage 3 the operator wrote: "ты же
+  обычно рефакторил так: делал папку с модулями и исходный модуль упрощал - делал тонкий
+  менеджер/оркестратор". Offered a thin `mermaid_model.py` beside a package of another name, they
+  answered "Оставить как есть". `mermaid_model/__init__.py` holds that role: the imports of the 15
+  modules and the four entry points. The rule of R5.2 gives TASK 125 and TASK 126 the thin file for
+  a script that a command runs by its path.
 
 ## 8. Measurements of this run
 
-- Under a faked 3.9.6, the grader prints "grade_figures.py needs Python 3.11 or newer" and exits
-  2. It has loaded six local modules by then: `fidelity`, `lint_mermaid`, `mermaid_model`,
-  `planarity`, `stats` and `svg_geometry`. The lint imports `planarity`. `run_evals` is not in
-  `sys.modules` after its guard raises, and neither is the grader that `runpy` ran.
-- `render_corpus.py` holds its guard at line 97. Its imports follow at lines 107 to 111, the import
-  of `render_check` as `rc` at line 109. The write of `geometry.json` is at lines 470 to 473.
-  `EXPECTED_CASES` of the selftest is 225. No test of the skill's `scripts/tests` imports
-  `render_corpus.py` or the selftest.
-- A document whose edge label holds ESC, U+202E and U+2028 gives MA-LABEL-03. The text output holds
-  the three characters raw, and `--json` holds U+2028 and U+202E raw. With the same characters in a
-  node label, the inventory table holds all three raw. `references/paired-examples.md` gives 21
-  expected findings and no other.
-- `python3 examples/skill-testing/test_skill.py`, with no key, exits 1 with
-  `FileNotFoundError: File not found: 08_agent_developer.md`.
-  `System/Agents/08_developer_prompt.md`, `.agent/skills/tdd-stub-first/SKILL.md` and
-  `.agent/skills/documentation-standards/SKILL.md` exist.
-- Tracked sources with raw non-printable characters, newlines and tabs aside:
-  - `test_ledger_hardening.py`, lines 68 and 87: U+2028, U+2029, U+202E, U+2066, U+200B, U+00AD;
-  - `test_wi_tail.py`, lines 624, 625 and 636: U+2028;
-  - `test_lint_mermaid.py`, lines 1530 and 1533: U+FEFF;
-  - `test_task_id_tool.py`, line 301: U+FEFF;
-  - `scan_register.py`, line 744: U+200D, in a pattern; an allow rule names the script (§9);
-  - two Markdown task files and one captured fixture, as data (§9).
-- `check_positional_refs.py --all docs .` reports 23 errors:
-  - the 11 of R8 that `--targets-changed` reports: eight in the changelogs, two in
-    `framework-audit-105.md:65`, and `review-095-independent.md:35`;
-  - five more in old records: `framework-audit-20260813-reference-gate-scope.md:46` twice,
-    `plan-103-referent-carrying-positional-references.md:195`, and
-    `vdd-adversarial-known-issues-format.md:15` twice;
-  - four in examples of two skills, and three coordinates of the `docs/TASK.md` slot (§9).
-- The pins of R8:
-  - in `onchain-analytics` at `77fa89c`, line 117 of `packages/mcp-server/src/tools/get-token.ts`
-    and line 92 of `wallet-balances.ts` hold
-    `const outcome = await resolveCapability(ctx.registry, …`. That commit added the task document
-    that cites both lines;
-  - at `b0d78f9`, line 21 of `System/scripts/check_prompt_references.py` is
-    `AGENT_REF_RE = re.compile(…)`, the line `review-095-independent.md:35` quotes. `b0d78f9` is
-    an ancestor of `14799d3`, the commit that added the review, where that line is a comment;
-  - at `1ca49cf`, lines 49 and 51 of `.agent/skills/known-issues-format/SKILL.md` hold the two
-    glosses that `vdd-adversarial-known-issues-format.md:15` quotes. `1ca49cf` is the parent of
-    `4f11f71`, the commit that added the review.
-- `.claude/settings.local.json` names these files of the repository: `run_audit.py` of
-  `security-audit`, `validate_skill.py`, `analyze_gaps.py`, `task_id_tool.py`, and four test
-  modules of `tests/`, none of which this task edits. Its rule `ca2c33383ded254c`, unittest
-  discovery over `tests/`, runs these files of the change:
-  - `tests/test_run_safety_rules.py`, `tests/test_python_floor.py` and `tests/test_bare_pytest.py`;
-  - the example, through `tests/test_bare_pytest.py`;
-  - `lint_mermaid.py`, through `tests/test_mermaid_wiring.py`;
-  - `render_corpus.py` and `selftest_figure_evals.py` up to their guards, through TC-04;
-  - at the base, `svg_geometry.py`, through TC-04.
-- The user's `~/.claude/settings.json` holds 326 allow rules, and none names a file this task
-  edits. These of them reach the repository:
-  - two rules, `fcf7ae83aa61d9ee` and `3c013025af0d911c`, run
-    `.agent/skills/run-feedback/scripts/tests/test_e2e.sh` from its directories. It runs that
-    skill's tests, `test_ledger_hardening.py` and `test_wi_tail.py` among them;
-  - the rule `9fa5cad71668c6f7` runs unittest discovery over the `scripts/tests` of the directory it
-    runs in. In `mermaid-authoring-guidelines`, the files of this change among them are
-    `test_lint_mermaid.py` and, after stage 3, `test_printed_output.py`. Through them it runs the
-    lint, `svg_geometry.py` and `render_check.py`;
-  - one rule names `validate.py` of `skill-spec-validator`;
-  - rules with a path into `Universal-skills` run this repository's `task_id_tool.py` and
-    `update_state.py`, whose directories that repository links here;
-  - two rules, `89216e2cf09753da` and `aa8ebef8166f2dac`, run any code with this repository's
-    `.venv`, and two, `1906407db7c8843f` and `9b7c28a93551887e`, run a git subcommand on any
-    arguments (§9).
+- The base module, by section; the line of each section's opening comment starts its range:
 
-  A rule is named here by the first 16 hex digits of the SHA-256 of its text (D3).
-- A bare `python3 -m pytest --co` collects 714 tests from 40 files, all in `tests/`. pytest does not
-  enter a directory whose name starts with a dot, such as `.agent`. The same command from
-  `.agent/tools` or from a skill's directory collects the tests there. `tests/conftest.py` removes
-  stale entries of `tests/.scratch/` at the start of a pytest run. `python` and `python3` are the
-  same pyenv shim here, at Python 3.14.8. No managed settings file exists on this machine.
+  | Section | Lines | Top-level names |
+  | :--- | :--- | :--- |
+  | header | 1–93 | 8 |
+  | document level | 94–724 | 40 |
+  | figure level | 725–989 | 22 |
+  | hazard codes | 990–1069 | 8 |
+  | labels | 1070–1148 | 10 |
+  | kinds | 1149–1197 | 4 |
+  | settings | 1198–1524 | 15 |
+  | preprocessing | 1525–1667 | 5 |
+  | flowchart | 1668–2318 | 17 |
+  | sequence | 2319–2494 | 12 |
+  | state | 2495–2707 | 10 |
+  | gantt | 2708–2782 | 3 |
+  | er | 2783–2875 | 6 |
+  | other kinds | 2876–3174 | 23 |
+  | ascii | 3175–3624 | 43 |
+  | entry points | 3625–3708 | 4 |
+
+- No name is bound in two sections. `S/scripts/mermaid_model.py:3224@44520ba`
+  `_UP_STROKE, _DOWN_STROKE = _box_strokes()` binds two names through one tuple target, and lines
+  3225–3226 rebind them in place.
+- A name of one section that another section reads, annotations included, always belongs to a
+  section above the reader. The module has no `global` statement, no import inside a function, no
+  `__main__` block and no anchor literal.
+- The 8 scripts that import the module: `lint_mermaid.py`, `render_check.py`, `plan_gantt.py` and
+  `svg_geometry.py` of `S/scripts/`; `grade_figures.py`, `fidelity.py`, `render_corpus.py` and
+  `selftest_figure_evals.py` of `S/evals/`.
+- The 8 test modules that import it, all of `S/scripts/tests/`: `test_lint_mermaid.py`,
+  `test_render_check.py`, `test_commonmark_scan.py`, `test_notation_consistency.py`,
+  `test_paired_examples.py`, `test_plan_gantt.py`, `test_setup_renderers.py` and
+  `test_svg_geometry.py`.
+- The 9 private names that callers read:
+  - `_Line`, `_fence_spans`, `_list_item`, `_parse_er`, `_parse_props`, `_quote_strip`, `_scan`;
+  - `_paragraph_before` and `_paragraph_after`, through `getattr` in `grade_figures.py` only.
+
+  6 callers read them: `lint_mermaid.py`,
+  `grade_figures.py`, `fidelity.py`, `test_commonmark_scan.py`, `test_notation_consistency.py` and
+  `test_lint_mermaid.py`.
+- The grader reads 4 names through `getattr`: `_paragraph_before`, `_paragraph_after`,
+  `_parse_props` and `NEGATIVE_MARKER`. A missing private one raises `InstrumentError`, exit 2. A
+  missing `NEGATIVE_MARKER` leaves the text as it is.
+- The lines that read or assign a name of the module, at `@44520ba`:
+  - `NEGATIVE_ROOTS`: lines 1150, 1152, 1156, 1160, 1202, 1203 and 1206 of
+    `S/scripts/tests/test_lint_mermaid.py`, and lines 379, 383, 387 and 669 of
+    `S/scripts/tests/test_render_check.py`;
+  - `negative_markers`: lines 1168, 1173 and 1179 of `S/scripts/tests/test_lint_mermaid.py`;
+  - `_parse_er`: lines 1300, 1301, 1305, 2781, 2790 and 2798 of
+    `S/scripts/tests/test_lint_mermaid.py`, in two tests.
+- `S/scripts/mermaid_model.py:44@44520ba` `SKILL_DIR = Path(__file__).resolve().parent.parent`.
+- The rules that run the module, named by the first 16 hex digits of their SHA-256: the committed
+  rule `f594e5c59bc4365f` runs the lint, and the committed rules `de5f1e917179bf0e` and
+  `cc744c1d56d6c74f` run `plan_gantt.py`. The reading of the local and the user's settings follows
+  at §2.2.
+- `S/evals/corpus/` holds 66 committed `geometry.json` files, each with an `instrument_sha256`.
+- Each of the 6 scripts of `S/scripts/` imports only standard-library modules and modules of
+  `S/scripts/`. The skill holds committed `.mmd` fixtures, `fx-k33.mmd` among them; the lint reads a
+  `.mmd` file through `figure_from_mmd`.
+- `System/scripts/install.py` installs by per-item symlinks by default, and by copies with
+  `--mode copy`.
+- The list of the behaviour check: every `.md` file of `S/references/`, `S/evals/corpus/`, `docs/`
+  and `System/`, and `S/SKILL.md`.
 
 <!-- contract:out-of-scope -->
 
 ## 9. Out of scope
 
-- The coordinates in the examples of two skills: `documentation-standards/SKILL.md` lines 80 and
-  81, and `skill-adversarial-performance/SKILL.md` lines 94 and 116. They show a reader the form of
-  a reference.
-- The coordinates of the `docs/TASK.md` slot in `docs/design/095_workflow_loop_contract.md`,
-  `review-095-rev5-adversarial.md` and the ledger record ARC-11. They fail only while the slot is
-  empty, and a ledger record is data.
-- The raw U+200D in a pattern of `scan_register.py`, which an allow rule names. The emoji of two
-  task files and the captured U+2028 of an `ab-corpus` fixture are data.
-- Rules that run whatever code their command line or standard input holds, and name no file: the
-  local rule `881e39b164a546fa`, which runs standard input as Python, and the user's rules
-  `89216e2cf09753da` and `aa8ebef8166f2dac`. One of the user's two git rules can set a command that
-  a later `git status` runs, and the other can discard work. Step 4 stages nothing for them;
-  whether to keep them is the operator's call.
-- Rules that managed settings or plugins add, and commands that the Auto mode classifier approves.
-  No managed settings exist on this machine; the user's settings hold an allow list for the
-  classifier, and plugin commands carry `allowed-tools` (D18).
-- `tests/test_script_guards.py` checks the scripts that committed rules run, and not those of the
-  local or the user's rules.
-- Writes outside the repository, in `$TMPDIR` and in `$HOME`, but the three files of the user that
-  the check lists (D18, D19). A later command can also run code through `~/.claude.json`,
-  `~/.claude/agents/`, `~/.claude/skills/`, the git configuration of the system, and one under a
-  `$XDG_CONFIG_HOME` other than `~/.config`, none of which the check lists. A child process that
-  writes after the second listing, and code that behaves otherwise under the two variables of the
-  check, also pass it unseen.
-- The routes of the put-back that round 3 of stage 2 found, which WI-54 holds (D20):
-  - a created file can hold the only copy of a changed file, which the put-back then removes
-    (S3-1);
-  - a created link to a directory can read as a directory, and the text does not say how the
-    put-back removes a file or a directory (S3-2);
-  - the text does not say that the check hashes what a linked user file holds (R3-2);
-  - the restore command omits `-c core.fsmonitor=false`, and the text does not say that a file
-    that hashes otherwise after the restore stops the run (R3-4, I-2).
-- From TASK 122 §9: the mock of `tests/test_mock_agent.py` runs `python3` from PATH and sleeps 5 s;
-  `measure_text.mjs` joins a label's lines with no separator. The KaTeX advisory of the renderer
-  lockfiles is WI-41.
+- `S/scripts/svg_geometry.py` (TASK 125) and `S/scripts/lint_mermaid.py` (TASK 126).
+- The texts that name `mermaid_model.py` in the three files of D7: the docstring of
+  `grade_figures.py`, `S/evals/fidelity.py` line 20 in its docstring, and a comment of
+  `render_check.py`. TASK 125 edits `render_check.py` and renders the fixtures again; it takes the
+  comment.
+- The record of `S/evals/AMENDMENTS.md` that names `mermaid_model.py`; a record keeps its text.
+- The re-render of the committed corpus renders (D8).
+- The glob of `test_every_anchor_a_script_reads_is_registered` of `tests/test_mermaid_wiring.py`,
+  while no package holds an anchor literal (R5.2).
+- WI-54, the residual routes of the put-back of `framework-upgrade` §3 step 4.
+- TC-07 reads the static absolute imports of the scripts and of the package. A dynamic import or a
+  `sys.path` entry outside the skill would pass it; neither exists today (D13). `render_check.py`
+  runs `mmdc` and node as subprocesses in the renderers' install directory outside the skill,
+  which TC-07 does not read (D14).
+- TC-03 of the floor test reads files and runs none of their code. Code that runs to import is out
+  of its reach, such as `exec`, `eval`, `__import__`, `importlib`, a loader called directly, a
+  computed `getattr`, a module-level `__getattr__`, or a change of `sys.path`, `sys.meta_path` or
+  `sys.path_hooks`. So are the interpreter's environment, such as `PYTHONPATH` or a `.pth` file,
+  and Python's bytecode cache. TC-03 reads no import in a class or a function body. It refuses a
+  local module of a standard-library name only for a name that the walked code or a guarded script
+  imports, not for one that the standard library imports in turn, such as `gettext` (D17).
+  Of the modules that TC-03 walks today, `lint_mermaid.py`, `svg_geometry.py` and
+  `S/evals/fidelity.py` change `sys.path`, each to add `S/scripts/`, a directory of `GRADER_PATH`.
+  None of them uses the other forms, and each `getattr` call there names its attribute literally
+  (D16).
+- The skill's eval scripts import from another skill: `S/evals/grade_figures.py` imports
+  `aggregate_benchmark`, and `S/evals/selftest_figure_evals.py` puts `skill-creator/scripts` on
+  `sys.path`. R1.8 covers `S/scripts/`. At the retro the operator kept the rest of the skill as it
+  is (D13).

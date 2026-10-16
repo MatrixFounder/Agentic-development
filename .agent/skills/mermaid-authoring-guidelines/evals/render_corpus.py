@@ -123,7 +123,15 @@ DARK_SUFFIX = "-dark"
 
 #: Files whose content decides a render and its measurement; `instrument_sha256` hashes them.
 INSTRUMENT_FILES = ("scripts/render_check.py", "scripts/svg_geometry.py",
-                    "scripts/measure_text.mjs", "scripts/mermaid_model.py", "assets/notation.json")
+                    "scripts/measure_text.mjs", "scripts/mermaid_model/__init__.py",
+                    "scripts/mermaid_model/base.py", "scripts/mermaid_model/document.py",
+                    "scripts/mermaid_model/figure.py", "scripts/mermaid_model/hazards.py",
+                    "scripts/mermaid_model/labels.py", "scripts/mermaid_model/kinds.py",
+                    "scripts/mermaid_model/settings.py", "scripts/mermaid_model/preprocessing.py",
+                    "scripts/mermaid_model/flowchart.py", "scripts/mermaid_model/sequence.py",
+                    "scripts/mermaid_model/state.py", "scripts/mermaid_model/gantt.py",
+                    "scripts/mermaid_model/er.py", "scripts/mermaid_model/other_kinds.py",
+                    "scripts/mermaid_model/ascii_figures.py", "assets/notation.json")
 
 #: Fields of `render_check.RenderResult` that `render_one` maps itself; a local path is never stored.
 _MAPPED_FIELDS = ("tag", "dark", "ok", "svg", "png", "log", "metrics", "findings", "status",

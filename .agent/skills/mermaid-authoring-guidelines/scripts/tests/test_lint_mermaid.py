@@ -1,5 +1,5 @@
-"""Tests for lint_mermaid.py and mermaid_model.py (TASK 108, R6, R2.5, R2.7, R3.3, R3.7, D20, D21,
-D25, D26).
+"""Tests for lint_mermaid.py and the package mermaid_model (TASK 108, R6, R2.5, R2.7, R3.3, R3.7,
+D20, D21, D25, D26; TASK 124).
 
 The rule ids are pinned as a literal set (TASK R6.6) and compared with the registry both ways: a
 deleted, renamed or added rule fails here, because the expected set is declared in this file and
@@ -24,6 +24,11 @@ import mermaid_model as mm  # noqa: E402
 import svg_geometry as sg  # noqa: E402
 
 NOTATION = mm.load_notation()
+#: The modules whose code looks up NEGATIVE_ROOTS and negative_markers. A test reads and assigns
+#: each name there, so the assignment reaches that code in one module or in a package
+#: (TASK 124 R2.2).
+ROOTS_HOME = sys.modules[mm.negative_allowed.__module__]
+MARKERS_HOME = sys.modules[mm.Fence.__module__]
 
 RULE_IDS = {
     "MA-PARSE-01", "MA-PARSE-02", "MA-PARSE-03", "MA-PARSE-04", "MA-PARSE-05", "MA-PARSE-06",
@@ -1147,17 +1152,17 @@ class TestNegativeFences(unittest.TestCase):
         """`negative_allowed` reads NEGATIVE_ROOTS when called: the lint and the render check
         share this one definition, and a test that moves the roots moves both."""
         roots = (mm.SKILL_DIR / "references", mm.SKILL_DIR / "scripts" / "tests" / "fixtures")
-        self.assertEqual(mm.NEGATIVE_ROOTS, roots)
+        self.assertEqual(ROOTS_HOME.NEGATIVE_ROOTS, roots)
         reference = mm.SKILL_DIR / "references" / "ascii.md"
-        saved = mm.NEGATIVE_ROOTS
+        saved = ROOTS_HOME.NEGATIVE_ROOTS
         with tempfile.TemporaryDirectory() as tmp:
             inside = Path(tmp, "doc.md")
             inside.write_text("x\n", encoding="utf-8")
-            mm.NEGATIVE_ROOTS = (Path(tmp),)
+            ROOTS_HOME.NEGATIVE_ROOTS = (Path(tmp),)
             try:
                 self.assertEqual((mm.negative_allowed(inside), mm.negative_allowed(reference)), (True, False))
             finally:
-                mm.NEGATIVE_ROOTS = saved
+                ROOTS_HOME.NEGATIVE_ROOTS = saved
         self.assertTrue(mm.negative_allowed(reference))
 
     def test_markers_are_read_once_per_fence(self):
@@ -1165,19 +1170,20 @@ class TestNegativeFences(unittest.TestCase):
         body = "flowchart TB\n" + "\n".join("  A --> B" for _ in range(3000))
         text = self.negative(body, "MA-FLOW-01")
         calls = []
-        original = mm.negative_markers
+        original = MARKERS_HOME.negative_markers
 
         def counting(fence):
             calls.append(fence.start)
             return original(fence)
-        mm.negative_markers = counting
+        MARKERS_HOME.negative_markers = counting
         try:
             start = time.perf_counter()
             found = run(text)
             elapsed = time.perf_counter() - start
         finally:
-            mm.negative_markers = original
+            MARKERS_HOME.negative_markers = original
         self.assertGreater(len([f for f in found if f.expected]), 1000)
+        self.assertGreater(len(calls), 0, "the counting function never ran (TASK 124 R2.3)")
         self.assertLess(len(calls), 10)
         self.assertLess(elapsed, 2.0, f"{elapsed:.2f} s")
 
@@ -1199,11 +1205,11 @@ class TestCli(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.dir = Path(self.tmp.name)
-        self.roots = mm.NEGATIVE_ROOTS
-        mm.NEGATIVE_ROOTS = self.roots + (self.dir,)
+        self.roots = ROOTS_HOME.NEGATIVE_ROOTS
+        ROOTS_HOME.NEGATIVE_ROOTS = self.roots + (self.dir,)
 
     def tearDown(self):
-        mm.NEGATIVE_ROOTS = self.roots
+        ROOTS_HOME.NEGATIVE_ROOTS = self.roots
         self.tmp.cleanup()
 
     def write(self, name, text, encoding="utf-8"):

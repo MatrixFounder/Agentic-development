@@ -5,7 +5,7 @@ tier: 2
 triggers:
   - /light workflow
   - "[LIGHT] tag in TASK.md"
-version: 1.0
+version: 1.1
 ---
 
 # Skill: Light Mode
@@ -23,6 +23,11 @@ A task qualifies for Light Mode if ALL of the following are true:
 - [ ] Estimated implementation time: < 30 minutes.
 
 If **ANY** condition is false, **ESCALATE** to standard pipeline.
+
+**Exception — a mechanical split.** A behaviour-preserving split of a script of an auxiliary
+skill (TIER 2+, such as `mermaid-authoring-guidelines`) qualifies, although it creates files and
+takes longer than 30 minutes. The Self-Improvement Mode of the system prompts names it a case
+for `/light`. Every other condition above still holds.
 
 ---
 

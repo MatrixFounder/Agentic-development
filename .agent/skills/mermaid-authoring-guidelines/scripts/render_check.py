@@ -165,10 +165,20 @@ RENDER_KEEP = 20
 
 FIXTURE_SCHEMA = "render-evidence-fixture/v1"
 #: Files whose content decides the stored metrics of a render. The fixture records their sha256,
-#: so evidence measured by other instruments reads as stale (TASK R9.5). `mermaid_model.py` is
-#: left out: the fence hash already binds the text it extracts, and the lint changes it often.
+#: so evidence measured by other instruments reads as stale (TASK R9.5). The package
+#: `mermaid_model` is left out: the fence hash already binds the text it extracts, and the lint
+#: changes it often. `svg_geometry.py` is a thin file over `svg_geometry_parts/` (TASK 125).
 INSTRUMENT_FILES = ("scripts/render_check.py", "scripts/svg_geometry.py",
-                    "scripts/measure_text.mjs")
+                    "scripts/svg_geometry_parts/__init__.py", "scripts/svg_geometry_parts/base.py",
+                    "scripts/svg_geometry_parts/tolerances.py",
+                    "scripts/svg_geometry_parts/transforms.py",
+                    "scripts/svg_geometry_parts/flattening.py",
+                    "scripts/svg_geometry_parts/plane.py",
+                    "scripts/svg_geometry_parts/text_estimate.py",
+                    "scripts/svg_geometry_parts/svg_model.py",
+                    "scripts/svg_geometry_parts/graph.py", "scripts/svg_geometry_parts/sequence.py",
+                    "scripts/svg_geometry_parts/gantt.py", "scripts/svg_geometry_parts/contrast.py",
+                    "scripts/svg_geometry_parts/api.py", "scripts/measure_text.mjs")
 #: Lint families whose rules say a source does not parse in a pinned version. A negative fence
 #: that names one of them, or one of their rules, may show a parse or render error.
 PARSE_FAMILIES = ("PARSE", "SYN")

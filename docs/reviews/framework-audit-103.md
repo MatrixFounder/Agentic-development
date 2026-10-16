@@ -153,8 +153,8 @@ F1 writes the rule into `documentation-standards` §4.1 and F3 writes the mirror
 met the same situation and **stated it** — "The pair is ungated" — so a later reader does not assume
 a gate exists. This task inherits the situation and inherits the obligation to declare it.
 
-**Required action:** state the residual in `docs/TASK.md` §7. Not a blocker on its own; blocking
-only because an undeclared gap reads as a covered one.
+**Required action:** state the residual in `docs/TASK.md` §7, the TASK at `ed2af74`. Not a
+blocker on its own; blocking only because an undeclared gap reads as a covered one.
 
 ## 6. Verdict & Actions — Mode B
 

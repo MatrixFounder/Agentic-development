@@ -606,7 +606,8 @@ needs no load.
 | `scripts/mermaid_model/` | library | fence extraction; parsers for flowchart, sequence, state, gantt, ASCII; one module per section | unit tests |
 | `scripts/lint_mermaid.py` | CLI | static rules with probe pairs; `--inventory` worksheet | yes |
 | `scripts/planarity.py` | library | exact planarity test of a flowchart's simple graph | unit tests |
-| `scripts/svg_geometry.py` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG | fixture tests |
+| `scripts/svg_geometry.py` | library | a thin file over `svg_geometry_parts/`: binds every name of its modules, holds the debug command line | fixture tests |
+| `scripts/svg_geometry_parts/` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG; one module per section | fixture tests |
 | `scripts/render_check.py` | CLI | renders with pinned installs, measures text, swaps the font of the 11.17.2 renders, calls `svg_geometry` | no |
 | `scripts/setup_renderers.sh` | CLI | installs the pinned renderers into a cache outside the repository | no |
 | `assets/renderers/<tag>/` | data | `package.json` and lockfile per pinned renderer, installed with `npm ci` | — |

@@ -1,6 +1,6 @@
 # PLAN 124 — `mermaid_model.py` becomes the package `mermaid_model/`, one module per section
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 9) · **Covers:** R1–R6 · **Acceptance:** TASK A1–A10.
+**TASK:** [docs/TASK.md](../tasks/task-124-mermaid-model-package.md) (revision 9) · **Covers:** R1–R6 · **Acceptance:** TASK A1–A10.
 
 **Revision:** 8, per round 5 of stage 2 (TASK D17): stage 2 closes at that round, by the
 operator's choice, and J1 follows.

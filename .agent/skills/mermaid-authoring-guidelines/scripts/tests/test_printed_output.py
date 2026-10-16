@@ -8,7 +8,7 @@ prints as it is. The lint holds copies of `json_text` and `_shown` of render_che
 does not import (TASK 123 D7); a test here pins each pair to one output.
 
 The debug command line of svg_geometry.py prints ASCII JSON, and escapes its error lines with the
-`_escaped` that the file holds (TASK 123 R4.1).
+`_escaped` that the file binds from `svg_geometry_parts/api.py` (TASK 123 R4.1, TASK 125).
 """
 import ast
 import contextlib
@@ -184,14 +184,16 @@ class TestOnlySayPrints(unittest.TestCase):
                 writes.append(owner.get(id(node), "<module>") + ": " + text)
         self.assertEqual(prints, ["_say"])
         self.assertEqual(writes, [])
-        # TASK 123 D7: the lint holds its own copies, so its rule runs neither of these
+        # TASK 123 D7: the lint holds its own copies, so its rule runs none of these; the
+        # geometry's code lies in `svg_geometry_parts` since TASK 125
         imported = set()
         for node in ast.walk(self.tree):
             if isinstance(node, ast.Import):
                 imported.update(a.name.split(".")[0] for a in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported.add(node.module.split(".")[0])
-        self.assertEqual(sorted(imported & {"render_check", "svg_geometry"}), [])
+        self.assertEqual(sorted(imported & {"render_check", "svg_geometry", "svg_geometry_parts"}),
+                         [])
 
     def test_lines_go_only_with_json_or_escaped_lines(self):
         allowed = {"_json_text", "_format_text", "_format_inventory"}

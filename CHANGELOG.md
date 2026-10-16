@@ -16,6 +16,24 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.45.0 — `svg_geometry.py` of the figure skill becomes a thin file over a package (TASK 125)**
+
+#### Changed
+
+- **The sections of `scripts/svg_geometry.py` of `mermaid-authoring-guidelines` move to the
+  package `scripts/svg_geometry_parts/`**, one module per section, each moved verbatim.
+  `svg_geometry.py` stays as a thin file: it binds all 120 top-level names, lists them in
+  `__all__` and holds the debug command line. The render check, the grader and the tests import
+  `svg_geometry` as before, and `python3 svg_geometry.py FIG.svg` works as before. A module
+  imports only from the modules above it, and a test pins that order.
+- **Both `INSTRUMENT_FILES` name the files of the package.** The two geometry fixtures of the
+  skill's tests were rendered again. The committed corpus renders keep their old instrument
+  hash, so the next corpus run renders their figures again.
+- `docs/ARCHITECTURE.md` §10.1 lists the thin file and the package.
+- **`light-mode` 1.1 admits a mechanical split.** A behaviour-preserving split of a script of an
+  auxiliary skill qualifies for `/light`, as the Self-Improvement Mode of the system prompts
+  says.
+
 ### **v3.44.0 — `mermaid_model.py` of the figure skill becomes a package, one module per section (TASK 124)**
 
 #### Changed

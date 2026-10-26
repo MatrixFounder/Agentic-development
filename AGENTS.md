@@ -34,6 +34,11 @@ Your default file-discovery commands (`find`, `ls`, `rg`, `fd`) do **NOT** desce
 2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary.
 3. **IF NEW**: Proceed with normal analysis.
 4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
+5. **DISAGREEMENT CHECK**: If the state was restored and `docs/TASK.md` exists, read its H1 and
+   its Task ID.
+   - Both it and `current_task.name` carry a task ID, and the IDs differ: say in your first reply: "Session state and docs/TASK.md disagree: latest.yaml names [ID], docs/TASK.md is [ID]." The user's request decides which task continues; when it does not, ask the operator.
+   - Either carries no task ID: name the H1 of `docs/TASK.md` beside the restored task, and ask nothing.
+   - The IDs are equal: nothing changes.
 
 ## TOOL EXECUTION PROTOCOL
 Use your harness's **built-in tools** — Cursor and Codex CLI both provide file read/write/edit, a sandboxed shell/terminal (Codex `workspace-write`; Cursor approval-gated), and search.
@@ -56,6 +61,7 @@ Use your harness's **built-in tools** — Cursor and Codex CLI both provide file
 
 ### Session State Persistence
 - **MANDATORY**: After every phase boundary, you **MUST** immediately execute `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"` to persist context.
+- **If `update_state.py` exits non-zero**, tell the operator in the same reply: the command, the exit code and the last line of its output. Do not write `.agent/sessions/latest.yaml` by hand in place of the run. Continue the task; a workflow's own stop rules still apply.
 
 ## WORKSPACE WORKFLOWS (Dynamic Dispatch)
 Before starting the standard pipeline, check if the user's request matches a workflow in `.agent/workflows/`.

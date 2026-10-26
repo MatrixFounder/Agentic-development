@@ -1,15 +1,81 @@
 #!/usr/bin/env python3
-import sys
+"""Persist the session state of `skill-session-state` in `.agent/sessions/latest.yaml`.
+
+The bootstrap files run this script at each phase boundary. It takes an exclusive lock on
+`latest.yaml.lock`, reads the state once, merges the arguments into it and writes it back
+(TASK 127):
+
+- the lock is `fcntl.flock` on POSIX and `msvcrt.locking` on Windows, chosen by which of the two
+  imports;
+- the file is UTF-8 with LF line ends. Its first line is `schema_version: 2`, and each string is
+  a JSON string, which is also a YAML double-quoted scalar;
+- a file without `schema_version: 2` is read as the script before TASK 127 wrote it, and the
+  next write stores the same strings in the new form.
+
+Exit codes: 0 the state was written; 1 no lock module, a lock that stayed held, a state file that
+is not UTF-8, or another error; 2 a usage error. In the first three cases of exit 1 the script
+writes nothing.
+"""
 import os
-import uuid
-import datetime
-import argparse
-import re
-import fcntl
+import sys
+
+# Run as a script, its own directory leaves the import path before any other import, so a module
+# planted beside the script is never imported under the allow rule (WI-39, TASK 127 R6). An entry
+# is that directory when its real path, or its device and inode, match the directory of the path
+# as called or of the real path. A case-insensitive volume, a linked directory and a linked file
+# reach the directory under other spellings. A test that loads the module keeps its own path.
+if __name__ == "__main__":
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
+
+import argparse  # noqa: E402
+import datetime  # noqa: E402
+import json  # noqa: E402
+import re  # noqa: E402
+import uuid  # noqa: E402
+
+# The lock module: `fcntl` where it imports, else `msvcrt` (TASK 127 D10).
+try:
+    import fcntl  # noqa: E402
+except ImportError:
+    fcntl = None
+    try:
+        import msvcrt  # noqa: E402
+    except ImportError:
+        msvcrt = None
+else:
+    msvcrt = None
 
 # Constants
 SESSION_DIR = ".agent/sessions"
 SESSION_FILE = "latest.yaml"
+SCHEMA_VERSION = 2
+#: Characters that `json.dumps(ensure_ascii=False)` leaves raw and a YAML double-quoted scalar
+#: must not hold raw: those outside the YAML 1.2 printable set, and the line breaks U+0085,
+#: U+2028 and U+2029 (TASK 127 R3.1).
+_YAML_UNSAFE = re.compile("[%s]" % "".join(
+    "%s-%s" % (chr(low), chr(high))
+    for low, high in ((0x7F, 0x9F), (0x2028, 0x2029), (0xD800, 0xDFFF), (0xFFFE, 0xFFFF))))
+#: The version line; the reader takes it from the first line only (TASK 127 R3.3).
+_VERSION_LINE = re.compile(r"schema_version:\s*(\d+)\s*")
+
+
+class StateError(Exception):
+    """A state that the script will not read or lock; the message names the file."""
+
 
 def find_repo_root():
     """Anchor for SESSION_DIR (SS-1): the state file must land at the repo
@@ -43,106 +109,141 @@ def get_session_path():
     return os.path.join(get_session_dir(), SESSION_FILE)
 
 def ensure_session_dir():
-    session_dir = get_session_dir()
-    if not os.path.exists(session_dir):
-        os.makedirs(session_dir)
+    """Create the session dir; a second run that creates it at the same time is no error."""
+    os.makedirs(get_session_dir(), exist_ok=True)
 
-# --- Minimal YAML Parser (Read-Only specific to our schema) ---
-# We ONLY need to preserve: session_id, active_blockers, recent_decisions.
+# --- Minimal YAML reader (specific to our schema) ---
+# We ONLY need to preserve: session_id, active_blockers, recent_decisions, completed_tasks.
 # Everything else (task, mode, summary) is overwritten by the Agent's update.
+
+def _decode(raw, version):
+    """One preserved value from its text in the file.
+
+    A version 2 file holds a JSON string, which `json.loads` decodes. A version 1 file, or an item
+    that is not a JSON string, is read as the script before TASK 127 read it: one optional quote
+    is stripped from each end, then the outer whitespace.
+    """
+    if version >= SCHEMA_VERSION:
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            value = None
+        if isinstance(value, str):
+            return value
+    return re.fullmatch(r"""['"]?(.*?)['"]?""", raw, re.DOTALL).group(1).strip()
+
+
+def _list_items(content, key, version):
+    """The items of the list `key`, each decoded by `_decode`."""
+    section = re.search(r'^' + key + r':\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
+    if not section:
+        return []
+    return [_decode(raw, version)
+            for raw in re.findall(r'^\s+-\s+(.*?)\s*$', section.group(1), re.MULTILINE)]
+
 
 def parse_simple_yaml(content):
     """
     Robustly extract specific fields from our generated YAML.
     Does NOT aim to be a full YAML parser.
     """
+    match = _VERSION_LINE.fullmatch(content.split("\n", 1)[0])
+    version = int(match.group(1)) if match else 1
     data = {
         "session_id": None,
-        "active_blockers": [],
-        "recent_decisions": [],
-        "completed_tasks": []
+        "active_blockers": _list_items(content, "active_blockers", version),
+        "recent_decisions": _list_items(content, "recent_decisions", version),
+        "completed_tasks": _list_items(content, "completed_tasks", version),
     }
-    
-    # Extract session_id
-    sid_match = re.search(r'^session_id:\s*[\'"]?([^\'"\n]+)[\'"]?', content, re.MULTILINE)
-    if sid_match:
-        data["session_id"] = sid_match.group(1).strip()
-        
-    # Extract active_blockers (List of strings)
-    # Assumes format:
-    # active_blockers:
-    #   - "Blocker 1"
-    #   - "Blocker 2"
-    blockers_section = re.search(r'^active_blockers:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
-    if blockers_section:
-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', blockers_section.group(1), re.MULTILINE)
-        data["active_blockers"] = [item.strip() for item in items]
-
-    # Extract recent_decisions
-    decisions_section = re.search(r'^recent_decisions:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
-    if decisions_section:
-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', decisions_section.group(1), re.MULTILINE)
-        data["recent_decisions"] = [item.strip() for item in items]
-
-    # Extract completed_tasks
-    completed_section = re.search(r'^completed_tasks:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
-    if completed_section:
-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', completed_section.group(1), re.MULTILINE)
-        data["completed_tasks"] = [item.strip() for item in items]
-        
+    if version >= SCHEMA_VERSION:
+        sid = re.search(r'^session_id:\s*(.*?)\s*$', content, re.MULTILINE)
+        if sid:
+            data["session_id"] = _decode(sid.group(1), version) or None
+    else:
+        sid = re.search(r'^session_id:\s*[\'"]?([^\'"\n]+)[\'"]?', content, re.MULTILINE)
+        if sid:
+            data["session_id"] = sid.group(1).strip()
     return data
+
+
+def _scalar(value):
+    """`value` as a YAML double-quoted scalar: a JSON string with `_YAML_UNSAFE` escaped."""
+    text = json.dumps(str(value), ensure_ascii=False)
+    return _YAML_UNSAFE.sub(lambda m: "\\u%04x" % ord(m.group()), text)
+
 
 def generate_yaml(data):
     """
     Generate clean, valid YAML string.
     """
-    iso_time = datetime.datetime.now().isoformat()
-    
-    # Handle multiline summary
-    summary = data.get('context_summary', '').strip()
-    formatted_summary = ""
-    if '\n' in summary or len(summary) > 80:
-        formatted_summary = "|\n" + "\n".join([f"  {line}" for line in summary.splitlines()])
+    lines = [
+        f"schema_version: {SCHEMA_VERSION}",
+        f"session_id: {_scalar(data.get('session_id'))}",
+        f"last_updated: {_scalar(datetime.datetime.now().isoformat())}",
+        f"mode: {_scalar(data.get('mode', 'UNKNOWN'))}",
+        "",
+        "current_task:",
+        f"  name: {_scalar(data.get('task_name', 'Unknown Task'))}",
+        f"  status: {_scalar(data.get('task_status', 'Initializing'))}",
+        f"  predicted_steps: {int(data.get('predicted_steps', 0))}",
+        "",
+        f"context_summary: {_scalar(data.get('context_summary', '').strip())}",
+    ]
+    for key in ("active_blockers", "recent_decisions", "completed_tasks"):
+        items = data.get(key) or []
+        lines += ["", f"{key}:"]
+        lines += [f"  - {_scalar(item)}" for item in items] or ["  []"]
+    return "\n".join(lines) + "\n"
+
+
+def read_state(fpath):
+    """The preserved fields of the state file `fpath`, or `{}` when it does not exist.
+
+    The read drops a leading byte-order mark (TASK 127 D14).
+
+    Raises:
+        StateError: the file is not UTF-8 (TASK 127 R2.3).
+    """
+    if not os.path.exists(fpath):
+        return {}
+    try:
+        with open(fpath, "r", encoding="utf-8-sig") as f:
+            content = f.read()
+    except UnicodeDecodeError as exc:
+        raise StateError(f"{fpath} is not UTF-8 (byte {exc.start}: {exc.reason}); "
+                         f"save it as UTF-8 or delete it") from None
+    return parse_simple_yaml(content)
+
+
+def _lock(fd):
+    """Take the exclusive lock of the state on the lock file `fd`.
+
+    `msvcrt.LK_LOCK` tries 10 times, 1 second apart, and then raises `OSError`; `fcntl.flock`
+    waits with no time limit.
+    """
+    if fcntl is not None:
+        fcntl.flock(fd, fcntl.LOCK_EX)
     else:
-        formatted_summary = f'"{summary}"'
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
 
-    yaml = f"""session_id: "{data.get('session_id')}"
-last_updated: "{iso_time}"
-mode: "{data.get('mode', 'UNKNOWN')}"
 
-current_task:
-  name: "{data.get('task_name', 'Unknown Task')}"
-  status: "{data.get('task_status', 'Initializing')}"
-  predicted_steps: {data.get('predicted_steps', 0)}
+def _unlock(fd):
+    """Release the lock that `_lock` took."""
+    if fcntl is not None:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+    else:
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
 
-context_summary: {formatted_summary}
-
-active_blockers:
-"""
-    # Add lists
-    for blocker in data.get('active_blockers', []):
-        yaml += f'  - "{blocker}"\n'
-    
-    if not data.get('active_blockers'):
-        yaml += "  []\n"
-        
-    yaml += "\nrecent_decisions:\n"
-    for decision in data.get('recent_decisions', []):
-        yaml += f'  - "{decision}"\n'
-        
-    if not data.get('recent_decisions'):
-        yaml += "  []\n"
-        
-    yaml += "\ncompleted_tasks:\n"
-    for task in data.get('completed_tasks', []):
-        yaml += f'  - "{task}"\n'
-        
-    if not data.get('completed_tasks'):
-        yaml += "  []\n"
-        
-    return yaml
 
 def main():
+    # The script's own messages never raise an encoding error on a console or a pipe whose
+    # encoding cannot hold a path or a value (TASK 127 R2.2).
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
     parser = argparse.ArgumentParser(description="Update Session State YAML")
     parser.add_argument("--mode", required=True, help="Current Agent Mode")
     parser.add_argument("--task", required=True, help="Current Task Name")
@@ -153,85 +254,40 @@ def main():
     parser.add_argument("--add_blocker", help="Add a blocker item")
     parser.add_argument("--clear_blockers", action="store_true", help="Clear all blockers")
     parser.add_argument("--add_completed_task", help="Add a completed task to history")
-    
+
     args = parser.parse_args()
-    
-    ensure_session_dir()
-    fpath = get_session_path()
-    
-    # 1. Read existing state to preserve ID and lists
-    existing_data = {}
-    if os.path.exists(fpath):
-        try:
-            with open(fpath, 'r') as f:
-                content = f.read()
-                existing_data = parse_simple_yaml(content)
-        except Exception as e:
-            print(f"Warning: Could not read existing session file: {e}")
-            existing_data = {}
-            
-    # 2. Merge Data
-    session_id = existing_data.get("session_id") or str(uuid.uuid4())
-    active_blockers = existing_data.get("active_blockers", [])
-    recent_decisions = existing_data.get("recent_decisions", [])
-    
-    if args.clear_blockers:
-        active_blockers = []
-    
-    if args.add_blocker:
-        if args.add_blocker not in active_blockers:
-            active_blockers.append(args.add_blocker)
-            
-            
-    if args.add_decision:
-        # Keep only last 10 decisions
-        recent_decisions.append(args.add_decision)
-        if len(recent_decisions) > 10:
-            recent_decisions = recent_decisions[-10:]
 
-    completed_tasks = existing_data.get("completed_tasks", [])
-    if args.add_completed_task:
-        if args.add_completed_task not in completed_tasks:
-            completed_tasks.append(args.add_completed_task)
-            
-    
-    # 3. Construct New State
-    # Note: We construct it BEFORE locking to minimize lock time, 
-    # but we must re-read inside the lock to get the TRUE latest state.
-    
-    # --- CRITICAL SECTION START ---
-    # We use a separate lock file to avoid truncation issues with open(..., 'w')
-    lock_path = fpath + ".lock"
-    
+    if fcntl is None and msvcrt is None:
+        print("Error updating session state: neither fcntl nor msvcrt imports, "
+              "and the state needs one of them for its lock")
+        sys.exit(1)
+
     try:
-        with open(lock_path, 'w') as lockfile:
-            # Acquire Exclusive Lock
-            fcntl.flock(lockfile, fcntl.LOCK_EX)
-            
+        ensure_session_dir()
+        fpath = get_session_path()
+        # A separate lock file, opened with no truncation and at position 0 (TASK 127 R1.6).
+        lock_path = fpath + ".lock"
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
             try:
-                # RE-READ existing state inside the lock to ensure we have the absolute latest
-                # (Another agent might have updated it while we were parsing args)
-                if os.path.exists(fpath):
-                    with open(fpath, 'r') as f:
-                        current_content = f.read()
-                        latest_data = parse_simple_yaml(current_content)
-                else:
-                    latest_data = {}
+                _lock(fd)
+            except OSError as exc:
+                raise StateError(f"could not lock {lock_path}: {exc}") from None
+            try:
+                # The one read of the state, inside the lock (TASK 127 R1.2).
+                latest_data = read_state(fpath)
 
-                # Merge Logic (Re-apply on top of latest_data)
-                # We prioritize the LATEST data for lists, but the ARGS for current status
-                
                 # Session ID: Persist if exists
-                final_session_id = latest_data.get("session_id") or session_id
-                
+                final_session_id = latest_data.get("session_id") or str(uuid.uuid4())
+
                 # Active Blockers: Merge (Union)
                 final_blockers = latest_data.get("active_blockers", [])
                 if args.clear_blockers:
                     final_blockers = []
                 elif args.add_blocker and args.add_blocker not in final_blockers:
                     final_blockers.append(args.add_blocker)
-                    
-                # Recent Decisions: Append
+
+                # Recent Decisions: Append, keep the last 10
                 final_decisions = latest_data.get("recent_decisions", [])
                 if args.add_decision:
                     final_decisions.append(args.add_decision)
@@ -243,7 +299,6 @@ def main():
                 if args.add_completed_task and args.add_completed_task not in final_completed:
                     final_completed.append(args.add_completed_task)
 
-                # Construct Final State Object
                 final_state = {
                     "session_id": final_session_id,
                     "mode": args.mode,
@@ -253,22 +308,18 @@ def main():
                     "context_summary": args.summary,
                     "active_blockers": final_blockers,
                     "recent_decisions": final_decisions,
-                    "completed_tasks": final_completed
+                    "completed_tasks": final_completed,
                 }
-                
-                # Generate YAML
                 yaml_content = generate_yaml(final_state)
-                
-                # Write to actual file
-                with open(fpath, 'w') as f:
+
+                with open(fpath, "w", encoding="utf-8", newline="\n") as f:
                     f.write(yaml_content)
-                    
+
                 print(f"Session state updated: {fpath} (Locked)")
-                
             finally:
-                # Release Lock
-                fcntl.flock(lockfile, fcntl.LOCK_UN)
-                
+                _unlock(fd)
+        finally:
+            os.close(fd)
     except Exception as e:
         print(f"Error updating session state: {e}")
         sys.exit(1)

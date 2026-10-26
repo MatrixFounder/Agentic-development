@@ -1,0 +1,1026 @@
+diff --git a/.agent/skills/skill-session-state/scripts/tests/test_update_state.py b/.agent/skills/skill-session-state/scripts/tests/test_update_state.py
+index ba98fa5..b8531db 100644
+--- a/.agent/skills/skill-session-state/scripts/tests/test_update_state.py
++++ b/.agent/skills/skill-session-state/scripts/tests/test_update_state.py
+@@ -1,15 +1,264 @@
+-"""SS-1 regression: update_state.py must anchor .agent/sessions at the repo
+-root regardless of the invocation CWD (docs/issues/ss-1-*.md)."""
++"""Tests of `update_state.py`.
++
++SS-1 regression: update_state.py must anchor .agent/sessions at the repo root regardless of the
++invocation CWD (docs/issues/ss-1-*.md). TASK 127: the lock on POSIX and on Windows, UTF-8, the
++escaped scalars and their round trip, and the import path (WI-39); TC-01 to TC-18 of its §5.
++
++Each test runs the script in a temporary root that holds its own `.git`, and no test writes
++under the repository. The Windows branch runs on POSIX: a test writes, into a temporary
++directory, a `sitecustomize.py` that blocks `import fcntl` and provides a `msvcrt` stand-in on
++`fcntl.lockf`, and puts that directory on `PYTHONPATH`. PyYAML checks each written file as a
++second reader; where it does not import, each test that reaches such a check reports a skip.
++"""
++import ast
++import json
+ import os
++import py_compile
++import re
+ import subprocess
+ import sys
+ import tempfile
++import time
++import types
+ import unittest
+ from pathlib import Path
+ 
++try:
++    import fcntl
++except ImportError:  # Windows: the tests that hold a POSIX lock skip
++    fcntl = None
++try:
++    import yaml
++except ImportError:  # PyYAML is a second reader only
++    yaml = None
++
+ SCRIPT = Path(__file__).resolve().parents[1] / "update_state.py"
+ ARGS = ["--mode", "Test", "--task", "t", "--status", "s", "--summary", "x"]
+ 
++#: The `sitecustomize.py` of the Windows branch (TASK 127 R7.2). `MSVCRT_STANDIN=1` blocks
++#: `import fcntl` and provides `msvcrt`, whose `locking` logs `<mode> <offset> <nbytes>` to
++#: `MSVCRT_STANDIN_LOG` and takes `fcntl.lockf` on the same bytes. `LK_LOCK` tries
++#: `MSVCRT_STANDIN_TRIES` times, like the 10 tries of the real one, and then raises `OSError`.
++#: `MSVCRT_STANDIN_BLOCK` names more modules to block.
++SITECUSTOMIZE = r'''
++import errno
++import os
++import sys
++import time
++import types
++
++_BLOCKED = {"fcntl"} | set(filter(None, os.environ.get("MSVCRT_STANDIN_BLOCK", "").split(",")))
++for _name in _BLOCKED - {"fcntl"}:
++    sys.modules.pop(_name, None)
++
++if os.environ.get("MSVCRT_STANDIN") == "1":
++    import fcntl as _real
++    del sys.modules["fcntl"]
++    _LOG = os.environ.get("MSVCRT_STANDIN_LOG")
++    _TRIES = int(os.environ.get("MSVCRT_STANDIN_TRIES", "10"))
++    msvcrt = types.ModuleType("msvcrt")
++    msvcrt.LK_UNLCK, msvcrt.LK_LOCK, msvcrt.LK_NBLCK, msvcrt.LK_RLCK, msvcrt.LK_NBRLCK = range(5)
++
++    def locking(fd, mode, nbytes):
++        offset = os.lseek(fd, 0, os.SEEK_CUR)
++        if _LOG:
++            with open(_LOG, "a", encoding="utf-8") as fh:
++                fh.write(f"{mode} {offset} {nbytes}\n")
++        if mode == msvcrt.LK_UNLCK:
++            _real.lockf(fd, _real.LOCK_UN, nbytes, offset, os.SEEK_SET)
++            return
++        for _ in range(_TRIES):
++            try:
++                _real.lockf(fd, _real.LOCK_EX | _real.LOCK_NB, nbytes, offset, os.SEEK_SET)
++                return
++            except OSError:
++                time.sleep(0.05)
++        raise OSError(errno.EDEADLK, "Resource deadlock avoided")
++
++    msvcrt.locking = locking
++    sys.modules["msvcrt"] = msvcrt
++else:
++    sys.modules.pop("fcntl", None)
++
++
++class _Block:
++    def find_spec(self, name, path=None, target=None):
++        if name in _BLOCKED:
++            raise ModuleNotFoundError(f"No module named {name!r}", name=name)
++        return None
++
++
++sys.meta_path.insert(0, _Block())
++'''
++
++#: TC-09: one value per run, each a case of TASK 127 §5.
++ROUND_TRIP_VALUES = [
++    'q"q', "b\\b", "n\\nn",
++    "l\nl", "c\rc", "t\tt", "d\x7fd", "x\x85x", "y\x93y", "z\u2028z",
++    "Тест", "e\U0001F600e",
++    "k: v", "# h", " lead",
++    "s\udcffs",
++]
++
++#: A version 2 state file whose decision holds Cyrillic and an arrow (TC-06), and one whose
++#: decision holds escaped quotes (TC-15).
++V2_STATE = """schema_version: 2
++session_id: "sid-127"
++last_updated: "2026-10-26T00:00:00"
++mode: "M"
++
++current_task:
++  name: "t"
++  status: "s"
++  predicted_steps: 0
++
++context_summary: "x"
++
++active_blockers:
++  []
++
++recent_decisions:
++  - {decision}
++
++completed_tasks:
++  []
++"""
++
++#: A state file as the script before TASK 127 wrote it, with a key that a hand edit added
++#: (TC-10, UC-5).
++V1_STATE = r"""session_id: "old-sid"
++last_updated: "2026-09-17T00:00:00"
++mode: "M"
++
++current_task:
++  name: "t"
++  status: "s"
++  predicted_steps: 0
++
++context_summary: "x"
++
++current_task_2026_09_17:
++  name: "TASK-029 by hand"
++
++active_blockers:
++  []
++
++recent_decisions:
++  - "say "hi""
++  - "C:\new\dir"
++  - "C:\new\tab"
++
++schema_version: 2
++
++completed_tasks:
++  - "done one"
++"""
++
++
++def clean_env():
++    """The environment of a run: no `CLAUDE_PROJECT_DIR`, which could point the script at a live
++    repository, no `PYTHONPATH`, and no bytecode written."""
++    env = dict(os.environ)
++    for key in ("CLAUDE_PROJECT_DIR", "PYTHONPATH"):
++        env.pop(key, None)
++    env["PYTHONDONTWRITEBYTECODE"] = "1"
++    return env
++
++
++def run_script(cwd, args, env_extra=None, script=SCRIPT, pythonpath=None):
++    """Run the script with `args` in `cwd`; bytes out."""
++    env = clean_env()
++    if pythonpath is not None:
++        env["PYTHONPATH"] = str(pythonpath)
++    env.update(env_extra or {})
++    return subprocess.run([sys.executable, str(script)] + list(args), cwd=str(cwd), env=env,
++                          capture_output=True, timeout=120)
++
++
++def output(proc):
++    """stdout and stderr of `proc` as text, for messages and assertions."""
++    return (proc.stdout + proc.stderr).decode("utf-8", "backslashreplace")
++
++
++def load_script(name):
++    """The script as a module named `name`, compiled from its source in memory.
++
++    `importlib`'s loader reads and writes `__pycache__/` beside the script; this neither reads
++    nor writes bytecode there.
++    """
++    module = types.ModuleType(name)
++    module.__file__ = str(SCRIPT)
++    exec(compile(SCRIPT.read_bytes(), str(SCRIPT), "exec"), module.__dict__)
++    return module
++
++
++def json_lists(text):
++    """Each list of the state file and the scalars of `current_task`, read as JSON lines.
++
++    A reader of its own, independent of the script's parser: a list item is `  - <JSON string>`.
++    """
++    lists, key = {}, None
++    scalars = {}
++    for line in text.split("\n"):
++        head = re.match(r"^(\w+):\s*$", line)
++        if head:
++            key = head.group(1)
++            lists.setdefault(key, [])
++            continue
++        item = re.match(r"^  - (.*)$", line)
++        if item and key:
++            lists[key].append(json.loads(item.group(1)))
++            continue
++        field = re.match(r"^  (name|status): (.*)$", line)
++        if field and key == "current_task":
++            scalars[field.group(1)] = json.loads(field.group(2))
++    return lists, scalars
++
++
++class _RootCase(unittest.TestCase):
++    """A temporary root that holds its own `.git`; the script writes its state there."""
++
++    def setUp(self):
++        self._tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._tmp.cleanup)
++        self.root = Path(self._tmp.name).resolve() / "root"
++        (self.root / ".git").mkdir(parents=True)
++        self.sessions = self.root / ".agent" / "sessions"
++        self.state = self.sessions / "latest.yaml"
++        self.lock = self.sessions / "latest.yaml.lock"
++
++    def run_ok(self, args, **kwargs):
++        proc = run_script(self.root, args, **kwargs)
++        self.assertEqual(proc.returncode, 0, output(proc))
++        return proc
++
++    def text(self):
++        return self.state.read_bytes().decode("utf-8")
++
++    def write_state(self, text, prefix=b""):
++        self.sessions.mkdir(parents=True, exist_ok=True)
++        self.state.write_bytes(prefix + text.encode("utf-8"))
++
++    def standin(self, **env):
++        """The `PYTHONPATH` directory and the environment of the Windows branch."""
++        site = Path(self._tmp.name) / "site"
++        site.mkdir(exist_ok=True)
++        (site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
++        values = {"MSVCRT_STANDIN": "1",
++                  "MSVCRT_STANDIN_LOG": str(Path(self._tmp.name) / "msvcrt.log")}
++        values.update(env)
++        return site, values
++
++    def assert_yaml_equal(self, text, key, expected):
++        """PyYAML yields `expected` for `key`, a dotted path. Each test calls this after its own
++        checks; without PyYAML the test reports a skip, so R3.7 is not shown as checked."""
++        if yaml is None:
++            self.skipTest("PyYAML does not import: TASK 127 R3.7 is not checked")
++        node = yaml.safe_load(text)
++        for part in key.split("."):
++            node = node[part]
++        self.assertEqual(node, expected)
++
+ 
+ class UpdateStateAnchorTestCase(unittest.TestCase):
+     def setUp(self):
+@@ -90,5 +339,295 @@ class UpdateStateAnchorTestCase(unittest.TestCase):
+                          "same session_id — subdir run updates, not forks")
+ 
+ 
++@unittest.skipIf(fcntl is None, "holds a POSIX lock, or runs the Windows branch on POSIX")
++class LockTestCase(_RootCase):
++    """TASK 127 R1: the lock on POSIX and on Windows (TC-01 to TC-05)."""
++
++    def test_tc01_two_runs_at_once_keep_both_tasks(self):
++        procs = [subprocess.Popen([sys.executable, str(SCRIPT)] + ARGS
++                                  + ["--add_completed_task", name], cwd=str(self.root),
++                                  env=clean_env(), stdout=subprocess.PIPE,
++                                  stderr=subprocess.PIPE)
++                 for name in ("Task A", "Task B")]
++        for proc in procs:
++            out, err = proc.communicate(timeout=120)
++            self.assertEqual(proc.returncode, 0, (out + err).decode("utf-8", "replace"))
++        lists, _ = json_lists(self.text())
++        self.assertEqual(sorted(lists["completed_tasks"]), ["Task A", "Task B"])
++
++    def test_tc02_a_held_flock_makes_the_run_wait(self):
++        self.sessions.mkdir(parents=True)
++        fd = os.open(self.lock, os.O_RDWR | os.O_CREAT, 0o644)
++        try:
++            fcntl.flock(fd, fcntl.LOCK_EX)
++            proc = subprocess.Popen([sys.executable, str(SCRIPT)] + ARGS, cwd=str(self.root),
++                                    env=clean_env(), stdout=subprocess.PIPE,
++                                    stderr=subprocess.PIPE)
++            time.sleep(2)
++            waiting = proc.poll() is None
++            # A state that another run wrote while this one waited: the read must come after it.
++            self.write_state(V2_STATE.format(decision='"kept"').replace(
++                "completed_tasks:\n  []", 'completed_tasks:\n  - "written while waiting"'))
++            fcntl.flock(fd, fcntl.LOCK_UN)
++            out, err = proc.communicate(timeout=120)
++        finally:
++            os.close(fd)
++        self.assertTrue(waiting, "the run did not wait for the held lock")
++        self.assertEqual(proc.returncode, 0, (out + err).decode("utf-8", "replace"))
++        lists, _ = json_lists(self.text())
++        self.assertEqual(lists["completed_tasks"], ["written while waiting"],
++                         "the run read the state before it took the lock")
++
++    def test_tc03_windows_branch_locks_and_unlocks_byte_zero(self):
++        site, env = self.standin()
++        self.run_ok(ARGS, env_extra=env, pythonpath=site)
++        log = Path(env["MSVCRT_STANDIN_LOG"]).read_text(encoding="utf-8").split()
++        self.assertEqual(log, ["1", "0", "1", "0", "0", "1"],
++                         "LK_LOCK, then LK_UNLCK, each on 1 byte at offset 0")
++        self.assertTrue(self.text().startswith("schema_version: 2\n"))
++
++    def test_tc04_windows_branch_exits_1_when_the_lock_stays_held(self):
++        self.write_state(V2_STATE.format(decision='"kept"'))
++        before = self.state.read_bytes()
++        fd = os.open(self.lock, os.O_RDWR | os.O_CREAT, 0o644)
++        try:
++            fcntl.lockf(fd, fcntl.LOCK_EX, 1, 0, os.SEEK_SET)
++            site, env = self.standin()
++            proc = run_script(self.root, ARGS, env_extra=env, pythonpath=site)
++        finally:
++            os.close(fd)
++        self.assertEqual(proc.returncode, 1, output(proc))
++        self.assertIn("latest.yaml.lock", output(proc))
++        self.assertEqual(self.state.read_bytes(), before)
++
++    def test_tc05_no_lock_module_exits_1_and_writes_nothing(self):
++        site, env = self.standin(MSVCRT_STANDIN="0", MSVCRT_STANDIN_BLOCK="msvcrt")
++        proc = run_script(self.root, ARGS, env_extra=env, pythonpath=site)
++        self.assertEqual(proc.returncode, 1, output(proc))
++        self.assertIn("fcntl", output(proc))
++        self.assertIn("msvcrt", output(proc))
++        self.assertFalse((self.root / ".agent").exists(), "a file was written")
++        proc = run_script(self.root, ["--help"], env_extra=env, pythonpath=site)
++        self.assertEqual(proc.returncode, 0, output(proc))
++
++
++class DirectoryTestCase(_RootCase):
++    """TASK 127 R1.9: a session directory that another run made meanwhile (TC-18)."""
++
++    def test_tc18_a_directory_made_meanwhile_is_no_error(self):
++        # The race of R1.9 every time: the directory exists, and `os.path.exists` says it does
++        # not, as when a second run creates it between the check and the creation.
++        from unittest import mock
++        module = load_script("update_state_tc18")
++        self.sessions.mkdir(parents=True)
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        try:
++            with mock.patch.dict(os.environ), mock.patch("os.path.exists", return_value=False):
++                os.environ.pop("CLAUDE_PROJECT_DIR", None)
++                module.ensure_session_dir()
++        finally:
++            os.chdir(cwd)
++        self.assertTrue(self.sessions.is_dir())
++
++
++class EncodingTestCase(_RootCase):
++    """TASK 127 R2: UTF-8 on every platform (TC-06 to TC-08, TC-11, TC-15)."""
++
++    #: A locale whose encoding is ASCII on Linux and macOS (TASK 127 R7.3).
++    ASCII_LOCALE = {"LC_ALL": "C", "LANG": "C", "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0"}
++
++    def test_tc06_cyrillic_state_survives_an_ascii_locale(self):
++        self.write_state(V2_STATE.format(decision='"решение → ok"'))
++        self.run_ok(ARGS, env_extra=self.ASCII_LOCALE)
++        lists, _ = json_lists(self.text())
++        self.assertEqual(lists["recent_decisions"], ["решение → ok"])
++        self.assert_yaml_equal(self.text(), "recent_decisions", ["решение → ok"])
++
++    def test_tc07_each_open_names_its_encoding(self):
++        tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
++        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
++                 and isinstance(node.func, ast.Name) and node.func.id == "open"]
++        self.assertTrue(calls)
++        for call in calls:
++            keywords = {kw.arg: kw.value for kw in call.keywords}
++            mode = call.args[1] if len(call.args) > 1 else keywords.get("mode")
++            mode = mode.value if isinstance(mode, ast.Constant) else "r"
++            encoding = keywords.get("encoding")
++            self.assertIsInstance(encoding, ast.Constant, f"line {call.lineno}: no encoding")
++            if "w" in mode:
++                self.assertEqual(encoding.value, "utf-8", f"line {call.lineno}")
++                newline = keywords.get("newline")
++                self.assertIsInstance(newline, ast.Constant, f"line {call.lineno}: no newline")
++                self.assertEqual(newline.value, "\n", f"line {call.lineno}")
++            else:
++                self.assertEqual(encoding.value, "utf-8-sig", f"line {call.lineno}")
++
++    def test_tc08_messages_survive_an_ascii_pipe(self):
++        root = Path(self._tmp.name).resolve() / "корень"
++        (root / ".git").mkdir(parents=True)
++        proc = run_script(root, ARGS, env_extra={"PYTHONIOENCODING": "ascii"})
++        self.assertEqual(proc.returncode, 0, output(proc))
++        self.assertNotIn("Traceback", output(proc))
++
++    def test_tc11_a_state_file_that_is_not_utf8_stops_the_run(self):
++        self.sessions.mkdir(parents=True)
++        before = b'session_id: "x"\nmode: "\xff\xfe"\n'
++        self.state.write_bytes(before)
++        proc = run_script(self.root, ARGS)
++        self.assertEqual(proc.returncode, 1, output(proc))
++        self.assertIn(str(self.state), output(proc))
++        self.assertIn("UTF-8", output(proc))
++        self.assertEqual(self.state.read_bytes(), before)
++
++    def test_tc15_a_byte_order_mark_does_not_hide_version_2(self):
++        # An ASCII-only JSON string escapes `é` and `→`. A version 2 read decodes the
++        # escapes, and the write stores the characters; a version 1 read keeps them as text.
++        self.write_state(V2_STATE.format(decision=json.dumps("café → ok")),
++                         prefix=b"\xef\xbb\xbf")
++        self.run_ok(ARGS)
++        raw = self.state.read_bytes()
++        self.assertFalse(raw.startswith(b"\xef\xbb\xbf"))
++        self.assertIn('  - "café → ok"\n', raw.decode("utf-8"))
++
++
++class ScalarTestCase(_RootCase):
++    """TASK 127 R3: escaped scalars and a stable round trip (TC-09, TC-10, TC-14, TC-16)."""
++
++    def test_tc09_sixteen_runs_keep_every_value(self):
++        for value in ROUND_TRIP_VALUES:
++            self.run_ok(["--mode", "M", "--task", value, "--status", value, "--summary", "x",
++                         "--add_blocker", value, "--add_decision", value,
++                         "--add_completed_task", value])
++        text = self.text()
++        lists, scalars = json_lists(text)
++        self.assertEqual(lists["active_blockers"], ROUND_TRIP_VALUES)
++        self.assertEqual(lists["completed_tasks"], ROUND_TRIP_VALUES)
++        self.assertEqual(lists["recent_decisions"], ROUND_TRIP_VALUES[-10:])
++        self.assertEqual(scalars, {"name": ROUND_TRIP_VALUES[-1],
++                                   "status": ROUND_TRIP_VALUES[-1]})
++        self.assert_yaml_equal(text, "active_blockers", ROUND_TRIP_VALUES)
++        self.assert_yaml_equal(text, "completed_tasks", ROUND_TRIP_VALUES)
++        self.assert_yaml_equal(text, "recent_decisions", ROUND_TRIP_VALUES[-10:])
++        self.assert_yaml_equal(text, "current_task.name", ROUND_TRIP_VALUES[-1])
++        self.assert_yaml_equal(text, "current_task.status", ROUND_TRIP_VALUES[-1])
++
++    def test_tc10_an_old_file_keeps_its_strings(self):
++        self.write_state(V1_STATE)
++        self.run_ok(ARGS)
++        text = self.text()
++        self.assertTrue(text.startswith("schema_version: 2\n"))
++        lists, _ = json_lists(text)
++        self.assertEqual(lists["recent_decisions"],
++                         ['say "hi"', "C:\\new\\dir", "C:\\new\\tab"])
++        self.assertEqual(lists["completed_tasks"], ["done one"])
++        self.assertIn('session_id: "old-sid"', text)
++        self.assertNotIn("current_task_2026_09_17", text)
++        self.assert_yaml_equal(text, "recent_decisions",
++                               ['say "hi"', "C:\\new\\dir", "C:\\new\\tab"])
++
++    def test_tc14_a_summary_of_two_lines_is_one_scalar(self):
++        self.run_ok(["--mode", "M", "--task", "t", "--status", "s",
++                     "--summary", "line one\nline two"])
++        text = self.text()
++        line = [l for l in text.split("\n") if l.startswith("context_summary: ")]
++        self.assertEqual(len(line), 1)
++        self.assertEqual(json.loads(line[0][len("context_summary: "):]), "line one\nline two")
++        self.run_ok(["--mode", "M", "--task", "t", "--status", "s", "--summary", "  padded  "])
++        self.assertIn('context_summary: "padded"\n', self.text())
++        self.assert_yaml_equal(text, "context_summary", "line one\nline two")
++
++    def test_tc17_the_merge_rules(self):
++        self.run_ok(ARGS + ["--add_blocker", "", "--add_decision", ""])
++        lists, _ = json_lists(self.text())
++        self.assertEqual((lists["active_blockers"], lists["recent_decisions"]), ([], []))
++        for _ in range(2):
++            self.run_ok(ARGS + ["--add_blocker", "B", "--add_completed_task", "T"])
++        lists, _ = json_lists(self.text())
++        self.assertEqual(lists["active_blockers"], ["B"])
++        self.assertEqual(lists["completed_tasks"], ["T"])
++
++    def test_tc16_an_empty_task_name(self):
++        self.run_ok(["--mode", "M", "--task", "", "--status", "s", "--summary", "x"])
++        _, scalars = json_lists(self.text())
++        self.assertEqual(scalars["name"], "")
++        self.assert_yaml_equal(self.text(), "current_task.name", "")
++
++
++class ImportPathTestCase(_RootCase):
++    """TASK 127 R6, WI-39: no module planted beside the script runs (TC-12, TC-13)."""
++
++    #: Modules that a planted file cannot shadow: built into the interpreter, or imported
++    #: before the script runs.
++    PRELOADED = ("os", "sys")
++
++    def planted_names(self):
++        """Each module that the script imports, by its AST, and `msvcrt` and `_winapi`."""
++        names = {"msvcrt", "_winapi"}
++        for node in ast.walk(ast.parse(SCRIPT.read_text(encoding="utf-8"))):
++            if isinstance(node, ast.Import):
++                names.update(alias.name.split(".")[0] for alias in node.names)
++            elif isinstance(node, ast.ImportFrom) and node.level == 0:
++                names.add(node.module.split(".")[0])
++        return sorted(names - set(self.PRELOADED))
++
++    def test_tc12_a_planted_module_is_not_imported(self):
++        base = Path(self._tmp.name).resolve()
++        scripts = base / "copy" / "scripts"
++        scripts.mkdir(parents=True)
++        (scripts / "update_state.py").write_bytes(SCRIPT.read_bytes())
++        markers = base / "markers"
++        markers.mkdir()
++        planted = self.planted_names()
++        self.assertIn("datetime", planted)
++        self.assertIn("json", planted)
++        for name in planted:
++            if name == "datetime":
++                continue
++            (scripts / f"{name}.py").write_text(
++                f"open({str(markers / name)!r}, 'w').close()\n", encoding="utf-8")
++        source = base / "datetime_source.py"
++        source.write_text(f"open({str(markers / 'datetime')!r}, 'w').close()\n",
++                          encoding="utf-8")
++        py_compile.compile(str(source), cfile=str(scripts / "datetime.pyc"), doraise=True)
++        source.unlink()
++        runs = [scripts / "update_state.py"]
++        link = base / "link"
++        try:
++            os.symlink(scripts, link, target_is_directory=True)
++            runs.append(link / "update_state.py")
++        except (OSError, NotImplementedError):  # no symbolic link on this host
++            pass
++        # A case-insensitive volume reaches the copy through other letter case, and the path as
++        # called then differs from the real one (security audit S-1).
++        variant = base / "COPY" / "scripts" / "update_state.py"
++        if variant.exists():
++            runs.append(variant)
++        # A linked file leaves the link's own directory on `sys.path` on Windows; the modules
++        # planted there must not run either.
++        linked = base / "linked"
++        linked.mkdir()
++        for name in planted:
++            if name != "datetime":
++                (linked / f"{name}.py").write_text(
++                    f"open({str(markers / name)!r}, 'w').close()\n", encoding="utf-8")
++        try:
++            os.symlink(scripts / "update_state.py", linked / "update_state.py")
++            runs.append(linked / "update_state.py")
++        except (OSError, NotImplementedError):
++            pass
++        for script in runs:
++            proc = run_script(self.root, ARGS, script=script)
++            self.assertEqual(proc.returncode, 0, output(proc))
++            self.assertEqual(sorted(p.name for p in markers.iterdir()), [],
++                             f"a module planted beside {script} was imported")
++
++    def test_tc13_a_module_import_keeps_sys_path(self):
++        before = list(sys.path)
++        module = load_script("update_state_under_test")
++        self.assertEqual(sys.path, before)
++        self.assertTrue(callable(module.parse_simple_yaml))
++
++
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/.agent/skills/skill-session-state/scripts/update_state.py b/.agent/skills/skill-session-state/scripts/update_state.py
+index 3bd5970..0a6c27f 100644
+--- a/.agent/skills/skill-session-state/scripts/update_state.py
++++ b/.agent/skills/skill-session-state/scripts/update_state.py
+@@ -1,15 +1,81 @@
+ #!/usr/bin/env python3
+-import sys
++"""Persist the session state of `skill-session-state` in `.agent/sessions/latest.yaml`.
++
++The bootstrap files run this script at each phase boundary. It takes an exclusive lock on
++`latest.yaml.lock`, reads the state once, merges the arguments into it and writes it back
++(TASK 127):
++
++- the lock is `fcntl.flock` on POSIX and `msvcrt.locking` on Windows, chosen by which of the two
++  imports;
++- the file is UTF-8 with LF line ends. Its first line is `schema_version: 2`, and each string is
++  a JSON string, which is also a YAML double-quoted scalar;
++- a file without `schema_version: 2` is read as the script before TASK 127 wrote it, and the
++  next write stores the same strings in the new form.
++
++Exit codes: 0 the state was written; 1 no lock module, a lock that stayed held, a state file that
++is not UTF-8, or another error; 2 a usage error. In the first three cases of exit 1 the script
++writes nothing.
++"""
+ import os
+-import uuid
+-import datetime
+-import argparse
+-import re
+-import fcntl
++import sys
++
++# Run as a script, its own directory leaves the import path before any other import, so a module
++# planted beside the script is never imported under the allow rule (WI-39, TASK 127 R6). An entry
++# is that directory when its real path, or its device and inode, match the directory of the path
++# as called or of the real path. A case-insensitive volume, a linked directory and a linked file
++# reach the directory under other spellings. A test that loads the module keeps its own path.
++if __name__ == "__main__":
++    def _identity(path):
++        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
++        try:
++            st = os.stat(path)
++        except OSError:
++            return None
++        return (st.st_dev, st.st_ino) if st.st_ino else None
++
++    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
++             os.path.dirname(os.path.realpath(__file__))}
++    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
++    _IDS = {_identity(path) for path in _DIRS} - {None}
++    sys.path[:] = [entry for entry in sys.path
++                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
++                   and _identity(entry or os.curdir) not in _IDS]
++
++import argparse  # noqa: E402
++import datetime  # noqa: E402
++import json  # noqa: E402
++import re  # noqa: E402
++import uuid  # noqa: E402
++
++# The lock module: `fcntl` where it imports, else `msvcrt` (TASK 127 D10).
++try:
++    import fcntl  # noqa: E402
++except ImportError:
++    fcntl = None
++    try:
++        import msvcrt  # noqa: E402
++    except ImportError:
++        msvcrt = None
++else:
++    msvcrt = None
+ 
+ # Constants
+ SESSION_DIR = ".agent/sessions"
+ SESSION_FILE = "latest.yaml"
++SCHEMA_VERSION = 2
++#: Characters that `json.dumps(ensure_ascii=False)` leaves raw and a YAML double-quoted scalar
++#: must not hold raw: those outside the YAML 1.2 printable set, and the line breaks U+0085,
++#: U+2028 and U+2029 (TASK 127 R3.1).
++_YAML_UNSAFE = re.compile("[%s]" % "".join(
++    "%s-%s" % (chr(low), chr(high))
++    for low, high in ((0x7F, 0x9F), (0x2028, 0x2029), (0xD800, 0xDFFF), (0xFFFE, 0xFFFF))))
++#: The version line; the reader takes it from the first line only (TASK 127 R3.3).
++_VERSION_LINE = re.compile(r"schema_version:\s*(\d+)\s*")
++
++
++class StateError(Exception):
++    """A state that the script will not read or lock; the message names the file."""
++
+ 
+ def find_repo_root():
+     """Anchor for SESSION_DIR (SS-1): the state file must land at the repo
+@@ -43,106 +109,141 @@ def get_session_path():
+     return os.path.join(get_session_dir(), SESSION_FILE)
+ 
+ def ensure_session_dir():
+-    session_dir = get_session_dir()
+-    if not os.path.exists(session_dir):
+-        os.makedirs(session_dir)
++    """Create the session dir; a second run that creates it at the same time is no error."""
++    os.makedirs(get_session_dir(), exist_ok=True)
+ 
+-# --- Minimal YAML Parser (Read-Only specific to our schema) ---
+-# We ONLY need to preserve: session_id, active_blockers, recent_decisions.
++# --- Minimal YAML reader (specific to our schema) ---
++# We ONLY need to preserve: session_id, active_blockers, recent_decisions, completed_tasks.
+ # Everything else (task, mode, summary) is overwritten by the Agent's update.
+ 
++def _decode(raw, version):
++    """One preserved value from its text in the file.
++
++    A version 2 file holds a JSON string, which `json.loads` decodes. A version 1 file, or an item
++    that is not a JSON string, is read as the script before TASK 127 read it: one optional quote
++    is stripped from each end, then the outer whitespace.
++    """
++    if version >= SCHEMA_VERSION:
++        try:
++            value = json.loads(raw)
++        except ValueError:
++            value = None
++        if isinstance(value, str):
++            return value
++    return re.fullmatch(r"""['"]?(.*?)['"]?""", raw, re.DOTALL).group(1).strip()
++
++
++def _list_items(content, key, version):
++    """The items of the list `key`, each decoded by `_decode`."""
++    section = re.search(r'^' + key + r':\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
++    if not section:
++        return []
++    return [_decode(raw, version)
++            for raw in re.findall(r'^\s+-\s+(.*?)\s*$', section.group(1), re.MULTILINE)]
++
++
+ def parse_simple_yaml(content):
+     """
+     Robustly extract specific fields from our generated YAML.
+     Does NOT aim to be a full YAML parser.
+     """
++    match = _VERSION_LINE.fullmatch(content.split("\n", 1)[0])
++    version = int(match.group(1)) if match else 1
+     data = {
+         "session_id": None,
+-        "active_blockers": [],
+-        "recent_decisions": [],
+-        "completed_tasks": []
++        "active_blockers": _list_items(content, "active_blockers", version),
++        "recent_decisions": _list_items(content, "recent_decisions", version),
++        "completed_tasks": _list_items(content, "completed_tasks", version),
+     }
+-    
+-    # Extract session_id
+-    sid_match = re.search(r'^session_id:\s*[\'"]?([^\'"\n]+)[\'"]?', content, re.MULTILINE)
+-    if sid_match:
+-        data["session_id"] = sid_match.group(1).strip()
+-        
+-    # Extract active_blockers (List of strings)
+-    # Assumes format:
+-    # active_blockers:
+-    #   - "Blocker 1"
+-    #   - "Blocker 2"
+-    blockers_section = re.search(r'^active_blockers:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
+-    if blockers_section:
+-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', blockers_section.group(1), re.MULTILINE)
+-        data["active_blockers"] = [item.strip() for item in items]
+-
+-    # Extract recent_decisions
+-    decisions_section = re.search(r'^recent_decisions:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
+-    if decisions_section:
+-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', decisions_section.group(1), re.MULTILINE)
+-        data["recent_decisions"] = [item.strip() for item in items]
+-
+-    # Extract completed_tasks
+-    completed_section = re.search(r'^completed_tasks:\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
+-    if completed_section:
+-        items = re.findall(r'^\s+-\s+[\'"]?(.*?)[\'"]?\s*$', completed_section.group(1), re.MULTILINE)
+-        data["completed_tasks"] = [item.strip() for item in items]
+-        
++    if version >= SCHEMA_VERSION:
++        sid = re.search(r'^session_id:\s*(.*?)\s*$', content, re.MULTILINE)
++        if sid:
++            data["session_id"] = _decode(sid.group(1), version) or None
++    else:
++        sid = re.search(r'^session_id:\s*[\'"]?([^\'"\n]+)[\'"]?', content, re.MULTILINE)
++        if sid:
++            data["session_id"] = sid.group(1).strip()
+     return data
+ 
++
++def _scalar(value):
++    """`value` as a YAML double-quoted scalar: a JSON string with `_YAML_UNSAFE` escaped."""
++    text = json.dumps(str(value), ensure_ascii=False)
++    return _YAML_UNSAFE.sub(lambda m: "\\u%04x" % ord(m.group()), text)
++
++
+ def generate_yaml(data):
+     """
+     Generate clean, valid YAML string.
+     """
+-    iso_time = datetime.datetime.now().isoformat()
+-    
+-    # Handle multiline summary
+-    summary = data.get('context_summary', '').strip()
+-    formatted_summary = ""
+-    if '\n' in summary or len(summary) > 80:
+-        formatted_summary = "|\n" + "\n".join([f"  {line}" for line in summary.splitlines()])
+-    else:
+-        formatted_summary = f'"{summary}"'
++    lines = [
++        f"schema_version: {SCHEMA_VERSION}",
++        f"session_id: {_scalar(data.get('session_id'))}",
++        f"last_updated: {_scalar(datetime.datetime.now().isoformat())}",
++        f"mode: {_scalar(data.get('mode', 'UNKNOWN'))}",
++        "",
++        "current_task:",
++        f"  name: {_scalar(data.get('task_name', 'Unknown Task'))}",
++        f"  status: {_scalar(data.get('task_status', 'Initializing'))}",
++        f"  predicted_steps: {int(data.get('predicted_steps', 0))}",
++        "",
++        f"context_summary: {_scalar(data.get('context_summary', '').strip())}",
++    ]
++    for key in ("active_blockers", "recent_decisions", "completed_tasks"):
++        items = data.get(key) or []
++        lines += ["", f"{key}:"]
++        lines += [f"  - {_scalar(item)}" for item in items] or ["  []"]
++    return "\n".join(lines) + "\n"
+ 
+-    yaml = f"""session_id: "{data.get('session_id')}"
+-last_updated: "{iso_time}"
+-mode: "{data.get('mode', 'UNKNOWN')}"
+ 
+-current_task:
+-  name: "{data.get('task_name', 'Unknown Task')}"
+-  status: "{data.get('task_status', 'Initializing')}"
+-  predicted_steps: {data.get('predicted_steps', 0)}
++def read_state(fpath):
++    """The preserved fields of the state file `fpath`, or `{}` when it does not exist.
+ 
+-context_summary: {formatted_summary}
++    The read drops a leading byte-order mark (TASK 127 D14).
++
++    Raises:
++        StateError: the file is not UTF-8 (TASK 127 R2.3).
++    """
++    if not os.path.exists(fpath):
++        return {}
++    try:
++        with open(fpath, "r", encoding="utf-8-sig") as f:
++            content = f.read()
++    except UnicodeDecodeError as exc:
++        raise StateError(f"{fpath} is not UTF-8 (byte {exc.start}: {exc.reason}); "
++                         f"save it as UTF-8 or delete it") from None
++    return parse_simple_yaml(content)
++
++
++def _lock(fd):
++    """Take the exclusive lock of the state on the lock file `fd`.
++
++    `msvcrt.LK_LOCK` tries 10 times, 1 second apart, and then raises `OSError`; `fcntl.flock`
++    waits with no time limit.
++    """
++    if fcntl is not None:
++        fcntl.flock(fd, fcntl.LOCK_EX)
++    else:
++        os.lseek(fd, 0, os.SEEK_SET)
++        msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
++
++
++def _unlock(fd):
++    """Release the lock that `_lock` took."""
++    if fcntl is not None:
++        fcntl.flock(fd, fcntl.LOCK_UN)
++    else:
++        os.lseek(fd, 0, os.SEEK_SET)
++        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+ 
+-active_blockers:
+-"""
+-    # Add lists
+-    for blocker in data.get('active_blockers', []):
+-        yaml += f'  - "{blocker}"\n'
+-    
+-    if not data.get('active_blockers'):
+-        yaml += "  []\n"
+-        
+-    yaml += "\nrecent_decisions:\n"
+-    for decision in data.get('recent_decisions', []):
+-        yaml += f'  - "{decision}"\n'
+-        
+-    if not data.get('recent_decisions'):
+-        yaml += "  []\n"
+-        
+-    yaml += "\ncompleted_tasks:\n"
+-    for task in data.get('completed_tasks', []):
+-        yaml += f'  - "{task}"\n'
+-        
+-    if not data.get('completed_tasks'):
+-        yaml += "  []\n"
+-        
+-    return yaml
+ 
+ def main():
++    # The script's own messages never raise an encoding error on a console or a pipe whose
++    # encoding cannot hold a path or a value (TASK 127 R2.2).
++    for stream in (sys.stdout, sys.stderr):
++        if hasattr(stream, "reconfigure"):
++            stream.reconfigure(errors="backslashreplace")
++
+     parser = argparse.ArgumentParser(description="Update Session State YAML")
+     parser.add_argument("--mode", required=True, help="Current Agent Mode")
+     parser.add_argument("--task", required=True, help="Current Task Name")
+@@ -153,85 +254,40 @@ def main():
+     parser.add_argument("--add_blocker", help="Add a blocker item")
+     parser.add_argument("--clear_blockers", action="store_true", help="Clear all blockers")
+     parser.add_argument("--add_completed_task", help="Add a completed task to history")
+-    
++
+     args = parser.parse_args()
+-    
+-    ensure_session_dir()
+-    fpath = get_session_path()
+-    
+-    # 1. Read existing state to preserve ID and lists
+-    existing_data = {}
+-    if os.path.exists(fpath):
+-        try:
+-            with open(fpath, 'r') as f:
+-                content = f.read()
+-                existing_data = parse_simple_yaml(content)
+-        except Exception as e:
+-            print(f"Warning: Could not read existing session file: {e}")
+-            existing_data = {}
+-            
+-    # 2. Merge Data
+-    session_id = existing_data.get("session_id") or str(uuid.uuid4())
+-    active_blockers = existing_data.get("active_blockers", [])
+-    recent_decisions = existing_data.get("recent_decisions", [])
+-    
+-    if args.clear_blockers:
+-        active_blockers = []
+-    
+-    if args.add_blocker:
+-        if args.add_blocker not in active_blockers:
+-            active_blockers.append(args.add_blocker)
+-            
+-            
+-    if args.add_decision:
+-        # Keep only last 10 decisions
+-        recent_decisions.append(args.add_decision)
+-        if len(recent_decisions) > 10:
+-            recent_decisions = recent_decisions[-10:]
+-
+-    completed_tasks = existing_data.get("completed_tasks", [])
+-    if args.add_completed_task:
+-        if args.add_completed_task not in completed_tasks:
+-            completed_tasks.append(args.add_completed_task)
+-            
+-    
+-    # 3. Construct New State
+-    # Note: We construct it BEFORE locking to minimize lock time, 
+-    # but we must re-read inside the lock to get the TRUE latest state.
+-    
+-    # --- CRITICAL SECTION START ---
+-    # We use a separate lock file to avoid truncation issues with open(..., 'w')
+-    lock_path = fpath + ".lock"
+-    
++
++    if fcntl is None and msvcrt is None:
++        print("Error updating session state: neither fcntl nor msvcrt imports, "
++              "and the state needs one of them for its lock")
++        sys.exit(1)
++
+     try:
+-        with open(lock_path, 'w') as lockfile:
+-            # Acquire Exclusive Lock
+-            fcntl.flock(lockfile, fcntl.LOCK_EX)
+-            
++        ensure_session_dir()
++        fpath = get_session_path()
++        # A separate lock file, opened with no truncation and at position 0 (TASK 127 R1.6).
++        lock_path = fpath + ".lock"
++        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o644)
++        try:
+             try:
+-                # RE-READ existing state inside the lock to ensure we have the absolute latest
+-                # (Another agent might have updated it while we were parsing args)
+-                if os.path.exists(fpath):
+-                    with open(fpath, 'r') as f:
+-                        current_content = f.read()
+-                        latest_data = parse_simple_yaml(current_content)
+-                else:
+-                    latest_data = {}
+-
+-                # Merge Logic (Re-apply on top of latest_data)
+-                # We prioritize the LATEST data for lists, but the ARGS for current status
+-                
++                _lock(fd)
++            except OSError as exc:
++                raise StateError(f"could not lock {lock_path}: {exc}") from None
++            try:
++                # The one read of the state, inside the lock (TASK 127 R1.2).
++                latest_data = read_state(fpath)
++
+                 # Session ID: Persist if exists
+-                final_session_id = latest_data.get("session_id") or session_id
+-                
++                final_session_id = latest_data.get("session_id") or str(uuid.uuid4())
++
+                 # Active Blockers: Merge (Union)
+                 final_blockers = latest_data.get("active_blockers", [])
+                 if args.clear_blockers:
+                     final_blockers = []
+                 elif args.add_blocker and args.add_blocker not in final_blockers:
+                     final_blockers.append(args.add_blocker)
+-                    
+-                # Recent Decisions: Append
++
++                # Recent Decisions: Append, keep the last 10
+                 final_decisions = latest_data.get("recent_decisions", [])
+                 if args.add_decision:
+                     final_decisions.append(args.add_decision)
+@@ -243,7 +299,6 @@ def main():
+                 if args.add_completed_task and args.add_completed_task not in final_completed:
+                     final_completed.append(args.add_completed_task)
+ 
+-                # Construct Final State Object
+                 final_state = {
+                     "session_id": final_session_id,
+                     "mode": args.mode,
+@@ -253,22 +308,18 @@ def main():
+                     "context_summary": args.summary,
+                     "active_blockers": final_blockers,
+                     "recent_decisions": final_decisions,
+-                    "completed_tasks": final_completed
++                    "completed_tasks": final_completed,
+                 }
+-                
+-                # Generate YAML
+                 yaml_content = generate_yaml(final_state)
+-                
+-                # Write to actual file
+-                with open(fpath, 'w') as f:
++
++                with open(fpath, "w", encoding="utf-8", newline="\n") as f:
+                     f.write(yaml_content)
+-                    
++
+                 print(f"Session state updated: {fpath} (Locked)")
+-                
+             finally:
+-                # Release Lock
+-                fcntl.flock(lockfile, fcntl.LOCK_UN)
+-                
++                _unlock(fd)
++        finally:
++            os.close(fd)
+     except Exception as e:
+         print(f"Error updating session state: {e}")
+         sys.exit(1)

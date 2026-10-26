@@ -18,10 +18,16 @@ The system relies on a modular **Skills System**:
    "Restored session: Mode=[mode], Task=[task_name], Status=[status]."
 3. **IF NOT EXISTS or empty**: Proceed with new task analysis.
 4. **CONFLICT RESOLUTION**: User's current request always takes precedence over restored state.
+5. **DISAGREEMENT CHECK**: If the state was restored and `docs/TASK.md` exists, read its H1 and
+   its Task ID.
+   - Both it and `current_task.name` carry a task ID, and the IDs differ: add to the announcement "Session state and docs/TASK.md disagree: latest.yaml names [ID], docs/TASK.md is [ID]." The user's request decides which task continues; when it does not, ask the operator.
+   - Either carries no task ID: name the H1 of `docs/TASK.md` beside the restored task, and ask nothing.
+   - The IDs are equal: nothing changes.
 
 **ON PHASE BOUNDARY** (after completing each pipeline stage):
 1. Run via Bash: `python3 .agent/skills/skill-session-state/scripts/update_state.py --mode "[Mode]" --task "[TaskName]" --status "[Status]" --summary "[Summary]"`
 2. This persists context for session recovery.
+3. **If `update_state.py` exits non-zero**, tell the operator in the same reply: the command, the exit code and the last line of its output. Do not write `.agent/sessions/latest.yaml` by hand in place of the run. Continue the task; a workflow's own stop rules still apply.
 
 ## TOOL EXECUTION PROTOCOL
 Use your built-in tools: Read (files), Write (files), Edit (files), Bash (commands, git, tests), Grep (search), Glob (find files).

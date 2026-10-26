@@ -2,7 +2,7 @@
 name: skill-session-state
 description: "Persist and restore agent session context (Mode, Task, Summary) to survive resets."
 tier: 0
-version: 1.1
+version: 1.2
 ---
 
 # Session State Management
@@ -12,19 +12,34 @@ This skill provides the mechanism to persist your current working state to a fil
 ## 1. The Session File
 *   **Path**: `.agent/sessions/latest.yaml` — resolved from the **repo root** regardless of the
     invocation CWD (walk-up to `.git`, `CLAUDE_PROJECT_DIR` fallback; SS-1).
-*   **Purpose**: Stores the exact arguments from your last `task_boundary` call, plus session metadata.
+*   **Purpose**: Stores the arguments of the last `update_state.py` run, plus session metadata.
 *   **Persistence**: surviving session clears, allowing you to pick up exactly where you left off.
 *   **Never committed**: this is per-machine runtime data — `.agent/sessions/` is gitignored (SS-2).
     Do not `git add` it and do not ship a committed "seed" state.
+*   **Format** (TASK 127): UTF-8 with LF line ends, on macOS, Linux and Windows. The first line is
+    `schema_version: 2`. The keys are `session_id`, `last_updated`, `mode`, `current_task`
+    (`name`, `status`, `predicted_steps`), `context_summary`, `active_blockers`,
+    `recent_decisions` and `completed_tasks`. Each string is a JSON string, which is also a YAML
+    double-quoted scalar. A file without `schema_version: 2` is read as the script before
+    TASK 127 wrote it, and the next run rewrites it in this form.
+*   **Owner**: the script owns the file, and it drops a key that it does not write. A key added by
+    hand is gone after the next run.
 
 ## 2. Boot Protocol (Start of Session)
 **IF** `.agent/sessions/latest.yaml` exists **AND** you are starting a new session (blank context):
-1.  **READ** the file using `read_file` or `view_file`.
+1.  **READ** the file with your harness's file-read tool.
 2.  **RESTORE** your state:
     *   Set your internal `Mode` to the file's `mode`.
     *   Set your `TaskName` and `TaskStatus` to the file's `current_task`.
     *   Read the `context_summary` to understand what you were doing.
     *   Check `active_blockers` to see if you were blocked.
+3.  **COMPARE** it with `docs/TASK.md`, when that file exists: read its H1 and its Task ID.
+    *   Both `current_task.name` and `docs/TASK.md` carry a task ID, and the IDs differ: the
+        announcement says `Session state and docs/TASK.md disagree` and names both IDs. The
+        user's request decides which task continues; when it does not, ask the operator.
+    *   Either carries no task ID: the announcement names the H1 of `docs/TASK.md` beside the
+        restored task, and you ask nothing.
+    *   The IDs are equal: the announcement stays as before.
 
 ## 3. Update Protocol (During Work)
 
@@ -37,7 +52,7 @@ This skill provides the mechanism to persist your current working state to a fil
 > cannot satisfy is how a subagent burns its whole turn and returns nothing
 > (`skill-parallel-orchestration` §2.4).
 
-**WHENEVER** you call the `task_boundary` tool, you **MUST** immediately follow it with a call to the `update_state.py` script.
+**At each phase boundary**, you **MUST** run the `update_state.py` script.
 
 ### Command Syntax
 ```bash
@@ -50,8 +65,11 @@ python3 .agent/skills/skill-session-state/scripts/update_state.py \
 ```
 
 ### Protocol Rules
-1.  **Sync**: The arguments passed to the script MUST match the arguments you just passed to `task_boundary`.
-2.  **Atomic**: Always call `task_boundary` first, then `update_state.py`.
+1.  **Trigger**: Run the script at each phase boundary, a workflow's last phase included (rule 4).
+2.  **Failure**: **If `update_state.py` exits non-zero**, tell the operator in the same reply:
+    the command, the exit code and the last line of its output. Do not write
+    `.agent/sessions/latest.yaml` by hand in place of the run. Continue the task; a workflow's own
+    stop rules still apply.
 3.  **No Hallucinations**: Do not invent values. Use the exact ones from your current context.
 4.  **Terminal boundary**: a workflow's last phase — acceptance, merge, escalation — is a boundary
     like any other. Write the terminal status, record the finished task with
@@ -63,10 +81,9 @@ python3 .agent/skills/skill-session-state/scripts/update_state.py \
 ## 4. Task Switching Logic
 If you finish one task and start another **in the same session**:
 1.  **Archive History**: Ensure the old `docs/TASK.md` is archived (via `skill-archive-task`).
-2.  **Update State**: Call `task_boundary` with the **NEW** Task Name.
+2.  **Update State**: Run `update_state.py` with the **NEW** task details.
 3.  **Persist & Track**:
-    *   Call `update_state.py` with the new task details.
-    *   **CRITICAL**: Add the flag `--add_completed_task "[Old Task Name]"` to preserve history.
+    *   **CRITICAL**: Add the flag `--add_completed_task "[Old Task Name]"` to that run to preserve history.
     *   Example: `...scripts/update_state.py ... --add_completed_task "Optimizing Database"`
     *   This ensures `latest.yaml` shows: *Current Task = UI Bug*, *Completed = [Database]*
 
@@ -86,23 +103,11 @@ python3 ...scripts/update_state.py ... --add_decision "Chose Redux over Context 
 > **For Parallel Agents**: When multiple agents run simultaneously, they must NOT overwrite each other's state in `latest.yaml`.
 
 ### Locking Mechanism
-The `update_state.py` script now implements **Atomic File Locking** (`fcntl.lockf` on Unix).
-- **Read**: Shared Lock (allow others to read).
-- **Write**: Exclusive Lock (wait for others to finish).
+`update_state.py` takes one exclusive lock on `.agent/sessions/latest.yaml.lock` around its read,
+its merge and its write of `latest.yaml` (TASK 127):
+- **POSIX**: `fcntl.flock`, which waits with no time limit.
+- **Windows**: `msvcrt.locking` on one byte of the lock file. It tries 10 times, 1 second apart;
+  then the script exits 1 and writes nothing.
 
-### Safe Usage Pattern
-1.  **Read State**:
-    ```python
-    # Pseudo-code
-    with FileLock("latest.yaml", "r"):
-        state = load()
-    ```
-2.  **Write State**:
-    ```python
-    # Pseudo-code
-    with FileLock("latest.yaml", "w"):
-        state = load() # Re-read to get latest
-        state.update(my_changes)
-        save(state)
-    ```
-
+Two agents that run the script at the same time both keep their additions: the second waits for
+the first, then reads the state that the first wrote.

@@ -117,7 +117,7 @@ The orchestration layer now supports **Structured Tool Calling**:
 
 The system formerly supported a **Parallel Orchestration Protocol** via mock agents:
 - **Orchestrator Role**: Decomposes tasks and spawns sub-agents.
-- **Shared State**: Uses `fcntl` file locking on `.agent/sessions/latest.yaml` to ensure safe concurrent updates. *(This locking mechanism is retained and still in use under §5.1.)*
+- **Shared State**: Uses file locking on `.agent/sessions/latest.yaml` — `fcntl` on POSIX, `msvcrt` on Windows (TASK 127) — to ensure safe concurrent updates. *(This locking mechanism is retained and still in use under §5.1.)*
 - **Agent Runner** *(DEPRECATED)*: `spawn_agent_mock.py` script simulated sub-agent behavior.
 - **Protocol** *(DEPRECATED)*:
   1. Orchestrator splits `TASK.md` -> `subtask-A.md`, `subtask-B.md`.
@@ -212,7 +212,7 @@ Archiving runs through `.agent/tools/archive_move.py`, which one allow rule name
 
 ### Shared infrastructure (both layers)
 
-- **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
+- **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking on POSIX and `msvcrt`-locking on Windows (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
 - **Source of truth**: methodology lives in `.agent/skills/*/SKILL.md` (critics) and `System/Agents/*.md` (pipeline roles). Wrapper files in `.claude/agents/` are thin adapters, not duplicated content.
 - **Vendor portability**: `.claude/agents/` is Claude Code specific. Other vendors resolve their own native parallel adapter via `skill-parallel-orchestration` §1.1. Codex, Cursor and Antigravity each have a documented parallel primitive, none of them validated end to end. Sequential role-switching is the last resort for a runtime with no primitive, documented per workflow under its vendor-dispatch section.
 

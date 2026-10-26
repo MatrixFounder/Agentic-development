@@ -16,6 +16,42 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.47.0 — `update_state.py` runs on Windows, and a failed run of it reaches the operator (TASK 127)**
+
+#### Fixed
+
+- **`update_state.py` of `skill-session-state` runs on Windows.** It imported `fcntl` at its
+  top, so on Windows every phase boundary failed with `ModuleNotFoundError`. It now takes
+  `fcntl.flock` on POSIX and `msvcrt.locking` on Windows, chosen by which of the two imports. On
+  Windows the lock tries 10 times, 1 second apart; then the script exits 1 and writes nothing.
+- **The state file is UTF-8 on every platform.** The script opened it in the encoding of the
+  locale: cp1251 on a Russian Windows, where a summary with an arrow exited 1. A read now uses
+  `utf-8-sig`, and the write `utf-8` with LF line ends. A file that is not UTF-8 exits 1, and the
+  message names it.
+- **Each value is escaped.** A double quote in `--task`, or a backslash in `--add_decision`, made
+  the file invalid YAML. Each string is now a JSON string, which is also a YAML double-quoted
+  scalar, under the first line `schema_version: 2`. A file without that line is read as before,
+  and the next run rewrites it in the new form.
+- **Two runs at once on a new repository both succeed.** `ensure_session_dir` raced on
+  `os.makedirs`, and the second run exited with `FileExistsError`.
+- **A module planted beside the script no longer runs** (WI-39, for this script). Run as a
+  script, it removes its own directory from `sys.path` before any import but `os` and `sys`. It
+  matches the directory by real path and by device and inode, so a linked directory, a linked file
+  and a path in other letter case on a case-insensitive volume are filtered too.
+
+#### Changed
+
+- **A failed run of `update_state.py` reaches the operator.** `CLAUDE.md`, `AGENTS.md` and
+  `GEMINI.md`: on a non-zero exit, the agent names the command, the exit code and the last line of
+  the output in the same reply. It does not write `latest.yaml` by hand in place of the run.
+- **The boot compares the state with `docs/TASK.md`.** When both carry a task ID and the IDs
+  differ, the announcement says `Session state and docs/TASK.md disagree`.
+- **`skill-session-state` 1.2 names no tool of one vendor.** Its trigger is each phase boundary;
+  `task_boundary`, `read_file` and `view_file` are gone. §1 states the file's format, and §6 the
+  lock as the script takes it.
+- `System/Docs/SESSION_CONTEXT_GUIDE.md` and `docs/ARCHITECTURE.md` follow. The skill's tests and
+  `tests/test_session_state_contract.py` run in the pytest step of CI.
+
 ### **v3.46.0 — `lint_mermaid.py` of the figure skill keeps its command line over a package (TASK 126)**
 
 #### Changed

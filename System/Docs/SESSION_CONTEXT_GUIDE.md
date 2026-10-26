@@ -12,6 +12,9 @@ This document explains the mechanism, rationale, and configuration of the Sessio
 2.  **Tracking**: At every phase boundary, the agent executes `update_state.py` to persist the new state atomically.
 3.  **Conflict Resolution**: If the user's new prompt conflicts with the file (e.g., "Start task X"), the **User takes precedence**.
 4.  **Multi-Task**: Completed tasks are tracked in the `completed_tasks` list to preserve history within a single session.
+5.  **Failure Rule**: If `update_state.py` exits non-zero, the agent tells the operator in the same reply: the command, the exit code and the last line of its output. It does not write `latest.yaml` by hand in place of the run, and it continues the task;
+    a workflow's own stop rules still apply.
+6.  **Disagreement Check**: At boot, when `current_task.name` and `docs/TASK.md` both carry a task ID and the IDs differ, the announcement says `Session state and docs/TASK.md disagree` and names both IDs. The user's request decides which task continues; otherwise the agent asks the operator. When either carries no task ID, the announcement names the H1 of `docs/TASK.md` beside the restored task.
 
 ## 2. Adversarial Analysis (The "Why")
 
@@ -64,6 +67,7 @@ I have adversarialy analyzed potential downsides:
 **Scenario:** Agent crashes *before* updating `latest.yaml`.
 **Result:** On reboot, Agent restores a state that is 1 step behind reality.
 **Mitigation:** `GEMINI.md` Conflict Resolution Rule (User > File). User says "No, we are done with that", Agent obeys.
+**Mitigation (TASK 127):** two rules of §1. The failure rule: If `update_state.py` exits non-zero, the agent tells the operator in the same reply, and does not write the file by hand. The disagreement check: when the task IDs differ, the announcement says `Session state and docs/TASK.md disagree`. A team on Windows reported the case they close: the script failed at every phase boundary, and the state stayed three tasks old with no one told.
 **Verdict:** Manageable.
 
 ### Risk B: Confusion with IDE Features
@@ -86,18 +90,20 @@ Different AI coding platforms have their own memory/context systems. The framewo
 
 **Key principle**: Platform memory answers "What do I know about this project?" Session state answers "What was I doing right now?"
 
-Both systems are independent and complementary. Session state works identically across all supported platforms (Claude Code, Gemini CLI, Cursor IDE).
+Both systems are independent and complementary. Session state works identically across all supported platforms (Claude Code, Gemini CLI, Cursor IDE), on macOS, Linux and Windows.
 
 ## 6. Manual Override (Troubleshooting)
 
-The session file is standard YAML. If the agent gets stuck or confused, you can edit it manually:
+The session file is UTF-8 YAML, and its first line is `schema_version: 2`. If the agent gets stuck or confused, you can edit it manually:
 
 1.  Open `.agent/sessions/latest.yaml`.
-2.  Change the `task_status` or `context_summary` to match reality.
-3.  Save the file.
+2.  Change `current_task.status` or `context_summary` to match reality.
+3.  Save the file as UTF-8.
 4.  Restart the chat window. The agent will read your "corrected" state.
 
 **Tip:** You can also simply delete the file to force a "fresh start".
+
+**Note:** the script drops a key that it does not write, so a key added by hand is gone after the next run. An agent never edits the file in place of a failed run of the script (§1, Failure Rule).
 
 ## 7. Deactivation Guide (How to Disable)
 

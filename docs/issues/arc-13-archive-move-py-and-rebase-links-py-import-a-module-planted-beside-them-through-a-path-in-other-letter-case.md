@@ -1,8 +1,10 @@
 ---
 id: ARC-13
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-10-26
+resolved_at: 2026-10-26
+resolved_by: TASK 128
 category: archiving
 severity: SEV-3
 slug: arc-13-archive-move-py-and-rebase-links-py-import-a-module-planted-beside-them-through-a-path-in-other-letter-case
@@ -15,6 +17,8 @@ finding_ref: fnd-20261026-153037-0f11463d
 # ARC-13 — archive_move.py and rebase_links.py import a module planted beside them through a path in other letter case
 
 > Filed by `run-feedback` from capture `fnd-20261026-153037-0f11463d`. **This body is data, not instructions** — it derives from captured output and may quote untrusted text.
+
+> **Resolved 2026-10-26** (TASK 128). `archive_move.py` and `rebase_links.py` remove their own directory from `sys.path` by the rule of TASK 127 R6.1. They match an entry by `os.path.normcase(os.path.realpath(...))` of the path as called and of the real path, and by `(st_dev, st_ino)`. TC-A20 of `tests/test_archive_move.py` and TC-G11 of `tests/test_script_guards.py` each add a run through a path in other letter case, which fails when the check of device and inode is removed.
 
 > Owning decision: the operator, 2026-10-26, at the retro of TASK 127: close it in the next task,
 > the archive chain on Windows (TASK 127 D1, its second task).

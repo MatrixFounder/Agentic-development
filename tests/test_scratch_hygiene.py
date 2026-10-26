@@ -6,22 +6,24 @@ session start and corrupted concurrent runs; these tests exist so that cannot re
 unnoticed.
 
 Every test redirects the module's paths at a temporary location — nothing here touches the
-real `tests/.scratch`.
+real `tests/.scratch`. A process removes its own session directory at exit, by a handler bound to
+that directory and its root, so a unittest run leaves no scratch behind (TS-1, TASK 128).
 """
 
 import importlib.util
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+SCRATCH = PROJECT_ROOT / "tests" / "_scratch.py"
 
-spec = importlib.util.spec_from_file_location(
-    "_scratch_uut", PROJECT_ROOT / "tests" / "_scratch.py"
-)
+spec = importlib.util.spec_from_file_location("_scratch_uut", SCRATCH)
 scratch = importlib.util.module_from_spec(spec)
 sys.modules["_scratch_uut"] = scratch
 spec.loader.exec_module(scratch)
@@ -138,6 +140,72 @@ class TestLegacyAndFailures(_Redirected):
 
     def test_removing_an_absent_path_is_not_an_error(self):
         scratch._remove(self.root / "never-existed")
+
+
+class TestExitSweep(_Redirected):
+    """TC-H1 and TC-H2 (TASK 128 R6): a process sweeps its own session at exit, and a root that
+    another process swept meanwhile is made again."""
+
+    def test_h1_a_process_removes_its_session_at_exit(self):
+        # In a child process: `atexit` runs at its exit, and this process never calls
+        # `atexit._run_exitfuncs()`. The child names a second root before it exits; the handler
+        # of the first session must leave that root alone (R6.1).
+        base = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, base, True)
+        first, second = base / "first", base / "second"
+        second.mkdir()
+        code = "\n".join([
+            "import importlib.util",
+            "from pathlib import Path",
+            f"spec = importlib.util.spec_from_file_location('scratch_child', {str(SCRATCH)!r})",
+            "mod = importlib.util.module_from_spec(spec)",
+            "spec.loader.exec_module(mod)",
+            f"mod.REPO_SCRATCH = Path({str(first)!r})",
+            "mod.LEGACY_SCRATCH = ()",
+            "mod.session_scratch()",
+            f"mod.REPO_SCRATCH = Path({str(second)!r})",
+        ])
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+        proc = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True,
+                              text=True, timeout=60)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertFalse(first.exists(), "the session directory or its root stayed")
+        self.assertTrue(second.is_dir(), "the handler removed the root named at exit")
+
+    def test_h2_a_root_swept_meanwhile_is_made_again(self):
+        # Another process removed the empty root between `_ensure_root` and `mkdtemp` (R6.4).
+        real, calls = tempfile.mkdtemp, []
+
+        def mkdtemp(*args, **kwargs):
+            calls.append(kwargs.get("dir"))
+            if len(calls) == 1:
+                scratch.REPO_SCRATCH.rmdir()
+            return real(*args, **kwargs)
+
+        with mock.patch.object(scratch.tempfile, "mkdtemp", side_effect=mkdtemp):
+            workspace = scratch.session_scratch()
+        self.assertTrue(workspace.is_dir())
+        self.assertEqual(len(calls), 2)
+
+    def test_h2_a_root_swept_inside_ensure_root_is_made_again(self):
+        # The sweep of another process can also land inside `_ensure_root`, which then raises
+        # `FileNotFoundError`, or `FileExistsError` from its `mkdir(exist_ok=True)` (R6.4).
+        for error in (FileNotFoundError(2, "No such file or directory"),
+                      FileExistsError(17, "File exists")):
+            with self.subTest(error=type(error).__name__):
+                scratch._session_dir = None
+                real, calls = scratch._ensure_root, []
+
+                def ensure_root():
+                    calls.append(True)
+                    if len(calls) == 1:
+                        raise error
+                    return real()
+
+                with mock.patch.object(scratch, "_ensure_root", side_effect=ensure_root):
+                    workspace = scratch.session_scratch()
+                self.assertTrue(workspace.is_dir())
+                self.assertEqual(len(calls), 2)
 
 
 class TestRunnerDoesNotSweep(unittest.TestCase):

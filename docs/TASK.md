@@ -1,4 +1,4 @@
-# TASK 127 — `update_state.py` runs on Windows, and a failed run of it reaches the operator
+# TASK 128 — A CI job runs the session state on Windows, and the six records of the TASK 127 retro close
 
 <!-- contract:meta -->
 
@@ -6,65 +6,57 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 127 |
-| Slug | session-state-windows |
+| Task ID | 128 |
+| Slug | windows-ci-and-retro-records |
 | Type | Framework Upgrade (Self-Improvement Mode) |
-| Source | a defect report of 2026-10-26 from a team on Windows 10; the operator's answers of 2026-10-26 (D1, D2) |
-| Base revision | `c6666c4a6cd251d7f0327ad0df57dd706a3104e3` |
-| Closes | WI-39 for `update_state.py` only; the record stays open for nine scripts |
-| Archive name | `task-127-session-state-windows.md` |
+| Source | the retro of TASK 127 and the operator's answers of 2026-10-26 (D1, D2) |
+| Base revision | `931d5b1c2ceaf8b33e8dca0e64aacdf7c1aaac1b` |
+| Closes | ARC-13, SS-3, SS-4, SS-5, SS-6, TS-1 |
+| Archive name | `task-128-windows-ci-and-retro-records.md` |
 | Revision | 7 |
 
-**Request.** A team runs the framework on Windows 10 with Python 3.13, Git Bash and PowerShell.
-The ANSI code page there is cp1251. Their report lists framework scripts that fail on Windows.
-The operator decided to support native Windows on the critical path, in four tasks (D1). This
-task is the first: the session state of `skill-session-state`. The operator added the WI-39 fix
-for this script to the scope (D2).
+**Revision 7** records the close of stage 2 (D16). **Revision 6** applies fix round 2 of
+stage 2 (D15). **Revision 5** applies fix round 1 of
+stage 2 (D14). **Revision 4** extends TC-25 to a failed
+removal (Mode B N11). **Revision 3** applies m1 to m4
+and N1 to N7 of Mode A round 2, which passed, with no further round. **Revision 2** applied M1, m1 to m11 and N1 to N9 of round 1. It also took two findings
+before the task into the task: an entry of another kind at the state (D13), and the race of the
+scratch root (R6.4).
 
-**Revision 2** applies M1, m1 to m5, N1 to N6 and N8 of Mode A round 1; N7 keeps the precedent
-of TASK 124. **Revision 3** applies m1 and N1 to N6 of round 2, which passed, with no further
-round, on the precedent of TASK 122 to TASK 124. **Revision 4** follows Mode B round 1 of the
-PLAN (m2, N7, N8, N10) and a defect that B measured on the base script (R1.9, D16).
-**Revision 5** adds TC-18 for R1.9, after Mode B round 2 (N4), which passed. **Revision 6**
-records fix round 1 of stage 2 (D17). **Revision 7** records the close of stage 2 at round 2, and
-its limits (D18).
+**Request.** At the retro of TASK 127 the operator filed six defects and chose to close them in
+the next task. Asked for the order of the Windows series, they chose a CI job on Windows first,
+with these records. The Windows port of the archive chain follows as TASK 129 (D1).
 
 In this document `S/` stands for `.agent/skills/skill-session-state/`. A coordinate into a file
-that this task edits carries the pin `@c6666c4`, the base revision.
+that this task edits carries the pin `@931d5b1`, the base revision.
 
 <!-- contract:problem -->
 
 ## 1. Problem
 
-`S/scripts/update_state.py` writes `.agent/sessions/latest.yaml`. Every bootstrap file tells the
-agent to run it at each phase boundary. The report, and the runs of §8 on the base script, give
-these defects:
-
-1. **Import.** `S/scripts/update_state.py:8@c6666c4` `import fcntl` raises
-   `ModuleNotFoundError` on Windows. Every phase boundary fails there. In the report, the state
-   file kept one task for three tasks.
-2. **Encoding.** Four `open()` calls pass no `encoding`: lines 166, 207, 215 and 263 `@c6666c4`.
-   Windows opens them in the ANSI code page. A summary with `→` exits 1 with
-   `UnicodeEncodeError` (§8, run 2). A UTF-8 file read in cp1251 decodes to other text.
-3. **Escaping.** `S/scripts/update_state.py:114@c6666c4` `name: "{data.get('task_name',
-   'Unknown Task')}"` writes each value between quotes, with no escape. A `"` in `--task`, or a
-   `\` in `--add_decision`, makes the file invalid YAML (§8, runs 3 and 4).
-4. **No failure rule.** No rule says what an agent does when the script exits non-zero. In the
-   report, agents continued the task. One agent wrote keys into `latest.yaml` by hand, and the
-   script does not keep such keys.
-5. **Stale state at boot.** The boot protocol announces the restored state and does not compare
-   it with `docs/TASK.md`. In the report, a new session would restore a task three tasks old.
-6. **Vendor tool in a TIER 0 skill.** `S/SKILL.md:40@c6666c4` `WHENEVER** you call the
-   `task_boundary` tool` names its trigger by an Antigravity tool. Claude Code, Codex CLI and
-   Cursor have no such tool. v3.20.11 removed the same framing from `00_agent_development.md` and
-   `GEMINI.md`. `S/SKILL.md:89@c6666c4` `fcntl.lockf` states a lock that the script does not
-   take: the script takes `fcntl.flock`, and no lock for a read.
-7. **WI-39.** `.claude/settings.json:33` `update_state.py *` runs the script with no prompt.
-   Python puts the script's directory first on `sys.path`. A `json.py` or `argparse.py` planted
-   beside the script runs at the next phase boundary.
-8. **Tests that run nowhere.** `S/scripts/tests/test_update_state.py` holds 6 tests of SS-1.
-   No CI step names them. A bare `python3 -m pytest` from the root collects 725 tests and none
-   under `.agent/`: pytest skips a directory whose name starts with a dot.
+1. **No run on Windows.** TASK 127 made `S/scripts/update_state.py` run on Windows, and no run on
+   Windows has checked it. Every CI job of `.github/workflows/framework-gates.yml` runs on Ubuntu.
+   TASK 127 §9 gave the CI job, and a run of its UC-1 on Windows, to this series.
+2. **The tests assume POSIX in places.**
+   - `.agent/skills/skill-session-state/scripts/update_state.py:63@931d5b1` `SESSION_DIR =
+     ".agent/sessions"`. On Windows the script names `…\root\.agent/sessions\latest.yaml`.
+   - TC-11 at `.agent/skills/skill-session-state/scripts/tests/test_update_state.py:479@931d5b1`
+     expects backslashes only, so it fails on Windows.
+   - `LockTestCase` skips TC-01 where `fcntl` is missing, though TC-01 holds no POSIX lock.
+3. **ARC-13.** `.agent/tools/archive_move.py:36@931d5b1` and `.agent/tools/rebase_links.py:80@931d5b1`
+   compare real paths as strings. A call through a path in other letter case, on a
+   case-insensitive volume, keeps the script's directory on `sys.path`. A module planted beside
+   the script then runs under the allow rule.
+4. **SS-3.** `update_state.py` reads and writes `latest.yaml` by its path. A link planted at
+   `latest.yaml`, at its lock file or at `.agent/sessions` sends the read or the write to the
+   link's target.
+5. **SS-4.** `tests/test_concurrent_state.py` deletes the live `latest.yaml` when run by hand.
+6. **SS-5.** Two SS-1 tests write the state of an outer repository when `TMPDIR` lies inside a git
+   work tree.
+7. **SS-6.** The list-item pattern of the reader, `^\s+-\s+(.*?)\s*$`, backtracks over a run of
+   spaces: 20,000 spaces cost about one second at each run.
+8. **TS-1.** `python3 -m unittest discover -s tests` leaves `tests/.scratch/` and a session
+   directory behind: only the pytest hook of `tests/conftest.py` removes them.
 
 <!-- contract:rtm -->
 
@@ -72,499 +64,424 @@ these defects:
 
 | ID | Requirement | MVP? | Sub-features | Acceptance |
 | :--- | :--- | :--- | :--- | :--- |
-| R1 | The lock on POSIX and on Windows | yes | choice by import; one read inside the lock; `fcntl.flock`; `msvcrt.locking`; timeout exits 1 | A1, A2, A5 |
-| R2 | UTF-8 on every platform | yes | `encoding` on each `open`; a BOM tolerated; LF line ends; messages never fail; a non-UTF-8 file exits 1 | A3, A4 |
-| R3 | Escaped scalars and a stable round trip | yes | JSON scalars; YAML-printable escapes; `schema_version: 2`; old files read as before | A5, A6 |
-| R4 | A failed run reaches the operator | yes | the failure rule; the disagreement step; the three bootstrap files; `S/SKILL.md`; the guide | A8 |
-| R5 | `S/SKILL.md` names no vendor tool | yes | the phase boundary as trigger; the schema; §6 as the code locks; version 1.2 | A8, A12 |
-| R6 | WI-39 for `update_state.py` | yes | the real directory leaves `sys.path`; no bytecode; a module import keeps the path; the record notes it | A7 |
-| R7 | Tests and CI | yes | the staged test module; the Windows stand-in; the contract test; the CI step | A9, A10, A13 |
-| R8 | Staging and records | yes | the four stages; the checks; the settings readings; the changelogs; the architecture; the restart | A11, A12, A13 |
+| R1 | The filter of the archive scripts (ARC-13) | yes | the rule of TASK 127 R6.1; both scripts; a run in other letter case; no shared module | A1 |
+| R2 | No read or write through a link (SS-3) | yes | a link refused; `O_NOFOLLOW` on POSIX; an exclusive temporary file; the move tried again; the mode kept | A2 |
+| R3 | A linear item pattern (SS-6) | yes | `(.*)$` and `rstrip`; the session id too; a time bound | A3 |
+| R4 | The SS-1 tests stay in their root (SS-5) | yes | a skip inside a git work tree; the walk-up unchanged; a test of the skip | A4 |
+| R5 | No script that deletes the live state (SS-4) | yes | the module removed; no reference left; TC-01 and TC-02 cover it | A5 |
+| R6 | Scratch removed at the end of a unittest run (TS-1) | yes | `atexit` bound to its directory; the runner keeps no hook; a child process; the root made again | A6 |
+| R7 | CI jobs on Windows | yes | 3.11 and 3.14; bash; paths of the platform; TC-01 and TC-24 on Windows; each test read; the first run read | A7, A12, A13 |
+| R8 | Records, documents, staging and checks | yes | the six records closed; WI-39; the documents; the changelogs; the four stages; the checks | A8, A9, A10, A11 |
 
 ## 3. Requirements
 
-### R1 — the lock on POSIX and on Windows
+### R1 — the filter of the archive scripts (ARC-13)
 
-- **R1.1** The script chooses its lock by import. When `import fcntl` succeeds, it uses `fcntl`.
-  Otherwise it imports `msvcrt`. When neither imports, it prints a message that names both
-  modules and exits 1, before it writes anything. `--help` works without either module.
-- **R1.2** The script reads `latest.yaml` once, inside the lock, then merges and writes it. The
-  read before the lock, at `S/scripts/update_state.py:162@c6666c4` `# 1. Read existing state`,
-  is removed (D13). The lock file is `latest.yaml.lock` in the same directory.
+- **R1.1** `.agent/tools/archive_move.py` and `.agent/tools/rebase_links.py`, run as `__main__`,
+  remove from `sys.path` each entry that is their own directory, by the rule of TASK 127 R6.1:
+  - their own directory is the directory of `__file__` as called and of its real path;
+  - an entry matches by `os.path.normcase(os.path.realpath(...))` or by `(st_dev, st_ino)`.
+- **R1.2** The code of the filter lives in each script; no module is shared (TASK 127 D3).
+  `rebase_links.py` keeps its bytecode settings.
+- **R1.3** TC-A20 of `tests/test_archive_move.py` and TC-G11 of `tests/test_script_guards.py` each
+  add a run through a path in other letter case. The run is skipped where the volume tells letter
+  case apart.
 
-  **Why.** The base merges the result of that read only into values that the read inside the
-  lock computes again.
-- **R1.3** On POSIX the script takes `fcntl.flock(fd, fcntl.LOCK_EX)` and releases it with
-  `fcntl.LOCK_UN`. It waits with no time limit, as at the base.
-- **R1.4** On Windows the script takes `msvcrt.locking(fd, msvcrt.LK_LOCK, 1)` at offset 0 of the
-  lock file. It releases the same byte with `msvcrt.LK_UNLCK`.
-- **R1.5** `LK_LOCK` tries 10 times, 1 second apart, and then raises `OSError`. The script then
-  prints a message that names the lock file and exits 1. `latest.yaml` keeps its bytes.
-- **R1.6** The script opens the lock file with `os.open(path, os.O_RDWR | os.O_CREAT, 0o644)`:
-  for reading and writing, created when absent, never truncated, at position 0. It is not an
-  `open()` call of TC-07.
-- **R1.7** The lock code is part of `update_state.py`. The script imports no module of the
-  repository (D3).
-- **R1.8** The merge keeps its base rules. An empty value of an `--add_*` option records
-  nothing. `recent_decisions` keeps its last 10 items. `--add_blocker` and
-  `--add_completed_task` skip a value that the list already holds.
-- **R1.9** Two runs that create `.agent/sessions/` at the same time both succeed: the script
-  calls `os.makedirs(..., exist_ok=True)`, inside its error handling (D16).
+### R2 — no read or write through a link (SS-3)
 
-### R2 — UTF-8 on every platform
+- **R2.1** The script finds the session directory once, and checks three entries with
+  `os.lstat`. It refuses each that is a link, or that is of another kind than expected:
+  - `.agent/sessions`, before it creates or opens anything: a directory;
+  - `latest.yaml.lock`, before it opens it: a regular file;
+  - `latest.yaml`, after it takes the lock and before it reads: a regular file.
 
-- **R2.1** Each `open()` of the script passes an encoding. A read passes `encoding="utf-8-sig"`,
-  which drops a leading byte-order mark (D14). The write passes `encoding="utf-8"` and
-  `newline="\n"`, so the file has LF line ends and no byte-order mark on every platform.
-- **R2.2** The script reconfigures `sys.stdout` and `sys.stderr` with `errors="backslashreplace"`.
-  No message of the script raises an encoding error on a console or a pipe.
-- **R2.3** An existing `latest.yaml` that is not valid UTF-8 stops the run. The script prints a
-  message that names the file, says it is not UTF-8, and says to save it as UTF-8 or delete it.
-  It exits 1, and the file keeps its bytes (D9).
+  An entry that does not exist passes. A refusal prints a message that names the path and says
+  `is a link`, or names the kind it expected, and exits 1. For a link the message also says to
+  remove it, or to replace it with a directory or a regular file of one's own. No state is
+  written, and nothing is written through a link.
+- **R2.2** A link is an entry for which `os.lstat` gives `stat.S_ISLNK`. It is also a reparse
+  point whose tag is a name surrogate: `st_file_attributes` holds
+  `stat.FILE_ATTRIBUTE_REPARSE_POINT`, and `st_reparse_tag & 0x20000000` is not 0. The check reads
+  both attributes with `getattr` on every platform; only Windows sets them. A symbolic link and a
+  junction are links; a cloud or deduplication placeholder is not (D11).
+- **R2.3** On POSIX, the lock file opens with `os.O_NOFOLLOW`. The read and the write pass `open`
+  one `opener`. It adds `os.O_NOFOLLOW` on POSIX to the flags that it receives, and creates a file
+  with the bits `0o600`. The flags of `open` stay, `O_BINARY` on Windows among them.
+- **R2.4** The script writes the new state to a temporary file named
+  `latest.yaml.<32 hex digits>.tmp` in `.agent/sessions`:
+  1. `open` with mode `"x"`, `encoding="utf-8"`, `newline="\n"` and the opener of R2.3 creates
+     it exclusively, with the bits `0o600`, so no other user can open it before step 2;
+  2. on POSIX, `os.fchmod` gives the file the permission bits of `latest.yaml` when that is a
+     regular file, and else the bits `0o644` under the umask;
+  3. the script writes the file, flushes it, syncs it with `os.fsync`, and closes it;
+  4. `os.replace` moves it onto `latest.yaml`.
+- **R2.5** A move or a removal that fails with `PermissionError` is tried again: at most 10 tries,
+  0.1 seconds apart (D9).
+- **R2.6** A failure of the write or of the move closes the temporary file and removes it, with
+  the tries of R2.5: Windows removes no open file. The script prints a message that names
+  `latest.yaml`, and exits 1. `latest.yaml` keeps its bytes.
 
-### R3 — escaped scalars and a stable round trip
+### R3 — a linear item pattern (SS-6)
 
-- **R3.1** The script writes each string value as a YAML double-quoted scalar:
-  1. `json.dumps(value, ensure_ascii=False)` encodes the value;
-  2. each character outside the YAML 1.2 printable set becomes its `\uXXXX` escape;
-  3. U+0085, U+2028 and U+2029 become `\u0085`, `\u2028` and `\u2029`.
-- **R3.2** `context_summary` is such a scalar too. The script no longer writes the block form `|`
-  (D6). It strips the summary's outer whitespace, as at the base.
-- **R3.3** The first line of the file is `schema_version: 2`. The reader takes the version from
-  the first line only.
-- **R3.4** With `schema_version: 2` in the file, the reader decodes each preserved value with
-  `json.loads`: `session_id` and the items of `active_blockers`, `recent_decisions` and
-  `completed_tasks`. An item that `json.loads` rejects is read as at the base.
-- **R3.5** Without `schema_version: 2`, the reader reads the file as at the base. The next write
-  stores the same strings in the encoding of R3.1. A revert to the base script reads a version 2
-  file in the base way: each escape stays in the value as literal text.
-- **R3.6** A string that the command line can carry is read back unchanged after any number of
-  runs. A lone surrogate of `surrogateescape` is such a string. The escapes of a high and a low
-  surrogate, written by hand, read back as one character: `json.loads` joins them. The command
-  line cannot carry such a pair.
-- **R3.7** PyYAML `safe_load` parses each file that the script writes, and yields the values that
-  the script wrote. The script itself does not import PyYAML (D5).
+- **R3.1** The reader captures a list item with `(.*)$` and strips its trailing whitespace with
+  `str.rstrip`. The session id of a version 2 file is read the same way.
+- **R3.2** Each value reads back as at TASK 127; TC-09 and TC-10 keep their assertions.
 
-### R4 — a failed run reaches the operator
+### R4 — the SS-1 tests stay in their root (SS-5)
 
-- **R4.1** The failure rule stands in the `ON PHASE BOUNDARY` list of `CLAUDE.md`, and in the
-  `Session State Persistence` section of `AGENTS.md` and of `GEMINI.md`:
-  1. on a non-zero exit of `update_state.py`, the agent tells the operator in the same reply;
-  2. the message names the command, the exit code and the last line of the output;
-  3. the agent does not write `.agent/sessions/latest.yaml` by hand in place of the run;
-  4. the agent continues the task.
+- **R4.1** `test_no_git_falls_back_to_claude_project_dir` and
+  `test_no_git_no_env_keeps_legacy_cwd_behavior` skip when an ancestor of their temporary root
+  holds `.git`. A helper of the test module finds that ancestor, and the skip message names it.
+- **R4.2** The walk-up of the script stays as SS-1 fixed it.
 
-  The rule leaves each stop rule of a workflow in force, such as `framework-upgrade` §5 step 0.
-- **R4.2** The `SESSION RESTORATION (BOOTSTRAP)` section of the same three files gains a
-  disagreement step. When the state was restored and `docs/TASK.md` exists, the agent reads its
-  H1 and its Task ID:
-  1. Both `current_task.name` and `docs/TASK.md` carry a task ID, and the two differ. The
-     announcement says `Session state and docs/TASK.md disagree` and names both IDs. The user's
-     request decides which task continues; when it does not decide, the agent asks the operator.
-  2. Either carries no task ID. The announcement names the H1 of `docs/TASK.md` beside the
-     restored task, and the agent asks nothing.
-  3. The two IDs are equal. The announcement stays as before.
-- **R4.3** `S/SKILL.md` §2 states the disagreement step, and §3 states the failure rule. §3 keeps
-  its paragraph for roles that cannot run a command.
-- **R4.4** `System/Docs/SESSION_CONTEXT_GUIDE.md` changes in four places:
-  - §1 states both rules, with the stop rules of a workflow and the case with no task ID;
-  - §4, Risk A, names both rules as mitigations;
-  - §5 names macOS, Linux and Windows;
-  - §6 names `current_task.status`, states that the file is UTF-8, and states that the script
-    drops a key that it does not write.
+### R5 — no script that deletes the live state (SS-4)
 
-### R5 — `S/SKILL.md` names no vendor tool
+- **R5.1** `tests/test_concurrent_state.py` is removed. TC-01 and TC-02 of the test module test
+  concurrent runs in a temporary root.
+- **R5.2** After the change, no tracked file names the module outside `docs/`, `CHANGELOG.md` and
+  `CHANGELOG.ru.md`.
 
-- **R5.1** `S/SKILL.md` names its trigger as each phase boundary, the wording of the bootstrap
-  files. It contains no `task_boundary`, no `read_file` and no `view_file` (D8).
-- **R5.2** §1 states the file's format: UTF-8, LF, `schema_version: 2`, the keys, and JSON
-  scalars. It states that the script owns the file and drops a key that it does not write.
-- **R5.3** §6 states the lock as the script takes it:
-  - one exclusive lock on `latest.yaml.lock` around the read, the merge and the write;
-  - `fcntl.flock` on POSIX, with no time limit;
-  - `msvcrt.locking` on Windows, which waits about 10 seconds and then exits 1.
+### R6 — scratch removed at the end of a unittest run (TS-1)
 
-  The pseudo-code of a read lock is removed.
-- **R5.4** The frontmatter `version` of `S/SKILL.md` becomes `1.2`.
-- **R5.5** `System/Docs/SKILLS.md` and `System/Docs/WORKFLOWS.md` stay unedited: no skill and no
-  workflow is added, renamed or removed.
+- **R6.1** When `session_scratch()` of `tests/_scratch.py` creates a session directory, it
+  registers an `atexit` handler with that directory and its root as arguments. At exit the handler
+  removes that directory, and that root when the root is empty. It reads no global of the module.
+  `tests/test_scratch_hygiene.py` loads a second module object and restores its root after each
+  test. The handler of that object touches only the temporary root it was given.
+- **R6.2** The pytest hook of `tests/conftest.py` stays. `tests/run_tests.py` gains no sweep hook,
+  so `TestRunnerDoesNotSweep` of `tests/test_scratch_hygiene.py` stays true.
+- **R6.3** A killed process runs no `atexit` handler. Its directory stays until the stale sweep
+  of the next pytest session removes it. A unittest run removes no stale directory.
+- **R6.4** When `_ensure_root` or `tempfile.mkdtemp` raises `FileNotFoundError` or
+  `FileExistsError`, `session_scratch()` makes the root again and tries once more. A sweep of another process can
+  remove the empty root during either call, and `atexit` adds such sweeps.
 
-### R6 — WI-39 for `update_state.py`
+### R7 — CI jobs on Windows
 
-- **R6.1** Run as `__main__`, before every import but `os` and `sys`, the script removes from
-  `sys.path` each entry that is its own directory. Its own directory is the directory of
-  `__file__` as called and of its real path. An entry is that directory when its real path,
-  through `os.path.normcase`, or its device and inode, match one of them. The script sets no
-  bytecode option (D15).
-- **R6.2** A module import of the script, such as a test's
-  `importlib.util.spec_from_file_location`, leaves `sys.path` unchanged.
-- **R6.3** The WI-39 record gains a progress blockquote after its provenance banner, where ARC-8
-  holds its resolution. It names TASK 127 and `update_state.py`, and says that nine scripts
-  remain. Its status stays `open`, and its index line stays as it is.
+- **R7.1** `.github/workflows/framework-gates.yml` gains two jobs on `windows-latest`:
+  `session-state-windows-floor` with `python-version: "3.11"`, and `session-state-windows-main`
+  with `python-version: "3.14"`. Each job:
+  - sets `defaults.run.shell: bash`, so a failed command fails its step (D3);
+  - checks out with `persist-credentials: false`, and sets up Python with the pinned actions of
+    the other jobs;
+  - runs `python -m pip install --upgrade pip` and `pip install -r requirements-dev.txt`;
+  - runs `python -m pytest -p no:cacheprovider .agent/skills/skill-session-state/scripts/tests/
+    tests/test_session_state_contract.py -q`.
+- **R7.2** The jobs have no `python-version` list: `tests/test_python_floor.py` allows one version
+  matrix in the workflow (D3).
+- **R7.3** The script builds `.agent/sessions` with `os.path.join(".agent", "sessions")`, so each
+  path that it prints has the form of the platform (D8).
+- **R7.4** In the test module of `S/`:
+  - TC-01 runs on every platform. Only the tests that hold a POSIX lock or use the stand-in skip
+    where `fcntl` is missing;
+  - TC-24 holds the real lock where `msvcrt` imports;
+  - each test that names a path compares it in the form of the platform.
+- **R7.5** Before stage 2, the run reads each test that the jobs run for an assumption of POSIX.
+  The read covers path separators, line ends, links, locks, encodings, the temporary directory,
+  and the removal of a file that is still open. The audit record lists each test, the assumption
+  it meets, and how the change meets it.
+- **R7.6** TC-C8 of `tests/test_session_state_contract.py` checks the two jobs of R7.1.
+- **R7.7** The first run of the jobs follows the operator's push, after this run. The final report
+  of this run names the two jobs. TASK 129 reads their result first, with `gh run list` and
+  `gh run view`. A failed test is filed as a defect record and named to the operator, who decides
+  whether TASK 129 closes it first (D12).
 
-### R7 — tests and CI
+### R8 — records, documents, staging and checks
 
-- **R7.1** `S/scripts/tests/test_update_state.py` keeps the 6 tests of SS-1 and gains the tests
-  of §5. A test runs the script in a temporary root that holds its own `.git`. No test writes
-  under the repository.
-- **R7.2** A test runs the Windows branch on POSIX. At run time it writes, in a temporary
-  directory, a `sitecustomize.py` that blocks `import fcntl` and provides a `msvcrt` stand-in. It
-  starts the script with that directory on `PYTHONPATH`. The stand-in implements `locking` with
-  `fcntl.lockf` on the same byte, and logs each call (D10). No such file is committed.
-- **R7.3** A test runs the script under `LC_ALL=C`, `PYTHONUTF8=0` and `PYTHONCOERCECLOCALE=0`.
-  There, Python's locale encoding is US-ASCII on macOS (§8, run 5) and ASCII on Linux (PEP 538
-  and PEP 540 then leave the C locale in force). On Linux the command line is decoded in ASCII
-  too, so the test passes non-ASCII text through an existing state file.
-- **R7.4** `tests/test_session_state_contract.py` is a new test module of `unittest.TestCase`
-  classes. It checks the documents of R4 and R5, `docs/ARCHITECTURE.md` and the CI step of R7.5.
-- **R7.5** The pytest step of `.github/workflows/framework-gates.yml` names
-  `.agent/skills/skill-session-state/scripts/tests/` and `tests/test_session_state_contract.py`.
+- **R8.1** Each of the six records gains `status: fixed`, `resolved_at: 2026-10-26`,
+  `resolved_by: TASK 128` and a resolution blockquote after its provenance banner, as ARC-8 holds.
+  Its index line in `docs/KNOWN_ISSUES.md` names status `fixed`.
+- **R8.2** The WI-39 record gains a progress blockquote after its last one. It states that the two
+  archive scripts match their directory by the rule of TASK 127 R6.1. That rule replaces the check
+  by name of its table. Its index line in `docs/BACKLOG.md` stays.
+- **R8.3** `S/SKILL.md` becomes version `1.3`. Its §1 and §6, and §1 and §6 of
+  `System/Docs/SESSION_CONTEXT_GUIDE.md`, state the refusal of a link and the write through a
+  temporary file. The guide's §6 states the remedy: remove the link, or replace it with a
+  directory or a regular file of one's own. It also states that a link above the three entries
+  is followed.
+- **R8.4** `CHANGELOG.md` and `CHANGELOG.ru.md` hold v3.48.0. Its **Changed** part states the
+  refusal of a link and the remedy.
+- **R8.5** The change runs the four stages of `framework-upgrade` §3 step 4. Stage 1 writes these
+  copies under new names, and the stage-3 patch gives each final file their bytes:
+  - `S/scripts/staged_update_state.py` → `S/scripts/update_state.py`;
+  - `S/scripts/tests/staged_test_update_state.py` → `S/scripts/tests/test_update_state.py`;
+  - `.agent/tools/staged_archive_move.py` → `.agent/tools/archive_move.py`;
+  - `.agent/tools/staged_rebase_links.py` → `.agent/tools/rebase_links.py`;
+  - `tests/staged_scratch.py` → `tests/_scratch.py`;
+  - `tests/staged_archive_move.py` → `tests/test_archive_move.py`;
+  - `tests/staged_script_guards.py` → `tests/test_script_guards.py`;
+  - `tests/staged_scratch_hygiene.py` → `tests/test_scratch_hygiene.py`.
 
-### R8 — staging and records
+  The patch also removes `tests/test_concurrent_state.py`. It touches no other path.
 
-- **R8.1** The change runs the four stages of `framework-upgrade` §3 step 4 (D11). Stage 1 writes
-  two copies under new names:
-  - `S/scripts/staged_update_state.py`, the new script;
-  - `S/scripts/tests/staged_test_update_state.py`, the new test module. It runs
-    `update_state.py`, the final name.
-
-  No rule runs the copies, and no test runner collects them (A13).
-- **R8.2** The edits of R4, R5, R6.3, R7.4, R7.5 and the records land in place before stage 3.
-- **R8.3** The stage-3 patch gives `update_state.py` and `test_update_state.py` the bytes of their
-  staged copies. It touches no other path and holds no staged copy. Stage 3 removes each copy
-  once its file hashes to it. Stage 3 adds no settings test.
-
-  **Why.** `tests/test_committed_settings.py:74` already pins the allow rule, and no
-  registration changes.
-- **R8.4** On a failure of stage 3 or stage 4, the run writes back each removed copy from its
-  file and runs `git apply -R` of the patch. A file that hashes otherwise, or a failed
-  `git apply -R`, stops the run for the operator.
-- **R8.5** The behaviour check runs in a throwaway worktree outside the repository. The worktree
-  holds the live tree's files and the stage-3 patch. There, the gates of
-  `.github/workflows/framework-gates.yml` and the new test module pass.
-- **R8.6** The check of `framework-upgrade` §3 step 4 runs each command below, from the
-  repository root unless a directory is named:
-  - before and after stage 3:
-    - `python3 -m pytest` from the root and from `S/`;
-    - `python3 tests/run_tests.py`;
-    - the local rule's `python3 -m unittest discover -s tests -v`, which runs the contract test;
-    - the user rule's `python3 -m unittest discover -s scripts/tests`, from `S/`;
-  - after stage 3, from `S/scripts/`: `python3 -m pytest`, and the local rule's
-    `python3 -m unittest discover -s tests -v`, which there runs `scripts/tests`;
-  - after stage 3, the committed rule of `update_state.py`, on the live state file, with the
-    four required options and no `--add_*` option:
-    - one run with the live base-format file, then one run with the version 2 file it becomes;
-  - after stage 3, on a stand-in state file (R8.10), in this order:
-    1. one run with no state file; it writes the stand-in;
-    2. one run with each of `--add_decision`, `--add_blocker`, `--add_completed_task`,
-       `--clear_blockers` and `--predicted_steps 3`. A string value has the form
-       `TASK 127 check: <option>`;
-    3. one run with `--help`;
-    4. one run with the stand-in written again with a byte-order mark in front;
-    5. the 15 rules of the user's settings that run the script by an absolute path. That path
-       lies in a sibling checkout whose skill directory links into this repository;
-    6. last, one run with a stand-in that is not UTF-8, which exits 1 and writes nothing.
-- **R8.10** For the runs on a stand-in, the run renames the live `latest.yaml` to
-  `latest.yaml.keep-127` in the same directory. After the last run it removes the stand-in and
-  renames the file back. Then it records the session state again through `update_state.py`. The
-  check values stay out of the live history. On any other exit after the rename, the run first
-  removes the stand-in and renames the file back. Under the stop rule of `framework-upgrade` §3
-  step 4, it moves neither file and names both to the operator.
-- **R8.7** The run reads `.claude/settings.local.json` and the user's `~/.claude/settings.json` at
-  §2.2, at §4.5 and after the gates of stage 3. The audit record names each file of the change
-  that a rule of either file runs, and quotes no rule.
-- **R8.8** `CHANGELOG.md` and `CHANGELOG.ru.md` hold v3.47.0. `docs/ARCHITECTURE.md` names
-  `msvcrt` beside `fcntl` at its two statements of the session-state lock.
-- **R8.9** The run tells the operator to restart the session: the change edits `CLAUDE.md`,
-  `AGENTS.md` and `GEMINI.md` (`framework-upgrade` §4 step 3).
+  **Why.** Allow rules run the three scripts. `tests/run_tests.py`, which an allow rule runs, runs
+  the three test modules of `tests/`, and `tests/test_scratch_hygiene.py` loads `tests/_scratch.py`.
+  The test module of `S/` tests the script by its final name.
+- **R8.6** The documents, the changelogs, the records, the CI workflow and the contract test land
+  in place before stage 3.
+- **R8.7** The checks of TASK 127 apply, with the commands of this change:
+  - the behaviour check in a worktree, the mutations and the byte scan;
+  - the live-state guard;
+  - the check of §3 step 4 for each allowed command that reaches the change, which the PLAN lists.
+- **R8.8** The run reads `.claude/settings.local.json` and the user's `~/.claude/settings.json` at
+  §2.2, at §4.5 and after the gates of stage 3.
+- **R8.9** Before stage 3, the run looks for a link at the three entries of R2.1 in each checkout
+  beside this repository that holds `.agent/sessions`. The script runs there under the user's
+  rules. The audit record names each link found, and the run names it to the operator.
 
 <!-- contract:use-cases -->
 
 ## 4. Use cases
 
-### UC-1 — An agent on Windows records a phase boundary
+### UC-1 — The operator pushes, and CI runs the session state on Windows
 
-- **Actors.** An agent in Claude Code on Windows 10; Python 3.13; the ANSI code page cp1251.
-- **Precondition.** TASK 127 has landed.
-1. The agent runs `update_state.py --mode M --task "TASK-031 «тест» → ok" --status S --summary
-   "line one"`.
-2. The script imports `msvcrt`, locks byte 0 of `latest.yaml.lock`, reads, merges and writes the
-   file.
-3. The script prints `Session state updated` and exits 0.
-- **Alternative 2a.** Another agent holds the lock. `LK_LOCK` waits and then succeeds.
-- **Alternative 2b.** The lock stays held for 10 tries. The script exits 1; UC-3 follows.
-- **Postcondition.** `latest.yaml` is UTF-8 with LF line ends, and its first line is
-  `schema_version: 2`. PyYAML reads `TASK-031 «тест» → ok` back from `current_task.name`.
+- **Actors.** The operator; GitHub Actions; the orchestrator of TASK 129.
+- **Precondition.** The operator has committed and pushed this task.
+1. Each Windows job checks out the tree on `windows-latest` and sets up Python 3.11 or 3.14.
+2. It installs `requirements-dev.txt`, and runs the test module of `S/` and the contract test with
+   pytest under bash.
+3. The tests that hold a POSIX lock or use the stand-in skip. The others run the script with the
+   real `msvcrt`, the runner's code page cp1252, NTFS and paths in the Windows form.
+4. The orchestrator of TASK 129 reads both results (R7.7).
+- **Alternative 3a.** A test fails, and its job is red. Step 4 files the failure as a defect
+  record, and the operator decides.
+- **Postcondition.** The results show whether TASK 127 and this task hold on Windows. The jobs
+  are the run of TASK 127 UC-1 on Windows: TC-09 runs its values, TC-01 its alternative 2a, and
+  TC-24 its alternative 2b.
 
-### UC-2 — Two agents record a boundary at the same time
+### UC-2 — A link stands at `latest.yaml`
 
-- **Actors.** Two agents of one team; one host, POSIX or Windows.
-1. Both run the script with `--add_completed_task`, each with its own task.
-2. One takes the lock; the other waits.
-- **Postcondition.** `completed_tasks` holds both tasks.
+- **Actors.** An agent at a phase boundary; a link that another process planted, or that a cloned
+  repository holds.
+- **Precondition.** `.agent/sessions/latest.yaml` is a link to another file.
+1. The agent runs `update_state.py`.
+2. The script exits 1, and its message names the path and says `is a link`. The target keeps its
+   bytes.
+3. The failure rule of TASK 127 follows: the agent tells the operator.
+- **Alternative 1a.** `.agent/sessions` is a symbolic link or, on Windows, a junction. The script
+  refuses it before it creates anything.
+- **Alternative 1b.** No link stands, and the move of the temporary file fails at each of its 10
+  tries: on Windows another process holds `latest.yaml` open. The script removes the temporary
+  file and exits 1, `latest.yaml` keeps its bytes, and step 3 follows.
+- **Postcondition.** No byte is written through a link.
 
-### UC-3 — The script exits non-zero
+### UC-3 — A full unittest discovery of `tests/`
 
-- **Actors.** Any agent with a shell tool.
-1. The agent sees a non-zero exit of `update_state.py`.
-2. In the same reply, it tells the operator the command, the exit code and the last output line.
-3. It continues the task. It does not edit `latest.yaml`.
-- **Alternative 3a.** A workflow step needs the record, such as `framework-upgrade` §0 step 3.
-  That workflow's own stop rules apply.
-- **Postcondition.** The operator knows that the state did not change.
-
-### UC-4 — A session starts on a state that disagrees with `docs/TASK.md`
-
-- **Actors.** An agent at session start.
-- **Precondition.** `latest.yaml` names TASK-028, and `docs/TASK.md` is TASK-031.
-1. The agent reads `latest.yaml`, then the H1 and the Task ID of `docs/TASK.md`.
-2. Its announcement says `Session state and docs/TASK.md disagree` and names TASK-028 and
-   TASK-031.
-3. The user's request decides which task continues. When it does not, the agent asks.
-- **Alternative 1a.** `docs/TASK.md` does not exist. The agent announces the state as before.
-- **Alternative 1b.** `current_task.name` is `Optimizing Database`, with no task ID. The
-  announcement names the H1 of `docs/TASK.md` beside it. It states no disagreement, and the
-  agent asks nothing.
-- **Alternative 1c.** `docs/TASK.md` has no Task ID. The announcement names its H1, as in 1b.
-- **Alternative 1e.** Both IDs are TASK-031. The announcement stays as before.
-- **Alternative 1d.** The state names a later task than `docs/TASK.md`. A run stopped between
-  `framework-upgrade` §0 and §1 leaves this state. The announcement states the disagreement, as
-  in step 2.
-
-### UC-5 — The first run after the upgrade meets an old file
-
-- **Precondition.** `latest.yaml` has no `schema_version`. One decision holds `C:\new\dir`.
-1. The script reads the file as at the base.
-2. It writes the same strings in the encoding of R3.1, under `schema_version: 2`.
-- **Postcondition.** The decision reads back as `C:\new\dir`. Keys that the script does not write
-  are gone.
+- **Actors.** The operator, or an agent under the local rule.
+1. The local rule runs `python3 -m unittest discover -s tests -v`.
+2. A test creates its in-repo scratch. At the end of the process, `atexit` removes the session
+   directory, and `tests/.scratch/` when it is empty.
+- **Alternative 2a.** The process is killed. No `atexit` handler runs, and the directory stays
+  until the next pytest session (R6.3).
+- **Postcondition.** The session directory of the run does not exist. `tests/.scratch/` exists only
+  while another live session holds a directory in it.
 
 <!-- contract:acceptance -->
 
 ## 5. Acceptance criteria
 
-The tests of the test module after stage 3 (R7.1):
+New and changed tests of `S/scripts/tests/test_update_state.py`:
 
-- **TC-01** — two runs started together, with distinct `--add_completed_task` → `completed_tasks`
-  holds both.
-- **TC-02** — the test holds `flock` on the lock file, then starts a run → the run has not exited
-  after 2 seconds. While it waits, the test writes a version 2 state whose `completed_tasks`
-  holds a marker. After the release the run exits 0, and the marker survives; fails when the
-  lock is removed, or when the read moves before the lock.
-- **TC-03** — the Windows branch of R7.2 → exit 0; the stand-in logs `LK_LOCK` and then
-  `LK_UNLCK`, each on 1 byte at offset 0.
-- **TC-04** — the Windows branch, with the stand-in's lock held for its 10 tries → exit 1; the
-  message names `latest.yaml.lock`; `latest.yaml` keeps its bytes.
-- **TC-05** — `fcntl` blocked and no `msvcrt` → exit 1, the message names both modules, and no
-  file is written. `--help` under the same block exits 0.
-- **TC-06** — a version 2 `latest.yaml` whose `recent_decisions` holds Cyrillic and `→`, the
-  locale of R7.3, and arguments in ASCII → exit 0. The file decodes as UTF-8 and still holds both
-  strings; fails when the read or the write of `latest.yaml` loses its encoding.
-- **TC-07** — the AST of `update_state.py` → each `open()` call passes an encoding. A read
-  passes `"utf-8-sig"`; the write passes `"utf-8"` and `newline="\n"`.
-- **TC-08** — `PYTHONIOENCODING=ascii` and a temporary root whose name holds Cyrillic → exit 0,
-  and no traceback.
-- **TC-09** — 16 runs; run k passes value k of the list below to `--add_blocker`,
-  `--add_decision`, `--add_completed_task`, `--task` and `--status`:
-  - `"`, `\` and a literal `\n`;
-  - LF, CR, TAB, U+007F, U+0085, U+0093 and U+2028;
-  - Cyrillic and an emoji;
-  - `: `, `#` and a leading space;
-  - a lone surrogate.
+- **TC-01** — runs on every platform; two runs at once keep both tasks.
+- **TC-07** — checks every call of `open` by name, and treats a mode with `w`, `x`, `a` or `+` as
+  a write. It fails on a call of `os.fdopen`, `io.open` or `codecs.open`.
+- **TC-19** — a link at `latest.yaml` → exit 1, the message names the path, says `is a link` and
+  says to remove it, and the target keeps its bytes. Fails when the check of `latest.yaml` is removed; skipped where
+  no link can be created.
+- **TC-20** — a link at `.agent/sessions`, a link at `latest.yaml.lock`, and on Windows a junction
+  at `.agent/sessions` → exit 1 with `is a link`, and nothing is written through any of them. Fails
+  when the check of either entry is removed; each case is skipped where its link cannot be made.
+- **TC-21** — a run → `.agent/sessions` holds `latest.yaml` and its lock only, and the file holds
+  no CR byte. On POSIX:
+  - a new file has the bits `0o644` under the umask, and a file with the bits `0o600` keeps them;
+  - under the umask `022`, the temporary file holds no bit for group or others until
+    `os.fchmod`;
+  - a write onto a link gives the new file the bits `0o644` under the umask, not the link's.
 
-  After the 16th run, `active_blockers` and `completed_tasks` hold the 16 values in order, and
-  `recent_decisions` holds the last 10. PyYAML yields the same lists, and the 16th value from
-  `current_task.name` and `current_task.status`.
-- **TC-10** — an old file of UC-5, with a decision `C:\new\tab` and a line
-  `schema_version: 2` below its first line → the strings survive. The first line of the new
-  file is `schema_version: 2`, and PyYAML parses it; fails when the reader takes the version
-  from any line.
-- **TC-11** — a `latest.yaml` with bytes that are not UTF-8 → exit 1; the message names the file
-  and `UTF-8`; the file keeps its bytes.
-- **TC-12** — copies of the script beside planted modules → exit 0, and no planted module writes
-  its marker; fails when the `sys.path` filter is removed:
-  - planted as sources: each module that the script imports, found from its AST, and `msvcrt`
-    and `_winapi`, but `datetime`;
-  - planted as a sourceless `.pyc` with no source beside it: `datetime`;
-  - one run calls the copy by its path, one through a symbolic link to its directory, and one
-    through a path in other letter case where the volume ignores case;
-  - one run calls a symbolic link to the copy, from a directory that holds planted modules too.
-- **TC-13** — a module import of the script → `sys.path` is unchanged. TC-13 and TC-18 compile
-  the script in memory, so neither reads nor writes `__pycache__/` beside it.
-- **TC-14** — a summary of two lines → `context_summary` is one JSON scalar that decodes to both
-  lines. A summary with outer spaces is stored without them; fails when the strip is removed.
-- **TC-15** — a version 2 file that starts with a byte-order mark → its values are decoded as
-  version 2, and the new file has no byte-order mark.
-- **TC-16** — `--task ""` → exit 0, and PyYAML reads `""` from `current_task.name`.
-- **TC-17** — the merge rules of R1.8 → an empty `--add_blocker` and an empty `--add_decision`
-  record nothing. A second `--add_blocker` and a second `--add_completed_task` of one value keep
-  one item each.
-- **TC-18** — the race of R1.9, every time: `ensure_session_dir` of the imported script, with
-  `.agent/sessions` present and `os.path.exists` reporting it absent → no exception; fails when
-  `exist_ok=True` is removed.
+  Fails when `os.fchmod` is removed, when the opener creates with `0o644`, or when the bits come
+  from an entry of any kind.
+- **TC-22** — `os.replace` made to fail with `OSError` in an imported script → exit 1, the message
+  names `latest.yaml`, `latest.yaml` keeps its bytes, and no temporary file stays. Fails when the
+  removal of the temporary file is removed.
+- **TC-23** — a version 2 file whose session id and decision each hold 100,000 spaces between
+  two letters → the run exits 0 within 4 seconds, and both read back unchanged. Fails with either
+  pattern of the base.
+- **TC-24** — on Windows the test holds byte 0 of `latest.yaml.lock` with `msvcrt.locking` → exit 1
+  after the tries of `LK_LOCK`, the message names `latest.yaml.lock`, and `latest.yaml` keeps its
+  bytes. The test unlocks the byte before it closes the descriptor. Skipped where `msvcrt` does not
+  import.
+- **TC-25** — `os.replace` made to fail with `PermissionError` twice in an imported script → exit
+  0, the state is written, and no temporary file stays. A second case: `os.replace` fails with
+  `OSError`, and `os.remove` with `PermissionError` twice → exit 1, and no temporary file stays. A
+  third case: `os.replace` fails with `PermissionError` at each try → exit 1 after 10 tries and 9
+  pauses of 0.1 seconds, `latest.yaml` keeps its bytes, and no temporary file stays. Fails when
+  the tries of R2.5 are removed, or their count or their pause changes.
+- **TC-26** — the helper of R4.1 names an ancestor that holds `.git` as a directory, and one that
+  holds `.git` as a file, as a linked worktree does. For a directory with no such ancestor of its
+  own, it answers as for the directory's parent.
+- **TC-27** — the script loaded while `os.path` is `ntpath` names the session directory
+  `.agent\sessions`. Fails with the literal of the base.
+- **TC-28** — `os.lstat` patched in an imported script: a directory whose reparse tag is
+  `0xA0000003` or `0xA000000C` is refused as a link, and one whose tag is `0x9000001A` is not. A
+  FIFO at `latest.yaml` is refused as no regular file, and a regular file at `.agent/sessions` as
+  no directory. Runs on every platform. Fails when the tag check, the branch of the reparse point,
+  or either check of the kind is removed.
+- **TC-29** — on POSIX, `os.lstat` is patched in an imported script. It reports a regular file over
+  a link to an existing file at `latest.yaml`, and over a dangling link at `latest.yaml.lock`.
+  Each run exits 1 with no `is a link` in its output, the linked file keeps its bytes, and the
+  target of the dangling link is not created. Fails when `O_NOFOLLOW` is removed from the opener or from the open of the lock file.
+  Skipped where `os.O_NOFOLLOW` is missing or no link can be made.
 
-The tests of `tests/test_session_state_contract.py` (R7.4):
+Changed tests of other modules:
 
-- **TC-C1** — the failure rule of R4.1 stands in the three named sections, in `S/SKILL.md` §3, and
-  in the guide's §1 and its Risk A, with "the operator in the same reply".
-- **TC-C2** — `Session state and docs/TASK.md disagree` stands in the three `SESSION RESTORATION`
-  sections, in `S/SKILL.md` §2, and in the guide's §1 and its Risk A.
-- **TC-C3** — `S/SKILL.md` holds no `task_boundary`, `read_file`, `view_file`, `lockf` or
-  `Shared Lock`, and §3 keeps the paragraph for roles that cannot run a command.
-- **TC-C4** — `S/SKILL.md` §1 names `schema_version: 2`, `UTF-8` and the dropped key; §6 names
-  `fcntl.flock` and `msvcrt.locking`; the frontmatter has `version: 1.2`.
-- **TC-C5** — the guide names `current_task.status` and not `task_status`; its §5 names macOS,
-  Linux and Windows; its §6 names `UTF-8` and the dropped key.
-- **TC-C6** — the pytest step of the CI workflow names both paths of R7.5.
-- **TC-C7** — `docs/ARCHITECTURE.md` names `msvcrt` at both statements of the session-state lock.
+- **TC-12 of `S/`**, TC-A20 of `tests/test_archive_move.py` and TC-G11 of
+  `tests/test_script_guards.py` → no planted module runs through a path in other letter case.
+- **TC-H1** of `tests/test_scratch_hygiene.py` — a child process creates a session directory under
+  a redirected root, names a second empty directory as its root, and exits. The first root holds
+  nothing, and the second stays. Fails when the registration of R6.1 is removed, or when the
+  handler reads the globals of the module at exit. The test never calls `atexit._run_exitfuncs()`.
+- **TC-H2** of `tests/test_scratch_hygiene.py` — the root removed before the first
+  `tempfile.mkdtemp`, and in two more cases `_ensure_root` made to raise `FileNotFoundError` or
+  `FileExistsError` once → `session_scratch()` returns a directory each time. Fails when R6.4 is removed, or when the root
+  is made once before the tries.
+- **TC-C4** — `S/SKILL.md` has version 1.3. Its §1 holds `is a link` and `temporary file`, and its
+  §6 holds `os.replace`.
+- **TC-C5** — the guide's §1 holds `temporary file`, and its §6 holds `is a link`.
+- **TC-C8** — the workflow holds two jobs on `windows-latest`, with Python 3.11 and 3.14 and the
+  shell bash, and a pytest step in each runs both paths of R7.1.
 
 The criteria of the task:
 
-- **A1** — TC-01, TC-02, TC-18 and the 6 SS-1 tests pass on POSIX.
-- **A2** — TC-03, TC-04 and TC-05 pass.
-- **A3** — TC-06, TC-07, TC-08 and TC-15 pass.
-- **A4** — TC-11 passes.
-- **A5** — TC-09, TC-14, TC-16 and TC-17 pass.
-- **A6** — TC-10 passes.
-- **A7** — TC-12 and TC-13 pass, and the WI-39 record holds the note of R6.3.
-- **A8** — TC-C1 to TC-C5 pass.
-- **A9** — `tests/test_mock_agent.py` passes after stage 3.
-- **A10** — TC-C6 passes, and the gates pass on the patched worktree and, after stage 3, on the
-  tree.
-- **A11** — the checks of R8.6 pass, and the audit record holds the readings of R8.7.
-- **A12** — TC-C7 passes, the changelogs hold v3.47.0, and `git diff --quiet <base> --` exits 0
-  for `System/Docs/SKILLS.md` and `System/Docs/WORKFLOWS.md`.
-- **A13** — before stage 3, these list no staged file: `python3 -m pytest --co -q` from the root
-  and from `S/`, and `python3 -m unittest discover -s scripts/tests -v` from `S/`.
+- **A1** — R1: the runs in other letter case pass, and fail when the check of device and inode is
+  removed from either script.
+- **A2** — TC-19 to TC-22, TC-25, TC-28 and TC-29 pass.
+- **A3** — TC-23, TC-09 and TC-10 pass.
+- **A4** — TC-26 passes. Under a `TMPDIR` inside a git work tree, the two SS-1 tests skip and
+  write nothing.
+- **A5** — `tests/test_concurrent_state.py` does not exist, and
+  `git grep -l test_concurrent_state -- . ':!docs' ':!CHANGELOG.md' ':!CHANGELOG.ru.md'` prints
+  nothing.
+- **A6** — TC-H1 and TC-H2 pass. The check of §3 step 4 for the local unittest discovery of
+  `tests` finds no difference after stage 3.
+- **A7** — TC-01, TC-11, TC-27 and TC-C8 pass. The test steps of the new jobs pass when `gates.py`
+  runs them on macOS. `gates.py` skips the install steps, so pip installs nothing outside a
+  virtual environment. The audit record holds the read of R7.5.
+- **A8** — the six records are `fixed`, with their index lines, and the WI-39 record holds the
+  progress of R8.2.
+- **A9** — the gates pass on the patched worktree and, after stage 3, on the tree. Each mutation
+  of the PLAN makes its test fail.
+- **A10** — the checks of R8.7 pass. The audit record holds the readings of R8.8 and the search of
+  R8.9.
+- **A11** — TC-C4 and TC-C5 pass. The **Changed** part of v3.48.0 in each changelog names the
+  refusal of a link and the remedy. `regcheck.py` finds no warning on an added line of the
+  documents, the changelogs and the records.
+- **A12** — after the push, owned by TASK 129: both Windows jobs pass, TC-24 among their tests
+  (R7.7). This run cannot decide it.
+- **A13** — the final report of this run names `session-state-windows-floor` and
+  `session-state-windows-main`, and asks the operator to push (R7.7).
 
 <!-- contract:open-questions -->
 
 ## 6. Open questions
 
-None. The operator answered the scope (D1) and WI-39 (D2).
+None. The operator chose the order (D1) and the records (D2).
 
 ## 7. Decisions
 
-- **D1**, 2026-10-26, operator: native Windows is supported on the critical path, in four tasks.
-  Answers "Да с твоими рекомендациями" and "согласен с рекомендацией". This task is the first;
-  §9 names the other three.
-- **D2**, 2026-10-26, operator: this task removes the script's directory from `sys.path` (WI-39).
-  Answer "Включить в TASK 127". The decision D10 of 2026-10-08 required the operator's review of
-  such a change. Rejected: WI-39 left as it is, with the gap named in the audit record.
-- **D3**, 2026-10-26, orchestrator: the lock code stays inside `update_state.py`. Rejected: one
-  module `.agent/tools/_lock.py` shared by the skills. A skill installs alone, by its own link or
-  copy, and cannot import from `.agent/tools/`. An added import path also widens WI-39.
-- **D4**, 2026-10-26, orchestrator: `msvcrt.locking` on one byte of the lock file. Windows
-  releases it when the process exits. Rejected: a lock file created with `O_CREAT | O_EXCL`. A
-  process that dies holds it, and every later run fails until someone removes the file.
-- **D5**, 2026-10-26, orchestrator: JSON scalars from the standard library, with
-  `schema_version: 2`. Rejected: PyYAML, which needs a virtual environment; the bootstrap files
-  run the script with the bare `python3`. Rejected: single-quoted YAML, which has no escape for a
-  line break.
-- **D6**, 2026-10-26, orchestrator: `context_summary` is a JSON scalar. Rejected: the block form
-  `|`. A first line that starts with a space, a CR or a character outside the printable set makes
-  the file invalid or changes the value.
-- **D7**, 2026-10-26, orchestrator: the disagreement step is an instruction to the agent, and it
-  compares task IDs only where both sides carry one. Rejected: a `--check` option of the script.
-  A task in `current_task.name` is free text, and projects write its ID in different forms, such
-  as `TASK 127` and `TASK-031`.
-- **D8**, 2026-10-26, orchestrator: `S/SKILL.md` drops `task_boundary`, `read_file` and
-  `view_file`. Rejected: an Antigravity note. v3.20.11 removed that framing from `GEMINI.md`,
-  which Antigravity also reads.
-- **D9**, 2026-10-26, orchestrator: a state file that is not UTF-8 stops the run. Rejected: a
-  fallback to the locale encoding. cp1251 decodes almost every byte sequence, so a wrong guess
-  gives other text and no error.
-- **D10**, 2026-10-26, orchestrator: the script chooses the lock by the import of `fcntl`.
-  Rejected: `os.name == "nt"`. A test on POSIX could reach that branch only by patching `os` for
-  the whole interpreter.
-- **D11**, 2026-10-26, orchestrator: the script and its test module are staged; the documents
-  are edited in place. An allow rule names the script. The test module runs it, and until stage 3
-  the old tests stay green on the live tree.
-- **D12**, 2026-10-26, orchestrator: the skill's tests join the existing CI step on Ubuntu. A
-  Windows job is the fourth task of D1.
-- **D13**, 2026-10-26, orchestrator: the read before the lock is removed. Rejected: kept with an
-  `encoding`. Its result changes no output, and it would print a second message for a file that
-  is not UTF-8.
-- **D14**, 2026-10-26, orchestrator: a read uses `utf-8-sig`. PowerShell 5.1 and some editors
-  write a byte-order mark. With `utf-8`, the mark hides `schema_version: 2` from the reader, and
-  a version 2 file is read in the base way.
-- **D15**, 2026-10-26, orchestrator: the script sets neither `sys.dont_write_bytecode` nor
-  `sys.pycache_prefix`. Those settings of `rebase_links.py` guard siblings that it loads by
-  explicit path; this script loads none. Rejected: both settings, as the WI-39 record lists them.
-  The prefix also sends every standard-library import to its source, at every phase boundary.
-- **D16**, 2026-10-26, orchestrator: `ensure_session_dir` creates the directory with
-  `exist_ok=True`, inside the script's error handling. At the base, TC-01 failed in 3 of 25 runs
-  with `FileExistsError` on `.agent/sessions` (§8). Rejected: leaving it, since UC-2 is two agents
-  at the same time.
-- **D17**, 2026-10-26, orchestrator: fix round 1 of stage 2. Both reviews of round 1 passed; the
-  run fixes their findings in scope before registration:
-  - S-1 and CR-1: R6.1 matches the directory by device and inode too, and TC-12 adds its runs;
-  - CR-2: TC-02 writes a marker while the run waits; S-2 and CR-3: TC-13 and TC-18 compile the
-    script in memory;
-  - CR-4, CR-5 and CR-7: TC-14, TC-C1 and TC-10 gain their cases, and R3.3 its first line;
-  - CR-6 and CR-8: the wording of R4.2, of the guide, of the docstring and of `S/SKILL.md`;
-  - S-4: the limit of R3.6. Rejected: an escape form of JSON for a lone surrogate pair; JSON has
-    none.
-  The findings before the task stay as one line each in the audit record.
-- **D18**, 2026-10-26, orchestrator, under the operator's rule recorded at TASK 124 D17: stage 2
-  closes at round 2. Both reviews passed, and the findings left are LOW or notes. Each stands as
-  a limit of this task:
-  - a volume that reports no inode number leaves the check by name alone, which is
-    case-sensitive on POSIX; APFS, ext4, NTFS, SMB and FAT report inode numbers;
-  - the run of TC-12 through a linked file fails only on Windows, where `sys.path[0]` is the
-    link's directory; the CI job on Windows of the fourth task of D1 runs it there;
-  - TC-13 fails on a removed `__main__` guard only when `S/scripts/` is on `sys.path`, as in a
-    run from that directory;
-  - the check by device and inode assumes that the pair names one directory. Where it repeats,
-    the script loses a standard-library entry and exits 1.
-  Rejected: a third round. The operator's rule closes a task once both reviews pass and only
-  narrow LOW routes remain.
+- **D1**, 2026-10-26, operator: this task runs the session state on Windows in CI and closes the
+  six records; TASK 129 ports the archive chain to Windows. Answer "Сначала CI и записи".
+  Rejected: the archive chain first, which a run on macOS can check only by emulation.
+- **D2**, 2026-10-26, operator, at the retro of TASK 127: the six records close in the next task.
+- **D3**, 2026-10-26, orchestrator: the Windows jobs run Python 3.11 and 3.14, the floor and the
+  main version of README §3, as the tooling job does. The 3.13 of the report lies between them.
+  Two jobs of one version each, since `tests/test_python_floor.py` allows one `python-version`
+  list. Each job sets the shell bash. Rejected:
+  - 3.13 alone, which leaves unchecked an API that 3.11 lacks on Windows;
+  - a second matrix, which fails that test;
+  - one job with both versions, where a failure on 3.11 hides the result of 3.14;
+  - PowerShell, the default shell, where a failed command early in a block does not fail its
+    step.
+- **D4**, 2026-10-26, orchestrator: TS-1 is closed by `atexit` in `tests/_scratch.py`. Rejected: a
+  sweep hook in `tests/run_tests.py`, which `TestRunnerDoesNotSweep` forbids, and which a full
+  discovery of `tests/` would not run.
+- **D5**, 2026-10-26, orchestrator: `tests/test_concurrent_state.py` is removed. Rejected: a
+  rewrite in a temporary root; TC-01 and TC-02 already test concurrent runs.
+- **D6**, 2026-10-26, orchestrator: the script refuses a link at the three entries, and writes
+  through a temporary file that `os.replace` moves. A move replaces a link at `latest.yaml` and
+  writes nothing through it. On POSIX, `O_NOFOLLOW` closes the window of the lock file and of the
+  read. Accepted, for a process that can swap entries in `.agent/sessions` during a run can
+  already write the scripts of the repository:
+  - a link swapped in at `.agent/sessions` between its check and the move;
+  - on Windows, which has no `O_NOFOLLOW`, a link swapped in at the lock file or at `latest.yaml`
+    between its check and its open.
+  Rejected: descriptors of the directory (`dir_fd`). Windows lacks them, so the script would keep a
+  second path for one platform.
+- **D7**, 2026-10-26, orchestrator: SS-5 is closed in the tests. Rejected: a change of the
+  walk-up, which SS-1 fixed on purpose.
+- **D8**, 2026-10-26, orchestrator: the script builds `.agent/sessions` with `os.path.join` (Mode A
+  M1). Rejected: a test that accepts both separators, which keeps the mixed form in every message
+  on Windows.
+- **D9**, 2026-10-26, orchestrator: a move or a removal that fails with `PermissionError` is tried
+  10 times, 0.1 seconds apart, on every platform. On Windows a reader or a virus scan can hold the
+  file without `FILE_SHARE_DELETE` for a moment. Rejected: one try, which fails a phase boundary
+  for a moment's hold; tries on Windows only, which no test on POSIX reaches.
+- **D10**, 2026-10-26, orchestrator: on POSIX the new file keeps the permission bits of the old
+  one, and a first file gets `0o644` under the umask (Mode A m2). Rejected: a fixed `0o644`, which
+  loosens a file that the user set to `0o600`.
+- **D11**, 2026-10-26, orchestrator: a reparse point counts as a link only when its tag is a name
+  surrogate, a symbolic link or a junction (Mode A N1). Rejected: every reparse point, which
+  refuses a project in a cloud folder whose files are placeholders.
+- **D12**, 2026-10-26, orchestrator: TASK 129 reads the first run of the Windows jobs (R7.7). The
+  run never pushes; the operator commits and pushes.
+- **D13**, 2026-10-26, orchestrator: the check of R2.1 also refuses an entry of another kind. A
+  FIFO at `latest.yaml` blocks the read while the lock is held. Mode A named it a finding before
+  the task; the same `os.lstat` serves both checks. Accepted, as in D6: a FIFO swapped in between
+  the check and the read. Rejected: `O_NONBLOCK` and a check of `fstat` after the open, a second
+  check for the window that D6 accepts.
+- **D14**, 2026-10-26, orchestrator, under the operator's rule recorded at TASK 124: fix round 1
+  of stage 2 fixes the findings of both reviews that break something real. It fixes the race of
+  `_ensure_root`, the bits of the temporary file, and the wording of the documents and the
+  changelogs. It also closes the gaps of the tests. Each other finding stands as a limit of this
+  task:
+  - the script follows a link above the three entries, at `.agent` or a parent. The names under
+    it stay fixed, so another checkout's state can be read and replaced, nothing else;
+  - a run killed between the creation and the move leaves its temporary file, which no run reads;
+  - a file system that refuses `os.fchmod` or `os.fsync` makes the write exit 1;
+  - the Windows jobs install `requirements-dev.txt` without hashes, as the other jobs do;
+  - R1 keeps the check by name alone on a volume without inode numbers (PLAN H2).
+
+  Rejected: a refusal of a link at `.agent`, which an installation that links `.agent` whole
+  would meet at each phase boundary.
+- **D15**, 2026-10-26, orchestrator: round 2 of stage 2 passed. Fix round 2 corrects the message
+  and the docstring of the script to the remedy of R2.1, catches `FileExistsError` in R6.4, and
+  sets the umask of the bits check of TC-21. A limit joins D14: the new state keeps the mode bits
+  of the old file, not its ACL, its extended attributes or its owner. Round 3 is the last of the
+  bound of `framework-upgrade` §3 step 4.
+- **D16**, 2026-10-26, orchestrator: stage 2 closes at round 3. Both reviews passed with no new
+  finding, and the limits of D6, D13, D14 and D15 stand.
 
 ## 8. Measurements of this run
 
-Measured at the base revision. The runs used a temporary root with its own `.git`, under the
-session's scratchpad.
-
-- `S/scripts/update_state.py` has 277 lines. `open(` occurs on lines 166, 203, 207, 215 and 263;
-  line 203 is a comment, so four calls pass no `encoding`.
-- Run 1: `fcntl` blocked by a meta-path finder → `ModuleNotFoundError: No module named 'fcntl'`,
-  exit 1.
-- Run 2: `LC_ALL=C PYTHONUTF8=0 PYTHONCOERCECLOCALE=0`, `--summary "TASK-031 → ok"` → `Error
-  updating session state: 'ascii' codec can't encode character '\u2192'`, exit 1.
-- Run 3: `--task 'say "hi"'` → exit 0; PyYAML `safe_load` raises `ParserError`.
-- Run 4: `--add_decision 'C:\new\dir'` → exit 0; PyYAML `safe_load` raises an error at line 16,
-  column 13.
-- Run 5: under the locale of run 2, `locale.getpreferredencoding(False)` is `US-ASCII` on macOS
-  with Python 3.14.8.
-- `python3 -m pytest --co -q` from the root collects 725 tests. None lies under `.agent/`.
-- Run 6: TC-01 of the new test module against the base script, 25 times in a new root each →
-  3 failures, each `FileExistsError: [Errno 17] File exists: '<root>/.agent/sessions'`. Against
-  the new script → 0 failures in 25.
-- Callers of the script: the bootstrap files, the workflows, and
-  `.agent/skills/skill-parallel-orchestration/scripts/spawn_agent_mock.py`.
-  `tests/test_mock_agent.py` runs that mock against a sandbox copy of the script.
-- `S/SKILL.md` names `task_boundary` on lines 15, 40, 53, 54 and 66, and `read_file` and
-  `view_file` on line 22.
-- `docs/ARCHITECTURE.md` names `fcntl` as the lock of the session state on lines 120 and 215.
-- The user's settings hold 15 allow rules that run the script by an absolute path with fixed
-  arguments. The path lies in a sibling checkout whose skill directory links into this
-  repository. One rule of the local settings names a path that does not exist.
-- `tests/test_concurrent_state.py` deletes and rewrites the live `latest.yaml` when run by hand.
-  No runner collects it: it defines no test function. This is a finding before the task.
+- The six records reproduced at the retro of TASK 127; each `sh` block printed its defect line.
+- `tests/test_python_floor.py:429` `matrix = re.findall(r"python-version:\s*\[([^\]]*)\]", text)`
+  requires one version list.
+- `tests/run_tests.py` runs `test_archive_move`, `test_script_guards` and `test_scratch_hygiene`,
+  and `test_scratch_hygiene` loads `tests/_scratch.py`.
+- `ntpath.join("C:\\root", ".agent/sessions")` keeps the `/`, so the base names the state with
+  both separators on Windows.
 
 <!-- contract:out-of-scope -->
 
 ## 9. Out of scope
 
-- The archive chain on Windows: `archive_move.py`, `rebase_links.py` and `slot_links.py` — the
-  second task of D1.
-- The locks and `O_NOFOLLOW` of `run-feedback` — the third task of D1.
-- A CI job on `windows-latest`, and a run of UC-1 on Windows — the fourth task of D1.
-- WI-39 for the other nine scripts — the WI-39 record.
-- `os.killpg` and `signal.SIGKILL` of `render_check.py` — a `/light` task, if the operator asks.
-- The `python3` launcher on Windows. The allow rules name `python3`, which the python.org
-  installer of Python 3.13 does not create. The fourth task of D1 asks the reporter.
-- A statement of supported platforms in `README.md` — the fourth task of D1.
-- A time limit for the POSIX lock, which waits with no limit at the base.
-- `tests/test_concurrent_state.py` — §8; a record needs the operator's decision.
-- `docs/migration-to-claude.md`, which records the migration as it was done.
+- The Windows port of the archive chain: `archive_move.py`, `rebase_links.py` and `slot_links.py`
+  — TASK 129. This task edits the first two for ARC-13 only.
+- The locks and `O_NOFOLLOW` of `run-feedback` — the third task of the Windows series.
+- WI-39 for the nine scripts without a filter — the WI-39 record.
+- A statement of supported platforms in `README.md` — after TASK 129. TASK 127 §9 gave it to the
+  last task of the series.
+- The `python3` launcher on Windows — the reporter's answer is still open. TASK 127 §9 gave the
+  question to this series.
+- The stale sweep of `tests/_scratch.py` on Windows, where `os.kill(pid, 0)` sends
+  `CTRL_C_EVENT` — a finding before the task.
+- The five findings in the inbox of `run-feedback` from earlier sessions.

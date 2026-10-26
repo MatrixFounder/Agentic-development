@@ -2,7 +2,7 @@
 name: skill-session-state
 description: "Persist and restore agent session context (Mode, Task, Summary) to survive resets."
 tier: 0
-version: 1.2
+version: 1.3
 ---
 
 # Session State Management
@@ -24,6 +24,14 @@ This skill provides the mechanism to persist your current working state to a fil
     TASK 127 wrote it, and the next run rewrites it in this form.
 *   **Owner**: the script owns the file, and it drops a key that it does not write. A key added by
     hand is gone after the next run.
+*   **No link** (TASK 128): the script refuses a link at `.agent/sessions`, at `latest.yaml` and
+    at `latest.yaml.lock`, and an entry of another kind there. The run exits 1, and the message
+    says that the path is a link, or names the kind that it expected. Remove the link, or replace
+    it with a directory or a regular file of your own. A link above them, at `.agent` or a parent
+    directory, is followed.
+*   **Write**: the script writes the state to a temporary file in `.agent/sessions`, then moves it
+    onto `latest.yaml`. On POSIX the new file keeps the permission bits of the old one, and a first
+    file gets `0o644` under the umask.
 
 ## 2. Boot Protocol (Start of Session)
 **IF** `.agent/sessions/latest.yaml` exists **AND** you are starting a new session (blank context):
@@ -111,3 +119,7 @@ its merge and its write of `latest.yaml` (TASK 127):
 
 Two agents that run the script at the same time both keep their additions: the second waits for
 the first, then reads the state that the first wrote.
+
+Inside the lock, the script moves its temporary file onto `latest.yaml` with `os.replace`
+(TASK 128). A move that another process blocks for a moment, as a reader on Windows does, is
+tried 10 times, 0.1 seconds apart; then the script exits 1, and `latest.yaml` keeps its bytes.

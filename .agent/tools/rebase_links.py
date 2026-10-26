@@ -72,13 +72,28 @@ import sys
 # - its own directory leaves `sys.path`, so no file planted beside the script answers an import:
 #   not a standard-library name, not one the standard library lacks on this platform (`subprocess`
 #   imports `msvcrt` on POSIX), and not a sibling's name; the inbound mode loads its siblings by
-#   explicit path (`_load_siblings`);
+#   explicit path (`_load_siblings`). An entry is that directory when its real path, or its device
+#   and inode, match the directory of the path as called or of the real path: a case-insensitive
+#   volume reaches the directory in other letter case (ARC-13, the rule of TASK 127 R6.1);
 # - no bytecode is written, and `.pyc` files are looked up under the null device, where none can
 #   exist, so a `.pyc` planted in `__pycache__/` is never read.
 # The module has no `from __future__` statement: at run time it imports `__future__`.
 if __name__ == "__main__":
-    _HERE = os.path.dirname(os.path.realpath(__file__))
-    sys.path[:] = [entry for entry in sys.path if os.path.realpath(entry or os.curdir) != _HERE]
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
     sys.dont_write_bytecode = True
     sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
 

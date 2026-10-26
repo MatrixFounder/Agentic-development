@@ -20,7 +20,8 @@ Before TASK 112 two allow rules, `Bash(mv docs/TASK.md docs/tasks/*)` and
 * a source swapped during the move is refused on the link path and on the copy path, and a failed
   copy leaves no destination (``TC-A15`` to ``TC-A18``);
 * a failed check after the link leaves no destination; a module planted beside the script is not
-  imported, and loading the script keeps the caller's `sys.path`; a source that vanishes before
+  imported, through a path in other letter case either (ARC-13, TASK 128), and loading the script
+  keeps the caller's `sys.path`; a source that vanishes before
   its unlink, holds another file then, or cannot be checked, leaves the archive in place
   (``TC-A19`` to ``TC-A23``);
 * an existing letter-suffixed sub-task file in the destination's place is refused (``TC-A24``,
@@ -364,6 +365,22 @@ class TestLastSteps(ArchiveTestCase):
                                 cwd=self.root, capture_output=True, text=True, timeout=60)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(marker.exists(), "the planted json.py ran")
+
+    def test_a20_a_module_beside_the_script_through_other_letter_case(self):
+        # ARC-13: a volume that ignores letter case reaches the copy through a path in other case,
+        # and the path as called then differs from the real one (TASK 128 R1.3).
+        tools = Path(os.path.realpath(tempfile.mkdtemp()))
+        self.addCleanup(shutil.rmtree, tools)
+        shutil.copyfile(SCRIPT, tools / "archive_move.py")
+        marker = self.root / "planted-module-ran"
+        (tools / "json.py").write_text(f"open({str(marker)!r}, 'w').close()\n", encoding="utf-8")
+        variant = tools.parent / tools.name.swapcase() / "archive_move.py"
+        if not variant.exists():
+            self.skipTest("the volume tells letter case apart")
+        result = subprocess.run([sys.executable, str(variant), TASK, TASK_DEST],
+                                cwd=self.root, capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(marker.exists(), "the planted json.py ran through other letter case")
 
     def test_a20_loading_the_script_keeps_the_callers_path(self):
         before = list(sys.path)

@@ -92,7 +92,7 @@ the matching `## <category>` heading here, in ID order.
 - **ARC-10** [Step 7.4 still mandates the pre-flip contract](issues/arc-10-step-7-4-still-mandates-the-pre-flip-contract.md) — severity `SEV-4`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 098): Step 7.4 and the Edge Cases row state the Meta-block rule Steps 3/4 enforce
 - **ARC-11** [A sixth invocation site of the bare `task_id_tool.py <slug>` form that the commit's own audit did not enumerat…](issues/arc-11-a-sixth-invocation-site-of-the-bare-task-id-tool-py-slug-form-that-the-commit-s-own-audit-did-not-enumerat.md) — severity `SEV-3`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 098): planner card reuses the parent Meta ID; `ARCHITECTURE.md:169` corrected
 - **ARC-12** [The new Step 4 ID write-back keys on the English literal `Task ID`, while `parse_task_meta` was deliberately m…](issues/arc-12-the-new-step-4-id-write-back-keys-on-the-english-literal-task-id-while-parse-task-meta-was-deliberately-m.md) — severity `SEV-4`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 098): write-back is structural and reports `meta_id_written`; the slug read no longer needs a filled ID row
-- **ARC-13** [archive_move.py and rebase_links.py import a module planted beside them through a path in other letter case](issues/arc-13-archive-move-py-and-rebase-links-py-import-a-module-planted-beside-them-through-a-path-in-other-letter-case.md) — severity `SEV-3`, status `open`, opened 2026-10-26
+- **ARC-13** [archive_move.py and rebase_links.py import a module planted beside them through a path in other letter case](issues/arc-13-archive-move-py-and-rebase-links-py-import-a-module-planted-beside-them-through-a-path-in-other-letter-case.md) — severity `SEV-3`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): the two scripts match their directory by real path and by device and inode (TASK 127 R6.1)
 
 ## feedback
 
@@ -132,14 +132,14 @@ the matching `## <category>` heading here, in ID order.
 
 - **SS-1** [update_state.py resolves .agent/sessions relative to CWD — stray state when run from a subdir](issues/ss-1-update-state-py-resolves-agent-sessions-relative-to-cwd-stray-state-when-run-from-a-subdir.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13
 - **SS-2** [Session state latest.yaml is git-tracked — every protocol run dirties the tree](issues/ss-2-session-state-latest-yaml-is-git-tracked-every-protocol-run-dirties-the-tree.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13
-- **SS-3** [update_state.py writes latest.yaml through a link planted at that name](issues/ss-3-update-state-py-writes-latest-yaml-through-a-link-planted-at-that-name.md) — severity `SEV-3`, status `open`, opened 2026-10-26
-- **SS-4** [tests/test_concurrent_state.py deletes the live latest.yaml when run by hand](issues/ss-4-tests-test-concurrent-state-py-deletes-the-live-latest-yaml-when-run-by-hand.md) — severity `SEV-4`, status `open`, opened 2026-10-26
-- **SS-5** [Two SS-1 tests write the state of an outer repository when TMPDIR lies inside a git work tree](issues/ss-5-two-ss-1-tests-write-the-state-of-an-outer-repository-when-tmpdir-lies-inside-a-git-work-tree.md) — severity `LOW`, status `open`, opened 2026-10-26
-- **SS-6** [The list-item pattern of update_state.py's reader is quadratic in a run of spaces](issues/ss-6-the-list-item-pattern-of-update-state-py-s-reader-is-quadratic-in-a-run-of-spaces.md) — severity `LOW`, status `open`, opened 2026-10-26
+- **SS-3** [update_state.py writes latest.yaml through a link planted at that name](issues/ss-3-update-state-py-writes-latest-yaml-through-a-link-planted-at-that-name.md) — severity `SEV-3`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): a link is refused; the write uses `os.replace`
+- **SS-4** [tests/test_concurrent_state.py deletes the live latest.yaml when run by hand](issues/ss-4-tests-test-concurrent-state-py-deletes-the-live-latest-yaml-when-run-by-hand.md) — severity `SEV-4`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): the script is removed
+- **SS-5** [Two SS-1 tests write the state of an outer repository when TMPDIR lies inside a git work tree](issues/ss-5-two-ss-1-tests-write-the-state-of-an-outer-repository-when-tmpdir-lies-inside-a-git-work-tree.md) — severity `LOW`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): both tests skip
+- **SS-6** [The list-item pattern of update_state.py's reader is quadratic in a run of spaces](issues/ss-6-the-list-item-pattern-of-update-state-py-s-reader-is-quadratic-in-a-run-of-spaces.md) — severity `LOW`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): a linear pattern and `str.rstrip`
 
 ## test-suite
 
-- **TS-1** [Unittest discovery of tests/ leaves an empty tests/.scratch/ session directory behind](issues/ts-1-unittest-discovery-of-tests-leaves-an-empty-tests-scratch-session-directory-behind.md) — severity `LOW`, status `open`, opened 2026-10-26
+- **TS-1** [Unittest discovery of tests/ leaves an empty tests/.scratch/ session directory behind](issues/ts-1-unittest-discovery-of-tests-leaves-an-empty-tests-scratch-session-directory-behind.md) — severity `LOW`, status `fixed`, opened 2026-10-26 · **fixed 2026-10-26** (TASK 128): removed at exit by `atexit`
 
 
 ## validation

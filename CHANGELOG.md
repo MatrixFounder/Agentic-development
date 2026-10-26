@@ -16,6 +16,49 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.48.0 — The session state runs in CI on Windows, and six records of the TASK 127 retro close (TASK 128)**
+
+#### Fixed
+
+- **`update_state.py` refuses a link at the session state** (SS-3). A link planted at
+  `.agent/sessions`, at `latest.yaml` or at its lock file sent the read or the write to the link's
+  target. The script now refuses a link, or an entry of another kind, at each of the three, and
+  exits 1. It writes a temporary file and moves it onto `latest.yaml` with `os.replace`. On POSIX
+  the lock file and the read open with `O_NOFOLLOW`. On Windows a symbolic link or a junction is a
+  link, and a cloud placeholder is not. A move or a removal that another process blocks for a
+  moment is tried 10 times, 0.1 seconds apart.
+- **The reader of the state is linear** (SS-6). Its patterns of a list item and of the session id
+  backtracked over a run of spaces: a decision and a session id of 50,000 spaces each cost about
+  15 seconds at each run. Both now capture to the end of the line and strip with `str.rstrip`.
+- **On Windows the script names its files with one form of separator.** It joined
+  `.agent/sessions` with a `/`, and its messages named `…\root\.agent/sessions\latest.yaml`.
+- **`archive_move.py` and `rebase_links.py` filter their own directory in other letter case**
+  (ARC-13). They compared real paths as strings. A call through a path in other letter case, on a
+  case-insensitive volume, kept the directory on `sys.path`, and a module planted beside the script
+  ran under the allow rule. They now match by `os.path.normcase(os.path.realpath(...))` and by
+  device and inode, the rule of TASK 127 for `update_state.py`.
+- **A unittest run of `tests/` leaves no scratch behind** (TS-1). `tests/_scratch.py` removes a
+  session directory at the exit of the process, through a handler bound to that directory and its
+  root.
+- **The tests no longer delete the live state** (SS-4, SS-5). `tests/test_concurrent_state.py`,
+  a script that deleted `latest.yaml` when run by hand, is removed; TC-01 and TC-02 test concurrent
+  runs in a temporary root. The two SS-1 tests of the fallback without `.git` skip when an
+  ancestor of their root holds `.git`.
+
+#### Changed
+
+- **A link at the session state stops each run** of `update_state.py` with exit 1, and the
+  message says that the path is a link, or names the kind that it expected. Remove the link, or
+  replace it with a directory or a regular file of your own. A link above them, at `.agent` or a
+  parent directory, is followed. State shared between checkouts through a link is not
+  supported.
+- **CI runs the session state on Windows.** Two jobs on `windows-latest`,
+  `session-state-windows-floor` with Python 3.11 and `session-state-windows-main` with Python
+  3.14, run the skill's tests and `tests/test_session_state_contract.py` under bash. TC-01 runs on
+  every platform, and TC-24 holds the real `msvcrt` lock.
+- `skill-session-state` 1.3 states the refusal of a link and the write through a temporary file in
+  its §1 and §6. `System/Docs/SESSION_CONTEXT_GUIDE.md` follows, with the remedy in its §6.
+
 ### **v3.47.0 — `update_state.py` runs on Windows, and a failed run of it reaches the operator (TASK 127)**
 
 #### Fixed

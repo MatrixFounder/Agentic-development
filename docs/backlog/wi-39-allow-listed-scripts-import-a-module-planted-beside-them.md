@@ -21,6 +21,8 @@ finding_ref: fnd-20261008-104504-8ba32d71
 
 > **Progress 2026-10-26 (TASK 127).** `update_state.py` of `skill-session-state` removes its own directory from `sys.path` when it runs as a script. TC-12 of its test module plants each module that it imports, and `msvcrt` and `_winapi`, beside a copy of it, and none runs. Nine scripts of the list below remain.
 
+> **Progress 2026-10-26 (TASK 128).** `archive_move.py` and `rebase_links.py` match their own directory by the rule of TASK 127 R6.1: by `os.path.normcase(os.path.realpath(...))` of the path as called and of the real path, and by `(st_dev, st_ino)`. A path in other letter case on a case-insensitive volume reached a planted module before (ARC-13). That rule replaces the "real directory" of the table below for every script of this record.
+
 > Origin: TASK 115, stage 2 (code review B1, security M1), and operator decision D10 of
 > 2026-10-08. The fix lands in scripts that are installed into other repositories: a behaviour
 > change for the framework owner's review, not a landed fix.

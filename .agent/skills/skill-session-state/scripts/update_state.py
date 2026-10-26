@@ -12,9 +12,14 @@ The bootstrap files run this script at each phase boundary. It takes an exclusiv
 - a file without `schema_version: 2` is read as the script before TASK 127 wrote it, and the
   next write stores the same strings in the new form.
 
+The script refuses a link, or an entry of another kind, at `.agent/sessions`, at the lock file
+and at `latest.yaml` (SS-3, TASK 128); a link above them, at `.agent` or a parent directory, is
+followed (TASK 128 D14). It writes a temporary file beside the state and moves it onto
+`latest.yaml` with `os.replace`, which replaces a link there and writes nothing through it.
+
 Exit codes: 0 the state was written; 1 no lock module, a lock that stayed held, a state file that
-is not UTF-8, or another error; 2 a usage error. In the first three cases of exit 1 the script
-writes nothing.
+is not UTF-8, a link or an entry of another kind, a failed write, or another error; 2 a usage
+error. In each case of exit 1 the script writes no state.
 """
 import os
 import sys
@@ -45,6 +50,8 @@ import argparse  # noqa: E402
 import datetime  # noqa: E402
 import json  # noqa: E402
 import re  # noqa: E402
+import stat  # noqa: E402
+import time  # noqa: E402
 import uuid  # noqa: E402
 
 # The lock module: `fcntl` where it imports, else `msvcrt` (TASK 127 D10).
@@ -59,8 +66,9 @@ except ImportError:
 else:
     msvcrt = None
 
-# Constants
-SESSION_DIR = ".agent/sessions"
+# Constants. The session directory is joined by the platform, so each path that the script
+# prints has one form of separator on Windows (TASK 128 R7.3).
+SESSION_DIR = os.path.join(".agent", "sessions")
 SESSION_FILE = "latest.yaml"
 SCHEMA_VERSION = 2
 #: Characters that `json.dumps(ensure_ascii=False)` leaves raw and a YAML double-quoted scalar
@@ -71,6 +79,15 @@ _YAML_UNSAFE = re.compile("[%s]" % "".join(
     for low, high in ((0x7F, 0x9F), (0x2028, 0x2029), (0xD800, 0xDFFF), (0xFFFE, 0xFFFF))))
 #: The version line; the reader takes it from the first line only (TASK 127 R3.3).
 _VERSION_LINE = re.compile(r"schema_version:\s*(\d+)\s*")
+#: `os.O_NOFOLLOW` where the platform has it; Windows has none (TASK 128 R2.3).
+_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction
+#: (TASK 128 R2.2).
+_NAME_SURROGATE = 0x20000000
+#: A move or a removal that fails with `PermissionError` is tried this often, this many seconds
+#: apart (TASK 128 R2.5).
+_TRIES = 10
+_PAUSE = 0.1
 
 
 class StateError(Exception):
@@ -108,9 +125,11 @@ def get_session_path():
     """Get absolute path to session file."""
     return os.path.join(get_session_dir(), SESSION_FILE)
 
-def ensure_session_dir():
-    """Create the session dir; a second run that creates it at the same time is no error."""
-    os.makedirs(get_session_dir(), exist_ok=True)
+def ensure_session_dir(session_dir=None):
+    """Create the session dir; a second run that creates it at the same time is no error.
+
+    `main` passes the directory that it found once (TASK 128 R2.1)."""
+    os.makedirs(session_dir or get_session_dir(), exist_ok=True)
 
 # --- Minimal YAML reader (specific to our schema) ---
 # We ONLY need to preserve: session_id, active_blockers, recent_decisions, completed_tasks.
@@ -134,12 +153,17 @@ def _decode(raw, version):
 
 
 def _list_items(content, key, version):
-    """The items of the list `key`, each decoded by `_decode`."""
+    """The items of the list `key`, each decoded by `_decode`.
+
+    An item is taken to the end of its line, and its trailing whitespace is stripped. A lazy
+    capture before a pattern of trailing whitespace backtracks over a run of spaces in a quadratic
+    number of steps (SS-6, TASK 128 R3.1).
+    """
     section = re.search(r'^' + key + r':\s*\n((?:\s+-\s+.*(?:\n|$))*)', content, re.MULTILINE)
     if not section:
         return []
-    return [_decode(raw, version)
-            for raw in re.findall(r'^\s+-\s+(.*?)\s*$', section.group(1), re.MULTILINE)]
+    return [_decode(raw.rstrip(), version)
+            for raw in re.findall(r'^\s+-\s+(.*)$', section.group(1), re.MULTILINE)]
 
 
 def parse_simple_yaml(content):
@@ -156,9 +180,9 @@ def parse_simple_yaml(content):
         "completed_tasks": _list_items(content, "completed_tasks", version),
     }
     if version >= SCHEMA_VERSION:
-        sid = re.search(r'^session_id:\s*(.*?)\s*$', content, re.MULTILINE)
+        sid = re.search(r'^session_id:\s*(.*)$', content, re.MULTILINE)
         if sid:
-            data["session_id"] = _decode(sid.group(1), version) or None
+            data["session_id"] = _decode(sid.group(1).rstrip(), version) or None
     else:
         sid = re.search(r'^session_id:\s*[\'"]?([^\'"\n]+)[\'"]?', content, re.MULTILINE)
         if sid:
@@ -207,7 +231,7 @@ def read_state(fpath):
     if not os.path.exists(fpath):
         return {}
     try:
-        with open(fpath, "r", encoding="utf-8-sig") as f:
+        with open(fpath, "r", encoding="utf-8-sig", opener=_opener) as f:
             content = f.read()
     except UnicodeDecodeError as exc:
         raise StateError(f"{fpath} is not UTF-8 (byte {exc.start}: {exc.reason}); "
@@ -237,6 +261,91 @@ def _unlock(fd):
         msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
 
 
+def _check_entry(path, directory):
+    """Refuse `path` when it is a link, or when it exists and is not a directory (`directory`) or
+    a regular file (TASK 128 R2.1, R2.2).
+
+    A link is a symbolic link, or a reparse point whose tag is a name surrogate: a symbolic link
+    or a junction of Windows. A cloud or deduplication placeholder is no link. The attributes of
+    Windows are read with `getattr` on every platform; only Windows sets them.
+
+    Raises:
+        StateError: the message names the path.
+    """
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError:
+        return
+    if stat.S_ISLNK(st.st_mode) or (
+            getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+            and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE):
+        raise StateError(f"{path} is a link; remove it, or replace it with a directory or a "
+                         f"regular file of your own")
+    if directory and not stat.S_ISDIR(st.st_mode):
+        raise StateError(f"{path} is not a directory")
+    if not directory and not stat.S_ISREG(st.st_mode):
+        raise StateError(f"{path} is not a regular file")
+
+
+def _opener(path, flags):
+    """The opener of the read and of the write of the state (TASK 128 R2.3): the flags that `open`
+    hands it, `O_BINARY` on Windows among them, with `O_NOFOLLOW` on POSIX, and the permission
+    bits `0o600` for a file that it creates, so no other user opens it before `os.fchmod`."""
+    return os.open(path, flags | _NOFOLLOW, 0o600)
+
+
+def _retry(call, *args):
+    """`call(*args)`, tried again on `PermissionError`: at most `_TRIES` tries, `_PAUSE` seconds
+    apart (TASK 128 R2.5). On Windows a reader or a scan can hold a file for a moment."""
+    for attempt in range(_TRIES):
+        try:
+            return call(*args)
+        except PermissionError:
+            if attempt == _TRIES - 1:
+                raise
+            time.sleep(_PAUSE)
+
+
+def _write_state(fpath, text):
+    """Write `text` to a temporary file beside `fpath`, and move it onto `fpath` (TASK 128 R2.4 to
+    R2.6).
+
+    The temporary file is created exclusively, with the bits `0o600`. On POSIX it then takes the
+    bits of `fpath` when that is a regular file, and else `0o644` under the umask; a link swapped
+    in at `fpath` gives it no bits. It is synced and closed before the move. A failed write or
+    move closes the temporary file, removes it, and raises `StateError`.
+    """
+    tmp = os.path.join(os.path.dirname(fpath), f"{SESSION_FILE}.{uuid.uuid4().hex}.tmp")
+    try:
+        st = os.lstat(fpath)
+    except FileNotFoundError:
+        st = None
+    if st is not None and stat.S_ISREG(st.st_mode):
+        bits = stat.S_IMODE(st.st_mode)
+    else:
+        umask = os.umask(0)
+        os.umask(umask)
+        bits = 0o644 & ~umask
+    made = False
+    try:
+        with open(tmp, "x", encoding="utf-8", newline="\n", opener=_opener) as f:
+            made = True
+            if os.name == "posix":
+                os.fchmod(f.fileno(), bits)
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        _retry(os.replace, tmp, fpath)
+    except Exception as exc:
+        stays = ""
+        if made:
+            try:
+                _retry(os.remove, tmp)
+            except OSError as left:
+                stays = f"; the temporary file {tmp} stays: {left}"
+        raise StateError(f"could not write {fpath}: {exc}{stays}") from None
+
+
 def main():
     # The script's own messages never raise an encoding error on a console or a pipe whose
     # encoding cannot hold a path or a value (TASK 127 R2.2).
@@ -263,17 +372,24 @@ def main():
         sys.exit(1)
 
     try:
-        ensure_session_dir()
-        fpath = get_session_path()
+        # No entry of the state is a link, or of another kind (TASK 128 R2.1): the directory
+        # before anything is made, the lock file before its open, the state inside the lock.
+        # The directory is found once, so the one checked is the one used.
+        session_dir = get_session_dir()
+        _check_entry(session_dir, directory=True)
+        ensure_session_dir(session_dir)
+        fpath = os.path.join(session_dir, SESSION_FILE)
         # A separate lock file, opened with no truncation and at position 0 (TASK 127 R1.6).
         lock_path = fpath + ".lock"
-        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o644)
+        _check_entry(lock_path, directory=False)
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT | _NOFOLLOW, 0o644)
         try:
             try:
                 _lock(fd)
             except OSError as exc:
                 raise StateError(f"could not lock {lock_path}: {exc}") from None
             try:
+                _check_entry(fpath, directory=False)
                 # The one read of the state, inside the lock (TASK 127 R1.2).
                 latest_data = read_state(fpath)
 
@@ -311,9 +427,7 @@ def main():
                     "completed_tasks": final_completed,
                 }
                 yaml_content = generate_yaml(final_state)
-
-                with open(fpath, "w", encoding="utf-8", newline="\n") as f:
-                    f.write(yaml_content)
+                _write_state(fpath, yaml_content)
 
                 print(f"Session state updated: {fpath} (Locked)")
             finally:

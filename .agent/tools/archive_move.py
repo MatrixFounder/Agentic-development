@@ -31,10 +31,25 @@ import sys
 
 # Run as a script, its own directory leaves the import path before any other import, so a module
 # planted beside the script is never imported under the allow rule. A test that loads the module
-# keeps its own path (TASK 112 R1.8).
+# keeps its own path (TASK 112 R1.8). An entry is that directory when its real path, or its device
+# and inode, match the directory of the path as called or of the real path: a case-insensitive
+# volume reaches the directory in other letter case (ARC-13, the rule of TASK 127 R6.1).
 if __name__ == "__main__":
-    _HERE = os.path.dirname(os.path.realpath(__file__))
-    sys.path[:] = [entry for entry in sys.path if os.path.realpath(entry or os.curdir) != _HERE]
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
 
 import errno  # noqa: E402
 import json  # noqa: E402

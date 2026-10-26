@@ -15,6 +15,7 @@ This document explains the mechanism, rationale, and configuration of the Sessio
 5.  **Failure Rule**: If `update_state.py` exits non-zero, the agent tells the operator in the same reply: the command, the exit code and the last line of its output. It does not write `latest.yaml` by hand in place of the run, and it continues the task;
     a workflow's own stop rules still apply.
 6.  **Disagreement Check**: At boot, when `current_task.name` and `docs/TASK.md` both carry a task ID and the IDs differ, the announcement says `Session state and docs/TASK.md disagree` and names both IDs. The user's request decides which task continues; otherwise the agent asks the operator. When either carries no task ID, the announcement names the H1 of `docs/TASK.md` beside the restored task.
+7.  **Write**: `update_state.py` writes the state to a temporary file in `.agent/sessions`, and moves it onto `latest.yaml` with `os.replace`. It refuses a link at the three entries of the state (TASK 128, §6).
 
 ## 2. Adversarial Analysis (The "Why")
 
@@ -104,6 +105,10 @@ The session file is UTF-8 YAML, and its first line is `schema_version: 2`. If th
 **Tip:** You can also simply delete the file to force a "fresh start".
 
 **Note:** the script drops a key that it does not write, so a key added by hand is gone after the next run. An agent never edits the file in place of a failed run of the script (§1, Failure Rule).
+
+**Links:** a link at `.agent/sessions`, at `latest.yaml` or at `latest.yaml.lock`, or an entry of another kind there, stops every run of the script with exit 1. Its message says that the path is a link, or names the kind that it expected. Remove the link, or replace it with a directory or a regular file of your own. A link above them, at `.agent` or a parent directory, is followed. State shared between checkouts through a link is not supported (TASK 128).
+
+**A killed run** can leave a file `latest.yaml.<32 hex digits>.tmp` in `.agent/sessions`. No run reads it, and it can be deleted.
 
 ## 7. Deactivation Guide (How to Disable)
 

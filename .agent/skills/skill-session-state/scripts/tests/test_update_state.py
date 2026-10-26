@@ -3,18 +3,26 @@
 SS-1 regression: update_state.py must anchor .agent/sessions at the repo root regardless of the
 invocation CWD (docs/issues/ss-1-*.md). TASK 127: the lock on POSIX and on Windows, UTF-8, the
 escaped scalars and their round trip, and the import path (WI-39); TC-01 to TC-18 of its §5.
+TASK 128: no read or write through a link (SS-3), the write through a temporary file, a linear
+reader (SS-6), the SS-1 tests inside a git work tree (SS-5), and the paths of Windows; TC-19 to
+TC-29 of its §5.
 
 Each test runs the script in a temporary root that holds its own `.git`, and no test writes
-under the repository. The Windows branch runs on POSIX: a test writes, into a temporary
-directory, a `sitecustomize.py` that blocks `import fcntl` and provides a `msvcrt` stand-in on
-`fcntl.lockf`, and puts that directory on `PYTHONPATH`. PyYAML checks each written file as a
-second reader; where it does not import, each test that reaches such a check reports a skip.
+under the repository. A call of the script in this process changes into such a root first. The
+two SS-1 tests of the fallback without `.git` skip when an ancestor holds one. The Windows branch
+runs on POSIX: a test writes, into a temporary directory, a `sitecustomize.py` that blocks
+`import fcntl` and provides a `msvcrt` stand-in on `fcntl.lockf`, and puts that directory on
+`PYTHONPATH`. PyYAML checks each written file as a second reader; where it does not import, each
+test that reaches such a check reports a skip.
 """
 import ast
+import contextlib
+import io
 import json
 import os
 import py_compile
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -22,11 +30,20 @@ import time
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 try:
     import fcntl
 except ImportError:  # Windows: the tests that hold a POSIX lock skip
     fcntl = None
+try:
+    import msvcrt
+except ImportError:  # POSIX: the test of the real lock of Windows skips
+    msvcrt = None
+try:
+    import _winapi
+except ImportError:  # POSIX: the junction of TC-20 skips
+    _winapi = None
 try:
     import yaml
 except ImportError:  # PyYAML is a second reader only
@@ -215,6 +232,24 @@ def json_lists(text):
     return lists, scalars
 
 
+def outer_git(path):
+    """`path` or its nearest ancestor that holds `.git`, a directory or a file, or `None`.
+
+    The script's walk-up stops at such a directory (SS-1), so a test that expects no `.git` above
+    its root skips when one is found (TASK 128 R4.1).
+    """
+    path = Path(path).resolve()
+    for directory in (path, *path.parents):
+        if (directory / ".git").exists():
+            return directory
+    return None
+
+
+def fake_stat(mode, attributes=0, tag=0):
+    """A result of `os.lstat` with the attributes that the check of the script reads."""
+    return types.SimpleNamespace(st_mode=mode, st_file_attributes=attributes, st_reparse_tag=tag)
+
+
 class _RootCase(unittest.TestCase):
     """A temporary root that holds its own `.git`; the script writes its state there."""
 
@@ -231,6 +266,37 @@ class _RootCase(unittest.TestCase):
         proc = run_script(self.root, args, **kwargs)
         self.assertEqual(proc.returncode, 0, output(proc))
         return proc
+
+    def run_main(self, module, args):
+        """`module.main()` in this process with `args`, in the root and without
+        `CLAUDE_PROJECT_DIR`; the exit code and the output."""
+        out = io.StringIO()
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        try:
+            with mock.patch.dict(os.environ), \
+                    mock.patch.object(sys, "argv", ["update_state.py"] + list(args)), \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                os.environ.pop("CLAUDE_PROJECT_DIR", None)
+                try:
+                    module.main()
+                    code = 0
+                except SystemExit as exc:
+                    code = exc.code
+        finally:
+            os.chdir(cwd)
+        return code, out.getvalue()
+
+    def make_link(self, link, target, directory=False):
+        """A symbolic link at `link`; the test skips where none can be made."""
+        try:
+            os.symlink(target, link, target_is_directory=directory)
+        except (OSError, NotImplementedError):
+            self.skipTest("no symbolic link can be made on this host")
+
+    def names(self):
+        """The entries of the session directory, sorted."""
+        return sorted(p.name for p in self.sessions.iterdir())
 
     def text(self):
         return self.state.read_bytes().decode("utf-8")
@@ -304,7 +370,15 @@ class UpdateStateAnchorTestCase(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertTrue(self._state(self.root).is_file())
 
+    def skip_inside_a_work_tree(self):
+        """The fallback without `.git` is tested only where no ancestor of the root holds one;
+        elsewhere the script would write the state of that outer tree (SS-5)."""
+        outer = outer_git(self.root)
+        if outer is not None:
+            self.skipTest(f"{outer} holds .git, and the script would write its state there (SS-5)")
+
     def test_no_git_falls_back_to_claude_project_dir(self):
+        self.skip_inside_a_work_tree()
         target = self.root / "proj"
         (target / ".agent").mkdir(parents=True)
         lone = self.root / "lone"
@@ -316,6 +390,7 @@ class UpdateStateAnchorTestCase(unittest.TestCase):
         self.assertFalse((lone / ".agent").exists())
 
     def test_no_git_no_env_keeps_legacy_cwd_behavior(self):
+        self.skip_inside_a_work_tree()
         lone = self.root / "lone"
         lone.mkdir()
         proc = self._run(lone)
@@ -339,9 +414,8 @@ class UpdateStateAnchorTestCase(unittest.TestCase):
                          "same session_id — subdir run updates, not forks")
 
 
-@unittest.skipIf(fcntl is None, "holds a POSIX lock, or runs the Windows branch on POSIX")
-class LockTestCase(_RootCase):
-    """TASK 127 R1: the lock on POSIX and on Windows (TC-01 to TC-05)."""
+class ConcurrentRunsTestCase(_RootCase):
+    """TASK 127 R1 on every platform (TASK 128 R7.4): two runs at once (TC-01)."""
 
     def test_tc01_two_runs_at_once_keep_both_tasks(self):
         procs = [subprocess.Popen([sys.executable, str(SCRIPT)] + ARGS
@@ -354,6 +428,33 @@ class LockTestCase(_RootCase):
             self.assertEqual(proc.returncode, 0, (out + err).decode("utf-8", "replace"))
         lists, _ = json_lists(self.text())
         self.assertEqual(sorted(lists["completed_tasks"]), ["Task A", "Task B"])
+
+
+@unittest.skipIf(msvcrt is None, "holds the lock of Windows")
+class WindowsLockTestCase(_RootCase):
+    """TASK 128 R7.4: the real `msvcrt` lock (TC-24)."""
+
+    def test_tc24_a_held_lock_ends_the_run_after_its_tries(self):
+        self.write_state(V2_STATE.format(decision='"kept"'))
+        before = self.state.read_bytes()
+        fd = os.open(self.lock, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            try:
+                proc = run_script(self.root, ARGS)
+            finally:
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        finally:
+            os.close(fd)
+        self.assertEqual(proc.returncode, 1, output(proc))
+        self.assertIn("latest.yaml.lock", output(proc))
+        self.assertEqual(self.state.read_bytes(), before)
+
+
+@unittest.skipIf(fcntl is None, "holds a POSIX lock, or runs the Windows branch on POSIX")
+class LockTestCase(_RootCase):
+    """TASK 127 R1: the lock on POSIX and on Windows (TC-02 to TC-05)."""
 
     def test_tc02_a_held_flock_makes_the_run_wait(self):
         self.sessions.mkdir(parents=True)
@@ -446,8 +547,15 @@ class EncodingTestCase(_RootCase):
 
     def test_tc07_each_open_names_its_encoding(self):
         tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
-        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
-                 and isinstance(node.func, ast.Name) and node.func.id == "open"]
+        every = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+        # A file of the state is read and written through `open` only (TASK 128 TC-07).
+        others = [call.lineno for call in every if isinstance(call.func, ast.Attribute)
+                  and (call.func.attr == "fdopen"
+                       or call.func.attr == "open" and isinstance(call.func.value, ast.Name)
+                       and call.func.value.id in ("io", "codecs"))]
+        self.assertEqual(others, [], "a file opened outside `open`")
+        calls = [call for call in every
+                 if isinstance(call.func, ast.Name) and call.func.id == "open"]
         self.assertTrue(calls)
         for call in calls:
             keywords = {kw.arg: kw.value for kw in call.keywords}
@@ -455,7 +563,7 @@ class EncodingTestCase(_RootCase):
             mode = mode.value if isinstance(mode, ast.Constant) else "r"
             encoding = keywords.get("encoding")
             self.assertIsInstance(encoding, ast.Constant, f"line {call.lineno}: no encoding")
-            if "w" in mode:
+            if any(flag in mode for flag in "wxa+"):
                 self.assertEqual(encoding.value, "utf-8", f"line {call.lineno}")
                 newline = keywords.get("newline")
                 self.assertIsInstance(newline, ast.Constant, f"line {call.lineno}: no newline")
@@ -627,6 +735,273 @@ class ImportPathTestCase(_RootCase):
         module = load_script("update_state_under_test")
         self.assertEqual(sys.path, before)
         self.assertTrue(callable(module.parse_simple_yaml))
+
+
+class LinkTestCase(_RootCase):
+    """TASK 128 R2.1 to R2.3, SS-3: no read or write through a link (TC-19, TC-20, TC-29)."""
+
+    def test_tc19_a_link_at_the_state_is_refused(self):
+        outside = Path(self._tmp.name).resolve() / "outside.txt"
+        outside.write_bytes(b"keep\n")
+        self.sessions.mkdir(parents=True)
+        self.make_link(self.state, outside)
+        proc = run_script(self.root, ARGS)
+        self.assertEqual(proc.returncode, 1, output(proc))
+        self.assertIn(str(self.state), output(proc))
+        self.assertIn("is a link", output(proc))
+        self.assertIn("remove it", output(proc))
+        self.assertEqual(outside.read_bytes(), b"keep\n")
+
+    def test_tc20_a_link_at_the_directory_is_refused(self):
+        outside = Path(self._tmp.name).resolve() / "outside-dir"
+        outside.mkdir()
+        (self.root / ".agent").mkdir()
+        self.make_link(self.sessions, outside, directory=True)
+        proc = run_script(self.root, ARGS)
+        self.assertEqual(proc.returncode, 1, output(proc))
+        self.assertIn("is a link", output(proc))
+        self.assertEqual(list(outside.iterdir()), [])
+
+    def test_tc20_a_link_at_the_lock_is_refused(self):
+        outside = Path(self._tmp.name).resolve() / "outside.txt"
+        outside.write_bytes(b"keep\n")
+        self.sessions.mkdir(parents=True)
+        self.make_link(self.lock, outside)
+        proc = run_script(self.root, ARGS)
+        self.assertEqual(proc.returncode, 1, output(proc))
+        self.assertIn("is a link", output(proc))
+        self.assertEqual(outside.read_bytes(), b"keep\n")
+        self.assertFalse(self.state.exists())
+
+    @unittest.skipIf(_winapi is None, "makes a junction of Windows")
+    def test_tc20_a_junction_at_the_directory_is_refused(self):
+        outside = Path(self._tmp.name).resolve() / "outside-dir"
+        outside.mkdir()
+        (self.root / ".agent").mkdir()
+        try:
+            _winapi.CreateJunction(str(outside), str(self.sessions))
+        except OSError:
+            self.skipTest("no junction can be made on this host")
+        self.addCleanup(os.rmdir, str(self.sessions))
+        proc = run_script(self.root, ARGS)
+        self.assertEqual(proc.returncode, 1, output(proc))
+        self.assertIn("is a link", output(proc))
+        self.assertEqual(list(outside.iterdir()), [])
+
+    def regular_at(self, *entries):
+        """An `os.lstat` that reports a regular file at `entries`: a link swapped in after the
+        check of R2.1 (TC-29)."""
+        real = os.lstat
+        names = {str(entry) for entry in entries}
+
+        def lstat(path, *args, **kwargs):
+            if os.fspath(path) in names:
+                return fake_stat(stat.S_IFREG | 0o644)
+            return real(path, *args, **kwargs)
+        return lstat
+
+    @unittest.skipIf(not hasattr(os, "O_NOFOLLOW"), "no O_NOFOLLOW on this platform")
+    def test_tc29_a_link_swapped_in_at_the_state_is_not_read(self):
+        target = Path(self._tmp.name).resolve() / "target.txt"
+        target.write_bytes(b"keep\n")
+        self.sessions.mkdir(parents=True)
+        self.make_link(self.state, target)
+        module = load_script("update_state_tc29_state")
+        with mock.patch.object(module.os, "lstat", side_effect=self.regular_at(self.state)):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertNotIn("is a link", out, "the check of R2.1 refused, not O_NOFOLLOW")
+        self.assertEqual(target.read_bytes(), b"keep\n")
+        self.assertTrue(self.state.is_symlink())
+
+    @unittest.skipIf(not hasattr(os, "O_NOFOLLOW"), "no O_NOFOLLOW on this platform")
+    def test_tc29_a_link_swapped_in_at_the_lock_is_not_followed(self):
+        target = Path(self._tmp.name).resolve() / "made-through-the-lock"
+        self.sessions.mkdir(parents=True)
+        self.make_link(self.lock, target)
+        module = load_script("update_state_tc29_lock")
+        with mock.patch.object(module.os, "lstat", side_effect=self.regular_at(self.lock)):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertNotIn("is a link", out, "the check of R2.1 refused, not O_NOFOLLOW")
+        self.assertFalse(os.path.lexists(target), "the link at the lock file was followed")
+
+
+class WriteTestCase(_RootCase):
+    """TASK 128 R2.4 to R2.6: the write through a temporary file (TC-21, TC-22, TC-25)."""
+
+    def test_tc21_the_write_leaves_no_temporary_file_and_keeps_the_bits(self):
+        self.run_ok(ARGS)
+        self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+        self.assertNotIn(bytes([13]), self.state.read_bytes())
+        if os.name == "posix":
+            umask = os.umask(0)
+            os.umask(umask)
+            self.assertEqual(stat.S_IMODE(self.state.stat().st_mode), 0o644 & ~umask)
+            os.chmod(self.state, 0o600)
+            self.run_ok(ARGS)
+            self.assertEqual(stat.S_IMODE(self.state.stat().st_mode), 0o600)
+            self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+
+            # The temporary file holds no bit for group or others until `os.fchmod` (R2.4). The
+            # umask `022` leaves group and others readable, so creation bits of `0o644` show.
+            module = load_script("update_state_tc21")
+            seen, real_fchmod = [], os.fchmod
+
+            def fchmod(fd, mode):
+                seen.append(stat.S_IMODE(os.fstat(fd).st_mode))
+                return real_fchmod(fd, mode)
+
+            ambient = os.umask(0o022)
+            try:
+                with mock.patch.object(module.os, "fchmod", side_effect=fchmod):
+                    code, out = self.run_main(module, ARGS)
+            finally:
+                os.umask(ambient)
+            self.assertEqual(code, 0, out)
+            self.assertEqual(len(seen), 1)
+            self.assertEqual(seen[0] & 0o077, 0, f"the temporary file had {oct(seen[0])}")
+
+            # A write onto a link gives the new file the bits of no link (R2.4 step 2).
+            target = Path(self._tmp.name).resolve() / "target.txt"
+            target.write_bytes(b"keep\n")
+            os.remove(self.state)
+            self.make_link(self.state, target)
+            module._write_state(str(self.state), "schema_version: 2")
+            self.assertFalse(self.state.is_symlink())
+            self.assertEqual(stat.S_IMODE(self.state.stat().st_mode), 0o644 & ~umask)
+            self.assertEqual(target.read_bytes(), b"keep\n")
+
+    def test_tc22_a_failed_move_keeps_the_state(self):
+        self.write_state(V2_STATE.format(decision='"kept"'))
+        before = self.state.read_bytes()
+        module = load_script("update_state_tc22")
+        with mock.patch.object(module.os, "replace", side_effect=OSError(5, "Input/output error")):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertIn(str(self.state), out)
+        self.assertEqual(self.state.read_bytes(), before)
+        self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+
+    def test_tc25_a_move_or_a_removal_held_for_a_moment_is_tried_again(self):
+        module = load_script("update_state_tc25")
+        real_replace, real_remove = os.replace, os.remove
+        moves, removals = [], []
+
+        def move_held_twice(src, dst):
+            moves.append(src)
+            if len(moves) <= 2:
+                raise PermissionError(13, "held by another process")
+            return real_replace(src, dst)
+
+        def removal_held_twice(path):
+            removals.append(path)
+            if len(removals) <= 2:
+                raise PermissionError(13, "held by another process")
+            return real_remove(path)
+
+        with mock.patch.object(module.os, "replace", side_effect=move_held_twice), \
+                mock.patch("time.sleep"):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(moves), 3)
+        self.assertEqual(self.text().splitlines()[0], "schema_version: 2")
+        self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+
+        before = self.state.read_bytes()
+        with mock.patch.object(module.os, "replace", side_effect=OSError(5, "Input/output error")), \
+                mock.patch.object(module.os, "remove", side_effect=removal_held_twice), \
+                mock.patch("time.sleep"):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertEqual(len(removals), 3)
+        self.assertEqual(self.state.read_bytes(), before)
+        self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+
+        # A move held at every try: 10 tries, 9 pauses of 0.1 seconds, then exit 1 (UC-2 1b).
+        with mock.patch.object(module.os, "replace",
+                               side_effect=PermissionError(13, "held by another process")) as held, \
+                mock.patch("time.sleep") as pause:
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertEqual(held.call_count, 10)
+        self.assertEqual([call.args for call in pause.call_args_list], [(0.1,)] * 9)
+        self.assertEqual(self.state.read_bytes(), before)
+        self.assertEqual(self.names(), ["latest.yaml", "latest.yaml.lock"])
+
+
+class PatternTestCase(_RootCase):
+    """TASK 128 R3, SS-6: the reader is linear in a run of spaces (TC-23)."""
+
+    def test_tc23_a_run_of_spaces_is_read_in_linear_time(self):
+        spaces = " " * 100000
+        session, decision = "a" + spaces + "b", "c" + spaces + "d"
+        text = V2_STATE.format(decision=json.dumps(decision)).replace(
+            'session_id: "sid-127"', "session_id: " + json.dumps(session))
+        self.write_state(text)
+        start = time.monotonic()
+        proc = run_script(self.root, ARGS)
+        elapsed = time.monotonic() - start
+        self.assertEqual(proc.returncode, 0, output(proc))
+        self.assertLess(elapsed, 4.0, f"the run took {elapsed:.1f} s")
+        lists, _ = json_lists(self.text())
+        self.assertEqual(lists["recent_decisions"], [decision])
+        ids = [line for line in self.text().splitlines() if line.startswith("session_id: ")]
+        self.assertEqual([json.loads(line[len("session_id: "):]) for line in ids], [session])
+
+
+class HelperTestCase(unittest.TestCase):
+    """TASK 128 R4.1: the helper that decides the skip of the two SS-1 tests (TC-26)."""
+
+    def test_tc26_outer_git_names_the_nearest_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve()
+            (base / "a" / ".git").mkdir(parents=True)
+            (base / "a" / "b" / "c").mkdir(parents=True)
+            self.assertEqual(outer_git(base / "a" / "b" / "c"), base / "a")
+            (base / "w" / "x").mkdir(parents=True)
+            (base / "w" / ".git").write_text("gitdir: /elsewhere", encoding="utf-8")
+            self.assertEqual(outer_git(base / "w" / "x"), base / "w")
+            (base / "n" / "m").mkdir(parents=True)
+            self.assertEqual(outer_git(base / "n" / "m"), outer_git(base))
+
+
+class PathFormTestCase(unittest.TestCase):
+    """TASK 128 R7.3: the session directory in the form of the platform (TC-27)."""
+
+    def test_tc27_the_session_directory_is_joined_by_the_platform(self):
+        import ntpath
+        source = SCRIPT.read_bytes()
+        module = types.ModuleType("update_state_tc27")
+        module.__file__ = str(SCRIPT)
+        with mock.patch("os.path", ntpath):
+            exec(compile(source, str(SCRIPT), "exec"), module.__dict__)
+        self.assertEqual(module.SESSION_DIR, ntpath.join(".agent", "sessions"))
+
+
+class EntryKindTestCase(unittest.TestCase):
+    """TASK 128 R2.1, R2.2: what the check counts as a link, or as another kind (TC-28)."""
+
+    def test_tc28_a_link_is_a_symbolic_link_or_a_name_surrogate(self):
+        module = load_script("update_state_tc28")
+        reparse = stat.FILE_ATTRIBUTE_REPARSE_POINT
+        directory = stat.S_IFDIR | 0o755
+        cases = [
+            ("a junction", fake_stat(directory, reparse, 0xA0000003), True, "is a link"),
+            ("a symbolic link", fake_stat(directory, reparse, 0xA000000C), True, "is a link"),
+            ("a cloud placeholder", fake_stat(directory, reparse, 0x9000001A), True, None),
+            ("a FIFO", fake_stat(stat.S_IFIFO | 0o644), False, "not a regular file"),
+            ("a file for the directory", fake_stat(stat.S_IFREG | 0o644), True, "not a directory"),
+        ]
+        for name, result, is_dir, message in cases:
+            with self.subTest(case=name), \
+                    mock.patch.object(module.os, "lstat", return_value=result):
+                if message is None:
+                    module._check_entry("entry", is_dir)
+                    continue
+                with self.assertRaises(module.StateError) as caught:
+                    module._check_entry("entry", is_dir)
+                self.assertIn(message, str(caught.exception))
 
 
 if __name__ == "__main__":

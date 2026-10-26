@@ -22,10 +22,18 @@ timeout cannot execute its own teardown. The next session therefore removes subd
 whose owning process is **gone**, which recovers the debris without ever reaching into a
 live session. Keeping the tree out of `git status` is not this sweep's job — `.gitignore`
 already covers `tests/.scratch/`.
+
+**Why a session is also swept at exit.** Only pytest runs the hook of `tests/conftest.py`, so
+a unittest run left its session directory behind (TS-1). A session directory therefore
+registers an `atexit` handler when it is made. The handler holds that directory and its root
+as arguments and reads no global, so a second copy of this module that a test redirects
+touches only the root it was given (TASK 128 R6.1). A killed process runs no handler; the
+start-up sweep of the next pytest session collects what it leaves.
 """
 
 from __future__ import annotations
 
+import atexit
 import os
 import shutil
 import tempfile
@@ -96,14 +104,42 @@ def _remove(path: Path) -> None:
         pass
 
 
+def _sweep(session_dir: Path | None, root: Path) -> None:
+    """Remove `session_dir`, and `root` when it is then empty.
+
+    Both are arguments, so the `atexit` handler of a session removes the directory it was made
+    for, whatever this module names as its root at exit (TASK 128 R6.1).
+    """
+    if session_dir is not None:
+        _remove(session_dir)
+    try:
+        if root.is_dir() and not any(root.iterdir()):
+            root.rmdir()
+    except OSError:
+        pass
+
+
 def session_scratch() -> Path:
-    """Return this session's private scratch directory, creating it on first use."""
+    """Return this session's private scratch directory, creating it on first use.
+
+    A directory made here is removed at the exit of the process (TS-1). When `_ensure_root` or
+    `mkdtemp` raises `FileNotFoundError` or `FileExistsError`, a sweep of another process removed
+    the empty root meanwhile; the root is made again for one more try (TASK 128 R6.4). `mkdtemp`
+    raises `FileExistsError` itself only after it runs out of names, so one more try is safe.
+    """
     global _session_dir
     if _session_dir is None or not _session_dir.is_dir():
-        _ensure_root()
-        _session_dir = Path(
-            tempfile.mkdtemp(prefix=f"{SESSION_PREFIX}{os.getpid()}_", dir=REPO_SCRATCH)
-        )
+        for attempt in range(2):
+            try:
+                _ensure_root()
+                _session_dir = Path(
+                    tempfile.mkdtemp(prefix=f"{SESSION_PREFIX}{os.getpid()}_", dir=REPO_SCRATCH)
+                )
+                break
+            except (FileNotFoundError, FileExistsError):
+                if attempt:
+                    raise
+        atexit.register(_sweep, _session_dir, REPO_SCRATCH)
     return _session_dir
 
 
@@ -154,11 +190,5 @@ def sweep_stale_sessions() -> int:
 def sweep_session() -> None:
     """Remove only this session's scratch directory, and the root if it is now empty."""
     global _session_dir
-    if _session_dir is not None:
-        _remove(_session_dir)
-        _session_dir = None
-    try:
-        if REPO_SCRATCH.is_dir() and not any(REPO_SCRATCH.iterdir()):
-            REPO_SCRATCH.rmdir()
-    except OSError:
-        pass
+    _sweep(_session_dir, REPO_SCRATCH)
+    _session_dir = None

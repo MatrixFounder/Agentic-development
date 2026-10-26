@@ -1,6 +1,6 @@
 """The session-state rules stand where the agents read them (TASK 127 R4, R5, R7.5, R8.8).
 
-TC-C1 to TC-C7 of TASK 127 §5 pin:
+TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5, pin:
 
 * the failure rule of R4.1 in the three bootstrap files, in `skill-session-state` §3, and in the
   guide's §1 and its Risk A (``TC-C1``);
@@ -8,12 +8,15 @@ TC-C1 to TC-C7 of TASK 127 §5 pin:
   guide's §1 and its Risk A (``TC-C2``);
 * the skill names no tool of one vendor and no lock that the script does not take, and §3 keeps
   its paragraph for roles that cannot run a command (``TC-C3``);
-* the skill's §1 states the file format, its §6 the lock, and its version is 1.2 (``TC-C4``);
-* the guide names `current_task.status`, the three platforms, UTF-8 and the dropped key
-  (``TC-C5``);
+* the skill's §1 states the file format, the refusal of a link and the temporary file, its §6 the
+  lock and `os.replace`, and its version is 1.3 (``TC-C4``);
+* the guide names `current_task.status`, the three platforms, UTF-8 and the dropped key; its §1
+  names the temporary file, and its §6 the link (``TC-C5``);
 * the CI pytest step runs the skill's tests and this module (``TC-C6``);
 * `docs/ARCHITECTURE.md` names `msvcrt` at both statements of the session-state lock
-  (``TC-C7``).
+  (``TC-C7``);
+* two jobs on `windows-latest`, with Python 3.11 and 3.14 and the shell bash, run the skill's
+  tests and this module (``TC-C8``).
 """
 import re
 import unittest
@@ -94,20 +97,23 @@ class RulesTestCase(unittest.TestCase):
 
     def test_c4_the_skill_states_the_format_and_the_lock(self):
         skill = read(SKILL)
-        self.assertRegex(skill.split("---", 2)[1], r"(?m)^version: 1\.2$")
+        self.assertRegex(skill.split("---", 2)[1], r"(?m)^version: 1\.3$")
         self.assert_holds(heading_section(skill, "1. The Session File"),
-                          ("`schema_version: 2`", "UTF-8", "drops a key"), "SKILL.md §1")
+                          ("`schema_version: 2`", "UTF-8", "drops a key", "is a link",
+                           "temporary file"), "SKILL.md §1")
         self.assert_holds(heading_section(skill, "6. Shared State Protocol"),
-                          ("`fcntl.flock`", "`msvcrt.locking`"), "SKILL.md §6")
+                          ("`fcntl.flock`", "`msvcrt.locking`", "os.replace"), "SKILL.md §6")
 
     def test_c5_the_guide(self):
         guide = read(GUIDE)
         self.assert_holds(guide, ("current_task.status",), "the guide")
         self.assertFalse("task_status" in guide, "the guide holds 'task_status'")
+        self.assert_holds(heading_section(guide, "1. How It Works"), ("temporary file",),
+                          "the guide's §1")
         self.assert_holds(heading_section(guide, "5. Platform Memory Integration"),
                           ("macOS", "Linux", "Windows"), "the guide's §5")
         self.assert_holds(heading_section(guide, "6. Manual Override"),
-                          ("UTF-8", "drops a key"), "the guide's §6")
+                          ("UTF-8", "drops a key", "is a link"), "the guide's §6")
 
     def test_c6_the_ci_pytest_step(self):
         workflow = read(WORKFLOW)
@@ -120,6 +126,29 @@ class RulesTestCase(unittest.TestCase):
             hits = [line for line in lines if line.startswith(marker)]
             self.assertEqual(len(hits), 1, marker)
             self.assert_holds(hits[0], ("`fcntl`", "`msvcrt`"), f"ARCHITECTURE {marker}")
+
+    def test_c8_the_windows_jobs(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("PyYAML does not import: TC-C8 reads the workflow as YAML")
+        jobs = [job for job in yaml.safe_load(read(WORKFLOW))["jobs"].values()
+                if job.get("runs-on") == "windows-latest"]
+        versions = sorted(step["with"]["python-version"] for job in jobs
+                          for step in job.get("steps", [])
+                          if step.get("uses", "").startswith("actions/setup-python@"))
+        self.assertEqual(versions, ["3.11", "3.14"], "the Python versions of the Windows jobs")
+        for job in jobs:
+            name = job.get("name", "?")
+            self.assertEqual(job.get("defaults", {}).get("run", {}).get("shell"), "bash", name)
+            checkout = [step for step in job.get("steps", [])
+                        if step.get("uses", "").startswith("actions/checkout@")]
+            self.assertEqual([step["with"]["persist-credentials"] for step in checkout], [False],
+                             name)
+            tests = [step["run"] for step in job.get("steps", [])
+                     if "pytest" in step.get("run", "")]
+            self.assertEqual(len(tests), 1, f"{name}: one pytest step")
+            self.assert_holds(tests[0], CI_PATHS, f"{name}: the pytest step")
 
 
 if __name__ == "__main__":

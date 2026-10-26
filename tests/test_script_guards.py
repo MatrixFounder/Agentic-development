@@ -24,7 +24,8 @@ skill directory at any `--path` or path-shaped name. This file pins:
   (``TC-G28`` to ``TC-G30``, TASK 116 R8);
 * `rebase_links.py --inbound` refuses a file with a second hard link and skips a symbolic link,
   with exit 3 and no write; it rewrites a sub-task inside; neither a module nor a `.pyc`
-  planted beside the script runs (``TC-G8`` to ``TC-G12``, TASK 115);
+  planted beside the script runs (``TC-G8`` to ``TC-G12``, TASK 115), through a path in other
+  letter case either (ARC-13, TASK 128);
 * `init_skill.py` refuses a skill directory outside the working directory or under `.git/`, with
   exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``).
 
@@ -770,6 +771,24 @@ class TestInboundGuard(unittest.TestCase):
         ran += [name for name in siblings
                 if (self.outside / f"sentinel-package-{name}").exists()]
         self.assertEqual(ran, [], "a module planted beside the script was imported")
+
+    def test_g11_a_planted_module_through_other_letter_case(self):
+        # ARC-13: a volume that ignores letter case reaches the copy through a path in other case,
+        # and the path as called then differs from the real one (TASK 128 R1.3).
+        tools = self._tools_copy()
+        planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
+                   "msvcrt", "_winapi")
+        for name in planted:
+            sentinel = self.outside / f"sentinel-{name}"
+            (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
+                                              encoding="utf-8")
+        variant = tools.parent / tools.name.swapcase() / REBASE.name
+        if not variant.exists():
+            self.skipTest("the volume tells letter case apart")
+        result = self.inbound(variant)
+        self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
+        ran = [name for name in planted if (self.outside / f"sentinel-{name}").exists()]
+        self.assertEqual(ran, [], "a module planted beside the script ran through other case")
 
     def test_g12_a_planted_pyc_is_never_read(self):
         import py_compile

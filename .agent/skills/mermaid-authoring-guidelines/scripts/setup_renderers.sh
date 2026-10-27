@@ -40,11 +40,21 @@
 # every render, the smoke render included, runs in the install directory. Each install is
 # verified with a smoke render under that configuration.
 #
-# The v10 lockfile overrides the puppeteer 19.11.1 of mermaid-cli 10.9.1 with 25.12.0, the
-# version of v11 (TASK 110 R7.1). 19.11.1 pinned extract-zip 2.0.1, tar-fs 2.1.1 and ws 8.13.0:
-# 6 high advisories (npm audit, 2026-10-03), and extract-zip has no release with a fix. With the
-# override, npm audit reports none for the three lockfiles (2026-10-05), and every reference
-# figure rendered in 10.9.8 with the metrics measured under 19.11.1.
+# The overrides of the v10 package.json replace the puppeteer 19.11.1 of mermaid-cli 10.9.1 with
+# 25.16.0, the version of v11 and v12 (TASK 110 R7.1, TASK 129 R3.2). 19.11.1 pinned extract-zip
+# 2.0.1, tar-fs 2.1.1 and ws 8.13.0: 6 high advisories (npm audit, 2026-10-03), and extract-zip
+# has no release with a fix. The overrides of each package.json also set dompurify to 3.4.17 and
+# katex to 0.18.10 (TASK 129 R3.1). With these versions npm audit reports no advisory for the
+# three lockfiles (2026-10-27). The render page takes no script from those two packages. It runs
+# the copies that other packages embed, which advisories cover (WI-41):
+#   v10  mermaid 10.9.8                                   DOMPurify 3.4.2   KaTeX 0.16.45
+#   v11  mermaid 11.17.2, @mermaid-js/layout-elk 0.2.3    DOMPurify 3.4.12  KaTeX 0.16.47
+#   v11  @mermaid-js/mermaid-zenuml 0.2.3                 DOMPurify 3.3.1
+#   v12  mermaid 12.1.0                                   DOMPurify 3.4.12  KaTeX 0.16.47
+#   v12  @mermaid-js/mermaid-zenuml 1.0.1                 DOMPurify 3.3.1
+# On 2026-10-05 every reference figure rendered in v10 with the metrics measured under 19.11.1
+# (TASK 110). On 2026-10-27 every reference figure rendered in v10, v11 and v12 with the status and
+# the metrics it had with puppeteer 25.12.0 (TASK 129 R3.5).
 #
 # Usage: setup_renderers.sh [--forward] [--dry-run]
 #   --dry-run writes nothing: it checks node and the install home (a home inside a git work

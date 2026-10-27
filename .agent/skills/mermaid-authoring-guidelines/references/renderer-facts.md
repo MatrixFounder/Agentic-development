@@ -817,17 +817,35 @@ this file until a public advisory describes it (`security-audit` §6.1).
 
 ### RF-22 — the floor renderer runs on the puppeteer of v11
 
-**Versions.** mermaid 10.9.8 with mermaid-cli 10.9.1, measured 2026-10-05.
+**Versions.** mermaid 10.9.8 with mermaid-cli 10.9.1, measured 2026-10-05; the overrides of
+TASK 129, measured 2026-10-27.
 
-**Observed.** mermaid-cli 10.9.1 asks for puppeteer `^19.0.0`. Puppeteer 19.11.1 pins
+**Observed, 2026-10-05 (TASK 110).** mermaid-cli 10.9.1 asks for puppeteer `^19.0.0`. Puppeteer 19.11.1 pins
 `extract-zip` 2.0.1, `tar-fs` 2.1.1 and `ws` 8.13.0: 6 high advisories, and `extract-zip` has no
 release with a fix. The v10 lockfile overrides puppeteer with 25.12.0, the version of v11. npm
 audit then reports no advisory, and the lockfile holds 135 entries instead of 190. Every mermaid
 fence of `references/` rendered in 10.9.8 with the same metrics as under 19.11.1, in the same
 browser build. The setup selects headless mode `shell` for puppeteer 22 or newer, as for v11.
 
-**Rule.** Keep the override while v10 renders with mermaid-cli 10.9.1. Render every reference in
-10.9.8 again after any change of the v10 lockfile.
+**Observed, 2026-10-27 (TASK 129).** Advisories published after 2026-10-05 covered `dompurify`
+3.4.16, `zod` 3.25.76 through the `chromium-bidi` of puppeteer 25.12.0, and `katex` 0.16.47, in each
+lockfile. The manifests of v10, v11 and v12 now override `dompurify` with 3.4.17 and `katex` with
+0.18.10, and each install runs puppeteer 25.16.0. npm audit then reports no advisory, and the
+lockfiles hold 135, 201 and 204 entries. Every mermaid fence of `references/` and a KaTeX probe
+figure render in v10, v11 and v12 with the status and the metrics of the base lockfiles. The browser
+build is 150.0.7871.24. The render page takes no script from the packages `dompurify` and `katex`.
+It runs the copies that other packages embed, which advisories cover (WI-41):
+
+- v10: mermaid 10.9.8, with DOMPurify 3.4.2 and KaTeX 0.16.45;
+- v11: mermaid 11.17.2 and `@mermaid-js/layout-elk` 0.2.3, with DOMPurify 3.4.12 and KaTeX 0.16.47;
+  `@mermaid-js/mermaid-zenuml` 0.2.3, with DOMPurify 3.3.1;
+- v12: mermaid 12.1.0, with DOMPurify 3.4.12 and KaTeX 0.16.47; `@mermaid-js/mermaid-zenuml` 1.0.1,
+  with DOMPurify 3.3.1.
+
+**Rule.** Keep the override of puppeteer while v10 renders with mermaid-cli 10.9.1. Render every
+reference again after any change of a lockfile, and compare the status and the metrics of each
+render. Read the versions of DOMPurify and KaTeX that the page runs in the packages that embed
+them, not in the lockfile.
 
 ### RF-23 — GitHub draws HTML labels in its own font after mermaid sized them
 

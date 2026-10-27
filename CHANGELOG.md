@@ -16,6 +16,50 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.48.1 — The tests run from any directory, and the dependency advisories of the TASK 128 retro close (TASK 129)**
+
+#### Fixed
+
+- **pytest runs from any working directory.** Run from `tests/`, `python3 -m pytest` stopped at a
+  collection error: `tests/test_tool_runner.py` imported `System.scripts` without the repository
+  root on `sys.path`. Two more modules read files by paths relative to the working directory. The
+  three modules now read from the repository root, and `TestToolRunner` changes into it for each
+  test and back. TC-W1 checks the change of directory.
+- **pytest 9.1.1.** `requirements-dev.txt` pinned pytest 9.0.2, which CVE-2025-71176 covers.
+- **The renderer lockfiles carry no known advisory.** `npm audit` reported a critical, a high and a
+  low advisory in `dompurify` 3.4.16, a high one in `zod` 3.25.76 through the `chromium-bidi` of
+  puppeteer 25.12.0, and a low one in `katex` 0.16.47 (WI-41). The manifests of v10, v11 and v12
+  now override `dompurify` with 3.4.17 and `katex` with 0.18.10, and each install runs puppeteer
+  25.16.0. `npm audit` reports no advisory for the three lockfiles (2026-10-27). The 51 reference
+  figures and a KaTeX probe figure render in v10, v11 and v12 with the status and the metrics they
+  had before.
+- **The stale sweep of `tests/_scratch.py` sends no signal on Windows.** There `os.kill(pid, 0)`
+  sends `CTRL_C_EVENT`. `_pid_alive` now answers alive on Windows without the call, so the sweep
+  removes no session directory there. The exit handler still removes the directory of each normal
+  exit.
+- **The architecture names the lock file of the session state**, `.agent/sessions/latest.yaml.lock`,
+  in §5 and under the shared infrastructure. TC-C7 checks both lines.
+
+#### Notes
+
+- **The render page runs the DOMPurify and KaTeX that other packages embed.** The page takes no
+  script from the packages `dompurify` and `katex`, so the overrides do not reach these copies.
+  Advisories cover each of them, among them the critical GHSA-cg2g-xh64-v4q7 on the copies of
+  DOMPurify 3.4.12:
+  - v10: mermaid 10.9.8, with DOMPurify 3.4.2 and KaTeX 0.16.45;
+  - v11: mermaid 11.17.2 and `@mermaid-js/layout-elk` 0.2.3, with DOMPurify 3.4.12 and KaTeX
+    0.16.47; `@mermaid-js/mermaid-zenuml` 0.2.3, with DOMPurify 3.3.1;
+  - v12: mermaid 12.1.0, with DOMPurify 3.4.12 and KaTeX 0.16.47; `@mermaid-js/mermaid-zenuml`
+    1.0.1, with DOMPurify 3.3.1.
+
+  No release of these packages bundles DOMPurify 3.4.17 yet. WI-41 stays open for each copy.
+
+#### Migration
+
+- **Run `setup_renderers.sh` again**, with `--forward` for v12. `render_check.py` refuses an install
+  whose lockfile stamp differs from the committed lockfile, and the tests of the skill that render
+  skip with such an install.
+
 ### **v3.48.0 — The session state runs in CI on Windows, and six records of the TASK 127 retro close (TASK 128)**
 
 #### Fixed

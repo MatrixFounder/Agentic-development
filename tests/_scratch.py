@@ -21,14 +21,17 @@ touches nothing else.
 timeout cannot execute its own teardown. The next session therefore removes subdirectories
 whose owning process is **gone**, which recovers the debris without ever reaching into a
 live session. Keeping the tree out of `git status` is not this sweep's job — `.gitignore`
-already covers `tests/.scratch/`.
+already covers `tests/.scratch/`. On Windows `_pid_alive` answers alive for every pid, so there
+the sweep removes no session directory (TASK 129 R5.3).
 
 **Why a session is also swept at exit.** Only pytest runs the hook of `tests/conftest.py`, so
 a unittest run left its session directory behind (TS-1). A session directory therefore
 registers an `atexit` handler when it is made. The handler holds that directory and its root
 as arguments and reads no global, so a second copy of this module that a test redirects
-touches only the root it was given (TASK 128 R6.1). A killed process runs no handler; the
-start-up sweep of the next pytest session collects what it leaves.
+touches only the root it was given (TASK 128 R6.1). A killed process runs no handler; on
+POSIX the start-up sweep of the next pytest session collects what it leaves. On Windows the
+handler removes the directory of each normal exit, and the directory of a killed run stays
+(TASK 129 R5.3).
 """
 
 from __future__ import annotations
@@ -63,8 +66,13 @@ def _pid_alive(pid: int) -> bool:
     """Return whether a process is running.
 
     Unknown answers count as **alive**: deleting a live session's workspace is far worse
-    than leaving one stale directory behind for the next run to collect.
+    than leaving one stale directory behind for a later run on POSIX to collect.
+
+    On Windows every answer is alive, and `os.kill` is not called: there the signal number 0 is
+    `CTRL_C_EVENT`, which `os.kill(pid, 0)` would send (TASK 129 R5.1).
     """
+    if os.name == "nt":
+        return True
     try:
         os.kill(pid, 0)
     except ProcessLookupError:

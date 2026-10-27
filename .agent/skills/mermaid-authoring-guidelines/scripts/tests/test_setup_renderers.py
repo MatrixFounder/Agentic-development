@@ -35,8 +35,12 @@ ASSETS = HERE.parent.parent / "assets" / "renderers"
 #: The oldest browser build the script accepts from the cache; read from the script itself.
 _FLOOR = re.search(r"^BROWSER_MIN_BUILD=['\"]?([0-9.]+)", SCRIPT.read_text(encoding="utf-8"), re.M)
 FLOOR = _FLOOR.group(1) if _FLOOR else ""
-#: v10 overrides the puppeteer of mermaid-cli 10.9.1 with the one of v11 (TASK 110 R7.1).
-PUPPETEER = {"v10": "25.12.0", "v11": "25.12.0", "v12": "25.12.0"}
+#: v10 overrides the puppeteer of mermaid-cli 10.9.1 with the one of v11 and v12 (TASK 110 R7.1,
+#: TASK 129 R3.2).
+PUPPETEER = {"v10": "25.16.0", "v11": "25.16.0", "v12": "25.16.0"}
+#: The overrides of each renderer manifest (TASK 129 R3.1).
+DOMPURIFY = "3.4.17"
+KATEX = "0.18.10"
 HASH_VARIABLE = "MERMAID_RENDER_BROWSER_SHA256"
 
 FAKE_MMDC = """#!/bin/sh
@@ -570,6 +574,39 @@ class TestRecordedBrowsers(unittest.TestCase):
         self.assertIn(("mac_arm", FLOOR), builds)
         for b in table["browsers"]:
             self.assertRegex(b["tree_sha256"], r"^[0-9a-f]{64}$")
+
+
+def _package_name(key, entry):
+    """The package of a lockfile entry: an alias's name, else the path after `node_modules/`."""
+    return entry.get("name") or key.rpartition("node_modules/")[2]
+
+
+class TestLockfileOverrides(unittest.TestCase):
+    """TC-L1 (TASK 129 R3.1-R3.3, A4): each lockfile holds the overridden and pinned versions."""
+
+    def test_l1_each_lockfile_holds_the_overridden_versions(self):
+        for tag in sorted(NOTATION["renderers"]["installs"]):
+            with self.subTest(tag=tag):
+                manifest = json.loads((ASSETS / tag / "package.json").read_text(encoding="utf-8"))
+                overrides = manifest.get("overrides", {})
+                self.assertEqual(overrides.get("dompurify"), DOMPURIFY)
+                self.assertEqual(overrides.get("katex"), KATEX)
+                lock = json.loads((ASSETS / tag / "package-lock.json").read_text(encoding="utf-8"))
+                packages = lock["packages"]
+                pinned = NOTATION["renderers"]["installs"][tag]
+                expected = {
+                    "node_modules/dompurify": DOMPURIFY,
+                    "node_modules/katex": KATEX,
+                    "node_modules/puppeteer": PUPPETEER[tag],
+                    "node_modules/mermaid": pinned["mermaid"],
+                    "node_modules/@mermaid-js/mermaid-cli": pinned["cli"],
+                }
+                for key, version in expected.items():
+                    self.assertEqual(packages.get(key, {}).get("version"), version, key)
+                copies = [key for key, entry in packages.items()
+                          if key not in expected
+                          and _package_name(key, entry) in ("dompurify", "katex", "puppeteer")]
+                self.assertEqual(copies, [])
 
 
 if __name__ == "__main__":

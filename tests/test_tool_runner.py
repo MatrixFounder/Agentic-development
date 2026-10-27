@@ -1,14 +1,21 @@
 import json
+import os
 import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from System.scripts import tool_runner
-from System.scripts.tool_runner import execute_tool
+REPO_ROOT = Path(__file__).resolve().parents[1]
+# `System.scripts` imports from any working directory (TASK 129 R1.1)
+if str(REPO_ROOT) not in sys.path:
+    sys.path.append(str(REPO_ROOT))
+
+from System.scripts import tool_runner  # noqa: E402 - needs the path append above
+from System.scripts.tool_runner import execute_tool  # noqa: E402 - needs the path append above
 
 sys.path.append(str(Path(__file__).resolve().parent))
 from _scratch import repo_scratch_dir  # noqa: E402 - needs the path append above
@@ -16,6 +23,9 @@ from _scratch import repo_scratch_dir  # noqa: E402 - needs the path append abov
 
 class TestToolRunner(unittest.TestCase):
     def setUp(self):
+        # execute_tool takes the working directory as the repository root (TASK 129 R1.2)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(REPO_ROOT)
         self.repo_root = Path.cwd().resolve()
         # an in-repo directory that git ignores: the tool runner reads only repository paths,
         # and an interrupted run then leaves no untracked path (TASK 122 R3.4)
@@ -166,6 +176,27 @@ class TestToolRunner(unittest.TestCase):
         for command in self.ALLOWED:
             with self.subTest(command=command):
                 self.assertTrue(tool_runner._is_allowed_test_command(shlex.split(command)))
+
+
+class TestWorkingDirectory(unittest.TestCase):
+    """TC-W1 (TASK 129 R1.2): `TestToolRunner.setUp` runs at the repository root.
+
+    Its cleanup changes back to the directory that the test started in.
+    """
+
+    def test_w1_setup_changes_into_the_root_and_back(self):
+        start = Path(tempfile.mkdtemp()).resolve()
+        self.addCleanup(shutil.rmtree, start, ignore_errors=True)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(start)
+        case = TestToolRunner("test_unknown_tool")
+        case.setUp()
+        try:
+            self.assertEqual(Path.cwd().resolve(), REPO_ROOT)
+        finally:
+            case.tearDown()
+            case.doCleanups()
+        self.assertEqual(Path.cwd().resolve(), start)
 
 
 if __name__ == "__main__":

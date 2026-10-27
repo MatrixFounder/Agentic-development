@@ -13,8 +13,8 @@ TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5, pin
 * the guide names `current_task.status`, the three platforms, UTF-8 and the dropped key; its §1
   names the temporary file, and its §6 the link (``TC-C5``);
 * the CI pytest step runs the skill's tests and this module (``TC-C6``);
-* `docs/ARCHITECTURE.md` names `msvcrt` at both statements of the session-state lock
-  (``TC-C7``);
+* `docs/ARCHITECTURE.md` names `msvcrt` and the lock file `.agent/sessions/latest.yaml.lock` at
+  both statements of the session-state lock (``TC-C7``, the lock file since TASK 129 R4.1);
 * two jobs on `windows-latest`, with Python 3.11 and 3.14 and the shell bash, run the skill's
   tests and this module (``TC-C8``).
 """
@@ -125,7 +125,8 @@ class RulesTestCase(unittest.TestCase):
         for marker in ("- **Shared State**:", "- **Session state**:"):
             hits = [line for line in lines if line.startswith(marker)]
             self.assertEqual(len(hits), 1, marker)
-            self.assert_holds(hits[0], ("`fcntl`", "`msvcrt`"), f"ARCHITECTURE {marker}")
+            self.assert_holds(hits[0], ("`fcntl`", "`msvcrt`", "`.agent/sessions/latest.yaml.lock`"),
+                              f"ARCHITECTURE {marker}")
 
     def test_c8_the_windows_jobs(self):
         try:

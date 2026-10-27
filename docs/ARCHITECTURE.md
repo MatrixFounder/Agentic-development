@@ -117,7 +117,7 @@ The orchestration layer now supports **Structured Tool Calling**:
 
 The system formerly supported a **Parallel Orchestration Protocol** via mock agents:
 - **Orchestrator Role**: Decomposes tasks and spawns sub-agents.
-- **Shared State**: Uses file locking on `.agent/sessions/latest.yaml` — `fcntl` on POSIX, `msvcrt` on Windows (TASK 127) — to ensure safe concurrent updates. *(This locking mechanism is retained and still in use under §5.1.)*
+- **Shared State**: `update_state.py` takes a file lock on `.agent/sessions/latest.yaml.lock` — `fcntl` on POSIX, `msvcrt` on Windows (TASK 127) — around each update of `.agent/sessions/latest.yaml`, to ensure safe concurrent updates. *(This locking mechanism is retained and still in use under §5.1.)*
 - **Agent Runner** *(DEPRECATED)*: `spawn_agent_mock.py` script simulated sub-agent behavior.
 - **Protocol** *(DEPRECATED)*:
   1. Orchestrator splits `TASK.md` -> `subtask-A.md`, `subtask-B.md`.
@@ -212,7 +212,7 @@ Archiving runs through `.agent/tools/archive_move.py`, which one allow rule name
 
 ### Shared infrastructure (both layers)
 
-- **Session state**: `.agent/sessions/latest.yaml` with `fcntl`-locking on POSIX and `msvcrt`-locking on Windows (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
+- **Session state**: `.agent/sessions/latest.yaml`, updated under a lock on `.agent/sessions/latest.yaml.lock`: `fcntl` on POSIX and `msvcrt` on Windows (via `skill-session-state`). Safe for concurrent writes from parallel teammates.
 - **Source of truth**: methodology lives in `.agent/skills/*/SKILL.md` (critics) and `System/Agents/*.md` (pipeline roles). Wrapper files in `.claude/agents/` are thin adapters, not duplicated content.
 - **Vendor portability**: `.claude/agents/` is Claude Code specific. Other vendors resolve their own native parallel adapter via `skill-parallel-orchestration` §1.1. Codex, Cursor and Antigravity each have a documented parallel primitive, none of them validated end to end. Sequential role-switching is the last resort for a runtime with no primitive, documented per workflow under its vendor-dispatch section.
 
@@ -731,8 +731,23 @@ scripts only.
 
 - `setup_renderers.sh` installs exact versions with `npm ci --ignore-scripts` from committed
   lockfiles, never globally, into `${MERMAID_RENDER_HOME:-~/.cache/mermaid-authoring-guidelines}`,
-  with the npm cache beside the installs. The v10 lockfile overrides puppeteer with the version of
-  v11; `npm audit` reports no high advisory for any lockfile (TASK 110).
+  with the npm cache beside the installs. The `overrides` of each renderer's `package.json` set
+  `dompurify` to 3.4.17 and `katex` to 0.18.10. Each lockfile pins puppeteer 25.16.0; in v10 an
+  override of the puppeteer of mermaid-cli 10.9.1 sets that version (TASK 110, TASK 129). With
+  these versions `npm audit` reports no advisory for any lockfile (2026-10-27, TASK 129). The
+  render page takes no script from the packages `dompurify` and `katex`. It runs the copies that
+  other packages embed, which advisories cover (WI-41):
+  - v10: mermaid 10.9.8, with DOMPurify 3.4.2 and KaTeX 0.16.45;
+  - v11: mermaid 11.17.2 and `@mermaid-js/layout-elk` 0.2.3, with DOMPurify 3.4.12 and KaTeX
+    0.16.47; `@mermaid-js/mermaid-zenuml` 0.2.3, with DOMPurify 3.3.1;
+  - v12: mermaid 12.1.0, with DOMPurify 3.4.12 and KaTeX 0.16.47; `@mermaid-js/mermaid-zenuml`
+    1.0.1, with DOMPurify 3.3.1.
+
+  Puppeteer 25.16.0 pins chrome-headless-shell 156.0.8078.47, whose tree hash `browsers.json` does
+  not record. The setup accepts that build only when the operator sets
+  `MERMAID_RENDER_BROWSER_SHA256` to its hash. Otherwise it runs a cached 150.0.7871.24, the one
+  build that `browsers.json` records, for mac_arm. On another platform every build needs that
+  variable.
 - The setup accepts a browser only when the tree hash of its directory is in
   `assets/renderers/browsers.json` or equals `MERMAID_RENDER_BROWSER_SHA256`, set by the operator,
   and when that directory and the one above it are private. It resolves every symbolic link of

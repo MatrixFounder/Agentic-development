@@ -92,6 +92,24 @@ class TestSessionIsolation(_Redirected):
         self.assertTrue(other.exists())
 
 
+class TestWindowsLiveness(unittest.TestCase):
+    """TC-S1 (TASK 129 R5.1): on Windows `_pid_alive` answers alive and sends no signal.
+
+    There `os.kill(pid, 0)` sends `CTRL_C_EVENT`, since the signal number 0 is that event.
+    """
+
+    def test_s1_windows_answers_alive_without_a_signal(self):
+        # a dead pid: a call of os.kill that escapes the patch answers False and fails the test
+        pid = _a_dead_pid()
+        kill = mock.Mock()
+        # pathlib reads os.name when it makes a Path, so the patches enclose the one call only
+        with mock.patch.object(scratch.os, "kill", kill), \
+                mock.patch.object(scratch.os, "name", "nt"):
+            alive = scratch._pid_alive(pid)
+        self.assertTrue(alive)
+        self.assertEqual(kill.call_args_list, [])
+
+
 class TestHostileRootStates(_Redirected):
     """`tests/.scratch` may already exist as something other than a directory."""
 

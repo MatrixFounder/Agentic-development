@@ -1,7 +1,7 @@
 {
   "name": "mermaid-render-v10",
   "private": true,
-  "description": "Pinned renderer for render_check.py: mermaid-cli 10.9.1 with mermaid 10.9.8 (the 10.9 floor), and the puppeteer of v11, 25.12.0, in place of 19.11.1 (TASK 110 R7.1). Installed by scripts/setup_renderers.sh with npm ci --ignore-scripts.",
+  "description": "Pinned renderer for render_check.py: mermaid-cli 10.9.1 with mermaid 10.9.8 (the 10.9 floor), and the puppeteer of v11 and v12, 25.16.0, in place of 19.11.1 (TASK 110 R7.1, TASK 129 R3.2). Its overrides also set dompurify to 3.4.17 and katex to 0.18.10 (TASK 129 R3.1). Installed by scripts/setup_renderers.sh with npm ci --ignore-scripts.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=22.13.0"
@@ -11,7 +11,9 @@
     "mermaid": "10.9.8"
   },
   "overrides": {
+    "dompurify": "3.4.17",
+    "katex": "0.18.10",
     "mermaid": "10.9.8",
-    "puppeteer": "25.12.0"
+    "puppeteer": "25.16.0"
   }
 }

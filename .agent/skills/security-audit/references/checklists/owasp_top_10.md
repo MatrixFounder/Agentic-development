@@ -32,7 +32,7 @@
 
 ## A03: Software Supply Chain Failures — CWE-1104, CWE-829, CWE-494
 - [ ] **SCA Scanning:** Is automated Software Composition Analysis running in CI?
-- [ ] **Dependency Audit:** Is `npm audit` / `cargo audit` / `pip-audit` clean?
+- [ ] **Dependency Audit:** Is `npm audit` / `cargo audit` / `pip-audit` clean? Are the copies outside the dependency tree checked (`SKILL.md` §3, Copies outside the dependency tree)?
 - [ ] **End-of-Life:** Are we using EOL OS, runtimes, or libraries?
 - [ ] **Pinned Versions:** Are dependencies pinned to specific versions (not ranges)?
 - [ ] **Lock Files:** Are `package-lock.json` / `Cargo.lock` / `poetry.lock` committed?

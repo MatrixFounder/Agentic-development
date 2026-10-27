@@ -2,7 +2,7 @@
 name: task-review-checklist
 description: Detailed checklist for verifying Technical Specifications (TASK).
 tier: 1
-version: 1.1
+version: 1.2
 ---
 # TASK Review Checklist
 
@@ -29,6 +29,10 @@ version: 1.1
 ## 5. Non-Functional
 - [ ] **Performance:** Metrics defined?
 - [ ] **Security:** Critical checks (auth, inputs)?
+- [ ] **Dependency advisories:** a TASK that fixes a published advisory in a dependency names each
+      copy that a runtime loads, with its package, version and advisories, or states that none
+      runs. Its requirements name the copies that the fix reaches and those it does not
+      (`requirements-analysis` §3).
 
 ## 6. Register (`documentation-standards` §5.5)
 - [ ] **Scan attached:** `artifact-formalizer/scripts/scan_register.py docs/TASK.md --sections

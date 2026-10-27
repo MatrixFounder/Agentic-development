@@ -2,7 +2,7 @@
 name: requirements-analysis
 description: "Use when gathering and refining requirements into a structured TASK."
 tier: 1
-version: 1.4
+version: 1.5
 ---
 # Requirements Analysis
 
@@ -24,6 +24,15 @@ Read this file to understand the required headers and sections.
 3. **Ask questions:** If something is unclear — add to "Open Questions".
 4. **Use existing terminology:** Use terms from project documentation.
 5. **Link to existing functionality:** Explicitly state how new functionality interacts with existing.
+6. **Measure the copies that run:** a task that fixes a published advisory in a dependency states,
+   in its problem section, each copy of the library that a runtime loads. For each copy, it names
+   the package that carries it, its version and the advisories that cover it. A library that no
+   runtime of the project loads, such as a package of type declarations only, is stated as such.
+   The requirements name the copies that the fix reaches and those it does not. Steps 1 to 3 of
+   `security-audit` §3, Copies outside the dependency tree, give the measurement. A vulnerability
+   with no published advisory follows `security-audit` §6.1. The problem section is the one under
+   `<!-- contract:problem -->`, which `System/Agents/02_analyst_prompt.md` defines; the task
+   template calls it §1, General Description.
 
 ### ❌ DO NOT:
 1. **DO NOT write code:** You create TASK, not implementation.

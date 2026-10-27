@@ -73,7 +73,8 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-55** [A dependency audit misses the copies that a bundle embeds](backlog/wi-55-a-dependency-audit-misses-the-copies-that-a-bundle-embeds.md) — effort `S`, status `open`, opened 2026-10-27
+- **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
+- **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `open`, opened 2026-10-27
 - **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `open`, opened 2026-10-15
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-49** [The history secret scan runs git in the scanned tree's repository](backlog/wi-49-the-history-secret-scan-runs-git-in-the-scanned-trees-repository.md) — effort `M`, status `open`, opened 2026-10-09
@@ -93,6 +94,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-55** [A dependency audit misses the copies that a bundle embeds](backlog/wi-55-a-dependency-audit-misses-the-copies-that-a-bundle-embeds.md) — effort `S`, status `done`, opened 2026-10-27 · **done 2026-10-27** (TASK 130): `security-audit` §3 and `requirements-analysis` §3 hold the rule
 - **WI-53** [Mermaid's HTML labels are cut on GitHub, and the render check cannot see it](backlog/wi-53-mermaid-html-labels-are-cut-on-github.md) — effort `M`, status `done`, opened 2026-10-14 · **done 2026-10-14** (TASK 121): `themeCSS`, plain second lines, `font_swap`
 - **WI-52** [Stage-2 reviews can widen a framework-upgrade task beyond its changed lines](backlog/wi-52-stage-2-reviews-can-widen-a-framework-upgrade-task-beyond-its-changed-lines.md) — effort `S`, status `done`, opened 2026-10-09 · **done 2026-10-09** (TASK 120): a review boundary for stage 2
 - **WI-51** [Residual routes of the TASK 118 scanner review](backlog/wi-51-residual-routes-of-the-task-118-scanner-review.md) — effort `M`, status `done`, opened 2026-10-09 · **done 2026-10-09** (TASK 119): FIFO skip, test `PATH`, backslash

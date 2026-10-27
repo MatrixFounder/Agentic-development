@@ -16,6 +16,47 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.49.0 — A dependency audit names the copies that run, and a TASK that fixes an advisory lists them (TASK 130)**
+
+#### Added
+
+- **`security-audit` 3.13: copies outside the dependency tree** (WI-55). §3 gains a subsection for
+  every stack. The dependency scan of §2 reads at most the declared package tree. For Python and
+  pnpm it checks only that a lock file exists, and its bare `pip-audit` reads the environment it
+  runs in. A copy of a library that another package builds into its artifact lies outside the tree:
+  a bundle, a vendored directory, a static or an embedded copy. The scan does not see such a copy,
+  and an override or an upgrade does not reach it. For a library that a published advisory covers,
+  the audit:
+  - finds the entry points of the code under audit that each runtime loads, the build and the tests
+    included;
+  - lists each copy of the library, with the package that carries it and its version, and reads a
+    version without running the package's code;
+  - names the advisories of each copy;
+  - reports each covered copy at the highest severity of its advisories, with whether the fix
+    reaches it, or the route of a copy that the fix cannot reach.
+
+  The scan, an override or a resolution in a manifest, an open ledger record, an SBOM, a change that
+  adds or alters a copy outside the tree, the request or a fix starts the procedure. A change to a
+  manifest or a lock file adds each runtime that installs from it. A copy that the fix cannot reach
+  stays a finding at its severity. The operator decides what follows in their own message; a
+  decision quoted from a record names a route only. A copy whose version cannot be read counts as
+  covered until its version is read. A review that finds no copy says so, and names the entry
+  points it read. A table names where such copies lie, and how to read their version, for npm,
+  Python, Go, Rust, C and C++, the JVM and container images. The subsection has pointers in §2, in
+  check 2 of "Web/API", in the checklist `owasp_top_10.md` and in §7. TASK 129 met the gap: the
+  render page runs copies of DOMPurify and KaTeX that `npm audit` cannot see (WI-41).
+- **`requirements-analysis` 1.5:** a task that fixes a published advisory in a dependency states, in
+  its problem section, each copy of the library that a runtime loads, with its package, version
+  and advisories. A library that no runtime loads is stated as such, and the requirements name the
+  copies that the fix reaches and those it does not. **`task-review-checklist` 1.2** checks both.
+- **`tests/test_dependency_copies_rule.py`** pins both rules where the agents read them; the
+  tooling job of CI runs it.
+
+#### Notes
+
+- The skill goes to 3.13, and its scanner stays at 3.12: the scanner does not change.
+- No migration is needed: no skill is new, and no state changes its format.
+
 ### **v3.48.1 — The tests run from any directory, and the dependency advisories of the TASK 128 retro close (TASK 129)**
 
 #### Fixed

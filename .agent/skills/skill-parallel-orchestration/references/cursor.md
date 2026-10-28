@@ -34,7 +34,7 @@
 - Independent context per subagent; no cross-pollination except the shared execution-evidence block (`vdd-multi` Phase 1).
 - **Read-only critic guarantee**: `readonly: true` on every critic subagent — the runtime-enforced analogue of withholding `Bash`/`Write` from a Claude critic wrapper.
 
-**In-session vs background**: in-session subagents (interactive, `is_background:false`) are the Layer A path here. Background agents (cloud, async) are closer to Layer B — **deferred**, like Claude's `TeamCreate` Layer B.
+**In-session vs background**: in-session subagents (interactive, `is_background:false`) are the Layer A path here. Background agents (cloud, async) are closer to Layer B — **deferred**, like Claude's Layer B.
 
 ---
 

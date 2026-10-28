@@ -1,14 +1,18 @@
 ---
 id: AT-6
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-04-17
+resolved_at: 2026-10-28
+resolved_by: 'Claude Code 2.1.306'
 category: agent-teams
 severity: SEV-2
 slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown
 ---
 
 # `TeamDelete` does NOT clean up after protocol shutdown
+
+> **Resolved 2026-10-28** (Claude Code 2.1.306). The record describes the runtime of the probe of 2026-04-17, with `TeamCreate`, `TeamDelete` and named teams under `~/.claude/teams/`. Claude Code 2.1.306 retired `TeamCreate` and `TeamDelete`: its binary lists both among retired tool names, and with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` neither is offered as a tool. A session has one implicit team, and `Agent` ignores its `team_name` parameter. The step that failed no longer exists, and the workaround below is not needed.
 
 > **Scope:** applies to **Layer B** (`TeamCreate`/`SendMessage`). Layer A (parallel `Agent`
 > tool-uses in one message) is **not** affected.

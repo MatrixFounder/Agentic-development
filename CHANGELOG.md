@@ -16,6 +16,30 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.50.2 — Layer B names the primitives of the current Claude Code, and the records of the April probe close**
+
+#### Fixed
+
+- **`skill-parallel-orchestration` 3.12: the runtime fingerprint matches Claude Code again.** §1.2
+  signal 1 required the tool `TeamCreate`. Claude Code 2.1.306 retired `TeamCreate` and
+  `TeamDelete`: its binary lists both among retired tool names, and with
+  `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` neither is offered as a tool. The signal now names the
+  `Agent` tool with a `subagent_type` parameter.
+
+#### Changed
+
+- **Layer B names the current primitives.** A session has one implicit team, and `Agent` ignores
+  `team_name`. Teammates are spawned with `Agent(name=...)` and addressed with `SendMessage`.
+  `references/claude-code.md`, `CLAUDE.md`, `System/Agents/01_orchestrator.md` §5.1,
+  `System/Docs/WORKFLOWS.md` and `docs/ARCHITECTURE.md` follow. Layer B stays deferred.
+- **AT-1 to AT-9 close.** The records describe the runtime of the probe of 2026-04-17. AT-6
+  (`TeamDelete` does not clean up) is `fixed` by the retirement. The other eight are `wontfix`,
+  not probed again on 2.1.306. A Layer B workflow starts with a new probe.
+
+#### Notes
+
+- No migration is needed: no script changes, and no state changes its format.
+
 ### **v3.50.1 — The inbound walk and the file mode of `rebase_links.py` end without a traceback on a path that names a device (TASK 132)**
 
 #### Fixed

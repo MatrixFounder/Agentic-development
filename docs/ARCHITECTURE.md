@@ -138,7 +138,7 @@ Wave 1 replaces the mock POC with a concrete two-layer teams model based on Clau
                  │                             │
      ┌───────────▼─────────────┐   ┌──────────▼────────────────┐
      │  Layer A: Agent tool     │   │  Layer B: Native Teams   │
-     │  (parallel subagents)    │   │  (TeamCreate/SendMessage)│
+     │  (parallel subagents)    │   │  (teammates+SendMessage) │
      │  ✅ Wave 1 — implemented │   │  ⏸ Wave 4 — stub only    │
      └───────────┬──────────────┘   └──────────────────────────┘
                  │
@@ -204,11 +204,11 @@ Archiving runs through `.agent/tools/archive_move.py`, which one allow rule name
 
 ### Layer B — Native Teams (Wave 4, stub)
 
-- **Mechanism**: `TeamCreate` + `SendMessage` + `Agent(team_name=…)`. Each teammate is a **separate session** with its own context window and mailbox.
+- **Mechanism**: `Agent(name=…)` + `SendMessage`, in the one implicit team of the session. Claude Code 2.1.306 retired `TeamCreate` and `TeamDelete`, and `Agent` ignores `team_name`. Each teammate is a **separate session** with its own context window and mailbox.
 - **Gate**: experimental feature enabled via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in [.claude/settings.json](../.claude/settings.json).
 - **Use cases** (not implemented in Wave 1): peer-debate between critics, parallel feature development with mid-flight schema negotiation, multi-hour research with teammates exchanging findings.
 - **Decision rule**: use Layer B **iff** teammates need to exchange messages with each other during work (not just with the lead). Otherwise Layer A.
-- **Known gotchas**: see [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+- **Known gotchas**: none on record. The records AT-1 to AT-9 of [docs/KNOWN_ISSUES.md](KNOWN_ISSUES.md) describe the retired runtime and are closed; a Layer B workflow starts with a new probe.
 
 ### Shared infrastructure (both layers)
 

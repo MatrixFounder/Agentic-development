@@ -2,7 +2,7 @@
 name: skill-parallel-orchestration
 description: "Use when decomposing tasks into parallel sub-tasks or spawning sub-agents. Vendor-agnostic core; load a per-vendor reference for concrete tool names, directory conventions, and invocation syntax."
 tier: 2
-version: 3.11
+version: 3.12
 ---
 
 # Parallel Orchestration Skill
@@ -36,7 +36,7 @@ If `cwd` is not the project root, walk up looking for the first marker; stop at 
 
 If a repo carries both `CLAUDE.md` and `GEMINI.md` (multi-vendor support), the agent cannot reliably introspect which CLI is hosting it. Use these concrete signals, in order:
 
-1. **Tool-list fingerprint**: if the agent has `Agent` (with `team_name` parameter) + `TeamCreate` + `SendMessage` available — load `claude-code.md`. If it has a Gemini-specific `run_shell_command` or Cursor's Composer primitives — load the matching reference. Tool availability is the most reliable signal.
+1. **Tool-list fingerprint**: if the agent has the `Agent` tool with a `subagent_type` parameter — load `claude-code.md`. With agent teams on, `SendMessage` is present too. If it has a Gemini-specific `run_shell_command` or Cursor's Composer primitives — load the matching reference. Tool availability is the most reliable signal.
 2. **Explicit caller hint**: if the orchestrator passed a `runtime:` parameter in the skill invocation, honor it.
 3. **Fallback**: if still ambiguous, emit a warning "ambiguous runtime; defaulting to sequential-fallback" and load `sequential-fallback.md`. Do not guess silently.
 
@@ -342,6 +342,10 @@ All universal concepts (§2–§6) — including merge rules and the evidence co
 
 ## 9. History
 
+- **v3.12 (2026-10-28)**: **§1.2 signal 1 names the `Agent` tool with `subagent_type`.** Claude
+  Code 2.1.306 retired `TeamCreate` and `TeamDelete`, so the fingerprint before it matched no
+  Claude Code session. `references/claude-code.md` describes Layer B as named teammates and
+  `SendMessage` in the session's one implicit team. KNOWN_ISSUES AT-1 to AT-9 are closed.
 - **v3.11 (2026-10-05)**: **the §2.4.1 fingerprint covers untracked content** (TASK 111, WI-31).
   The formula adds the sha256 of each untracked, not ignored file, and `--binary --no-ext-diff
   --no-textconv` to the diff. An edit inside an untracked file moved no value before, and a round

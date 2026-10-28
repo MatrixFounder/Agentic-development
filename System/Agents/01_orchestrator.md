@@ -55,7 +55,7 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 |---|---|---|---|
 | Parallel orthogonal critiques (logic + security + performance) | **A** | `Agent` tool, N parallel calls in one message, `subagent_type` from `.claude/agents/` | ✅ Wave 1 (see `.agent/workflows/vdd-multi.md`) |
 | Independent parallel exploration (research, discovery) | **A** | Same as above with Explore-type subagents | ✅ available |
-| Peer-debate / inter-teammate communication / long-running multi-session collab | **B** | `TeamCreate` + `SendMessage` + `Agent(team_name=...)` | ⏸ deferred (Layer B defined in `skill-parallel-orchestration` §2.2) |
+| Peer-debate / inter-teammate communication / long-running multi-session collab | **B** | `Agent(name=...)` + `SendMessage`, in the session's one implicit team | ⏸ deferred (Layer B defined in `skill-parallel-orchestration` §2.2) |
 
 **Decision rule**: use Layer A unless teammates need to exchange messages with each other *during* their work. See `skill-parallel-orchestration` §2.2 for the full criterion.
 

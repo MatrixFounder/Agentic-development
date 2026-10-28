@@ -52,4 +52,4 @@ For any category that returned issues, apply fixes and re-spawn **only that crit
 
 For "Build Login Page (Frontend) + Auth API (Backend) simultaneously" where teammates need to negotiate API schema mid-flight:
 - **Wave 1**: not the right use case for Layer A (needs inter-teammate communication).
-- **Wave 4 (planned)**: `TeamCreate` + teammates with `SendMessage` mailbox. Stub criterion in `SKILL.md` §4.
+- **Wave 4 (planned)**: named teammates with a `SendMessage` mailbox. Stub criterion in `SKILL.md` §4.

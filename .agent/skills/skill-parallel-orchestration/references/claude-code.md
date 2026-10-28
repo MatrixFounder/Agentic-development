@@ -14,7 +14,7 @@
 | Teammate definition | `.claude/agents/<name>.md` — YAML frontmatter (`name`, `description`, `tools`, `model`) + thin body |
 | Teammate type selector | `subagent_type: "<wrapper-name>"` parameter on the `Agent` tool |
 | Single-invocation multi-spawn | Claude's multi-tool-call feature (one LLM turn, multiple tool-uses, same `requestId`) |
-| Inter-teammate communication (Layer B) | `TeamCreate` + `SendMessage` + `Agent(team_name=..., name=...)` — see Layer B section below |
+| Inter-teammate communication (Layer B) | `Agent(name=...)` + `SendMessage`, in the session's one implicit team — see Layer B section below |
 
 ---
 
@@ -41,25 +41,17 @@ Message with three parallel tool-uses:
 
 ---
 
-## Layer B (peer communication) — runtime probed, full workflow deferred
+## Layer B (peer communication) — full workflow deferred
 
-**Runtime status**: probed at v3.13.0. Core primitives work; lifecycle has blockers. Full workflow (`/teams-vdd-multi`) deferred — see [docs/ROADMAP.md](../../../../docs/ROADMAP.md).
+**Runtime status**: Claude Code 2.1.306, with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in [.claude/settings.json](../../../../.claude/settings.json). A session has one implicit team. `TeamCreate` and `TeamDelete` are retired: the binary lists both among retired tool names, and neither is offered as a tool. `Agent` ignores its `team_name` parameter. The full workflow (`/teams-vdd-multi`) stays deferred — see [docs/ROADMAP.md](../../../../docs/ROADMAP.md).
 
-**Primitives**:
-- `TeamCreate(team_name, description, agent_type)` — creates `~/.claude/teams/<name>/config.json` + `~/.claude/tasks/<name>/` task-list dir.
-- `Agent(team_name=..., name=..., subagent_type=...)` — spawns a teammate **asynchronously** into the team. Returns immediately with `agent_id: <name>@<team>`; teammate runs in background.
-- `SendMessage(to=<name>, message=..., summary=...)` — delivers into `~/.claude/teams/<name>/inboxes/<recipient>.json`.
-- `TeamDelete()` — cleanup. **Currently broken after protocol shutdown** — see KNOWN_ISSUES.
+**Primitives** (from the tool schemas of 2.1.306; no Layer B workflow ran on them):
+- `Agent(name=..., subagent_type=..., prompt=...)` — spawns a teammate that runs in the background. `name` makes it addressable while it runs; the lead is notified when it completes.
+- `SendMessage(to=<name>, message=...)` — sends a message to a running teammate, or resumes a finished one from its transcript. Messages from teammates arrive in the lead's turn; there is no inbox file to read. `shutdown_request` and `plan_approval_request` remain as legacy protocol messages.
+- `ListAgents()` — lists the teammates and subagents that the session can message.
+- `TaskStop(task_id=<name>)` — stops a running teammate.
 
-**Shutdown protocol**: `SendMessage({type: "shutdown_request"})` → teammate replies `shutdown_approved` → `TeamDelete()`. Last step currently fails; workaround is manual `rm -rf ~/.claude/teams/<name>/`.
-
-**Known gotchas** (from [docs/KNOWN_ISSUES.md](../../../../docs/KNOWN_ISSUES.md)):
-- `TeamDelete` does not clean up `config.json` members after `shutdown_approved`.
-- Async spawn returns immediately — lead must poll inbox file or await auto-delivered turn.
-- `subagent_type: "Explore"` defaults to `model: "haiku"` regardless of lead's model; override explicitly.
-- Runtime sends structured JSON status messages (`idle_notification`, `shutdown_approved`) despite docs saying not to.
-- No session resumption across `/resume`.
-- One team per session, no nested teams, no leadership transfer.
+**Probe history**: the probe of v3.13.0 (2026-04-17) ran on `TeamCreate`, `TeamDelete` and team directories under `~/.claude/teams/<name>/`. Its records AT-1 to AT-9 in [docs/KNOWN_ISSUES.md](../../../../docs/KNOWN_ISSUES.md) are closed: AT-6 (`TeamDelete` cleanup) is `fixed` by the retirement, and the other eight are `wontfix`, not probed again. A Layer B workflow starts with a new probe on the current runtime, and files each constraint that still holds as a new record.
 
 ---
 

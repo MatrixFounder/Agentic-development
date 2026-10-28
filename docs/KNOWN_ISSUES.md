@@ -34,7 +34,7 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 
 | Prefix | Category      | Scope |
 |--------|---------------|-------|
-| `AT-N` | `agent-teams` | Native Claude Code Agent Teams (Layer B `TeamCreate`/`SendMessage`) limitations. |
+| `AT-N` | `agent-teams` | Claude Code agent teams (Layer B: named teammates and `SendMessage`) limitations. |
 | `ARC-N` | `archiving` | `skill-archive-task` / `task_id_tool.py` defects: ID generation, rotation, lockstep pairing. |
 | `WR-N` | `wrappers`    | Thin-wrapper ↔ SOT synchronization hazards (`.claude/agents/` & scaffold dirs). |
 | `HK-N` | `hooks`       | Claude Code hook-surface limitations affecting framework capture/automation. |
@@ -67,16 +67,20 @@ the matching `## <category>` heading here, in ID order.
 
 > These apply to **Layer B** (`TeamCreate`/`SendMessage`). Layer A (parallel `Agent`
 > tool-uses in one message) is **not** affected.
+>
+> **Closed 2026-10-28.** The nine records describe the runtime of the probe of 2026-04-17.
+> Claude Code 2.1.306 retired `TeamCreate` and `TeamDelete`, and a session has one implicit
+> team. AT-6 is `fixed`; the other eight are `wontfix`, not probed again on 2.1.306.
 
-- **AT-1** [No session resumption](issues/at-1-no-session-resumption.md) — status `documented`, opened 2026-04-17
-- **AT-2** [Task status lag](issues/at-2-task-status-lag.md) — severity `SEV-3`, status `documented`, opened 2026-04-17
-- **AT-3** [One team per session](issues/at-3-one-team-per-session.md) — status `documented`, opened 2026-04-17
-- **AT-4** [No leadership transfer](issues/at-4-no-leadership-transfer.md) — status `documented`, opened 2026-04-17
-- **AT-5** [Higher token costs](issues/at-5-higher-token-costs.md) — status `by-design`, opened 2026-04-17
-- **AT-6** [`TeamDelete` does NOT clean up after protocol shutdown](issues/at-6-teamdelete-does-not-clean-up-after-protocol-shutdown.md) — severity `SEV-2`, status `open`, opened 2026-04-17
-- **AT-7** [Async spawn ≠ sync return](issues/at-7-async-spawn-not-sync-return.md) — status `documented`, opened 2026-04-17
-- **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `documented`, opened 2026-04-17
-- **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `documented`, opened 2026-04-17
+- **AT-1** [No session resumption](issues/at-1-no-session-resumption.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-2** [Task status lag](issues/at-2-task-status-lag.md) — severity `SEV-3`, status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-3** [One team per session](issues/at-3-one-team-per-session.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-4** [No leadership transfer](issues/at-4-no-leadership-transfer.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-5** [Higher token costs](issues/at-5-higher-token-costs.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-6** [`TeamDelete` does NOT clean up after protocol shutdown](issues/at-6-teamdelete-does-not-clean-up-after-protocol-shutdown.md) — severity `SEV-2`, status `fixed`, opened 2026-04-17 · **fixed 2026-10-28** (Claude Code 2.1.306): the runtime retired `TeamDelete`
+- **AT-7** [Async spawn ≠ sync return](issues/at-7-async-spawn-not-sync-return.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-8** [Model inheritance inconsistent across agent types](issues/at-8-model-inheritance-inconsistent-across-agent-types.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
+- **AT-9** [Runtime sends structured JSON despite docs](issues/at-9-runtime-sends-structured-json-despite-docs.md) — status `wontfix`, opened 2026-04-17 · **closed 2026-10-28** (Claude Code 2.1.306): superseded by the single implicit team; not probed again
 
 ## archiving
 

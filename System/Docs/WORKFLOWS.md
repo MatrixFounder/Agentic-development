@@ -450,7 +450,7 @@ For critical system updates, follow this **Hybrid Verification Loop**:
 ### Two spawn layers
 
 - **Layer A — parallel `Agent` tool-use** (implemented, default). Orchestrator issues N parallel `Agent` calls in **one message**; each teammate runs synchronously and returns a result via `tool_result`. Used by `/vdd-multi`. Proven twice under smoke tests (Sonnet and Opus baselines).
-- **Layer B — native `TeamCreate` / `SendMessage`** (runtime probed v3.13.0; full workflow deferred). For scenarios requiring inter-teammate messaging mid-work. Probe confirmed core tools work but documented blocking gotchas in [docs/KNOWN_ISSUES.md](../../docs/KNOWN_ISSUES.md) — most notably `TeamDelete` fails to clean up after `shutdown_approved`. Reopens when a concrete peer-debate use case justifies the extra complexity.
+- **Layer B — named teammates and `SendMessage`** (full workflow deferred). For scenarios requiring inter-teammate messaging mid-work. The probe of v3.13.0 ran on `TeamCreate` and `TeamDelete`. Claude Code 2.1.306 retired both, and a session has one implicit team. The probe's records AT-1 to AT-9 in [docs/KNOWN_ISSUES.md](../../docs/KNOWN_ISSUES.md) are closed and were not probed again. Reopens when a concrete peer-debate use case justifies the extra complexity, and starts with a new probe.
 
 ### `/vdd-multi` parameter reference (v3.13.0)
 

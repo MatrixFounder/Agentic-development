@@ -27,7 +27,6 @@ import re
 import sys
 import tempfile
 import time
-import fcntl
 import os
 from pathlib import Path
 
@@ -35,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from feedback_lib import (atomic, body as body_mod, claims, filters, finding,
                           frontmatter, ids as ids_mod, inbox, journal,
-                          ledger_backlog, ledger_issues, mine as mine_mod)
+                          ledger_backlog, ledger_issues, locks, mine as mine_mod)
 from feedback_lib.config import load_config
 from feedback_lib.envelope import (EXIT_CONFIG, EXIT_FILING_CONFLICT, EXIT_OK,
                                    EXIT_UNEXPECTED, EXIT_USAGE, CliError,
@@ -58,11 +57,21 @@ def _parse_kv(pairs):
 
 def _read_maybe_stdin(spec):
     if spec == "-":
-        return sys.stdin.read()
+        # the bytes of stdin, as UTF-8 with an optional byte-order mark: Windows decodes a
+        # pipe in its code page (TASK 133 R7.3)
+        buffer = getattr(sys.stdin, "buffer", None)
+        if buffer is None:
+            return sys.stdin.read()
+        data = buffer.read()
+        try:
+            return data.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise CliError("stdin is not valid UTF-8 (byte %d: %s)" % (exc.start, exc.reason),
+                           code=EXIT_USAGE, err_type="UsageError")
     if spec.startswith("@"):
         path = Path(spec[1:])
         try:
-            return path.read_text(encoding="utf-8")
+            return path.read_text(encoding="utf-8-sig")
         except OSError as exc:
             raise CliError("cannot read %s: %s" % (path, exc),
                            code=EXIT_USAGE, err_type="UsageError")
@@ -95,9 +104,26 @@ def _parse_envelope(spec):
     return obj
 
 
+def _journal_after_write(cfg, event_type, subject, details=None):
+    """Journal *event_type* after a write of the command completed (TASK 133 R1.7).
+
+    A lock error of the journal, or a refusal of `open_state` (R3.2), does not undo
+    the write that came before it: the command prints one warning that names the
+    event and keeps its exit code.
+    """
+    try:
+        journal.append_event(cfg.journal_dir, event_type, subject, details)
+    except CliError as exc:
+        if exc.err_type not in ("LockTimeout", "LockError", "StateRefused"):
+            raise
+        sys.stderr.write("run-feedback: warning: %s was not journaled: %s\n"
+                         % (event_type, exc))
+
+
 def _emit(args, payload, human):
     if getattr(args, "json", False):
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        # ASCII on every platform (TASK 133 R7.1a, D8)
+        print(json.dumps(payload, ensure_ascii=True, indent=2))
     else:
         print(human)
 
@@ -138,8 +164,8 @@ def cmd_collect(args, cfg):
         exit_code=args.exit_code, error_envelope=envelope_obj,
         run=run_ctx, evidence=evidence, proposed=proposed)
     record, deduped = inbox.collect(cfg, record)
-    journal.append_event(
-        cfg.journal_dir,
+    _journal_after_write(
+        cfg,
         "finding_deduped" if deduped else "finding_collected",
         "%s %s" % (args.component, record["fingerprint"]),
         {"kind": args.kind, "sources": ",".join(record["sources"]),
@@ -239,7 +265,7 @@ def cmd_triage(args, cfg):
             "dup_candidates": _dup_candidates(record, issue_fps, titles),
         })
     if args.json:
-        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        print(json.dumps(rows, ensure_ascii=True, indent=2))
         return EXIT_OK
     if not rows:
         print("inbox is empty — nothing to triage")
@@ -502,13 +528,15 @@ def _consume_or_explain(cfg, path, record, new_status, filed_as):
     try:
         inbox.consume(cfg, path, record, new_status)
         return
-    except OSError as exc:
+    except (OSError, CliError) as exc:
+        # each failure of the move leaves the half-state, a refusal of a link included
+        # (TASK 133 R3.2, round 4 of stage 2, R4-1 and R4-2)
         try:
             record["status"] = new_status
             atomic.write_atomic(
                 path, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
             noted = "the finding was marked %s in place" % new_status
-        except OSError:
+        except (OSError, CliError):
             noted = ("the finding could NOT be marked %s and is still `new`"
                      % new_status)
         written = (filed_as or {}).get("path")
@@ -526,18 +554,29 @@ def _consume_or_explain(cfg, path, record, new_status, filed_as):
 
 
 def cmd_file(args, cfg):
+    # no link reaches a directory that the command reads or moves a finding in, checked before
+    # any read and any write: a refusal after the ledger write would leave a half-state
+    # (TASK 133 R3.2, round 3 of stage 2)
+    for directory in (cfg.inbox_dir, cfg.filed_dir, cfg.dismissed_dir):
+        atomic.check_state_dir(directory)
     path, record = inbox.resolve(cfg, args.finding)
     if record.get("status") != "new":
         raise CliError("finding %s is already %s"
                        % (record["finding_id"], record.get("status")),
                        code=EXIT_USAGE, err_type="UsageError")
+    # and the file that the move writes, before the ledger write (round 4 of stage 2, R4-1)
+    atomic.check_state_file(
+        Path(cfg.dismissed_dir if args.classification == "noise" else cfg.filed_dir)
+        / (record["finding_id"] + ".json"))
     subject = record.get("subject", {})
     lock_fd = None
     if not args.dry_run:
         cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
-        lock_fd = os.open(str(cfg.filing_lock), os.O_WRONLY | os.O_CREAT, 0o644)
-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        lock_fd = atomic.open_state(cfg.filing_lock, os.O_WRONLY | os.O_CREAT)
     try:
+        if lock_fd is not None:
+            # inside the `try`, so a lock error of Windows closes the descriptor (TASK 133 R1.5)
+            locks.acquire(lock_fd, cfg.filing_lock)
         if args.classification == "defect":
             _reject_inapplicable_flags(args)
             component = args.component or subject.get("component")
@@ -633,19 +672,20 @@ def cmd_file(args, cfg):
             if args.classification == "noise":
                 record["dismiss_reason"] = args.reason
                 _consume_or_explain(cfg, path, record, "dismissed", None)
-                journal.append_event(cfg.journal_dir, "finding_dismissed",
+                _journal_after_write(cfg, "finding_dismissed",
                                      "%s %s" % (record["fingerprint"],
                                                 args.reason))
             else:
                 record["filed_as"] = filed_as
                 _consume_or_explain(cfg, path, record, "filed", filed_as)
-                journal.append_event(
-                    cfg.journal_dir, "finding_filed",
+                _journal_after_write(
+                    cfg, "finding_filed",
                     "%s %s" % (filed_as.get("id") or "backlog",
                                record["finding_id"]),
                     {"ledger": filed_as["ledger"], "path": filed_as["path"]})
     finally:
         if lock_fd is not None:
+            locks.release(lock_fd)
             os.close(lock_fd)
     _emit(args, {"result": result, "filed_as": filed_as,
                  "dry_run": args.dry_run}, human)
@@ -668,7 +708,7 @@ def cmd_issues(args, cfg):
         auto_fixable=True if args.auto_fixable else None)
     records.sort(key=lambda r: (-r["severity_rank"], r.get("opened_at") or ""))
     if args.json:
-        print(json.dumps(records, ensure_ascii=False, indent=2))
+        print(json.dumps(records, ensure_ascii=True, indent=2))
     else:
         for rec in records:
             print("%-24s %-10s %-8s %s" % (rec["id"], rec["status"],
@@ -680,7 +720,7 @@ def cmd_issues(args, cfg):
 def cmd_claim(args, cfg):
     acquired, owner = claims.claim(cfg, args.run_id)
     if acquired:
-        journal.append_event(cfg.journal_dir, "retro_claimed", args.run_id)
+        _journal_after_write(cfg, "retro_claimed", args.run_id)
     _emit(args, {"acquired": acquired, "owner": owner},
           "retro %s (owner: %s)" % ("claimed" if acquired else "DENIED",
                                     owner))
@@ -690,7 +730,7 @@ def cmd_claim(args, cfg):
 def cmd_release(args, cfg):
     released = claims.release(cfg, args.run_id, force=args.force)
     if released:
-        journal.append_event(cfg.journal_dir, "retro_released", args.run_id)
+        _journal_after_write(cfg, "retro_released", args.run_id)
     _emit(args, {"released": released},
           "retro %s" % ("released" if released else "NOT released (foreign owner)"))
     return EXIT_OK if released else EXIT_CLAIM_DENIED
@@ -710,7 +750,7 @@ def cmd_mine(args, cfg):
             _, was_dup = inbox.collect(cfg, record)
             collected += 0 if was_dup else 1
             deduped += 1 if was_dup else 0
-        journal.append_event(cfg.journal_dir, "mine_run",
+        _journal_after_write(cfg, "mine_run",
                              "%d candidates" % len(emitted),
                              {**stats, "collected": collected,
                               "deduped": deduped})
@@ -725,6 +765,7 @@ def cmd_mine(args, cfg):
                    for r in emitted]}
     human = ["mine: %(files_scanned)d files scanned, "
              "%(files_skipped_active)d active skipped, "
+             "%(files_skipped_foreign)d of another root skipped, "
              "%(candidates)d candidates" % stats]
     for c in payload["candidates"]:
         human.append("  %(kind)s %(component)s ×%(count)s: %(message)s" % c)
@@ -1091,7 +1132,19 @@ def build_parser(argv=None):
     return parser
 
 
+def _reconfigure_streams():
+    """Escape what the stream cannot encode (TASK 133 R7.1, the rule of TASK 127 R2.2).
+
+    A pipe on Windows uses the code page of the system. A stream without
+    `reconfigure`, such as the `io.StringIO` of a test, stays as it is.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main(argv=None):
+    _reconfigure_streams()
     argv = argv if argv is not None else sys.argv[1:]
     parser = build_parser(argv)
     args = parser.parse_args(argv)

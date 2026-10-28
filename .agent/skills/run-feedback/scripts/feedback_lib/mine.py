@@ -2,8 +2,14 @@
 
 Claude Code shards transcripts per-cwd under ``~/.claude/projects/`` (a
 session launched inside ``skills/html`` lands in a DIFFERENT dir than one
-launched at the repo root), so discovery enumerates every project dir
-whose decoded path sits at or under the repo root.
+launched at the repo root). Claude Code 2.1.306 names that dir after the path:
+each UTF-16 code unit outside ``[A-Za-z0-9]`` becomes ``-``, and a name longer
+than 200 characters keeps its first 200, with ``-`` and a hash appended. The
+name cannot be decoded, so discovery takes each dir named as the root, or
+starting with that name and ``-``, comparing the first 200 characters, without
+letter case on Windows. A sibling such as ``<root>-old`` matches by name too, so
+each session file is read only when the first line of it that carries ``cwd``
+names the root or a path under it (TASK 133 R5).
 
 Deterministic, incremental (per-file byte offsets), and it shares the
 noise policy + fingerprint recipe with the PostToolUse hook so the same
@@ -17,10 +23,11 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 import time
 from pathlib import Path
 
-from . import atomic, filters, finding
+from . import atomic, filters, finding, locks
 from . import fingerprint as fp
 
 MINE_STATE_VERSION = 1
@@ -35,18 +42,93 @@ _FRUSTRATION_RE = re.compile(
     r"doesn'?t work|again\b|wtf|broken again)")
 
 
+_ALNUM = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+#: Claude Code cuts a longer name to this many characters and appends `-` and a hash.
+NAME_LIMIT = 200
+
+
 def encode_project_dir(path):
-    return re.sub(r"[/.]", "-", str(path))
+    """The name Claude Code 2.1.306 gives the transcript dir of *path* (TASK 133 R5.1).
+
+    Its rule is ``replace(/[^a-zA-Z0-9]/g, "-")`` over UTF-16 code units, so a character
+    outside the Basic Multilingual Plane, two code units, gives two ``-``.
+    """
+    return "".join(c if c in _ALNUM else ("--" if ord(c) > 0xFFFF else "-")
+                   for c in str(path))
 
 
 def default_transcript_dirs(repo_root, projects_dir=None):
+    return match_transcript_dirs(str(Path(repo_root).resolve()), projects_dir)
+
+
+def match_transcript_dirs(root_text, projects_dir=None):
+    """Each dir of *projects_dir* named as the root *root_text*, or starting with that
+    name and ``-`` (TASK 133 R5.2, R5.3).
+
+    A name longer than ``NAME_LIMIT`` is compared on its first ``NAME_LIMIT``
+    characters. On Windows the names are compared after ``str.casefold``: NTFS ignores
+    letter case, and the drive letter of the root may differ in case from the one that
+    Claude Code read.
+    """
     projects = Path(projects_dir or (Path.home() / ".claude" / "projects"))
     if not projects.is_dir():
         return []
-    prefix = encode_project_dir(Path(repo_root).resolve())
+    fold = str.casefold if locks.WINDOWS else (lambda text: text)
+    prefix = fold(encode_project_dir(root_text)[:NAME_LIMIT])
     return sorted(d for d in projects.iterdir()
-                  if d.is_dir() and (d.name == prefix
-                                     or d.name.startswith(prefix + "-")))
+                  if d.is_dir() and (fold(d.name) == prefix
+                                     or fold(d.name).startswith(prefix + "-")))
+
+
+def _open_regular(path):
+    """*path* open for reading, or None when it is no regular file (TASK 133 R5.4).
+
+    ``O_NONBLOCK`` keeps a FIFO, swapped in after the ``stat`` of the caller, from
+    blocking the open; ``os.fstat`` then decides on the descriptor itself.
+    """
+    fd = os.open(str(path), os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
+                 | getattr(os, "O_BINARY", 0))
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            os.close(fd)
+            return None
+        return os.fdopen(fd, "rb")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def _first_cwd(path):
+    """The ``cwd`` of the first line of *path* that carries one, or None."""
+    try:
+        handle = _open_regular(path)
+        if handle is None:
+            return None
+        with handle:
+            for raw in handle:
+                try:
+                    obj = json.loads(raw)
+                except ValueError:
+                    continue
+                if isinstance(obj, dict) and isinstance(obj.get("cwd"), str):
+                    return obj["cwd"]
+    except OSError:
+        return None
+    return None
+
+
+def _session_of_root(path, root_text):
+    """True when the first ``cwd`` of the session file *path* is the root or under it
+    (TASK 133 R5.4)."""
+    cwd = _first_cwd(path)
+    if cwd is None:
+        return False
+    # text only: a link is not resolved, so a `cwd` such as a UNC path opens no connection
+    here = os.path.normcase(os.path.normpath(cwd))
+    root = os.path.normcase(os.path.normpath(root_text))
+    if locks.WINDOWS:
+        here, root = here.casefold(), root.casefold()
+    return here == root or here.startswith(root.rstrip(os.sep) + os.sep)
 
 
 # --- incremental state -------------------------------------------------------
@@ -171,16 +253,25 @@ class SessionMiner:
 
 
 def mine(config, transcript_dirs=None, since=None, session=None,
-         include_active=False, frustration=False, limit=None, dry_run=False):
+         include_active=False, frustration=False, limit=None, dry_run=False,
+         projects_dir=None):
     """Scan transcripts, return (candidates_emitted, stats). Emission =
-    building a finding dict; the CLI decides to collect or just print."""
-    dirs = ([Path(d) for d in transcript_dirs] if transcript_dirs
-            else default_transcript_dirs(config.repo_root))
+    building a finding dict; the CLI decides to collect or just print.
+
+    *projects_dir* replaces ``~/.claude/projects`` for the default dirs (TASK 133
+    R5.6). With explicit *transcript_dirs* each file is read, as before; with the
+    default dirs a session file of another root is skipped (R5.4)."""
+    root_text = None
+    if transcript_dirs:
+        dirs = [Path(d) for d in transcript_dirs]
+    else:
+        root_text = str(Path(config.repo_root).resolve())
+        dirs = default_transcript_dirs(config.repo_root, projects_dir)
     state = load_state(config.mine_state_path)
     now = time.time()
     emitted = []
     stats = {"files_scanned": 0, "files_skipped_active": 0,
-             "bytes_read": 0, "candidates": 0}
+             "files_skipped_foreign": 0, "bytes_read": 0, "candidates": 0}
 
     for directory in dirs:
         for path in sorted(directory.glob("*.jsonl")):
@@ -188,10 +279,12 @@ def mine(config, transcript_dirs=None, since=None, session=None,
             if session and session_id != session:
                 continue
             try:
-                mtime = path.stat().st_mtime
-                size = path.stat().st_size
+                st = path.stat()
             except OSError:
                 continue
+            if not stat.S_ISREG(st.st_mode):
+                continue  # a FIFO or a device would block the read (round 1 of stage 2, L1)
+            mtime, size = st.st_mtime, st.st_size
             if (not include_active
                     and now - mtime < ACTIVE_SESSION_WINDOW_SEC):
                 stats["files_skipped_active"] += 1
@@ -204,8 +297,17 @@ def mine(config, transcript_dirs=None, since=None, session=None,
                 offset = 0  # truncated/rewritten: rescan
             if size == offset:
                 continue
+            if root_text is not None and not _session_of_root(path, root_text):
+                stats["files_skipped_foreign"] += 1
+                continue
             miner = SessionMiner(session_id, frustration=frustration)
-            with open(path, "rb") as handle:
+            try:
+                handle = _open_regular(path)
+            except OSError:
+                continue
+            if handle is None:
+                continue
+            with handle:
                 handle.seek(offset)
                 for raw in handle:
                     try:

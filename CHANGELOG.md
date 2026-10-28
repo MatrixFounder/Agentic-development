@@ -16,6 +16,66 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.51.0 — `run-feedback` runs on Windows, and `mine` finds the transcripts of its root (TASK 133)**
+
+#### Fixed
+
+- **`run-feedback` on Windows.** Four modules imported `fcntl` at their top, so every command
+  exited 1 on Windows and the retro claim of each workflow failed. Both hooks then wrote nothing
+  and said nothing. A new module `feedback_lib/locks.py` takes the lock:
+  - `fcntl.flock` on POSIX, as before;
+  - `msvcrt.locking` on byte 0 of the same file on Windows, 10 tries 1 second apart. A lock that
+    stays held exits 1 with `LockTimeout`; another lock error exits 1 with `LockError`.
+
+  A journal append that follows a completed write warns and keeps the command's exit code.
+- **The create-only write of a record** read `os.O_NOFOLLOW`, which Windows lacks, and `file`
+  ended in a traceback. Without the flag, a check after the open refuses a link or a swap at the
+  record path with exit 4. Each rollback, the one after a failed write of the index included,
+  removes the path only while it holds the file written. A failed `os.fdopen` closes the
+  descriptor before the rollback.
+- **Line ends and replaces on Windows.** Each `os.open` passes `O_BINARY`, and a record has LF line
+  ends. `os.replace` and `os.unlink` are tried 10 times while another process holds the file;
+  `write_atomic` refuses a junction as a link.
+- **Text encoding.** The CLI and both hooks escape what the stream cannot encode, and every JSON
+  output to a stream is ASCII. Stdin and the hook payloads are read as UTF-8, and the `git` call of
+  the config decodes UTF-8. A configured path with a root or a drive, such as `/tmp/x` or `C:docs`
+  on Windows, is refused as not relative.
+- **`mine` finds the transcripts of its root.** It named the transcript dir by replacing `/` and
+  `.` only, so it found none on Windows, nor for a root with a space, `_` or a Cyrillic letter.
+  It now follows Claude Code 2.1.306: each UTF-16 code unit outside `[A-Za-z0-9]` becomes `-`, and
+  a name longer than 200 characters is compared on its first 200. A session file is read only when
+  its first line that carries `cwd` names the root or a path under it. `mine()` takes
+  `projects_dir`.
+- **No link in the machine state, on POSIX too.** A symbolic link planted at
+  `.agent/feedback/retro_owner` made `claim` write a file outside the repository and `release`
+  truncate it. A link at a journal file, or at `journal/` or `inbox/`, made appends and findings
+  land outside. The claim, the journal and the two lock files now open through `open_state`. It
+  refuses, with exit 4, a link or a junction at the file or at its directory, a FIFO, and a second
+  hard link. It passes `O_NOFOLLOW` where the platform has it, and checks the identity on
+  Windows. Before its ledger write, `file` checks the directories that it moves the finding
+  between and the file that it moves it to. Each failure of the move marks the finding in place.
+- **`mine` skips a file that is no regular file**, and a file with no new bytes, before it reads
+  the `cwd` of the file; a FIFO among the session files blocked it.
+- **The residuals of TASK 132.** The inbound walk enters no entry that `lstat` gives as no
+  directory, and records it as `UNREADABLE`. A test pins that the check of `--from` and `--to`
+  runs before any operand, and the docstrings of `rebase_links.py` name a path that names a device.
+
+#### Changed
+
+- **CI runs the tests of `run-feedback`**, which no step ran before: the 333 of the base and the
+  tests of the Windows branches, in the tooling job and in both Windows jobs.
+- **JSON output on POSIX** prints a non-ASCII character as `\uXXXX`.
+
+#### Migration
+
+- A link, a FIFO or a second hard link at the claim or at a lock file of `.agent/feedback/` now
+  stops the command with exit 4. So does a link at `inbox/`, `filed/` or `dismissed/`, or at the
+  file that `file` moves a finding to. At a journal file or at `journal/`, such an entry stops
+  `journal`; each other command prints a warning and writes no journal entry. The SessionEnd hook
+  then writes no marker and mines nothing. Remove the entry, and run the command again.
+- A root that matched no transcript dir before, such as one with `_` or a space in its path, reads
+  its whole transcript history at its first `mine`. `--since` bounds it.
+
 ### **v3.50.2 — Layer B names the primitives of the current Claude Code, and the records of the April probe close**
 
 #### Fixed

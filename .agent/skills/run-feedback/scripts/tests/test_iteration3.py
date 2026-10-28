@@ -43,6 +43,23 @@ from feedback_lib import (body as body_mod, frontmatter,  # noqa: E402
                           markdown)
 from feedback_lib.envelope import CliError  # noqa: E402
 
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
+    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
+    import shutil
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
+
+
 ANCHOR = "<!-- feedback:discovered-issues -->"
 
 
@@ -610,6 +627,7 @@ class TestResidueFixes(unittest.TestCase):
         self.root = fx.make_repo(self._tmp.name)
 
     # R6 / sec-L-08
+    @NEEDS_SYMLINK
     def test_write_atomic_refuses_a_symlinked_target(self):
         from feedback_lib import atomic
         victim = fx.write(self.root / "victim.md", "original\n")
@@ -621,6 +639,8 @@ class TestResidueFixes(unittest.TestCase):
         self.assertEqual(victim.read_text(encoding="utf-8"), "original\n",
                          "wrote through the symlink")
 
+    @unittest.skipIf(os.name == "nt",
+                     "POSIX permission bits: os.chmod on Windows sets only the read-only flag")
     def test_write_atomic_preserves_mode_of_a_regular_file(self):
         from feedback_lib import atomic
         target = fx.write(self.root / "l.md", "a\n")
@@ -721,7 +741,7 @@ class TestResidueFixes(unittest.TestCase):
         fx.write(self.root / "docs" / "feedback" / "config.json",
                  json.dumps({"v": 1, "feedback_dir": ".agent/feedback"}))
         cfg = fx.load_cfg(self.root)
-        self.assertTrue(str(cfg.feedback_dir).endswith("/.agent/feedback"))
+        self.assertEqual(cfg.feedback_dir, self.root / ".agent" / "feedback")
         for bad in (".git/objects", ".claude/state", "System/state"):
             with self.subTest(bad=bad):
                 fx.write(self.root / "docs" / "feedback" / "config.json",

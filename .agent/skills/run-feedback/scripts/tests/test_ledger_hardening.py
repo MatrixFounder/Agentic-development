@@ -35,6 +35,23 @@ from feedback_lib import atomic, frontmatter, ledger_backlog  # noqa: E402
 from feedback_lib.config import load_config  # noqa: E402
 from feedback_lib.envelope import CliError  # noqa: E402
 
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
+    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
+    import shutil
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
+
+
 ANCHOR = "<!-- feedback:discovered-issues -->"
 
 
@@ -212,6 +229,7 @@ class TestIndexLineInjection(HardeningTestCase):
 class TestSymlinkAndCreateOnly(HardeningTestCase):
     """S-03."""
 
+    @NEEDS_SYMLINK
     def test_dangling_symlink_is_caught_by_the_lexists_precheck(self):
         """First of the two guards: the friendly error.
 
@@ -226,6 +244,10 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
         self.assertIn("already exists", str(ctx.exception))
         self.assertFalse(target.exists(), "write followed the symlink")
 
+    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW"),
+                         "pins the O_EXCL|O_NOFOLLOW refusal; without O_NOFOLLOW the identity "
+                         "check of TASK 133 R2.2 refuses (TC-RF10)")
+    @NEEDS_SYMLINK
     def test_the_kernel_flags_are_the_enforcing_guard_not_the_precheck(self):
         """V-22: the previous single test asserted only `code == 4`, which BOTH
         guards produce — so it could not tell whether `lexists` or
@@ -261,6 +283,7 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
         self.assertFalse(target.exists(),
                          "the symlink was followed outside the record dir")
 
+    @NEEDS_SYMLINK
     def test_symlinked_record_dir_is_refused_for_library_callers(self):
         """`is_symlink()` is defence-in-depth for a caller that hand-builds a
         config: through `Config` the path is already resolved, so a symlink
@@ -280,6 +303,7 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
         self.assertEqual(ctx.exception.code, 4)
         self.assertEqual(list(elsewhere.iterdir()), [])
 
+    @NEEDS_SYMLINK
     def test_record_dir_symlinked_out_of_the_repo_is_refused_by_containment(self):
         outside = Path(self._tmp.name).parent / ("outside-" + self.root.name)
         outside.mkdir()

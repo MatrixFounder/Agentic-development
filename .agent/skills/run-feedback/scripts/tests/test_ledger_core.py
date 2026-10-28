@@ -29,6 +29,23 @@ from feedback_lib import (frontmatter, ledger_backlog, ledger_core,  # noqa: E40
                           ledger_issues)
 from feedback_lib.envelope import CliError  # noqa: E402
 
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
+    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
+    import shutil
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
+
+
 ANCHOR = "<!-- feedback:discovered-issues -->"
 
 
@@ -129,6 +146,7 @@ class GuardInventory(unittest.TestCase):
         for name, exc in verdicts.items():
             self.assertIn("already exists", str(exc), name)
 
+    @NEEDS_SYMLINK
     def test_a_dangling_symlink_at_the_record_path_is_refused(self):
         def plant(record_dir, _index):
             record_dir.mkdir(parents=True, exist_ok=True)
@@ -142,6 +160,10 @@ class GuardInventory(unittest.TestCase):
             self.assertFalse((self.root / ("PWNED-" + slug)).exists(),
                              "the symlink was followed")
 
+    @NEEDS_SYMLINK
+    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW"),
+                         "pins the O_EXCL|O_NOFOLLOW refusal; without O_NOFOLLOW the identity "
+                         "check of TASK 133 R2.2 refuses (TC-RF10)")
     def test_the_kernel_flags_refuse_when_the_precheck_is_bypassed(self):
         """O_EXCL|O_NOFOLLOW is the enforcing guard; the pre-check is the message.
         Neutralize the pre-check (as a TOCTOU race would) and the kernel must still
@@ -160,6 +182,7 @@ class GuardInventory(unittest.TestCase):
                 self.assertIn("appeared while filing", str(ctx.exception))
                 self.assertFalse(target.exists())
 
+    @NEEDS_SYMLINK
     def test_a_symlinked_record_dir_is_refused_for_library_callers(self):
         """`is_symlink()` is defence-in-depth for a caller that hand-builds a
         config: through `Config` the path is already RESOLVED, so a symlink
@@ -305,6 +328,7 @@ class GuardInventory(unittest.TestCase):
 
     # --- records-dir TOCTOU (sec-L-07) ------------------------------------
 
+    @NEEDS_SYMLINK
     def test_a_path_component_swapped_after_validation_is_refused(self):
         """sec-L-07, end to end. Two defences stack here and the test says which:
 
@@ -333,6 +357,7 @@ class GuardInventory(unittest.TestCase):
                     docs.unlink()
                     (self.root / "docs-real").rename(docs)
 
+    @NEEDS_SYMLINK
     def test_the_core_refuses_a_records_dir_whose_realpath_moved(self):
         """sec-L-07, the core guard in isolation — the case `Config` cannot catch
         because the caller already holds a resolved path. `O_NOFOLLOW` sees only

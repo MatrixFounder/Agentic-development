@@ -11,9 +11,31 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
+def _read_payload():
+    """The JSON payload of stdin, read as UTF-8 bytes with an optional byte-order mark.
+
+    A pipe of Windows decodes text in its code page (TASK 133 R7.2). Raises
+    `ValueError` for bytes that are not UTF-8 or text that is not JSON.
+    """
+    buffer = getattr(sys.stdin, "buffer", None)
+    raw = buffer.read() if buffer is not None else sys.stdin.read()
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8-sig")
+    return json.loads(raw)
+
+
+def _reconfigure_streams():
+    """Escape what the stream cannot encode (TASK 133 R7.1); a stream without
+    `reconfigure` stays as it is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main():
+    _reconfigure_streams()
     try:
-        payload = json.load(sys.stdin)
+        payload = _read_payload()
     except (ValueError, OSError):
         payload = {}
     from feedback_lib import inbox, journal

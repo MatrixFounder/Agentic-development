@@ -1,0 +1,2953 @@
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/atomic.py b/.agent/skills/run-feedback/scripts/feedback_lib/atomic.py
+index 79c6910..f5e3c75 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/atomic.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/atomic.py
+@@ -22,13 +22,137 @@ rather than implied, because the module it replaced claimed more than it did.
+ 
+ from __future__ import annotations
+ 
++import errno
+ import os
+ import stat
+ import tempfile
++import time
+ from pathlib import Path
+ 
++from . import locks
+ from .envelope import EXIT_FILING_CONFLICT, CliError
+ 
++#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
++#: R2.2, TASK 131 R1.3).
++_NAME_SURROGATE = 0x20000000
++
++
++def is_link(st):
++    """True for a symbolic link, or a reparse point whose tag is a name surrogate (a junction).
++
++    Both attributes of Windows are read with `getattr`: only Windows sets them. A cloud
++    placeholder is a reparse point with no name surrogate, and is no link.
++    """
++    return stat.S_ISLNK(st.st_mode) or bool(
++        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
++        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
++
++
++def check_state_dir(directory):
++    """Refuse a directory of the machine state that is a link or a junction.
++
++    The files of the state lie in ``.agent/feedback/``, which comes resolved from the
++    config, or in one directory under it, such as ``journal/`` or ``inbox/``. A link
++    at such a directory made ``collect`` write outside the repository (TASK 133 R3.2,
++    round 2 of stage 2, H1). A link above ``.agent/feedback/``, such as ``/var`` of
++    macOS, is the system's and stays allowed.
++    """
++    try:
++        st = os.lstat(str(directory))
++    except FileNotFoundError:
++        return
++    if is_link(st) or not stat.S_ISDIR(st.st_mode):
++        raise _state_refused(directory)
++
++
++def check_state_file(path):
++    """Refuse a file of the machine state that a later write would replace, when it is no
++    regular file under ``os.lstat``: a link, a junction, a directory or a FIFO.
++
++    `write_atomic` refuses a link at its target only when it runs. For the move of `file`
++    that is after the ledger write, and a refusal there left a half-state (TASK 133 R3.2,
++    round 4 of stage 2, R4-1).
++    """
++    try:
++        st = os.lstat(str(path))
++    except FileNotFoundError:
++        return
++    if not stat.S_ISREG(st.st_mode):
++        raise _state_refused(path)
++
++
++#: The errors of an open with `O_NOFOLLOW` that a link at the name gives: Linux and macOS
++#: give ELOOP, FreeBSD EMLINK, NetBSD EFTYPE.
++_LINK_ERRNOS = {errno.ELOOP, errno.EMLINK} | ({errno.EFTYPE} if hasattr(errno, "EFTYPE") else set())
++
++
++def open_state(path, flags, mode=0o644):
++    """Open a file of the machine state; refuse what would let a write leave it.
++
++    The claim, the journal and the two lock files of run-feedback live under the
++    gitignored ``.agent/feedback/`` of a repository the agent may not trust. A link
++    planted at such a name made ``claim`` write a file outside the repository, and
++    ``release`` truncate it; a link at ``inbox/`` made ``collect`` write there, and a
++    FIFO made it wait (TASK 133 R3.2). The refusals, each exit 4, writing nothing:
++    a directory of the path that a link reaches; a link at the name (``O_NOFOLLOW``
++    where ``os`` has it, else ``os.lstat`` before and after the open, and the
++    identity of the descriptor after it); a file that is no regular file
++    (``O_NONBLOCK``, and ``os.fstat``); a file with a second hard link.
++    """
++    check_state_dir(os.path.dirname(str(path)))
++    nofollow = getattr(os, "O_NOFOLLOW", None)
++    if nofollow is None:
++        try:
++            if is_link(os.lstat(str(path))):
++                raise _state_refused(path)
++        except FileNotFoundError:
++            pass
++    try:
++        fd = os.open(str(path), flags | (nofollow or 0) | getattr(os, "O_NONBLOCK", 0)
++                     | getattr(os, "O_BINARY", 0), mode)
++    except OSError as exc:
++        if (nofollow is not None and exc.errno in _LINK_ERRNOS) or exc.errno == errno.ENXIO:
++            raise _state_refused(path)
++        raise
++    try:
++        st = os.fstat(fd)
++        same = True
++        if nofollow is None:
++            lst = os.lstat(str(path))
++            same = (lst.st_dev, lst.st_ino) == (st.st_dev, st.st_ino) and not is_link(lst)
++    except BaseException:
++        os.close(fd)
++        raise
++    if not (same and stat.S_ISREG(st.st_mode) and st.st_nlink == 1):
++        os.close(fd)
++        raise _state_refused(path)
++    return fd
++
++
++def _state_refused(path):
++    return CliError("refusing %s: a link, a junction or a file that is not regular stands on "
++                    "the path, or the file has a second hard link" % path,
++                    code=EXIT_FILING_CONFLICT, err_type="StateRefused",
++                    remediation="run-feedback keeps its own state under .agent/feedback/ and "
++                                "writes nothing through a link there — remove the entry")
++
++
++def retried(call, *args):
++    """Run *call*; on Windows try it 10 times, 0.1 seconds apart, while it raises
++    `PermissionError` (TASK 133 R4, the rule of TASK 128 for `update_state.py`).
++
++    On Windows `os.replace` and `os.unlink` fail while another process holds the file open
++    without delete sharing, such as a scanner or an editor. The last error propagates.
++    """
++    tries = 10 if locks.WINDOWS else 1
++    for attempt in range(tries):
++        try:
++            return call(*args)
++        except PermissionError:
++            if attempt == tries - 1:
++                raise
++            time.sleep(0.1)
++
+ 
+ def read_verbatim(path, encoding="utf-8"):
+     """Read a text file WITHOUT newline translation.
+@@ -75,7 +199,7 @@ def write_atomic(path, text, encoding="utf-8", newline="", durable=True):
+     except OSError:
+         info = None
+     if info is not None:
+-        if stat.S_ISLNK(info.st_mode):
++        if is_link(info):
+             raise CliError(
+                 "refusing to replace %s: it is a symlink" % path,
+                 code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+@@ -94,10 +218,10 @@ def write_atomic(path, text, encoding="utf-8", newline="", durable=True):
+             os.chmod(tmp_name, mode)
+         else:
+             os.chmod(tmp_name, 0o644 & ~_umask())
+-        os.replace(tmp_name, str(path))
++        retried(os.replace, tmp_name, str(path))
+     except BaseException:
+         try:
+-            os.unlink(tmp_name)
++            retried(os.unlink, tmp_name)
+         except OSError:
+             pass
+         raise
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/claims.py b/.agent/skills/run-feedback/scripts/feedback_lib/claims.py
+index fef623b..d178942 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/claims.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/claims.py
+@@ -1,7 +1,7 @@
+ """Deterministic retro ownership.
+ 
+ The "skip if sub-workflow" rule cannot be enforced by prose (workflows
+-have no runtime nesting signal), so ownership is a flock-guarded claim
++have no runtime nesting signal), so ownership is a lock-guarded claim
+ file: the FIRST workflow of a run claims it; nested workflows see a live
+ foreign claim and skip their retro step; the owner releases at the end.
+ Stale claims (default TTL 24h) are silently overwritable so a crashed run
+@@ -10,18 +10,21 @@ never bricks future retros.
+ 
+ from __future__ import annotations
+ 
+-import fcntl
+ import json
+ import os
+ import time
+ from pathlib import Path
+ 
++from . import atomic, locks
++
+ DEFAULT_TTL_HOURS = 24
+ 
+ 
+ def _locked(path):
++    atomic.check_state_dir(path.parent)  # before `mkdir` meets a dangling link (R3.2)
+     path.parent.mkdir(parents=True, exist_ok=True)
+-    return os.open(str(path), os.O_RDWR | os.O_CREAT, 0o644)
++    # no link and no second hard link at the claim (TASK 133 R3.2)
++    return atomic.open_state(path, os.O_RDWR | os.O_CREAT)
+ 
+ 
+ def _read(fd):
+@@ -53,7 +56,7 @@ def claim(config, run_id, ttl_hours=DEFAULT_TTL_HOURS):
+     path = Path(config.retro_owner_path)
+     fd = _locked(path)
+     try:
+-        fcntl.flock(fd, fcntl.LOCK_EX)
++        locks.acquire(fd, path)
+         current = _read(fd)
+         now = time.time()
+         if current:
+@@ -65,6 +68,7 @@ def claim(config, run_id, ttl_hours=DEFAULT_TTL_HOURS):
+         _write(fd, {"run_id": run_id, "claimed_at": now})
+         return True, run_id
+     finally:
++        locks.release(fd)
+         os.close(fd)
+ 
+ 
+@@ -75,12 +79,13 @@ def release(config, run_id, force=False):
+         return True
+     fd = _locked(path)
+     try:
+-        fcntl.flock(fd, fcntl.LOCK_EX)
++        locks.acquire(fd, path)
+         current = _read(fd)
+         if current and not force and current.get("run_id") != run_id:
+             return False
+         os.ftruncate(fd, 0)
+     finally:
++        locks.release(fd)
+         os.close(fd)
+     try:
+         path.unlink()
+@@ -95,7 +100,8 @@ def current(config):
+         return None
+     fd = _locked(path)
+     try:
+-        fcntl.flock(fd, fcntl.LOCK_SH)
++        locks.acquire(fd, path, shared=True)
+         return _read(fd)
+     finally:
++        locks.release(fd)
+         os.close(fd)
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/config.py b/.agent/skills/run-feedback/scripts/feedback_lib/config.py
+index c09067a..f2a6843 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/config.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/config.py
+@@ -99,7 +99,8 @@ def main_worktree_root(repo_root):
+     try:
+         out = subprocess.run(
+             ["git", "rev-parse", "--git-common-dir"],
+-            cwd=str(repo_root), capture_output=True, text=True, timeout=2)
++            cwd=str(repo_root), capture_output=True, encoding="utf-8",
++            errors="surrogateescape", timeout=2)
+         if out.returncode == 0:
+             common = Path(out.stdout.strip())
+             if not common.is_absolute():
+@@ -125,7 +126,10 @@ def _contained(root, raw, key, source, ledger=True):
+                        "%r) in %s" % (key, raw, source or "built-in defaults"),
+                        code=EXIT_CONFIG, err_type="ConfigError")
+     candidate = Path(raw)
+-    if candidate.is_absolute():
++    # TASK 133 R4.5: an anchor is a root or a drive. On Windows `/tmp/x` has the anchor
++    # `\` and `C:docs` the anchor `C:`, and neither is absolute; on POSIX a path has
++    # an anchor exactly when it is absolute.
++    if candidate.is_absolute() or candidate.anchor:
+         raise CliError("config key %r must be RELATIVE to the repo root (got "
+                        "%r) in %s" % (key, raw, source or "built-in defaults"),
+                        code=EXIT_CONFIG, err_type="ConfigError",
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/envelope.py b/.agent/skills/run-feedback/scripts/feedback_lib/envelope.py
+index 59c9f70..2072a8d 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/envelope.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/envelope.py
+@@ -56,7 +56,9 @@ def emit_json_error(message, code=EXIT_UNEXPECTED, err_type=None,
+         payload["type"] = str(err_type)
+     if details:
+         payload["details"] = details
+-    stream.write(json.dumps(payload, ensure_ascii=False) + "\n")
++    # ASCII on every platform: a code page of Windows cannot encode each character, and
++    # `backslashreplace` writes escapes that JSON does not allow (TASK 133 R7.1a)
++    stream.write(json.dumps(payload, ensure_ascii=True) + "\n")
+     stream.flush()
+     return int(code)
+ 
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/inbox.py b/.agent/skills/run-feedback/scripts/feedback_lib/inbox.py
+index 8b14116..412299d 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/inbox.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/inbox.py
+@@ -6,12 +6,11 @@ told to treat ``collect`` as the sole entry point.
+ 
+ from __future__ import annotations
+ 
+-import fcntl
+ import json
+ import os
+ from pathlib import Path
+ 
+-from . import atomic, finding as finding_mod
++from . import atomic, finding as finding_mod, locks
+ from .envelope import EXIT_NOT_FOUND, EXIT_USAGE, CliError
+ 
+ 
+@@ -124,15 +123,16 @@ def resolve(config, ref):
+ def collect(config, record):
+     """Idempotent intake: dedup-merge against the inbox by fingerprint.
+ 
+-    Returns (record, deduped). Serialized by a collect-scoped flock so two
++    Returns (record, deduped). Serialized by a collect-scoped lock of `locks` so two
+     concurrent captures of the same failure cannot race the merge.
+     """
+     inbox = Path(config.inbox_dir)
++    atomic.check_state_dir(inbox)  # before `mkdir` meets a dangling link (R3.2)
+     inbox.mkdir(parents=True, exist_ok=True)
+     lock_path = inbox / ".collect.lock"
+-    fd = os.open(str(lock_path), os.O_WRONLY | os.O_CREAT, 0o644)
++    fd = atomic.open_state(lock_path, os.O_WRONLY | os.O_CREAT)
+     try:
+-        fcntl.flock(fd, fcntl.LOCK_EX)
++        locks.acquire(fd, lock_path)
+         existing_path, existing = find_by_fingerprint(inbox,
+                                                       record["fingerprint"])
+         if existing is not None:
+@@ -145,6 +145,7 @@ def collect(config, record):
+         finding_mod.save(inbox, record)
+         return record, False
+     finally:
++        locks.release(fd)
+         os.close(fd)
+ 
+ 
+@@ -152,11 +153,15 @@ def consume(config, path, record, new_status):
+     """Move a finding out of the inbox to filed/ or dismissed/."""
+     dest_dir = {"filed": Path(config.filed_dir),
+                 "dismissed": Path(config.dismissed_dir)}[new_status]
++    # no link reaches the directory of the moved finding, dangling included (TASK 133 R3.2)
++    atomic.check_state_dir(dest_dir)
+     dest_dir.mkdir(parents=True, exist_ok=True)
++    atomic.check_state_dir(dest_dir)
+     record["status"] = new_status
+     finding_mod.save(dest_dir, record)
+     try:
+-        os.unlink(str(path))
++        # on Windows a removal that another process blocks is tried 10 times (TASK 133 R4.2)
++        atomic.retried(os.unlink, str(path))
+     except FileNotFoundError:
+         pass
+     return dest_dir / (record["finding_id"] + ".json")
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/journal.py b/.agent/skills/run-feedback/scripts/feedback_lib/journal.py
+index d85681c..91f99e4 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/journal.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/journal.py
+@@ -6,21 +6,22 @@ entry headers::
+     ## [YYYY-MM-DD HH:MM:SS] <event_type> | <subject>
+     - key: value
+ 
+-Atomic under concurrency: O_APPEND + flock(LOCK_EX) + full-write loop +
+-fsync (pattern proven by the obsidian-llm-wiki log writer; implemented
+-fresh here — stdlib only). Lives under the gitignored ``.agent/feedback/``
+-so appends never dirty the git tree (heal-issues preconditions depend on
+-this).
++Atomic under concurrency: O_APPEND + the exclusive lock of `locks` (`fcntl.flock`
++on POSIX, `msvcrt.locking` on Windows) + full-write loop + fsync (pattern proven
++by the obsidian-llm-wiki log writer; implemented fresh here — stdlib only). Lives
++under the gitignored ``.agent/feedback/`` so appends never dirty the git tree
++(heal-issues preconditions depend on this).
+ """
+ 
+ from __future__ import annotations
+ 
+-import fcntl
+ import os
+ import re
+ import time
+ from pathlib import Path
+ 
++from . import atomic, locks
++
+ _HEADER_SANITIZE_RE = re.compile(r"[\r\n|]+")
+ _EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9_\-]*$")
+ 
+@@ -60,12 +61,14 @@ def append_event(journal_dir, event_type, subject, details=None, ts=None):
+     if not _EVENT_TYPE_RE.match(event_type):
+         raise ValueError("invalid event_type: %r" % event_type)
+     path = journal_path(journal_dir, ts)
++    # a link at the directory, dangling included, is refused before `mkdir` meets it (R3.2)
++    atomic.check_state_dir(path.parent)
+     path.parent.mkdir(parents=True, exist_ok=True)
+     data = render_entry(event_type, subject, details, ts).encode("utf-8")
+ 
+-    fd = os.open(str(path), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
++    fd = atomic.open_state(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
+     try:
+-        fcntl.flock(fd, fcntl.LOCK_EX)
++        locks.acquire(fd, path)
+         offset = os.lseek(fd, 0, os.SEEK_END)
+         view = memoryview(data)
+         while view:
+@@ -74,5 +77,6 @@ def append_event(journal_dir, event_type, subject, details=None, ts=None):
+         os.fsync(fd)
+         return offset
+     finally:
+-        # closing releases the flock
++        # closing releases the lock; `release` unlocks first where the platform asks
++        locks.release(fd)
+         os.close(fd)
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/ledger_core.py b/.agent/skills/run-feedback/scripts/feedback_lib/ledger_core.py
+index 7766a62..391a5df 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/ledger_core.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/ledger_core.py
+@@ -37,7 +37,9 @@ reviewable, namely that the whole pre-existing test suite passes **unmodified**.
+ 
+ from __future__ import annotations
+ 
++import errno
+ import os
++import stat
+ import time
+ from pathlib import Path
+ 
+@@ -126,18 +128,73 @@ def _assert_records_dir_intact(reg):
+                         "since the config was validated; nothing was written")
+ 
+ 
+-def _rollback(record_path):
++#: The identity of a record whose check has not returned: a rollback removes nothing.
++_UNKNOWN = object()
++
++
++def _rollback(record_path, ident=None):
+     """Remove a just-written record so a half-state never survives.
+ 
+     ``os.unlink`` on the path itself (never a symlink target), and reports nothing:
+-    this runs while another exception is propagating.
++    this runs while another exception is propagating. With *ident*, the
++    ``(st_dev, st_ino)`` of the descriptor that wrote the record, the path is removed
++    only while it still holds that file (TASK 133 R2.3). On Windows a removal that
++    another process blocks is tried 10 times, and then left (R4.2).
+     """
++    if ident is _UNKNOWN:
++        return
++    if ident is not None:
++        try:
++            st = os.lstat(str(record_path))
++        except OSError:
++            return
++        if (st.st_dev, st.st_ino) != ident or atomic.is_link(st):
++            return
+     try:
+-        os.unlink(str(record_path))
++        atomic.retried(os.unlink, str(record_path))
+     except OSError:
+         pass
+ 
+ 
++def _close_quietly(fd):
++    """Close *fd* before a rollback; ``EBADF`` means it is closed already (TASK 133 R2.5).
++
++    On Windows a file that is open cannot be removed, so a descriptor that leaked
++    past a failed ``os.fdopen`` would leave the record behind.
++    """
++    try:
++        os.close(fd)
++    except OSError as exc:
++        if exc.errno != errno.EBADF:
++            raise
++
++
++def _check_written(record_path, fd):
++    """Refuse a record path that no longer holds the file of *fd* (TASK 133 R2.2).
++
++    The branch for a platform without ``O_NOFOLLOW``, which Windows lacks: after the
++    create-only open, the descriptor must be a regular file with one hard link, and
++    the path must be no link and give the descriptor's identity. Returns that
++    identity. A refusal closes *fd*, removes the path only while it holds that file,
++    and raises exit 4.
++    """
++    st = os.fstat(fd)
++    ident = (st.st_dev, st.st_ino)
++    try:
++        lst = os.lstat(str(record_path))
++    except OSError:
++        lst = None
++    if (stat.S_ISREG(st.st_mode) and st.st_nlink == 1 and lst is not None
++            and (lst.st_dev, lst.st_ino) == ident and not atomic.is_link(lst)):
++        return ident
++    _close_quietly(fd)
++    _rollback(record_path, ident)
++    raise CliError("the record path changed during the write: %s" % record_path,
++                   code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
++                   remediation="a link or another file took the record path after its "
++                               "create-only open; the file at the path is left as it is")
++
++
+ def file_record(reg, config, record_id, slug, title, body, status,
+                 rank=None, opened_at=None, extensions=None, dry_run=False,
+                 meta_kwargs=None, line_kwargs=None):
+@@ -202,12 +259,26 @@ def file_record(reg, config, record_id, slug, title, body, status,
+ 
+     _assert_records_dir_intact(reg)
+     reg.records_dir.mkdir(parents=True, exist_ok=True)
++    ident = None
++    fd = handle = None
+     try:
+         # O_EXCL|O_NOFOLLOW: create-only enforced by the kernel, and a symlink at
+-        # this path is refused rather than followed (S-03)
++        # this path is refused rather than followed (S-03). Windows has no
++        # O_NOFOLLOW: there the identity check of `_check_written` refuses a link
++        # or a swap (TASK 133 R2.2). O_BINARY keeps the C runtime of Windows from
++        # writing CR LF; the text layer writes LF on every platform (R2.4, R3).
++        nofollow = getattr(os, "O_NOFOLLOW", None)
++        if nofollow is None:
++            # until `_check_written` returns, the path may hold another file: a rollback
++            # removes nothing, an error of the open included (R2.3)
++            ident = _UNKNOWN
+         fd = os.open(str(record_path),
+-                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
++                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | (nofollow or 0)
++                     | getattr(os, "O_BINARY", 0), 0o644)
++        if nofollow is None:
++            ident = _check_written(record_path, fd)
++        handle = os.fdopen(fd, "w", encoding="utf-8", newline="\n")
++        with handle:
+             handle.write(record_text)
+     except FileExistsError:
+         raise CliError(
+@@ -216,12 +287,18 @@ def file_record(reg, config, record_id, slug, title, body, status,
+             code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+             remediation="another process filed this slug, or a symlink was "
+                         "planted at that path — re-run to get a fresh id")
++    except CliError:
++        raise
+     except BaseException as exc:
+         # ANY failure, not just OSError: a KeyboardInterrupt or MemoryError
+         # mid-write left a truncated orphan record with no index line while the
+         # docstring claimed no half-state could exist (iteration 2 V1 on one
+         # writer; iteration 3 L-4 on the other — now impossible to have on one)
+-        _rollback(record_path)
++        if fd is not None and handle is None:
++            # `os.fdopen` failed, or no text layer took the descriptor: close it before the
++            # rollback, since Windows removes no file that is open (R2.5)
++            _close_quietly(fd)
++        _rollback(record_path, ident)
+         if not isinstance(exc, OSError):
+             raise
+         raise CliError("could not write the %s record %s (%s)"
+@@ -233,6 +310,6 @@ def file_record(reg, config, record_id, slug, title, body, status,
+         reg.index_path.parent.mkdir(parents=True, exist_ok=True)
+         reg.write_index(reg.index_path, index_after)
+     except BaseException:
+-        _rollback(record_path)
++        _rollback(record_path, ident)
+         raise
+     return result
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/locks.py b/.agent/skills/run-feedback/scripts/feedback_lib/locks.py
+new file mode 100644
+index 0000000..5efa903
+--- /dev/null
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/locks.py
+@@ -0,0 +1,64 @@
++"""File locks of run-feedback on POSIX and Windows (TASK 133 R1).
++
++POSIX takes `fcntl.flock` on the descriptor, with no time limit, and the close of the descriptor
++releases it, as before TASK 133. Windows has no `fcntl`: there `acquire` locks byte 0 of the same
++file with `msvcrt.locking`, which tries 10 times, 1 second apart, and `release` unlocks that byte
++before the close. A lock of `msvcrt` is mandatory and has no shared form, so a shared lock is
++exclusive there.
++
++`WINDOWS` is true exactly when `fcntl` does not import. The modules that act otherwise on Windows
++read it when they run, so a test sets it.
++"""
++
++from __future__ import annotations
++
++import os
++
++from .envelope import EXIT_UNEXPECTED, CliError
++
++try:
++    import fcntl
++except ImportError:
++    fcntl = None
++    try:
++        import msvcrt
++    except ImportError:
++        msvcrt = None
++else:
++    msvcrt = None
++
++WINDOWS = fcntl is None
++
++#: The errno of `msvcrt.locking` after its 10 tries: `EDEADLOCK` of the Universal C Runtime.
++#: `errno.EDEADLOCK` is 35 on Linux and absent on macOS, so the value is held here.
++EDEADLOCK = 36
++
++
++def acquire(fd, path, shared=False):
++    """Take the lock of *fd*, the descriptor of *path*; raise `CliError` when it cannot."""
++    if fcntl is not None:
++        fcntl.flock(fd, fcntl.LOCK_SH if shared else fcntl.LOCK_EX)
++        return
++    if msvcrt is None:
++        raise CliError("cannot lock %s: neither fcntl nor msvcrt imports on this platform"
++                       % path, code=EXIT_UNEXPECTED, err_type="LockError")
++    os.lseek(fd, 0, os.SEEK_SET)
++    try:
++        msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
++    except OSError as exc:
++        if exc.errno == EDEADLOCK:
++            raise CliError("timed out waiting for the lock of %s: another run-feedback process "
++                           "holds it" % path, code=EXIT_UNEXPECTED, err_type="LockTimeout")
++        raise CliError("cannot lock %s: %s" % (path, exc.strerror or exc),
++                       code=EXIT_UNEXPECTED, err_type="LockError")
++
++
++def release(fd):
++    """Release the lock of *fd* before its close; on POSIX the close releases it."""
++    if fcntl is not None or msvcrt is None:
++        return
++    try:
++        os.lseek(fd, 0, os.SEEK_SET)
++        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
++    except OSError:
++        pass  # the close of the descriptor releases the lock
+diff --git a/.agent/skills/run-feedback/scripts/feedback_lib/mine.py b/.agent/skills/run-feedback/scripts/feedback_lib/mine.py
+index e1679bf..e8a8259 100644
+--- a/.agent/skills/run-feedback/scripts/feedback_lib/mine.py
++++ b/.agent/skills/run-feedback/scripts/feedback_lib/mine.py
+@@ -2,8 +2,14 @@
+ 
+ Claude Code shards transcripts per-cwd under ``~/.claude/projects/`` (a
+ session launched inside ``skills/html`` lands in a DIFFERENT dir than one
+-launched at the repo root), so discovery enumerates every project dir
+-whose decoded path sits at or under the repo root.
++launched at the repo root). Claude Code 2.1.306 names that dir after the path:
++each UTF-16 code unit outside ``[A-Za-z0-9]`` becomes ``-``, and a name longer
++than 200 characters keeps its first 200, with ``-`` and a hash appended. The
++name cannot be decoded, so discovery takes each dir named as the root, or
++starting with that name and ``-``, comparing the first 200 characters, without
++letter case on Windows. A sibling such as ``<root>-old`` matches by name too, so
++each session file is read only when the first line of it that carries ``cwd``
++names the root or a path under it (TASK 133 R5).
+ 
+ Deterministic, incremental (per-file byte offsets), and it shares the
+ noise policy + fingerprint recipe with the PostToolUse hook so the same
+@@ -17,10 +23,11 @@ from __future__ import annotations
+ import json
+ import os
+ import re
++import stat
+ import time
+ from pathlib import Path
+ 
+-from . import atomic, filters, finding
++from . import atomic, filters, finding, locks
+ from . import fingerprint as fp
+ 
+ MINE_STATE_VERSION = 1
+@@ -35,18 +42,93 @@ _FRUSTRATION_RE = re.compile(
+     r"doesn'?t work|again\b|wtf|broken again)")
+ 
+ 
++_ALNUM = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
++#: Claude Code cuts a longer name to this many characters and appends `-` and a hash.
++NAME_LIMIT = 200
++
++
+ def encode_project_dir(path):
+-    return re.sub(r"[/.]", "-", str(path))
++    """The name Claude Code 2.1.306 gives the transcript dir of *path* (TASK 133 R5.1).
++
++    Its rule is ``replace(/[^a-zA-Z0-9]/g, "-")`` over UTF-16 code units, so a character
++    outside the Basic Multilingual Plane, two code units, gives two ``-``.
++    """
++    return "".join(c if c in _ALNUM else ("--" if ord(c) > 0xFFFF else "-")
++                   for c in str(path))
+ 
+ 
+ def default_transcript_dirs(repo_root, projects_dir=None):
++    return match_transcript_dirs(str(Path(repo_root).resolve()), projects_dir)
++
++
++def match_transcript_dirs(root_text, projects_dir=None):
++    """Each dir of *projects_dir* named as the root *root_text*, or starting with that
++    name and ``-`` (TASK 133 R5.2, R5.3).
++
++    A name longer than ``NAME_LIMIT`` is compared on its first ``NAME_LIMIT``
++    characters. On Windows the names are compared after ``str.casefold``: NTFS ignores
++    letter case, and the drive letter of the root may differ in case from the one that
++    Claude Code read.
++    """
+     projects = Path(projects_dir or (Path.home() / ".claude" / "projects"))
+     if not projects.is_dir():
+         return []
+-    prefix = encode_project_dir(Path(repo_root).resolve())
++    fold = str.casefold if locks.WINDOWS else (lambda text: text)
++    prefix = fold(encode_project_dir(root_text)[:NAME_LIMIT])
+     return sorted(d for d in projects.iterdir()
+-                  if d.is_dir() and (d.name == prefix
+-                                     or d.name.startswith(prefix + "-")))
++                  if d.is_dir() and (fold(d.name) == prefix
++                                     or fold(d.name).startswith(prefix + "-")))
++
++
++def _open_regular(path):
++    """*path* open for reading, or None when it is no regular file (TASK 133 R5.4).
++
++    ``O_NONBLOCK`` keeps a FIFO, swapped in after the ``stat`` of the caller, from
++    blocking the open; ``os.fstat`` then decides on the descriptor itself.
++    """
++    fd = os.open(str(path), os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
++                 | getattr(os, "O_BINARY", 0))
++    try:
++        if not stat.S_ISREG(os.fstat(fd).st_mode):
++            os.close(fd)
++            return None
++        return os.fdopen(fd, "rb")
++    except BaseException:
++        os.close(fd)
++        raise
++
++
++def _first_cwd(path):
++    """The ``cwd`` of the first line of *path* that carries one, or None."""
++    try:
++        handle = _open_regular(path)
++        if handle is None:
++            return None
++        with handle:
++            for raw in handle:
++                try:
++                    obj = json.loads(raw)
++                except ValueError:
++                    continue
++                if isinstance(obj, dict) and isinstance(obj.get("cwd"), str):
++                    return obj["cwd"]
++    except OSError:
++        return None
++    return None
++
++
++def _session_of_root(path, root_text):
++    """True when the first ``cwd`` of the session file *path* is the root or under it
++    (TASK 133 R5.4)."""
++    cwd = _first_cwd(path)
++    if cwd is None:
++        return False
++    # text only: a link is not resolved, so a `cwd` such as a UNC path opens no connection
++    here = os.path.normcase(os.path.normpath(cwd))
++    root = os.path.normcase(os.path.normpath(root_text))
++    if locks.WINDOWS:
++        here, root = here.casefold(), root.casefold()
++    return here == root or here.startswith(root.rstrip(os.sep) + os.sep)
+ 
+ 
+ # --- incremental state -------------------------------------------------------
+@@ -171,16 +253,25 @@ class SessionMiner:
+ 
+ 
+ def mine(config, transcript_dirs=None, since=None, session=None,
+-         include_active=False, frustration=False, limit=None, dry_run=False):
++         include_active=False, frustration=False, limit=None, dry_run=False,
++         projects_dir=None):
+     """Scan transcripts, return (candidates_emitted, stats). Emission =
+-    building a finding dict; the CLI decides to collect or just print."""
+-    dirs = ([Path(d) for d in transcript_dirs] if transcript_dirs
+-            else default_transcript_dirs(config.repo_root))
++    building a finding dict; the CLI decides to collect or just print.
++
++    *projects_dir* replaces ``~/.claude/projects`` for the default dirs (TASK 133
++    R5.6). With explicit *transcript_dirs* each file is read, as before; with the
++    default dirs a session file of another root is skipped (R5.4)."""
++    root_text = None
++    if transcript_dirs:
++        dirs = [Path(d) for d in transcript_dirs]
++    else:
++        root_text = str(Path(config.repo_root).resolve())
++        dirs = default_transcript_dirs(config.repo_root, projects_dir)
+     state = load_state(config.mine_state_path)
+     now = time.time()
+     emitted = []
+     stats = {"files_scanned": 0, "files_skipped_active": 0,
+-             "bytes_read": 0, "candidates": 0}
++             "files_skipped_foreign": 0, "bytes_read": 0, "candidates": 0}
+ 
+     for directory in dirs:
+         for path in sorted(directory.glob("*.jsonl")):
+@@ -188,10 +279,12 @@ def mine(config, transcript_dirs=None, since=None, session=None,
+             if session and session_id != session:
+                 continue
+             try:
+-                mtime = path.stat().st_mtime
+-                size = path.stat().st_size
++                st = path.stat()
+             except OSError:
+                 continue
++            if not stat.S_ISREG(st.st_mode):
++                continue  # a FIFO or a device would block the read (round 1 of stage 2, L1)
++            mtime, size = st.st_mtime, st.st_size
+             if (not include_active
+                     and now - mtime < ACTIVE_SESSION_WINDOW_SEC):
+                 stats["files_skipped_active"] += 1
+@@ -204,8 +297,17 @@ def mine(config, transcript_dirs=None, since=None, session=None,
+                 offset = 0  # truncated/rewritten: rescan
+             if size == offset:
+                 continue
++            if root_text is not None and not _session_of_root(path, root_text):
++                stats["files_skipped_foreign"] += 1
++                continue
+             miner = SessionMiner(session_id, frustration=frustration)
+-            with open(path, "rb") as handle:
++            try:
++                handle = _open_regular(path)
++            except OSError:
++                continue
++            if handle is None:
++                continue
++            with handle:
+                 handle.seek(offset)
+                 for raw in handle:
+                     try:
+diff --git a/.agent/skills/run-feedback/scripts/hooks/posttooluse_filter.py b/.agent/skills/run-feedback/scripts/hooks/posttooluse_filter.py
+index f96f23f..e440393 100644
+--- a/.agent/skills/run-feedback/scripts/hooks/posttooluse_filter.py
++++ b/.agent/skills/run-feedback/scripts/hooks/posttooluse_filter.py
+@@ -110,14 +110,36 @@ def _maybe_debug_dump(payload):
+     return 0
+ 
+ 
++def _read_payload():
++    """The JSON payload of stdin, read as UTF-8 bytes with an optional byte-order mark.
++
++    A pipe of Windows decodes text in its code page (TASK 133 R7.2). Raises
++    `ValueError` for bytes that are not UTF-8 or text that is not JSON.
++    """
++    buffer = getattr(sys.stdin, "buffer", None)
++    raw = buffer.read() if buffer is not None else sys.stdin.read()
++    if isinstance(raw, bytes):
++        raw = raw.decode("utf-8-sig")
++    return json.loads(raw)
++
++
++def _reconfigure_streams():
++    """Escape what the stream cannot encode (TASK 133 R7.1); a stream without
++    `reconfigure` stays as it is."""
++    for stream in (sys.stdout, sys.stderr):
++        if hasattr(stream, "reconfigure"):
++            stream.reconfigure(errors="backslashreplace")
++
++
+ def main():
++    _reconfigure_streams()
+     try:
+-        payload = json.load(sys.stdin)
++        payload = _read_payload()
+     except (ValueError, OSError):
+         return 0
+ 
+     # The cheapest possible discard comes FIRST — before the feedback_lib imports,
+-    # which pull in re, shlex, json, fcntl, tempfile, subprocess and unicodedata
++    # which pull in re, shlex, json, locks, tempfile, subprocess and unicodedata
+     # (~5-15ms of a ~40ms process) for an event that is about to be dropped. Same
+     # defect class as WI-4, one layer up (iteration 3, perf-High secondary).
+     if payload.get("tool_name") != "Bash":
+diff --git a/.agent/skills/run-feedback/scripts/hooks/session_end_marker.py b/.agent/skills/run-feedback/scripts/hooks/session_end_marker.py
+index ea886e8..df6786b 100644
+--- a/.agent/skills/run-feedback/scripts/hooks/session_end_marker.py
++++ b/.agent/skills/run-feedback/scripts/hooks/session_end_marker.py
+@@ -11,9 +11,31 @@ from pathlib import Path
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ 
+ 
++def _read_payload():
++    """The JSON payload of stdin, read as UTF-8 bytes with an optional byte-order mark.
++
++    A pipe of Windows decodes text in its code page (TASK 133 R7.2). Raises
++    `ValueError` for bytes that are not UTF-8 or text that is not JSON.
++    """
++    buffer = getattr(sys.stdin, "buffer", None)
++    raw = buffer.read() if buffer is not None else sys.stdin.read()
++    if isinstance(raw, bytes):
++        raw = raw.decode("utf-8-sig")
++    return json.loads(raw)
++
++
++def _reconfigure_streams():
++    """Escape what the stream cannot encode (TASK 133 R7.1); a stream without
++    `reconfigure` stays as it is."""
++    for stream in (sys.stdout, sys.stderr):
++        if hasattr(stream, "reconfigure"):
++            stream.reconfigure(errors="backslashreplace")
++
++
+ def main():
++    _reconfigure_streams()
+     try:
+-        payload = json.load(sys.stdin)
++        payload = _read_payload()
+     except (ValueError, OSError):
+         payload = {}
+     from feedback_lib import inbox, journal
+diff --git a/.agent/skills/run-feedback/scripts/run_feedback.py b/.agent/skills/run-feedback/scripts/run_feedback.py
+index 796abe4..a0092bf 100755
+--- a/.agent/skills/run-feedback/scripts/run_feedback.py
++++ b/.agent/skills/run-feedback/scripts/run_feedback.py
+@@ -27,7 +27,6 @@ import re
+ import sys
+ import tempfile
+ import time
+-import fcntl
+ import os
+ from pathlib import Path
+ 
+@@ -35,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
+ 
+ from feedback_lib import (atomic, body as body_mod, claims, filters, finding,
+                           frontmatter, ids as ids_mod, inbox, journal,
+-                          ledger_backlog, ledger_issues, mine as mine_mod)
++                          ledger_backlog, ledger_issues, locks, mine as mine_mod)
+ from feedback_lib.config import load_config
+ from feedback_lib.envelope import (EXIT_CONFIG, EXIT_FILING_CONFLICT, EXIT_OK,
+                                    EXIT_UNEXPECTED, EXIT_USAGE, CliError,
+@@ -58,11 +57,21 @@ def _parse_kv(pairs):
+ 
+ def _read_maybe_stdin(spec):
+     if spec == "-":
+-        return sys.stdin.read()
++        # the bytes of stdin, as UTF-8 with an optional byte-order mark: Windows decodes a
++        # pipe in its code page (TASK 133 R7.3)
++        buffer = getattr(sys.stdin, "buffer", None)
++        if buffer is None:
++            return sys.stdin.read()
++        data = buffer.read()
++        try:
++            return data.decode("utf-8-sig")
++        except UnicodeDecodeError as exc:
++            raise CliError("stdin is not valid UTF-8 (byte %d: %s)" % (exc.start, exc.reason),
++                           code=EXIT_USAGE, err_type="UsageError")
+     if spec.startswith("@"):
+         path = Path(spec[1:])
+         try:
+-            return path.read_text(encoding="utf-8")
++            return path.read_text(encoding="utf-8-sig")
+         except OSError as exc:
+             raise CliError("cannot read %s: %s" % (path, exc),
+                            code=EXIT_USAGE, err_type="UsageError")
+@@ -95,9 +104,26 @@ def _parse_envelope(spec):
+     return obj
+ 
+ 
++def _journal_after_write(cfg, event_type, subject, details=None):
++    """Journal *event_type* after a write of the command completed (TASK 133 R1.7).
++
++    A lock error of the journal, or a refusal of `open_state` (R3.2), does not undo
++    the write that came before it: the command prints one warning that names the
++    event and keeps its exit code.
++    """
++    try:
++        journal.append_event(cfg.journal_dir, event_type, subject, details)
++    except CliError as exc:
++        if exc.err_type not in ("LockTimeout", "LockError", "StateRefused"):
++            raise
++        sys.stderr.write("run-feedback: warning: %s was not journaled: %s\n"
++                         % (event_type, exc))
++
++
+ def _emit(args, payload, human):
+     if getattr(args, "json", False):
+-        print(json.dumps(payload, ensure_ascii=False, indent=2))
++        # ASCII on every platform (TASK 133 R7.1a, D8)
++        print(json.dumps(payload, ensure_ascii=True, indent=2))
+     else:
+         print(human)
+ 
+@@ -138,8 +164,8 @@ def cmd_collect(args, cfg):
+         exit_code=args.exit_code, error_envelope=envelope_obj,
+         run=run_ctx, evidence=evidence, proposed=proposed)
+     record, deduped = inbox.collect(cfg, record)
+-    journal.append_event(
+-        cfg.journal_dir,
++    _journal_after_write(
++        cfg,
+         "finding_deduped" if deduped else "finding_collected",
+         "%s %s" % (args.component, record["fingerprint"]),
+         {"kind": args.kind, "sources": ",".join(record["sources"]),
+@@ -239,7 +265,7 @@ def cmd_triage(args, cfg):
+             "dup_candidates": _dup_candidates(record, issue_fps, titles),
+         })
+     if args.json:
+-        print(json.dumps(rows, ensure_ascii=False, indent=2))
++        print(json.dumps(rows, ensure_ascii=True, indent=2))
+         return EXIT_OK
+     if not rows:
+         print("inbox is empty — nothing to triage")
+@@ -502,13 +528,15 @@ def _consume_or_explain(cfg, path, record, new_status, filed_as):
+     try:
+         inbox.consume(cfg, path, record, new_status)
+         return
+-    except OSError as exc:
++    except (OSError, CliError) as exc:
++        # each failure of the move leaves the half-state, a refusal of a link included
++        # (TASK 133 R3.2, round 4 of stage 2, R4-1 and R4-2)
+         try:
+             record["status"] = new_status
+             atomic.write_atomic(
+                 path, json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+             noted = "the finding was marked %s in place" % new_status
+-        except OSError:
++        except (OSError, CliError):
+             noted = ("the finding could NOT be marked %s and is still `new`"
+                      % new_status)
+         written = (filed_as or {}).get("path")
+@@ -526,18 +554,29 @@ def _consume_or_explain(cfg, path, record, new_status, filed_as):
+ 
+ 
+ def cmd_file(args, cfg):
++    # no link reaches a directory that the command reads or moves a finding in, checked before
++    # any read and any write: a refusal after the ledger write would leave a half-state
++    # (TASK 133 R3.2, round 3 of stage 2)
++    for directory in (cfg.inbox_dir, cfg.filed_dir, cfg.dismissed_dir):
++        atomic.check_state_dir(directory)
+     path, record = inbox.resolve(cfg, args.finding)
+     if record.get("status") != "new":
+         raise CliError("finding %s is already %s"
+                        % (record["finding_id"], record.get("status")),
+                        code=EXIT_USAGE, err_type="UsageError")
++    # and the file that the move writes, before the ledger write (round 4 of stage 2, R4-1)
++    atomic.check_state_file(
++        Path(cfg.dismissed_dir if args.classification == "noise" else cfg.filed_dir)
++        / (record["finding_id"] + ".json"))
+     subject = record.get("subject", {})
+     lock_fd = None
+     if not args.dry_run:
+         cfg.feedback_dir.mkdir(parents=True, exist_ok=True)
+-        lock_fd = os.open(str(cfg.filing_lock), os.O_WRONLY | os.O_CREAT, 0o644)
+-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
++        lock_fd = atomic.open_state(cfg.filing_lock, os.O_WRONLY | os.O_CREAT)
+     try:
++        if lock_fd is not None:
++            # inside the `try`, so a lock error of Windows closes the descriptor (TASK 133 R1.5)
++            locks.acquire(lock_fd, cfg.filing_lock)
+         if args.classification == "defect":
+             _reject_inapplicable_flags(args)
+             component = args.component or subject.get("component")
+@@ -633,19 +672,20 @@ def cmd_file(args, cfg):
+             if args.classification == "noise":
+                 record["dismiss_reason"] = args.reason
+                 _consume_or_explain(cfg, path, record, "dismissed", None)
+-                journal.append_event(cfg.journal_dir, "finding_dismissed",
++                _journal_after_write(cfg, "finding_dismissed",
+                                      "%s %s" % (record["fingerprint"],
+                                                 args.reason))
+             else:
+                 record["filed_as"] = filed_as
+                 _consume_or_explain(cfg, path, record, "filed", filed_as)
+-                journal.append_event(
+-                    cfg.journal_dir, "finding_filed",
++                _journal_after_write(
++                    cfg, "finding_filed",
+                     "%s %s" % (filed_as.get("id") or "backlog",
+                                record["finding_id"]),
+                     {"ledger": filed_as["ledger"], "path": filed_as["path"]})
+     finally:
+         if lock_fd is not None:
++            locks.release(lock_fd)
+             os.close(lock_fd)
+     _emit(args, {"result": result, "filed_as": filed_as,
+                  "dry_run": args.dry_run}, human)
+@@ -668,7 +708,7 @@ def cmd_issues(args, cfg):
+         auto_fixable=True if args.auto_fixable else None)
+     records.sort(key=lambda r: (-r["severity_rank"], r.get("opened_at") or ""))
+     if args.json:
+-        print(json.dumps(records, ensure_ascii=False, indent=2))
++        print(json.dumps(records, ensure_ascii=True, indent=2))
+     else:
+         for rec in records:
+             print("%-24s %-10s %-8s %s" % (rec["id"], rec["status"],
+@@ -680,7 +720,7 @@ def cmd_issues(args, cfg):
+ def cmd_claim(args, cfg):
+     acquired, owner = claims.claim(cfg, args.run_id)
+     if acquired:
+-        journal.append_event(cfg.journal_dir, "retro_claimed", args.run_id)
++        _journal_after_write(cfg, "retro_claimed", args.run_id)
+     _emit(args, {"acquired": acquired, "owner": owner},
+           "retro %s (owner: %s)" % ("claimed" if acquired else "DENIED",
+                                     owner))
+@@ -690,7 +730,7 @@ def cmd_claim(args, cfg):
+ def cmd_release(args, cfg):
+     released = claims.release(cfg, args.run_id, force=args.force)
+     if released:
+-        journal.append_event(cfg.journal_dir, "retro_released", args.run_id)
++        _journal_after_write(cfg, "retro_released", args.run_id)
+     _emit(args, {"released": released},
+           "retro %s" % ("released" if released else "NOT released (foreign owner)"))
+     return EXIT_OK if released else EXIT_CLAIM_DENIED
+@@ -710,7 +750,7 @@ def cmd_mine(args, cfg):
+             _, was_dup = inbox.collect(cfg, record)
+             collected += 0 if was_dup else 1
+             deduped += 1 if was_dup else 0
+-        journal.append_event(cfg.journal_dir, "mine_run",
++        _journal_after_write(cfg, "mine_run",
+                              "%d candidates" % len(emitted),
+                              {**stats, "collected": collected,
+                               "deduped": deduped})
+@@ -725,6 +765,7 @@ def cmd_mine(args, cfg):
+                    for r in emitted]}
+     human = ["mine: %(files_scanned)d files scanned, "
+              "%(files_skipped_active)d active skipped, "
++             "%(files_skipped_foreign)d of another root skipped, "
+              "%(candidates)d candidates" % stats]
+     for c in payload["candidates"]:
+         human.append("  %(kind)s %(component)s ×%(count)s: %(message)s" % c)
+@@ -1091,7 +1132,19 @@ def build_parser(argv=None):
+     return parser
+ 
+ 
++def _reconfigure_streams():
++    """Escape what the stream cannot encode (TASK 133 R7.1, the rule of TASK 127 R2.2).
++
++    A pipe on Windows uses the code page of the system. A stream without
++    `reconfigure`, such as the `io.StringIO` of a test, stays as it is.
++    """
++    for stream in (sys.stdout, sys.stderr):
++        if hasattr(stream, "reconfigure"):
++            stream.reconfigure(errors="backslashreplace")
++
++
+ def main(argv=None):
++    _reconfigure_streams()
+     argv = argv if argv is not None else sys.argv[1:]
+     parser = build_parser(argv)
+     args = parser.parse_args(argv)
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_backlog_append.py b/.agent/skills/run-feedback/scripts/tests/test_backlog_append.py
+index 627071f..84723d8 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_backlog_append.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_backlog_append.py
+@@ -139,8 +139,7 @@ class TestTwoLevelFiling(TwoLevelTestCase):
+         self.assertEqual(fx.tree_hash(self.root), before)
+         self.assertTrue(result["dry_run"])
+         self.assertEqual(result["item_id"], "WI-3")
+-        self.assertTrue(result["record_path"].endswith(
+-            "docs/backlog/wi-3-new-item.md"))
++        self.assertEqual(Path(result["record_path"]), self.records / "wi-3-new-item.md")
+         self.assertIn("effort `M`", result["index_line"])
+         self.assertIn("| Option | Cost |", result["record_text"])
+ 
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_dry_run.py b/.agent/skills/run-feedback/scripts/tests/test_dry_run.py
+index 92a7ae1..3f42ae9 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_dry_run.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_dry_run.py
+@@ -1,5 +1,6 @@
+ """R4 — `file --dry-run` never writes: whole-tree hash before == after."""
+ import json
++import os
+ import sys
+ import tempfile
+ import time
+@@ -63,7 +64,7 @@ class DryRunTestCase(unittest.TestCase):
+         self.assertEqual(code, 0, err)
+         self.assertIn("DRY-RUN", out)
+         # allocated ID (empty backlog dir -> WI-1), record path, exact line
+-        self.assertIn("docs/backlog/wi-1-follow-up-on-boom.md", out)
++        self.assertIn(os.path.join("docs", "backlog", "wi-1-follow-up-on-boom.md"), out)
+         expected_line = (
+             "- **WI-1** [Follow up on boom](backlog/wi-1-follow-up-on-boom.md)"
+             " — effort `S`, status `open`, opened %s"
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_iteration3.py b/.agent/skills/run-feedback/scripts/tests/test_iteration3.py
+index fe97aa4..b7b7ecd 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_iteration3.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_iteration3.py
+@@ -43,6 +43,23 @@ from feedback_lib import (body as body_mod, frontmatter,  # noqa: E402
+                           markdown)
+ from feedback_lib.envelope import CliError  # noqa: E402
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
++    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
++    import shutil
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++
++
+ ANCHOR = "<!-- feedback:discovered-issues -->"
+ 
+ 
+@@ -610,6 +627,7 @@ class TestResidueFixes(unittest.TestCase):
+         self.root = fx.make_repo(self._tmp.name)
+ 
+     # R6 / sec-L-08
++    @NEEDS_SYMLINK
+     def test_write_atomic_refuses_a_symlinked_target(self):
+         from feedback_lib import atomic
+         victim = fx.write(self.root / "victim.md", "original\n")
+@@ -621,6 +639,8 @@ class TestResidueFixes(unittest.TestCase):
+         self.assertEqual(victim.read_text(encoding="utf-8"), "original\n",
+                          "wrote through the symlink")
+ 
++    @unittest.skipIf(os.name == "nt",
++                     "POSIX permission bits: os.chmod on Windows sets only the read-only flag")
+     def test_write_atomic_preserves_mode_of_a_regular_file(self):
+         from feedback_lib import atomic
+         target = fx.write(self.root / "l.md", "a\n")
+@@ -721,7 +741,7 @@ class TestResidueFixes(unittest.TestCase):
+         fx.write(self.root / "docs" / "feedback" / "config.json",
+                  json.dumps({"v": 1, "feedback_dir": ".agent/feedback"}))
+         cfg = fx.load_cfg(self.root)
+-        self.assertTrue(str(cfg.feedback_dir).endswith("/.agent/feedback"))
++        self.assertEqual(cfg.feedback_dir, self.root / ".agent" / "feedback")
+         for bad in (".git/objects", ".claude/state", "System/state"):
+             with self.subTest(bad=bad):
+                 fx.write(self.root / "docs" / "feedback" / "config.json",
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_ledger_core.py b/.agent/skills/run-feedback/scripts/tests/test_ledger_core.py
+index 9516c4e..8bb5714 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_ledger_core.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_ledger_core.py
+@@ -29,6 +29,23 @@ from feedback_lib import (frontmatter, ledger_backlog, ledger_core,  # noqa: E40
+                           ledger_issues)
+ from feedback_lib.envelope import CliError  # noqa: E402
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
++    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
++    import shutil
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++
++
+ ANCHOR = "<!-- feedback:discovered-issues -->"
+ 
+ 
+@@ -129,6 +146,7 @@ class GuardInventory(unittest.TestCase):
+         for name, exc in verdicts.items():
+             self.assertIn("already exists", str(exc), name)
+ 
++    @NEEDS_SYMLINK
+     def test_a_dangling_symlink_at_the_record_path_is_refused(self):
+         def plant(record_dir, _index):
+             record_dir.mkdir(parents=True, exist_ok=True)
+@@ -142,6 +160,10 @@ class GuardInventory(unittest.TestCase):
+             self.assertFalse((self.root / ("PWNED-" + slug)).exists(),
+                              "the symlink was followed")
+ 
++    @NEEDS_SYMLINK
++    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW"),
++                         "pins the O_EXCL|O_NOFOLLOW refusal; without O_NOFOLLOW the identity "
++                         "check of TASK 133 R2.2 refuses (TC-RF10)")
+     def test_the_kernel_flags_refuse_when_the_precheck_is_bypassed(self):
+         """O_EXCL|O_NOFOLLOW is the enforcing guard; the pre-check is the message.
+         Neutralize the pre-check (as a TOCTOU race would) and the kernel must still
+@@ -160,6 +182,7 @@ class GuardInventory(unittest.TestCase):
+                 self.assertIn("appeared while filing", str(ctx.exception))
+                 self.assertFalse(target.exists())
+ 
++    @NEEDS_SYMLINK
+     def test_a_symlinked_record_dir_is_refused_for_library_callers(self):
+         """`is_symlink()` is defence-in-depth for a caller that hand-builds a
+         config: through `Config` the path is already RESOLVED, so a symlink
+@@ -305,6 +328,7 @@ class GuardInventory(unittest.TestCase):
+ 
+     # --- records-dir TOCTOU (sec-L-07) ------------------------------------
+ 
++    @NEEDS_SYMLINK
+     def test_a_path_component_swapped_after_validation_is_refused(self):
+         """sec-L-07, end to end. Two defences stack here and the test says which:
+ 
+@@ -333,6 +357,7 @@ class GuardInventory(unittest.TestCase):
+                     docs.unlink()
+                     (self.root / "docs-real").rename(docs)
+ 
++    @NEEDS_SYMLINK
+     def test_the_core_refuses_a_records_dir_whose_realpath_moved(self):
+         """sec-L-07, the core guard in isolation — the case `Config` cannot catch
+         because the caller already holds a resolved path. `O_NOFOLLOW` sees only
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py b/.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py
+index 979ee98..29ef51a 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_ledger_hardening.py
+@@ -35,6 +35,23 @@ from feedback_lib import atomic, frontmatter, ledger_backlog  # noqa: E402
+ from feedback_lib.config import load_config  # noqa: E402
+ from feedback_lib.envelope import CliError  # noqa: E402
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
++    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
++    import shutil
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++
++
+ ANCHOR = "<!-- feedback:discovered-issues -->"
+ 
+ 
+@@ -212,6 +229,7 @@ class TestIndexLineInjection(HardeningTestCase):
+ class TestSymlinkAndCreateOnly(HardeningTestCase):
+     """S-03."""
+ 
++    @NEEDS_SYMLINK
+     def test_dangling_symlink_is_caught_by_the_lexists_precheck(self):
+         """First of the two guards: the friendly error.
+ 
+@@ -226,6 +244,10 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
+         self.assertIn("already exists", str(ctx.exception))
+         self.assertFalse(target.exists(), "write followed the symlink")
+ 
++    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW"),
++                         "pins the O_EXCL|O_NOFOLLOW refusal; without O_NOFOLLOW the identity "
++                         "check of TASK 133 R2.2 refuses (TC-RF10)")
++    @NEEDS_SYMLINK
+     def test_the_kernel_flags_are_the_enforcing_guard_not_the_precheck(self):
+         """V-22: the previous single test asserted only `code == 4`, which BOTH
+         guards produce — so it could not tell whether `lexists` or
+@@ -261,6 +283,7 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
+         self.assertFalse(target.exists(),
+                          "the symlink was followed outside the record dir")
+ 
++    @NEEDS_SYMLINK
+     def test_symlinked_record_dir_is_refused_for_library_callers(self):
+         """`is_symlink()` is defence-in-depth for a caller that hand-builds a
+         config: through `Config` the path is already resolved, so a symlink
+@@ -280,6 +303,7 @@ class TestSymlinkAndCreateOnly(HardeningTestCase):
+         self.assertEqual(ctx.exception.code, 4)
+         self.assertEqual(list(elsewhere.iterdir()), [])
+ 
++    @NEEDS_SYMLINK
+     def test_record_dir_symlinked_out_of_the_repo_is_refused_by_containment(self):
+         outside = Path(self._tmp.name).parent / ("outside-" + self.root.name)
+         outside.mkdir()
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_mine.py b/.agent/skills/run-feedback/scripts/tests/test_mine.py
+index 0c93fdf..b39f06b 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_mine.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_mine.py
+@@ -1,9 +1,11 @@
+ """R11 — transcript miner: extraction, noise policy, dedup, incremental."""
+ import json
++import os
+ import sys
+ import tempfile
+ import unittest
+ from pathlib import Path
++from unittest import mock
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ sys.path.insert(0, str(Path(__file__).resolve().parent))
+@@ -162,5 +164,137 @@ class TestActiveSessionSkip(MineTestCase):
+         self.assertEqual(emitted, [])
+ 
+ 
++
++class TestProjectDirectoryNaming(unittest.TestCase):
++    """TASK 133 R5: the name Claude Code 2.1.306 gives a project's transcript directory, the cut
++    at 200 characters, the case fold on Windows and the `cwd` filter (TC-MN1 to TC-MN5). No test
++    reads the real `~/.claude/projects` (R5.6): each passes a temporary `projects_dir`, and HOME
++    points at the temporary root."""
++
++    def setUp(self):
++        self._tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._tmp.cleanup)
++        self.tmp = Path(self._tmp.name).resolve()
++        home = mock.patch.dict(os.environ, {"HOME": str(self.tmp),
++                                            "GIT_CEILING_DIRECTORIES": str(self.tmp)})
++        home.start()
++        self.addCleanup(home.stop)
++        self.projects = self.tmp / "projects"
++        self.projects.mkdir()
++
++    def test_mn1_the_naming_rule_of_claude_code(self):
++        """TC-MN1: each code unit outside [A-Za-z0-9] becomes `-`."""
++        cyrillic = "".join(chr(0x430 + i) for i in range(12))
++        cases = {
++            "C:\\Users\\dev\\loyalty-api-java": "C--Users-dev-loyalty-api-java",
++            "/home/u/My Project_1": "-home-u-My-Project-1",
++            "/Users/sergey/Documents/Work/data/" + cyrillic:
++                "-Users-sergey-Documents-Work-data-------------",
++            "/a/x" + chr(0x1F600): "-a-x--",
++            "/home/u/app": "-home-u-app",
++        }
++        for path, name in cases.items():
++            self.assertEqual(mine.encode_project_dir(path), name, path)
++
++    def test_mn2_a_long_root_matches_the_cut_name(self):
++        """TC-MN2: a root of 210 characters matches its first 200, with `-` and a hash."""
++        root = "/" + "a" * 209
++        name = mine.encode_project_dir(root)[:200] + "-1k3x9"
++        (self.projects / name).mkdir()
++        self.assertEqual([d.name for d in mine.match_transcript_dirs(root, self.projects)],
++                         [name])
++
++    def test_mn3_a_drive_letter_in_other_case_matches_on_windows(self):
++        """TC-MN3: with `locks.WINDOWS` set, `c:\\Users\\dev\\app` matches `C--Users-dev-app`."""
++        from feedback_lib import locks
++        (self.projects / "C--Users-dev-app").mkdir()
++        with mock.patch.object(locks, "WINDOWS", True):
++            found = mine.match_transcript_dirs("c:\\Users\\dev\\app", self.projects)
++        self.assertEqual([d.name for d in found], ["C--Users-dev-app"])
++
++    def _session(self, directory, name, cwd):
++        line = {"type": "user", "message": {"content": "hi"}}
++        if cwd is not None:
++            line["cwd"] = cwd
++        _write_jsonl(directory / name, [{"type": "summary"}, line])
++
++    def _mine(self, root):
++        cfg = fx.load_cfg(root)
++        return mine.mine(cfg, projects_dir=self.projects, include_active=True, dry_run=True)
++
++    def test_mn4_a_session_of_a_sibling_is_skipped(self):
++        """TC-MN4: a session whose first `cwd` is `<r>-old` is skipped and counted; one whose
++        first `cwd` is `<r>/sub` is read."""
++        root = fx.make_repo(self.tmp / "r")
++        own = self.projects / mine.encode_project_dir(root)
++        sibling = self.projects / (mine.encode_project_dir(root) + "-old")
++        self._session(own, "a.jsonl", str(root / "sub"))
++        self._session(sibling, "b.jsonl", str(root) + "-old")
++        _, stats = self._mine(root)
++        self.assertEqual(stats["files_scanned"], 1)
++        self.assertEqual(stats["files_skipped_foreign"], 1)
++
++    @unittest.skipUnless(hasattr(os, "mkfifo"), "makes a FIFO, which only POSIX has")
++    def test_mn6_a_fifo_among_the_sessions_is_skipped(self):
++        """TC-MN6: a FIFO and a directory named `*.jsonl` among the session files: a process that
++        runs `mine` returns within 10 seconds, and counts neither (round 1 of stage 2, L1)."""
++        import subprocess
++        root = fx.make_repo(self.tmp / "r")
++        own = self.projects / mine.encode_project_dir(root)
++        own.mkdir()
++        fifo = own / "f.jsonl"
++        os.mkfifo(str(fifo))
++        os.utime(str(fifo), (1, 1))
++        (own / "d.jsonl").mkdir()
++        script = ("import sys; sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
++                  "import _fixtures as fx\nfrom feedback_lib import mine\n"
++                  "import json\nprint(json.dumps(mine.mine(fx.load_cfg(%r), projects_dir=%r, "
++                  "include_active=True, dry_run=True)[1]))\n"
++                  % (str(Path(__file__).resolve().parents[1]),
++                     str(Path(__file__).resolve().parent), str(root), str(self.projects)))
++        try:
++            proc = subprocess.run([sys.executable, "-B", "-c", script], capture_output=True,
++                                  timeout=10, env=dict(os.environ))
++        except subprocess.TimeoutExpired:
++            self.fail("mine blocked on a FIFO")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        stats = json.loads(proc.stdout)
++        self.assertEqual((stats["files_scanned"], stats["files_skipped_foreign"]), (0, 0))
++
++    def test_mn7_a_cwd_in_other_case_is_read_on_windows(self):
++        """TC-MN7: with `locks.WINDOWS` set, a session whose first `cwd` differs from the root in
++        letter case is read."""
++        from feedback_lib import locks
++        root = fx.make_repo(self.tmp / "r")
++        own = self.projects / mine.encode_project_dir(root)
++        self._session(own, "a.jsonl", str(root).upper())
++        with mock.patch.object(locks, "WINDOWS", True):
++            _, stats = self._mine(root)
++        self.assertEqual(stats["files_scanned"], 1)
++
++    def test_mn8_a_session_with_no_new_bytes_is_not_counted(self):
++        """TC-MN8: a session file of another root whose saved offset equals its size is skipped
++        before its `cwd` is read, and is not counted."""
++        root = fx.make_repo(self.tmp / "r")
++        sibling = self.projects / (mine.encode_project_dir(root) + "-old")
++        self._session(sibling, "old.jsonl", str(root) + "-old")
++        size = (sibling / "old.jsonl").stat().st_size
++        cfg = fx.load_cfg(root)
++        mine.save_state(cfg.mine_state_path, {"v": mine.MINE_STATE_VERSION,
++                                              "sessions": {"old": {"offset": size}}})
++        _, stats = self._mine(root)
++        self.assertEqual(stats["files_skipped_foreign"], 0)
++
++    def test_mn5_a_session_with_no_cwd_is_skipped(self):
++        """TC-MN5: a session file of the root's directory with no line that carries `cwd` is
++        skipped and counted."""
++        root = fx.make_repo(self.tmp / "r")
++        own = self.projects / mine.encode_project_dir(root)
++        self._session(own, "c.jsonl", None)
++        _, stats = self._mine(root)
++        self.assertEqual(stats["files_scanned"], 0)
++        self.assertEqual(stats["files_skipped_foreign"], 1)
++
++
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_wi_tail.py b/.agent/skills/run-feedback/scripts/tests/test_wi_tail.py
+index 0c02957..cbe7cf4 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_wi_tail.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_wi_tail.py
+@@ -38,6 +38,23 @@ from feedback_lib import (atomic, body as body_mod, config as config_mod,  # noq
+                           frontmatter, inbox, ledger_backlog, ledger_issues)
+ from feedback_lib.envelope import CliError  # noqa: E402
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
++    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
++    import shutil
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++
++
+ ANCHOR = "<!-- feedback:discovered-issues -->"
+ 
+ 
+@@ -315,10 +332,13 @@ class TestHookLoadsConfigOnlyWhenCapturing(unittest.TestCase):
+ 
+ 
+ class StringIOish:
+-    """Minimal stdin stand-in: `json.load` only needs `.read()`."""
++    """Minimal stdin stand-in: `json.load` needs `.read()`, and the hook of TASK 133 R7.2 reads
++    the bytes of `.buffer`."""
+ 
+     def __init__(self, text):
++        import io
+         self._text = text
++        self.buffer = io.BytesIO(text.encode("utf-8"))
+ 
+     def read(self, *_):
+         return self._text
+@@ -868,6 +888,7 @@ class TestDoctorRobustness(unittest.TestCase):
+         self.assertTrue(payload["ready"], err)
+         self.assertEqual(code, 0)
+ 
++    @NEEDS_SYMLINK
+     def test_the_writability_probe_does_not_follow_a_planted_symlink(self):
+         """V-08 — the last predictable-name write in the engine."""
+         cfg = fx.load_cfg(self.root)
+@@ -964,7 +985,7 @@ class TestConsumeFailureIsRecoverable(unittest.TestCase):
+                  "--body-file", str(self.body)])
+         self.assertEqual(code, 4)
+         self.assertIn("could not be moved out", err)
+-        self.assertIn("docs/backlog", err)
++        self.assertIn(os.path.join("docs", "backlog"), err)
+         self.assertIn("marked filed in place", err)
+ 
+     def test_a_retry_reports_already_filed_instead_of_exiting_4_forever(self):
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_windows_branch.py b/.agent/skills/run-feedback/scripts/tests/test_windows_branch.py
+new file mode 100644
+index 0000000..4340174
+--- /dev/null
++++ b/.agent/skills/run-feedback/scripts/tests/test_windows_branch.py
+@@ -0,0 +1,1190 @@
++"""TASK 133 — the Windows branches of run-feedback (R1–R4, R7, R8.1–R8.3).
++
++The stand-in tests (TC-RF*) run the Windows branches on POSIX: a `sitecustomize.py`, written at
++run time into a temporary directory on `PYTHONPATH`, blocks `import fcntl` and provides a `msvcrt`
++stand-in built on `fcntl.lockf` (the method of TASK 127 R7.2). It logs each lock call with the
++process, the `(st_dev, st_ino)` of the descriptor, the offset and the time, and each `os.write` on
++a descriptor that `locking` has seen. They skip where `fcntl` does not import.
++
++The encoding tests (TC-EN*) run the CLI and the hooks with `PYTHONIOENCODING` set to a code page
++of Windows. The tests of TC-WN* run on Windows only.
++
++The module imports no module of `feedback_lib` at its top, so it collects at the base.
++"""
++import json
++import os
++import shutil
++import stat
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++import unittest
++from pathlib import Path, PureWindowsPath
++from unittest import mock
++
++SCRIPTS = Path(__file__).resolve().parents[1]
++CLI = SCRIPTS / "run_feedback.py"
++HOOK = SCRIPTS / "hooks" / "posttooluse_filter.py"
++SESSION_END = SCRIPTS / "hooks" / "session_end_marker.py"
++
++sys.path.insert(0, str(SCRIPTS))
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++import _fixtures as fx  # noqa: E402
++
++try:
++    import fcntl
++except ImportError:
++    fcntl = None
++
++WINDOWS = os.name == "nt"
++NEEDS_STANDIN = unittest.skipIf(
++    fcntl is None, "the stand-in of msvcrt is built on fcntl.lockf, which only POSIX has")
++WINDOWS_ONLY = unittest.skipUnless(WINDOWS, "runs the real Windows branch")
++
++E_ACUTE = chr(0xE9)
++ARROW = chr(0x2192)
++EMOJI = chr(0x1F600)
++CYRILLIC = "".join(chr(c) for c in (0x442, 0x435, 0x441, 0x442))
++
++#: The `sitecustomize.py` of the stand-in. `MSVCRT_STANDIN=1` blocks `fcntl` and provides
++#: `msvcrt`; `none` blocks `fcntl` and provides nothing. `MSVCRT_STANDIN_FAIL_FROM=N` makes the
++#: N-th `LK_LOCK` call and each later one raise `OSError` with `MSVCRT_STANDIN_ERRNO` (36 by
++#: default, `EDEADLOCK` of the UCRT). `MSVCRT_STANDIN_NO_NOFOLLOW=1` removes `os.O_NOFOLLOW`.
++SITECUSTOMIZE = r'''
++import os
++import sys
++import time
++import types
++
++_MODE = os.environ.get("MSVCRT_STANDIN", "")
++if _MODE in ("1", "none"):
++    import fcntl as _real
++
++    class _Block:
++        def find_spec(self, name, path=None, target=None):
++            if name == "fcntl" or (_MODE == "none" and name == "msvcrt"):
++                raise ModuleNotFoundError("No module named %r" % name, name=name)
++            return None
++
++    sys.meta_path.insert(0, _Block())
++    sys.modules.pop("fcntl", None)
++    if os.environ.get("MSVCRT_STANDIN_NO_NOFOLLOW") == "1" and hasattr(os, "O_NOFOLLOW"):
++        del os.O_NOFOLLOW
++
++if _MODE == "1":
++    # `subprocess` takes the platform for Windows when `import msvcrt` succeeds, so it is
++    # imported before the stand-in is
++    import subprocess  # noqa: F401
++
++    _LOG = os.environ["MSVCRT_STANDIN_LOG"]
++    _FAIL_FROM = int(os.environ.get("MSVCRT_STANDIN_FAIL_FROM", "0"))
++    _ERRNO = int(os.environ.get("MSVCRT_STANDIN_ERRNO", "36"))
++    _seen = set()
++    _calls = [0]
++    _orig_write = os.write
++    _orig_close = os.close
++
++    def _log(fields):
++        fd = os.open(_LOG, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
++        try:
++            _orig_write(fd, (" ".join(str(f) for f in fields) + "\n").encode("utf-8"))
++        finally:
++            _orig_close(fd)
++
++    def _ident(fd):
++        st = os.fstat(fd)
++        return "%d:%d" % (st.st_dev, st.st_ino)
++
++    msvcrt = types.ModuleType("msvcrt")
++    msvcrt.LK_UNLCK, msvcrt.LK_LOCK, msvcrt.LK_NBLCK, msvcrt.LK_RLCK, msvcrt.LK_NBRLCK = range(5)
++    _NAMES = {0: "LK_UNLCK", 1: "LK_LOCK", 2: "LK_NBLCK", 3: "LK_RLCK", 4: "LK_NBRLCK"}
++
++    def locking(fd, mode, nbytes):
++        offset = os.lseek(fd, 0, os.SEEK_CUR)
++        name = _NAMES.get(mode, str(mode))
++        _seen.add(fd)
++        if mode == msvcrt.LK_UNLCK:
++            _log((name, os.getpid(), _ident(fd), offset, "%.6f" % time.time()))
++            _real.lockf(fd, _real.LOCK_UN, nbytes, offset, os.SEEK_SET)
++            return
++        _calls[0] += 1
++        if _FAIL_FROM and _calls[0] >= _FAIL_FROM:
++            _log((name + "-FAIL", os.getpid(), _ident(fd), offset, "%.6f" % time.time()))
++            raise OSError(_ERRNO, "stand-in lock failure")
++        for _ in range(10):
++            try:
++                _real.lockf(fd, _real.LOCK_EX | _real.LOCK_NB, nbytes, offset, os.SEEK_SET)
++            except OSError:
++                time.sleep(0.2)
++                continue
++            _log((name, os.getpid(), _ident(fd), offset, "%.6f" % time.time()))
++            return
++        raise OSError(36, "Resource deadlock avoided")
++
++    def _write(fd, data):
++        if fd in _seen:
++            _log(("WRITE", os.getpid(), _ident(fd), len(data), "%.6f" % time.time()))
++        return _orig_write(fd, data)
++
++    def _close(fd):
++        _seen.discard(fd)
++        return _orig_close(fd)
++
++    os.write = _write
++    os.close = _close
++    msvcrt.locking = locking
++    sys.modules["msvcrt"] = msvcrt
++'''
++
++FAILED_BASH = {"stdout": "", "stderr": "boom\nExit code 2", "interrupted": False}
++
++
++def _transcript(path):
++    """A session transcript that holds one failed Bash call (the form of test_hook_filter)."""
++    pair = [
++        {"type": "assistant", "message": {"content": [
++            {"type": "tool_use", "id": "t1", "name": "Bash",
++             "input": {"command": "python3 skills/html/scripts/x.py"}}]}},
++        {"type": "user", "timestamp": "2026-07-13T02:00:00Z",
++         "message": {"content": [
++             {"type": "tool_result", "tool_use_id": "t1",
++              "is_error": True, "content": "boom\nExit code 2"}]}},
++    ]
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_text("\n".join(json.dumps(o) for o in pair) + "\n", encoding="utf-8")
++    return path
++
++
++class _Case(unittest.TestCase):
++    """A temporary root with its own `.git`, run in isolation (PLAN 133, the isolation of a run)."""
++
++    def setUp(self):
++        self._tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(self._tmp.cleanup)
++        self.tmp = Path(self._tmp.name).resolve()
++        self.root = fx.make_repo(self.tmp / "root")
++        self.site = self.tmp / "site"
++        self.site.mkdir()
++        (self.site / "sitecustomize.py").write_text(SITECUSTOMIZE, encoding="utf-8")
++        self.log = self.tmp / "lock.log"
++        self.body = fx.write(self.tmp / "body.md", fx.DEFECT_BODY)
++
++    def env(self, standin="1", **extra):
++        env = {k: v for k, v in os.environ.items()
++               if not k.startswith(("RUN_FEEDBACK_", "MSVCRT_STANDIN", "PYTHONIOENCODING"))}
++        # git stops at the temporary directory, so a root whose `.git` git refuses resolves to
++        # itself, not to a work tree above `TMPDIR` (round 1 of stage 2, L5)
++        env.update(CLAUDE_PROJECT_DIR=str(self.root), HOME=str(self.tmp),
++                   PYTHONDONTWRITEBYTECODE="1", GIT_CEILING_DIRECTORIES=str(self.tmp))
++        if standin:
++            env.update(PYTHONPATH=str(self.site), MSVCRT_STANDIN=standin,
++                       MSVCRT_STANDIN_LOG=str(self.log))
++        else:
++            env.pop("PYTHONPATH", None)
++        env.update({k: str(v) for k, v in extra.items()})
++        return env
++
++    def run_script(self, script, args=(), stdin=b"", **env):
++        return subprocess.run([sys.executable, "-B", str(script), *[str(a) for a in args]],
++                              input=stdin, capture_output=True, cwd=str(self.root),
++                              env=self.env(**env), timeout=120)
++
++    def cli(self, *args, stdin=b"", **env):
++        return self.run_script(CLI, args, stdin=stdin, **env)
++
++    def log_rows(self):
++        if not self.log.is_file():
++            return []
++        return [line.split() for line in self.log.read_text(encoding="utf-8").splitlines()]
++
++    def ident(self, path):
++        st = os.stat(str(path))
++        return "%d:%d" % (st.st_dev, st.st_ino)
++
++    def findings(self):
++        inbox = self.root / ".agent" / "feedback" / "inbox"
++        return sorted(inbox.glob("fnd-*.json")) if inbox.is_dir() else []
++
++    def journal_text(self):
++        jdir = self.root / ".agent" / "feedback" / "journal"
++        return "".join(p.read_text(encoding="utf-8") for p in sorted(jdir.glob("*.md"))) \
++            if jdir.is_dir() else ""
++
++    def collect(self, message="boom", **env):
++        proc = self.cli("collect", "--source", "test", "--kind", "tool-error",
++                        "--component", "rf", "--message", message, "--json", **env)
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        return json.loads(proc.stdout)["finding"]["finding_id"]
++
++    def seed_ledger(self):
++        fx.write(self.root / "docs" / "KNOWN_ISSUES.md", fx.INDEX_FIXTURE)
++
++    def assert_no_traceback(self, proc):
++        self.assertNotIn(b"Traceback", proc.stderr, proc.stderr.decode("utf-8", "replace"))
++
++
++@NEEDS_STANDIN
++class TestLocksUnderTheStandIn(_Case):
++    """TC-RF1 to TC-RF8 and TC-RF20 (TASK 133 R1)."""
++
++    def _sequence(self, standin):
++        """Run each subcommand and both hooks; return the exit codes, in order."""
++        self.seed_ledger()
++        codes = []
++        empty = self.tmp / ("transcripts-%s" % (standin or "posix"))
++        empty.mkdir()
++        for args in (("--help",), ("claim", "--run-id", "r1"), ("release", "--run-id", "r1"),
++                     ("triage", "--json"),
++                     ("journal", "--event-type", "heal_run", "--subject", "s"),
++                     ("issues", "--json"), ("mine", "--dry-run", "--transcripts-dir", empty),
++                     ("init",), ("doctor",)):
++            proc = self.cli(*args, standin=standin)
++            self.assert_no_traceback(proc)
++            codes.append((args[0], proc.returncode))
++        finding_id = self.collect(standin=standin)
++        proc = self.cli("file", "--finding", finding_id, "--as", "defect", "--title", "T",
++                        "--category", "correctness", "--body-file", self.body, standin=standin)
++        self.assert_no_traceback(proc)
++        codes.append(("file", proc.returncode))
++        hook = self.run_script(HOOK, stdin=json.dumps({
++            "session_id": "s1", "cwd": str(self.root), "tool_name": "Bash",
++            "tool_input": {"command": "python3 x.py"}, "tool_response": FAILED_BASH}).encode(),
++            standin=standin, RUN_FEEDBACK_HOOKS="1")
++        codes.append(("posttooluse", hook.returncode))
++        end = self.run_script(SESSION_END, stdin=json.dumps({
++            "session_id": "s1", "cwd": str(self.root), "reason": "other"}).encode(),
++            standin=standin, RUN_FEEDBACK_HOOKS="1")
++        codes.append(("session_end", end.returncode))
++        return codes
++
++    def test_rf1_each_subcommand_and_both_hooks_exit_as_with_fcntl(self):
++        """TC-RF1: with `fcntl` blocked and the stand-in present, each exit code equals that of a
++        run with `fcntl`, in a twin root."""
++        windows = self._sequence("1")
++        windows_root = self.root
++        self.root = fx.make_repo(self.tmp / "posix-root")
++        posix = self._sequence("")
++        self.assertEqual(windows, posix)
++        self.assertEqual({code for _name, code in windows}, {0}, windows)
++        self.assertTrue(any(row[0] == "LK_LOCK" for row in self.log_rows()))
++        self.root = windows_root
++        self.assertIn("session_end | s1", self.journal_text())
++        self.assertTrue(self.findings(), "the PostToolUse hook collected nothing")
++
++    def test_rf2_each_lock_call_is_at_offset_0(self):
++        """TC-RF2: each `LK_LOCK` and `LK_UNLCK` of the log is at offset 0, and the log holds
++        at least one `LK_LOCK`."""
++        for args in (("claim", "--run-id", "r2"), ("release", "--run-id", "r2")):
++            self.assertEqual(self.cli(*args).returncode, 0)
++        self.collect()
++        rows = [r for r in self.log_rows() if r[0] in ("LK_LOCK", "LK_UNLCK")]
++        self.assertTrue(any(r[0] == "LK_LOCK" for r in rows), rows)
++        self.assertEqual({r[3] for r in rows}, {"0"}, rows)
++
++    def test_rf3_no_lock_module_names_both(self):
++        """TC-RF3: with neither `fcntl` nor `msvcrt`, a command that locks exits 1 and names
++        both modules."""
++        proc = self.cli("claim", "--run-id", "r3", standin="none")
++        self.assertEqual(proc.returncode, 1, proc.stderr)
++        self.assert_no_traceback(proc)
++        err = proc.stderr.decode("utf-8", "replace")
++        self.assertIn("fcntl", err)
++        self.assertIn("msvcrt", err)
++
++    def test_rf4_a_held_lock_times_out(self):
++        """TC-RF4: `EDEADLOCK` (errno 36) of `LK_LOCK` is a `LockTimeout`, exit 1."""
++        proc = self.cli("--json-errors", "claim", "--run-id", "r4", MSVCRT_STANDIN_FAIL_FROM=1)
++        self.assertEqual(proc.returncode, 1, proc.stderr)
++        envelope = json.loads(proc.stderr.decode("ascii").strip().splitlines()[-1])
++        self.assertEqual(envelope["type"], "LockTimeout")
++        self.assertIn("retro", envelope["error"])
++
++    def test_rf5_the_posttooluse_hook_stays_silent_on_a_lock_timeout(self):
++        """TC-RF5: the hook exits 0, writes no finding and no journal entry, and the log holds
++        the `LK_LOCK` call of the collect lock."""
++        proc = self.run_script(HOOK, stdin=json.dumps({
++            "session_id": "s5", "cwd": str(self.root), "tool_name": "Bash",
++            "tool_input": {"command": "python3 x.py"}, "tool_response": FAILED_BASH}).encode(),
++            RUN_FEEDBACK_HOOKS="1", MSVCRT_STANDIN_FAIL_FROM=1)
++        self.assertEqual(proc.returncode, 0)
++        self.assertEqual(self.findings(), [])
++        self.assertEqual(self.journal_text(), "")
++        lock = self.root / ".agent" / "feedback" / "inbox" / ".collect.lock"
++        rows = [r for r in self.log_rows() if r[0].startswith("LK_LOCK")]
++        self.assertTrue(lock.is_file())
++        self.assertEqual([r[2] for r in rows], [self.ident(lock)], rows)
++
++    def test_rf6_file_warns_when_the_journal_lock_fails_after_the_filing(self):
++        """TC-RF6: the filing lock is the first `LK_LOCK` of `file`, the journal's the second.
++        With the second failing, the record is filed, a warning names `finding_filed`, exit 0."""
++        self.seed_ledger()
++        for errno_value in (36, 13):
++            with self.subTest(errno=errno_value):
++                finding_id = self.collect(message="boom %d" % errno_value)
++                proc = self.cli("file", "--finding", finding_id, "--as", "defect", "--title",
++                                "T%d" % errno_value, "--category", "correctness", "--body-file",
++                                self.body, MSVCRT_STANDIN_FAIL_FROM=2,
++                                MSVCRT_STANDIN_ERRNO=errno_value)
++                self.assertEqual(proc.returncode, 0, proc.stderr)
++                self.assertIn(b"finding_filed", proc.stderr)
++        self.assertEqual(len(list((self.root / "docs" / "issues").glob("*.md"))), 2)
++
++    def test_rf7_another_errno_is_a_lock_error(self):
++        """TC-RF7: an `OSError` of another errno is a `LockError`, exit 1."""
++        proc = self.cli("--json-errors", "claim", "--run-id", "r7", MSVCRT_STANDIN_FAIL_FROM=1,
++                        MSVCRT_STANDIN_ERRNO=13)
++        self.assertEqual(proc.returncode, 1, proc.stderr)
++        envelope = json.loads(proc.stderr.decode("ascii").strip().splitlines()[-1])
++        self.assertEqual(envelope["type"], "LockError")
++
++    def test_rf8_two_appends_at_once_keep_their_locks(self):
++        """TC-RF8: two journal appends at once: each takes one `LK_LOCK` and one `LK_UNLCK`,
++        writes once inside its own interval, and the two intervals do not overlap."""
++        cmd = [sys.executable, "-B", str(CLI), "journal", "--event-type", "heal_run",
++               "--subject", "s"]
++        procs = [subprocess.Popen(cmd, cwd=str(self.root), env=self.env(),
++                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                 for _ in range(2)]
++        for proc in procs:
++            _, err = proc.communicate(timeout=120)
++            self.assertEqual(proc.returncode, 0, err)
++        rows = self.log_rows()
++        intervals = []
++        for pid in {r[1] for r in rows}:
++            mine = [r for r in rows if r[1] == pid]
++            kinds = [r[0] for r in mine]
++            self.assertEqual(sorted(kinds), ["LK_LOCK", "LK_UNLCK", "WRITE"], mine)
++            times = {r[0]: float(r[4]) for r in mine}
++            self.assertLessEqual(times["LK_LOCK"], times["WRITE"])
++            self.assertLessEqual(times["WRITE"], times["LK_UNLCK"])
++            intervals.append((times["LK_LOCK"], times["LK_UNLCK"]))
++        self.assertEqual(len(intervals), 2, rows)
++        first, second = sorted(intervals)
++        self.assertLessEqual(first[1], second[0])
++        self.assertEqual(self.journal_text().count("heal_run | s"), 2)
++
++    def test_rf20_session_end_on_a_lock_timeout_writes_nothing(self):
++        """TC-RF20: with the mine of the hook on and the first `LK_LOCK` failing, the hook exits
++        0. It writes no finding and no `mine_state.json`, and the only `LK_LOCK` of the log is the
++        journal's."""
++        transcript = _transcript(self.tmp / "shard" / "s20.jsonl")
++        proc = self.run_script(SESSION_END, stdin=json.dumps({
++            "session_id": "s20", "cwd": str(self.root), "reason": "other",
++            "transcript_path": str(transcript)}).encode(),
++            RUN_FEEDBACK_HOOKS="1", RUN_FEEDBACK_MINE_ON_END="1", MSVCRT_STANDIN_FAIL_FROM=1)
++        self.assertEqual(proc.returncode, 0)
++        self.assertEqual(self.findings(), [])
++        self.assertFalse((self.root / ".agent" / "feedback" / "mine_state.json").exists())
++        journals = list((self.root / ".agent" / "feedback" / "journal").glob("*.md"))
++        self.assertEqual(len(journals), 1)
++        rows = [r for r in self.log_rows() if r[0].startswith("LK_LOCK")]
++        self.assertEqual([r[2] for r in rows], [self.ident(journals[0])], rows)
++
++
++class _InProcess(_Case):
++    """In-process tests of `feedback_lib`; the modules import in each test, not at the top."""
++
++    def setUp(self):
++        super().setUp()
++        ceiling = mock.patch.dict(os.environ, {"GIT_CEILING_DIRECTORIES": str(self.tmp)})
++        ceiling.start()
++        self.addCleanup(ceiling.stop)
++
++    def without_nofollow(self):
++        if hasattr(os, "O_NOFOLLOW"):
++            value = os.O_NOFOLLOW
++            del os.O_NOFOLLOW
++            self.addCleanup(setattr, os, "O_NOFOLLOW", value)
++
++    def run_cli(self, *args):
++        with mock.patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": str(self.root)}):
++            return fx.run_cli(["--repo-root", str(self.root), *args])
++
++    def collect_in_process(self, message="boom"):
++        code, out, err = self.run_cli("collect", "--source", "test", "--kind", "tool-error",
++                                      "--component", "rf", "--message", message, "--json")
++        self.assertEqual(code, 0, err)
++        return json.loads(out)["finding"]["finding_id"]
++
++
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege."""
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++class TestCreateOnlyWrite(_InProcess):
++    """TC-RF9 to TC-RF12, TC-RF18 (TASK 133 R2, R3)."""
++
++    def test_rf9_file_creates_the_record_with_lf_without_o_nofollow(self):
++        """TC-RF9: with `os.O_NOFOLLOW` removed, `file` writes the record with LF line ends."""
++        self.without_nofollow()
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                    "--title", "T", "--category", "correctness",
++                                    "--body-file", str(self.body))
++        self.assertEqual(code, 0, err)
++        records = list((self.root / "docs" / "issues").glob("*.md"))
++        self.assertEqual(len(records), 1)
++        data = records[0].read_bytes()
++        self.assertNotIn(b"\r", data)
++        self.assertTrue(data.endswith(b"\n"))
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    @unittest.skipIf(WINDOWS, "Windows refuses to rename a file that a descriptor holds open")
++    def test_rf10_a_swapped_record_path_is_refused_and_the_link_stays(self):
++        """TC-RF10: a record path swapped for a link right after the open exits 4, and the link
++        at the path stays."""
++        self.without_nofollow()
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        real_open = os.open
++        moved = self.tmp / "moved.md"
++
++        def swapping_open(path, flags, *rest):
++            fd = real_open(path, flags, *rest)
++            text = str(path)
++            if text.endswith(".md") and os.sep + "issues" + os.sep in text:
++                os.rename(text, str(moved))
++                os.symlink(str(moved), text)
++            return fd
++
++        with mock.patch.object(os, "open", swapping_open):
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T", "--category", "correctness",
++                                        "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        self.assertIn("changed during the write", err)
++        links = [p for p in (self.root / "docs" / "issues").iterdir() if p.is_symlink()]
++        self.assertEqual(len(links), 1)
++
++    @unittest.skipIf(not hasattr(os, "O_NOFOLLOW"), "pins the branch that has O_NOFOLLOW")
++    def test_rf11_the_record_bytes_equal_the_record_text(self):
++        """TC-RF11: with `O_NOFOLLOW`, the record's bytes equal its text, encoded with LF."""
++        from feedback_lib import ledger_issues
++        self.seed_ledger()
++        cfg = fx.load_cfg(self.root)
++        preview = ledger_issues.file_defect(cfg, "RF-2", "rf-2-x", "X", "correctness",
++                                            fx.DEFECT_BODY, dry_run=True)
++        ledger_issues.file_defect(cfg, "RF-2", "rf-2-x", "X", "correctness", fx.DEFECT_BODY)
++        data = (self.root / "docs" / "issues" / "rf-2-x.md").read_bytes()
++        self.assertEqual(data, preview["issue_text"].encode("utf-8"))
++
++    def test_rf12_each_os_open_passes_o_binary(self):
++        """TC-RF12: a stand-in value of `os.O_BINARY` reaches each of the five calls."""
++        used = 0
++        for name in dir(os):
++            if name.startswith("O_") and isinstance(getattr(os, name), int):
++                used |= getattr(os, name)
++        bit = next(1 << n for n in range(20, 31) if not used & (1 << n))
++        seen = []
++        real_open = os.open
++
++        def spy(path, flags, *rest):
++            seen.append((str(path), bool(flags & bit)))
++            return real_open(path, flags & ~bit, *rest)
++
++        self.seed_ledger()
++        with mock.patch.object(os, "O_BINARY", bit, create=True), \
++                mock.patch.object(os, "open", spy):
++            for args in (("claim", "--run-id", "r12"),):
++                self.assertEqual(self.run_cli(*args)[0], 0)
++            finding_id = self.collect_in_process()
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T", "--category", "correctness",
++                                        "--body-file", str(self.body))
++            self.assertEqual(code, 0, err)
++        targets = {
++            "retro": lambda p: os.path.basename(p) == "retro_owner",
++            "collect lock": lambda p: p.endswith(".collect.lock"),
++            "journal": lambda p: os.sep + "journal" + os.sep in p,
++            "filing lock": lambda p: p.endswith(".filing.lock"),
++            "record": lambda p: os.sep + "issues" + os.sep in p and p.endswith(".md"),
++        }
++        for label, match in targets.items():
++            hits = [flag for path, flag in seen if match(path)]
++            self.assertTrue(hits, "%s: no os.open" % label)
++            self.assertTrue(all(hits), "%s: an os.open without O_BINARY" % label)
++
++    def test_rf18_a_failed_fdopen_closes_the_descriptor_before_the_rollback(self):
++        """TC-RF18: when `os.fdopen` raises, the descriptor closes before the record is
++        removed."""
++        from feedback_lib import ledger_core, ledger_issues
++        from feedback_lib.envelope import CliError
++        self.seed_ledger()
++        cfg = fx.load_cfg(self.root)
++        events = []
++        real_close, real_unlink = os.close, os.unlink
++
++        def fdopen(fd, *args, **kwargs):
++            events.append(("fd", fd))
++            raise OSError(5, "stand-in fdopen failure")
++
++        def close(fd):
++            events.append(("close", fd))
++            return real_close(fd)
++
++        def unlink(path, *args, **kwargs):
++            events.append(("unlink", str(path)))
++            return real_unlink(path, *args, **kwargs)
++
++        with mock.patch.object(ledger_core.os, "fdopen", fdopen), \
++                mock.patch.object(os, "close", close), mock.patch.object(os, "unlink", unlink):
++            with self.assertRaises((CliError, OSError)):
++                ledger_issues.file_defect(cfg, "RF-2", "rf-2-y", "Y", "correctness",
++                                          fx.DEFECT_BODY)
++        fd = next(v for k, v in events if k == "fd")
++        record = str(self.root / "docs" / "issues" / "rf-2-y.md")
++        self.assertIn(("close", fd), events)
++        self.assertIn(("unlink", record), events)
++        self.assertLess(events.index(("close", fd)), events.index(("unlink", record)))
++        self.assertFalse(os.path.lexists(record))
++
++
++class TestStateAndRollback(_InProcess):
++    """TC-RF21 to TC-RF24 (TASK 133 R2.3, R3.2): the rollback after a failed write of the index,
++    and no link or second hard link at a file of the machine state."""
++
++    def _outside(self):
++        outside = self.tmp / "outside.txt"
++        outside.write_text("keep\n", encoding="utf-8")
++        return outside
++
++    def test_rf21_a_failed_index_write_leaves_a_foreign_file(self):
++        """TC-RF21: without `O_NOFOLLOW`, the rollback after a failed write of the index keeps a
++        file that took the record path."""
++        from feedback_lib import ledger_issues
++        self.without_nofollow()
++        self.seed_ledger()
++        cfg = fx.load_cfg(self.root)
++        record = self.root / "docs" / "issues" / "rf-2-z.md"
++        foreign = b"foreign\n"
++
++        def failing_index(path, text, *args, **kwargs):
++            # a new file made while the record still holds its number, then moved over it: the
++            # two never share an identity, whatever the file system reuses
++            stand_in = record.with_name("rf-2-z.md.foreign")
++            stand_in.write_bytes(foreign)
++            os.replace(str(stand_in), str(record))
++            raise OSError(28, "stand-in: no space left on device")
++
++        with mock.patch("feedback_lib.atomic.write_atomic", failing_index):
++            with self.assertRaises(OSError):
++                ledger_issues.file_defect(cfg, "RF-2", "rf-2-z", "Z", "correctness",
++                                          fx.DEFECT_BODY)
++        self.assertEqual(record.read_bytes(), foreign)
++
++    def _state_cases(self):
++        """(the name of a state file, the command that opens it): each command exits 4 when a
++        link or a FIFO stands at that name."""
++        feedback = self.root / ".agent" / "feedback"
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        return [
++            (feedback / "retro_owner", ("claim", "--run-id", "r22")),
++            (feedback / "journal" / (time.strftime("%Y-%m") + ".md"),
++             ("journal", "--event-type", "heal_run", "--subject", "s")),
++            (feedback / "inbox" / ".collect.lock",
++             ("collect", "--source", "test", "--kind", "tool-error", "--component", "rf",
++              "--message", "m22")),
++            (feedback / ".filing.lock",
++             ("file", "--finding", finding_id, "--as", "noise", "--reason", "r")),
++        ]
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    def test_rf22_a_link_at_a_state_file_is_refused(self):
++        """TC-RF22: a symbolic link at `retro_owner`, at the journal file and at both lock files:
++        each command exits 4, and the link's target keeps its bytes, with `O_NOFOLLOW` (a
++        process) and, where the process can drop it, without it (in this process)."""
++        outside = self._outside()
++        for name, args in self._state_cases():
++            with self.subTest(name=name.name):
++                name.parent.mkdir(parents=True, exist_ok=True)
++                if os.path.lexists(str(name)):
++                    os.unlink(str(name))
++                os.symlink(str(outside), str(name))
++                proc = self.cli(*args, standin="")
++                self.assertEqual(proc.returncode, 4, proc.stderr)
++                self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
++                os.unlink(str(name))
++        self.without_nofollow()
++        for name, args in self._state_cases():
++            with self.subTest(name=name.name, nofollow=False):
++                name.parent.mkdir(parents=True, exist_ok=True)
++                if os.path.lexists(str(name)):
++                    os.unlink(str(name))
++                os.symlink(str(outside), str(name))
++                self.assertEqual(self.run_cli(*args)[0], 4)
++                self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
++                os.unlink(str(name))
++        # a dangling link: the open would create its target, so `os.lstat` refuses it first
++        retro = self.root / ".agent" / "feedback" / "retro_owner"
++        target = self.tmp / "created-by-the-open"
++        os.symlink(str(target), str(retro))
++        self.assertEqual(self.run_cli("claim", "--run-id", "r22")[0], 4)
++        self.assertFalse(target.exists(), "the open created the target of a dangling link")
++        os.unlink(str(retro))
++        if WINDOWS:
++            return  # Windows refuses to rename a file that a descriptor holds open
++        # a swap after the open: only the identity check after it sees the link
++        retro.write_text("", encoding="utf-8")
++        real_open = os.open
++
++        def swapping_open(path, flags, *rest):
++            fd = real_open(path, flags, *rest)
++            if str(path) == str(retro):
++                os.rename(str(retro), str(self.tmp / "moved-owner"))
++                os.symlink(str(outside), str(retro))
++            return fd
++
++        with mock.patch.object(os, "open", swapping_open):
++            self.assertEqual(self.run_cli("claim", "--run-id", "r22")[0], 4)
++        self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
++
++    def test_rf25_an_error_before_the_identity_removes_nothing(self):
++        """TC-RF25: without `O_NOFOLLOW`, an error of the open of a record, or of its
++        `os.fstat`, leaves the file at the record path."""
++        from feedback_lib import ledger_issues
++        self.without_nofollow()
++        self.seed_ledger()
++        cfg = fx.load_cfg(self.root)
++        real_open, real_fstat = os.open, os.fstat
++        foreign = b"foreign\n"
++        for slug, case in (("rf-2-a", "open"), ("rf-2-b", "fstat")):
++            record = self.root / "docs" / "issues" / (slug + ".md")
++
++            def failing_open(path, flags, *rest):
++                if str(path) == str(record):
++                    record.write_bytes(foreign)
++                    raise PermissionError(13, "stand-in: access denied")
++                return real_open(path, flags, *rest)
++
++            def failing_fstat(fd, *args, **kwargs):
++                if case == "fstat" and os.path.exists(str(record)):
++                    raise OSError(5, "stand-in: input/output error")
++                return real_fstat(fd, *args, **kwargs)
++
++            with self.subTest(case=case):
++                patches = [mock.patch.object(os, "fstat", failing_fstat)] if case == "fstat" \
++                    else [mock.patch.object(os, "open", failing_open)]
++                with patches[0]:
++                    with self.assertRaises(Exception):
++                        ledger_issues.file_defect(cfg, slug.upper()[:4], slug, "A",
++                                                  "correctness", fx.DEFECT_BODY)
++                self.assertTrue(record.exists(), "the rollback removed the record path")
++                if case == "open":
++                    self.assertEqual(record.read_bytes(), foreign)
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    def test_rf26_a_link_at_a_directory_of_the_state_is_refused(self):
++        """TC-RF26: a link at `journal/`, at `inbox/` and at `dismissed/` of
++        `.agent/feedback/`: `claim` warns, `collect` and `file --as noise` exit 4, and the link's
++        target stays empty, with `O_NOFOLLOW` (a process) and without it (in this process)."""
++        feedback = self.root / ".agent" / "feedback"
++        self.seed_ledger()
++        for nofollow in (True, False):
++            if not nofollow:
++                self.without_nofollow()
++            finding_id = self.collect_in_process()
++            for sub, args, code in (
++                    ("journal", ("claim", "--run-id", "r26"), 0),
++                    ("inbox", ("collect", "--source", "test", "--kind", "tool-error",
++                               "--component", "rf", "--message", "m26"), 4),
++                    ("dismissed", ("file", "--finding", finding_id, "--as", "noise",
++                                   "--reason", "r"), 4)):
++                with self.subTest(sub=sub, nofollow=nofollow):
++                    outside = self.tmp / ("outside-%s-%s" % (sub, nofollow))
++                    outside.mkdir()
++                    directory = feedback / sub
++                    keep = None
++                    if directory.exists():
++                        keep = self.tmp / ("kept-%s-%s" % (sub, nofollow))
++                        os.rename(str(directory), str(keep))
++                    os.symlink(str(outside), str(directory))
++                    if nofollow:
++                        proc = self.cli(*args, standin="")
++                        result, err = proc.returncode, proc.stderr.decode("utf-8", "replace")
++                    else:
++                        result, _, err = self.run_cli(*args)
++                    self.assertEqual(result, code, err)
++                    if code == 0:
++                        self.assertIn("retro_claimed", err)
++                        self.run_cli("release", "--run-id", "r26")
++                    self.assertEqual(list(outside.iterdir()), [])
++                    os.unlink(str(directory))
++                    if keep is not None:
++                        os.rename(str(keep), str(directory))
++
++    def _finding_status(self, finding_id):
++        path = self.root / ".agent" / "feedback" / "inbox" / (finding_id + ".json")
++        return json.loads(path.read_text(encoding="utf-8"))["status"]
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    def test_rf28_file_checks_its_directories_before_any_write(self):
++        """TC-RF28: a link at `filed/`: `file --as defect` exits 4, files no record and leaves
++        the finding `new`. A link at `inbox/`: `file --as noise` exits 4, and the finding outside
++        stays."""
++        feedback = self.root / ".agent" / "feedback"
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        outside = self.tmp / "outside-filed"
++        outside.mkdir()
++        os.symlink(str(outside), str(feedback / "filed"))
++        code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                    "--title", "T", "--category", "correctness",
++                                    "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        issues = self.root / "docs" / "issues"
++        self.assertEqual(list(issues.glob("*.md")) if issues.is_dir() else [], [])
++        self.assertEqual(self._finding_status(finding_id), "new")
++        self.assertEqual(list(outside.iterdir()), [])
++        os.unlink(str(feedback / "filed"))
++        moved = self.tmp / "outside-inbox"
++        os.rename(str(feedback / "inbox"), str(moved))
++        os.symlink(str(moved), str(feedback / "inbox"))
++        code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "noise",
++                                    "--reason", "r")
++        self.assertEqual(code, 4, err)
++        self.assertTrue((moved / (finding_id + ".json")).exists())
++        # `consume` keeps its own check of the directory it moves a finding to
++        from feedback_lib import inbox
++        from feedback_lib.envelope import CliError
++        os.unlink(str(feedback / "inbox"))
++        os.rename(str(moved), str(feedback / "inbox"))
++        os.symlink(str(outside), str(feedback / "dismissed"))
++        path = feedback / "inbox" / (finding_id + ".json")
++        record = json.loads(path.read_text(encoding="utf-8"))
++        with self.assertRaises(CliError):
++            inbox.consume(fx.load_cfg(self.root), path, record, "dismissed")
++        self.assertEqual(list(outside.iterdir()), [])
++        # a dangling link there meets the check before `mkdir`
++        os.unlink(str(feedback / "dismissed"))
++        missing = self.tmp / "missing-dismissed"
++        os.symlink(str(missing), str(feedback / "dismissed"))
++        with self.assertRaises(CliError):
++            inbox.consume(fx.load_cfg(self.root), path, record, "dismissed")
++        self.assertFalse(missing.exists())
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    def test_rf29_a_dangling_link_at_a_state_directory_is_refused(self):
++        """TC-RF29: a dangling link at `journal/`: `claim` warns and exits 0; at `inbox/`:
++        `collect` exits 4. Neither ends in a traceback, and no target is made."""
++        feedback = self.root / ".agent" / "feedback"
++        feedback.mkdir(parents=True)
++        missing = self.tmp / "missing-target"
++        os.symlink(str(missing), str(feedback / "journal"))
++        code, _, err = self.run_cli("claim", "--run-id", "r29")
++        self.assertEqual(code, 0, err)
++        self.assertIn("retro_claimed", err)
++        os.symlink(str(missing), str(feedback / "inbox"))
++        code, _, err = self.run_cli("collect", "--source", "test", "--kind", "tool-error",
++                                    "--component", "rf", "--message", "m29")
++        self.assertEqual(code, 4, err)
++        self.assertFalse(missing.exists())
++
++    def test_rf30_a_late_refusal_of_the_move_marks_the_finding_filed(self):
++        """TC-RF30: a `StateRefused` of the move after the ledger write runs the recovery of V17:
++        exit 4, an error that names both halves, and the finding marked `filed` in place."""
++        from feedback_lib import inbox
++        from feedback_lib.envelope import CliError
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        refusal = CliError("refusing a link", code=4, err_type="StateRefused")
++        with mock.patch.object(inbox, "consume", side_effect=refusal):
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T", "--category", "correctness",
++                                        "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        self.assertIn("could not be moved out", err)
++        self.assertEqual(self._finding_status(finding_id), "filed")
++
++    @unittest.skipUnless(_can_symlink(), "this process cannot make a link")
++    def test_rf31_file_checks_the_file_its_move_writes(self):
++        """TC-RF31: a link at `filed/<finding_id>.json`: `file --as defect` exits 4, files no
++        record and leaves the finding `new`. A link at `dismissed/<finding_id>.json`: `file --as
++        noise` exits 4. No target is made."""
++        feedback = self.root / ".agent" / "feedback"
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        for directory, args in (("filed", ("--as", "defect", "--title", "T", "--category",
++                                           "correctness", "--body-file", str(self.body))),
++                                ("dismissed", ("--as", "noise", "--reason", "r"))):
++            with self.subTest(directory=directory):
++                target = self.tmp / ("outside-%s.json" % directory)
++                (feedback / directory).mkdir(exist_ok=True)
++                link = feedback / directory / (finding_id + ".json")
++                os.symlink(str(target), str(link))
++                try:
++                    code, _, err = self.run_cli("file", "--finding", finding_id, *args)
++                finally:
++                    os.unlink(str(link))
++                self.assertEqual(code, 4, err)
++                self.assertIn("a link, a junction", err)
++                issues = self.root / "docs" / "issues"
++                self.assertEqual(list(issues.glob("*.md")) if issues.is_dir() else [], [])
++                self.assertEqual(self._finding_status(finding_id), "new")
++                self.assertFalse(target.exists())
++
++    def test_rf32_each_failure_of_the_move_runs_the_recovery(self):
++        """TC-RF32: a `FilingConflict` of the move after the ledger write also marks the finding
++        `filed` in place. When that mark is refused too, the error still names both halves."""
++        from feedback_lib import atomic, inbox
++        from feedback_lib.envelope import CliError
++        self.seed_ledger()
++        conflict = CliError("refusing to replace a link", code=4, err_type="FilingConflict")
++        finding_id = self.collect_in_process()
++        with mock.patch.object(inbox, "consume", side_effect=conflict):
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T", "--category", "correctness",
++                                        "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        self.assertIn("could not be moved out", err)
++        self.assertEqual(self._finding_status(finding_id), "filed")
++        finding_id = self.collect_in_process(message="m32")
++        real_write = atomic.write_atomic
++
++        def refusing_write(path, *args, **kwargs):
++            if Path(path).parent.name == "inbox":
++                raise conflict
++            return real_write(path, *args, **kwargs)
++
++        refusal = CliError("refusing a link", code=4, err_type="StateRefused")
++        with mock.patch.object(inbox, "consume", side_effect=refusal), \
++                mock.patch.object(atomic, "write_atomic", refusing_write):
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T2", "--category", "correctness",
++                                        "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        self.assertIn("could not be moved out", err)
++        self.assertIn("could NOT be marked filed", err)
++        self.assertEqual(self._finding_status(finding_id), "new")
++
++    @unittest.skipUnless(hasattr(os, "mkfifo"), "makes a FIFO, which only POSIX has")
++    def test_rf27_a_fifo_at_a_state_file_is_refused(self):
++        """TC-RF27: a FIFO at `retro_owner`, at the journal file and at `.collect.lock`: each
++        command exits 4 within 10 seconds."""
++        for name, args in self._state_cases()[:3]:
++            with self.subTest(name=name.name):
++                name.parent.mkdir(parents=True, exist_ok=True)
++                if os.path.lexists(str(name)):
++                    os.unlink(str(name))
++                os.mkfifo(str(name))
++                try:
++                    proc = subprocess.run([sys.executable, "-B", str(CLI), *args],
++                                          cwd=str(self.root), env=self.env(standin=""),
++                                          capture_output=True, timeout=10)
++                except subprocess.TimeoutExpired:
++                    self.fail("%s blocked on a FIFO" % args[0])
++                self.assertEqual(proc.returncode, 4, proc.stderr)
++                os.unlink(str(name))
++
++    def test_rf23_a_second_hard_link_of_a_record_is_refused(self):
++        """TC-RF23: without `O_NOFOLLOW`, a second hard link made right after the open of a record
++        exits 4, and the other link keeps the file."""
++        self.without_nofollow()
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        real_open = os.open
++        other = self.tmp / "other-link.md"
++
++        def linking_open(path, flags, *rest):
++            fd = real_open(path, flags, *rest)
++            text = str(path)
++            if text.endswith(".md") and os.sep + "issues" + os.sep in text:
++                os.link(text, str(other))
++            return fd
++
++        with mock.patch.object(os, "open", linking_open):
++            code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                        "--title", "T", "--category", "correctness",
++                                        "--body-file", str(self.body))
++        self.assertEqual(code, 4, err)
++        self.assertTrue(other.exists())
++
++    def test_rf24_a_hard_link_at_retro_owner_is_refused(self):
++        """TC-RF24: a hard link at `retro_owner` exits 4, and the other name keeps its bytes."""
++        outside = self._outside()
++        feedback = self.root / ".agent" / "feedback"
++        feedback.mkdir(parents=True)
++        os.link(str(outside), str(feedback / "retro_owner"))
++        self.assertEqual(self.run_cli("claim", "--run-id", "r24")[0], 4)
++        self.assertEqual(outside.read_text(encoding="utf-8"), "keep\n")
++
++
++class TestReplaceAndUnlink(_InProcess):
++    """TC-RF13 to TC-RF17, TC-RF19 (TASK 133 R4)."""
++
++    def setUp(self):
++        super().setUp()
++        from feedback_lib import atomic, locks
++        self.atomic = atomic
++        patcher = mock.patch.object(locks, "WINDOWS", True)
++        patcher.start()
++        self.addCleanup(patcher.stop)
++        sleeper = mock.patch.object(time, "sleep", lambda seconds: None)
++        sleeper.start()
++        self.addCleanup(sleeper.stop)
++        self.target = self.tmp / "target.txt"
++
++    @staticmethod
++    def failing(real, times, error=PermissionError):
++        calls = []
++
++        def call(*args, **kwargs):
++            calls.append(args)
++            if len(calls) <= times:
++                raise error(13, "stand-in sharing violation")
++            return real(*args, **kwargs)
++        call.calls = calls
++        return call
++
++    def test_rf13_replace_retries_a_held_target(self):
++        """TC-RF13: `os.replace` that fails twice and then succeeds writes the file."""
++        replace = self.failing(os.replace, 2)
++        with mock.patch.object(os, "replace", replace):
++            self.atomic.write_atomic(self.target, "text\n")
++        self.assertEqual(self.target.read_text(encoding="utf-8"), "text\n")
++        self.assertEqual(len(replace.calls), 3)
++
++    def test_rf14_replace_gives_up_after_ten_and_removes_the_temporary_file(self):
++        """TC-RF14: after ten failures the error propagates, and no temporary file stays."""
++        replace = self.failing(os.replace, 99)
++        with mock.patch.object(os, "replace", replace):
++            with self.assertRaises(PermissionError):
++                self.atomic.write_atomic(self.target, "text\n")
++        self.assertEqual(len(replace.calls), 10)
++        self.assertEqual(list(self.tmp.glob("target.txt.tmp.*")), [])
++
++    def test_rf15_consume_retries_its_unlink(self):
++        """TC-RF15: `consume` succeeds after two failures, and propagates after ten."""
++        from feedback_lib import inbox
++        cfg = fx.load_cfg(self.root)
++        for times, raises in ((2, False), (99, True)):
++            path = self.tmp / ("finding-%d.json" % times)
++            path.write_text("{}", encoding="utf-8")
++            record = {"finding_id": "fnd-20260101-000000-0000000%d" % (times % 10),
++                      "status": "new"}
++            unlink = self.failing(os.unlink, times)
++            with mock.patch.object(os, "unlink", unlink):
++                if raises:
++                    with self.assertRaises(PermissionError):
++                        inbox.consume(cfg, path, record, "dismissed")
++                    self.assertEqual(len(unlink.calls), 10)
++                    self.assertTrue(path.exists())
++                else:
++                    inbox.consume(cfg, path, record, "dismissed")
++                    self.assertFalse(path.exists())
++
++    def test_rf16_write_atomic_refuses_a_junction(self):
++        """TC-RF16: a target whose `lstat` gives a name-surrogate reparse point is refused."""
++        from feedback_lib.envelope import CliError
++        self.target.write_text("old", encoding="utf-8")
++        real = os.lstat(str(self.target))
++
++        class Junction:
++            st_mode = stat.S_IFDIR | 0o755
++            st_file_attributes = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
++            st_reparse_tag = 0xA0000003
++            st_dev, st_ino, st_nlink = real.st_dev, real.st_ino, 1
++
++        def lstat(path, *args, **kwargs):
++            if str(path) == str(self.target):
++                return Junction()
++            return os.stat(path, follow_symlinks=False)
++
++        with mock.patch.object(os, "lstat", lstat):
++            with self.assertRaises(CliError):
++                self.atomic.write_atomic(self.target, "new")
++        self.assertEqual(self.target.read_text(encoding="utf-8"), "old")
++
++    def test_rf17_cleanup_unlinks_give_up_quietly_after_ten(self):
++        """TC-RF17: the unlink of the temporary file and `_rollback` succeed after two failures;
++        after ten each ignores its error, the starting exception propagates, the path stays."""
++        from feedback_lib import ledger_core
++        for times, stays in ((2, False), (99, True)):
++            unlink = self.failing(os.unlink, times)
++            with mock.patch.object(os, "replace", side_effect=ValueError("boom")), \
++                    mock.patch.object(os, "unlink", unlink):
++                with self.assertRaises(ValueError):
++                    self.atomic.write_atomic(self.target, "text")
++            self.assertEqual(bool(list(self.tmp.glob("target.txt.tmp.*"))), stays)
++            for leftover in self.tmp.glob("target.txt.tmp.*"):
++                leftover.unlink()
++            record = self.tmp / ("record-%d.md" % times)
++            record.write_text("r", encoding="utf-8")
++            unlink = self.failing(os.unlink, times)
++            with mock.patch.object(os, "unlink", unlink):
++                ledger_core._rollback(record)
++            self.assertEqual(record.exists(), stays)
++
++    def test_rf19_a_rooted_config_path_is_refused_as_relative(self):
++        """TC-RF19: with `Path` of `_contained` bound to `PureWindowsPath`, `/tmp/escaped` and
++        `C:docs` raise code 3 with `RELATIVE`."""
++        from feedback_lib import config
++        from feedback_lib.envelope import CliError
++        for raw in ("/tmp/escaped", "C:docs"):
++            with mock.patch.object(config, "Path", PureWindowsPath):
++                with self.assertRaises(CliError) as ctx:
++                    config._contained(PureWindowsPath("C:/repo"), raw, "backlog_dir", "config")
++            self.assertEqual(ctx.exception.code, 3)
++            self.assertIn("RELATIVE", str(ctx.exception))
++
++
++class TestStreamEncoding(_Case):
++    """TC-EN1 to TC-EN5 (TASK 133 R7)."""
++
++    def test_en1_init_escapes_the_arrow_under_cp1252(self):
++        """TC-EN1: `init` exits 0, and its human output holds the escape of the arrow."""
++        proc = self.cli("init", standin="", PYTHONIOENCODING="cp1252")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        self.assertIn(b"prefix\\u2192category", proc.stdout)
++
++    def test_en2_session_end_journals_a_cyrillic_id_with_a_bom(self):
++        """TC-EN2: a payload with a byte-order mark and a Cyrillic session id is journaled."""
++        payload = json.dumps({"session_id": CYRILLIC, "cwd": str(self.root), "reason": "other"},
++                             ensure_ascii=False).encode("utf-8")
++        proc = self.run_script(SESSION_END, stdin=b"\xef\xbb\xbf" + payload, standin="",
++                               RUN_FEEDBACK_HOOKS="1", PYTHONIOENCODING="cp1252")
++        self.assertEqual(proc.returncode, 0)
++        self.assertIn("session_end | " + CYRILLIC, self.journal_text())
++
++    def test_en3_collect_reads_a_cyrillic_envelope_from_stdin(self):
++        """TC-EN3: `--error-envelope -` decodes stdin as UTF-8."""
++        envelope = json.dumps({"v": 1, "error": CYRILLIC}, ensure_ascii=False).encode("utf-8")
++        proc = self.cli("collect", "--source", "test", "--kind", "tool-error", "--component",
++                        "rf", "--message", "m " + EMOJI, "--error-envelope", "-", "--json",
++                        stdin=b"\xef\xbb\xbf" + envelope, standin="",
++                        PYTHONIOENCODING="cp1252")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        self.assertTrue(proc.stdout.isascii())
++        record = json.loads(proc.stdout.decode("ascii"))["finding"]
++        self.assertEqual(record["subject"]["error_envelope"]["error"], CYRILLIC)
++
++    def test_en4_issues_json_is_ascii_under_cp1251(self):
++        """TC-EN4: `issues --json` of a record whose category holds `e` with acute is ASCII, and
++        parses to the value written."""
++        fx.write_issue(self.root / "docs" / "issues", "RF-1", "rf-1-x",
++                       category="caf" + E_ACUTE)
++        proc = self.cli("issues", "--json", standin="", PYTHONIOENCODING="cp1251")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        records = json.loads(proc.stdout.decode("ascii"))
++        self.assertEqual(records[0]["category"], "caf" + E_ACUTE)
++
++    def test_en5_triage_and_the_error_envelope_are_ascii_under_cp1252(self):
++        """TC-EN5: `triage --json` with an emoji, and the `--json-errors` envelope of a path
++        with `e` with acute, are ASCII and parse."""
++        self.collect(message="boom " + EMOJI, standin="")
++        proc = self.cli("triage", "--json", standin="", PYTHONIOENCODING="cp1252")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        rows = json.loads(proc.stdout.decode("ascii"))
++        self.assertIn(EMOJI, json.dumps(rows, ensure_ascii=False))
++        missing = self.root / ("caf" + E_ACUTE + ".json")
++        proc = self.cli("--json-errors", "file", "--finding", missing, "--as", "noise",
++                        "--reason", "r", standin="", PYTHONIOENCODING="cp1252")
++        self.assertNotEqual(proc.returncode, 0)
++        envelope = json.loads(proc.stderr.decode("ascii").strip().splitlines()[-1])
++        self.assertIn("caf" + E_ACUTE, envelope["error"])
++
++
++    def test_en6_a_body_file_with_a_bom_files_without_it(self):
++        """TC-EN6: a `--body-file` that starts with a byte-order mark files a body without it."""
++        self.seed_ledger()
++        body = self.tmp / "bom-body.md"
++        body.write_bytes(b"\xef\xbb\xbf" + fx.DEFECT_BODY.encode("utf-8"))
++        finding_id = self.collect(standin="")
++        proc = self.cli("file", "--finding", finding_id, "--as", "defect", "--title", "T",
++                        "--category", "correctness", "--body-file", body, standin="")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        record = next((self.root / "docs" / "issues").glob("*.md")).read_text(encoding="utf-8")
++        self.assertNotIn(chr(0xFEFF), record)
++
++    def test_en7_the_posttooluse_hook_reads_a_payload_with_a_bom(self):
++        """TC-EN7: the PostToolUse hook with a byte-order mark on stdin collects its finding."""
++        payload = json.dumps({"session_id": "s7", "cwd": str(self.root), "tool_name": "Bash",
++                              "tool_input": {"command": "python3 x.py"},
++                              "tool_response": FAILED_BASH}).encode("utf-8")
++        proc = self.run_script(HOOK, stdin=b"\xef\xbb\xbf" + payload, standin="",
++                               RUN_FEEDBACK_HOOKS="1", PYTHONIOENCODING="cp1252")
++        self.assertEqual(proc.returncode, 0)
++        self.assertEqual(len(self.findings()), 1)
++
++
++@WINDOWS_ONLY
++class TestOnWindows(_InProcess):
++    """TC-WN1 to TC-WN5 (TASK 133 R8.3): the real branches on Windows."""
++
++    def test_wn1_replace_waits_for_a_held_target(self):
++        """TC-WN1: a target held open by another handle is replaced once that handle closes."""
++        from feedback_lib import atomic
++        target = self.tmp / "held.txt"
++        target.write_text("old", encoding="utf-8")
++        handle = open(str(target), "rb")
++        threading.Timer(0.3, handle.close).start()
++        atomic.write_atomic(target, "new")
++        self.assertEqual(target.read_text(encoding="utf-8"), "new")
++
++    def test_wn2_write_atomic_refuses_a_real_junction(self):
++        """TC-WN2: a junction at the target is refused."""
++        import _winapi
++        from feedback_lib import atomic
++        from feedback_lib.envelope import CliError
++        inner = self.tmp / "inner"
++        inner.mkdir()
++        link = self.tmp / "junction"
++        _winapi.CreateJunction(str(inner), str(link))
++        with self.assertRaises(CliError):
++            atomic.write_atomic(link, "x")
++
++    def test_wn3_the_journal_and_a_filed_record_hold_no_cr(self):
++        """TC-WN3: the bytes of a journal entry and of a filed record hold no CR."""
++        self.seed_ledger()
++        finding_id = self.collect_in_process()
++        code, _, err = self.run_cli("file", "--finding", finding_id, "--as", "defect",
++                                    "--title", "T", "--category", "correctness",
++                                    "--body-file", str(self.body))
++        self.assertEqual(code, 0, err)
++        for path in list((self.root / "docs" / "issues").glob("*.md")) + \
++                list((self.root / ".agent" / "feedback" / "journal").glob("*.md")):
++            self.assertNotIn(b"\r", path.read_bytes(), path)
++
++    def test_wn4_the_real_lock_times_out(self):
++        """TC-WN4: a second process meets the held lock and exits 1 with `LockTimeout`."""
++        import msvcrt
++        proc = self.cli("claim", "--run-id", "w4", standin="")
++        self.assertEqual(proc.returncode, 0, proc.stderr)
++        owner = self.root / ".agent" / "feedback" / "retro_owner"
++        fd = os.open(str(owner), os.O_RDWR | getattr(os, "O_BINARY", 0))
++        try:
++            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
++            proc = self.cli("--json-errors", "release", "--run-id", "w4", standin="")
++            os.lseek(fd, 0, os.SEEK_SET)
++            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
++        finally:
++            os.close(fd)
++        self.assertEqual(proc.returncode, 1, proc.stderr)
++        envelope = json.loads(proc.stderr.decode("ascii").strip().splitlines()[-1])
++        self.assertEqual(envelope["type"], "LockTimeout")
++
++    def test_wn5_a_lower_case_drive_letter_matches(self):
++        """TC-WN5: `default_transcript_dirs` matches a directory named with the other case of
++        the drive letter."""
++        from feedback_lib import mine
++        root = str(self.root)
++        flipped = root[0].swapcase() + root[1:]
++        projects = self.tmp / "projects"
++        (projects / mine.encode_project_dir(flipped)).mkdir(parents=True)
++        self.assertEqual(len(mine.default_transcript_dirs(root, projects_dir=projects)), 1)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/.agent/skills/run-feedback/scripts/tests/test_work_item_cli.py b/.agent/skills/run-feedback/scripts/tests/test_work_item_cli.py
+index 64d5bc5..d91c48e 100644
+--- a/.agent/skills/run-feedback/scripts/tests/test_work_item_cli.py
++++ b/.agent/skills/run-feedback/scripts/tests/test_work_item_cli.py
+@@ -72,8 +72,8 @@ class TestTwoLevelCli(WorkItemCliTestCase):
+         payload = json.loads(out)
+         self.assertEqual(payload["filed_as"]["id"], "WI-9")
+         self.assertEqual(payload["filed_as"]["ledger"], "backlog")
+-        self.assertTrue(payload["filed_as"]["path"].endswith(
+-            "docs/backlog/wi-9-work-item-path-flattens-the-backlog.md"))
++        self.assertEqual(Path(payload["filed_as"]["path"]),
++                         self.records / "wi-9-work-item-path-flattens-the-backlog.md")
+ 
+     def test_record_carries_context_and_index_gets_one_line(self):
+         code, out, err = self.file_work_item("--effort", "S", "--json")
+diff --git a/.agent/tools/rebase_links.py b/.agent/tools/rebase_links.py
+index 4101da5..1fe80c8 100644
+--- a/.agent/tools/rebase_links.py
++++ b/.agent/tools/rebase_links.py
+@@ -35,6 +35,8 @@ Decision table, per link:
+     no          no                 PRE_BROKEN, left alone and reported
+ 
+ Anything whose old denotation escapes `repo_root` is left alone (ESCAPES_ROOT).
++That includes a link to a path that names a device, such as `nul`: on Windows
++`os.path.relpath` raises for it, and the link counts as one outside (TASK 132).
+ 
+ Idempotence falls out of the table rather than being bolted on: re-running the
+ same (from_dir, to_dir) over an already-rebased file lands in the
+@@ -52,6 +54,10 @@ whose existence was already proven, so it reconstructs an existing path in every
+ case. That probe is retained as a postcondition on the rewrite arithmetic, but
+ it is not the gate that catches a wrong slot map -- `--slot-must-exist` is.
+ 
++In the file mode, an operand that names a device exits 2 as one outside the
++working directory, and so does a `--from` or a `--to` that names one; the check
++of the options runs before any operand is read (TASK 132 R2.3, R2.4).
++
+ Inbound mode (TASK 115, `skill-archive-task` Step 8). With `--inbound` as the
+ first argument, the remaining arguments go to `main(argv)` of `slot_links.py`:
+ 
+@@ -495,14 +501,15 @@ def _refuse_operand(path):
+ 
+     `Bash(python3 .agent/tools/rebase_links.py *)` approves any operand, and the rewrite writes the
+     file in place. A file outside the working directory, by its absolute path normalised without
+-    resolving links, is refused; so is a file under `.git/` (`_under_git`), a symbolic link, and a
+-    file with a second hard link, which would write through to another name. Then a file whose
+-    directory resolves outside the working directory, both by real path, is refused: a directory
+-    link would carry the write there. The directory is the operand's own, resolved as the kernel
+-    resolves it, each link before the `..` that follows it. Last, an operand that does not lie
+-    under `docs/`, and then a name that does not end in `.md`, is refused (TASK 116 R8.2): only
+-    a markdown file under `docs/` is this script's to rewrite. `rebase_file()` keeps no such
+-    guard: `archive_protocol.py` calls it with temporary paths.
++    resolving links, is refused, and so is a path that names a device, such as `nul`, for which
++    `os.path.relpath` of Windows raises (TASK 132 R2.3). So is a file under `.git/` (`_under_git`),
++    a symbolic link, and a file with a second hard link, which would write through to another name.
++    Then a file whose directory resolves outside the working directory, both by real path, is
++    refused: a directory link would carry the write there. The directory is the operand's own,
++    resolved as the kernel resolves it, each link before the `..` that follows it. Last, an operand
++    that does not lie under `docs/`, and then a name that does not end in `.md`, is refused
++    (TASK 116 R8.2): only a markdown file under `docs/` is this script's to rewrite.
++    `rebase_file()` keeps no such guard: `archive_protocol.py` calls it with temporary paths.
+     """
+     cwd = os.getcwd()
+     absolute = os.path.normpath(os.path.join(cwd, path))
+diff --git a/.agent/tools/slot_links.py b/.agent/tools/slot_links.py
+index 4e90ab7..6ba189e 100644
+--- a/.agent/tools/slot_links.py
++++ b/.agent/tools/slot_links.py
+@@ -185,14 +185,23 @@ def _walk(root, unreadable):
+ 
+     def entered(dirpath, name):
+         """TASK 131 R2.5: `os.walk` enters a junction; the walk enters no directory link, and no
+-        directory whose `lstat` fails, which it records as unreadable."""
++        directory whose `lstat` fails, which it records as unreadable. TASK 133 R6.1: nor an
++        entry that `lstat` gives as no directory, which it records as unreadable too. On Python
++        3.11 for Windows `lstat` of a junction named after a device may give the device."""
+         path = os.path.join(dirpath, name)
+         try:
+-            return not _is_link(os.lstat(path))
++            st = os.lstat(path)
+         except OSError as exc:
+             unreadable.append(InboundRecord(relative(path), None, "UNREADABLE", "", "",
+                                             exc.strerror or str(exc)))
+             return False
++        if _is_link(st):
++            return False
++        if not stat.S_ISDIR(st.st_mode):
++            unreadable.append(InboundRecord(relative(path), None, "UNREADABLE", "", "",
++                                            "not a directory"))
++            return False
++        return True
+ 
+     found = []
+     for dirpath, dirnames, filenames in os.walk(root, onerror=failed):
+diff --git a/.agent/tools/test_slot_links.py b/.agent/tools/test_slot_links.py
+index b926c81..5be3835 100644
+--- a/.agent/tools/test_slot_links.py
++++ b/.agent/tools/test_slot_links.py
+@@ -1216,6 +1216,20 @@ def test_d3_a_file_named_nul_is_listed(project):
+     assert unreadable == []
+ 
+ 
++def test_ar1_the_walk_enters_no_entry_that_lstat_gives_as_no_directory(project):
++    # base-fail: `entered` checks `_is_link` only, so the walk enters an entry that `lstat`
++    # gives as a device, as Python 3.11 on Windows may give a junction named after one
++    # (TASK 133 R6.1, TC-AR1).
++    hidden = project / "docs" / "device-like"
++    write(hidden, "x.md", "[x](../TASK.md)\n")
++    unreadable = []
++    with lstat_reporting({str(hidden)}, st_mode=stat.S_IFCHR | 0o666):
++        found = slot_links._walk(str(project), unreadable)
++    assert "docs/device-like/x.md" not in found and TASK in found
++    assert [(r.file, r.action, r.reason) for r in unreadable] == [
++        ("docs/device-like", "UNREADABLE", "not a directory")]
++
++
+ def test_d4_the_walk_calls_no_relpath(project):
+     # base-fail: the base derives each path with `relpath`.
+     write(project, "docs/a/b/c.md", "c\n")
+diff --git a/tests/test_script_guards.py b/tests/test_script_guards.py
+index e8efb11..3bd0496 100644
+--- a/tests/test_script_guards.py
++++ b/tests/test_script_guards.py
+@@ -1198,6 +1198,24 @@ class TestRebaseLinksGuard(unittest.TestCase):
+                 self.assertIn(f"{option} does not lie inside the working directory", err)
+                 self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+ 
++    def test_ar2_the_check_of_the_options_precedes_each_operand(self):
++        # TASK 133 R6.2, TC-AR2: the check of TASK 132 R2.4 runs before any check of an operand.
++        # The operand `README.md` is refused too, as no markdown file under `docs/`, and the run
++        # names the option, not the operand.
++        module = _module(REBASE, "rebase_links_under_test")
++        (self.root / "README.md").write_text("# r\n", encoding="utf-8")
++        code, err = self.main_in_root(module, ["README.md", "--from", "nul", "--to", "docs/tasks"])
++        self.assertEqual(code, 2, err)
++        self.assertIn("--from does not lie inside the working directory", err)
++        self.assertNotIn("README.md:", err)
++
++    def test_ar3_both_docstrings_name_a_device(self):
++        # TASK 133 R6.3, TC-AR3: the module docstring and that of `_refuse_operand` name a path
++        # that names a device among the refusals (TASK 132 R2.3, R2.4).
++        module = _module(REBASE, "rebase_links_under_test")
++        self.assertIn("device", module.__doc__.lower())
++        self.assertIn("device", module._refuse_operand.__doc__.lower())
++
+     @WINDOWS_ONLY
+     def test_d6_a_device_on_windows(self):
+         moved = self.root / "docs" / "tasks" / "t.md"
+diff --git a/tests/test_session_state_contract.py b/tests/test_session_state_contract.py
+index b306efd..5bb9796 100644
+--- a/tests/test_session_state_contract.py
++++ b/tests/test_session_state_contract.py
+@@ -181,5 +181,37 @@ class RulesTestCase(unittest.TestCase):
+             self.assert_holds(step["run"], CHAIN_PATHS, f"{key}: the archive-chain step")
+ 
+ 
++    def test_ci1_the_run_feedback_step(self):
++        # TASK 133 R8.6, R8.7, TC-CI1: the tooling job and both Windows jobs run the tests of
++        # run-feedback; in a Windows job the step follows the archive-chain step.
++        try:
++            import yaml
++        except ImportError:
++            self.skipTest("PyYAML does not import: TC-CI1 reads the workflow as YAML")
++        command = "python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q"
++        jobs = yaml.safe_load(read(WORKFLOW))["jobs"]
++        for key in ("tooling-tests", "session-state-windows-floor", "session-state-windows-main"):
++            names = [step.get("name") for step in jobs[key].get("steps", [])]
++            self.assertIn("Run the run-feedback tests", names, key)
++            step = jobs[key]["steps"][names.index("Run the run-feedback tests")]
++            self.assertEqual(step["run"].strip(), command, key)
++            if key != "tooling-tests":
++                self.assertEqual(names.index("Run the run-feedback tests"),
++                                 names.index("Run the archive-chain tests") + 1, key)
++
++    def test_ci2_the_documents_name_both_locks_and_the_naming_rule(self):
++        # TASK 133 R5.5, R9.7, TC-CI2: the lock of the journal is `fcntl.flock` on POSIX and
++        # `msvcrt.locking` on Windows, and the reference states how `mine` finds its directory.
++        reference = read(ROOT / ".agent" / "skills" / "run-feedback" / "references"
++                         / "cli_reference.md")
++        loop = read(ROOT / "System" / "Docs" / "QUALITY_FEEDBACK_LOOP.md")
++        for name, text in (("cli_reference.md", reference), ("QUALITY_FEEDBACK_LOOP.md", loop)):
++            self.assertIn("fcntl.flock", text, name)
++            self.assertIn("msvcrt.locking", text, name)
++            self.assertNotIn("(flock+fsync", text, name)
++        self.assertIn("[^a-zA-Z0-9]", reference)
++        self.assertIn("first line that carries `cwd`", reference)
++
++
+ if __name__ == "__main__":
+     unittest.main()

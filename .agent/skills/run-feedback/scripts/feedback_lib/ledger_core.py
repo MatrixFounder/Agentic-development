@@ -37,7 +37,9 @@ reviewable, namely that the whole pre-existing test suite passes **unmodified**.
 
 from __future__ import annotations
 
+import errno
 import os
+import stat
 import time
 from pathlib import Path
 
@@ -126,16 +128,71 @@ def _assert_records_dir_intact(reg):
                         "since the config was validated; nothing was written")
 
 
-def _rollback(record_path):
+#: The identity of a record whose check has not returned: a rollback removes nothing.
+_UNKNOWN = object()
+
+
+def _rollback(record_path, ident=None):
     """Remove a just-written record so a half-state never survives.
 
     ``os.unlink`` on the path itself (never a symlink target), and reports nothing:
-    this runs while another exception is propagating.
+    this runs while another exception is propagating. With *ident*, the
+    ``(st_dev, st_ino)`` of the descriptor that wrote the record, the path is removed
+    only while it still holds that file (TASK 133 R2.3). On Windows a removal that
+    another process blocks is tried 10 times, and then left (R4.2).
     """
+    if ident is _UNKNOWN:
+        return
+    if ident is not None:
+        try:
+            st = os.lstat(str(record_path))
+        except OSError:
+            return
+        if (st.st_dev, st.st_ino) != ident or atomic.is_link(st):
+            return
     try:
-        os.unlink(str(record_path))
+        atomic.retried(os.unlink, str(record_path))
     except OSError:
         pass
+
+
+def _close_quietly(fd):
+    """Close *fd* before a rollback; ``EBADF`` means it is closed already (TASK 133 R2.5).
+
+    On Windows a file that is open cannot be removed, so a descriptor that leaked
+    past a failed ``os.fdopen`` would leave the record behind.
+    """
+    try:
+        os.close(fd)
+    except OSError as exc:
+        if exc.errno != errno.EBADF:
+            raise
+
+
+def _check_written(record_path, fd):
+    """Refuse a record path that no longer holds the file of *fd* (TASK 133 R2.2).
+
+    The branch for a platform without ``O_NOFOLLOW``, which Windows lacks: after the
+    create-only open, the descriptor must be a regular file with one hard link, and
+    the path must be no link and give the descriptor's identity. Returns that
+    identity. A refusal closes *fd*, removes the path only while it holds that file,
+    and raises exit 4.
+    """
+    st = os.fstat(fd)
+    ident = (st.st_dev, st.st_ino)
+    try:
+        lst = os.lstat(str(record_path))
+    except OSError:
+        lst = None
+    if (stat.S_ISREG(st.st_mode) and st.st_nlink == 1 and lst is not None
+            and (lst.st_dev, lst.st_ino) == ident and not atomic.is_link(lst)):
+        return ident
+    _close_quietly(fd)
+    _rollback(record_path, ident)
+    raise CliError("the record path changed during the write: %s" % record_path,
+                   code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
+                   remediation="a link or another file took the record path after its "
+                               "create-only open; the file at the path is left as it is")
 
 
 def file_record(reg, config, record_id, slug, title, body, status,
@@ -202,12 +259,26 @@ def file_record(reg, config, record_id, slug, title, body, status,
 
     _assert_records_dir_intact(reg)
     reg.records_dir.mkdir(parents=True, exist_ok=True)
+    ident = None
+    fd = handle = None
     try:
         # O_EXCL|O_NOFOLLOW: create-only enforced by the kernel, and a symlink at
-        # this path is refused rather than followed (S-03)
+        # this path is refused rather than followed (S-03). Windows has no
+        # O_NOFOLLOW: there the identity check of `_check_written` refuses a link
+        # or a swap (TASK 133 R2.2). O_BINARY keeps the C runtime of Windows from
+        # writing CR LF; the text layer writes LF on every platform (R2.4, R3).
+        nofollow = getattr(os, "O_NOFOLLOW", None)
+        if nofollow is None:
+            # until `_check_written` returns, the path may hold another file: a rollback
+            # removes nothing, an error of the open included (R2.3)
+            ident = _UNKNOWN
         fd = os.open(str(record_path),
-                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | (nofollow or 0)
+                     | getattr(os, "O_BINARY", 0), 0o644)
+        if nofollow is None:
+            ident = _check_written(record_path, fd)
+        handle = os.fdopen(fd, "w", encoding="utf-8", newline="\n")
+        with handle:
             handle.write(record_text)
     except FileExistsError:
         raise CliError(
@@ -216,12 +287,18 @@ def file_record(reg, config, record_id, slug, title, body, status,
             code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
             remediation="another process filed this slug, or a symlink was "
                         "planted at that path — re-run to get a fresh id")
+    except CliError:
+        raise
     except BaseException as exc:
         # ANY failure, not just OSError: a KeyboardInterrupt or MemoryError
         # mid-write left a truncated orphan record with no index line while the
         # docstring claimed no half-state could exist (iteration 2 V1 on one
         # writer; iteration 3 L-4 on the other — now impossible to have on one)
-        _rollback(record_path)
+        if fd is not None and handle is None:
+            # `os.fdopen` failed, or no text layer took the descriptor: close it before the
+            # rollback, since Windows removes no file that is open (R2.5)
+            _close_quietly(fd)
+        _rollback(record_path, ident)
         if not isinstance(exc, OSError):
             raise
         raise CliError("could not write the %s record %s (%s)"
@@ -233,6 +310,6 @@ def file_record(reg, config, record_id, slug, title, body, status,
         reg.index_path.parent.mkdir(parents=True, exist_ok=True)
         reg.write_index(reg.index_path, index_after)
     except BaseException:
-        _rollback(record_path)
+        _rollback(record_path, ident)
         raise
     return result

@@ -2,6 +2,16 @@
 
 Global flags (before the subcommand): `--repo-root PATH`, `--config PATH`, `--json-errors`.
 
+Exit 4 also stops `claim`, `release`, `journal`, `collect` and `file` before they read or write.
+One cause is a link, a junction, a FIFO or a second hard link at the claim, at a journal file or
+at a lock file of `.agent/feedback/`. Another is a link at its subdirectory (`journal/`, `inbox/`,
+`filed/`, `dismissed/`). `file` also refuses an entry that is no regular file, such as a link, at
+the file that it moves the finding to. With a dangling link at the claim, `release` acts as if no
+claim stood: it exits 0, journals `retro_released` and leaves the link, which the next `claim`
+refuses with exit 4. After a completed write, a refusal of the journal prints a warning and keeps
+the exit code. When the journal refuses its entry, the SessionEnd hook writes no marker and mines
+nothing.
+
 ## collect — queue a finding (idempotent)
 
 ```
@@ -86,7 +96,8 @@ Noise: requires `--reason`; moves the finding to `dismissed/` and journals it.
 ## journal / issues / claim / release
 
 - `journal --event-type T --subject S [--detail K=V]...` — append to
-  `.agent/feedback/journal/YYYY-MM.md` (flock+fsync, monthly rotation).
+  `.agent/feedback/journal/YYYY-MM.md` (a lock, `fcntl.flock` on POSIX and `msvcrt.locking` on
+  Windows, then fsync; monthly rotation).
 - `issues [--status S] [--component C] [--auto-fixable] [--json]` — tolerant frontmatter feed,
   sorted by severity rank (unknown/missing → lowest) then age. The `/heal-issues` input.
 - `claim --run-id ID` — exit 0 = you own the retro; exit 6 = nested, skip. TTL 24h (stale claims
@@ -99,12 +110,18 @@ mine [--transcripts-dir D]... [--since YYYY-MM-DD] [--session UUID]
      [--include-active] [--frustration] [--limit N] [--dry-run] [--json]
 ```
 
-Default dirs: every `~/.claude/projects/` entry whose decoded path is at/under the repo root
-(Claude Code shards transcripts per-cwd — a session launched in `skills/html` lands in its own
-dir). Incremental via byte offsets in `.agent/feedback/mine_state.json`; active sessions
-(mtime < 10 min) skipped unless `--include-active`; ≥3 same-fingerprint failures in one session
-collapse into a single `repeated-failure` candidate. `--dry-run` prints candidates, writes
-nothing (no state, no inbox). First run on a repo: ALWAYS `--dry-run` and eyeball the yield.
+Default dirs: the `~/.claude/projects/` entries of the repo root (Claude Code shards transcripts
+per-cwd — a session launched in `skills/html` lands in its own dir). Claude Code 2.1.306 names a dir
+after the path with `replace(/[^a-zA-Z0-9]/g, "-")` over UTF-16 code units, and cuts a name longer
+than 200 characters to 200, with `-` and a hash appended. The name cannot be decoded, so `mine`
+takes each dir named as the root, or starting with that name and `-`, comparing the first 200
+characters, and on Windows without letter case. A session file of such a dir is read only when its
+first line that carries `cwd` names the root or a path under it; the others count as
+`files_skipped_foreign`. With `--transcripts-dir`, each file of the dirs given is read. Incremental
+via byte offsets in `.agent/feedback/mine_state.json`; active sessions (mtime < 10 min) skipped
+unless `--include-active`; ≥3 same-fingerprint failures in one session collapse into a single
+`repeated-failure` candidate. `--dry-run` prints candidates, writes nothing (no state, no inbox).
+First run on a repo: ALWAYS `--dry-run` and eyeball the yield.
 
 ## init — bootstrap configs from templates (create-only)
 

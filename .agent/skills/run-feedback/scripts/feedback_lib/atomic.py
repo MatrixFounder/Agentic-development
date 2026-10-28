@@ -22,12 +22,136 @@ rather than implied, because the module it replaced claimed more than it did.
 
 from __future__ import annotations
 
+import errno
 import os
 import stat
 import tempfile
+import time
 from pathlib import Path
 
+from . import locks
 from .envelope import EXIT_FILING_CONFLICT, CliError
+
+#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
+#: R2.2, TASK 131 R1.3).
+_NAME_SURROGATE = 0x20000000
+
+
+def is_link(st):
+    """True for a symbolic link, or a reparse point whose tag is a name surrogate (a junction).
+
+    Both attributes of Windows are read with `getattr`: only Windows sets them. A cloud
+    placeholder is a reparse point with no name surrogate, and is no link.
+    """
+    return stat.S_ISLNK(st.st_mode) or bool(
+        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
+
+
+def check_state_dir(directory):
+    """Refuse a directory of the machine state that is a link or a junction.
+
+    The files of the state lie in ``.agent/feedback/``, which comes resolved from the
+    config, or in one directory under it, such as ``journal/`` or ``inbox/``. A link
+    at such a directory made ``collect`` write outside the repository (TASK 133 R3.2,
+    round 2 of stage 2, H1). A link above ``.agent/feedback/``, such as ``/var`` of
+    macOS, is the system's and stays allowed.
+    """
+    try:
+        st = os.lstat(str(directory))
+    except FileNotFoundError:
+        return
+    if is_link(st) or not stat.S_ISDIR(st.st_mode):
+        raise _state_refused(directory)
+
+
+def check_state_file(path):
+    """Refuse a file of the machine state that a later write would replace, when it is no
+    regular file under ``os.lstat``: a link, a junction, a directory or a FIFO.
+
+    `write_atomic` refuses a link at its target only when it runs. For the move of `file`
+    that is after the ledger write, and a refusal there left a half-state (TASK 133 R3.2,
+    round 4 of stage 2, R4-1).
+    """
+    try:
+        st = os.lstat(str(path))
+    except FileNotFoundError:
+        return
+    if not stat.S_ISREG(st.st_mode):
+        raise _state_refused(path)
+
+
+#: The errors of an open with `O_NOFOLLOW` that a link at the name gives: Linux and macOS
+#: give ELOOP, FreeBSD EMLINK, NetBSD EFTYPE.
+_LINK_ERRNOS = {errno.ELOOP, errno.EMLINK} | ({errno.EFTYPE} if hasattr(errno, "EFTYPE") else set())
+
+
+def open_state(path, flags, mode=0o644):
+    """Open a file of the machine state; refuse what would let a write leave it.
+
+    The claim, the journal and the two lock files of run-feedback live under the
+    gitignored ``.agent/feedback/`` of a repository the agent may not trust. A link
+    planted at such a name made ``claim`` write a file outside the repository, and
+    ``release`` truncate it; a link at ``inbox/`` made ``collect`` write there, and a
+    FIFO made it wait (TASK 133 R3.2). The refusals, each exit 4, writing nothing:
+    a directory of the path that a link reaches; a link at the name (``O_NOFOLLOW``
+    where ``os`` has it, else ``os.lstat`` before and after the open, and the
+    identity of the descriptor after it); a file that is no regular file
+    (``O_NONBLOCK``, and ``os.fstat``); a file with a second hard link.
+    """
+    check_state_dir(os.path.dirname(str(path)))
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    if nofollow is None:
+        try:
+            if is_link(os.lstat(str(path))):
+                raise _state_refused(path)
+        except FileNotFoundError:
+            pass
+    try:
+        fd = os.open(str(path), flags | (nofollow or 0) | getattr(os, "O_NONBLOCK", 0)
+                     | getattr(os, "O_BINARY", 0), mode)
+    except OSError as exc:
+        if (nofollow is not None and exc.errno in _LINK_ERRNOS) or exc.errno == errno.ENXIO:
+            raise _state_refused(path)
+        raise
+    try:
+        st = os.fstat(fd)
+        same = True
+        if nofollow is None:
+            lst = os.lstat(str(path))
+            same = (lst.st_dev, lst.st_ino) == (st.st_dev, st.st_ino) and not is_link(lst)
+    except BaseException:
+        os.close(fd)
+        raise
+    if not (same and stat.S_ISREG(st.st_mode) and st.st_nlink == 1):
+        os.close(fd)
+        raise _state_refused(path)
+    return fd
+
+
+def _state_refused(path):
+    return CliError("refusing %s: a link, a junction or a file that is not regular stands on "
+                    "the path, or the file has a second hard link" % path,
+                    code=EXIT_FILING_CONFLICT, err_type="StateRefused",
+                    remediation="run-feedback keeps its own state under .agent/feedback/ and "
+                                "writes nothing through a link there — remove the entry")
+
+
+def retried(call, *args):
+    """Run *call*; on Windows try it 10 times, 0.1 seconds apart, while it raises
+    `PermissionError` (TASK 133 R4, the rule of TASK 128 for `update_state.py`).
+
+    On Windows `os.replace` and `os.unlink` fail while another process holds the file open
+    without delete sharing, such as a scanner or an editor. The last error propagates.
+    """
+    tries = 10 if locks.WINDOWS else 1
+    for attempt in range(tries):
+        try:
+            return call(*args)
+        except PermissionError:
+            if attempt == tries - 1:
+                raise
+            time.sleep(0.1)
 
 
 def read_verbatim(path, encoding="utf-8"):
@@ -75,7 +199,7 @@ def write_atomic(path, text, encoding="utf-8", newline="", durable=True):
     except OSError:
         info = None
     if info is not None:
-        if stat.S_ISLNK(info.st_mode):
+        if is_link(info):
             raise CliError(
                 "refusing to replace %s: it is a symlink" % path,
                 code=EXIT_FILING_CONFLICT, err_type="FilingConflict",
@@ -94,10 +218,10 @@ def write_atomic(path, text, encoding="utf-8", newline="", durable=True):
             os.chmod(tmp_name, mode)
         else:
             os.chmod(tmp_name, 0o644 & ~_umask())
-        os.replace(tmp_name, str(path))
+        retried(os.replace, tmp_name, str(path))
     except BaseException:
         try:
-            os.unlink(tmp_name)
+            retried(os.unlink, tmp_name)
         except OSError:
             pass
         raise

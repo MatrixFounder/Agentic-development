@@ -6,12 +6,11 @@ told to treat ``collect`` as the sole entry point.
 
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 from pathlib import Path
 
-from . import atomic, finding as finding_mod
+from . import atomic, finding as finding_mod, locks
 from .envelope import EXIT_NOT_FOUND, EXIT_USAGE, CliError
 
 
@@ -124,15 +123,16 @@ def resolve(config, ref):
 def collect(config, record):
     """Idempotent intake: dedup-merge against the inbox by fingerprint.
 
-    Returns (record, deduped). Serialized by a collect-scoped flock so two
+    Returns (record, deduped). Serialized by a collect-scoped lock of `locks` so two
     concurrent captures of the same failure cannot race the merge.
     """
     inbox = Path(config.inbox_dir)
+    atomic.check_state_dir(inbox)  # before `mkdir` meets a dangling link (R3.2)
     inbox.mkdir(parents=True, exist_ok=True)
     lock_path = inbox / ".collect.lock"
-    fd = os.open(str(lock_path), os.O_WRONLY | os.O_CREAT, 0o644)
+    fd = atomic.open_state(lock_path, os.O_WRONLY | os.O_CREAT)
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        locks.acquire(fd, lock_path)
         existing_path, existing = find_by_fingerprint(inbox,
                                                       record["fingerprint"])
         if existing is not None:
@@ -145,6 +145,7 @@ def collect(config, record):
         finding_mod.save(inbox, record)
         return record, False
     finally:
+        locks.release(fd)
         os.close(fd)
 
 
@@ -152,11 +153,15 @@ def consume(config, path, record, new_status):
     """Move a finding out of the inbox to filed/ or dismissed/."""
     dest_dir = {"filed": Path(config.filed_dir),
                 "dismissed": Path(config.dismissed_dir)}[new_status]
+    # no link reaches the directory of the moved finding, dangling included (TASK 133 R3.2)
+    atomic.check_state_dir(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
+    atomic.check_state_dir(dest_dir)
     record["status"] = new_status
     finding_mod.save(dest_dir, record)
     try:
-        os.unlink(str(path))
+        # on Windows a removal that another process blocks is tried 10 times (TASK 133 R4.2)
+        atomic.retried(os.unlink, str(path))
     except FileNotFoundError:
         pass
     return dest_dir / (record["finding_id"] + ".json")

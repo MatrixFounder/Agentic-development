@@ -100,6 +100,11 @@ jobs:
       - name: Run mermaid-authoring-guidelines unit tests
         run: python -m pytest -p no:cacheprovider .agent/skills/mermaid-authoring-guidelines/scripts/tests -q
 
+      # TASK 133 R8.6: the tests of run-feedback, which no step ran before. They are stdlib-only
+      # and need no install; the tests of the Windows branches run here through a stand-in.
+      - name: Run the run-feedback tests
+        run: python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q
+
       - name: Figure lint — probe every rule
         run: python .agent/skills/mermaid-authoring-guidelines/scripts/lint_mermaid.py --probe
 
@@ -338,6 +343,11 @@ jobs:
       - name: Run the archive-chain tests
         run: python -m pytest -p no:cacheprovider -q tests/test_archive_move.py tests/test_script_guards.py::TestRebaseLinksGuard tests/test_script_guards.py::TestInboundGuard .agent/tools/test_rebase_links.py .agent/tools/test_slot_links.py .agent/tools/test_archive_protocol.py .agent/tools/test_task_id_tool.py
 
+      # TASK 133 R8.7: run-feedback on Windows. The tests that need POSIX skip there, and the
+      # tests of TC-WN1 to TC-WN5 run. The next task reads the first run (TASK 133 R8.8).
+      - name: Run the run-feedback tests
+        run: python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q
+
   session-state-windows-main:
     name: Session state on Windows (3.14)
     runs-on: windows-latest
@@ -367,3 +377,8 @@ jobs:
       # tests of Windows run (TASK 131 R6.4). The next task reads the first run (TASK 131 R7.4).
       - name: Run the archive-chain tests
         run: python -m pytest -p no:cacheprovider -q tests/test_archive_move.py tests/test_script_guards.py::TestRebaseLinksGuard tests/test_script_guards.py::TestInboundGuard .agent/tools/test_rebase_links.py .agent/tools/test_slot_links.py .agent/tools/test_archive_protocol.py .agent/tools/test_task_id_tool.py
+
+      # TASK 133 R8.7: run-feedback on Windows. The tests that need POSIX skip there, and the
+      # tests of TC-WN1 to TC-WN5 run. The next task reads the first run (TASK 133 R8.8).
+      - name: Run the run-feedback tests
+        run: python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q

@@ -56,7 +56,9 @@ def emit_json_error(message, code=EXIT_UNEXPECTED, err_type=None,
         payload["type"] = str(err_type)
     if details:
         payload["details"] = details
-    stream.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    # ASCII on every platform: a code page of Windows cannot encode each character, and
+    # `backslashreplace` writes escapes that JSON does not allow (TASK 133 R7.1a)
+    stream.write(json.dumps(payload, ensure_ascii=True) + "\n")
     stream.flush()
     return int(code)
 

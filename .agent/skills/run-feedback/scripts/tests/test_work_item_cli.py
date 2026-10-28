@@ -72,8 +72,8 @@ class TestTwoLevelCli(WorkItemCliTestCase):
         payload = json.loads(out)
         self.assertEqual(payload["filed_as"]["id"], "WI-9")
         self.assertEqual(payload["filed_as"]["ledger"], "backlog")
-        self.assertTrue(payload["filed_as"]["path"].endswith(
-            "docs/backlog/wi-9-work-item-path-flattens-the-backlog.md"))
+        self.assertEqual(Path(payload["filed_as"]["path"]),
+                         self.records / "wi-9-work-item-path-flattens-the-backlog.md")
 
     def test_record_carries_context_and_index_gets_one_line(self):
         code, out, err = self.file_work_item("--effort", "S", "--json")

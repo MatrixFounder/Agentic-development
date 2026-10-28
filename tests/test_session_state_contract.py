@@ -181,5 +181,37 @@ class RulesTestCase(unittest.TestCase):
             self.assert_holds(step["run"], CHAIN_PATHS, f"{key}: the archive-chain step")
 
 
+    def test_ci1_the_run_feedback_step(self):
+        # TASK 133 R8.6, R8.7, TC-CI1: the tooling job and both Windows jobs run the tests of
+        # run-feedback; in a Windows job the step follows the archive-chain step.
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("PyYAML does not import: TC-CI1 reads the workflow as YAML")
+        command = "python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q"
+        jobs = yaml.safe_load(read(WORKFLOW))["jobs"]
+        for key in ("tooling-tests", "session-state-windows-floor", "session-state-windows-main"):
+            names = [step.get("name") for step in jobs[key].get("steps", [])]
+            self.assertIn("Run the run-feedback tests", names, key)
+            step = jobs[key]["steps"][names.index("Run the run-feedback tests")]
+            self.assertEqual(step["run"].strip(), command, key)
+            if key != "tooling-tests":
+                self.assertEqual(names.index("Run the run-feedback tests"),
+                                 names.index("Run the archive-chain tests") + 1, key)
+
+    def test_ci2_the_documents_name_both_locks_and_the_naming_rule(self):
+        # TASK 133 R5.5, R9.7, TC-CI2: the lock of the journal is `fcntl.flock` on POSIX and
+        # `msvcrt.locking` on Windows, and the reference states how `mine` finds its directory.
+        reference = read(ROOT / ".agent" / "skills" / "run-feedback" / "references"
+                         / "cli_reference.md")
+        loop = read(ROOT / "System" / "Docs" / "QUALITY_FEEDBACK_LOOP.md")
+        for name, text in (("cli_reference.md", reference), ("QUALITY_FEEDBACK_LOOP.md", loop)):
+            self.assertIn("fcntl.flock", text, name)
+            self.assertIn("msvcrt.locking", text, name)
+            self.assertNotIn("(flock+fsync", text, name)
+        self.assertIn("[^a-zA-Z0-9]", reference)
+        self.assertIn("first line that carries `cwd`", reference)
+
+
 if __name__ == "__main__":
     unittest.main()

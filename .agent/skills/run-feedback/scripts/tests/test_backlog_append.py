@@ -139,8 +139,7 @@ class TestTwoLevelFiling(TwoLevelTestCase):
         self.assertEqual(fx.tree_hash(self.root), before)
         self.assertTrue(result["dry_run"])
         self.assertEqual(result["item_id"], "WI-3")
-        self.assertTrue(result["record_path"].endswith(
-            "docs/backlog/wi-3-new-item.md"))
+        self.assertEqual(Path(result["record_path"]), self.records / "wi-3-new-item.md")
         self.assertIn("effort `M`", result["index_line"])
         self.assertIn("| Option | Cost |", result["record_text"])
 

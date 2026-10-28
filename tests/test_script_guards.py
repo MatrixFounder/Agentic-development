@@ -1198,6 +1198,24 @@ class TestRebaseLinksGuard(unittest.TestCase):
                 self.assertIn(f"{option} does not lie inside the working directory", err)
                 self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
 
+    def test_ar2_the_check_of_the_options_precedes_each_operand(self):
+        # TASK 133 R6.2, TC-AR2: the check of TASK 132 R2.4 runs before any check of an operand.
+        # The operand `README.md` is refused too, as no markdown file under `docs/`, and the run
+        # names the option, not the operand.
+        module = _module(REBASE, "rebase_links_under_test")
+        (self.root / "README.md").write_text("# r\n", encoding="utf-8")
+        code, err = self.main_in_root(module, ["README.md", "--from", "nul", "--to", "docs/tasks"])
+        self.assertEqual(code, 2, err)
+        self.assertIn("--from does not lie inside the working directory", err)
+        self.assertNotIn("README.md:", err)
+
+    def test_ar3_both_docstrings_name_a_device(self):
+        # TASK 133 R6.3, TC-AR3: the module docstring and that of `_refuse_operand` name a path
+        # that names a device among the refusals (TASK 132 R2.3, R2.4).
+        module = _module(REBASE, "rebase_links_under_test")
+        self.assertIn("device", module.__doc__.lower())
+        self.assertIn("device", module._refuse_operand.__doc__.lower())
+
     @WINDOWS_ONLY
     def test_d6_a_device_on_windows(self):
         moved = self.root / "docs" / "tasks" / "t.md"

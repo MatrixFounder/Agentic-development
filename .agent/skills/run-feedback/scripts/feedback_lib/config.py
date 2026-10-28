@@ -99,7 +99,8 @@ def main_worktree_root(repo_root):
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--git-common-dir"],
-            cwd=str(repo_root), capture_output=True, text=True, timeout=2)
+            cwd=str(repo_root), capture_output=True, encoding="utf-8",
+            errors="surrogateescape", timeout=2)
         if out.returncode == 0:
             common = Path(out.stdout.strip())
             if not common.is_absolute():
@@ -125,7 +126,10 @@ def _contained(root, raw, key, source, ledger=True):
                        "%r) in %s" % (key, raw, source or "built-in defaults"),
                        code=EXIT_CONFIG, err_type="ConfigError")
     candidate = Path(raw)
-    if candidate.is_absolute():
+    # TASK 133 R4.5: an anchor is a root or a drive. On Windows `/tmp/x` has the anchor
+    # `\` and `C:docs` the anchor `C:`, and neither is absolute; on POSIX a path has
+    # an anchor exactly when it is absolute.
+    if candidate.is_absolute() or candidate.anchor:
         raise CliError("config key %r must be RELATIVE to the repo root (got "
                        "%r) in %s" % (key, raw, source or "built-in defaults"),
                        code=EXIT_CONFIG, err_type="ConfigError",

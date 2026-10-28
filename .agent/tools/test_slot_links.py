@@ -1216,6 +1216,20 @@ def test_d3_a_file_named_nul_is_listed(project):
     assert unreadable == []
 
 
+def test_ar1_the_walk_enters_no_entry_that_lstat_gives_as_no_directory(project):
+    # base-fail: `entered` checks `_is_link` only, so the walk enters an entry that `lstat`
+    # gives as a device, as Python 3.11 on Windows may give a junction named after one
+    # (TASK 133 R6.1, TC-AR1).
+    hidden = project / "docs" / "device-like"
+    write(hidden, "x.md", "[x](../TASK.md)\n")
+    unreadable = []
+    with lstat_reporting({str(hidden)}, st_mode=stat.S_IFCHR | 0o666):
+        found = slot_links._walk(str(project), unreadable)
+    assert "docs/device-like/x.md" not in found and TASK in found
+    assert [(r.file, r.action, r.reason) for r in unreadable] == [
+        ("docs/device-like", "UNREADABLE", "not a directory")]
+
+
 def test_d4_the_walk_calls_no_relpath(project):
     # base-fail: the base derives each path with `relpath`.
     write(project, "docs/a/b/c.md", "c\n")

@@ -1,5 +1,6 @@
 """R4 — `file --dry-run` never writes: whole-tree hash before == after."""
 import json
+import os
 import sys
 import tempfile
 import time
@@ -63,7 +64,7 @@ class DryRunTestCase(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertIn("DRY-RUN", out)
         # allocated ID (empty backlog dir -> WI-1), record path, exact line
-        self.assertIn("docs/backlog/wi-1-follow-up-on-boom.md", out)
+        self.assertIn(os.path.join("docs", "backlog", "wi-1-follow-up-on-boom.md"), out)
         expected_line = (
             "- **WI-1** [Follow up on boom](backlog/wi-1-follow-up-on-boom.md)"
             " — effort `S`, status `open`, opened %s"

@@ -185,14 +185,23 @@ def _walk(root, unreadable):
 
     def entered(dirpath, name):
         """TASK 131 R2.5: `os.walk` enters a junction; the walk enters no directory link, and no
-        directory whose `lstat` fails, which it records as unreadable."""
+        directory whose `lstat` fails, which it records as unreadable. TASK 133 R6.1: nor an
+        entry that `lstat` gives as no directory, which it records as unreadable too. On Python
+        3.11 for Windows `lstat` of a junction named after a device may give the device."""
         path = os.path.join(dirpath, name)
         try:
-            return not _is_link(os.lstat(path))
+            st = os.lstat(path)
         except OSError as exc:
             unreadable.append(InboundRecord(relative(path), None, "UNREADABLE", "", "",
                                             exc.strerror or str(exc)))
             return False
+        if _is_link(st):
+            return False
+        if not stat.S_ISDIR(st.st_mode):
+            unreadable.append(InboundRecord(relative(path), None, "UNREADABLE", "", "",
+                                            "not a directory"))
+            return False
+        return True
 
     found = []
     for dirpath, dirnames, filenames in os.walk(root, onerror=failed):

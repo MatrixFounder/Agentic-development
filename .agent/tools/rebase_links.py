@@ -35,6 +35,8 @@ Decision table, per link:
     no          no                 PRE_BROKEN, left alone and reported
 
 Anything whose old denotation escapes `repo_root` is left alone (ESCAPES_ROOT).
+That includes a link to a path that names a device, such as `nul`: on Windows
+`os.path.relpath` raises for it, and the link counts as one outside (TASK 132).
 
 Idempotence falls out of the table rather than being bolted on: re-running the
 same (from_dir, to_dir) over an already-rebased file lands in the
@@ -51,6 +53,10 @@ The conservation probe it guarded re-derives its target by `relpath` from a path
 whose existence was already proven, so it reconstructs an existing path in every
 case. That probe is retained as a postcondition on the rewrite arithmetic, but
 it is not the gate that catches a wrong slot map -- `--slot-must-exist` is.
+
+In the file mode, an operand that names a device exits 2 as one outside the
+working directory, and so does a `--from` or a `--to` that names one; the check
+of the options runs before any operand is read (TASK 132 R2.3, R2.4).
 
 Inbound mode (TASK 115, `skill-archive-task` Step 8). With `--inbound` as the
 first argument, the remaining arguments go to `main(argv)` of `slot_links.py`:
@@ -495,14 +501,15 @@ def _refuse_operand(path):
 
     `Bash(python3 .agent/tools/rebase_links.py *)` approves any operand, and the rewrite writes the
     file in place. A file outside the working directory, by its absolute path normalised without
-    resolving links, is refused; so is a file under `.git/` (`_under_git`), a symbolic link, and a
-    file with a second hard link, which would write through to another name. Then a file whose
-    directory resolves outside the working directory, both by real path, is refused: a directory
-    link would carry the write there. The directory is the operand's own, resolved as the kernel
-    resolves it, each link before the `..` that follows it. Last, an operand that does not lie
-    under `docs/`, and then a name that does not end in `.md`, is refused (TASK 116 R8.2): only
-    a markdown file under `docs/` is this script's to rewrite. `rebase_file()` keeps no such
-    guard: `archive_protocol.py` calls it with temporary paths.
+    resolving links, is refused, and so is a path that names a device, such as `nul`, for which
+    `os.path.relpath` of Windows raises (TASK 132 R2.3). So is a file under `.git/` (`_under_git`),
+    a symbolic link, and a file with a second hard link, which would write through to another name.
+    Then a file whose directory resolves outside the working directory, both by real path, is
+    refused: a directory link would carry the write there. The directory is the operand's own,
+    resolved as the kernel resolves it, each link before the `..` that follows it. Last, an operand
+    that does not lie under `docs/`, and then a name that does not end in `.md`, is refused
+    (TASK 116 R8.2): only a markdown file under `docs/` is this script's to rewrite.
+    `rebase_file()` keeps no such guard: `archive_protocol.py` calls it with temporary paths.
     """
     cwd = os.getcwd()
     absolute = os.path.normpath(os.path.join(cwd, path))

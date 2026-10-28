@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-58** [A fix round of stage 2 fixes the instance of a class, and the next round finds the next site](backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md) — effort `S`, status `open`, opened 2026-10-28
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `open`, opened 2026-10-27
 - **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `open`, opened 2026-10-15

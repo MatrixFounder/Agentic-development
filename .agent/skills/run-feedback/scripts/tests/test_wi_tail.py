@@ -38,6 +38,23 @@ from feedback_lib import (atomic, body as body_mod, config as config_mod,  # noq
                           frontmatter, inbox, ledger_backlog, ledger_issues)
 from feedback_lib.envelope import CliError  # noqa: E402
 
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege (TASK 133
+    R8.5a, the form of `_can_symlink` of `.agent/tools/test_slot_links.py`)."""
+    import shutil
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a link")
+
+
 ANCHOR = "<!-- feedback:discovered-issues -->"
 
 
@@ -315,10 +332,13 @@ class TestHookLoadsConfigOnlyWhenCapturing(unittest.TestCase):
 
 
 class StringIOish:
-    """Minimal stdin stand-in: `json.load` only needs `.read()`."""
+    """Minimal stdin stand-in: `json.load` needs `.read()`, and the hook of TASK 133 R7.2 reads
+    the bytes of `.buffer`."""
 
     def __init__(self, text):
+        import io
         self._text = text
+        self.buffer = io.BytesIO(text.encode("utf-8"))
 
     def read(self, *_):
         return self._text
@@ -868,6 +888,7 @@ class TestDoctorRobustness(unittest.TestCase):
         self.assertTrue(payload["ready"], err)
         self.assertEqual(code, 0)
 
+    @NEEDS_SYMLINK
     def test_the_writability_probe_does_not_follow_a_planted_symlink(self):
         """V-08 — the last predictable-name write in the engine."""
         cfg = fx.load_cfg(self.root)
@@ -964,7 +985,7 @@ class TestConsumeFailureIsRecoverable(unittest.TestCase):
                  "--body-file", str(self.body)])
         self.assertEqual(code, 4)
         self.assertIn("could not be moved out", err)
-        self.assertIn("docs/backlog", err)
+        self.assertIn(os.path.join("docs", "backlog"), err)
         self.assertIn("marked filed in place", err)
 
     def test_a_retry_reports_already_filed_instead_of_exiting_4_forever(self):

@@ -110,14 +110,36 @@ def _maybe_debug_dump(payload):
     return 0
 
 
+def _read_payload():
+    """The JSON payload of stdin, read as UTF-8 bytes with an optional byte-order mark.
+
+    A pipe of Windows decodes text in its code page (TASK 133 R7.2). Raises
+    `ValueError` for bytes that are not UTF-8 or text that is not JSON.
+    """
+    buffer = getattr(sys.stdin, "buffer", None)
+    raw = buffer.read() if buffer is not None else sys.stdin.read()
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8-sig")
+    return json.loads(raw)
+
+
+def _reconfigure_streams():
+    """Escape what the stream cannot encode (TASK 133 R7.1); a stream without
+    `reconfigure` stays as it is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main():
+    _reconfigure_streams()
     try:
-        payload = json.load(sys.stdin)
+        payload = _read_payload()
     except (ValueError, OSError):
         return 0
 
     # The cheapest possible discard comes FIRST — before the feedback_lib imports,
-    # which pull in re, shlex, json, fcntl, tempfile, subprocess and unicodedata
+    # which pull in re, shlex, json, locks, tempfile, subprocess and unicodedata
     # (~5-15ms of a ~40ms process) for an event that is about to be dropped. Same
     # defect class as WI-4, one layer up (iteration 3, perf-High secondary).
     if payload.get("tool_name") != "Bash":

@@ -6,20 +6,21 @@ entry headers::
     ## [YYYY-MM-DD HH:MM:SS] <event_type> | <subject>
     - key: value
 
-Atomic under concurrency: O_APPEND + flock(LOCK_EX) + full-write loop +
-fsync (pattern proven by the obsidian-llm-wiki log writer; implemented
-fresh here — stdlib only). Lives under the gitignored ``.agent/feedback/``
-so appends never dirty the git tree (heal-issues preconditions depend on
-this).
+Atomic under concurrency: O_APPEND + the exclusive lock of `locks` (`fcntl.flock`
+on POSIX, `msvcrt.locking` on Windows) + full-write loop + fsync (pattern proven
+by the obsidian-llm-wiki log writer; implemented fresh here — stdlib only). Lives
+under the gitignored ``.agent/feedback/`` so appends never dirty the git tree
+(heal-issues preconditions depend on this).
 """
 
 from __future__ import annotations
 
-import fcntl
 import os
 import re
 import time
 from pathlib import Path
+
+from . import atomic, locks
 
 _HEADER_SANITIZE_RE = re.compile(r"[\r\n|]+")
 _EVENT_TYPE_RE = re.compile(r"^[a-z][a-z0-9_\-]*$")
@@ -60,12 +61,14 @@ def append_event(journal_dir, event_type, subject, details=None, ts=None):
     if not _EVENT_TYPE_RE.match(event_type):
         raise ValueError("invalid event_type: %r" % event_type)
     path = journal_path(journal_dir, ts)
+    # a link at the directory, dangling included, is refused before `mkdir` meets it (R3.2)
+    atomic.check_state_dir(path.parent)
     path.parent.mkdir(parents=True, exist_ok=True)
     data = render_entry(event_type, subject, details, ts).encode("utf-8")
 
-    fd = os.open(str(path), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+    fd = atomic.open_state(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        locks.acquire(fd, path)
         offset = os.lseek(fd, 0, os.SEEK_END)
         view = memoryview(data)
         while view:
@@ -74,5 +77,6 @@ def append_event(journal_dir, event_type, subject, details=None, ts=None):
         os.fsync(fd)
         return offset
     finally:
-        # closing releases the flock
+        # closing releases the lock; `release` unlocks first where the platform asks
+        locks.release(fd)
         os.close(fd)

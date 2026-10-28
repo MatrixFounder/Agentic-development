@@ -52,6 +52,9 @@ worktree land in the MAIN working tree and survive worktree teardown.
 
 ## C. Miner
 
-See `cli_reference.md` §mine. Key properties: enumerates ALL per-cwd transcript shards under the
-repo root; incremental byte offsets; skips active sessions; retry aggregation; redaction; hard
-excerpt caps; assistant text / thinking / file contents never scanned. First run: `--dry-run`.
+See `cli_reference.md` §mine. It enumerates the per-cwd transcript shards of the repo root, named as
+Claude Code 2.1.306 names them: each UTF-16 code unit outside `[A-Za-z0-9]` becomes `-`. A name is
+compared on its first 200 characters, and on Windows without letter case. It reads a session only
+when its first line that carries `cwd` names the root or a path under it. Other key properties:
+incremental byte offsets; skips active sessions; retry aggregation; redaction; hard excerpt caps;
+assistant text / thinking / file contents never scanned. First run: `--dry-run`.

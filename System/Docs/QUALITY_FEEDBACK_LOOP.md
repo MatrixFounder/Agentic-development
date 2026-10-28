@@ -66,7 +66,7 @@ no venv, runs from anywhere inside the repo (walks up to the root).
 | `collect` | Queue one finding (idempotent: repeated fingerprint → merge, `sources[]` union, exit 0) | inbox + journal |
 | `triage` | Table of open findings + duplicate candidates (fingerprint + index-title overlap) | — (read-only) |
 | `file` | `--as defect` → `docs/issues/<slug>.md` + index line; `--as work-item` → `docs/backlog/<slug>.md` + one pointer line after the backlog anchor — **both lockstep with rollback, both ID-allocating** (`<PREFIX>-<n>` / `WI-<n>`); `--as noise` → dismiss with reason. `--dry-run` previews ID, record path, and the exact index line with ZERO writes | ledgers |
-| `journal` | Append `## [ts] <event_type> \| <subject>` (flock+fsync, monthly rotation) | journal |
+| `journal` | Append `## [ts] <event_type> \| <subject>`: `fcntl.flock` or `msvcrt.locking`, fsync, monthly file | journal |
 | `issues` | Ledger feed for the harness (`--status open --auto-fixable --json`) | — (read-only) |
 | `mine` | Deterministic transcript extractor (tool errors, exit codes, envelopes, retry aggregation; redaction + excerpt caps; incremental byte offsets) | inbox |
 | `claim` / `release` | Retro ownership for nested workflows (exit 6 with an owner from this task = you are nested → skip retro; an owner from another task is a stale claim → `release --force`, claim again) | `.agent/feedback/` |

@@ -621,7 +621,7 @@ class TestMetaRefusalStopsTheArchive:
         """Red when `archive_task` has no branch for a refused identity."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| Приоритет | 001 |\n"
-            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n")
+            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
         for n in ("01", "02", "03"):
             (clean_docs_dir / "tasks" / f"task-095-{n}-sub.md").touch()
 
@@ -634,7 +634,7 @@ class TestMetaRefusalStopsTheArchive:
         """The document stays put, so the operator can repair its meta table."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| Приоритет | 001 |\n"
-            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n")
+            "| ИД задачи | 095 |\n| Слаг | реестр |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
 
         archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
 
@@ -645,7 +645,7 @@ class TestMetaRefusalStopsTheArchive:
         """The milder ARC-3 shape: id found, slug refused -> task-042-untitled."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| ИД | 042 |\n"
-            "| Дата | 2026-08-04 |\n\n<!-- contract:rtm -->\n")
+            "| Дата | 2026-08-04 |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
 
         result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
 
@@ -656,7 +656,7 @@ class TestMetaRefusalStopsTheArchive:
         """Absence is not ambiguity. This is the one legitimate write-back case."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
-            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
 
         result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
 
@@ -677,11 +677,11 @@ class TestIdWriteBackIsLanguageAgnostic:
         """Red while the write-back keys on the literal `Task ID`."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
-            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
 
         result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
 
-        archived = Path(result["archived_to"]).read_text()
+        archived = Path(result["archived_to"]).read_text(encoding="utf-8")
         assert "| ИД задачи | 001 |" in archived
 
     def test_the_english_label_keeps_working(self, clean_docs_dir):
@@ -698,7 +698,7 @@ class TestIdWriteBackIsLanguageAgnostic:
         """A miss must be visible. Before ARC-12 nothing in the dict said so."""
         (clean_docs_dir / "TASK.md").write_text(
             "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
-            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n")
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
 
         result = archive_task(docs_dir=str(clean_docs_dir), is_new_task=True)
 
@@ -832,4 +832,34 @@ class TestInboundSlotLinks:
         example = (Path(__file__).resolve().parents[1] / "skills" / "skill-planning-format"
                    / "examples" / "TASK_EXAMPLE.md")
         assert parse_task_meta(example.read_text(encoding="utf-8"))["base_revision"] == "9f1c2ab"
+
+
+class TestUtf8Io:
+    """TC-W28 (TASK 131 R10): `archive_protocol.py` reads and writes the TASK in UTF-8.
+
+    Run under an ASCII locale, the base reads the Cyrillic table in that locale and stops on it.
+    On Windows the locale encoding is cp1252, which TASK 131 measured on the CI runner.
+    """
+
+    def test_w28_archive_task_under_an_ascii_locale(self, clean_docs_dir):
+        import json
+        import subprocess
+        import sys
+        (clean_docs_dir / "TASK.md").write_text(
+            "<!-- contract:meta -->\n\n| ИД задачи |  |\n"
+            "| Слаг | novaya-fitcha |\n\n<!-- contract:rtm -->\n", encoding="utf-8")
+        code = ("import json, sys; sys.path.insert(0, sys.argv[1]); "
+                "from archive_protocol import archive_task; "
+                "r = archive_task(docs_dir=sys.argv[2], is_new_task=True); "
+                "print(json.dumps({'status': r['status'], 'to': r.get('archived_to')}))")
+        env = dict(os.environ, LC_ALL="C", PYTHONUTF8="0", PYTHONCOERCECLOCALE="0",
+                   PYTHONDONTWRITEBYTECODE="1")
+        result = subprocess.run([sys.executable, "-B", "-c", code, str(Path(__file__).parent),
+                                 str(clean_docs_dir)], env=env, capture_output=True, timeout=120)
+        assert result.returncode == 0, result.stderr.decode("utf-8", "replace")
+        report = json.loads(result.stdout)
+        assert report["status"] == "archived"
+        archived = Path(report["to"]).read_text(encoding="utf-8")
+        assert "| ИД задачи | 001 |" in archived
+        assert "| Слаг | novaya-fitcha |" in archived
 

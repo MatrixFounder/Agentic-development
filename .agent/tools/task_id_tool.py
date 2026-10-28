@@ -97,9 +97,11 @@ def _first_h1(path: str) -> Optional[str]:
     head), a leading YAML front matter and fenced code blocks are skipped: the sub-task template
     puts a comment block above its H1, and a YAML or shell comment line starts with `# `.
     The file is opened with `O_NONBLOCK | O_NOCTTY` and read only when `fstat` shows a regular
-    file, so a FIFO or a device named `task-*.md` does not block the scan.
+    file, so a FIFO or a device named `task-*.md` does not block the scan. Where `O_BINARY` exists,
+    Windows among them, the open passes it, so the read stops at no byte `0x1A` (TASK 131 R2.7).
     """
-    flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOCTTY', 0)
+    flags = (os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOCTTY', 0)
+             | getattr(os, 'O_BINARY', 0))
     try:
         fd = os.open(path, flags)
     except OSError:
@@ -131,6 +133,18 @@ def _first_h1(path: str) -> Optional[str]:
         if fence is None and re.match(r'#[ \t]+\S', line):
             return line
     return None
+
+
+def _unc(value: str) -> bool:
+    """True where paths have drives and `value` is a UNC or device path (TASK 131 R12.1).
+
+    Such a path starts with two separators, or with the NT prefix `\\??\\`. The check reads the
+    text, each `/` as `\\`, so it reaches no file system: on Windows an open of a UNC path sends
+    the user's credentials to its host. It reads no drive of `value`: `splitdrive` gives none for
+    `\\??\\`.
+    """
+    text = value.replace('/', '\\')
+    return bool(os.path.splitdrive('c:')[0]) and text.startswith(('\\\\', '\\??\\'))
 
 
 def classify_task_file(tasks_dir: str, filename: str) -> Optional[tuple[int, bool]]:
@@ -395,6 +409,12 @@ if __name__ == "__main__":
     # flags are combined rather than made mutually exclusive because
     # `--no-correction` now states the default, so passing both is consistent.
     allow_correction = args.allow_correction and not args.no_correction
+
+    # TASK 131 R12: a UNC `--tasks-dir` is refused before any call reaches the file system.
+    if _unc(args.tasks_dir):
+        print(json.dumps({"filename": None, "used_id": None, "status": "error",
+                          "message": "--tasks-dir is a UNC or device path"}, indent=2))
+        sys.exit(1)
 
     result = generate_task_archive_filename(
         slug=args.slug,

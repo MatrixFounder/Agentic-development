@@ -23,6 +23,8 @@ finding_ref: fnd-20261008-104504-8ba32d71
 
 > **Progress 2026-10-26 (TASK 128).** `archive_move.py` and `rebase_links.py` match their own directory by the rule of TASK 127 R6.1: by `os.path.normcase(os.path.realpath(...))` of the path as called and of the real path, and by `(st_dev, st_ino)`. A path in other letter case on a case-insensitive volume reached a planted module before (ARC-13). That rule replaces the "real directory" of the table below for every script of this record.
 
+> **Progress 2026-10-27 (TASK 131).** `rebase_links.py` looked up the `.pyc` of a sibling under `os.path.join(os.devnull, "rebase-links-pycache")`. On Windows `os.devnull` is `nul`, a path relative to the working directory, and a directory named `nul` there could hold a planted `.pyc`. Where `os.devnull` is relative, the prefix now lies under the script's own real path, where no file can exist. TC-W16 plants a `.pyc` under `nul/` and checks that none runs; TC-G11 also plants `fcntl`, which the scripts lack on Windows.
+
 > Origin: TASK 115, stage 2 (code review B1, security M1), and operator decision D10 of
 > 2026-10-08. The fix lands in scripts that are installed into other repositories: a behaviour
 > change for the framework owner's review, not a landed fix.

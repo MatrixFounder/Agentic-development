@@ -16,6 +16,58 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.50.0 — The archive chain runs on Windows, and the file mode of `rebase_links.py` ends without a traceback (TASK 131)**
+
+#### Fixed
+
+- **The archive chain on Windows.** Windows has no `dir_fd`, `O_NOFOLLOW` or `O_DIRECTORY`.
+  `archive_move.py`, the file mode of `rebase_links.py` and its inbound mode exited 2 there. Where
+  the platform lacks them, each now takes a branch by path:
+  - `archive_move.py` copies the file into an exclusively created archive, holds the source open
+    through its last check, and removes the source. It refuses a symbolic link, a junction, a
+    read-only or encrypted source, a source with a second hard link and an existing destination.
+    A failed unlink is tried 10 times. The archive stays whenever it may be the content's last
+    name. It is a new file: it takes the access rules of the destination directory, and no
+    alternate stream of the source;
+  - both modes of `rebase_links.py` check a path with `lstat` before its open and the descriptor
+    with `fstat` after it, and refuse a link or a swap. The walk of the inbound mode enters no
+    junction;
+  - each open of the chain passes `O_BINARY`, so CR LF and a byte `0x1A` stay as written.
+    `task_id_tool.py` reads the H1 of a task file the same way.
+- **Slot links on Windows.** A record wrote its path with `\`, and the check of TASK 117 refused
+  every slot link of Steps 5.5 and 7.6.5. Each record now holds `/` on every platform.
+- **The file mode of `rebase_links.py` ends without a traceback:**
+  - its report escapes a character that the stream cannot encode, and its `--json` output is
+    ASCII. Before, a target such as `→` ended the run with exit 1 after the file was written;
+  - an operand that is not UTF-8 exits 2 with `is not UTF-8`, and is not written;
+  - a path on another drive lies outside the working directory, and `--from` or `--to` with a
+    drive or a leading separator is refused.
+- **`rebase_links.py` looks up no `.pyc` under a relative path.** On Windows `os.devnull` is
+  `nul`, a path relative to the working directory, so a directory named `nul` there could hold a
+  sibling's bytecode. The script then looks bytecode up under its own real path, where no file can
+  exist (WI-39).
+- **`archive_protocol.py` reads and writes the TASK in UTF-8**, not in the locale encoding.
+- **A CR LF document.** The masks of `rebase_links.py` closed no fence and ended no code span on a
+  line of CR LF, so each link after the first fence of such a document was skipped with exit 0.
+  Git for Windows checks files out with CR LF by default. Both now read CR LF as LF.
+- **A UNC `--repo-root` or `--tasks-dir` is refused.** `rebase_links.py --repo-root` and
+  `task_id_tool.py --tasks-dir` refuse a UNC or device path, one that starts with two separators
+  or with `\??\`, before any call. On Windows an open of such a path sends the user's NTLM
+  credentials to its host.
+
+#### Changed
+
+- **CI.** Both Windows jobs gain the step `Run the archive-chain tests`. A test that needs POSIX
+  skips there, and the tests of junctions, held files and read-only sources run. The first run
+  follows the push.
+- `archive_move.py` exits 2 for a usage error only.
+
+#### Notes
+
+- Some windows of a race remain on Windows, which has no descriptor of a directory. TASK 131 D7
+  names each, and the docstring of `archive_move.py` labels them `RW1` to `RW12`.
+- No migration is needed: no skill version changes, and no state changes its format.
+
 ### **v3.49.0 — A dependency audit names the copies that run, and a TASK that fixes an advisory lists them (TASK 130)**
 
 #### Added

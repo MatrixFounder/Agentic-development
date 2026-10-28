@@ -1,0 +1,3299 @@
+diff --git a/.agent/tools/archive_move.py b/.agent/tools/archive_move.py
+index 59c5557..ab111a1 100644
+--- a/.agent/tools/archive_move.py
++++ b/.agent/tools/archive_move.py
+@@ -14,17 +14,46 @@ It accepts exactly two operand pairs, compared as text:
+ `<ID>` is three or more digits and `<slug>` is lowercase words joined by `-`, the shapes
+ `task_id_tool.py` produces. Run it from the project root.
+ 
+-It works through directory descriptors: `docs` and the destination directory are opened with
+-`O_DIRECTORY | O_NOFOLLOW`, and every file is named relative to them, so a link swapped in for
+-either directory is refused. It refuses a source that is a link or has a second hard link, and a
+-destination that exists. It holds the source open from its open to the end of the move, so a file
+-swapped in under its name meanwhile cannot take its inode number. It moves by a hard link and an
+-unlink, and copies into an exclusively created file where the file system refuses the hard link.
+-Any failure after the destination exists removes the destination; the source stays.
++Where the platform has `dir_fd`, `_move` works through directory descriptors: `docs` and the
++destination directory are opened with `O_DIRECTORY | O_NOFOLLOW`, and every file is named relative
++to them, so a link swapped in for either directory is refused. It refuses a source that is a link
++or has a second hard link, and a destination that exists. It holds the source open from its open
++to the end of the move, so a file swapped in under its name meanwhile cannot take its inode
++number. It moves by a hard link and an unlink, and copies into an exclusively created file where
++the file system refuses the hard link. Any failure after the destination exists removes the
++destination; the source stays.
++
++Where it has none, Windows among them, `_move_by_path` moves by path (TASK 131 R1). A link is a
++symbolic link or a junction: a reparse point whose tag is a name surrogate. It refuses each case
++of `_move`, a read-only source and an encrypted one, checks each entry before and after its open,
++copies into an exclusively created file with `O_BINARY`, and holds the source open through the
++check of its step 9. An unlink or a removal that fails with `PermissionError` is tried 10 times.
++The archive is a new file: it takes the access rules of the destination directory, and no
++alternate stream of the source. These windows of a race remain, as TASK 131 D7 states:
++
++- RW1: a link swapped in at `docs` or at the destination directory after its check, and swapped
++  back between the checks of step 7; the copy, or the move of a file at the link's target, is
++  then made there;
++- RW2: the same link swapped back before step 7, or still in place at it; an empty file stays at
++  the link's target, and the error says that it is kept; a directory that step 4 made through the
++  link stays there too;
++- RW3: a link swapped in at `docs` between step 9 and step 10 or a try; step 10 removes a file at
++  the link's target;
++- RW4: an entry swapped in at the source between step 9 and step 10 or a try; step 10 removes it;
++- RW5: the source removed between its check and a try of the archive's removal;
++- RW6: a link swapped in at the destination's name between steps 5 and 6;
++- RW7: a directory swapped for a link between an open and the check of its real path;
++- RW8: a junction swapped in between the walk filter and the walk's descent;
++- RW9: a volume that reports `st_ino` 0, where an identity compares the device only;
++- RW10: a replacement that receives the source's freed inode number;
++- RW11: a link swapped in at a directory, or another file put at the archive's name, between the
++  undo's checks and its removal of an entry;
++- RW12: a write to the source that keeps its size, which Windows may not date until the writer's
++  handle closes, or which falls within the 2-second steps of FAT; the archive misses it.
+ 
+ Exit codes: 0 moved; 1 refused, nothing changed on disk, except when the error says the archive
+-was kept; 2 usage error or a platform without `dir_fd` support. Any `OSError`, such as an overlong
+-name, is a refusal. One JSON object goes to stdout on success, to stderr otherwise.
++was kept; 2 usage error. Any `OSError`, such as an overlong name, is a refusal. One JSON object
++goes to stdout on success, to stderr otherwise.
+ """
+ import os
+ import sys
+@@ -55,6 +84,7 @@ import errno  # noqa: E402
+ import json  # noqa: E402
+ import re  # noqa: E402
+ import stat  # noqa: E402
++import time  # noqa: E402
+ 
+ USAGE = ("usage: archive_move.py docs/TASK.md docs/tasks/task-<ID>-<slug>.md\n"
+          "       archive_move.py docs/PLAN.md docs/plans/plan-<ID>-<slug>.md")
+@@ -68,6 +98,13 @@ PAIRS = {
+ NO_HARD_LINK = {errno.EPERM, errno.EXDEV, errno.EMLINK, errno.ENOSYS,
+                 getattr(errno, "ENOTSUP", errno.EPERM), getattr(errno, "EOPNOTSUPP", errno.EPERM)}
+ CHUNK = 1 << 16
++#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
++#: R2.2).
++NAME_SURROGATE = 0x20000000
++#: An unlink or a removal that fails with `PermissionError` is tried this often, this many seconds
++#: apart (TASK 128 D9, TASK 131 R1.6).
++TRIES = 10
++PAUSE = 0.1
+ 
+ 
+ class Refused(Exception):
+@@ -88,6 +125,278 @@ def _supported():
+             and hasattr(os, "O_NOFOLLOW") and hasattr(os, "O_DIRECTORY"))
+ 
+ 
++def _is_link(st):
++    """True for a symbolic link, or a reparse point whose tag is a name surrogate (TASK 131 R1.3).
++
++    Both attributes of Windows are read with `getattr`: only Windows sets them. A junction is a
++    link; a cloud placeholder is not.
++    """
++    return stat.S_ISLNK(st.st_mode) or bool(
++        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
++        and getattr(st, "st_reparse_tag", 0) & NAME_SURROGATE)
++
++
++def _flags(*names):
++    """The union of each `os.O_*` flag of `names` that this platform has."""
++    value = 0
++    for name in names:
++        value |= getattr(os, name, 0)
++    return value
++
++
++def _tried(call, path, check=None):
++    """`call(path)`, tried again on `PermissionError` (TASK 131 R1.6).
++
++    At most `TRIES` tries, `PAUSE` seconds apart. `check`, when given, runs before each try after
++    the first, and a check that raises ends the tries with its error.
++    """
++    for attempt in range(TRIES):
++        if attempt and check is not None:
++            check()
++        try:
++            return call(path)
++        except PermissionError:
++            if attempt == TRIES - 1:
++                raise
++            time.sleep(PAUSE)
++
++
++def _dir_lstat(path, label):
++    """The `lstat` of directory `path`; `label` names it in a refusal. A missing one raises
++    `FileNotFoundError`."""
++    try:
++        st = os.lstat(path)
++    except FileNotFoundError:
++        raise
++    except OSError as exc:
++        raise Refused(f"cannot open {label!r}: {exc.strerror}") from exc
++    return st
++
++
++def _same_dir(path, ref):
++    """True while `path` is a directory, no link, of the identity of `ref`."""
++    try:
++        st = os.lstat(path)
++    except OSError:
++        return False
++    return stat.S_ISDIR(st.st_mode) and not _is_link(st) and _same_file(st, ref)
++
++
++def _holds(path, ref):
++    """True while `path` is the file of `ref`, no link."""
++    try:
++        st = os.lstat(path)
++    except OSError:
++        return False
++    return not _is_link(st) and _same_file(st, ref)
++
++
++class _Kept(Refused):
++    """A refusal after which the archive stays: it may be the content's last name."""
++
++
++def _source_check(source, ref, target):
++    """Step 9: the source still holds the moved file, one hard link, with the size and the time of
++    the last write of step 2 (TASK 131 R1.4, R1.5).
++
++    Raises `_Kept` when the source is gone, holds another file or cannot be checked, and
++    `Refused` when it holds the moved file with a second hard link or a write since step 2.
++    """
++    try:
++        st = os.lstat(source)
++    except FileNotFoundError as exc:
++        raise _Kept(f"{source} is gone after the copy, so {target} is kept") from exc
++    except OSError as exc:
++        raise _Kept(f"cannot confirm what {source} holds ({exc.strerror}); both it and "
++                    f"{target} are kept") from exc
++    if _is_link(st) or not _same_file(st, ref):
++        raise _Kept(f"{source} no longer holds the moved file, so {target} is kept")
++    if st.st_nlink != 1 or (st.st_size, st.st_mtime_ns) != (ref.st_size, ref.st_mtime_ns):
++        raise Refused("the source changed during the move")
++
++
++class _UnlinkFailed(Refused):
++    """Step 10 failed while the source still holds the moved file; `strerror` is its error."""
++
++    def __init__(self, source, strerror):
++        super().__init__(f"cannot remove {source}: {strerror}")
++        self.strerror = strerror
++
++
++def _unlink_source(source, ref, target):
++    """Step 10, with the tries of R1.6; the message of `_undo_after_failed_unlink` on a failure."""
++    try:
++        _tried(os.unlink, source, lambda: _source_check(source, ref, target))
++    except Refused:
++        raise
++    except OSError as exc:
++        try:
++            st = os.lstat(source)
++        except FileNotFoundError:
++            raise _Kept(f"cannot remove {source} ({exc.strerror}); it is gone, so {target} is "
++                        "kept") from exc
++        except OSError as check:
++            raise _Kept(f"cannot remove {source} ({exc.strerror}) or confirm what it holds "
++                        f"({check.strerror}); both it and {target} are kept") from exc
++        if _is_link(st) or not _same_file(st, ref):
++            raise _Kept(f"cannot remove {source} ({exc.strerror}); it no longer holds the moved "
++                        f"file, so {target} is kept") from exc
++        raise _UnlinkFailed(source, exc.strerror) from exc
++
++
++class _DirsChanged(Exception):
++    """A directory of the undo is no longer the one that steps 1 and 4 checked."""
++
++
++class _NotOurs(Exception):
++    """The archive's name no longer holds the file that step 6 made."""
++
++
++def _remove_ours(target, made, dirs, check=None):
++    """Remove this run's archive, with the tries of R1.6, through unchanged directories (R1.5).
++
++    Before the first try and before each later one, the archive is checked and raises `_NotOurs`
++    unless it holds the file of `made`; then `dirs()` raises `_DirsChanged` unless `docs` and the
++    destination directory keep their identities; then `check` runs.
++    """
++    if made is None:
++        return
++
++    def checks():
++        if not _holds(target, made):
++            raise _NotOurs()
++        dirs()
++        if check is not None:
++            check()
++    checks()
++    _tried(os.unlink, target, checks)
++
++
++def _undo(exc, message, target, made, dirs, source, ref, checked):
++    """The message of a refusal after the undo of R1.5 removed what it may remove."""
++    def source_holds():
++        if not _holds(source, ref):
++            raise _Kept("")
++    try:
++        _remove_ours(target, made, dirs, source_holds if checked else None)
++    except _NotOurs:
++        return f"{message}; {target} no longer holds the file this run made, so that file is kept"
++    except _DirsChanged:
++        return f"{message}; the destination directory changed, so {target} is kept"
++    except _Kept:
++        return f"{message}; {source} changed before {target} was removed, so {target} is kept"
++    except OSError as cleanup:
++        if isinstance(exc, _UnlinkFailed):
++            return (f"cannot remove {source} ({exc.strerror}), and {target} remains "
++                    f"({cleanup.strerror})")
++        return f"{message}, and {target} remains ({cleanup.strerror})"
++    return message
++
++
++def _move_by_path(src, subdir, dst):
++    """Move `docs/<src>` to `docs/<subdir>/<dst>` by path, where `dir_fd` is missing (R1.4).
++
++    The steps are those of TASK 131 R1.4, and the undo that of R1.5: an archive made before step 9
++    is removed while it is this run's; one checked at step 9 or 10 stays when the source is gone
++    or holds another file. A directory this run created is removed again.
++    """
++    source, directory = f"docs/{src}", f"docs/{subdir}"
++    target = f"{directory}/{dst}"
++    try:                                                    # step 1
++        docs = _dir_lstat("docs", "docs")
++    except FileNotFoundError as exc:
++        raise Refused("docs does not exist") from exc
++    if _is_link(docs) or not stat.S_ISDIR(docs.st_mode):
++        raise Refused("'docs' is a symbolic link or not a directory")
++    src_fd = dst_fd = made = sub = ref = None
++    created, checked = False, False
++    try:
++        try:                                                # step 2
++            ref = os.lstat(source)
++        except FileNotFoundError as exc:
++            raise Refused(f"{source} does not exist") from exc
++        if _is_link(ref) or not stat.S_ISREG(ref.st_mode):
++            raise Refused(f"{source} is a symbolic link or not a regular file")
++        if ref.st_nlink != 1:
++            raise Refused(f"{source} has {ref.st_nlink} hard links")
++        if getattr(ref, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_READONLY:
++            raise Refused(f"{source} is read-only")
++        if getattr(ref, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_ENCRYPTED:
++            raise Refused(f"{source} is encrypted")
++        try:                                                # step 3
++            src_fd = os.open(source, _flags("O_RDONLY", "O_NOFOLLOW", "O_NONBLOCK", "O_BINARY"))
++        except OSError as exc:
++            raise Refused(f"cannot open {source}: {exc.strerror}") from exc
++        held = os.fstat(src_fd)
++        if not (stat.S_ISREG(held.st_mode) and _same_file(held, ref) and held.st_nlink == 1):
++            raise Refused("the source changed during the move")
++        try:                                                # step 4
++            sub = _dir_lstat(directory, subdir)
++        except FileNotFoundError:
++            os.mkdir(directory)
++            created = True
++            sub = _dir_lstat(directory, subdir)
++        if _is_link(sub) or not stat.S_ISDIR(sub.st_mode):
++            raise Refused(f"{subdir!r} is a symbolic link or not a directory")
++        try:                                                # step 5
++            os.lstat(target)
++        except FileNotFoundError:
++            pass
++        else:
++            raise Refused("the destination exists")
++        flags = _flags("O_WRONLY", "O_CREAT", "O_EXCL", "O_NOFOLLOW", "O_BINARY")
++        try:                                                # step 6
++            dst_fd = os.open(target, flags, stat.S_IMODE(ref.st_mode))
++        except FileExistsError as exc:
++            raise Refused("the destination exists") from exc
++        except OSError as exc:
++            raise Refused(f"cannot create the destination: {exc.strerror}") from exc
++        made = os.fstat(dst_fd)
++        if not (_same_dir("docs", docs) and _same_dir(directory, sub)       # step 7
++                and _holds(target, made)):
++            raise Refused("the destination directory changed during the move")
++        try:                                                # step 8
++            while chunk := os.read(src_fd, CHUNK):
++                view = memoryview(chunk)
++                while view:
++                    view = view[os.write(dst_fd, view):]
++            os.fsync(dst_fd)
++        except OSError as exc:
++            raise Refused(f"cannot copy the source: {exc.strerror}") from exc
++        _close(dst_fd)
++        dst_fd = None
++        checked = True                                      # step 9
++        _source_check(source, ref, target)
++        _close(src_fd)
++        src_fd = None
++        _unlink_source(source, ref, target)                 # step 10
++    except _Kept:
++        raise
++    except (Refused, OSError) as exc:
++        _close(dst_fd)
++        dst_fd = None
++        if isinstance(exc, Refused):
++            message = str(exc)
++        else:
++            message = f"{exc.strerror or exc}: {exc.filename or ''}".rstrip(": ")
++
++        def dirs():
++            if not (_same_dir("docs", docs) and (sub is None or _same_dir(directory, sub))):
++                raise _DirsChanged()
++        message = _undo(exc, message, target, made, dirs, source, ref, checked)
++        if created:
++            try:
++                dirs()
++                _tried(os.rmdir, directory, dirs)
++            except (_DirsChanged, OSError):
++                pass
++        raise Refused(message) from exc
++    finally:
++        _close(src_fd)
++        _close(dst_fd)
++    return {"method": "copy", "created_directory": created}
++
++
+ def _parse(source, destination):
+     """The source name in `docs`, the destination directory and the archive name, or Refused."""
+     if source not in PAIRS:
+@@ -298,11 +607,10 @@ def main(argv=None):
+     argv = sys.argv[1:] if argv is None else list(argv)
+     if len(argv) != 2 or any(arg.startswith("-") for arg in argv):
+         return _fail(2, USAGE)
+-    if not _supported():
+-        return _fail(2, "this platform has no dir_fd support for open, mkdir, link and unlink")
+     source, destination = argv
+     try:
+-        result = _move(*_parse(source, destination))
++        parsed = _parse(source, destination)
++        result = _move(*parsed) if _supported() else _move_by_path(*parsed)
+     except Refused as exc:
+         return _fail(1, str(exc))
+     print(json.dumps({"ok": True, "source": source, "destination": destination, **result}))
+diff --git a/.agent/tools/rebase_links.py b/.agent/tools/rebase_links.py
+index 523b982..35393f2 100644
+--- a/.agent/tools/rebase_links.py
++++ b/.agent/tools/rebase_links.py
+@@ -76,7 +76,9 @@ import sys
+ #   and inode, match the directory of the path as called or of the real path: a case-insensitive
+ #   volume reaches the directory in other letter case (ARC-13, the rule of TASK 127 R6.1);
+ # - no bytecode is written, and `.pyc` files are looked up under the null device, where none can
+-#   exist, so a `.pyc` planted in `__pycache__/` is never read.
++#   exist, so a `.pyc` planted in `__pycache__/` is never read. Where `os.devnull` is a relative
++#   path, `nul` on Windows, they are looked up under the script's own real path instead: a regular
++#   file holds no directory, so no `.pyc` can exist there either (TASK 131 R4).
+ # The module has no `from __future__` statement: at run time it imports `__future__`.
+ if __name__ == "__main__":
+     def _identity(path):
+@@ -95,7 +97,10 @@ if __name__ == "__main__":
+                    if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                    and _identity(entry or os.curdir) not in _IDS]
+     sys.dont_write_bytecode = True
+-    sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
++    if os.path.isabs(os.devnull):
++        sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
++    else:
++        sys.pycache_prefix = os.path.join(os.path.realpath(__file__), "pycache")
+ 
+ import posixpath  # noqa: E402
+ import re  # noqa: E402
+@@ -105,8 +110,9 @@ from typing import NamedTuple  # noqa: E402
+ #: Schemes and forms that are never document-relative.
+ _ABSOLUTE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//|/|#)", re.IGNORECASE)
+ 
+-#: Fenced blocks: ``` or ~~~, any info string, closed by a fence at least as long.
+-_FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*?^[ \t]{0,3}\1[ \t]*$",
++#: Fenced blocks: ``` or ~~~, any info string, closed by a fence at least as long. The closing
++#: line may end in CR LF, as Git for Windows checks a file out (TASK 131 R11.1).
++_FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*?^[ \t]{0,3}\1[ \t]*\r?$",
+                     re.S | re.M)
+ #: An unterminated fence: everything from the opener to end of document.
+ _FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*\Z", re.S | re.M)
+@@ -117,11 +123,12 @@ _FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*\Z", re.S | re.M)
+ #:      the mask desynchronized for the rest of the file.
+ #:   2. A code span cannot contain a blank line -- a blank line ends the
+ #:      paragraph. Without that bound an unbalanced backtick pairs with one
+-#:      hundreds of lines later and blanks every real link in between.
++#:      hundreds of lines later and blanks every real link in between. A blank
++#:      line of CR LF counts too (TASK 131 R11.2).
+ #: Measured on this corpus: (1)+(2) recover 3 real links in
+ #: docs/design/095_workflow_loop_contract.md that were invisible to the tool,
+ #: and keep masking all 13 links that are syntax examples inside code spans.
+-_CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))*?(?<!`)\1(?!`)")
++_CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)(?:[^\n]|\n(?![ \t]*\r?\n))*?(?<!`)\1(?!`)")
+ 
+ # NOTE: indented code blocks are deliberately NOT masked. In this corpus a
+ # 4-or-more-space indent is overwhelmingly a lazy continuation of a list item,
+@@ -261,7 +268,7 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
+         denote_old = os.path.normpath(os.path.join(old_base, path))
+         denote_new = os.path.normpath(os.path.join(new_base, path))
+ 
+-        if os.path.commonpath([root, denote_old]) != root:
++        if not _inside(denote_old, root):
+             records.append(LinkRecord(line, authored, denote_old,
+                                       "ESCAPES_ROOT", authored))
+             continue
+@@ -283,7 +290,7 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
+             if raw.startswith("<"):
+                 new_target = f"<{new_target}>"
+             records.append(LinkRecord(line, authored,
+-                                      os.path.relpath(identity, root),
++                                      os.path.relpath(identity, root).replace(os.sep, "/"),
+                                       "SLOT_RESOLVED", new_target))
+             edits.append((start, end, new_target))
+             continue
+@@ -292,13 +299,13 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
+         # the path here is what converts "dead" into "silently wrong".
+         if os.path.relpath(denote_old, root) in known_slots:
+             records.append(LinkRecord(line, authored,
+-                                      os.path.relpath(denote_old, root),
++                                      os.path.relpath(denote_old, root).replace(os.sep, "/"),
+                                       "UNMAPPED_SLOT", authored))
+             continue
+ 
+         resolved_old = os.path.exists(denote_old)
+         resolved_new = os.path.exists(denote_new)
+-        rel_old = os.path.relpath(denote_old, root)
++        rel_old = os.path.relpath(denote_old, root).replace(os.sep, "/")  # TASK 131 R5.3
+ 
+         if not resolved_old:
+             action = "ACCIDENTAL_RESOLVE" if resolved_new else "PRE_BROKEN"
+@@ -495,8 +502,10 @@ def _refuse_operand(path):
+     """
+     cwd = os.getcwd()
+     absolute = os.path.normpath(os.path.join(cwd, path))
+-    if os.path.commonpath([absolute, cwd]) != cwd or absolute == cwd:
++    if not _inside(absolute, cwd) or absolute == cwd:
+         return "lies outside the working directory"
++    if _names_stream(path):
++        return "names an alternate stream of a file"
+     if _under_git(path, cwd):
+         return "lies under .git/"
+     if os.path.islink(path):
+@@ -505,7 +514,7 @@ def _refuse_operand(path):
+         return "has a second hard link"
+     real_cwd = os.path.realpath(cwd)
+     directory = os.path.realpath(os.path.dirname(os.path.join(cwd, path)))
+-    if os.path.commonpath([directory, real_cwd]) != real_cwd:
++    if not _inside(directory, real_cwd):
+         return "its directory resolves outside the working directory"
+     if os.path.relpath(absolute, cwd).split(os.sep)[0] != "docs":
+         return "does not lie under docs/"
+@@ -518,6 +527,95 @@ class _Unsafe(Exception):
+     """An operand that the file mode refuses to read or to write (TASK 116 R7)."""
+ 
+ 
++#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
++#: R2.2). Held here, not read from a sibling (TASK 131 R2.6).
++_NAME_SURROGATE = 0x20000000
++
++
++def _is_link(st):
++    """True for a symbolic link, or a reparse point whose tag is a name surrogate (TASK 131 R1.3).
++
++    Both attributes of Windows are read with `getattr`: only Windows sets them. A junction is a
++    link; a cloud placeholder is not.
++    """
++    return stat.S_ISLNK(st.st_mode) or bool(
++        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
++        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
++
++
++def _open_nofollow(path, flags):
++    """A descriptor of `path` opened with `flags` and no link followed (TASK 131 R2.1, R2.2).
++
++    Where `O_NOFOLLOW` exists, the open of the base. Elsewhere, Windows among them: `os.lstat`, a
++    refusal of a link or of any entry that is not a regular file, `os.open` with `O_NONBLOCK` and
++    `O_BINARY` where they exist, and `os.fstat`, which must give the identity of the `lstat`. An
++    `OSError` of the calls passes to the caller.
++    """
++    nofollow = getattr(os, "O_NOFOLLOW", None)
++    if nofollow is not None:
++        return os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
++    before = os.lstat(path)
++    if _is_link(before):
++        raise _Unsafe("is a link")
++    if not stat.S_ISREG(before.st_mode):
++        raise _Unsafe("is not a regular file")
++    fd = os.open(path, flags | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
++    try:
++        st = os.fstat(fd)
++    except BaseException:
++        os.close(fd)
++        raise
++    if (st.st_dev, st.st_ino) != (before.st_dev, before.st_ino):
++        os.close(fd)
++        raise _Unsafe("changed during the run")
++    return fd
++
++
++def _inside(path, root):
++    """True when `path` lies inside `root`; paths on two drives lie outside (TASK 131 R5.1)."""
++    try:
++        return os.path.commonpath([path, root]) == root
++    except ValueError:
++        return False
++
++
++def _leaves_tree(value):
++    """True when `--from` or `--to` leaves the working directory (TASK 116 R8.6, TASK 131 R5.2).
++
++    A value leaves it when it is absolute, has a drive, starts with a separator, or starts with
++    `..` once normalised.
++    """
++    return (os.path.isabs(value) or bool(os.path.splitdrive(value)[0])
++            or value.startswith(("/", os.sep))
++            or os.path.normpath(value).split(os.sep)[0] == "..")
++
++
++def _names_stream(path):
++    """True where paths have drives and `path` holds `:` after its drive (TASK 131 R5.5).
++
++    On NTFS such a colon names an alternate data stream of the file before it.
++    """
++    return bool(os.path.splitdrive("c:")[0]) and ":" in os.path.splitdrive(path)[1]
++
++
++def _unc(value):
++    """True where paths have drives and `value` is a UNC or device path (TASK 131 R12.1).
++
++    Such a path starts with two separators, as `\\\\host\\share`, `\\\\?\\` and `\\\\.\\` do, or
++    with `\\??\\`, as `\\??\\UNC\\host\\share` does. The check reads the text, each `/` as `\\`,
++    so it reaches no file system. It reads no drive of `value`: `splitdrive` gives none for
++    `\\??\\`.
++    """
++    text = value.replace("/", "\\")
++    return bool(os.path.splitdrive("c:")[0]) and text.startswith(("\\\\", "\\??\\"))
++
++
++def _emit(stream, line):
++    """Write `line` and a newline; text the stream cannot encode becomes backslash escapes."""
++    encoding = getattr(stream, "encoding", None) or "utf-8"
++    stream.write(line.encode(encoding, "backslashreplace").decode(encoding, "replace") + "\n")
++
++
+ def _check_descriptor(fd, path, cwd):
+     """The `fstat` of `fd`, if it is the regular file at `path`'s real path (TASK 116 R7.2).
+ 
+@@ -543,7 +641,7 @@ def _check_descriptor(fd, path, cwd):
+     except OSError:
+         raise _Unsafe("is not the file at its real path") from None
+     real_cwd = os.path.realpath(cwd)
+-    if os.path.commonpath([os.path.dirname(where), real_cwd]) != real_cwd:
++    if not _inside(os.path.dirname(where), real_cwd):
+         raise _Unsafe("its directory resolves outside the working directory")
+     return st
+ 
+@@ -553,8 +651,11 @@ def _descriptor_path(fd):
+ 
+     `fcntl.F_GETPATH` gives it on darwin, and the link `/proc/self/fd/<fd>` on Linux. It is one
+     lookup, so no swap of a directory between two lookups by name can change it, as one can
+-    between `realpath` and `stat`. A failed lookup raises `OSError`.
++    between `realpath` and `stat`. A failed lookup raises `OSError`. Where `os.name` is not
++    `posix` it gives none: it imports no `fcntl` and reads no `/proc` (TASK 131 R2.3).
+     """
++    if os.name != "posix":
++        return None
+     try:
+         import fcntl
+     except ImportError:
+@@ -568,11 +669,8 @@ def _descriptor_path(fd):
+ 
+ def _open_checked(path, cwd, flags):
+     """`(descriptor, fstat)` of `path` opened with `flags` and no link followed (TASK 116 R7.1)."""
+-    nofollow = getattr(os, "O_NOFOLLOW", None)
+-    if nofollow is None:
+-        raise _Unsafe("this platform has no O_NOFOLLOW")
+     try:
+-        fd = os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
++        fd = _open_nofollow(path, flags)
+     except OSError as exc:
+         raise _Unsafe(f"cannot open it: {exc.strerror or exc}") from None
+     try:
+@@ -678,23 +776,24 @@ def _main(argv=None):
+     args = ap.parse_args(argv)
+ 
+     # TASK 116 R8.6: a rewritten link is built from these paths, so each stays in the tree.
+-    if os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
++    # TASK 131 R12: a UNC path is refused before any call reaches the file system.
++    if _unc(args.repo_root):
++        problem = "--repo-root is a UNC or device path"
++    elif os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
+         problem = "--repo-root is not the working directory"
+     else:
+         problem = next((f"{name} does not lie inside the working directory"
+                         for name, value in (("--from", args.from_dir), ("--to", args.to_dir))
+-                        if os.path.isabs(value)
+-                        or os.path.normpath(value).split(os.sep)[0] == ".."), None)
++                        if _leaves_tree(value)), None)
+     if problem:
+-        print(json.dumps({"ok": False, "error": problem}), file=sys.stderr)
++        _emit(sys.stderr, json.dumps({"ok": False, "error": problem}))
+         return 2
+ 
+     slot_map = {}
+     for pair in args.slot:
+         if "=" not in pair:
+-            print(json.dumps({"ok": False,
+-                              "error": f"--slot expects SLOT=ARCHIVE, got {pair!r}"}),
+-                  file=sys.stderr)
++            _emit(sys.stderr, json.dumps({"ok": False,
++                                          "error": f"--slot expects SLOT=ARCHIVE, got {pair!r}"}))
+             return 2
+         slot, archive = (part.strip() for part in pair.split("=", 1))
+         # TASK 116 R8.1: the allow rule approves any argument, and ARCHIVE is written as a link.
+@@ -706,7 +805,7 @@ def _main(argv=None):
+         else:
+             slot_map[slot] = archive
+             continue
+-        print(json.dumps({"ok": False, "error": f"--slot {pair!r}: {problem}"}), file=sys.stderr)
++        _emit(sys.stderr, json.dumps({"ok": False, "error": f"--slot {pair!r}: {problem}"}))
+         return 2
+ 
+     opened = []
+@@ -724,7 +823,7 @@ def _file_mode(args, slot_map, opened):
+     for path in args.files:
+         reason = _refuse_operand(path) or _refuse_slot(path, slot_map)
+         if reason:
+-            print(json.dumps({"ok": False, "error": f"{path}: {reason}"}), file=sys.stderr)
++            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {reason}"}))
+             return 2
+ 
+     # TASK 116 R7.1: every operand is open and checked before any of them is read.
+@@ -733,14 +832,18 @@ def _file_mode(args, slot_map, opened):
+         try:
+             fd, st = _open_checked(path, cwd, os.O_RDONLY)
+         except _Unsafe as exc:
+-            print(json.dumps({"ok": False, "error": f"{path}: {exc}"}), file=sys.stderr)
++            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {exc}"}))
+             return 2
+         opened.append((path, fd, st))
+ 
+     report, warned, failed, pending = [], False, False, []
+     for path, fd, st in opened:
+         try:
+-            text = _read_descriptor(fd).decode("utf-8")
++            try:
++                text = _read_descriptor(fd).decode("utf-8")
++            except UnicodeDecodeError:
++                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: is not UTF-8"}))
++                return 2
+             new_text, records = rebase_document_links(text, args.from_dir, args.to_dir,
+                                                       args.repo_root, slot_map)
+             changed = new_text != text
+@@ -748,32 +851,32 @@ def _file_mode(args, slot_map, opened):
+             added = [r.line for r in records if r.action in _WROTE
+                      and _adds_characters(r.authored, r.new_target)]
+             if added:
+-                print(json.dumps({"ok": False, "error": f"{path}:{added[0]}: a rewritten link "
+-                                  "holds text that its authored link does not"}),
+-                      file=sys.stderr)
++                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}:{added[0]}: a "
++                                              "rewritten link holds text that its authored "
++                                              "link does not"}))
+                 return 2
+             parts = [r.line for r in records if r.action in _WROTE and _adds_parts(r)]
+             if parts:
+-                print(json.dumps({"ok": False, "error": f"{path}:{parts[0]}: the path of a "
+-                                  "rewritten link is not a tail of its authored link's"}),
+-                      file=sys.stderr)
++                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}:{parts[0]}: the "
++                                              "path of a rewritten link is not a tail of its "
++                                              "authored link's"}))
+                 return 2
+             # Overlapping links are spliced one into the other: the text gains no character either.
+             if _adds_characters(text, new_text):
+-                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text holds a "
+-                                  "character that the text did not"}), file=sys.stderr)
++                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: the rewritten "
++                                              "text holds a character that the text did not"}))
+                 return 2
+             # TASK 117 R3: a splice that adds no new character still changes the length.
+             if len(new_text) != len(text) + sum(len(r.new_target) - len(r.authored)
+                                                 for r in records if r.action in _WROTE):
+-                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text is not the "
+-                                  "text with each rewritten link replaced"}), file=sys.stderr)
++                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: the rewritten "
++                                              "text is not the text with each rewritten link "
++                                              "replaced"}))
+                 return 2
+             if changed and not args.dry_run:
+                 _write_checked(path, cwd, st, new_text.encode("utf-8"))
+         except (OSError, _Unsafe) as exc:
+-            print(json.dumps({"ok": False, "error": f"{path}: {exc}"}),
+-                  file=sys.stderr)
++            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {exc}"}))
+             return 2
+ 
+         # Conservation law: every file denoted before the move is denoted after.
+@@ -815,23 +918,23 @@ def _file_mode(args, slot_map, opened):
+             warned = True
+ 
+     if args.json:
+-        print(json.dumps({"ok": not failed, "files": report,
+-                          "slot_targets_pending": pending},
+-                         ensure_ascii=False, indent=1))
++        _emit(sys.stdout, json.dumps({"ok": not failed, "files": report,
++                                      "slot_targets_pending": pending},
++                                     ensure_ascii=True, indent=1))
+     else:
+         for entry in report:
+             for r in entry["links"]:
+                 if r["action"] == "UNCHANGED":
+                     continue
+-                print(f"[{r['action']}] {entry['file']}:{r['line']}  "
++                _emit(sys.stdout, f"[{r['action']}] {entry['file']}:{r['line']}  "
+                       f"{r['authored']}"
+                       + (f"  ->  {r['new_target']}" if r["action"] in _WROTE
+                          else ""))
+         n = sum(1 for e in report for r in e["links"] if r["action"] in _WROTE)
+         w = sum(1 for e in report for r in e["links"] if r["action"] in ACTIONS_WARN)
+         for p in pending:
+-            print(f"[SLOT_PENDING] {p}  (declared identity, not yet on disk)")
+-        print(f"{n} rewritten / {w} needing review"
++            _emit(sys.stdout, f"[SLOT_PENDING] {p}  (declared identity, not yet on disk)")
++        _emit(sys.stdout, f"{n} rewritten / {w} needing review"
+               + (" (dry run)" if args.dry_run else ""))
+ 
+     if failed:
+diff --git a/.agent/tools/slot_links.py b/.agent/tools/slot_links.py
+index 1a4e8b4..a0e9e37 100644
+--- a/.agent/tools/slot_links.py
++++ b/.agent/tools/slot_links.py
+@@ -18,8 +18,11 @@ Added lines are computed here, from `git cat-file blob`, with `difflib`. No `git
+ diff driver, textconv driver or clean filter runs (TASK 115 D3).
+ 
+ Exit codes of `main`: 0 nothing listed; 1 a rewritten link does not resolve, a write failed after
+-its first byte, or an unexpected error; 2 an operand, git, `<rev>` or the platform; 3 completed with
+-`INBOUND`, `REFUSED`, `UNREADABLE` or `SKIPPED` records.
++its first byte, or an unexpected error; 2 an operand, git or `<rev>`; 3 completed with `INBOUND`,
++`REFUSED`, `UNREADABLE` or `SKIPPED` records.
++
++Where the platform has no `O_NOFOLLOW`, Windows among them, each open checks the path with `lstat`
++before it and the descriptor with `fstat` after it, and the walk enters no junction (TASK 131 R2).
+ """
+ from __future__ import annotations
+ 
+@@ -63,7 +66,7 @@ LISTED = ("INBOUND", "REFUSED", "UNREADABLE", "SKIPPED")
+ 
+ 
+ class InboundError(Exception):
+-    """An operand, git, `<rev>` or the platform: nothing was written (exit 2)."""
++    """An operand, git or `<rev>`: nothing was written (exit 2)."""
+ 
+ 
+ class InboundRecord(NamedTuple):
+@@ -168,9 +171,22 @@ def _walk(root, unreadable):
+         rel = os.path.relpath(exc.filename or root, root).replace(os.sep, "/")
+         unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "", exc.strerror or str(exc)))
+ 
++    def entered(dirpath, name):
++        """TASK 131 R2.5: `os.walk` enters a junction; the walk enters no directory link, and no
++        directory whose `lstat` fails, which it records as unreadable."""
++        path = os.path.join(dirpath, name)
++        try:
++            return not _is_link(os.lstat(path))
++        except OSError as exc:
++            rel = os.path.relpath(path, root).replace(os.sep, "/")
++            unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "",
++                                            exc.strerror or str(exc)))
++            return False
++
+     found = []
+     for dirpath, dirnames, filenames in os.walk(root, onerror=failed):
+         dirnames[:] = sorted(d for d in dirnames if d not in WALK_SKIPS
++                             and entered(dirpath, d)
+                              and not os.path.isfile(os.path.join(dirpath, d, "pyvenv.cfg")))
+         for name in filenames:
+             rel = os.path.relpath(os.path.join(dirpath, name), root)
+@@ -178,10 +194,68 @@ def _walk(root, unreadable):
+     return sorted(found)
+ 
+ 
++#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
++#: R2.2). Held here, not read from a sibling (TASK 131 R2.6).
++_NAME_SURROGATE = 0x20000000
++
++
++class _LinkRefused(Exception):
++    """An open of TASK 131 R2.2 met a link or a swap; the text is the refusal."""
++
++
++def _is_link(st):
++    """True for a symbolic link, or a reparse point whose tag is a name surrogate (TASK 131 R1.3).
++
++    Both attributes of Windows are read with `getattr`: only Windows sets them. A junction is a
++    link; a cloud placeholder is not.
++    """
++    return stat.S_ISLNK(st.st_mode) or bool(
++        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
++        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
++
++
++def _open_nofollow(path, flags):
++    """A descriptor of `path` opened with `flags` and no link followed (TASK 131 R2.1, R2.2).
++
++    Where `O_NOFOLLOW` exists, the open of the base. Elsewhere, Windows among them: `os.lstat`, a
++    refusal of a link or of any entry that is not a regular file, `os.open` with `O_NONBLOCK` and
++    `O_BINARY` where they exist, and `os.fstat`, which must give the identity of the `lstat`. A
++    refusal raises `_LinkRefused`; an `OSError` of the calls passes to the caller.
++    """
++    nofollow = getattr(os, "O_NOFOLLOW", None)
++    if nofollow is not None:
++        return os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
++    before = os.lstat(path)
++    if _is_link(before):
++        raise _LinkRefused("is a link")
++    if not stat.S_ISREG(before.st_mode):
++        raise _LinkRefused("is not a regular file")
++    fd = os.open(path, flags | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
++    try:
++        st = os.fstat(fd)
++    except BaseException:
++        os.close(fd)
++        raise
++    if (st.st_dev, st.st_ino) != (before.st_dev, before.st_ino):
++        os.close(fd)
++        raise _LinkRefused("changed during the run")
++    return fd
++
++
++def _inside(path, root):
++    """True when `path` lies inside `root`; paths on two drives lie outside (TASK 131 R5.1)."""
++    try:
++        return os.path.commonpath([path, root]) == root
++    except ValueError:
++        return False
++
++
+ def _read(path):
+     """`(bytes, (st_dev, st_ino))` of a regular file, through a descriptor that follows no link."""
+     try:
+-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
++        fd = _open_nofollow(path, os.O_RDONLY)
++    except _LinkRefused as exc:
++        raise _Unreadable(str(exc)) from exc
+     except OSError as exc:
+         raise _Unreadable(exc.strerror or str(exc)) from exc
+     try:
+@@ -328,8 +402,11 @@ def _descriptor_path(fd):
+     lookup, so no swap of a directory between two lookups by name can change it, as one can
+     between `realpath` and `stat`. A failed lookup raises `OSError`. The same lookup as
+     `rebase_links._descriptor_path`, held here since a copy of one module may run beside
+-    the base of the other.
++    the base of the other. Where `os.name` is not `posix` it gives none: it imports no `fcntl`
++    and reads no `/proc` (TASK 131 R2.3).
+     """
++    if os.name != "posix":
++        return None
+     try:
+         import fcntl
+     except ImportError:
+@@ -352,12 +429,14 @@ def _write_file(root, rel, original, ident, data, dry_run=False):
+     path = os.path.join(root, rel)
+     real_root = os.path.realpath(root)
+     parent = os.path.realpath(os.path.dirname(path))
+-    if os.path.commonpath([parent, real_root]) != real_root:
++    if not _inside(parent, real_root):
+         return _Refusal("its directory resolves outside the working directory", False)
+     if _rl._under_git(rel, root):
+         return _Refusal("lies under .git/", False)
+     try:
+-        fd = os.open(path, os.O_RDWR | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
++        fd = _open_nofollow(path, os.O_RDWR)
++    except _LinkRefused as exc:
++        return _Refusal(str(exc), False)
+     except OSError as exc:
+         return _Refusal(f"cannot open it: {exc.strerror or exc}", False)
+     written = 0
+@@ -376,7 +455,7 @@ def _write_file(root, rel, original, ident, data, dry_run=False):
+             return _Refusal("is not the file at its real path", False)
+         if (now.st_dev, now.st_ino) != (st.st_dev, st.st_ino):
+             return _Refusal("is not the file at its real path", False)
+-        if os.path.commonpath([os.path.dirname(where), real_root]) != real_root:
++        if not _inside(os.path.dirname(where), real_root):
+             return _Refusal("its directory resolves outside the working directory", False)
+         if (st.st_dev, st.st_ino) != ident:
+             return _Refusal("changed during the run", False)
+@@ -456,7 +535,7 @@ def _scan_set(root, unreadable):
+     if toplevel is None:
+         return "walk", [p for p in _walk(root, unreadable) if p.endswith(".md")], ""
+     real_root, real_top = os.path.realpath(root), os.path.realpath(toplevel)
+-    if os.path.commonpath([real_root, real_top]) != real_top:
++    if not _inside(real_root, real_top):
+         raise InboundError(f"{root} does not lie inside its git top level {toplevel}")
+     paths = {unicodedata.normalize("NFC", p): p for p in _ls_files(root) if p.endswith(".md")}
+     try:
+@@ -488,10 +567,8 @@ def retarget_inbound(repo_root, task_archive, plan_archive=None, since=None, dry
+         InboundResult(records, archived_slot_links, scan, since, exit_code).
+ 
+     Raises:
+-        InboundError: an operand, git, `<rev>` or the platform (exit 2); nothing was written.
++        InboundError: an operand, git or `<rev>` (exit 2); nothing was written.
+     """
+-    if not hasattr(os, "O_NOFOLLOW"):
+-        raise InboundError("this platform has no O_NOFOLLOW")
+     root = os.path.abspath(repo_root)
+     digits, archives = _check_archives(root, task_archive, plan_archive)
+     task_id = int(digits)
+diff --git a/.agent/tools/task_id_tool.py b/.agent/tools/task_id_tool.py
+index e229cf1..294fe23 100644
+--- a/.agent/tools/task_id_tool.py
++++ b/.agent/tools/task_id_tool.py
+@@ -97,9 +97,11 @@ def _first_h1(path: str) -> Optional[str]:
+     head), a leading YAML front matter and fenced code blocks are skipped: the sub-task template
+     puts a comment block above its H1, and a YAML or shell comment line starts with `# `.
+     The file is opened with `O_NONBLOCK | O_NOCTTY` and read only when `fstat` shows a regular
+-    file, so a FIFO or a device named `task-*.md` does not block the scan.
++    file, so a FIFO or a device named `task-*.md` does not block the scan. Where `O_BINARY` exists,
++    Windows among them, the open passes it, so the read stops at no byte `0x1A` (TASK 131 R2.7).
+     """
+-    flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOCTTY', 0)
++    flags = (os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOCTTY', 0)
++             | getattr(os, 'O_BINARY', 0))
+     try:
+         fd = os.open(path, flags)
+     except OSError:
+@@ -133,6 +135,18 @@ def _first_h1(path: str) -> Optional[str]:
+     return None
+ 
+ 
++def _unc(value: str) -> bool:
++    """True where paths have drives and `value` is a UNC or device path (TASK 131 R12.1).
++
++    Such a path starts with two separators, or with the NT prefix `\\??\\`. The check reads the
++    text, each `/` as `\\`, so it reaches no file system: on Windows an open of a UNC path sends
++    the user's credentials to its host. It reads no drive of `value`: `splitdrive` gives none for
++    `\\??\\`.
++    """
++    text = value.replace('/', '\\')
++    return bool(os.path.splitdrive('c:')[0]) and text.startswith(('\\\\', '\\??\\'))
++
++
+ def classify_task_file(tasks_dir: str, filename: str) -> Optional[tuple[int, bool]]:
+     """`(task id, is_subtask)` of a file in `tasks_dir`, or None when its name is not `task-<id>-*.md`.
+ 
+@@ -396,6 +410,12 @@ if __name__ == "__main__":
+     # `--no-correction` now states the default, so passing both is consistent.
+     allow_correction = args.allow_correction and not args.no_correction
+ 
++    # TASK 131 R12: a UNC `--tasks-dir` is refused before any call reaches the file system.
++    if _unc(args.tasks_dir):
++        print(json.dumps({"filename": None, "used_id": None, "status": "error",
++                          "message": "--tasks-dir is a UNC or device path"}, indent=2))
++        sys.exit(1)
++
+     result = generate_task_archive_filename(
+         slug=args.slug,
+         proposed_id=args.proposed_id,
+diff --git a/.agent/tools/test_rebase_links.py b/.agent/tools/test_rebase_links.py
+index 57d5258..e03740c 100644
+--- a/.agent/tools/test_rebase_links.py
++++ b/.agent/tools/test_rebase_links.py
+@@ -3,17 +3,22 @@
+ One test per row of the decision table, one per markdown construct that can
+ carry a path, and regression pins for the two defects an adversarial review
+ found in the first design: the mutable-slot case and the indented-continuation
+-masking rule.
++masking rule. TC-W25 (TASK 131 R5.3): a record writes its `denotes_old` with `/` on every
++platform, so the check of TASK 117 R2 reads a slot archive in parts on Windows too.
+ """
+ 
+ import json
++import ntpath
+ import os
+ import sys
++import types
++from unittest import mock
+ 
+ import pytest
+ 
+ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ 
++import rebase_links  # noqa: E402
+ from rebase_links import rebase_document_links, rebase_file  # noqa: E402
+ 
+ 
+@@ -206,7 +211,7 @@ class TestReporting:
+         _, rec = rb(repo, "[a](ARCHITECTURE.md)\n")
+         assert rec[0].authored == "ARCHITECTURE.md"
+         assert rec[0].new_target == "../ARCHITECTURE.md"
+-        assert rec[0].denotes_old == os.path.join("docs", "ARCHITECTURE.md")
++        assert rec[0].denotes_old == "docs/ARCHITECTURE.md"     # TASK 131 R5.3
+ 
+ 
+ class TestUnmappedSlot:
+@@ -492,11 +497,12 @@ class TestFileModeCommandLine:
+         assert self.run("docs/tasks/t.md") == 0
+         assert moved.read_bytes() == "# é\n[a](../ARCHITECTURE.md)\n".encode("utf-8")
+ 
+-    def test_f3_a_non_utf8_operand_raises_as_at_the_base(self, tmp_path):
++    def test_f3_a_non_utf8_operand_is_refused(self, tmp_path, capsys):
++        # TASK 131 R3.3 replaces the traceback of the base by a refusal, exit 2.
+         moved = tmp_path / "docs" / "tasks" / "t.md"
+         moved.write_bytes(b"\xff\xfe[a](ARCHITECTURE.md)\n")
+-        with pytest.raises(UnicodeDecodeError):
+-            self.run("docs/tasks/t.md")
++        assert self.run("docs/tasks/t.md") == 2
++        assert json.loads(capsys.readouterr().err)["error"] == "docs/tasks/t.md: is not UTF-8"
+         assert moved.read_bytes() == b"\xff\xfe[a](ARCHITECTURE.md)\n"
+ 
+     def test_f4_a_dry_run_writes_nothing(self, tmp_path):
+@@ -531,3 +537,20 @@ class TestFileModeCommandLine:
+         moved.write_bytes(b"[a](../ARCHITECTURE.md)\n")
+         assert self.run("docs/t.md", from_dir="docs/tasks", to_dir="docs") == 0
+         assert moved.read_bytes() == b"[a](ARCHITECTURE.md)\n"
++
++
++class TestWindowsSeparators:
++    """TC-W25 (TASK 131 R5.3), with the paths of Windows on any platform."""
++
++    def test_w25_a_slot_record_holds_slashes(self):
++        # base-fail: `denotes_old` holds `\\` under `ntpath`, so `_adds_parts` reads one part.
++        windows = types.SimpleNamespace(path=ntpath, sep="\\")
++        with mock.patch.object(rebase_links, "os", windows):
++            new_text, records = rebase_document_links(
++                "[t](TASK.md)\n", "docs", "docs/plans", "C:\\repo",
++                {"docs/TASK.md": "docs/tasks/task-001-x.md"})
++        assert [r.action for r in records] == ["SLOT_RESOLVED"]
++        assert records[0].denotes_old == "docs/tasks/task-001-x.md"
++        assert records[0].new_target == "../tasks/task-001-x.md"
++        assert not rebase_links._adds_parts(records[0])
++        assert new_text == "[t](../tasks/task-001-x.md)\n"
+diff --git a/.agent/tools/test_slot_links.py b/.agent/tools/test_slot_links.py
+index 266c8ff..24af90e 100644
+--- a/.agent/tools/test_slot_links.py
++++ b/.agent/tools/test_slot_links.py
+@@ -14,15 +14,24 @@ next task's TASK and PLAN filled it (WI-38). This module pins TC-0 to TC-46 of T
+ 
+ Git fixtures run with `GIT_CONFIG_GLOBAL=os.devnull`, `GIT_CONFIG_NOSYSTEM=1` and a fixed identity,
+ set for the test process so that the module's own git calls read no operator configuration.
++
++TC-W13, TC-W17, TC-W19, TC-W20 and TC-W24 (TASK 131) pin the inbound mode on a platform without
++`O_NOFOLLOW`, Windows among them. A test that makes a symbolic link or a FIFO skips where the
++platform cannot, and a test whose premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5).
+ """
+ 
++import contextlib
+ import errno
+ import json
+ import os
+ import shutil
++import stat
+ import subprocess
+ import sys
++import tempfile
++import types
+ from pathlib import Path
++from unittest import mock
+ 
+ import pytest
+ 
+@@ -48,6 +57,71 @@ def isolated_git(monkeypatch, tmp_path):
+         monkeypatch.setenv(key, value)
+ 
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege."""
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++needs_symlink = pytest.mark.skipif(not _can_symlink(), reason="this process cannot make a link")
++needs_fifo = pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
++#: TASK 131 R6.5: a premise of POSIX that Windows does not hold.
++posix_premise = pytest.mark.skipif(os.name == "nt", reason="a premise of POSIX (TASK 131 D22)")
++windows_only = pytest.mark.skipif(os.name != "nt", reason="a behaviour of Windows")
++#: The reparse tag of a junction (TASK 128 R2.2).
++JUNCTION = 0xA0000003
++
++
++@contextlib.contextmanager
++def no_o_nofollow():
++    """`os.O_NOFOLLOW` deleted, as on Windows, for the time of the block."""
++    saved = getattr(os, "O_NOFOLLOW", None)
++    if saved is not None:
++        del os.O_NOFOLLOW
++    try:
++        yield
++    finally:
++        if saved is not None:
++            os.O_NOFOLLOW = saved
++
++
++def lstat_reporting(paths, **extra):
++    """A patch of `os.lstat` that reports the attributes of Windows of `extra` for `paths`."""
++    real = os.lstat
++
++    def lstat(path, *args, **kwargs):
++        st = real(path, *args, **kwargs)
++        if os.fspath(path) not in paths:
++            return st
++        fields = {name: getattr(st, name) for name in dir(st) if name.startswith("st_")}
++        fields.setdefault("st_file_attributes", 0)
++        fields.setdefault("st_reparse_tag", 0)
++        fields.update(extra)
++        return types.SimpleNamespace(**fields)
++    return mock.patch("os.lstat", side_effect=lstat)
++
++
++def unused_open_bit():
++    """A bit that no `os.O_*` flag of this platform uses."""
++    used = 0
++    for name in dir(os):
++        if name.startswith("O_"):
++            used |= getattr(os, name)
++    return next(1 << bit for bit in range(30, 15, -1) if not used & (1 << bit))
++
++
++def junction(link, target):
++    """A junction at `link` to the directory `target` (Windows only), as CPython's tests make it."""
++    import _winapi
++    _winapi.CreateJunction(str(target), str(link))
++
++
+ def write(root, rel, text, newline="\n"):
+     path = Path(root) / rel
+     path.parent.mkdir(parents=True, exist_ok=True)
+@@ -213,7 +287,7 @@ def test_tc6_fences_and_code_spans_are_not_links(project):
+ def test_tc7_link_text(project, before, after):
+     sub = write(project, "docs/tasks/task-033-03-x.md", f"# Task 033-03: x\n\n{before}\n")
+     retarget_inbound(str(project), TASK, PLAN)
+-    assert sub.read_text() == f"# Task 033-03: x\n\n{after}\n"
++    assert sub.read_text(encoding="utf-8") == f"# Task 033-03: x\n\n{after}\n"
+ 
+ 
+ @pytest.mark.parametrize("before, after", [
+@@ -240,6 +314,7 @@ def test_tc8_fragment_brackets_and_reference_definitions(project, before, after)
+     ("--task", "docs/tasks/task-033-linked.md"),
+     ("--plan", PLAN),
+ ])
++@needs_symlink
+ def test_tc9_operands_exit_2_and_write_nothing(project, args):
+     write(project, "docs/tasks/task-033-01-guards.md", "# Task 033-01: Guards\n\n[x](../TASK.md)\n")
+     (project / "docs/tasks/task-033-linked.md").symlink_to(project / TASK)
+@@ -269,6 +344,7 @@ def test_tc10_since_errors_exit_2(project):
+     assert {k: v for k, v in after.items() if k in before} == before
+ 
+ 
++@needs_symlink
+ def test_tc11_links_and_hard_links_are_not_written(project, tmp_path):
+     outside = Path(os.path.realpath(tmp_path)) / "outside.md"
+     outside.write_text("[x](../TASK.md)\n")
+@@ -352,6 +428,7 @@ def test_tc18_an_unresolved_rewrite_exits_1(project, monkeypatch):
+     assert retarget_inbound(str(project), TASK).exit_code == 1
+ 
+ 
++@needs_symlink
+ def test_tc19_walk_mode_skips_git_node_modules_and_directory_links(project, tmp_path):
+     outside = Path(os.path.realpath(tmp_path)) / "elsewhere"
+     write(outside, "x.md", "[x](../docs/TASK.md)\n")
+@@ -396,14 +473,15 @@ def test_tc21_no_driver_filter_or_hook_runs(project, tmp_path):
+         hook = scratch / f"{name}.sh"
+         body = ('cat "$1"' if name == "textconv"
+                 else "cat" if name in ("clean", "smudge") else "exit 0")
+-        hook.write_text(f"#!/bin/sh\ntouch '{sentinels[name]}'\n{body}\n")
++        # TASK 131 R6.6: LF bytes and paths of POSIX, which the shell of git reads on Windows too.
++        hook.write_bytes(f"#!/bin/sh\ntouch '{sentinels[name].as_posix()}'\n{body}\n".encode())
+         hook.chmod(0o755)
+     for key, value in (("diff.external", scratch / "external.sh"),
+                        ("diff.md.textconv", scratch / "textconv.sh"),
+                        ("filter.sentinel.clean", scratch / "clean.sh"),
+                        ("filter.sentinel.smudge", scratch / "smudge.sh"),
+                        ("core.fsmonitor", scratch / "fsmonitor.sh")):
+-        git(project, "config", key, str(value))
++        git(project, "config", key, value.as_posix())
+     write(project, ".gitattributes", "*.md diff=md filter=sentinel\n")
+     design.write_text("Old [s](../TASK.md).\n\nNew [s](../TASK.md).\n")
+ 
+@@ -419,7 +497,7 @@ def test_tc21_no_driver_filter_or_hook_runs(project, tmp_path):
+         path.unlink()
+     # A tracked file changed at the same size: `git status` must read it through the clean
+     # filter, since its size no longer tells it apart from the index.
+-    same.write_text("bbbb\n")
++    same.write_bytes(b"bbbb\n")
+     stamp = same.stat()
+     os.utime(same, (stamp.st_atime + 5, stamp.st_mtime + 5))
+ 
+@@ -444,6 +522,7 @@ def test_tc22_inherited_git_variables_change_nothing(project, tmp_path, monkeypa
+     assert retarget_inbound(str(project), TASK, PLAN, since=base, dry_run=True) == expected
+ 
+ 
++@needs_symlink
+ def test_tc23_a_root_below_the_top_level_through_a_link(tmp_path):
+     real = Path(os.path.realpath(tmp_path))
+     top = real / "mono"
+@@ -475,10 +554,13 @@ def test_tc24_only_the_added_copy_of_a_duplicated_line_is_own(project):
+                                ("docs/design/core.md", 4, "RETARGETED")]
+ 
+ 
+-def test_platform_without_o_nofollow_refuses(project, monkeypatch):
+-    monkeypatch.delattr(os, "O_NOFOLLOW")
+-    with pytest.raises(InboundError):
+-        retarget_inbound(str(project), TASK, PLAN)
++def test_platform_without_o_nofollow_refuses(project):
++    # base-fail: the base refuses the platform (TASK 131 R2.4). The name stays from TASK 116.
++    sub = write(project, "docs/tasks/task-033-30-x.md", "# Task 033-30: x\n\n[a](../TASK.md)\n")
++    with no_o_nofollow():
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert records(result) == [("docs/tasks/task-033-30-x.md", 3, "RETARGETED")]
++    assert "[a](task-033-admission-core-v1.md)" in sub.read_text(encoding="utf-8")
+ 
+ 
+ # --- stage-2 round 1 ---------------------------------------------------------------------------
+@@ -500,6 +582,7 @@ def _after_read(monkeypatch, rel, change):
+     monkeypatch.setattr(slot_links, "_read", hooked)
+ 
+ 
++@needs_symlink
+ def test_tc26_a_parent_linked_outside_is_refused(project, tmp_path):
+     write(project, "docs/design/x.md", "Old.\n")
+     init_repo(project)
+@@ -517,7 +600,8 @@ def test_tc26_a_parent_linked_outside_is_refused(project, tmp_path):
+     assert (outside / "x.md").read_text() == "Old.\nNew [s](../TASK.md).\n"
+ 
+ 
+-@pytest.mark.parametrize("how", ["replaced", "changed", "fifo"])
++@pytest.mark.parametrize("how", ["replaced", "changed",
++                                 pytest.param("fifo", marks=needs_fifo)])
+ def test_tc26_a_file_changed_after_the_read_is_refused(project, monkeypatch, how):
+     rel = "docs/tasks/task-033-20-x.md"
+     sub = write(project, rel, "# Task 033-20: x\n\n[a](../TASK.md)\n")
+@@ -543,6 +627,8 @@ def test_tc26_a_file_changed_after_the_read_is_refused(project, monkeypatch, how
+         assert "[a](../TASK.md)" in sub.read_text()
+ 
+ 
++@pytest.mark.skipif(os.name == "nt", reason="Windows refuses to replace a file that a descriptor "
++                    "holds (TASK 131 D22)")
+ def test_tc27_a_file_replaced_after_the_write_is_refused(project, monkeypatch):
+     rel = "docs/tasks/task-033-21-x.md"
+     sub = write(project, rel, "# Task 033-21: x\n\n[a](../TASK.md)\n")
+@@ -604,6 +690,8 @@ def test_tc30_a_write_that_fails_after_its_first_byte_exits_1(project, monkeypat
+     assert result.exit_code == 1
+ 
+ 
++@needs_symlink
++@pytest.mark.skipif(os.name == "nt", reason="NTFS refuses a line break in a name (TASK 131 D22)")
+ def test_tc31_the_text_output_escapes_and_json_is_ascii(project):
+     (project / "docs" / "tasks").mkdir(parents=True, exist_ok=True)
+     (project / "docs" / "x\n[RETARGETED] forged.md").symlink_to(project / TASK)
+@@ -686,6 +774,7 @@ def test_tc36_an_ignored_subtask_is_still_read(project):
+ 
+ 
+ @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads any directory")
++@posix_premise
+ def test_tc37_an_unreadable_directory_is_listed(project):
+     secret = project / "docs" / "secret"
+     secret.mkdir()
+@@ -761,6 +850,7 @@ def test_tc42_autojunk_stays_off(project):
+ 
+ 
+ @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads any directory")
++@posix_premise
+ def test_tc43_an_unreadable_tasks_directory_is_listed_in_git_mode(project):
+     init_repo(project)
+     commit(project)
+@@ -792,6 +882,7 @@ def test_tc44_a_closed_stdout_exits_1_with_the_error_object(monkeypatch, capsys)
+     assert json.loads(capsys.readouterr().err)["ok"] is False
+ 
+ 
++@needs_fifo
+ def test_tc45_the_tasks_listing_reads_regular_files_only(project):
+     init_repo(project)
+     commit(project)
+@@ -817,3 +908,234 @@ def test_tc46_a_file_without_a_slot_name_is_not_masked(project, monkeypatch):
+     assert "No slot name here.\n" not in masked
+     assert "[a](TASK.md)\n" in masked
+ 
++
++# --- TASK 131: a platform without O_NOFOLLOW, Windows among them -------------------------------
++
++def _hook_open(monkeypatch, path, when, change):
++    """Run `change()` once, right before the first `os.open` of `path` whose flags pass `when`."""
++    real_open, done = os.open, []
++
++    def opener(name, flags, *args, **kwargs):
++        if os.path.abspath(name) == str(path) and when(flags) and not done:
++            done.append(True)
++            change()
++        return real_open(name, flags, *args, **kwargs)
++    monkeypatch.setattr(os, "open", opener)
++    return done
++
++
++@needs_symlink
++def test_w19_a_file_swapped_for_a_link_after_the_read_lstat(project, monkeypatch, tmp_path):
++    # base-fail: the base refuses the platform before it reads.
++    outside = Path(os.path.realpath(tmp_path)) / "outside.md"
++    outside.write_text("Outside.\n[x](../TASK.md)\n", encoding="utf-8")
++    rel = "docs/design/x.md"
++    design = write(project, rel, "Inside, with no link.\nTASK.md\n")
++
++    def swap():
++        design.unlink()
++        design.symlink_to(outside)
++    done = _hook_open(monkeypatch, project / rel, lambda flags: not flags & os.O_RDWR, swap)
++    with no_o_nofollow():
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert done, "the hook never swapped"
++    assert [(r.file, r.action, r.reason) for r in result.records if r.file == rel] == [
++        (rel, "UNREADABLE", "changed during the run")]
++    assert outside.read_text(encoding="utf-8") == "Outside.\n[x](../TASK.md)\n"
++
++
++@needs_symlink
++def test_w19_a_file_swapped_for_a_link_after_the_write_lstat(project, monkeypatch, tmp_path):
++    outside = Path(os.path.realpath(tmp_path)) / "victim.md"
++    rel = "docs/tasks/task-033-31-x.md"
++    text = "# Task 033-31: x\n\n[a](../TASK.md)\n"
++    outside.write_text(text, encoding="utf-8")
++    sub = write(project, rel, text)
++
++    def swap():
++        sub.unlink()
++        sub.symlink_to(outside)
++    _hook_open(monkeypatch, project / rel, lambda flags: flags & os.O_RDWR, swap)
++    with no_o_nofollow():
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert _reason(result, rel, "REFUSED") == ["changed during the run"]
++    assert outside.read_text(encoding="utf-8") == text
++
++
++def test_w19_a_reparse_tag_at_the_read_or_at_the_write(project, monkeypatch):
++    rel = "docs/tasks/task-033-32-x.md"
++    text = "# Task 033-32: x\n\n[a](../TASK.md)\n"
++    sub = write(project, rel, text)
++    path = os.path.join(str(project), rel)
++    tag = dict(st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT, st_reparse_tag=JUNCTION)
++    with no_o_nofollow(), lstat_reporting({path}, **tag):
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert [(r.action, r.reason) for r in result.records if r.file == rel] == [
++        ("UNREADABLE", "is a link")]
++
++    original = slot_links._read
++    read = []
++
++    def reading(name):
++        value = original(name)
++        if name == path:
++            read.append(True)
++        return value
++    monkeypatch.setattr(slot_links, "_read", reading)
++    real_lstat = os.lstat
++
++    def lstat(name, *args, **kwargs):
++        st = real_lstat(name, *args, **kwargs)
++        if os.fspath(name) != path or not read:
++            return st
++        fields = {key: getattr(st, key) for key in dir(st) if key.startswith("st_")}
++        fields.update(tag)
++        return types.SimpleNamespace(**fields)
++    with no_o_nofollow(), mock.patch("os.lstat", side_effect=lstat):
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert _reason(result, rel, "REFUSED") == ["is a link"]
++    assert sub.read_text(encoding="utf-8") == text
++
++
++def test_w20_the_walk_enters_no_directory_with_a_name_surrogate_tag(project):
++    # base-fail: `os.walk` enters a junction on Windows; the base has no filter (TASK 131 R2.5).
++    hidden = project / "docs" / "junction-like"
++    write(hidden, "x.md", "[x](../TASK.md)\n")
++    tag = dict(st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT, st_reparse_tag=JUNCTION)
++    with lstat_reporting({str(hidden)}, **tag):
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert result.scan == "walk"
++    assert [r.file for r in result.records if r.file.startswith("docs/junction-like")] == []
++
++
++@windows_only
++def test_w20_the_walk_enters_no_junction(project, tmp_path):
++    outside = Path(os.path.realpath(tmp_path)) / "elsewhere"
++    write(outside, "x.md", "[x](../docs/TASK.md)\n")
++    junction(project / "linked", outside)
++    try:
++        result = retarget_inbound(str(project), TASK, PLAN)
++    finally:
++        os.rmdir(project / "linked")
++    assert [r.file for r in result.records if r.file.startswith("linked")] == []
++
++
++@pytest.mark.parametrize("o_nofollow", [True, False])
++def test_w13_the_inbound_mode_keeps_every_byte(project, o_nofollow):
++    rel = "docs/tasks/task-033-33-x.md"
++    data = b"# Task 033-33: x\r\n\r\n[a](../TASK.md)\r\nline\x1a after the byte\r\n"
++    path = project / rel
++    path.parent.mkdir(parents=True, exist_ok=True)
++    path.write_bytes(data)
++    with (contextlib.nullcontext() if o_nofollow else no_o_nofollow()):
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert records(result) == [(rel, 3, "RETARGETED")]
++    assert path.read_bytes() == data.replace(b"(../TASK.md)", b"(task-033-admission-core-v1.md)")
++
++
++@pytest.mark.parametrize("call", [1, 2])
++def test_w17_two_drives_are_outside_at_the_write(project, call):
++    # base-fail: a ValueError of `commonpath` ends the base in a traceback (TASK 131 R5.1).
++    rel = "docs/tasks/task-033-34-x.md"
++    sub = write(project, rel, "# Task 033-34: x\n\n[a](../TASK.md)\n")
++    original, st = sub.read_bytes(), sub.stat()
++    calls, real = [], os.path.commonpath
++
++    def commonpath(paths):
++        calls.append(paths)
++        if len(calls) == call:
++            raise ValueError("Paths don't have the same drive")
++        return real(paths)
++    with mock.patch("os.path.commonpath", side_effect=commonpath):
++        refusal = slot_links._write_file(str(project), rel, original, (st.st_dev, st.st_ino),
++                                         b"rewritten\n")
++    assert refusal is not None
++    assert refusal.reason == "its directory resolves outside the working directory"
++    assert sub.read_bytes() == original
++
++
++def test_w17_two_drives_are_outside_at_the_scan(project):
++    init_repo(project)
++    commit(project)
++    with mock.patch("os.path.commonpath",
++                    side_effect=ValueError("Paths don't have the same drive")):
++        with pytest.raises(InboundError, match="does not lie inside its git top level"):
++            retarget_inbound(str(project), TASK, PLAN)
++
++
++def test_w24_each_open_of_the_inbound_mode_passes_o_binary(project, monkeypatch):
++    rel = "docs/tasks/task-033-35-x.md"
++    write(project, rel, "# Task 033-35: x\n\n[a](../TASK.md)\n")
++    bit, seen, real_open = unused_open_bit(), [], os.open
++
++    def spy(name, flags, *args, **kwargs):
++        if os.path.abspath(name) == os.path.abspath(os.path.join(str(project), rel)):
++            seen.append(flags)
++        return real_open(name, flags & ~bit, *args, **kwargs)
++    monkeypatch.setattr(os, "O_BINARY", bit, raising=False)
++    monkeypatch.setattr(os, "open", spy)
++    with no_o_nofollow():
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert records(result) == [(rel, 3, "RETARGETED")]
++    # The H1 scan of `task_id_tool._first_h1` opens the sub-task too (TASK 131 R2.7).
++    assert len(seen) >= 2 and any(flags & os.O_RDWR for flags in seen), seen
++    assert all(flags & bit for flags in seen), "an open drops O_BINARY"
++    nonblock = getattr(os, "O_NONBLOCK", 0)
++    assert all(flags & nonblock == nonblock for flags in seen), "an open drops O_NONBLOCK"
++
++
++# --- the fix of round 1 of stage 2 (TASK 131 D24 to D26) ---------------------------------------
++
++@needs_fifo
++def test_w37_without_o_nofollow_a_fifo_is_never_opened(project, monkeypatch):
++    fifo = project / "docs" / "design" / "f.md"
++    fifo.parent.mkdir(parents=True)
++    os.mkfifo(fifo)
++    opened, real_open = [], os.open
++
++    def opener(name, flags, *args, **kwargs):
++        if os.path.abspath(name) == str(fifo):
++            opened.append(flags)                    # the open would block: fail it instead
++            raise OSError(errno.EAGAIN, "the test refuses to open the FIFO")
++        return real_open(name, flags, *args, **kwargs)
++    monkeypatch.setattr(os, "open", opener)
++    with no_o_nofollow():
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert [(r.action, r.reason) for r in result.records if r.file == "docs/design/f.md"] == [
++        ("UNREADABLE", "is not a regular file")]
++    assert opened == [], "the FIFO was opened"
++
++
++def test_w40_a_directory_whose_lstat_fails_is_not_entered(project):
++    hidden = project / "docs" / "locked"
++    write(hidden, "x.md", "[x](../TASK.md)\n")
++    real_lstat = os.lstat
++
++    def lstat(path, *args, **kwargs):
++        if os.fspath(path) == str(hidden):
++            raise PermissionError(13, "Permission denied")
++        return real_lstat(path, *args, **kwargs)
++    with mock.patch("os.lstat", side_effect=lstat):
++        result = retarget_inbound(str(project), TASK, PLAN)
++    assert result.scan == "walk"
++    assert [(r.file, r.action) for r in result.records if r.file.startswith("docs/locked")] == [
++        ("docs/locked", "UNREADABLE")]
++
++
++def test_w41_a_crlf_subtask_with_a_fence(project):
++    # base-fail: at the base no fence closes on CR LF, so the link after it is never seen.
++    rel = "docs/tasks/task-033-36-x.md"
++    path = project / rel
++    path.parent.mkdir(parents=True, exist_ok=True)
++    data = (b"# Task 033-36: x\r\n\r\n[b](../TASK.md)\r\n\r\n```\r\n[c](../TASK.md)\r\n```\r\n"
++            b"\r\n[a](../TASK.md)\r\n\r\n`span\r\n \t\r\n[d](../TASK.md) and `x`\r\n")
++    path.write_bytes(data)
++    result = retarget_inbound(str(project), TASK, PLAN)
++    assert sorted(records(result)) == [(rel, 3, "RETARGETED"), (rel, 9, "RETARGETED"),
++                                       (rel, 13, "RETARGETED")]
++    expected = data
++    for label in (b"a", b"b", b"d"):
++        expected = expected.replace(b"[" + label + b"](../TASK.md)",
++                                    b"[" + label + b"](task-033-admission-core-v1.md)")
++    assert path.read_bytes() == expected
++
+diff --git a/.agent/tools/test_task_id_tool.py b/.agent/tools/test_task_id_tool.py
+index 5b3807f..dcb7b52 100644
+--- a/.agent/tools/test_task_id_tool.py
++++ b/.agent/tools/test_task_id_tool.py
+@@ -204,7 +204,9 @@ class TestSubTaskByH1:
+     @staticmethod
+     def _write(tasks_dir, name, h1):
+         tasks_dir.mkdir(exist_ok=True)
+-        (tasks_dir / name).write_text(f"{h1}\n\nBody.\n" if h1 else "No heading.\n")
++        # TASK 131 R6.6: the dashes of an H1 are not ASCII.
++        (tasks_dir / name).write_text(f"{h1}\n\nBody.\n" if h1 else "No heading.\n",
++                                      encoding="utf-8")
+ 
+     def test_tc1_letter_suffixed_subtasks_are_not_a_parent(self, tmp_path):
+         tasks_dir = tmp_path / "tasks"
+@@ -329,6 +331,7 @@ class TestSubTaskByH1:
+         assert not worker.is_alive(), "the scan blocked on a special file"
+         return result[0]
+ 
++    @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
+     def test_a_fifo_is_not_read(self, tmp_path):
+         """A FIFO named like a task file does not block the scan; its name decides."""
+         tasks_dir = tmp_path / "tasks"
+@@ -336,6 +339,7 @@ class TestSubTaskByH1:
+         os.mkfifo(tasks_dir / "task-033-05a-x.md")
+         assert self._scan_with_timeout(tasks_dir) == [33]
+ 
++    @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
+     def test_a_fifo_with_data_is_not_read(self, tmp_path):
+         """Only a regular file is read: a FIFO holding a sub-task H1 is classified by its name."""
+         tasks_dir = tmp_path / "tasks"
+@@ -705,5 +709,59 @@ class TestAllowCorrectionPolarity:
+         assert proc.returncode == 0
+ 
+ 
++class TestFirstH1Binary:
++    """TC-W24 (TASK 131 R2.7): the H1 scan opens its file with `O_BINARY` where it exists."""
++
++    def test_w24_the_h1_scan_passes_o_binary(self, tmp_path, monkeypatch):
++        import task_id_tool
++        used = 0
++        for name in dir(os):
++            if name.startswith("O_"):
++                used |= getattr(os, name)
++        bit = next(1 << b for b in range(30, 15, -1) if not used & (1 << b))
++        path = tmp_path / "task-033-05a-x.md"
++        path.write_bytes(b"# Task 033-05a: x\r\n\r\nBody.\r\n")
++        seen, real_open = [], os.open
++
++        def spy(name, flags, *args, **kwargs):
++            seen.append(flags)
++            return real_open(name, flags & ~bit, *args, **kwargs)
++        monkeypatch.setattr(os, "O_BINARY", bit, raising=False)
++        monkeypatch.setattr(os, "open", spy)
++        assert task_id_tool._first_h1(str(path)) == "# Task 033-05a: x"
++        assert seen and all(flags & bit for flags in seen), "the open drops O_BINARY"
++
++    def test_w42_a_unc_tasks_dir_is_refused(self):
++        # base-fail: the base lists any `--tasks-dir` (TASK 131 R12).
++        import ntpath
++        import posixpath
++        import types
++        from unittest import mock
++        import task_id_tool
++        unc = ("\\\\host\\share", "//host/share", "\\\\?\\C:\\x", "\\\\.\\pipe\\x",
++               "\\??\\UNC\\host\\share", "/??/UNC/host/share", "\\\\host\\\\share",
++               "\\\\\\host\\share", "\\\\host")
++        windows = types.SimpleNamespace(path=ntpath, sep="\\")
++        with mock.patch.object(task_id_tool, "os", windows):
++            for value in unc:
++                assert task_id_tool._unc(value), value
++            for value in ("C:\\repo\\docs\\tasks", "docs/tasks", "\\x"):
++                assert not task_id_tool._unc(value), value
++        with mock.patch.object(task_id_tool, "os", types.SimpleNamespace(path=posixpath, sep="/")):
++            for value in unc:
++                assert not task_id_tool._unc(value), f"no drives, no UNC path, on POSIX: {value}"
++
++    @pytest.mark.skipif(os.name != "nt", reason="a behaviour of Windows")
++    def test_w42_a_unc_tasks_dir_on_windows(self, tmp_path):
++        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "task_id_tool.py")
++        result = subprocess.run([sys.executable, script, "x", "--tasks-dir",
++                                 "\\\\localhost\\nowhere"], capture_output=True, text=True,
++                                cwd=tmp_path, timeout=60)
++        assert result.returncode == 1, result.stderr
++        report = json.loads(result.stdout)
++        assert report["status"] == "error"
++        assert "UNC or device path" in report["message"]
++
++
+ if __name__ == "__main__":
+     pytest.main([__file__, "-v"])
+diff --git a/tests/test_archive_move.py b/tests/test_archive_move.py
+index 96a1c13..3eb951b 100644
+--- a/tests/test_archive_move.py
++++ b/tests/test_archive_move.py
+@@ -25,11 +25,18 @@ Before TASK 112 two allow rules, `Bash(mv docs/TASK.md docs/tasks/*)` and
+   its unlink, holds another file then, or cannot be checked, leaves the archive in place
+   (``TC-A19`` to ``TC-A23``);
+ * an existing letter-suffixed sub-task file in the destination's place is refused (``TC-A24``,
+-  TASK 114).
++  TASK 114);
++* on a platform without `dir_fd`, Windows among them, the move copies by path: it refuses a link,
++  a junction, a read-only source and a source with a second hard link; it keeps the archive when
++  the source changed after the copy; it tries an unlink 10 times; it keeps every byte; and each of
++  its opens passes `O_BINARY` (``TC-W1`` to ``TC-W10``, ``TC-W21`` to ``TC-W24``, TASK 131 R1).
++
++A test that patches the descriptors of `_move` skips where `_supported()` is false, and a test
++that makes a symbolic link skips where this process cannot make one (TASK 131 R6.5).
+ 
+ Each case runs the script with the `realpath` of a temporary root as its working directory;
+ TC-A11, TC-A13 and TC-A15 to TC-A18 call `main(argv)` in-process to replace `os.link`, `os.unlink`
+-or `os.write`.
++or `os.write`; the TC-W tests call it in-process with `_supported` patched to return false.
+ """
+ import contextlib
+ import importlib.util
+@@ -37,9 +44,11 @@ import io
+ import json
+ import os
+ import shutil
++import stat
+ import subprocess
+ import sys
+ import tempfile
++import types
+ import unittest
+ from pathlib import Path
+ from unittest import mock
+@@ -59,6 +68,73 @@ def _load():
+     return module
+ 
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege."""
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a symbolic link")
++NEEDS_DIR_FD = unittest.skipUnless(_load()._supported(),
++                                   "it patches the descriptors of `_move`, which need `dir_fd`")
++WINDOWS_ONLY = unittest.skipUnless(os.name == "nt", "a behaviour of Windows")
++#: The reparse tags of a junction, of a symbolic link and of a cloud placeholder (TASK 128 R2.2).
++JUNCTION, SYMLINK, CLOUD = 0xA0000003, 0xA000000C, 0x9000001A
++
++
++def _fake_stat(real, **extra):
++    """The fields of `real`, with the attributes of Windows that `extra` names."""
++    fields = {name: getattr(real, name) for name in dir(real) if name.startswith("st_")}
++    fields.setdefault("st_file_attributes", 0)
++    fields.setdefault("st_reparse_tag", 0)
++    fields.update(extra)
++    return types.SimpleNamespace(**fields)
++
++
++def _lstat_reporting(paths, **extra):
++    """A patch of `os.lstat` that reports `extra` for each path of `paths`."""
++    real = os.lstat
++
++    def lstat(path, *args, **kwargs):
++        st = real(path, *args, **kwargs)
++        return _fake_stat(st, **extra) if os.fspath(path) in paths else st
++    return mock.patch("os.lstat", side_effect=lstat)
++
++
++def _unused_open_bit():
++    """A bit that no `os.O_*` flag of this platform uses."""
++    used = 0
++    for name in dir(os):
++        if name.startswith("O_"):
++            used |= getattr(os, name)
++    return next(1 << bit for bit in range(30, 15, -1) if not used & (1 << bit))
++
++
++@contextlib.contextmanager
++def _no_o_nofollow():
++    """`os.O_NOFOLLOW` deleted, as on Windows, for the time of the block."""
++    saved = getattr(os, "O_NOFOLLOW", None)
++    if saved is not None:
++        del os.O_NOFOLLOW
++    try:
++        yield
++    finally:
++        if saved is not None:
++            os.O_NOFOLLOW = saved
++
++
++def _junction(link, target):
++    """A junction at `link` to the directory `target` (Windows only), as CPython's tests make it."""
++    import _winapi
++    _winapi.CreateJunction(str(target), str(link))
++
++
+ class ArchiveTestCase(unittest.TestCase):
+ 
+     def setUp(self):
+@@ -71,7 +147,8 @@ class ArchiveTestCase(unittest.TestCase):
+     def write(self, rel, text):
+         path = self.root / rel
+         path.parent.mkdir(parents=True, exist_ok=True)
+-        path.write_text(text, encoding="utf-8")
++        # TASK 131 D26: LF on every platform, so a test may compare the bytes.
++        path.write_text(text, encoding="utf-8", newline="\n")
+         return path
+ 
+     def run_script(self, *args):
+@@ -147,6 +224,7 @@ class TestRefusals(ArchiveTestCase):
+         self.write(TASK_DEST, "# older\n")
+         self.assertRefused((TASK, TASK_DEST))
+ 
++    @NEEDS_SYMLINK
+     def test_a4_a_link_in_place_of_the_destination(self):
+         outside = Path(os.path.realpath(tempfile.mkdtemp()))
+         self.addCleanup(shutil.rmtree, outside)
+@@ -163,6 +241,7 @@ class TestRefusals(ArchiveTestCase):
+                 self.assertEqual(target.read_text(encoding="utf-8"), "victim\n")
+                 self.assertFalse((outside / "absent.md").exists())
+ 
++    @NEEDS_SYMLINK
+     def test_a5_a_linked_tasks_directory(self):
+         outside = Path(os.path.realpath(tempfile.mkdtemp()))
+         self.addCleanup(shutil.rmtree, outside)
+@@ -170,6 +249,7 @@ class TestRefusals(ArchiveTestCase):
+         self.assertRefused((TASK, TASK_DEST))
+         self.assertEqual(os.listdir(outside), [])
+ 
++    @NEEDS_SYMLINK
+     def test_a6_a_linked_source(self):
+         real = self.write("elsewhere.md", "# elsewhere\n")
+         (self.root / TASK).unlink()
+@@ -201,6 +281,7 @@ class TestRefusals(ArchiveTestCase):
+             with self.subTest(args=args):
+                 self.assertRefused(args, code=2)
+ 
++    @NEEDS_SYMLINK
+     def test_a9_a_linked_docs_directory(self):
+         real = self.root / "real-docs"
+         (self.root / "docs").rename(real)
+@@ -240,6 +321,7 @@ class TestFallbacks(ArchiveTestCase):
+         self.assertFalse((self.root / TASK).exists())
+         self.assertEqual((self.root / TASK_DEST).read_text(encoding="utf-8"), "# task\n")
+ 
++    @NEEDS_DIR_FD
+     def test_a11_copy_path_refuses_a_destination_that_appeared(self):
+         racer = self.root / TASK_DEST
+ 
+@@ -254,6 +336,7 @@ class TestFallbacks(ArchiveTestCase):
+         self.assertEqual((self.root / TASK).read_text(encoding="utf-8"), "# task\n")
+         self.assertEqual(racer.read_text(encoding="utf-8"), "# racer\n")
+ 
++    @NEEDS_DIR_FD
+     def test_a13_a_source_that_cannot_be_removed_leaves_no_destination(self):
+         real_unlink = os.unlink
+ 
+@@ -286,6 +369,7 @@ class TestSwappedSource(ArchiveTestCase):
+             (outside / "secret.md").write_text("secret\n", encoding="utf-8")
+             source.symlink_to(outside / "secret.md")
+ 
++    @NEEDS_DIR_FD
+     def test_a15_link_path_refuses_a_swapped_source(self):
+         real_link = os.link
+ 
+@@ -300,6 +384,7 @@ class TestSwappedSource(ArchiveTestCase):
+         self.assertFalse((self.root / TASK_DEST).exists())
+         self.assertEqual((self.root / TASK).read_text(encoding="utf-8"), "# swapped\n")
+ 
++    @NEEDS_DIR_FD
+     def test_a16_copy_path_refuses_a_swapped_regular_file(self):
+         def swap_then_fail(*_args, **_kwargs):
+             self.swap("file")
+@@ -311,6 +396,7 @@ class TestSwappedSource(ArchiveTestCase):
+         self.assertIn("changed", report["error"])
+         self.assertFalse((self.root / TASK_DEST).exists())
+ 
++    @NEEDS_DIR_FD
+     def test_a17_copy_path_never_opens_a_link(self):
+         def swap_then_fail(*_args, **_kwargs):
+             self.swap("link")
+@@ -336,6 +422,7 @@ class TestSwappedSource(ArchiveTestCase):
+ class TestLastSteps(ArchiveTestCase):
+     """TC-A19 to TC-A21 (TASK 112 fix round 2)."""
+ 
++    @NEEDS_DIR_FD
+     def test_a19_a_failed_check_after_the_link_leaves_no_destination(self):
+         real_link, real_stat, linked = os.link, os.stat, []
+ 
+@@ -391,6 +478,7 @@ class TestLastSteps(ArchiveTestCase):
+         finally:
+             sys.path[:] = before
+ 
++    @NEEDS_DIR_FD
+     def test_a21_a_vanished_source_keeps_the_archive(self):
+         real_unlink = os.unlink
+ 
+@@ -406,6 +494,7 @@ class TestLastSteps(ArchiveTestCase):
+         self.assertIn("kept", report["error"])
+         self.assertEqual((self.root / TASK_DEST).read_text(encoding="utf-8"), "# task\n")
+ 
++    @NEEDS_DIR_FD
+     def test_a22_a_source_swapped_before_its_unlink_keeps_the_archive(self):
+         real_unlink = os.unlink
+ 
+@@ -424,6 +513,7 @@ class TestLastSteps(ArchiveTestCase):
+         self.assertEqual((self.root / TASK_DEST).read_text(encoding="utf-8"), "# task\n")
+         self.assertEqual((self.root / TASK).read_text(encoding="utf-8"), "# another\n")
+ 
++    @NEEDS_DIR_FD
+     def test_a23_an_unconfirmed_source_keeps_both_names(self):
+         real_unlink, real_stat, failed = os.unlink, os.stat, []
+ 
+@@ -446,5 +536,714 @@ class TestLastSteps(ArchiveTestCase):
+         self.assertEqual((self.root / TASK_DEST).read_text(encoding="utf-8"), "# task\n")
+ 
+ 
++class TestMoveByPath(ArchiveTestCase):
++    """TC-W1 to TC-W10, TC-W21 to TC-W24 (TASK 131 R1): the move on a platform without `dir_fd`.
++
++    Each test calls `main` in the test process with `_supported` patched to return false, the
++    branch that Windows takes (TASK 131 R6.2), and with `time.sleep` patched out of the tries.
++    """
++
++    def by_path(self, *args, patches=(), module=None):
++        """`(exit code, the JSON object printed)` of `main` with `_supported` false."""
++        module = module or _load()
++        out, err = io.StringIO(), io.StringIO()
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        try:
++            with contextlib.ExitStack() as stack:
++                stack.enter_context(mock.patch.object(module, "_supported", return_value=False))
++                stack.enter_context(mock.patch("time.sleep"))
++                for patch in patches:
++                    stack.enter_context(patch)
++                stack.enter_context(contextlib.redirect_stdout(out))
++                stack.enter_context(contextlib.redirect_stderr(err))
++                code = module.main(list(args))
++        finally:
++            os.chdir(cwd)
++        return code, json.loads(out.getvalue() or err.getvalue())
++
++    def refused_by_path(self, args, message, patches=()):
++        before = self.tree()
++        code, report = self.by_path(*args, patches=patches)
++        self.assertEqual(code, 1, report)
++        self.assertFalse(report["ok"])
++        self.assertIn(message, report["error"])
++        self.assertEqual(self.tree(), before, "a refusal changed the disk")
++        return report
++
++    def outside(self):
++        path = Path(os.path.realpath(tempfile.mkdtemp()))
++        self.addCleanup(shutil.rmtree, path)
++        return path
++
++    def test_w1_the_move_by_path_copies(self):
++        for source, destination, text in ((TASK, TASK_DEST, b"# task\n"),
++                                          (PLAN, PLAN_DEST, b"# plan\n")):
++            with self.subTest(source=source):
++                code, report = self.by_path(source, destination)
++                self.assertEqual(code, 0, report)
++                self.assertEqual(report["method"], "copy")
++                self.assertTrue(report["created_directory"])
++                self.assertFalse((self.root / source).exists())
++                self.assertEqual((self.root / destination).read_bytes(), text)
++
++    def test_w1_the_script_moves_by_path_where_dir_fd_is_missing(self):
++        site = self.outside()
++        (site / "sitecustomize.py").write_text("import os\nos.supports_dir_fd = set()\n",
++                                               encoding="utf-8")
++        env = dict(os.environ, PYTHONPATH=str(site))
++        result = subprocess.run([sys.executable, str(SCRIPT), TASK, TASK_DEST], cwd=self.root,
++                                env=env, capture_output=True, text=True, timeout=60)
++        self.assertEqual(result.returncode, 0, result.stderr)
++        self.assertEqual(json.loads(result.stdout)["method"], "copy")
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    @NEEDS_SYMLINK
++    def test_w2_a_link_at_docs(self):
++        real = self.root / "real-docs"
++        (self.root / "docs").rename(real)
++        (self.root / "docs").symlink_to(real, target_is_directory=True)
++        self.refused_by_path((TASK, TASK_DEST), "'docs' is a symbolic link or not a directory")
++
++    @NEEDS_SYMLINK
++    def test_w2_a_link_at_the_destination_directory(self):
++        (self.root / "docs" / "tasks").symlink_to(self.outside(), target_is_directory=True)
++        self.refused_by_path((TASK, TASK_DEST), "'tasks' is a symbolic link or not a directory")
++
++    @NEEDS_SYMLINK
++    def test_w2_a_link_at_the_source(self):
++        real = self.write("elsewhere.md", "# elsewhere\n")
++        (self.root / TASK).unlink()
++        (self.root / TASK).symlink_to(real)
++        self.refused_by_path((TASK, TASK_DEST),
++                             "docs/TASK.md is a symbolic link or not a regular file")
++
++    def test_w2_a_reparse_tag_of_a_name_surrogate_is_a_link(self):
++        (self.root / "docs" / "tasks").mkdir()
++        for path, label in (("docs", "'docs'"), ("docs/tasks", "'tasks'")):
++            for tag in (JUNCTION, SYMLINK):
++                with self.subTest(path=path, tag=hex(tag)):
++                    patch = _lstat_reporting(
++                        {path}, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
++                        st_reparse_tag=tag)
++                    self.refused_by_path((TASK, TASK_DEST),
++                                         f"{label} is a symbolic link or not a directory",
++                                         patches=(patch,))
++
++    def test_w2_a_reparse_tag_that_is_no_name_surrogate_is_no_link(self):
++        patch = _lstat_reporting({"docs"}, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
++                                 st_reparse_tag=CLOUD)
++        code, report = self.by_path(TASK, TASK_DEST, patches=(patch,))
++        self.assertEqual(code, 0, report)
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    @WINDOWS_ONLY
++    def test_w2_a_junction_at_docs_or_at_the_destination_directory(self):
++        outside = self.outside()
++        tasks = self.root / "docs" / "tasks"
++        _junction(tasks, outside)
++        try:
++            self.refused_by_path((TASK, TASK_DEST),
++                                 "'tasks' is a symbolic link or not a directory")
++        finally:
++            os.rmdir(tasks)                     # removes the junction, not its target
++        real = self.root / "real-docs"
++        (self.root / "docs").rename(real)
++        _junction(self.root / "docs", real)
++        self.addCleanup(os.rmdir, self.root / "docs")
++        self.refused_by_path((TASK, TASK_DEST), "'docs' is a symbolic link or not a directory")
++
++    def test_w3_an_entry_at_the_destination(self):
++        tasks = self.root / "docs" / "tasks"
++        tasks.mkdir()
++        target = self.root / TASK_DEST
++        target.write_text("# older\n", encoding="utf-8")
++        self.refused_by_path((TASK, TASK_DEST), "the destination exists")
++        target.unlink()
++        target.mkdir()
++        self.refused_by_path((TASK, TASK_DEST), "the destination exists")
++        target.rmdir()
++        if _can_symlink():
++            target.symlink_to(self.outside() / "absent.md")
++            self.refused_by_path((TASK, TASK_DEST), "the destination exists")
++
++    def test_w4_a_second_hard_link_is_refused_at_its_lstat(self):
++        os.link(self.root / TASK, self.root / "alias.md")
++        self.refused_by_path((TASK, TASK_DEST), "docs/TASK.md has 2 hard links")
++
++    def test_w4_a_read_only_source_is_refused(self):
++        patch = _lstat_reporting({TASK}, st_file_attributes=stat.FILE_ATTRIBUTE_READONLY)
++        self.refused_by_path((TASK, TASK_DEST), "docs/TASK.md is read-only", patches=(patch,))
++
++    @WINDOWS_ONLY
++    def test_w4_a_read_only_source_on_windows(self):
++        source = self.root / TASK
++        os.chmod(source, stat.S_IREAD)
++        self.addCleanup(os.chmod, source, stat.S_IREAD | stat.S_IWRITE)
++        self.refused_by_path((TASK, TASK_DEST), "docs/TASK.md is read-only")
++
++    @NEEDS_SYMLINK
++    def test_w5_a_directory_swapped_for_a_link_before_the_create(self):
++        tasks = self.root / "docs" / "tasks"
++        tasks.mkdir()
++        outside = self.outside()
++        real_open = os.open
++
++        def open_(path, flags, *args, **kwargs):
++            if os.fspath(path) == TASK_DEST and flags & os.O_CREAT and not tasks.is_symlink():
++                tasks.rename(self.root / "docs" / "tasks-aside")
++                tasks.symlink_to(outside, target_is_directory=True)
++            return real_open(path, flags, *args, **kwargs)
++
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.open", side_effect=open_),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("the destination directory changed during the move", report["error"])
++        # R1.5: the undo removes nothing through the link; the empty file stays there (RW2).
++        self.assertIn("so docs/tasks/task-112-x.md is kept", report["error"])
++        self.assertEqual((outside / "task-112-x.md").read_bytes(), b"")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def changed_after_the_copy(self, change):
++        """`(exit code, report, whether the change was refused)`; `change` runs after the copy."""
++        real_fsync, refused = os.fsync, []
++
++        def fsync(fd):
++            real_fsync(fd)
++            try:
++                change(self.root / TASK)
++            except PermissionError:
++                refused.append(True)            # Windows: the source's descriptor is open
++
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.fsync", side_effect=fsync),))
++        return code, report, bool(refused)
++
++    def assertMovedDespite(self, code, report):
++        """TASK 131 D23, D28: a descriptor of the run refused the change, and the move ends."""
++        self.assertEqual(code, 0, report)
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++        self.assertFalse((self.root / TASK).exists())
++
++    def test_w6_a_source_replaced_after_the_copy_keeps_the_archive(self):
++        def replace(source):
++            new = source.with_name("TASK.md.new")
++            new.write_bytes(b"# replaced\n")
++            os.replace(new, source)
++
++        code, report, refused = self.changed_after_the_copy(replace)
++        if refused:
++            return self.assertMovedDespite(code, report)
++        self.assertEqual(code, 1, report)
++        self.assertEqual(report["error"], "docs/TASK.md no longer holds the moved file, so "
++                                          "docs/tasks/task-112-x.md is kept")
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# replaced\n")
++
++    def test_w6_a_source_removed_after_the_copy_keeps_the_archive(self):
++        code, report, refused = self.changed_after_the_copy(os.unlink)
++        if refused:
++            return self.assertMovedDespite(code, report)
++        self.assertEqual(code, 1, report)
++        self.assertIn("is gone after the copy", report["error"])
++        self.assertIn("is kept", report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    def test_w6_a_second_hard_link_after_the_copy_removes_the_archive(self):
++        code, report, refused = self.changed_after_the_copy(
++            lambda source: os.link(source, self.root / "alias.md"))
++        if refused:
++            return self.assertMovedDespite(code, report)
++        self.assertEqual(code, 1, report)
++        self.assertIn("the source changed during the move", report["error"])
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def unlink_failing(self, times, on_failure=None):
++        """A patch of `os.unlink` that fails `times` times on the source, then removes it."""
++        real_unlink, failures = os.unlink, []
++
++        def unlink(path, *args, **kwargs):
++            if os.fspath(path) == TASK and len(failures) < times:
++                failures.append(True)
++                if on_failure is not None:
++                    on_failure(len(failures))
++                raise PermissionError(13, "Permission denied")
++            return real_unlink(path, *args, **kwargs)
++        return mock.patch("os.unlink", side_effect=unlink)
++
++    def test_w7_the_unlink_of_the_source_is_tried_ten_times(self):
++        code, report = self.by_path(TASK, TASK_DEST, patches=(self.unlink_failing(10),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("cannot remove docs/TASK.md", report["error"])
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def test_w7_the_tenth_try_moves_the_file(self):
++        code, report = self.by_path(TASK, TASK_DEST, patches=(self.unlink_failing(9),))
++        self.assertEqual(code, 0, report)
++        self.assertFalse((self.root / TASK).exists())
++
++    def test_w7_a_source_replaced_between_two_tries_keeps_both(self):
++        def replace(count):
++            if count == 2:
++                new = self.root / "docs" / "TASK.md.new"
++                new.write_bytes(b"# replaced\n")
++                os.replace(new, self.root / TASK)
++
++        # Two failures, so that a third try with no check of step 9 removes the replacement.
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(self.unlink_failing(2, on_failure=replace),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("no longer holds the moved file", report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# replaced\n")
++
++    def test_w7_a_source_removed_before_a_try_of_the_archives_removal(self):
++        real_unlink, failed = os.unlink, []
++
++        def unlink(path, *args, **kwargs):
++            name = os.fspath(path)
++            if name == TASK:
++                raise PermissionError(13, "Permission denied")
++            if name == TASK_DEST and not failed:
++                failed.append(True)
++                real_unlink(self.root / TASK)       # another process removes the source
++                raise PermissionError(13, "Permission denied")
++            return real_unlink(path, *args, **kwargs)
++
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.unlink", side_effect=unlink),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("was removed, so", report["error"])
++        self.assertIn("is kept", report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    @WINDOWS_ONLY
++    def test_w8_a_source_held_open_by_another_handle(self):
++        with open(self.root / TASK, "rb"):
++            code, report = self.by_path(TASK, TASK_DEST)
++        self.assertEqual(code, 1, report)
++        self.assertIn("cannot remove docs/TASK.md", report["error"])
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def test_w9_the_archive_keeps_every_byte(self):
++        data = b"# task\r\nline\x1a after the byte\r\nlast\n"
++        (self.root / TASK).write_bytes(data)
++        code, report = self.by_path(TASK, TASK_DEST)
++        self.assertEqual(code, 0, report)
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), data)
++
++    @NEEDS_DIR_FD
++    def test_w10_a_platform_with_dir_fd_never_moves_by_path(self):
++        module = _load()
++        out = io.StringIO()
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        try:
++            with mock.patch.object(module, "_move_by_path",
++                                   side_effect=AssertionError("moved by path")), \
++                    contextlib.redirect_stdout(out):
++                code = module.main([TASK, TASK_DEST])
++        finally:
++            os.chdir(cwd)
++        self.assertEqual(code, 0)
++        self.assertTrue(json.loads(out.getvalue())["ok"])
++
++    def test_w21_a_regular_file_swapped_in_before_the_open(self):
++        real_open = os.open
++
++        def open_(path, flags, *args, **kwargs):
++            if os.fspath(path) == TASK and not flags & os.O_CREAT:
++                new = self.root / "docs" / "TASK.md.new"
++                new.write_bytes(b"# swapped\n")
++                os.replace(new, self.root / TASK)
++            return real_open(path, flags, *args, **kwargs)
++
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.open", side_effect=open_),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("the source changed during the move", report["error"])
++        self.assertFalse((self.root / "docs" / "tasks").exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# swapped\n")
++
++    @NEEDS_SYMLINK
++    def test_w21_a_link_swapped_in_where_o_nofollow_is_missing(self):
++        secret = self.outside() / "secret.md"
++        secret.write_bytes(b"secret\n")
++        real_open = os.open
++
++        def open_(path, flags, *args, **kwargs):
++            if os.fspath(path) == TASK and not flags & os.O_CREAT:
++                link = self.root / "docs" / "TASK.md.link"
++                link.symlink_to(secret)
++                os.replace(link, self.root / TASK)
++            return real_open(path, flags, *args, **kwargs)
++
++        with _no_o_nofollow():
++            code, report = self.by_path(TASK, TASK_DEST,
++                                        patches=(mock.patch("os.open", side_effect=open_),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("the source changed during the move", report["error"])
++        self.assertFalse((self.root / "docs" / "tasks").exists())
++
++    def test_w22_an_overlong_name_is_a_json_refusal(self):
++        code, report = self.by_path(TASK, "docs/tasks/task-112-" + "a" * 300 + ".md")
++        self.assertEqual(code, 1, report)
++        self.assertFalse(report["ok"])
++        self.assertFalse((self.root / "docs" / "tasks").exists())
++
++    def test_w22_a_created_directory_is_removed_after_a_failed_rmdir(self):
++        real_rmdir, failed = os.rmdir, []
++
++        def rmdir(path, *args, **kwargs):
++            if os.fspath(path) == "docs/plans" and not failed:
++                failed.append(True)
++                raise PermissionError(13, "Permission denied")
++            return real_rmdir(path, *args, **kwargs)
++
++        code, report = self.by_path(PLAN, "docs/plans/plan-112-" + "a" * 300 + ".md",
++                                    patches=(mock.patch("os.rmdir", side_effect=rmdir),))
++        self.assertEqual(code, 1, report)
++        self.assertTrue(failed, "the refusal removed no directory")
++        self.assertFalse((self.root / "docs" / "plans").exists())
++
++    def test_w23_the_docstring_names_both_branches_and_the_windows(self):
++        doc = _load().__doc__
++        self.assertIn("_move_by_path", doc)
++        self.assertIn("2 usage error.", doc)
++        self.assertIn("access rules", doc)
++        for label in range(1, 13):
++            with self.subTest(label=label):
++                self.assertRegex(doc, rf"\bRW{label}\b")
++
++    def test_w24_each_open_of_the_move_passes_o_binary(self):
++        bit, calls, real_open = _unused_open_bit(), [], os.open
++
++        def spy(path, flags, *args, **kwargs):
++            calls.append((os.fspath(path), flags))
++            return real_open(path, flags & ~bit, *args, **kwargs)
++
++        code, report = self.by_path(TASK, TASK_DEST, patches=(
++            mock.patch.object(os, "O_BINARY", bit, create=True),
++            mock.patch("os.open", side_effect=spy)))
++        self.assertEqual(code, 0, report)
++        self.assertEqual(sorted(path for path, _flags in calls), [TASK, TASK_DEST])
++        for path, flags in calls:
++            with self.subTest(path=path):
++                self.assertTrue(flags & bit, f"the open of {path} drops O_BINARY")
++
++    # --- the fix of round 1 of stage 2 (TASK 131 D26) ------------------------------------------
++
++    def open_hook(self, path, when, change):
++        """A patch of `os.open` that runs `change()` once, before the first open of `path` that
++        `when(flags)` accepts; the list it returns names each open of `path`."""
++        real_open, seen = os.open, []
++
++        def opener(name, flags, *args, **kwargs):
++            if os.fspath(name) == path:
++                seen.append(flags)
++                if when(flags) and len([f for f in seen if when(f)]) == 1:
++                    change()
++            return real_open(name, flags, *args, **kwargs)
++        return mock.patch("os.open", side_effect=opener), seen
++
++    def test_w29_a_second_hard_link_before_the_open_of_the_source(self):
++        real_open, opened = os.open, []
++
++        def opener(name, flags, *args, **kwargs):
++            opened.append(os.fspath(name))
++            if os.fspath(name) == TASK and opened.count(TASK) == 1:
++                os.link(self.root / TASK, self.root / "alias.md")
++            return real_open(name, flags, *args, **kwargs)
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.open", side_effect=opener),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("the source changed during the move", report["error"])
++        self.assertNotIn(TASK_DEST, opened, "step 6 opened the destination")
++        self.assertFalse((self.root / "docs" / "tasks").exists(), "step 4 ran")
++
++    def refused_on_windows(self, change, refused):
++        """`change()`; on Windows its `PermissionError` is noted in `refused` (TASK 131 D28)."""
++        try:
++            change()
++        except PermissionError:
++            if os.name != "nt":
++                raise
++            refused.append(True)                # a descriptor of the run holds the file
++
++    @NEEDS_SYMLINK
++    def test_w30_docs_moved_out_and_linked_back_before_the_create(self):
++        (self.root / "docs" / "tasks").mkdir()
++        away = self.outside() / "docs-moved"
++        refused = []
++
++        def move_docs():
++            (self.root / "docs").rename(away)
++            (self.root / "docs").symlink_to(away, target_is_directory=True)
++        patch, _seen = self.open_hook(TASK_DEST, lambda flags: flags & os.O_CREAT,
++                                      lambda: self.refused_on_windows(move_docs, refused))
++        code, report = self.by_path(TASK, TASK_DEST, patches=(patch,))
++        if refused:
++            return self.assertMovedDespite(code, report)
++        self.assertEqual(code, 1, report)
++        self.assertIn("the destination directory changed during the move", report["error"])
++        # R1.5: the undo removes nothing through a changed directory (RW2).
++        self.assertIn("so docs/tasks/task-112-x.md is kept", report["error"])
++        self.assertEqual((away / "tasks" / "task-112-x.md").read_bytes(), b"")
++        self.assertEqual((away / "TASK.md").read_bytes(), b"# task\n")
++
++    def test_w31_another_file_at_the_destination_after_the_create(self):
++        (self.root / "docs" / "tasks").mkdir()
++        target, aside = self.root / TASK_DEST, self.root / "docs" / "made-aside.md"
++        real_open, refused = os.open, []
++
++        def put_another():
++            target.rename(aside)
++            target.write_bytes(b"# impostor\n")
++
++        def opener(name, flags, *args, **kwargs):
++            fd = real_open(name, flags, *args, **kwargs)
++            if os.fspath(name) == TASK_DEST and flags & os.O_CREAT:
++                self.refused_on_windows(put_another, refused)
++            return fd
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.open", side_effect=opener),))
++        if refused:
++            return self.assertMovedDespite(code, report)
++        self.assertEqual(code, 1, report)
++        self.assertEqual(report["error"], "the destination directory changed during the move; "
++                                          "docs/tasks/task-112-x.md no longer holds the file "
++                                          "this run made, so that file is kept")
++        self.assertEqual(target.read_bytes(), b"# impostor\n")
++        self.assertEqual(aside.read_bytes(), b"")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def test_w32_the_undo_tries_the_removal_of_the_archive(self):
++        real_unlink, failed = os.unlink, []
++
++        def unlink(name, *args, **kwargs):
++            if os.fspath(name) == TASK_DEST and not failed:
++                failed.append(True)
++                raise PermissionError(13, "Permission denied")
++            return real_unlink(name, *args, **kwargs)
++        code, report = self.by_path(TASK, TASK_DEST, patches=(
++            mock.patch("os.write", side_effect=OSError(28, "No space left on device")),
++            mock.patch("os.unlink", side_effect=unlink)))
++        self.assertEqual(code, 1, report)
++        self.assertIn("cannot copy the source", report["error"])
++        self.assertTrue(failed)
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def failed_step_10(self, error, before=None):
++        """`main` with the unlink of the source failing with `error`; `before` runs first."""
++        real_unlink = os.unlink
++
++        def unlink(name, *args, **kwargs):
++            if os.fspath(name) == TASK:
++                if before is not None:
++                    before()
++                raise error
++            return real_unlink(name, *args, **kwargs)
++        return self.by_path(TASK, TASK_DEST, patches=(mock.patch("os.unlink", side_effect=unlink),))
++
++    def test_w33_a_vanished_source_keeps_the_archive(self):
++        code, report = self.failed_step_10(FileNotFoundError(2, "No such file or directory"),
++                                           before=lambda: os.remove(self.root / TASK))
++        self.assertEqual(code, 1, report)
++        self.assertIn("it is gone, so docs/tasks/task-112-x.md is kept", report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    def test_w33_a_source_that_holds_another_file_keeps_the_archive(self):
++        def swap():
++            new = self.root / "docs" / "TASK.md.new"
++            new.write_bytes(b"# another\n")
++            os.replace(new, self.root / TASK)
++        code, report = self.failed_step_10(OSError(5, "Input/output error"), before=swap)
++        self.assertEqual(code, 1, report)
++        self.assertIn("it no longer holds the moved file, so", report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# another\n")
++
++    def test_w33_an_unconfirmed_source_keeps_both_names(self):
++        real_lstat, real_unlink, failed = os.lstat, os.unlink, []
++
++        def unlink(name, *args, **kwargs):
++            if os.fspath(name) == TASK:
++                failed.append(True)
++                raise OSError(5, "Input/output error")
++            return real_unlink(name, *args, **kwargs)
++
++        def lstat(name, *args, **kwargs):
++            if failed and os.fspath(name) == TASK:
++                raise OSError(5, "Input/output error")
++            return real_lstat(name, *args, **kwargs)
++        code, report = self.by_path(TASK, TASK_DEST, patches=(
++            mock.patch("os.unlink", side_effect=unlink),
++            mock.patch("os.lstat", side_effect=lstat)))
++        self.assertEqual(code, 1, report)
++        self.assertIn("or confirm what it holds", report["error"])
++        self.assertIn("both it and docs/tasks/task-112-x.md are kept", report["error"])
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# task\n")
++
++    def test_w33_a_failed_removal_of_the_archive_keeps_the_base_message(self):
++        def unlink(name, *args, **kwargs):
++            raise PermissionError(13, "Permission denied")
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.unlink", side_effect=unlink),))
++        self.assertEqual(code, 1, report)
++        self.assertEqual(report["error"],
++                         "cannot remove docs/TASK.md (Permission denied), and "
++                         "docs/tasks/task-112-x.md remains (Permission denied)")
++
++    @NEEDS_SYMLINK
++    def test_w34_a_directory_swapped_before_the_removal_of_the_archive(self):
++        tasks = self.root / "docs" / "tasks"
++        tasks.mkdir()
++        outside = self.outside()
++        decoy = outside / "task-112-x.md"
++        decoy.write_bytes(b"# decoy\n")
++        real_lstat, swapped = os.lstat, []
++
++        def lstat(name, *args, **kwargs):
++            st = real_lstat(name, *args, **kwargs)
++            if os.fspath(name) == TASK_DEST and copied and not swapped:
++                swapped.append(True)                # the check of the archive passed
++                tasks.rename(self.root / "docs" / "tasks-aside")
++                tasks.symlink_to(outside, target_is_directory=True)
++            return st
++        copied = []
++
++        def failing_write(fd, data):
++            copied.append(True)
++            raise OSError(28, "No space left on device")
++        code, report = self.by_path(TASK, TASK_DEST, patches=(
++            mock.patch("os.write", side_effect=failing_write),
++            mock.patch("os.lstat", side_effect=lstat)))
++        self.assertEqual(code, 1, report)
++        self.assertTrue(swapped, "the hook never swapped")
++        self.assertIn("so docs/tasks/task-112-x.md is kept", report["error"])
++        self.assertEqual(decoy.read_bytes(), b"# decoy\n")
++
++    def test_w35_an_encrypted_source_is_refused(self):
++        patch = _lstat_reporting({TASK}, st_file_attributes=stat.FILE_ATTRIBUTE_ENCRYPTED)
++        self.refused_by_path((TASK, TASK_DEST), "docs/TASK.md is encrypted", patches=(patch,))
++
++    def test_w36_a_write_to_the_source_after_the_copy(self):
++        real_fsync = os.fsync
++
++        def fsync(fd):
++            real_fsync(fd)
++            with open(self.root / TASK, "ab") as handle:
++                handle.write(b"written later\n")
++            # a later time of the last write than that of step 3
++            st = os.stat(self.root / TASK)
++            os.utime(self.root / TASK, ns=(st.st_atime_ns, st.st_mtime_ns + 10**9))
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(mock.patch("os.fsync", side_effect=fsync),))
++        self.assertEqual(code, 1, report)
++        self.assertIn("the source changed during the move", report["error"])
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\nwritten later\n")
++
++    # --- the fix of round 2 of stage 2 (TASK 131 D28) ------------------------------------------
++
++    def test_w43_a_write_to_the_source_between_two_tries_of_step_10(self):
++        def write(_count):
++            with open(self.root / TASK, "ab") as handle:
++                handle.write(b"written later\n")
++
++        code, report = self.by_path(TASK, TASK_DEST,
++                                    patches=(self.unlink_failing(1, on_failure=write),))
++        self.assertEqual(code, 1, report)
++        self.assertEqual(report["error"], "the source changed during the move")
++        self.assertFalse((self.root / TASK_DEST).exists())
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\nwritten later\n")
++
++    def test_w44_another_file_at_the_archives_name_between_two_tries_of_the_undo(self):
++        real_unlink, failed = os.unlink, []
++
++        def unlink(name, *args, **kwargs):
++            if os.fspath(name) == TASK_DEST and not failed:
++                failed.append(True)
++                another = self.root / "docs" / "tasks" / "another.md"
++                another.write_bytes(b"# another\n")
++                os.replace(another, self.root / TASK_DEST)
++                raise PermissionError(13, "Permission denied")
++            return real_unlink(name, *args, **kwargs)
++        code, report = self.by_path(TASK, TASK_DEST, patches=(
++            mock.patch("os.write", side_effect=OSError(28, "No space left on device")),
++            mock.patch("os.unlink", side_effect=unlink)))
++        self.assertEqual(code, 1, report)
++        self.assertTrue(failed, "the undo tried no removal")
++        self.assertTrue(report["error"].endswith("so that file is kept"), report["error"])
++        self.assertEqual((self.root / TASK_DEST).read_bytes(), b"# another\n")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def copy_failing(self, path, change):
++        """Patches: the copy fails, and `change()` runs at the first `lstat` of `path` after it."""
++        real_lstat, copied, changed = os.lstat, [], []
++
++        def lstat(name, *args, **kwargs):
++            if os.fspath(name) == path and copied and not changed:
++                changed.append(True)
++                change()
++            return real_lstat(name, *args, **kwargs)
++
++        def failing_write(fd, data):
++            copied.append(True)
++            raise OSError(28, "No space left on device")
++        return (mock.patch("os.write", side_effect=failing_write),
++                mock.patch("os.lstat", side_effect=lstat)), changed
++
++    def test_w45_a_renamed_destination_directory_keeps_the_archive(self):
++        tasks = self.root / "docs" / "tasks"
++        tasks.mkdir()
++        aside = self.root / "docs" / "tasks-aside"
++        patches, changed = self.copy_failing(TASK_DEST, lambda: tasks.rename(aside))
++        code, report = self.by_path(TASK, TASK_DEST, patches=patches)
++        self.assertEqual(code, 1, report)
++        self.assertTrue(changed, "the undo never checked the archive")
++        self.assertEqual(report["error"], "cannot copy the source: No space left on device; "
++                                          "docs/tasks/task-112-x.md no longer holds the file "
++                                          "this run made, so that file is kept")
++        self.assertEqual((aside / "task-112-x.md").read_bytes(), b"")
++        self.assertEqual((self.root / TASK).read_bytes(), b"# task\n")
++
++    def test_w46_a_created_directory_replaced_before_the_undo_stays(self):
++        plans = self.root / "docs" / "plans"
++
++        def replace():
++            plans.rename(self.root / "docs" / "plans-aside")
++            plans.mkdir()                       # another, empty directory at its name
++        patches, changed = self.copy_failing(PLAN_DEST, replace)
++        code, report = self.by_path(PLAN, PLAN_DEST, patches=patches)
++        self.assertEqual(code, 1, report)
++        self.assertTrue(changed, "the undo never checked the archive")
++        self.assertTrue(plans.is_dir(), "the undo removed a directory that it did not create")
++        self.assertEqual((self.root / "docs" / "plans-aside" / "plan-112-x.md").read_bytes(), b"")
++
++    def test_w46_a_created_directory_replaced_between_two_tries_stays(self):
++        plans = self.root / "docs" / "plans"
++        real_rmdir, failed = os.rmdir, []
++
++        def rmdir(path, *args, **kwargs):
++            if os.fspath(path) == "docs/plans" and not failed:
++                failed.append(True)
++                plans.rename(self.root / "docs" / "plans-aside")
++                plans.mkdir()                   # another, empty directory at its name
++                raise PermissionError(13, "Permission denied")
++            return real_rmdir(path, *args, **kwargs)
++
++        code, report = self.by_path(PLAN, "docs/plans/plan-112-" + "a" * 300 + ".md",
++                                    patches=(mock.patch("os.rmdir", side_effect=rmdir),))
++        self.assertEqual(code, 1, report)
++        self.assertTrue(failed, "the refusal removed no directory")
++        self.assertTrue(plans.is_dir(), "the undo removed a directory that it did not create")
++
++
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/tests/test_script_guards.py b/tests/test_script_guards.py
+index dd8393c..2450770 100644
+--- a/tests/test_script_guards.py
++++ b/tests/test_script_guards.py
+@@ -13,10 +13,10 @@ skill directory at any `--path` or path-shaped name. This file pins:
+   exit 2 and no write, also through a `..` after a link; a file whose directory link resolves
+   inside is rewritten (``TC-G13`` to ``TC-G15``, TASK 116 R1.1);
+ * both modes write through the descriptor they checked: a directory swapped around the open or
+-  moved out, a file swapped for a link, a second hard link, a file replaced after the read, a FIFO
+-  and a platform with no `O_NOFOLLOW` are refused with no write, and so are three swaps around the
+-  identity check; a failed write leaves a prefix of the new text, and no descriptor stays open
+-  (``TC-G16`` to ``TC-G27``, TASK 116 R7);
++  moved out, a file swapped for a link, a second hard link, a file replaced after the read and a
++  FIFO are refused with no write, and so are three swaps around the identity check; a failed
++  write leaves a prefix of the new text, and no descriptor stays open (``TC-G16`` to ``TC-G27``,
++  TASK 116 R7). A platform with no `O_NOFOLLOW` opens through the check of TASK 131 R2.2;
+ * `rebase_links.py` takes a slot map only for `docs/TASK.md` and `docs/PLAN.md`, each with an
+   archive of its form, and only a markdown operand under `docs/`. Its `--repo-root`, `--from` and
+   `--to` stay in the tree. A rewrite adds to a link no character outside letters, digits and
+@@ -27,11 +27,20 @@ skill directory at any `--path` or path-shaped name. This file pins:
+   planted beside the script runs (``TC-G8`` to ``TC-G12``, TASK 115), through a path in other
+   letter case either (ARC-13, TASK 128);
+ * `init_skill.py` refuses a skill directory outside the working directory or under `.git/`, with
+-  exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``).
++  exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``);
++* on a platform without `O_NOFOLLOW`, Windows among them, the file mode opens with a check before
++  and after the open, refuses a junction, keeps every byte, writes any text in any stream
++  encoding, refuses an operand that is not UTF-8, finds no `.pyc` under a relative null device,
++  treats paths on two drives as outside, and keeps its own helpers (``TC-W11`` to ``TC-W18``,
++  ``TC-W24``, ``TC-W26``, ``TC-W27``, TASK 131).
++
++A test that makes a symbolic link skips where this process cannot make one, and a test whose
++premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5, D22).
+ 
+ The working directory is the `realpath` of a temporary root: `os.getcwd()` returns the resolved
+ path on darwin, where `tempfile` returns `/var/...`.
+ """
++import ast
+ import builtins
+ import contextlib
+ import errno
+@@ -39,12 +48,17 @@ import gc
+ import importlib.util
+ import io
+ import json
++import ntpath
+ import os
++import posixpath
++import py_compile
+ import re
+ import shutil
++import stat
+ import subprocess
+ import sys
+ import tempfile
++import types
+ import unittest
+ from pathlib import Path
+ from unittest import mock
+@@ -61,6 +75,9 @@ LINKED = "[a](ARCHITECTURE.md)\n"
+ REBASED = "[a](../ARCHITECTURE.md)\n"
+ SUBTASK = "# Task 112-01: a\n\n[docs/TASK.md](../TASK.md)\n"
+ RETARGETED = "# Task 112-01: a\n\n[task-112](task-112-x.md)\n"
++UNC_PATHS = ("\\\\host\\share", "//host/share", "\\\\?\\C:\\x", "\\\\.\\pipe\\x",
++             "\\??\\UNC\\host\\share", "/??/UNC/host/share", "\\\\host\\\\share",
++             "\\\\\\host\\share", "\\\\host")  # TASK 131 R12.1, TC-W42
+ 
+ 
+ def _tmp(case):
+@@ -123,6 +140,80 @@ def _descriptor_path_known():
+     return hasattr(fcntl, "F_GETPATH") or os.path.isdir("/proc/self/fd")
+ 
+ 
++def _can_symlink():
++    """True where this process can make a symbolic link; Windows asks for a privilege."""
++    probe = Path(tempfile.mkdtemp())
++    try:
++        (probe / "link").symlink_to(probe / "target")
++        return True
++    except OSError:
++        return False
++    finally:
++        shutil.rmtree(probe, ignore_errors=True)
++
++
++NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a symbolic link")
++WINDOWS_ONLY = unittest.skipUnless(os.name == "nt", "a behaviour of Windows")
++#: TASK 131 R6.5: a premise of POSIX that Windows does not hold.
++POSIX_PREMISE = os.name == "nt"
++#: The characters that a name on NTFS cannot hold.
++NTFS_REFUSES = set('<>:"|?*') if os.name == "nt" else set()
++#: The reparse tag of a junction (TASK 128 R2.2).
++JUNCTION = 0xA0000003
++
++
++def _o_nofollow_refusal(posix):
++    """The refusal of an open that meets a swap: `posix`, or that of TASK 131 R2.2."""
++    return posix if hasattr(os, "O_NOFOLLOW") else "changed during the run"
++
++
++@contextlib.contextmanager
++def _no_o_nofollow():
++    """`os.O_NOFOLLOW` deleted, as on Windows, for the time of the block."""
++    saved = getattr(os, "O_NOFOLLOW", None)
++    if saved is not None:
++        del os.O_NOFOLLOW
++    try:
++        yield
++    finally:
++        if saved is not None:
++            os.O_NOFOLLOW = saved
++
++
++def _fake_stat(real, **extra):
++    """The fields of `real`, with the attributes of Windows that `extra` names."""
++    fields = {name: getattr(real, name) for name in dir(real) if name.startswith("st_")}
++    fields.setdefault("st_file_attributes", 0)
++    fields.setdefault("st_reparse_tag", 0)
++    fields.update(extra)
++    return types.SimpleNamespace(**fields)
++
++
++def _lstat_reporting(paths, **extra):
++    """A patch of `os.lstat` that reports `extra` for each path of `paths`."""
++    real = os.lstat
++
++    def lstat(path, *args, **kwargs):
++        st = real(path, *args, **kwargs)
++        return _fake_stat(st, **extra) if os.fspath(path) in paths else st
++    return mock.patch("os.lstat", side_effect=lstat)
++
++
++def _unused_open_bit():
++    """A bit that no `os.O_*` flag of this platform uses."""
++    used = 0
++    for name in dir(os):
++        if name.startswith("O_"):
++            used |= getattr(os, name)
++    return next(1 << bit for bit in range(30, 15, -1) if not used & (1 << bit))
++
++
++def _junction(link, target):
++    """A junction at `link` to the directory `target` (Windows only), as CPython's tests make it."""
++    import _winapi
++    _winapi.CreateJunction(str(target), str(link))
++
++
+ class TestRebaseLinksGuard(unittest.TestCase):
+     """TC-G1 to TC-G3, TC-G7, TC-G13 to TC-G18, TC-G20 to TC-G30 (TASK 116), TC-G31 (TASK 117)."""
+ 
+@@ -146,6 +237,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertIn("lies outside the working directory", result.stderr)
+         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
+ 
++    @NEEDS_SYMLINK
+     def test_g2_a_link_a_second_hard_link_or_git(self):
+         victim = self.outside / "victim.md"
+         victim.write_text(LINKED, encoding="utf-8")
+@@ -171,6 +263,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertEqual(git.read_text(encoding="utf-8"), LINKED)
+         self.assertEqual(hook.read_text(encoding="utf-8"), LINKED)
+ 
++    @NEEDS_SYMLINK
+     def test_g2_from_a_subdirectory_and_through_a_firmlink(self):
+         (self.root / ".git" / "hooks").mkdir(parents=True)
+         hook = self.root / ".git" / "hooks" / "y.md"
+@@ -207,6 +300,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+         self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
+ 
++    @NEEDS_SYMLINK
+     def test_g13_a_directory_that_resolves_outside(self):
+         # base-fail: the base writes through the directory link.
+         victim = self.outside / "victim.md"
+@@ -217,6 +311,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertIn("resolves outside", result.stderr)
+         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
+ 
++    @NEEDS_SYMLINK
+     def test_g14_a_directory_link_that_resolves_inside(self):
+         moved = self.root / "docs" / "tasks" / "t.md"
+         moved.write_text(LINKED, encoding="utf-8")
+@@ -226,6 +321,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+         self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
+ 
++    @NEEDS_SYMLINK
++    @unittest.skipIf(POSIX_PREMISE, "Windows resolves the `..` before the link (TASK 131 D22)")
+     def test_g15_a_parent_segment_after_a_directory_link(self):
+         # base-fail: the kernel resolves the link before the `..`; a lexical check does not.
+         victim = self.outside / "victim.md"
+@@ -261,6 +358,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+             os.chdir(cwd)
+         return code, err.getvalue()
+ 
++    @NEEDS_SYMLINK
+     def test_g16_a_directory_swapped_around_the_open(self):
+         # base-fail: the base reads and writes the outside file through the swapped directory.
+         inside = self.root / "docs" / "x"
+@@ -282,10 +380,11 @@ class TestRebaseLinksGuard(unittest.TestCase):
+             return opener
+         code, err = self.inprocess("docs/x/t.md", hooks)
+         self.assertEqual(code, 2, err)
+-        self.assertIn("is not the file at its real path", err)
++        self.assertIn(_o_nofollow_refusal("is not the file at its real path"), err)
+         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
+         self.assertEqual((inside / "t.md").read_text(encoding="utf-8"), LINKED)
+ 
++    @NEEDS_SYMLINK
+     def test_g17_a_file_swapped_for_a_link(self):
+         # base-fail: the base follows the planted link. The inside link needs O_NOFOLLOW itself.
+         other = self.root / "docs" / "other.md"
+@@ -304,7 +403,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+                     return opener
+                 code, err = self.inprocess(f"docs/tasks/{name}.md", hooks)
+                 self.assertEqual(code, 2, err)
+-                self.assertIn("cannot open it", err)
++                self.assertIn(_o_nofollow_refusal("cannot open it"), err)
+                 self.assertEqual(target.read_text(encoding="utf-8"), LINKED)
+ 
+     def test_g18_a_second_hard_link_before_the_open(self):
+@@ -343,6 +442,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertEqual(alias.read_text(encoding="utf-8"), LINKED)
+         self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+ 
++    @unittest.skipIf(POSIX_PREMISE, "Windows refuses to replace a file that a descriptor holds")
+     def test_g21_a_file_replaced_after_the_read(self):
+         # base-fail: the base writes the rebased old text over the new file.
+         moved = self.root / "docs" / "tasks" / "t.md"
+@@ -366,23 +466,14 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         self.assertEqual(moved.read_text(encoding="utf-8"), fresh)
+ 
+     def test_g22_a_platform_with_no_o_nofollow(self):
+-        # base-fail: the base file mode needs no O_NOFOLLOW, so it rewrites the file.
++        # base-fail: the base refuses the platform (TASK 131 R2.4).
+         moved = self.root / "docs" / "tasks" / "t.md"
+         moved.write_text(LINKED, encoding="utf-8")
++        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=_no_o_nofollow)
++        self.assertEqual(code, 0, err)
++        self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
+ 
+-        @contextlib.contextmanager
+-        def no_o_nofollow():
+-            saved = os.O_NOFOLLOW
+-            del os.O_NOFOLLOW
+-            try:
+-                yield
+-            finally:
+-                os.O_NOFOLLOW = saved
+-        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=no_o_nofollow)
+-        self.assertEqual(code, 2, err)
+-        self.assertIn("this platform has no O_NOFOLLOW", err)
+-        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+-
++    @NEEDS_SYMLINK
+     def test_g23_a_directory_moved_out_and_linked_back(self):
+         # base-fail: the file keeps its inode, so only the directory check refuses it.
+         inside = self.root / "docs" / "x"
+@@ -563,9 +654,13 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         slot = ["--slot", "docs/TASK.md=docs/tasks/task-116-x.md"]
+         with_slot = LINKED + "[t](TASK.md)\n"
+         for name in ("x y", "a:b", "a)b", "plain-words"):
++            if NTFS_REFUSES & set(name):
++                continue                        # TASK 131 R6.5: a name that NTFS refuses
+             (docs / name).mkdir()
+             (docs / name / "ARCHITECTURE.md").write_text("# a\n", encoding="utf-8")
+         for name in ("a b/x y.md", "m n/a.md", 'href="x.md"', "x.md"):
++            if NTFS_REFUSES & set(name):
++                continue
+             (docs / name).parent.mkdir(exist_ok=True)
+             (docs / name).write_text("# a\n", encoding="utf-8")
+         text_held = "holds text that its authored link does not"
+@@ -601,6 +696,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
+             ("docs", "docs/tasks", ["--dry-run"], '[a](href="x.md")\n',
+              "the rewritten text holds a character that the text did not"))
+         for from_dir, to_dir, extra, text, reason in refused:
++            if NTFS_REFUSES & set(from_dir) or (NTFS_REFUSES and 'href="' in text):
++                continue                        # its name, or the file it splices, NTFS refuses
+             with self.subTest(from_dir=from_dir, to_dir=to_dir, extra=extra, text=text):
+                 moved.write_text(text, encoding="utf-8")
+                 result = _run(REBASE, ["docs/tasks/t.md", "--from", from_dir, "--to", to_dir,
+@@ -634,6 +731,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
+         (docs / "plans").mkdir()
+         (docs / "tasks" / "task-116-x.md").write_text("# Task 116: x\n", encoding="utf-8")
+         for name in ("two/one/one/two/three.md", "one/one/a.md", "](x", "x", 'x">', "a/c.md"):
++            if NTFS_REFUSES & set(name):
++                continue                        # TASK 131 R6.5: a name that NTFS refuses
+             (docs / name).parent.mkdir(parents=True, exist_ok=True)
+             (docs / name).write_text("# a\n", encoding="utf-8")
+         other = "names another <ID>-<slug> than its name"
+@@ -660,6 +759,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
+             ("tasks/t.md", "docs", "docs/tasks", [], '<a href="](x">\n', splice),
+             ("tasks/t.md", "docs", "docs/tasks", ["--dry-run"], "[r]: ](x\n", splice))
+         for operand, from_dir, to_dir, extra, text, reason in refused:
++            if NTFS_REFUSES and text.startswith("<a href="):
++                continue                        # the spliced file's name NTFS refuses
+             with self.subTest(operand=operand, from_dir=from_dir, extra=extra, text=text):
+                 moved = docs / operand
+                 moved.write_text(text, encoding="utf-8")
+@@ -687,6 +788,342 @@ class TestRebaseLinksGuard(unittest.TestCase):
+                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                 self.assertEqual(moved.read_text(encoding="utf-8"), rebased)
+ 
++    # --- TASK 131: a platform without O_NOFOLLOW, Windows among them ---------------------------
++
++    def test_w11_without_o_nofollow_a_swapped_link_is_refused(self):
++        # base-fail: the base refuses the platform before it opens the operand.
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text(LINKED, encoding="utf-8")
++        victim = self.outside / "victim.md"
++        victim.write_text(LINKED, encoding="utf-8")
++
++        def hooks(real):
++            def opener(path, *args, **kwargs):
++                if os.path.abspath(path) == str(moved) and not moved.is_symlink():
++                    moved.unlink()
++                    moved.symlink_to(victim)
++                return real(path, *args, **kwargs)
++            return opener
++        if not _can_symlink():
++            self.skipTest("this process cannot make a symbolic link")
++        code, err = self.inprocess("docs/tasks/t.md", hooks, before=_no_o_nofollow)
++        self.assertEqual(code, 2, err)
++        self.assertIn("changed during the run", err)
++        self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
++
++    def test_w11_without_o_nofollow_a_reparse_tag_is_a_link(self):
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text(LINKED, encoding="utf-8")
++
++        @contextlib.contextmanager
++        def tagged():
++            with _no_o_nofollow(), _lstat_reporting(
++                    {"docs/tasks/t.md"}, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
++                    st_reparse_tag=JUNCTION):
++                yield
++        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=tagged)
++        self.assertEqual(code, 2, err)
++        self.assertIn("is a link", err)
++        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
++
++    @WINDOWS_ONLY
++    def test_w12_a_junction_at_the_operands_directory(self):
++        victim = self.outside / "victim.md"
++        victim.write_text(LINKED, encoding="utf-8")
++        _junction(self.root / "docs" / "out", self.outside)
++        self.addCleanup(os.rmdir, self.root / "docs" / "out")
++        result = self.rebase("docs/out/victim.md")
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        self.assertIn("resolves outside", result.stderr)
++        self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
++
++    def test_w13_the_file_mode_keeps_every_byte(self):
++        moved = self.root / "docs" / "tasks" / "t.md"
++        text = b"[a](ARCHITECTURE.md)\r\nline\x1a after the byte\r\nlast\n"
++        rebased = text.replace(b"(ARCHITECTURE.md)", b"(../ARCHITECTURE.md)")
++        moved.write_bytes(text)
++        result = self.rebase("docs/tasks/t.md")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertEqual(moved.read_bytes(), rebased)
++        moved.write_bytes(text)
++        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=_no_o_nofollow)
++        self.assertEqual(code, 0, err)
++        self.assertEqual(moved.read_bytes(), rebased)
++
++    def rebase_env(self, args, **env):
++        return subprocess.run([sys.executable, str(REBASE), *args], cwd=self.root,
++                              capture_output=True, timeout=60, env=dict(os.environ, **env))
++
++    def test_w14_any_stream_encoding_and_ascii_json(self):
++        # base-fail: the base prints the target with `print`, after the write, and its JSON is not
++        # ASCII (TASK 131 R3).
++        notes = self.root / "docs" / "notes"
++        notes.mkdir()
++        (notes / "n\u2192.md").write_text("# n\n", encoding="utf-8")
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text("[a](notes/n\u2192.md)\n", encoding="utf-8")
++        result = self.rebase_env(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks"],
++                                 PYTHONIOENCODING="ascii")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertIn(b"\\u2192", result.stdout)
++        result.stdout.decode("ascii")
++        result.stderr.decode("ascii")
++        moved.write_text("[a](notes/n\u2192.md)\n", encoding="utf-8")
++        result = self.rebase_env(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
++                                  "--json"], PYTHONIOENCODING="utf-8")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertTrue(all(byte < 128 for byte in result.stdout), "the JSON is not ASCII")
++        report = json.loads(result.stdout)
++        self.assertEqual(report["files"][0]["links"][0]["authored"], "notes/n\u2192.md")
++
++    def test_w15_an_operand_that_is_not_utf_8(self):
++        # base-fail: the base ends in a traceback, exit 1.
++        moved = self.root / "docs" / "tasks" / "t.md"
++        data = "[a](ARCHITECTURE.md)\n# \u0422\u0417\n".encode("cp1251")
++        moved.write_bytes(data)
++        result = self.rebase("docs/tasks/t.md")
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        self.assertEqual(json.loads(result.stderr.strip().splitlines()[-1])["error"],
++                         "docs/tasks/t.md: is not UTF-8")
++        self.assertEqual(moved.read_bytes(), data)
++
++    def test_w17_two_drives_are_outside(self):
++        # base-fail: a ValueError of `commonpath` ends the base in a traceback (TASK 131 R5.1).
++        module = _module(REBASE, "rebase_links_under_test")
++        same_drive = ValueError("Paths don't have the same drive")
++        with mock.patch("os.path.commonpath", side_effect=same_drive):
++            _text, records = module.rebase_document_links("[a](x.md)\n", "docs", "docs/tasks",
++                                                          str(self.root))
++        self.assertEqual([r.action for r in records], ["ESCAPES_ROOT"])
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        self.addCleanup(os.chdir, cwd)
++        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
++        for call, reason in ((1, "lies outside the working directory"),
++                             (2, "its directory resolves outside the working directory")):
++            with self.subTest(call=call):
++                calls, real = [], os.path.commonpath
++
++                def commonpath(paths, call=call, calls=calls, real=real):
++                    calls.append(paths)
++                    if len(calls) == call:
++                        raise same_drive
++                    return real(paths)
++                with mock.patch("os.path.commonpath", side_effect=commonpath):
++                    self.assertEqual(module._refuse_operand("docs/tasks/t.md"), reason)
++        fd = os.open("docs/tasks/t.md", os.O_RDONLY)
++        self.addCleanup(os.close, fd)
++        with mock.patch("os.path.commonpath", side_effect=same_drive):
++            with self.assertRaises(module._Unsafe) as caught:
++                module._check_descriptor(fd, "docs/tasks/t.md", str(self.root))
++        self.assertEqual(str(caught.exception),
++                         "its directory resolves outside the working directory")
++
++    @WINDOWS_ONLY
++    def test_w17_an_operand_and_a_link_on_another_drive(self):
++        drive = os.path.splitdrive(str(self.root))[0].upper()
++        other = "Y:" if drive == "Z:" else "Z:"
++        result = self.rebase(f"{other}/docs/x.md")
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        self.assertIn("lies outside the working directory", result.stderr)
++        module = _module(REBASE, "rebase_links_under_test")
++        _text, records = module.rebase_document_links("[a](\\\\server\\share\\x.md)\n", "docs",
++                                                      "docs/tasks", str(self.root))
++        self.assertEqual([r.action for r in records], ["ESCAPES_ROOT"])
++
++    def test_w18_from_and_to_with_a_drive_or_a_root(self):
++        # base-fail: the base passes a drive with no root, and from Python 3.13 a root with no
++        # drive (TASK 131 R5.2).
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text(LINKED, encoding="utf-8")
++        for option in ("--from", "--to"):
++            with self.subTest(option=option):
++                args = {"--from": "docs", "--to": "docs/tasks"}
++                args[option] = "/x"
++                result = _run(REBASE, ["docs/tasks/t.md", "--from", args["--from"], "--to",
++                                       args["--to"]], self.root)
++                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++                self.assertIn(f"{option} does not lie inside the working directory",
++                              result.stderr)
++        module = _module(REBASE, "rebase_links_under_test")
++        windows = types.SimpleNamespace(path=ntpath, sep="\\")
++        with mock.patch.object(module, "os", windows):
++            for value, leaves in (("\\x", True), ("/x", True), ("D:x", True), ("D:\\x", True),
++                                  ("docs", False), ("docs\\tasks", False)):
++                with self.subTest(value=value):
++                    self.assertEqual(module._leaves_tree(value), leaves)
++        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
++
++    @WINDOWS_ONLY
++    def test_w18_a_drive_or_a_root_on_windows(self):
++        for value in ("\\x", "D:x"):
++            with self.subTest(value=value):
++                result = _run(REBASE, ["docs/tasks/t.md", "--from", value, "--to", "docs/tasks"],
++                              self.root)
++                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++                self.assertIn("--from does not lie inside the working directory", result.stderr)
++
++    def test_w24_each_open_of_the_file_mode_passes_o_binary(self):
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text(LINKED, encoding="utf-8")
++        bit, flags_seen = _unused_open_bit(), []
++
++        def hooks(real):
++            if real is not os.open:
++                return real
++
++            def opener(path, flags, *args, **kwargs):
++                if os.path.abspath(path) == str(moved):
++                    flags_seen.append(flags)
++                return real(path, flags & ~bit, *args, **kwargs)
++            return opener
++
++        @contextlib.contextmanager
++        def binary():
++            with _no_o_nofollow(), mock.patch.object(os, "O_BINARY", bit, create=True):
++                yield
++        code, err = self.inprocess("docs/tasks/t.md", hooks, before=binary)
++        self.assertEqual(code, 0, err)
++        self.assertEqual(len(flags_seen), 2, "the read and the write each open the file")
++        self.assertTrue(all(flags & bit for flags in flags_seen), "an open drops O_BINARY")
++        nonblock = getattr(os, "O_NONBLOCK", 0)
++        self.assertTrue(all(flags & nonblock == nonblock for flags in flags_seen),
++                        "an open drops O_NONBLOCK")
++
++    def test_w26_each_module_keeps_its_own_helpers(self):
++        # TASK 131 R2.6: a staged copy of one module runs beside the base of another (D12).
++        for path, names in ((ARCHIVE_MOVE, {"_is_link"}),
++                            (REBASE, {"_is_link", "_open_nofollow"}),
++                            (SLOT, {"_is_link", "_open_nofollow"})):
++            with self.subTest(module=path.name):
++                tree = ast.parse(path.read_text(encoding="utf-8"))
++                defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
++                self.assertLessEqual(names, defined)
++                borrowed = [node.attr for node in ast.walk(tree)
++                            if isinstance(node, ast.Attribute) and node.attr in names]
++                self.assertEqual(borrowed, [], "a helper read from another module")
++
++    @WINDOWS_ONLY
++    def test_w27_a_link_written_with_a_backslash(self):
++        (self.root / "x.md").write_text("# x\n", encoding="utf-8")
++        moved = self.root / "docs" / "tasks" / "t.md"
++        moved.write_text("[a](..\\x.md)\n", encoding="utf-8")
++        result = self.rebase("docs/tasks/t.md")
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        self.assertIn("docs/tasks/t.md:1", result.stderr)
++        self.assertEqual(moved.read_text(encoding="utf-8"), "[a](..\\x.md)\n")
++
++    # --- the fix of round 1 of stage 2 (TASK 131 D24 to D26) -----------------------------------
++
++    @unittest.skipUnless(hasattr(os, "mkfifo"), "no os.mkfifo")
++    def test_w37_without_o_nofollow_a_fifo_is_never_opened(self):
++        fifo = self.root / "docs" / "tasks" / "f.md"
++        os.mkfifo(fifo)
++        opened = []
++
++        def hooks(real):
++            if real is not os.open:
++                return real
++
++            def opener(path, *args, **kwargs):
++                if os.path.abspath(path) == str(fifo):
++                    opened.append(path)             # the open would block: fail it instead
++                    raise OSError(errno.EAGAIN, "the test refuses to open the FIFO")
++                return real(path, *args, **kwargs)
++            return opener
++        code, err = self.inprocess("docs/tasks/f.md", hooks, before=_no_o_nofollow)
++        self.assertEqual(code, 2, err)
++        self.assertIn("is not a regular file", err)
++        self.assertEqual(opened, [], "the FIFO was opened")
++
++    def test_w38_no_descriptor_path_and_no_fcntl_off_posix(self):
++        imported, real_import = [], builtins.__import__
++
++        def spy(name, *args, **kwargs):
++            imported.append(name)
++            return real_import(name, *args, **kwargs)
++        for path, name in ((REBASE, "rebase_links_under_test"), (SLOT, "slot_links_under_test")):
++            with self.subTest(module=path.name):
++                module = _module(path, name)
++                imported.clear()
++                with mock.patch.object(os, "name", "nt"), \
++                        mock.patch("builtins.__import__", side_effect=spy):
++                    self.assertIsNone(module._descriptor_path(0))
++                self.assertNotIn("fcntl", imported)
++
++    def test_w39_an_operand_that_names_a_stream(self):
++        module = _module(REBASE, "rebase_links_under_test")
++        windows = types.SimpleNamespace(path=ntpath, sep="\\")
++        with mock.patch.object(module, "os", windows):
++            self.assertTrue(module._names_stream("docs/a.md:b.md"))
++            self.assertTrue(module._names_stream("docs/tasks:b.md"))
++            self.assertFalse(module._names_stream("C:\\repo\\docs\\a.md"))
++            self.assertFalse(module._names_stream("docs/tasks/t.md"))
++        with mock.patch.object(module, "os", types.SimpleNamespace(path=posixpath, sep="/")):
++            self.assertFalse(module._names_stream("docs/a.md:b.md"),
++                             "a colon names no stream where paths have no drives")
++        # The file mode asks the check of each operand.
++        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        self.addCleanup(os.chdir, cwd)
++        with mock.patch.object(module, "_names_stream", return_value=True):
++            self.assertEqual(module._refuse_operand("docs/tasks/t.md"),
++                             "names an alternate stream of a file")
++
++    def test_w41_a_crlf_document_with_a_fence_and_a_code_span(self):
++        # base-fail: at the base no fence closes on CR LF, so the links after it stay.
++        moved = self.root / "docs" / "tasks" / "t.md"
++        text = (b"[a](ARCHITECTURE.md)\r\n\r\n```\r\n[x](ARCHITECTURE.md)\r\n```\r\n\r\n"
++                b"[b](ARCHITECTURE.md)\r\n\r\n`span\r\n\r\n[c](ARCHITECTURE.md) and `x`\r\n")
++        moved.write_bytes(text)
++        result = self.rebase("docs/tasks/t.md")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        rebased = moved.read_bytes()
++        self.assertEqual(rebased.count(b"(../ARCHITECTURE.md)"), 3, rebased)
++        self.assertIn(b"```\r\n[x](ARCHITECTURE.md)\r\n```", rebased)
++
++    def test_w42_a_unc_repo_root_is_refused_before_any_call(self):
++        # base-fail: the base resolves `--repo-root` with `os.path.realpath` first (TASK 131 R12).
++        module = _module(REBASE, "rebase_links_under_test")
++        windows = types.SimpleNamespace(path=ntpath, sep="\\")
++        with mock.patch.object(module, "os", windows):
++            for value in UNC_PATHS:
++                with self.subTest(value=value):
++                    self.assertTrue(module._unc(value))
++            for value in ("C:\\repo", "docs", "\\x", "."):
++                with self.subTest(value=value):
++                    self.assertFalse(module._unc(value))
++        with mock.patch.object(module, "os", types.SimpleNamespace(path=posixpath, sep="/")):
++            for value in UNC_PATHS:
++                with self.subTest(value=value, path="posixpath"):
++                    self.assertFalse(module._unc(value), "no drives, no UNC path, on POSIX")
++        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
++        resolved = []
++        real_realpath = os.path.realpath
++        cwd = os.getcwd()
++        os.chdir(self.root)
++        self.addCleanup(os.chdir, cwd)
++        err = io.StringIO()
++        with mock.patch.object(module, "_unc", return_value=True), \
++                mock.patch("os.path.realpath",
++                           side_effect=lambda p, *a, **k: (resolved.append(p),
++                                                          real_realpath(p, *a, **k))[1]), \
++                contextlib.redirect_stderr(err):
++            code = module._main(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
++                                 "--repo-root", "//host/share"])
++        self.assertEqual(code, 2, err.getvalue())
++        self.assertIn("--repo-root is a UNC or device path", err.getvalue())
++        self.assertEqual(resolved, [], "a path was resolved before the refusal")
++
++    @WINDOWS_ONLY
++    def test_w42_a_unc_repo_root_on_windows(self):
++        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
++        result = _run(REBASE, ["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
++                               "--repo-root", "\\\\localhost\\nowhere"], self.root)
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        self.assertIn("--repo-root is a UNC or device path", result.stderr)
++
+ 
+ class TestInboundGuard(unittest.TestCase):
+     """TC-G8 to TC-G12 (TASK 115) and TC-G19 (TASK 116 R7.4): `--inbound` writes only regular
+@@ -718,6 +1155,7 @@ class TestInboundGuard(unittest.TestCase):
+         self.assertEqual(sub.read_text(encoding="utf-8"), SUBTASK)
+         self.assertEqual((self.root / "alias.md").read_text(encoding="utf-8"), SUBTASK)
+ 
++    @NEEDS_SYMLINK
+     def test_g9_a_symbolic_link_to_a_file_outside(self):
+         victim = self.outside / "victim.md"
+         victim.write_text(SUBTASK, encoding="utf-8")
+@@ -751,7 +1189,7 @@ class TestInboundGuard(unittest.TestCase):
+         import importlib.machinery
+         tools = self._tools_copy()
+         planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
+-                   "msvcrt", "_winapi")
++                   "msvcrt", "_winapi", "fcntl")
+         for name in planted:
+             sentinel = self.outside / f"sentinel-{name}"
+             (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
+@@ -777,7 +1215,7 @@ class TestInboundGuard(unittest.TestCase):
+         # and the path as called then differs from the real one (TASK 128 R1.3).
+         tools = self._tools_copy()
+         planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
+-                   "msvcrt", "_winapi")
++                   "msvcrt", "_winapi", "fcntl")
+         for name in planted:
+             sentinel = self.outside / f"sentinel-{name}"
+             (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
+@@ -857,10 +1295,11 @@ class TestInboundGuard(unittest.TestCase):
+                 state.pop("back")()
+         return refusal, away / "t.md", original, state["swaps"]
+ 
++    @NEEDS_SYMLINK
+     def test_g19_a_directory_swapped_around_the_inbound_open(self):
+         # base-fail: the base writes the outside file; its post-write check refuses only a swap.
+         module = _module(SLOT, "slot_links_under_test")
+-        reasons = {"swap": "is not the file at its real path",
++        reasons = {"swap": _o_nofollow_refusal("is not the file at its real path"),
+                    "move": "its directory resolves outside the working directory",
+                    "three": "its directory resolves outside the working directory"}
+         for case, reason in reasons.items():
+@@ -875,6 +1314,39 @@ class TestInboundGuard(unittest.TestCase):
+                     self.assertGreaterEqual(swaps, 1, "the realpath hook never swapped")
+ 
+ 
++    def test_w16_no_pyc_under_a_relative_null_device(self):
++        # base-fail: the base looks a sibling's `.pyc` up under `nul/rebase-links-pycache/`, a path
++        # relative to the working directory where `os.devnull` is `nul` (TASK 131 R4).
++        tools = self._tools_copy()
++        site = self.outside / "site"
++        site.mkdir()
++        report = self.outside / "prefix.txt"
++        (site / "sitecustomize.py").write_text(
++            "import atexit, os, sys\n"
++            "os.devnull = 'nul'\n"
++            f"atexit.register(lambda: open({str(report)!r}, 'w', encoding='utf-8')"
++            ".write(str(sys.pycache_prefix)))\n", encoding="utf-8")
++        sentinel = self.outside / "sentinel-nul-pyc"
++        evil = self.outside / "evil.py"
++        evil.write_text(f"open({str(sentinel)!r}, 'w').close()\n", encoding="utf-8")
++        head = os.path.splitdrive(str(tools))[1].lstrip("\\/")
++        cache = os.path.join(str(self.root), "nul", "rebase-links-pycache", head)
++        if os.name == "nt":
++            cache = "\\\\?\\" + cache
++            self.addCleanup(shutil.rmtree, "\\\\?\\" + str(self.root / "nul"))
++        os.makedirs(cache)
++        py_compile.compile(str(evil), cfile=os.path.join(
++            cache, f"slot_links.{sys.implementation.cache_tag}.pyc"),
++            invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
++        result = subprocess.run([sys.executable, str(tools / REBASE.name), "--inbound", "--task",
++                                 "docs/tasks/task-112-x.md"], cwd=self.root, capture_output=True,
++                                text=True, timeout=60, env=dict(os.environ, PYTHONPATH=str(site)))
++        self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
++        self.assertFalse(sentinel.exists(), "a .pyc under the relative null device was read")
++        prefix = report.read_text(encoding="utf-8")
++        self.assertTrue(prefix.startswith(os.path.realpath(tools / REBASE.name)), prefix)
++
++
+ class TestInitSkillGuard(unittest.TestCase):
+     """TC-G4 to TC-G6."""
+ 

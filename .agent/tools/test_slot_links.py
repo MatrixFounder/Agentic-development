@@ -14,15 +14,24 @@ next task's TASK and PLAN filled it (WI-38). This module pins TC-0 to TC-46 of T
 
 Git fixtures run with `GIT_CONFIG_GLOBAL=os.devnull`, `GIT_CONFIG_NOSYSTEM=1` and a fixed identity,
 set for the test process so that the module's own git calls read no operator configuration.
+
+TC-W13, TC-W17, TC-W19, TC-W20 and TC-W24 (TASK 131) pin the inbound mode on a platform without
+`O_NOFOLLOW`, Windows among them. A test that makes a symbolic link or a FIFO skips where the
+platform cannot, and a test whose premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5).
 """
 
+import contextlib
 import errno
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
+import types
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -46,6 +55,71 @@ def isolated_git(monkeypatch, tmp_path):
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     for key, value in IDENTITY.items():
         monkeypatch.setenv(key, value)
+
+
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege."""
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+needs_symlink = pytest.mark.skipif(not _can_symlink(), reason="this process cannot make a link")
+needs_fifo = pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
+#: TASK 131 R6.5: a premise of POSIX that Windows does not hold.
+posix_premise = pytest.mark.skipif(os.name == "nt", reason="a premise of POSIX (TASK 131 D22)")
+windows_only = pytest.mark.skipif(os.name != "nt", reason="a behaviour of Windows")
+#: The reparse tag of a junction (TASK 128 R2.2).
+JUNCTION = 0xA0000003
+
+
+@contextlib.contextmanager
+def no_o_nofollow():
+    """`os.O_NOFOLLOW` deleted, as on Windows, for the time of the block."""
+    saved = getattr(os, "O_NOFOLLOW", None)
+    if saved is not None:
+        del os.O_NOFOLLOW
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.O_NOFOLLOW = saved
+
+
+def lstat_reporting(paths, **extra):
+    """A patch of `os.lstat` that reports the attributes of Windows of `extra` for `paths`."""
+    real = os.lstat
+
+    def lstat(path, *args, **kwargs):
+        st = real(path, *args, **kwargs)
+        if os.fspath(path) not in paths:
+            return st
+        fields = {name: getattr(st, name) for name in dir(st) if name.startswith("st_")}
+        fields.setdefault("st_file_attributes", 0)
+        fields.setdefault("st_reparse_tag", 0)
+        fields.update(extra)
+        return types.SimpleNamespace(**fields)
+    return mock.patch("os.lstat", side_effect=lstat)
+
+
+def unused_open_bit():
+    """A bit that no `os.O_*` flag of this platform uses."""
+    used = 0
+    for name in dir(os):
+        if name.startswith("O_"):
+            used |= getattr(os, name)
+    return next(1 << bit for bit in range(30, 15, -1) if not used & (1 << bit))
+
+
+def junction(link, target):
+    """A junction at `link` to the directory `target` (Windows only), as CPython's tests make it."""
+    import _winapi
+    _winapi.CreateJunction(str(target), str(link))
 
 
 def write(root, rel, text, newline="\n"):
@@ -213,7 +287,7 @@ def test_tc6_fences_and_code_spans_are_not_links(project):
 def test_tc7_link_text(project, before, after):
     sub = write(project, "docs/tasks/task-033-03-x.md", f"# Task 033-03: x\n\n{before}\n")
     retarget_inbound(str(project), TASK, PLAN)
-    assert sub.read_text() == f"# Task 033-03: x\n\n{after}\n"
+    assert sub.read_text(encoding="utf-8") == f"# Task 033-03: x\n\n{after}\n"
 
 
 @pytest.mark.parametrize("before, after", [
@@ -240,6 +314,7 @@ def test_tc8_fragment_brackets_and_reference_definitions(project, before, after)
     ("--task", "docs/tasks/task-033-linked.md"),
     ("--plan", PLAN),
 ])
+@needs_symlink
 def test_tc9_operands_exit_2_and_write_nothing(project, args):
     write(project, "docs/tasks/task-033-01-guards.md", "# Task 033-01: Guards\n\n[x](../TASK.md)\n")
     (project / "docs/tasks/task-033-linked.md").symlink_to(project / TASK)
@@ -269,6 +344,7 @@ def test_tc10_since_errors_exit_2(project):
     assert {k: v for k, v in after.items() if k in before} == before
 
 
+@needs_symlink
 def test_tc11_links_and_hard_links_are_not_written(project, tmp_path):
     outside = Path(os.path.realpath(tmp_path)) / "outside.md"
     outside.write_text("[x](../TASK.md)\n")
@@ -352,6 +428,7 @@ def test_tc18_an_unresolved_rewrite_exits_1(project, monkeypatch):
     assert retarget_inbound(str(project), TASK).exit_code == 1
 
 
+@needs_symlink
 def test_tc19_walk_mode_skips_git_node_modules_and_directory_links(project, tmp_path):
     outside = Path(os.path.realpath(tmp_path)) / "elsewhere"
     write(outside, "x.md", "[x](../docs/TASK.md)\n")
@@ -396,14 +473,15 @@ def test_tc21_no_driver_filter_or_hook_runs(project, tmp_path):
         hook = scratch / f"{name}.sh"
         body = ('cat "$1"' if name == "textconv"
                 else "cat" if name in ("clean", "smudge") else "exit 0")
-        hook.write_text(f"#!/bin/sh\ntouch '{sentinels[name]}'\n{body}\n")
+        # TASK 131 R6.6: LF bytes and paths of POSIX, which the shell of git reads on Windows too.
+        hook.write_bytes(f"#!/bin/sh\ntouch '{sentinels[name].as_posix()}'\n{body}\n".encode())
         hook.chmod(0o755)
     for key, value in (("diff.external", scratch / "external.sh"),
                        ("diff.md.textconv", scratch / "textconv.sh"),
                        ("filter.sentinel.clean", scratch / "clean.sh"),
                        ("filter.sentinel.smudge", scratch / "smudge.sh"),
                        ("core.fsmonitor", scratch / "fsmonitor.sh")):
-        git(project, "config", key, str(value))
+        git(project, "config", key, value.as_posix())
     write(project, ".gitattributes", "*.md diff=md filter=sentinel\n")
     design.write_text("Old [s](../TASK.md).\n\nNew [s](../TASK.md).\n")
 
@@ -419,7 +497,7 @@ def test_tc21_no_driver_filter_or_hook_runs(project, tmp_path):
         path.unlink()
     # A tracked file changed at the same size: `git status` must read it through the clean
     # filter, since its size no longer tells it apart from the index.
-    same.write_text("bbbb\n")
+    same.write_bytes(b"bbbb\n")
     stamp = same.stat()
     os.utime(same, (stamp.st_atime + 5, stamp.st_mtime + 5))
 
@@ -444,6 +522,7 @@ def test_tc22_inherited_git_variables_change_nothing(project, tmp_path, monkeypa
     assert retarget_inbound(str(project), TASK, PLAN, since=base, dry_run=True) == expected
 
 
+@needs_symlink
 def test_tc23_a_root_below_the_top_level_through_a_link(tmp_path):
     real = Path(os.path.realpath(tmp_path))
     top = real / "mono"
@@ -475,10 +554,13 @@ def test_tc24_only_the_added_copy_of_a_duplicated_line_is_own(project):
                                ("docs/design/core.md", 4, "RETARGETED")]
 
 
-def test_platform_without_o_nofollow_refuses(project, monkeypatch):
-    monkeypatch.delattr(os, "O_NOFOLLOW")
-    with pytest.raises(InboundError):
-        retarget_inbound(str(project), TASK, PLAN)
+def test_platform_without_o_nofollow_refuses(project):
+    # base-fail: the base refuses the platform (TASK 131 R2.4). The name stays from TASK 116.
+    sub = write(project, "docs/tasks/task-033-30-x.md", "# Task 033-30: x\n\n[a](../TASK.md)\n")
+    with no_o_nofollow():
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert records(result) == [("docs/tasks/task-033-30-x.md", 3, "RETARGETED")]
+    assert "[a](task-033-admission-core-v1.md)" in sub.read_text(encoding="utf-8")
 
 
 # --- stage-2 round 1 ---------------------------------------------------------------------------
@@ -500,6 +582,7 @@ def _after_read(monkeypatch, rel, change):
     monkeypatch.setattr(slot_links, "_read", hooked)
 
 
+@needs_symlink
 def test_tc26_a_parent_linked_outside_is_refused(project, tmp_path):
     write(project, "docs/design/x.md", "Old.\n")
     init_repo(project)
@@ -517,7 +600,8 @@ def test_tc26_a_parent_linked_outside_is_refused(project, tmp_path):
     assert (outside / "x.md").read_text() == "Old.\nNew [s](../TASK.md).\n"
 
 
-@pytest.mark.parametrize("how", ["replaced", "changed", "fifo"])
+@pytest.mark.parametrize("how", ["replaced", "changed",
+                                 pytest.param("fifo", marks=needs_fifo)])
 def test_tc26_a_file_changed_after_the_read_is_refused(project, monkeypatch, how):
     rel = "docs/tasks/task-033-20-x.md"
     sub = write(project, rel, "# Task 033-20: x\n\n[a](../TASK.md)\n")
@@ -543,6 +627,8 @@ def test_tc26_a_file_changed_after_the_read_is_refused(project, monkeypatch, how
         assert "[a](../TASK.md)" in sub.read_text()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Windows refuses to replace a file that a descriptor "
+                    "holds (TASK 131 D22)")
 def test_tc27_a_file_replaced_after_the_write_is_refused(project, monkeypatch):
     rel = "docs/tasks/task-033-21-x.md"
     sub = write(project, rel, "# Task 033-21: x\n\n[a](../TASK.md)\n")
@@ -604,6 +690,8 @@ def test_tc30_a_write_that_fails_after_its_first_byte_exits_1(project, monkeypat
     assert result.exit_code == 1
 
 
+@needs_symlink
+@pytest.mark.skipif(os.name == "nt", reason="NTFS refuses a line break in a name (TASK 131 D22)")
 def test_tc31_the_text_output_escapes_and_json_is_ascii(project):
     (project / "docs" / "tasks").mkdir(parents=True, exist_ok=True)
     (project / "docs" / "x\n[RETARGETED] forged.md").symlink_to(project / TASK)
@@ -686,6 +774,7 @@ def test_tc36_an_ignored_subtask_is_still_read(project):
 
 
 @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads any directory")
+@posix_premise
 def test_tc37_an_unreadable_directory_is_listed(project):
     secret = project / "docs" / "secret"
     secret.mkdir()
@@ -761,6 +850,7 @@ def test_tc42_autojunk_stays_off(project):
 
 
 @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root reads any directory")
+@posix_premise
 def test_tc43_an_unreadable_tasks_directory_is_listed_in_git_mode(project):
     init_repo(project)
     commit(project)
@@ -792,6 +882,7 @@ def test_tc44_a_closed_stdout_exits_1_with_the_error_object(monkeypatch, capsys)
     assert json.loads(capsys.readouterr().err)["ok"] is False
 
 
+@needs_fifo
 def test_tc45_the_tasks_listing_reads_regular_files_only(project):
     init_repo(project)
     commit(project)
@@ -816,4 +907,235 @@ def test_tc46_a_file_without_a_slot_name_is_not_masked(project, monkeypatch):
     retarget_inbound(str(project), TASK, PLAN)
     assert "No slot name here.\n" not in masked
     assert "[a](TASK.md)\n" in masked
+
+
+# --- TASK 131: a platform without O_NOFOLLOW, Windows among them -------------------------------
+
+def _hook_open(monkeypatch, path, when, change):
+    """Run `change()` once, right before the first `os.open` of `path` whose flags pass `when`."""
+    real_open, done = os.open, []
+
+    def opener(name, flags, *args, **kwargs):
+        if os.path.abspath(name) == str(path) and when(flags) and not done:
+            done.append(True)
+            change()
+        return real_open(name, flags, *args, **kwargs)
+    monkeypatch.setattr(os, "open", opener)
+    return done
+
+
+@needs_symlink
+def test_w19_a_file_swapped_for_a_link_after_the_read_lstat(project, monkeypatch, tmp_path):
+    # base-fail: the base refuses the platform before it reads.
+    outside = Path(os.path.realpath(tmp_path)) / "outside.md"
+    outside.write_text("Outside.\n[x](../TASK.md)\n", encoding="utf-8")
+    rel = "docs/design/x.md"
+    design = write(project, rel, "Inside, with no link.\nTASK.md\n")
+
+    def swap():
+        design.unlink()
+        design.symlink_to(outside)
+    done = _hook_open(monkeypatch, project / rel, lambda flags: not flags & os.O_RDWR, swap)
+    with no_o_nofollow():
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert done, "the hook never swapped"
+    assert [(r.file, r.action, r.reason) for r in result.records if r.file == rel] == [
+        (rel, "UNREADABLE", "changed during the run")]
+    assert outside.read_text(encoding="utf-8") == "Outside.\n[x](../TASK.md)\n"
+
+
+@needs_symlink
+def test_w19_a_file_swapped_for_a_link_after_the_write_lstat(project, monkeypatch, tmp_path):
+    outside = Path(os.path.realpath(tmp_path)) / "victim.md"
+    rel = "docs/tasks/task-033-31-x.md"
+    text = "# Task 033-31: x\n\n[a](../TASK.md)\n"
+    outside.write_text(text, encoding="utf-8")
+    sub = write(project, rel, text)
+
+    def swap():
+        sub.unlink()
+        sub.symlink_to(outside)
+    _hook_open(monkeypatch, project / rel, lambda flags: flags & os.O_RDWR, swap)
+    with no_o_nofollow():
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert _reason(result, rel, "REFUSED") == ["changed during the run"]
+    assert outside.read_text(encoding="utf-8") == text
+
+
+def test_w19_a_reparse_tag_at_the_read_or_at_the_write(project, monkeypatch):
+    rel = "docs/tasks/task-033-32-x.md"
+    text = "# Task 033-32: x\n\n[a](../TASK.md)\n"
+    sub = write(project, rel, text)
+    path = os.path.join(str(project), rel)
+    tag = dict(st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT, st_reparse_tag=JUNCTION)
+    with no_o_nofollow(), lstat_reporting({path}, **tag):
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert [(r.action, r.reason) for r in result.records if r.file == rel] == [
+        ("UNREADABLE", "is a link")]
+
+    original = slot_links._read
+    read = []
+
+    def reading(name):
+        value = original(name)
+        if name == path:
+            read.append(True)
+        return value
+    monkeypatch.setattr(slot_links, "_read", reading)
+    real_lstat = os.lstat
+
+    def lstat(name, *args, **kwargs):
+        st = real_lstat(name, *args, **kwargs)
+        if os.fspath(name) != path or not read:
+            return st
+        fields = {key: getattr(st, key) for key in dir(st) if key.startswith("st_")}
+        fields.update(tag)
+        return types.SimpleNamespace(**fields)
+    with no_o_nofollow(), mock.patch("os.lstat", side_effect=lstat):
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert _reason(result, rel, "REFUSED") == ["is a link"]
+    assert sub.read_text(encoding="utf-8") == text
+
+
+def test_w20_the_walk_enters_no_directory_with_a_name_surrogate_tag(project):
+    # base-fail: `os.walk` enters a junction on Windows; the base has no filter (TASK 131 R2.5).
+    hidden = project / "docs" / "junction-like"
+    write(hidden, "x.md", "[x](../TASK.md)\n")
+    tag = dict(st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT, st_reparse_tag=JUNCTION)
+    with lstat_reporting({str(hidden)}, **tag):
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert result.scan == "walk"
+    assert [r.file for r in result.records if r.file.startswith("docs/junction-like")] == []
+
+
+@windows_only
+def test_w20_the_walk_enters_no_junction(project, tmp_path):
+    outside = Path(os.path.realpath(tmp_path)) / "elsewhere"
+    write(outside, "x.md", "[x](../docs/TASK.md)\n")
+    junction(project / "linked", outside)
+    try:
+        result = retarget_inbound(str(project), TASK, PLAN)
+    finally:
+        os.rmdir(project / "linked")
+    assert [r.file for r in result.records if r.file.startswith("linked")] == []
+
+
+@pytest.mark.parametrize("o_nofollow", [True, False])
+def test_w13_the_inbound_mode_keeps_every_byte(project, o_nofollow):
+    rel = "docs/tasks/task-033-33-x.md"
+    data = b"# Task 033-33: x\r\n\r\n[a](../TASK.md)\r\nline\x1a after the byte\r\n"
+    path = project / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    with (contextlib.nullcontext() if o_nofollow else no_o_nofollow()):
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert records(result) == [(rel, 3, "RETARGETED")]
+    assert path.read_bytes() == data.replace(b"(../TASK.md)", b"(task-033-admission-core-v1.md)")
+
+
+@pytest.mark.parametrize("call", [1, 2])
+def test_w17_two_drives_are_outside_at_the_write(project, call):
+    # base-fail: a ValueError of `commonpath` ends the base in a traceback (TASK 131 R5.1).
+    rel = "docs/tasks/task-033-34-x.md"
+    sub = write(project, rel, "# Task 033-34: x\n\n[a](../TASK.md)\n")
+    original, st = sub.read_bytes(), sub.stat()
+    calls, real = [], os.path.commonpath
+
+    def commonpath(paths):
+        calls.append(paths)
+        if len(calls) == call:
+            raise ValueError("Paths don't have the same drive")
+        return real(paths)
+    with mock.patch("os.path.commonpath", side_effect=commonpath):
+        refusal = slot_links._write_file(str(project), rel, original, (st.st_dev, st.st_ino),
+                                         b"rewritten\n")
+    assert refusal is not None
+    assert refusal.reason == "its directory resolves outside the working directory"
+    assert sub.read_bytes() == original
+
+
+def test_w17_two_drives_are_outside_at_the_scan(project):
+    init_repo(project)
+    commit(project)
+    with mock.patch("os.path.commonpath",
+                    side_effect=ValueError("Paths don't have the same drive")):
+        with pytest.raises(InboundError, match="does not lie inside its git top level"):
+            retarget_inbound(str(project), TASK, PLAN)
+
+
+def test_w24_each_open_of_the_inbound_mode_passes_o_binary(project, monkeypatch):
+    rel = "docs/tasks/task-033-35-x.md"
+    write(project, rel, "# Task 033-35: x\n\n[a](../TASK.md)\n")
+    bit, seen, real_open = unused_open_bit(), [], os.open
+
+    def spy(name, flags, *args, **kwargs):
+        if os.path.abspath(name) == os.path.abspath(os.path.join(str(project), rel)):
+            seen.append(flags)
+        return real_open(name, flags & ~bit, *args, **kwargs)
+    monkeypatch.setattr(os, "O_BINARY", bit, raising=False)
+    monkeypatch.setattr(os, "open", spy)
+    with no_o_nofollow():
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert records(result) == [(rel, 3, "RETARGETED")]
+    # The H1 scan of `task_id_tool._first_h1` opens the sub-task too (TASK 131 R2.7).
+    assert len(seen) >= 2 and any(flags & os.O_RDWR for flags in seen), seen
+    assert all(flags & bit for flags in seen), "an open drops O_BINARY"
+    nonblock = getattr(os, "O_NONBLOCK", 0)
+    assert all(flags & nonblock == nonblock for flags in seen), "an open drops O_NONBLOCK"
+
+
+# --- the fix of round 1 of stage 2 (TASK 131 D24 to D26) ---------------------------------------
+
+@needs_fifo
+def test_w37_without_o_nofollow_a_fifo_is_never_opened(project, monkeypatch):
+    fifo = project / "docs" / "design" / "f.md"
+    fifo.parent.mkdir(parents=True)
+    os.mkfifo(fifo)
+    opened, real_open = [], os.open
+
+    def opener(name, flags, *args, **kwargs):
+        if os.path.abspath(name) == str(fifo):
+            opened.append(flags)                    # the open would block: fail it instead
+            raise OSError(errno.EAGAIN, "the test refuses to open the FIFO")
+        return real_open(name, flags, *args, **kwargs)
+    monkeypatch.setattr(os, "open", opener)
+    with no_o_nofollow():
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert [(r.action, r.reason) for r in result.records if r.file == "docs/design/f.md"] == [
+        ("UNREADABLE", "is not a regular file")]
+    assert opened == [], "the FIFO was opened"
+
+
+def test_w40_a_directory_whose_lstat_fails_is_not_entered(project):
+    hidden = project / "docs" / "locked"
+    write(hidden, "x.md", "[x](../TASK.md)\n")
+    real_lstat = os.lstat
+
+    def lstat(path, *args, **kwargs):
+        if os.fspath(path) == str(hidden):
+            raise PermissionError(13, "Permission denied")
+        return real_lstat(path, *args, **kwargs)
+    with mock.patch("os.lstat", side_effect=lstat):
+        result = retarget_inbound(str(project), TASK, PLAN)
+    assert result.scan == "walk"
+    assert [(r.file, r.action) for r in result.records if r.file.startswith("docs/locked")] == [
+        ("docs/locked", "UNREADABLE")]
+
+
+def test_w41_a_crlf_subtask_with_a_fence(project):
+    # base-fail: at the base no fence closes on CR LF, so the link after it is never seen.
+    rel = "docs/tasks/task-033-36-x.md"
+    path = project / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = (b"# Task 033-36: x\r\n\r\n[b](../TASK.md)\r\n\r\n```\r\n[c](../TASK.md)\r\n```\r\n"
+            b"\r\n[a](../TASK.md)\r\n\r\n`span\r\n \t\r\n[d](../TASK.md) and `x`\r\n")
+    path.write_bytes(data)
+    result = retarget_inbound(str(project), TASK, PLAN)
+    assert sorted(records(result)) == [(rel, 3, "RETARGETED"), (rel, 9, "RETARGETED"),
+                                       (rel, 13, "RETARGETED")]
+    expected = data
+    for label in (b"a", b"b", b"d"):
+        expected = expected.replace(b"[" + label + b"](../TASK.md)",
+                                    b"[" + label + b"](task-033-admission-core-v1.md)")
+    assert path.read_bytes() == expected
 

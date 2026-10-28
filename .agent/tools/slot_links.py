@@ -18,8 +18,11 @@ Added lines are computed here, from `git cat-file blob`, with `difflib`. No `git
 diff driver, textconv driver or clean filter runs (TASK 115 D3).
 
 Exit codes of `main`: 0 nothing listed; 1 a rewritten link does not resolve, a write failed after
-its first byte, or an unexpected error; 2 an operand, git, `<rev>` or the platform; 3 completed with
-`INBOUND`, `REFUSED`, `UNREADABLE` or `SKIPPED` records.
+its first byte, or an unexpected error; 2 an operand, git or `<rev>`; 3 completed with `INBOUND`,
+`REFUSED`, `UNREADABLE` or `SKIPPED` records.
+
+Where the platform has no `O_NOFOLLOW`, Windows among them, each open checks the path with `lstat`
+before it and the descriptor with `fstat` after it, and the walk enters no junction (TASK 131 R2).
 """
 from __future__ import annotations
 
@@ -63,7 +66,7 @@ LISTED = ("INBOUND", "REFUSED", "UNREADABLE", "SKIPPED")
 
 
 class InboundError(Exception):
-    """An operand, git, `<rev>` or the platform: nothing was written (exit 2)."""
+    """An operand, git or `<rev>`: nothing was written (exit 2)."""
 
 
 class InboundRecord(NamedTuple):
@@ -168,9 +171,22 @@ def _walk(root, unreadable):
         rel = os.path.relpath(exc.filename or root, root).replace(os.sep, "/")
         unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "", exc.strerror or str(exc)))
 
+    def entered(dirpath, name):
+        """TASK 131 R2.5: `os.walk` enters a junction; the walk enters no directory link, and no
+        directory whose `lstat` fails, which it records as unreadable."""
+        path = os.path.join(dirpath, name)
+        try:
+            return not _is_link(os.lstat(path))
+        except OSError as exc:
+            rel = os.path.relpath(path, root).replace(os.sep, "/")
+            unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "",
+                                            exc.strerror or str(exc)))
+            return False
+
     found = []
     for dirpath, dirnames, filenames in os.walk(root, onerror=failed):
         dirnames[:] = sorted(d for d in dirnames if d not in WALK_SKIPS
+                             and entered(dirpath, d)
                              and not os.path.isfile(os.path.join(dirpath, d, "pyvenv.cfg")))
         for name in filenames:
             rel = os.path.relpath(os.path.join(dirpath, name), root)
@@ -178,10 +194,68 @@ def _walk(root, unreadable):
     return sorted(found)
 
 
+#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
+#: R2.2). Held here, not read from a sibling (TASK 131 R2.6).
+_NAME_SURROGATE = 0x20000000
+
+
+class _LinkRefused(Exception):
+    """An open of TASK 131 R2.2 met a link or a swap; the text is the refusal."""
+
+
+def _is_link(st):
+    """True for a symbolic link, or a reparse point whose tag is a name surrogate (TASK 131 R1.3).
+
+    Both attributes of Windows are read with `getattr`: only Windows sets them. A junction is a
+    link; a cloud placeholder is not.
+    """
+    return stat.S_ISLNK(st.st_mode) or bool(
+        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
+
+
+def _open_nofollow(path, flags):
+    """A descriptor of `path` opened with `flags` and no link followed (TASK 131 R2.1, R2.2).
+
+    Where `O_NOFOLLOW` exists, the open of the base. Elsewhere, Windows among them: `os.lstat`, a
+    refusal of a link or of any entry that is not a regular file, `os.open` with `O_NONBLOCK` and
+    `O_BINARY` where they exist, and `os.fstat`, which must give the identity of the `lstat`. A
+    refusal raises `_LinkRefused`; an `OSError` of the calls passes to the caller.
+    """
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    if nofollow is not None:
+        return os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
+    before = os.lstat(path)
+    if _is_link(before):
+        raise _LinkRefused("is a link")
+    if not stat.S_ISREG(before.st_mode):
+        raise _LinkRefused("is not a regular file")
+    fd = os.open(path, flags | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
+    try:
+        st = os.fstat(fd)
+    except BaseException:
+        os.close(fd)
+        raise
+    if (st.st_dev, st.st_ino) != (before.st_dev, before.st_ino):
+        os.close(fd)
+        raise _LinkRefused("changed during the run")
+    return fd
+
+
+def _inside(path, root):
+    """True when `path` lies inside `root`; paths on two drives lie outside (TASK 131 R5.1)."""
+    try:
+        return os.path.commonpath([path, root]) == root
+    except ValueError:
+        return False
+
+
 def _read(path):
     """`(bytes, (st_dev, st_ino))` of a regular file, through a descriptor that follows no link."""
     try:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
+        fd = _open_nofollow(path, os.O_RDONLY)
+    except _LinkRefused as exc:
+        raise _Unreadable(str(exc)) from exc
     except OSError as exc:
         raise _Unreadable(exc.strerror or str(exc)) from exc
     try:
@@ -328,8 +402,11 @@ def _descriptor_path(fd):
     lookup, so no swap of a directory between two lookups by name can change it, as one can
     between `realpath` and `stat`. A failed lookup raises `OSError`. The same lookup as
     `rebase_links._descriptor_path`, held here since a copy of one module may run beside
-    the base of the other.
+    the base of the other. Where `os.name` is not `posix` it gives none: it imports no `fcntl`
+    and reads no `/proc` (TASK 131 R2.3).
     """
+    if os.name != "posix":
+        return None
     try:
         import fcntl
     except ImportError:
@@ -352,12 +429,14 @@ def _write_file(root, rel, original, ident, data, dry_run=False):
     path = os.path.join(root, rel)
     real_root = os.path.realpath(root)
     parent = os.path.realpath(os.path.dirname(path))
-    if os.path.commonpath([parent, real_root]) != real_root:
+    if not _inside(parent, real_root):
         return _Refusal("its directory resolves outside the working directory", False)
     if _rl._under_git(rel, root):
         return _Refusal("lies under .git/", False)
     try:
-        fd = os.open(path, os.O_RDWR | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
+        fd = _open_nofollow(path, os.O_RDWR)
+    except _LinkRefused as exc:
+        return _Refusal(str(exc), False)
     except OSError as exc:
         return _Refusal(f"cannot open it: {exc.strerror or exc}", False)
     written = 0
@@ -376,7 +455,7 @@ def _write_file(root, rel, original, ident, data, dry_run=False):
             return _Refusal("is not the file at its real path", False)
         if (now.st_dev, now.st_ino) != (st.st_dev, st.st_ino):
             return _Refusal("is not the file at its real path", False)
-        if os.path.commonpath([os.path.dirname(where), real_root]) != real_root:
+        if not _inside(os.path.dirname(where), real_root):
             return _Refusal("its directory resolves outside the working directory", False)
         if (st.st_dev, st.st_ino) != ident:
             return _Refusal("changed during the run", False)
@@ -456,7 +535,7 @@ def _scan_set(root, unreadable):
     if toplevel is None:
         return "walk", [p for p in _walk(root, unreadable) if p.endswith(".md")], ""
     real_root, real_top = os.path.realpath(root), os.path.realpath(toplevel)
-    if os.path.commonpath([real_root, real_top]) != real_top:
+    if not _inside(real_root, real_top):
         raise InboundError(f"{root} does not lie inside its git top level {toplevel}")
     paths = {unicodedata.normalize("NFC", p): p for p in _ls_files(root) if p.endswith(".md")}
     try:
@@ -488,10 +567,8 @@ def retarget_inbound(repo_root, task_archive, plan_archive=None, since=None, dry
         InboundResult(records, archived_slot_links, scan, since, exit_code).
 
     Raises:
-        InboundError: an operand, git, `<rev>` or the platform (exit 2); nothing was written.
+        InboundError: an operand, git or `<rev>` (exit 2); nothing was written.
     """
-    if not hasattr(os, "O_NOFOLLOW"):
-        raise InboundError("this platform has no O_NOFOLLOW")
     root = os.path.abspath(repo_root)
     digits, archives = _check_archives(root, task_archive, plan_archive)
     task_id = int(digits)

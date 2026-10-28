@@ -204,7 +204,9 @@ class TestSubTaskByH1:
     @staticmethod
     def _write(tasks_dir, name, h1):
         tasks_dir.mkdir(exist_ok=True)
-        (tasks_dir / name).write_text(f"{h1}\n\nBody.\n" if h1 else "No heading.\n")
+        # TASK 131 R6.6: the dashes of an H1 are not ASCII.
+        (tasks_dir / name).write_text(f"{h1}\n\nBody.\n" if h1 else "No heading.\n",
+                                      encoding="utf-8")
 
     def test_tc1_letter_suffixed_subtasks_are_not_a_parent(self, tmp_path):
         tasks_dir = tmp_path / "tasks"
@@ -329,6 +331,7 @@ class TestSubTaskByH1:
         assert not worker.is_alive(), "the scan blocked on a special file"
         return result[0]
 
+    @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
     def test_a_fifo_is_not_read(self, tmp_path):
         """A FIFO named like a task file does not block the scan; its name decides."""
         tasks_dir = tmp_path / "tasks"
@@ -336,6 +339,7 @@ class TestSubTaskByH1:
         os.mkfifo(tasks_dir / "task-033-05a-x.md")
         assert self._scan_with_timeout(tasks_dir) == [33]
 
+    @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no os.mkfifo")
     def test_a_fifo_with_data_is_not_read(self, tmp_path):
         """Only a regular file is read: a FIFO holding a sub-task H1 is classified by its name."""
         tasks_dir = tmp_path / "tasks"
@@ -703,6 +707,60 @@ class TestAllowCorrectionPolarity:
         assert payload["status"] == "generated"
         assert payload["used_id"] == "096"
         assert proc.returncode == 0
+
+
+class TestFirstH1Binary:
+    """TC-W24 (TASK 131 R2.7): the H1 scan opens its file with `O_BINARY` where it exists."""
+
+    def test_w24_the_h1_scan_passes_o_binary(self, tmp_path, monkeypatch):
+        import task_id_tool
+        used = 0
+        for name in dir(os):
+            if name.startswith("O_"):
+                used |= getattr(os, name)
+        bit = next(1 << b for b in range(30, 15, -1) if not used & (1 << b))
+        path = tmp_path / "task-033-05a-x.md"
+        path.write_bytes(b"# Task 033-05a: x\r\n\r\nBody.\r\n")
+        seen, real_open = [], os.open
+
+        def spy(name, flags, *args, **kwargs):
+            seen.append(flags)
+            return real_open(name, flags & ~bit, *args, **kwargs)
+        monkeypatch.setattr(os, "O_BINARY", bit, raising=False)
+        monkeypatch.setattr(os, "open", spy)
+        assert task_id_tool._first_h1(str(path)) == "# Task 033-05a: x"
+        assert seen and all(flags & bit for flags in seen), "the open drops O_BINARY"
+
+    def test_w42_a_unc_tasks_dir_is_refused(self):
+        # base-fail: the base lists any `--tasks-dir` (TASK 131 R12).
+        import ntpath
+        import posixpath
+        import types
+        from unittest import mock
+        import task_id_tool
+        unc = ("\\\\host\\share", "//host/share", "\\\\?\\C:\\x", "\\\\.\\pipe\\x",
+               "\\??\\UNC\\host\\share", "/??/UNC/host/share", "\\\\host\\\\share",
+               "\\\\\\host\\share", "\\\\host")
+        windows = types.SimpleNamespace(path=ntpath, sep="\\")
+        with mock.patch.object(task_id_tool, "os", windows):
+            for value in unc:
+                assert task_id_tool._unc(value), value
+            for value in ("C:\\repo\\docs\\tasks", "docs/tasks", "\\x"):
+                assert not task_id_tool._unc(value), value
+        with mock.patch.object(task_id_tool, "os", types.SimpleNamespace(path=posixpath, sep="/")):
+            for value in unc:
+                assert not task_id_tool._unc(value), f"no drives, no UNC path, on POSIX: {value}"
+
+    @pytest.mark.skipif(os.name != "nt", reason="a behaviour of Windows")
+    def test_w42_a_unc_tasks_dir_on_windows(self, tmp_path):
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "task_id_tool.py")
+        result = subprocess.run([sys.executable, script, "x", "--tasks-dir",
+                                 "\\\\localhost\\nowhere"], capture_output=True, text=True,
+                                cwd=tmp_path, timeout=60)
+        assert result.returncode == 1, result.stderr
+        report = json.loads(result.stdout)
+        assert report["status"] == "error"
+        assert "UNC or device path" in report["message"]
 
 
 if __name__ == "__main__":

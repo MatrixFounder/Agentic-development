@@ -76,7 +76,9 @@ import sys
 #   and inode, match the directory of the path as called or of the real path: a case-insensitive
 #   volume reaches the directory in other letter case (ARC-13, the rule of TASK 127 R6.1);
 # - no bytecode is written, and `.pyc` files are looked up under the null device, where none can
-#   exist, so a `.pyc` planted in `__pycache__/` is never read.
+#   exist, so a `.pyc` planted in `__pycache__/` is never read. Where `os.devnull` is a relative
+#   path, `nul` on Windows, they are looked up under the script's own real path instead: a regular
+#   file holds no directory, so no `.pyc` can exist there either (TASK 131 R4).
 # The module has no `from __future__` statement: at run time it imports `__future__`.
 if __name__ == "__main__":
     def _identity(path):
@@ -95,7 +97,10 @@ if __name__ == "__main__":
                    if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
                    and _identity(entry or os.curdir) not in _IDS]
     sys.dont_write_bytecode = True
-    sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
+    if os.path.isabs(os.devnull):
+        sys.pycache_prefix = os.path.join(os.devnull, "rebase-links-pycache")
+    else:
+        sys.pycache_prefix = os.path.join(os.path.realpath(__file__), "pycache")
 
 import posixpath  # noqa: E402
 import re  # noqa: E402
@@ -105,8 +110,9 @@ from typing import NamedTuple  # noqa: E402
 #: Schemes and forms that are never document-relative.
 _ABSOLUTE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//|/|#)", re.IGNORECASE)
 
-#: Fenced blocks: ``` or ~~~, any info string, closed by a fence at least as long.
-_FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*?^[ \t]{0,3}\1[ \t]*$",
+#: Fenced blocks: ``` or ~~~, any info string, closed by a fence at least as long. The closing
+#: line may end in CR LF, as Git for Windows checks a file out (TASK 131 R11.1).
+_FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*?^[ \t]{0,3}\1[ \t]*\r?$",
                     re.S | re.M)
 #: An unterminated fence: everything from the opener to end of document.
 _FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*\Z", re.S | re.M)
@@ -117,11 +123,12 @@ _FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[^\n]*\n.*\Z", re.S | re.M)
 #:      the mask desynchronized for the rest of the file.
 #:   2. A code span cannot contain a blank line -- a blank line ends the
 #:      paragraph. Without that bound an unbalanced backtick pairs with one
-#:      hundreds of lines later and blanks every real link in between.
+#:      hundreds of lines later and blanks every real link in between. A blank
+#:      line of CR LF counts too (TASK 131 R11.2).
 #: Measured on this corpus: (1)+(2) recover 3 real links in
 #: docs/design/095_workflow_loop_contract.md that were invisible to the tool,
 #: and keep masking all 13 links that are syntax examples inside code spans.
-_CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))*?(?<!`)\1(?!`)")
+_CODE_SPAN = re.compile(r"(?<!`)(`+)(?!`)(?:[^\n]|\n(?![ \t]*\r?\n))*?(?<!`)\1(?!`)")
 
 # NOTE: indented code blocks are deliberately NOT masked. In this corpus a
 # 4-or-more-space indent is overwhelmingly a lazy continuation of a list item,
@@ -261,7 +268,7 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
         denote_old = os.path.normpath(os.path.join(old_base, path))
         denote_new = os.path.normpath(os.path.join(new_base, path))
 
-        if os.path.commonpath([root, denote_old]) != root:
+        if not _inside(denote_old, root):
             records.append(LinkRecord(line, authored, denote_old,
                                       "ESCAPES_ROOT", authored))
             continue
@@ -283,7 +290,7 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
             if raw.startswith("<"):
                 new_target = f"<{new_target}>"
             records.append(LinkRecord(line, authored,
-                                      os.path.relpath(identity, root),
+                                      os.path.relpath(identity, root).replace(os.sep, "/"),
                                       "SLOT_RESOLVED", new_target))
             edits.append((start, end, new_target))
             continue
@@ -292,13 +299,13 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
         # the path here is what converts "dead" into "silently wrong".
         if os.path.relpath(denote_old, root) in known_slots:
             records.append(LinkRecord(line, authored,
-                                      os.path.relpath(denote_old, root),
+                                      os.path.relpath(denote_old, root).replace(os.sep, "/"),
                                       "UNMAPPED_SLOT", authored))
             continue
 
         resolved_old = os.path.exists(denote_old)
         resolved_new = os.path.exists(denote_new)
-        rel_old = os.path.relpath(denote_old, root)
+        rel_old = os.path.relpath(denote_old, root).replace(os.sep, "/")  # TASK 131 R5.3
 
         if not resolved_old:
             action = "ACCIDENTAL_RESOLVE" if resolved_new else "PRE_BROKEN"
@@ -495,8 +502,10 @@ def _refuse_operand(path):
     """
     cwd = os.getcwd()
     absolute = os.path.normpath(os.path.join(cwd, path))
-    if os.path.commonpath([absolute, cwd]) != cwd or absolute == cwd:
+    if not _inside(absolute, cwd) or absolute == cwd:
         return "lies outside the working directory"
+    if _names_stream(path):
+        return "names an alternate stream of a file"
     if _under_git(path, cwd):
         return "lies under .git/"
     if os.path.islink(path):
@@ -505,7 +514,7 @@ def _refuse_operand(path):
         return "has a second hard link"
     real_cwd = os.path.realpath(cwd)
     directory = os.path.realpath(os.path.dirname(os.path.join(cwd, path)))
-    if os.path.commonpath([directory, real_cwd]) != real_cwd:
+    if not _inside(directory, real_cwd):
         return "its directory resolves outside the working directory"
     if os.path.relpath(absolute, cwd).split(os.sep)[0] != "docs":
         return "does not lie under docs/"
@@ -516,6 +525,95 @@ def _refuse_operand(path):
 
 class _Unsafe(Exception):
     """An operand that the file mode refuses to read or to write (TASK 116 R7)."""
+
+
+#: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction (TASK 128
+#: R2.2). Held here, not read from a sibling (TASK 131 R2.6).
+_NAME_SURROGATE = 0x20000000
+
+
+def _is_link(st):
+    """True for a symbolic link, or a reparse point whose tag is a name surrogate (TASK 131 R1.3).
+
+    Both attributes of Windows are read with `getattr`: only Windows sets them. A junction is a
+    link; a cloud placeholder is not.
+    """
+    return stat.S_ISLNK(st.st_mode) or bool(
+        getattr(st, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        and getattr(st, "st_reparse_tag", 0) & _NAME_SURROGATE)
+
+
+def _open_nofollow(path, flags):
+    """A descriptor of `path` opened with `flags` and no link followed (TASK 131 R2.1, R2.2).
+
+    Where `O_NOFOLLOW` exists, the open of the base. Elsewhere, Windows among them: `os.lstat`, a
+    refusal of a link or of any entry that is not a regular file, `os.open` with `O_NONBLOCK` and
+    `O_BINARY` where they exist, and `os.fstat`, which must give the identity of the `lstat`. An
+    `OSError` of the calls passes to the caller.
+    """
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    if nofollow is not None:
+        return os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
+    before = os.lstat(path)
+    if _is_link(before):
+        raise _Unsafe("is a link")
+    if not stat.S_ISREG(before.st_mode):
+        raise _Unsafe("is not a regular file")
+    fd = os.open(path, flags | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
+    try:
+        st = os.fstat(fd)
+    except BaseException:
+        os.close(fd)
+        raise
+    if (st.st_dev, st.st_ino) != (before.st_dev, before.st_ino):
+        os.close(fd)
+        raise _Unsafe("changed during the run")
+    return fd
+
+
+def _inside(path, root):
+    """True when `path` lies inside `root`; paths on two drives lie outside (TASK 131 R5.1)."""
+    try:
+        return os.path.commonpath([path, root]) == root
+    except ValueError:
+        return False
+
+
+def _leaves_tree(value):
+    """True when `--from` or `--to` leaves the working directory (TASK 116 R8.6, TASK 131 R5.2).
+
+    A value leaves it when it is absolute, has a drive, starts with a separator, or starts with
+    `..` once normalised.
+    """
+    return (os.path.isabs(value) or bool(os.path.splitdrive(value)[0])
+            or value.startswith(("/", os.sep))
+            or os.path.normpath(value).split(os.sep)[0] == "..")
+
+
+def _names_stream(path):
+    """True where paths have drives and `path` holds `:` after its drive (TASK 131 R5.5).
+
+    On NTFS such a colon names an alternate data stream of the file before it.
+    """
+    return bool(os.path.splitdrive("c:")[0]) and ":" in os.path.splitdrive(path)[1]
+
+
+def _unc(value):
+    """True where paths have drives and `value` is a UNC or device path (TASK 131 R12.1).
+
+    Such a path starts with two separators, as `\\\\host\\share`, `\\\\?\\` and `\\\\.\\` do, or
+    with `\\??\\`, as `\\??\\UNC\\host\\share` does. The check reads the text, each `/` as `\\`,
+    so it reaches no file system. It reads no drive of `value`: `splitdrive` gives none for
+    `\\??\\`.
+    """
+    text = value.replace("/", "\\")
+    return bool(os.path.splitdrive("c:")[0]) and text.startswith(("\\\\", "\\??\\"))
+
+
+def _emit(stream, line):
+    """Write `line` and a newline; text the stream cannot encode becomes backslash escapes."""
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    stream.write(line.encode(encoding, "backslashreplace").decode(encoding, "replace") + "\n")
 
 
 def _check_descriptor(fd, path, cwd):
@@ -543,7 +641,7 @@ def _check_descriptor(fd, path, cwd):
     except OSError:
         raise _Unsafe("is not the file at its real path") from None
     real_cwd = os.path.realpath(cwd)
-    if os.path.commonpath([os.path.dirname(where), real_cwd]) != real_cwd:
+    if not _inside(os.path.dirname(where), real_cwd):
         raise _Unsafe("its directory resolves outside the working directory")
     return st
 
@@ -553,8 +651,11 @@ def _descriptor_path(fd):
 
     `fcntl.F_GETPATH` gives it on darwin, and the link `/proc/self/fd/<fd>` on Linux. It is one
     lookup, so no swap of a directory between two lookups by name can change it, as one can
-    between `realpath` and `stat`. A failed lookup raises `OSError`.
+    between `realpath` and `stat`. A failed lookup raises `OSError`. Where `os.name` is not
+    `posix` it gives none: it imports no `fcntl` and reads no `/proc` (TASK 131 R2.3).
     """
+    if os.name != "posix":
+        return None
     try:
         import fcntl
     except ImportError:
@@ -568,11 +669,8 @@ def _descriptor_path(fd):
 
 def _open_checked(path, cwd, flags):
     """`(descriptor, fstat)` of `path` opened with `flags` and no link followed (TASK 116 R7.1)."""
-    nofollow = getattr(os, "O_NOFOLLOW", None)
-    if nofollow is None:
-        raise _Unsafe("this platform has no O_NOFOLLOW")
     try:
-        fd = os.open(path, flags | nofollow | getattr(os, "O_NONBLOCK", 0))
+        fd = _open_nofollow(path, flags)
     except OSError as exc:
         raise _Unsafe(f"cannot open it: {exc.strerror or exc}") from None
     try:
@@ -678,23 +776,24 @@ def _main(argv=None):
     args = ap.parse_args(argv)
 
     # TASK 116 R8.6: a rewritten link is built from these paths, so each stays in the tree.
-    if os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
+    # TASK 131 R12: a UNC path is refused before any call reaches the file system.
+    if _unc(args.repo_root):
+        problem = "--repo-root is a UNC or device path"
+    elif os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
         problem = "--repo-root is not the working directory"
     else:
         problem = next((f"{name} does not lie inside the working directory"
                         for name, value in (("--from", args.from_dir), ("--to", args.to_dir))
-                        if os.path.isabs(value)
-                        or os.path.normpath(value).split(os.sep)[0] == ".."), None)
+                        if _leaves_tree(value)), None)
     if problem:
-        print(json.dumps({"ok": False, "error": problem}), file=sys.stderr)
+        _emit(sys.stderr, json.dumps({"ok": False, "error": problem}))
         return 2
 
     slot_map = {}
     for pair in args.slot:
         if "=" not in pair:
-            print(json.dumps({"ok": False,
-                              "error": f"--slot expects SLOT=ARCHIVE, got {pair!r}"}),
-                  file=sys.stderr)
+            _emit(sys.stderr, json.dumps({"ok": False,
+                                          "error": f"--slot expects SLOT=ARCHIVE, got {pair!r}"}))
             return 2
         slot, archive = (part.strip() for part in pair.split("=", 1))
         # TASK 116 R8.1: the allow rule approves any argument, and ARCHIVE is written as a link.
@@ -706,7 +805,7 @@ def _main(argv=None):
         else:
             slot_map[slot] = archive
             continue
-        print(json.dumps({"ok": False, "error": f"--slot {pair!r}: {problem}"}), file=sys.stderr)
+        _emit(sys.stderr, json.dumps({"ok": False, "error": f"--slot {pair!r}: {problem}"}))
         return 2
 
     opened = []
@@ -724,7 +823,7 @@ def _file_mode(args, slot_map, opened):
     for path in args.files:
         reason = _refuse_operand(path) or _refuse_slot(path, slot_map)
         if reason:
-            print(json.dumps({"ok": False, "error": f"{path}: {reason}"}), file=sys.stderr)
+            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {reason}"}))
             return 2
 
     # TASK 116 R7.1: every operand is open and checked before any of them is read.
@@ -733,14 +832,18 @@ def _file_mode(args, slot_map, opened):
         try:
             fd, st = _open_checked(path, cwd, os.O_RDONLY)
         except _Unsafe as exc:
-            print(json.dumps({"ok": False, "error": f"{path}: {exc}"}), file=sys.stderr)
+            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {exc}"}))
             return 2
         opened.append((path, fd, st))
 
     report, warned, failed, pending = [], False, False, []
     for path, fd, st in opened:
         try:
-            text = _read_descriptor(fd).decode("utf-8")
+            try:
+                text = _read_descriptor(fd).decode("utf-8")
+            except UnicodeDecodeError:
+                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: is not UTF-8"}))
+                return 2
             new_text, records = rebase_document_links(text, args.from_dir, args.to_dir,
                                                       args.repo_root, slot_map)
             changed = new_text != text
@@ -748,32 +851,32 @@ def _file_mode(args, slot_map, opened):
             added = [r.line for r in records if r.action in _WROTE
                      and _adds_characters(r.authored, r.new_target)]
             if added:
-                print(json.dumps({"ok": False, "error": f"{path}:{added[0]}: a rewritten link "
-                                  "holds text that its authored link does not"}),
-                      file=sys.stderr)
+                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}:{added[0]}: a "
+                                              "rewritten link holds text that its authored "
+                                              "link does not"}))
                 return 2
             parts = [r.line for r in records if r.action in _WROTE and _adds_parts(r)]
             if parts:
-                print(json.dumps({"ok": False, "error": f"{path}:{parts[0]}: the path of a "
-                                  "rewritten link is not a tail of its authored link's"}),
-                      file=sys.stderr)
+                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}:{parts[0]}: the "
+                                              "path of a rewritten link is not a tail of its "
+                                              "authored link's"}))
                 return 2
             # Overlapping links are spliced one into the other: the text gains no character either.
             if _adds_characters(text, new_text):
-                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text holds a "
-                                  "character that the text did not"}), file=sys.stderr)
+                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: the rewritten "
+                                              "text holds a character that the text did not"}))
                 return 2
             # TASK 117 R3: a splice that adds no new character still changes the length.
             if len(new_text) != len(text) + sum(len(r.new_target) - len(r.authored)
                                                 for r in records if r.action in _WROTE):
-                print(json.dumps({"ok": False, "error": f"{path}: the rewritten text is not the "
-                                  "text with each rewritten link replaced"}), file=sys.stderr)
+                _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: the rewritten "
+                                              "text is not the text with each rewritten link "
+                                              "replaced"}))
                 return 2
             if changed and not args.dry_run:
                 _write_checked(path, cwd, st, new_text.encode("utf-8"))
         except (OSError, _Unsafe) as exc:
-            print(json.dumps({"ok": False, "error": f"{path}: {exc}"}),
-                  file=sys.stderr)
+            _emit(sys.stderr, json.dumps({"ok": False, "error": f"{path}: {exc}"}))
             return 2
 
         # Conservation law: every file denoted before the move is denoted after.
@@ -815,23 +918,23 @@ def _file_mode(args, slot_map, opened):
             warned = True
 
     if args.json:
-        print(json.dumps({"ok": not failed, "files": report,
-                          "slot_targets_pending": pending},
-                         ensure_ascii=False, indent=1))
+        _emit(sys.stdout, json.dumps({"ok": not failed, "files": report,
+                                      "slot_targets_pending": pending},
+                                     ensure_ascii=True, indent=1))
     else:
         for entry in report:
             for r in entry["links"]:
                 if r["action"] == "UNCHANGED":
                     continue
-                print(f"[{r['action']}] {entry['file']}:{r['line']}  "
+                _emit(sys.stdout, f"[{r['action']}] {entry['file']}:{r['line']}  "
                       f"{r['authored']}"
                       + (f"  ->  {r['new_target']}" if r["action"] in _WROTE
                          else ""))
         n = sum(1 for e in report for r in e["links"] if r["action"] in _WROTE)
         w = sum(1 for e in report for r in e["links"] if r["action"] in ACTIONS_WARN)
         for p in pending:
-            print(f"[SLOT_PENDING] {p}  (declared identity, not yet on disk)")
-        print(f"{n} rewritten / {w} needing review"
+            _emit(sys.stdout, f"[SLOT_PENDING] {p}  (declared identity, not yet on disk)")
+        _emit(sys.stdout, f"{n} rewritten / {w} needing review"
               + (" (dry run)" if args.dry_run else ""))
 
     if failed:

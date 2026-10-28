@@ -13,10 +13,10 @@ skill directory at any `--path` or path-shaped name. This file pins:
   exit 2 and no write, also through a `..` after a link; a file whose directory link resolves
   inside is rewritten (``TC-G13`` to ``TC-G15``, TASK 116 R1.1);
 * both modes write through the descriptor they checked: a directory swapped around the open or
-  moved out, a file swapped for a link, a second hard link, a file replaced after the read, a FIFO
-  and a platform with no `O_NOFOLLOW` are refused with no write, and so are three swaps around the
-  identity check; a failed write leaves a prefix of the new text, and no descriptor stays open
-  (``TC-G16`` to ``TC-G27``, TASK 116 R7);
+  moved out, a file swapped for a link, a second hard link, a file replaced after the read and a
+  FIFO are refused with no write, and so are three swaps around the identity check; a failed
+  write leaves a prefix of the new text, and no descriptor stays open (``TC-G16`` to ``TC-G27``,
+  TASK 116 R7). A platform with no `O_NOFOLLOW` opens through the check of TASK 131 R2.2;
 * `rebase_links.py` takes a slot map only for `docs/TASK.md` and `docs/PLAN.md`, each with an
   archive of its form, and only a markdown operand under `docs/`. Its `--repo-root`, `--from` and
   `--to` stay in the tree. A rewrite adds to a link no character outside letters, digits and
@@ -27,11 +27,20 @@ skill directory at any `--path` or path-shaped name. This file pins:
   planted beside the script runs (``TC-G8`` to ``TC-G12``, TASK 115), through a path in other
   letter case either (ARC-13, TASK 128);
 * `init_skill.py` refuses a skill directory outside the working directory or under `.git/`, with
-  exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``).
+  exit 1 and nothing created (``TC-G4``, ``TC-G5``); a directory inside is created (``TC-G6``);
+* on a platform without `O_NOFOLLOW`, Windows among them, the file mode opens with a check before
+  and after the open, refuses a junction, keeps every byte, writes any text in any stream
+  encoding, refuses an operand that is not UTF-8, finds no `.pyc` under a relative null device,
+  treats paths on two drives as outside, and keeps its own helpers (``TC-W11`` to ``TC-W18``,
+  ``TC-W24``, ``TC-W26``, ``TC-W27``, TASK 131).
+
+A test that makes a symbolic link skips where this process cannot make one, and a test whose
+premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5, D22).
 
 The working directory is the `realpath` of a temporary root: `os.getcwd()` returns the resolved
 path on darwin, where `tempfile` returns `/var/...`.
 """
+import ast
 import builtins
 import contextlib
 import errno
@@ -39,12 +48,17 @@ import gc
 import importlib.util
 import io
 import json
+import ntpath
 import os
+import posixpath
+import py_compile
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -61,6 +75,9 @@ LINKED = "[a](ARCHITECTURE.md)\n"
 REBASED = "[a](../ARCHITECTURE.md)\n"
 SUBTASK = "# Task 112-01: a\n\n[docs/TASK.md](../TASK.md)\n"
 RETARGETED = "# Task 112-01: a\n\n[task-112](task-112-x.md)\n"
+UNC_PATHS = ("\\\\host\\share", "//host/share", "\\\\?\\C:\\x", "\\\\.\\pipe\\x",
+             "\\??\\UNC\\host\\share", "/??/UNC/host/share", "\\\\host\\\\share",
+             "\\\\\\host\\share", "\\\\host")  # TASK 131 R12.1, TC-W42
 
 
 def _tmp(case):
@@ -123,6 +140,80 @@ def _descriptor_path_known():
     return hasattr(fcntl, "F_GETPATH") or os.path.isdir("/proc/self/fd")
 
 
+def _can_symlink():
+    """True where this process can make a symbolic link; Windows asks for a privilege."""
+    probe = Path(tempfile.mkdtemp())
+    try:
+        (probe / "link").symlink_to(probe / "target")
+        return True
+    except OSError:
+        return False
+    finally:
+        shutil.rmtree(probe, ignore_errors=True)
+
+
+NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a symbolic link")
+WINDOWS_ONLY = unittest.skipUnless(os.name == "nt", "a behaviour of Windows")
+#: TASK 131 R6.5: a premise of POSIX that Windows does not hold.
+POSIX_PREMISE = os.name == "nt"
+#: The characters that a name on NTFS cannot hold.
+NTFS_REFUSES = set('<>:"|?*') if os.name == "nt" else set()
+#: The reparse tag of a junction (TASK 128 R2.2).
+JUNCTION = 0xA0000003
+
+
+def _o_nofollow_refusal(posix):
+    """The refusal of an open that meets a swap: `posix`, or that of TASK 131 R2.2."""
+    return posix if hasattr(os, "O_NOFOLLOW") else "changed during the run"
+
+
+@contextlib.contextmanager
+def _no_o_nofollow():
+    """`os.O_NOFOLLOW` deleted, as on Windows, for the time of the block."""
+    saved = getattr(os, "O_NOFOLLOW", None)
+    if saved is not None:
+        del os.O_NOFOLLOW
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.O_NOFOLLOW = saved
+
+
+def _fake_stat(real, **extra):
+    """The fields of `real`, with the attributes of Windows that `extra` names."""
+    fields = {name: getattr(real, name) for name in dir(real) if name.startswith("st_")}
+    fields.setdefault("st_file_attributes", 0)
+    fields.setdefault("st_reparse_tag", 0)
+    fields.update(extra)
+    return types.SimpleNamespace(**fields)
+
+
+def _lstat_reporting(paths, **extra):
+    """A patch of `os.lstat` that reports `extra` for each path of `paths`."""
+    real = os.lstat
+
+    def lstat(path, *args, **kwargs):
+        st = real(path, *args, **kwargs)
+        return _fake_stat(st, **extra) if os.fspath(path) in paths else st
+    return mock.patch("os.lstat", side_effect=lstat)
+
+
+def _unused_open_bit():
+    """A bit that no `os.O_*` flag of this platform uses."""
+    used = 0
+    for name in dir(os):
+        if name.startswith("O_"):
+            used |= getattr(os, name)
+    return next(1 << bit for bit in range(30, 15, -1) if not used & (1 << bit))
+
+
+def _junction(link, target):
+    """A junction at `link` to the directory `target` (Windows only), as CPython's tests make it."""
+    import _winapi
+    _winapi.CreateJunction(str(target), str(link))
+
+
 class TestRebaseLinksGuard(unittest.TestCase):
     """TC-G1 to TC-G3, TC-G7, TC-G13 to TC-G18, TC-G20 to TC-G30 (TASK 116), TC-G31 (TASK 117)."""
 
@@ -146,6 +237,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertIn("lies outside the working directory", result.stderr)
         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
 
+    @NEEDS_SYMLINK
     def test_g2_a_link_a_second_hard_link_or_git(self):
         victim = self.outside / "victim.md"
         victim.write_text(LINKED, encoding="utf-8")
@@ -171,6 +263,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertEqual(git.read_text(encoding="utf-8"), LINKED)
         self.assertEqual(hook.read_text(encoding="utf-8"), LINKED)
 
+    @NEEDS_SYMLINK
     def test_g2_from_a_subdirectory_and_through_a_firmlink(self):
         (self.root / ".git" / "hooks").mkdir(parents=True)
         hook = self.root / ".git" / "hooks" / "y.md"
@@ -207,6 +300,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
 
+    @NEEDS_SYMLINK
     def test_g13_a_directory_that_resolves_outside(self):
         # base-fail: the base writes through the directory link.
         victim = self.outside / "victim.md"
@@ -217,6 +311,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertIn("resolves outside", result.stderr)
         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
 
+    @NEEDS_SYMLINK
     def test_g14_a_directory_link_that_resolves_inside(self):
         moved = self.root / "docs" / "tasks" / "t.md"
         moved.write_text(LINKED, encoding="utf-8")
@@ -226,6 +321,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
 
+    @NEEDS_SYMLINK
+    @unittest.skipIf(POSIX_PREMISE, "Windows resolves the `..` before the link (TASK 131 D22)")
     def test_g15_a_parent_segment_after_a_directory_link(self):
         # base-fail: the kernel resolves the link before the `..`; a lexical check does not.
         victim = self.outside / "victim.md"
@@ -261,6 +358,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
             os.chdir(cwd)
         return code, err.getvalue()
 
+    @NEEDS_SYMLINK
     def test_g16_a_directory_swapped_around_the_open(self):
         # base-fail: the base reads and writes the outside file through the swapped directory.
         inside = self.root / "docs" / "x"
@@ -282,10 +380,11 @@ class TestRebaseLinksGuard(unittest.TestCase):
             return opener
         code, err = self.inprocess("docs/x/t.md", hooks)
         self.assertEqual(code, 2, err)
-        self.assertIn("is not the file at its real path", err)
+        self.assertIn(_o_nofollow_refusal("is not the file at its real path"), err)
         self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
         self.assertEqual((inside / "t.md").read_text(encoding="utf-8"), LINKED)
 
+    @NEEDS_SYMLINK
     def test_g17_a_file_swapped_for_a_link(self):
         # base-fail: the base follows the planted link. The inside link needs O_NOFOLLOW itself.
         other = self.root / "docs" / "other.md"
@@ -304,7 +403,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
                     return opener
                 code, err = self.inprocess(f"docs/tasks/{name}.md", hooks)
                 self.assertEqual(code, 2, err)
-                self.assertIn("cannot open it", err)
+                self.assertIn(_o_nofollow_refusal("cannot open it"), err)
                 self.assertEqual(target.read_text(encoding="utf-8"), LINKED)
 
     def test_g18_a_second_hard_link_before_the_open(self):
@@ -343,6 +442,7 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertEqual(alias.read_text(encoding="utf-8"), LINKED)
         self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
 
+    @unittest.skipIf(POSIX_PREMISE, "Windows refuses to replace a file that a descriptor holds")
     def test_g21_a_file_replaced_after_the_read(self):
         # base-fail: the base writes the rebased old text over the new file.
         moved = self.root / "docs" / "tasks" / "t.md"
@@ -366,23 +466,14 @@ class TestRebaseLinksGuard(unittest.TestCase):
         self.assertEqual(moved.read_text(encoding="utf-8"), fresh)
 
     def test_g22_a_platform_with_no_o_nofollow(self):
-        # base-fail: the base file mode needs no O_NOFOLLOW, so it rewrites the file.
+        # base-fail: the base refuses the platform (TASK 131 R2.4).
         moved = self.root / "docs" / "tasks" / "t.md"
         moved.write_text(LINKED, encoding="utf-8")
+        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=_no_o_nofollow)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(moved.read_text(encoding="utf-8"), REBASED)
 
-        @contextlib.contextmanager
-        def no_o_nofollow():
-            saved = os.O_NOFOLLOW
-            del os.O_NOFOLLOW
-            try:
-                yield
-            finally:
-                os.O_NOFOLLOW = saved
-        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=no_o_nofollow)
-        self.assertEqual(code, 2, err)
-        self.assertIn("this platform has no O_NOFOLLOW", err)
-        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
-
+    @NEEDS_SYMLINK
     def test_g23_a_directory_moved_out_and_linked_back(self):
         # base-fail: the file keeps its inode, so only the directory check refuses it.
         inside = self.root / "docs" / "x"
@@ -563,9 +654,13 @@ class TestRebaseLinksGuard(unittest.TestCase):
         slot = ["--slot", "docs/TASK.md=docs/tasks/task-116-x.md"]
         with_slot = LINKED + "[t](TASK.md)\n"
         for name in ("x y", "a:b", "a)b", "plain-words"):
+            if NTFS_REFUSES & set(name):
+                continue                        # TASK 131 R6.5: a name that NTFS refuses
             (docs / name).mkdir()
             (docs / name / "ARCHITECTURE.md").write_text("# a\n", encoding="utf-8")
         for name in ("a b/x y.md", "m n/a.md", 'href="x.md"', "x.md"):
+            if NTFS_REFUSES & set(name):
+                continue
             (docs / name).parent.mkdir(exist_ok=True)
             (docs / name).write_text("# a\n", encoding="utf-8")
         text_held = "holds text that its authored link does not"
@@ -601,6 +696,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
             ("docs", "docs/tasks", ["--dry-run"], '[a](href="x.md")\n',
              "the rewritten text holds a character that the text did not"))
         for from_dir, to_dir, extra, text, reason in refused:
+            if NTFS_REFUSES & set(from_dir) or (NTFS_REFUSES and 'href="' in text):
+                continue                        # its name, or the file it splices, NTFS refuses
             with self.subTest(from_dir=from_dir, to_dir=to_dir, extra=extra, text=text):
                 moved.write_text(text, encoding="utf-8")
                 result = _run(REBASE, ["docs/tasks/t.md", "--from", from_dir, "--to", to_dir,
@@ -634,6 +731,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
         (docs / "plans").mkdir()
         (docs / "tasks" / "task-116-x.md").write_text("# Task 116: x\n", encoding="utf-8")
         for name in ("two/one/one/two/three.md", "one/one/a.md", "](x", "x", 'x">', "a/c.md"):
+            if NTFS_REFUSES & set(name):
+                continue                        # TASK 131 R6.5: a name that NTFS refuses
             (docs / name).parent.mkdir(parents=True, exist_ok=True)
             (docs / name).write_text("# a\n", encoding="utf-8")
         other = "names another <ID>-<slug> than its name"
@@ -660,6 +759,8 @@ class TestRebaseLinksGuard(unittest.TestCase):
             ("tasks/t.md", "docs", "docs/tasks", [], '<a href="](x">\n', splice),
             ("tasks/t.md", "docs", "docs/tasks", ["--dry-run"], "[r]: ](x\n", splice))
         for operand, from_dir, to_dir, extra, text, reason in refused:
+            if NTFS_REFUSES and text.startswith("<a href="):
+                continue                        # the spliced file's name NTFS refuses
             with self.subTest(operand=operand, from_dir=from_dir, extra=extra, text=text):
                 moved = docs / operand
                 moved.write_text(text, encoding="utf-8")
@@ -686,6 +787,342 @@ class TestRebaseLinksGuard(unittest.TestCase):
                                        *extra], self.root)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(moved.read_text(encoding="utf-8"), rebased)
+
+    # --- TASK 131: a platform without O_NOFOLLOW, Windows among them ---------------------------
+
+    def test_w11_without_o_nofollow_a_swapped_link_is_refused(self):
+        # base-fail: the base refuses the platform before it opens the operand.
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text(LINKED, encoding="utf-8")
+        victim = self.outside / "victim.md"
+        victim.write_text(LINKED, encoding="utf-8")
+
+        def hooks(real):
+            def opener(path, *args, **kwargs):
+                if os.path.abspath(path) == str(moved) and not moved.is_symlink():
+                    moved.unlink()
+                    moved.symlink_to(victim)
+                return real(path, *args, **kwargs)
+            return opener
+        if not _can_symlink():
+            self.skipTest("this process cannot make a symbolic link")
+        code, err = self.inprocess("docs/tasks/t.md", hooks, before=_no_o_nofollow)
+        self.assertEqual(code, 2, err)
+        self.assertIn("changed during the run", err)
+        self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
+
+    def test_w11_without_o_nofollow_a_reparse_tag_is_a_link(self):
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text(LINKED, encoding="utf-8")
+
+        @contextlib.contextmanager
+        def tagged():
+            with _no_o_nofollow(), _lstat_reporting(
+                    {"docs/tasks/t.md"}, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                    st_reparse_tag=JUNCTION):
+                yield
+        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=tagged)
+        self.assertEqual(code, 2, err)
+        self.assertIn("is a link", err)
+        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+
+    @WINDOWS_ONLY
+    def test_w12_a_junction_at_the_operands_directory(self):
+        victim = self.outside / "victim.md"
+        victim.write_text(LINKED, encoding="utf-8")
+        _junction(self.root / "docs" / "out", self.outside)
+        self.addCleanup(os.rmdir, self.root / "docs" / "out")
+        result = self.rebase("docs/out/victim.md")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("resolves outside", result.stderr)
+        self.assertEqual(victim.read_text(encoding="utf-8"), LINKED)
+
+    def test_w13_the_file_mode_keeps_every_byte(self):
+        moved = self.root / "docs" / "tasks" / "t.md"
+        text = b"[a](ARCHITECTURE.md)\r\nline\x1a after the byte\r\nlast\n"
+        rebased = text.replace(b"(ARCHITECTURE.md)", b"(../ARCHITECTURE.md)")
+        moved.write_bytes(text)
+        result = self.rebase("docs/tasks/t.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(moved.read_bytes(), rebased)
+        moved.write_bytes(text)
+        code, err = self.inprocess("docs/tasks/t.md", lambda real: real, before=_no_o_nofollow)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(moved.read_bytes(), rebased)
+
+    def rebase_env(self, args, **env):
+        return subprocess.run([sys.executable, str(REBASE), *args], cwd=self.root,
+                              capture_output=True, timeout=60, env=dict(os.environ, **env))
+
+    def test_w14_any_stream_encoding_and_ascii_json(self):
+        # base-fail: the base prints the target with `print`, after the write, and its JSON is not
+        # ASCII (TASK 131 R3).
+        notes = self.root / "docs" / "notes"
+        notes.mkdir()
+        (notes / "n\u2192.md").write_text("# n\n", encoding="utf-8")
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text("[a](notes/n\u2192.md)\n", encoding="utf-8")
+        result = self.rebase_env(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks"],
+                                 PYTHONIOENCODING="ascii")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(b"\\u2192", result.stdout)
+        result.stdout.decode("ascii")
+        result.stderr.decode("ascii")
+        moved.write_text("[a](notes/n\u2192.md)\n", encoding="utf-8")
+        result = self.rebase_env(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
+                                  "--json"], PYTHONIOENCODING="utf-8")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(all(byte < 128 for byte in result.stdout), "the JSON is not ASCII")
+        report = json.loads(result.stdout)
+        self.assertEqual(report["files"][0]["links"][0]["authored"], "notes/n\u2192.md")
+
+    def test_w15_an_operand_that_is_not_utf_8(self):
+        # base-fail: the base ends in a traceback, exit 1.
+        moved = self.root / "docs" / "tasks" / "t.md"
+        data = "[a](ARCHITECTURE.md)\n# \u0422\u0417\n".encode("cp1251")
+        moved.write_bytes(data)
+        result = self.rebase("docs/tasks/t.md")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stderr.strip().splitlines()[-1])["error"],
+                         "docs/tasks/t.md: is not UTF-8")
+        self.assertEqual(moved.read_bytes(), data)
+
+    def test_w17_two_drives_are_outside(self):
+        # base-fail: a ValueError of `commonpath` ends the base in a traceback (TASK 131 R5.1).
+        module = _module(REBASE, "rebase_links_under_test")
+        same_drive = ValueError("Paths don't have the same drive")
+        with mock.patch("os.path.commonpath", side_effect=same_drive):
+            _text, records = module.rebase_document_links("[a](x.md)\n", "docs", "docs/tasks",
+                                                          str(self.root))
+        self.assertEqual([r.action for r in records], ["ESCAPES_ROOT"])
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
+        for call, reason in ((1, "lies outside the working directory"),
+                             (2, "its directory resolves outside the working directory")):
+            with self.subTest(call=call):
+                calls, real = [], os.path.commonpath
+
+                def commonpath(paths, call=call, calls=calls, real=real):
+                    calls.append(paths)
+                    if len(calls) == call:
+                        raise same_drive
+                    return real(paths)
+                with mock.patch("os.path.commonpath", side_effect=commonpath):
+                    self.assertEqual(module._refuse_operand("docs/tasks/t.md"), reason)
+        fd = os.open("docs/tasks/t.md", os.O_RDONLY)
+        self.addCleanup(os.close, fd)
+        with mock.patch("os.path.commonpath", side_effect=same_drive):
+            with self.assertRaises(module._Unsafe) as caught:
+                module._check_descriptor(fd, "docs/tasks/t.md", str(self.root))
+        self.assertEqual(str(caught.exception),
+                         "its directory resolves outside the working directory")
+
+    @WINDOWS_ONLY
+    def test_w17_an_operand_and_a_link_on_another_drive(self):
+        drive = os.path.splitdrive(str(self.root))[0].upper()
+        other = "Y:" if drive == "Z:" else "Z:"
+        result = self.rebase(f"{other}/docs/x.md")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("lies outside the working directory", result.stderr)
+        module = _module(REBASE, "rebase_links_under_test")
+        _text, records = module.rebase_document_links("[a](\\\\server\\share\\x.md)\n", "docs",
+                                                      "docs/tasks", str(self.root))
+        self.assertEqual([r.action for r in records], ["ESCAPES_ROOT"])
+
+    def test_w18_from_and_to_with_a_drive_or_a_root(self):
+        # base-fail: the base passes a drive with no root, and from Python 3.13 a root with no
+        # drive (TASK 131 R5.2).
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text(LINKED, encoding="utf-8")
+        for option in ("--from", "--to"):
+            with self.subTest(option=option):
+                args = {"--from": "docs", "--to": "docs/tasks"}
+                args[option] = "/x"
+                result = _run(REBASE, ["docs/tasks/t.md", "--from", args["--from"], "--to",
+                                       args["--to"]], self.root)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn(f"{option} does not lie inside the working directory",
+                              result.stderr)
+        module = _module(REBASE, "rebase_links_under_test")
+        windows = types.SimpleNamespace(path=ntpath, sep="\\")
+        with mock.patch.object(module, "os", windows):
+            for value, leaves in (("\\x", True), ("/x", True), ("D:x", True), ("D:\\x", True),
+                                  ("docs", False), ("docs\\tasks", False)):
+                with self.subTest(value=value):
+                    self.assertEqual(module._leaves_tree(value), leaves)
+        self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+
+    @WINDOWS_ONLY
+    def test_w18_a_drive_or_a_root_on_windows(self):
+        for value in ("\\x", "D:x"):
+            with self.subTest(value=value):
+                result = _run(REBASE, ["docs/tasks/t.md", "--from", value, "--to", "docs/tasks"],
+                              self.root)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("--from does not lie inside the working directory", result.stderr)
+
+    def test_w24_each_open_of_the_file_mode_passes_o_binary(self):
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text(LINKED, encoding="utf-8")
+        bit, flags_seen = _unused_open_bit(), []
+
+        def hooks(real):
+            if real is not os.open:
+                return real
+
+            def opener(path, flags, *args, **kwargs):
+                if os.path.abspath(path) == str(moved):
+                    flags_seen.append(flags)
+                return real(path, flags & ~bit, *args, **kwargs)
+            return opener
+
+        @contextlib.contextmanager
+        def binary():
+            with _no_o_nofollow(), mock.patch.object(os, "O_BINARY", bit, create=True):
+                yield
+        code, err = self.inprocess("docs/tasks/t.md", hooks, before=binary)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(len(flags_seen), 2, "the read and the write each open the file")
+        self.assertTrue(all(flags & bit for flags in flags_seen), "an open drops O_BINARY")
+        nonblock = getattr(os, "O_NONBLOCK", 0)
+        self.assertTrue(all(flags & nonblock == nonblock for flags in flags_seen),
+                        "an open drops O_NONBLOCK")
+
+    def test_w26_each_module_keeps_its_own_helpers(self):
+        # TASK 131 R2.6: a staged copy of one module runs beside the base of another (D12).
+        for path, names in ((ARCHIVE_MOVE, {"_is_link"}),
+                            (REBASE, {"_is_link", "_open_nofollow"}),
+                            (SLOT, {"_is_link", "_open_nofollow"})):
+            with self.subTest(module=path.name):
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+                self.assertLessEqual(names, defined)
+                borrowed = [node.attr for node in ast.walk(tree)
+                            if isinstance(node, ast.Attribute) and node.attr in names]
+                self.assertEqual(borrowed, [], "a helper read from another module")
+
+    @WINDOWS_ONLY
+    def test_w27_a_link_written_with_a_backslash(self):
+        (self.root / "x.md").write_text("# x\n", encoding="utf-8")
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text("[a](..\\x.md)\n", encoding="utf-8")
+        result = self.rebase("docs/tasks/t.md")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("docs/tasks/t.md:1", result.stderr)
+        self.assertEqual(moved.read_text(encoding="utf-8"), "[a](..\\x.md)\n")
+
+    # --- the fix of round 1 of stage 2 (TASK 131 D24 to D26) -----------------------------------
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "no os.mkfifo")
+    def test_w37_without_o_nofollow_a_fifo_is_never_opened(self):
+        fifo = self.root / "docs" / "tasks" / "f.md"
+        os.mkfifo(fifo)
+        opened = []
+
+        def hooks(real):
+            if real is not os.open:
+                return real
+
+            def opener(path, *args, **kwargs):
+                if os.path.abspath(path) == str(fifo):
+                    opened.append(path)             # the open would block: fail it instead
+                    raise OSError(errno.EAGAIN, "the test refuses to open the FIFO")
+                return real(path, *args, **kwargs)
+            return opener
+        code, err = self.inprocess("docs/tasks/f.md", hooks, before=_no_o_nofollow)
+        self.assertEqual(code, 2, err)
+        self.assertIn("is not a regular file", err)
+        self.assertEqual(opened, [], "the FIFO was opened")
+
+    def test_w38_no_descriptor_path_and_no_fcntl_off_posix(self):
+        imported, real_import = [], builtins.__import__
+
+        def spy(name, *args, **kwargs):
+            imported.append(name)
+            return real_import(name, *args, **kwargs)
+        for path, name in ((REBASE, "rebase_links_under_test"), (SLOT, "slot_links_under_test")):
+            with self.subTest(module=path.name):
+                module = _module(path, name)
+                imported.clear()
+                with mock.patch.object(os, "name", "nt"), \
+                        mock.patch("builtins.__import__", side_effect=spy):
+                    self.assertIsNone(module._descriptor_path(0))
+                self.assertNotIn("fcntl", imported)
+
+    def test_w39_an_operand_that_names_a_stream(self):
+        module = _module(REBASE, "rebase_links_under_test")
+        windows = types.SimpleNamespace(path=ntpath, sep="\\")
+        with mock.patch.object(module, "os", windows):
+            self.assertTrue(module._names_stream("docs/a.md:b.md"))
+            self.assertTrue(module._names_stream("docs/tasks:b.md"))
+            self.assertFalse(module._names_stream("C:\\repo\\docs\\a.md"))
+            self.assertFalse(module._names_stream("docs/tasks/t.md"))
+        with mock.patch.object(module, "os", types.SimpleNamespace(path=posixpath, sep="/")):
+            self.assertFalse(module._names_stream("docs/a.md:b.md"),
+                             "a colon names no stream where paths have no drives")
+        # The file mode asks the check of each operand.
+        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        with mock.patch.object(module, "_names_stream", return_value=True):
+            self.assertEqual(module._refuse_operand("docs/tasks/t.md"),
+                             "names an alternate stream of a file")
+
+    def test_w41_a_crlf_document_with_a_fence_and_a_code_span(self):
+        # base-fail: at the base no fence closes on CR LF, so the links after it stay.
+        moved = self.root / "docs" / "tasks" / "t.md"
+        text = (b"[a](ARCHITECTURE.md)\r\n\r\n```\r\n[x](ARCHITECTURE.md)\r\n```\r\n\r\n"
+                b"[b](ARCHITECTURE.md)\r\n\r\n`span\r\n\r\n[c](ARCHITECTURE.md) and `x`\r\n")
+        moved.write_bytes(text)
+        result = self.rebase("docs/tasks/t.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        rebased = moved.read_bytes()
+        self.assertEqual(rebased.count(b"(../ARCHITECTURE.md)"), 3, rebased)
+        self.assertIn(b"```\r\n[x](ARCHITECTURE.md)\r\n```", rebased)
+
+    def test_w42_a_unc_repo_root_is_refused_before_any_call(self):
+        # base-fail: the base resolves `--repo-root` with `os.path.realpath` first (TASK 131 R12).
+        module = _module(REBASE, "rebase_links_under_test")
+        windows = types.SimpleNamespace(path=ntpath, sep="\\")
+        with mock.patch.object(module, "os", windows):
+            for value in UNC_PATHS:
+                with self.subTest(value=value):
+                    self.assertTrue(module._unc(value))
+            for value in ("C:\\repo", "docs", "\\x", "."):
+                with self.subTest(value=value):
+                    self.assertFalse(module._unc(value))
+        with mock.patch.object(module, "os", types.SimpleNamespace(path=posixpath, sep="/")):
+            for value in UNC_PATHS:
+                with self.subTest(value=value, path="posixpath"):
+                    self.assertFalse(module._unc(value), "no drives, no UNC path, on POSIX")
+        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
+        resolved = []
+        real_realpath = os.path.realpath
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        err = io.StringIO()
+        with mock.patch.object(module, "_unc", return_value=True), \
+                mock.patch("os.path.realpath",
+                           side_effect=lambda p, *a, **k: (resolved.append(p),
+                                                          real_realpath(p, *a, **k))[1]), \
+                contextlib.redirect_stderr(err):
+            code = module._main(["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
+                                 "--repo-root", "//host/share"])
+        self.assertEqual(code, 2, err.getvalue())
+        self.assertIn("--repo-root is a UNC or device path", err.getvalue())
+        self.assertEqual(resolved, [], "a path was resolved before the refusal")
+
+    @WINDOWS_ONLY
+    def test_w42_a_unc_repo_root_on_windows(self):
+        (self.root / "docs" / "tasks" / "t.md").write_text(LINKED, encoding="utf-8")
+        result = _run(REBASE, ["docs/tasks/t.md", "--from", "docs", "--to", "docs/tasks",
+                               "--repo-root", "\\\\localhost\\nowhere"], self.root)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("--repo-root is a UNC or device path", result.stderr)
 
 
 class TestInboundGuard(unittest.TestCase):
@@ -718,6 +1155,7 @@ class TestInboundGuard(unittest.TestCase):
         self.assertEqual(sub.read_text(encoding="utf-8"), SUBTASK)
         self.assertEqual((self.root / "alias.md").read_text(encoding="utf-8"), SUBTASK)
 
+    @NEEDS_SYMLINK
     def test_g9_a_symbolic_link_to_a_file_outside(self):
         victim = self.outside / "victim.md"
         victim.write_text(SUBTASK, encoding="utf-8")
@@ -751,7 +1189,7 @@ class TestInboundGuard(unittest.TestCase):
         import importlib.machinery
         tools = self._tools_copy()
         planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
-                   "msvcrt", "_winapi")
+                   "msvcrt", "_winapi", "fcntl")
         for name in planted:
             sentinel = self.outside / f"sentinel-{name}"
             (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
@@ -777,7 +1215,7 @@ class TestInboundGuard(unittest.TestCase):
         # and the path as called then differs from the real one (TASK 128 R1.3).
         tools = self._tools_copy()
         planted = ("__future__", "re", "typing", "argparse", "json", "difflib", "subprocess",
-                   "msvcrt", "_winapi")
+                   "msvcrt", "_winapi", "fcntl")
         for name in planted:
             sentinel = self.outside / f"sentinel-{name}"
             (tools / f"{name}.py").write_text(f"open({str(sentinel)!r}, 'w').close()\n",
@@ -857,10 +1295,11 @@ class TestInboundGuard(unittest.TestCase):
                 state.pop("back")()
         return refusal, away / "t.md", original, state["swaps"]
 
+    @NEEDS_SYMLINK
     def test_g19_a_directory_swapped_around_the_inbound_open(self):
         # base-fail: the base writes the outside file; its post-write check refuses only a swap.
         module = _module(SLOT, "slot_links_under_test")
-        reasons = {"swap": "is not the file at its real path",
+        reasons = {"swap": _o_nofollow_refusal("is not the file at its real path"),
                    "move": "its directory resolves outside the working directory",
                    "three": "its directory resolves outside the working directory"}
         for case, reason in reasons.items():
@@ -873,6 +1312,39 @@ class TestInboundGuard(unittest.TestCase):
                 self.assertEqual(victim.read_bytes(), original)
                 if case == "three":
                     self.assertGreaterEqual(swaps, 1, "the realpath hook never swapped")
+
+
+    def test_w16_no_pyc_under_a_relative_null_device(self):
+        # base-fail: the base looks a sibling's `.pyc` up under `nul/rebase-links-pycache/`, a path
+        # relative to the working directory where `os.devnull` is `nul` (TASK 131 R4).
+        tools = self._tools_copy()
+        site = self.outside / "site"
+        site.mkdir()
+        report = self.outside / "prefix.txt"
+        (site / "sitecustomize.py").write_text(
+            "import atexit, os, sys\n"
+            "os.devnull = 'nul'\n"
+            f"atexit.register(lambda: open({str(report)!r}, 'w', encoding='utf-8')"
+            ".write(str(sys.pycache_prefix)))\n", encoding="utf-8")
+        sentinel = self.outside / "sentinel-nul-pyc"
+        evil = self.outside / "evil.py"
+        evil.write_text(f"open({str(sentinel)!r}, 'w').close()\n", encoding="utf-8")
+        head = os.path.splitdrive(str(tools))[1].lstrip("\\/")
+        cache = os.path.join(str(self.root), "nul", "rebase-links-pycache", head)
+        if os.name == "nt":
+            cache = "\\\\?\\" + cache
+            self.addCleanup(shutil.rmtree, "\\\\?\\" + str(self.root / "nul"))
+        os.makedirs(cache)
+        py_compile.compile(str(evil), cfile=os.path.join(
+            cache, f"slot_links.{sys.implementation.cache_tag}.pyc"),
+            invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
+        result = subprocess.run([sys.executable, str(tools / REBASE.name), "--inbound", "--task",
+                                 "docs/tasks/task-112-x.md"], cwd=self.root, capture_output=True,
+                                text=True, timeout=60, env=dict(os.environ, PYTHONPATH=str(site)))
+        self.assertIn(result.returncode, (0, 3), result.stdout + result.stderr)
+        self.assertFalse(sentinel.exists(), "a .pyc under the relative null device was read")
+        prefix = report.read_text(encoding="utf-8")
+        self.assertTrue(prefix.startswith(os.path.realpath(tools / REBASE.name)), prefix)
 
 
 class TestInitSkillGuard(unittest.TestCase):

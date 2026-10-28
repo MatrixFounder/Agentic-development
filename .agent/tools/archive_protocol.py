@@ -397,7 +397,7 @@ def archive_task(
     # meta id 095, caller supplies slug only -> archived as task-096).
     meta_id_written = False
     if current_task_slug is None or current_task_id is None:
-        meta = parse_task_meta(task_file.read_text())
+        meta = parse_task_meta(task_file.read_text(encoding="utf-8"))
 
         # Step 2.5: the STOP path parse_task_meta's comment promises (ARC-3).
         #
@@ -437,7 +437,7 @@ def archive_task(
 
     # TASK 115 R9.2: Step 2 also reads the Base revision. Step 8
     # (retarget_inbound_slot_links) takes it as `since`.
-    base_revision = parse_task_meta(task_file.read_text()).get("base_revision")
+    base_revision = parse_task_meta(task_file.read_text(encoding="utf-8")).get("base_revision")
 
     # Step 3: Generate filename via tool.
     # The document's id is the identity; the filename follows it. Correction is
@@ -484,11 +484,11 @@ def archive_task(
     # empty. Two such rows mean the table cannot be addressed structurally, so
     # nothing is written: the same refuse-rather-than-guess rule as above.
     if tool_result["status"] == "generated" and not current_task_id:
-        content = task_file.read_text()
+        content = task_file.read_text(encoding="utf-8")
         updated, meta_id_written = _write_id_into_meta(
             content, tool_result["used_id"])
         if meta_id_written:
-            task_file.write_text(updated)
+            task_file.write_text(updated, encoding="utf-8")
 
     # Step 5: Archive (move file)
     archived_path = tasks_dir / tool_result["filename"]

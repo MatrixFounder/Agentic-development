@@ -1,6 +1,7 @@
 """The session-state rules stand where the agents read them (TASK 127 R4, R5, R7.5, R8.8).
 
-TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5, pin:
+TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5 and TC-C9 of TASK 131
+§5, pin:
 
 * the failure rule of R4.1 in the three bootstrap files, in `skill-session-state` §3, and in the
   guide's §1 and its Risk A (``TC-C1``);
@@ -16,7 +17,9 @@ TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5, pin
 * `docs/ARCHITECTURE.md` names `msvcrt` and the lock file `.agent/sessions/latest.yaml.lock` at
   both statements of the session-state lock (``TC-C7``, the lock file since TASK 129 R4.1);
 * two jobs on `windows-latest`, with Python 3.11 and 3.14 and the shell bash, run the skill's
-  tests and this module (``TC-C8``).
+  tests and this module (``TC-C8``);
+* each Windows job then runs the tests of the archive chain, with the ids and names of TASK 128
+  (``TC-C9``).
 """
 import re
 import unittest
@@ -34,6 +37,12 @@ DISAGREE = ("Session state and docs/TASK.md disagree",)
 #: The paths of R7.5 in the pytest step of the CI workflow.
 CI_PATHS = (".agent/skills/skill-session-state/scripts/tests/",
             "tests/test_session_state_contract.py")
+#: TASK 131 R7.1: the paths of the step `Run the archive-chain tests`.
+CHAIN_PATHS = ("tests/test_archive_move.py",
+               "tests/test_script_guards.py::TestRebaseLinksGuard",
+               "tests/test_script_guards.py::TestInboundGuard",
+               ".agent/tools/test_rebase_links.py", ".agent/tools/test_slot_links.py",
+               ".agent/tools/test_archive_protocol.py", ".agent/tools/test_task_id_tool.py")
 
 
 def read(path):
@@ -147,9 +156,29 @@ class RulesTestCase(unittest.TestCase):
             self.assertEqual([step["with"]["persist-credentials"] for step in checkout], [False],
                              name)
             tests = [step["run"] for step in job.get("steps", [])
-                     if "pytest" in step.get("run", "")]
-            self.assertEqual(len(tests), 1, f"{name}: one pytest step")
-            self.assert_holds(tests[0], CI_PATHS, f"{name}: the pytest step")
+                     if step.get("name") == "Run the session-state tests"]
+            self.assertEqual(len(tests), 1, f"{name}: one session-state step")
+            self.assert_holds(tests[0], CI_PATHS, f"{name}: the session-state step")
+
+    def test_c9_the_windows_jobs_run_the_archive_chain(self):
+        # TASK 131 R7.1 to R7.3.
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("PyYAML does not import: TC-C9 reads the workflow as YAML")
+        jobs = {key: job for key, job in yaml.safe_load(read(WORKFLOW))["jobs"].items()
+                if job.get("runs-on") == "windows-latest"}
+        self.assertEqual({key: job.get("name") for key, job in jobs.items()},
+                         {"session-state-windows-floor": "Session state on Windows (3.11)",
+                          "session-state-windows-main": "Session state on Windows (3.14)"})
+        for key, job in jobs.items():
+            names = [step.get("name") for step in job.get("steps", [])]
+            self.assertIn("Run the archive-chain tests", names, key)
+            self.assertEqual(names.index("Run the archive-chain tests"),
+                             names.index("Run the session-state tests") + 1, key)
+            step = job["steps"][names.index("Run the archive-chain tests")]
+            self.assertTrue(step["run"].startswith("python -m pytest -p no:cacheprovider"), key)
+            self.assert_holds(step["run"], CHAIN_PATHS, f"{key}: the archive-chain step")
 
 
 if __name__ == "__main__":

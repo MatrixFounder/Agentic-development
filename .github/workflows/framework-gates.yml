@@ -333,6 +333,11 @@ jobs:
       - name: Run the session-state tests
         run: python -m pytest -p no:cacheprovider .agent/skills/skill-session-state/scripts/tests/ tests/test_session_state_contract.py -q
 
+      # TASK 131 R7.1: the archive chain on Windows. The tests that need POSIX skip there, and the
+      # tests of Windows run (TASK 131 R6.4). The next task reads the first run (TASK 131 R7.4).
+      - name: Run the archive-chain tests
+        run: python -m pytest -p no:cacheprovider -q tests/test_archive_move.py tests/test_script_guards.py::TestRebaseLinksGuard tests/test_script_guards.py::TestInboundGuard .agent/tools/test_rebase_links.py .agent/tools/test_slot_links.py .agent/tools/test_archive_protocol.py .agent/tools/test_task_id_tool.py
+
   session-state-windows-main:
     name: Session state on Windows (3.14)
     runs-on: windows-latest
@@ -357,3 +362,8 @@ jobs:
 
       - name: Run the session-state tests
         run: python -m pytest -p no:cacheprovider .agent/skills/skill-session-state/scripts/tests/ tests/test_session_state_contract.py -q
+
+      # TASK 131 R7.1: the archive chain on Windows. The tests that need POSIX skip there, and the
+      # tests of Windows run (TASK 131 R6.4). The next task reads the first run (TASK 131 R7.4).
+      - name: Run the archive-chain tests
+        run: python -m pytest -p no:cacheprovider -q tests/test_archive_move.py tests/test_script_guards.py::TestRebaseLinksGuard tests/test_script_guards.py::TestInboundGuard .agent/tools/test_rebase_links.py .agent/tools/test_slot_links.py .agent/tools/test_archive_protocol.py .agent/tools/test_task_id_tool.py

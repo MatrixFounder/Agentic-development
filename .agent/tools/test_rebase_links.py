@@ -3,17 +3,22 @@
 One test per row of the decision table, one per markdown construct that can
 carry a path, and regression pins for the two defects an adversarial review
 found in the first design: the mutable-slot case and the indented-continuation
-masking rule.
+masking rule. TC-W25 (TASK 131 R5.3): a record writes its `denotes_old` with `/` on every
+platform, so the check of TASK 117 R2 reads a slot archive in parts on Windows too.
 """
 
 import json
+import ntpath
 import os
 import sys
+import types
+from unittest import mock
 
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import rebase_links  # noqa: E402
 from rebase_links import rebase_document_links, rebase_file  # noqa: E402
 
 
@@ -206,7 +211,7 @@ class TestReporting:
         _, rec = rb(repo, "[a](ARCHITECTURE.md)\n")
         assert rec[0].authored == "ARCHITECTURE.md"
         assert rec[0].new_target == "../ARCHITECTURE.md"
-        assert rec[0].denotes_old == os.path.join("docs", "ARCHITECTURE.md")
+        assert rec[0].denotes_old == "docs/ARCHITECTURE.md"     # TASK 131 R5.3
 
 
 class TestUnmappedSlot:
@@ -492,11 +497,12 @@ class TestFileModeCommandLine:
         assert self.run("docs/tasks/t.md") == 0
         assert moved.read_bytes() == "# é\n[a](../ARCHITECTURE.md)\n".encode("utf-8")
 
-    def test_f3_a_non_utf8_operand_raises_as_at_the_base(self, tmp_path):
+    def test_f3_a_non_utf8_operand_is_refused(self, tmp_path, capsys):
+        # TASK 131 R3.3 replaces the traceback of the base by a refusal, exit 2.
         moved = tmp_path / "docs" / "tasks" / "t.md"
         moved.write_bytes(b"\xff\xfe[a](ARCHITECTURE.md)\n")
-        with pytest.raises(UnicodeDecodeError):
-            self.run("docs/tasks/t.md")
+        assert self.run("docs/tasks/t.md") == 2
+        assert json.loads(capsys.readouterr().err)["error"] == "docs/tasks/t.md: is not UTF-8"
         assert moved.read_bytes() == b"\xff\xfe[a](ARCHITECTURE.md)\n"
 
     def test_f4_a_dry_run_writes_nothing(self, tmp_path):
@@ -531,3 +537,20 @@ class TestFileModeCommandLine:
         moved.write_bytes(b"[a](../ARCHITECTURE.md)\n")
         assert self.run("docs/t.md", from_dir="docs/tasks", to_dir="docs") == 0
         assert moved.read_bytes() == b"[a](ARCHITECTURE.md)\n"
+
+
+class TestWindowsSeparators:
+    """TC-W25 (TASK 131 R5.3), with the paths of Windows on any platform."""
+
+    def test_w25_a_slot_record_holds_slashes(self):
+        # base-fail: `denotes_old` holds `\\` under `ntpath`, so `_adds_parts` reads one part.
+        windows = types.SimpleNamespace(path=ntpath, sep="\\")
+        with mock.patch.object(rebase_links, "os", windows):
+            new_text, records = rebase_document_links(
+                "[t](TASK.md)\n", "docs", "docs/plans", "C:\\repo",
+                {"docs/TASK.md": "docs/tasks/task-001-x.md"})
+        assert [r.action for r in records] == ["SLOT_RESOLVED"]
+        assert records[0].denotes_old == "docs/tasks/task-001-x.md"
+        assert records[0].new_target == "../tasks/task-001-x.md"
+        assert not rebase_links._adds_parts(records[0])
+        assert new_text == "[t](../tasks/task-001-x.md)\n"

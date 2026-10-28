@@ -272,6 +272,11 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
             records.append(LinkRecord(line, authored, denote_old,
                                       "ESCAPES_ROOT", authored))
             continue
+        rel = _relative(denote_old, root)
+        if rel is None:                             # TASK 132 R2.2: a device, as another drive
+            records.append(LinkRecord(line, authored, denote_old,
+                                      "ESCAPES_ROOT", authored))
+            continue
 
         # A MUTABLE SLOT is checked first, and without touching the filesystem.
         #
@@ -297,15 +302,14 @@ def rebase_document_links(text: str, from_dir: str, to_dir: str,
 
         # A known slot with no identity supplied is NEVER rewritten. Rebasing
         # the path here is what converts "dead" into "silently wrong".
-        if os.path.relpath(denote_old, root) in known_slots:
-            records.append(LinkRecord(line, authored,
-                                      os.path.relpath(denote_old, root).replace(os.sep, "/"),
+        if rel in known_slots:
+            records.append(LinkRecord(line, authored, rel.replace(os.sep, "/"),
                                       "UNMAPPED_SLOT", authored))
             continue
 
         resolved_old = os.path.exists(denote_old)
         resolved_new = os.path.exists(denote_new)
-        rel_old = os.path.relpath(denote_old, root).replace(os.sep, "/")  # TASK 131 R5.3
+        rel_old = rel.replace(os.sep, "/")  # TASK 131 R5.3
 
         if not resolved_old:
             action = "ACCIDENTAL_RESOLVE" if resolved_new else "PRE_BROKEN"
@@ -502,7 +506,8 @@ def _refuse_operand(path):
     """
     cwd = os.getcwd()
     absolute = os.path.normpath(os.path.join(cwd, path))
-    if not _inside(absolute, cwd) or absolute == cwd:
+    if (not _inside(absolute, cwd) or absolute == cwd
+            or _relative(absolute, cwd) is None):   # TASK 132 R2.3: a device
         return "lies outside the working directory"
     if _names_stream(path):
         return "names an alternate stream of a file"
@@ -516,7 +521,7 @@ def _refuse_operand(path):
     directory = os.path.realpath(os.path.dirname(os.path.join(cwd, path)))
     if not _inside(directory, real_cwd):
         return "its directory resolves outside the working directory"
-    if os.path.relpath(absolute, cwd).split(os.sep)[0] != "docs":
+    if _relative(absolute, cwd).split(os.sep)[0] != "docs":
         return "does not lie under docs/"
     if not path.endswith(".md"):
         return "is not a markdown file"
@@ -577,6 +582,19 @@ def _inside(path, root):
         return os.path.commonpath([path, root]) == root
     except ValueError:
         return False
+
+
+def _relative(path, start):
+    """`os.path.relpath(path, start)`, or None where it raises `ValueError` (TASK 132 R2.1).
+
+    On Windows `relpath` resolves both paths first, and a last part that names a device, such as
+    `nul`, resolves to `\\\\.\\nul`, on another drive (ARC-14). Each caller counts such a path
+    as one outside, as a `ValueError` of `commonpath` counts (TASK 131 R5.1).
+    """
+    try:
+        return os.path.relpath(path, start)
+    except ValueError:
+        return None
 
 
 def _leaves_tree(value):
@@ -777,6 +795,7 @@ def _main(argv=None):
 
     # TASK 116 R8.6: a rewritten link is built from these paths, so each stays in the tree.
     # TASK 131 R12: a UNC path is refused before any call reaches the file system.
+    # TASK 132 R2.4: so is a `--from` or `--to` that names a device, before any operand is read.
     if _unc(args.repo_root):
         problem = "--repo-root is a UNC or device path"
     elif os.path.realpath(args.repo_root) != os.path.realpath(os.getcwd()):
@@ -784,7 +803,9 @@ def _main(argv=None):
     else:
         problem = next((f"{name} does not lie inside the working directory"
                         for name, value in (("--from", args.from_dir), ("--to", args.to_dir))
-                        if _leaves_tree(value)), None)
+                        if _leaves_tree(value)
+                        or _relative(os.path.join(os.getcwd(), value), os.getcwd()) is None),
+                       None)
     if problem:
         _emit(sys.stderr, json.dumps({"ok": False, "error": problem}))
         return 2

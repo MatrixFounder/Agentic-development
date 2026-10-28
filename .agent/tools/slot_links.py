@@ -166,9 +166,21 @@ def _ls_files(root):
 
 
 def _walk(root, unreadable):
-    """Every file under `root`, repo-relative; a directory it cannot read goes to `unreadable`."""
+    """Every file under `root`, repo-relative; a directory it cannot read goes to `unreadable`.
+
+    Each path is read from its text after `root` (TASK 132 R1.1): `os.walk` joins each path onto
+    `root`, and so does each error that it passes to `onerror`. On Windows `os.path.relpath`
+    resolves a last part that names a device, such as `nul`, to `\\\\.\\nul`, and raises
+    `ValueError` (ARC-14).
+    """
+    head = os.path.join(root, "")
+
+    def relative(path):
+        """`path`, which is `root` or a path joined onto it, relative to `root`, with `/`."""
+        return "." if path == root else path[len(head):].replace(os.sep, "/")
+
     def failed(exc):
-        rel = os.path.relpath(exc.filename or root, root).replace(os.sep, "/")
+        rel = relative(exc.filename or root)
         unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "", exc.strerror or str(exc)))
 
     def entered(dirpath, name):
@@ -178,8 +190,7 @@ def _walk(root, unreadable):
         try:
             return not _is_link(os.lstat(path))
         except OSError as exc:
-            rel = os.path.relpath(path, root).replace(os.sep, "/")
-            unreadable.append(InboundRecord(rel, None, "UNREADABLE", "", "",
+            unreadable.append(InboundRecord(relative(path), None, "UNREADABLE", "", "",
                                             exc.strerror or str(exc)))
             return False
 
@@ -189,8 +200,7 @@ def _walk(root, unreadable):
                              and entered(dirpath, d)
                              and not os.path.isfile(os.path.join(dirpath, d, "pyvenv.cfg")))
         for name in filenames:
-            rel = os.path.relpath(os.path.join(dirpath, name), root)
-            found.append(rel.replace(os.sep, "/"))
+            found.append(relative(os.path.join(dirpath, name)))
     return sorted(found)
 
 

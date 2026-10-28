@@ -1,57 +1,55 @@
-# PLAN 131 — The archive chain runs on Windows, and the file mode of `rebase_links.py` ends without a traceback
+# PLAN 132 — The inbound walk and the file mode of `rebase_links.py` end without a traceback on a path that names a device
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 10) · **Covers:** R1–R12 · **Acceptance:** TASK A1–A14.
+**TASK:** [docs/TASK.md](TASK.md) (revision 4) · **Covers:** R1–R6 · **Acceptance:** TASK A1–A7.
 
-**Revision:** 10. Revision 2 applies M1 to M7, m1 to m10 and N1 to N4 of round 1 of the Mode B
-audit (the audit record). Revision 3 applies M1, M2, m1 to m5, N1 and N2 of round 2, and the read
-of B1, which TASK revision 5 states. Revision 4 applies m1 to m4 and N1, N2 and N5 of round 3,
-which passed, with no further round. Revision 5 records the run of A to G: the ticks, the fix of
-TC-W7 that F1 returned to B2, and mutation 38 as written in the table. Revision 6 states the fix
-of round 1 of stage 2 in I1, with mutations 55 to 76, and names TASK revision 8 in its header,
-which revision 5 left at revision 6. Revision 7 states the fix of round 2 in I1 and names TASK
-revision 9. The table of F1 gains mutations 77 to 83 and the rows with `b`, and the edits of
-mutations 58, 62, 64, 73b and 74 follow the new code. Revision 8 ticks I1 after round 3, which
-passed, and names TASK revision 10. Revision 9 ticks J1 to J4: stage 3 applied, and stage 4 passed.
-Revision 10 ticks K1 and K2.
+**Revision:** 7. Revision 2 applies M1, M2, m1 to m8 and N1 to N7 of round 1 of the Mode B audit
+(the audit record). Revision 3 applies N1 to N6 of round 2, which passed, with no further round. Revision 4 records the
+run of A to F: the ticks. Revision 5 ticks I1 and names TASK revision 4. Revision 6 ticks J1 to J4. Revision 7 ticks K1 and K2.
 
 In this PLAN a step is named by its cluster letter and number, such as H2. An acceptance criterion
 of the TASK is named with the prefix, such as TASK A4.
 
 The run writes no task file under `docs/tasks/` for its steps. This departs from
-`plan-review-checklist` §3 on the precedent of PLAN 111 to PLAN 130.
+`plan-review-checklist` §3 on the precedent of PLAN 111 to PLAN 131.
 
 <!-- contract:sequence -->
 
 ## Sequencing rule
 
-The change runs the four stages of `framework-upgrade` §3 step 4 for nine files (TASK R9.1).
-Every other edit lands in place, the test first:
+The change runs the four stages of `framework-upgrade` §3 step 4 for four files (TASK R6.1). Every
+other edit lands in place:
 
-1. stage 1 writes the five staged test modules and the in-place contract tests, red in the red
-   tree where they test new behaviour (B);
-2. stage 1 writes the four staged scripts, stubs first and then the logic, green in the dev tree
-   (C);
-3. the documents, the workflow, the records and the change of TASK R10 land in place (D);
+1. stage 1 writes the two staged test modules, red in the red tree (B);
+2. stage 1 writes the two staged scripts, the stub of `_relative` first and then the logic, green in
+   the dev tree (C);
+3. the changelogs and the record of ARC-14 land in place (D);
 4. E writes the stage-3 patch, and H checks the live tree and the patched tree;
-5. F runs the mutations in a copy of the patched tree, and G runs the check of what runs;
+5. F runs the mutations in a copy of the patched tree;
 6. stage 2 reviews the whole change at one fingerprint (I);
-7. §4.5, then stage 3 applies the patch as the last edit of the change, and stage 4 reviews it (J).
+7. §4.5, then stage 3 applies the patch as the last edit of the change, the check of what runs
+   follows, and stage 4 reviews it (J).
 
-A test that is red where this PLAN expects green returns the change to its cluster, B for a test
-and C for a script, red first. E1, H1, H2, F1 and G1 then run again.
+When a test is red where this PLAN expects green, the change returns to its cluster, B for a test
+and C for a script, red first. E1, H1, H2 and F1 then run again.
+
+Before stage 3 no code is edited in place. No allowed command but the three rules of A2 reaches a
+staged copy: no collection pattern matches a staged name, no rule names one, and `rebase_links.py`
+loads its siblings by fixed paths. The listings of H1 show it. The check of what runs of §3 step 4 therefore
+runs after stage 3 only, at J3.
 
 **Rules of every step.**
 
 - Every Python run passes `-B` or sets `PYTHONDONTWRITEBYTECODE=1`; every pytest run passes
-  `-p no:cacheprovider` or sets `PYTEST_ADDOPTS=-p no:cacheprovider`.
+  `-p no:cacheprovider` or sets `PYTEST_ADDOPTS=-p no:cacheprovider`. A check that imports a
+  staged copy runs it in a worktree or with `-B`, so no `.pyc` of a staged name is written.
 - Every git command runs with `-c core.fsmonitor=false`.
 - No tool input holds an escape of the form backslash, `u`, four hex digits; code builds the text
   that needs one. After each write of a file of the change, `bytescan.py` finds in it no control
   character but LF, no U+2028 or U+2029, no lone surrogate, and no byte-order mark.
 - A rule of the settings is named by the first 12 hex digits of its SHA-256, and its text is never
   quoted.
-- Each new or edited Python file parses with `ast.parse(..., feature_version=(3, 11))`. C5 reads
-  each call that the change adds against the documentation of Python 3.11.
+- Each new or edited Python file parses with `ast.parse(..., feature_version=(3, 11))`. C1 and C2
+  read each call that the change adds against the documentation of Python 3.11 (TASK D3).
 
 **The stop rule.** In the check of §3 step 4, these differences end the step at once:
 - a difference under `.git`;
@@ -60,34 +58,29 @@ and C for a script, red first. E1, H1, H2, F1 and G1 then run again.
 
 The run then names each difference to the operator and runs no further git command.
 
-**The live-state guard.** These runs execute code of the change outside a check of §3 step 4:
-- every run of a test module in B2, B3, C1 to C7, D1, D5 and H1;
-- the gates, the tests and the runs of H2, and the mutations of F1;
-- the gates of J3;
-- each review round of I1 and J4, where the reviewers run tests.
+**The live-state guard.** These steps run code of the change outside a check of §3 step 4: B2,
+C1, C2, H1, H2, F1, J3, and each review round of I1 and J4. Each lists `.agent/sessions/` before
+it and after it, each file with its SHA-256. A difference stops the run for the operator.
 
-Each such step lists `.agent/sessions/` before it and after it, each file with its SHA-256. A
-difference stops the run for the operator.
-
-**The worktrees.** `wt131.sh` builds each tree under the session's scratchpad, in three steps:
+**The worktrees.** `wt132.sh` builds each tree under the session's scratchpad, in three steps:
 1. `git worktree add --detach` at the base, then `git apply` of `git diff --binary <base>` of the
    live tree;
 2. a copy of each file that `git ls-files --others --exclude-standard` lists in the live tree,
    the staged copies and the stage-3 patch aside;
 3. by the tree's kind:
-   - `wt131.sh red`: a copy of each staged test module over its final name;
-   - `wt131.sh dev`: a copy of each of the nine staged files over its final name;
-   - `wt131.sh make`: a `git apply` of the stage-3 patch.
+   - `wt132.sh live`: nothing more;
+   - `wt132.sh red`: a copy of each staged test module over its final name;
+   - `wt132.sh dev`: a copy of each of the four staged files over its final name;
+   - `wt132.sh gen`: the edit of stage 3 by `stage3_edit132.py`, the diff of the four final files
+     to stdout, and the removal of its own worktree;
+   - `wt132.sh make`: a `git apply` of the stage-3 patch.
 
-The tools pair each staged copy with its final file by full path: `.agent/tools/staged_archive_move.py`
-and `tests/staged_archive_move.py` share a basename. `wt131.sh remove` removes a tree at the end of
-each step, a failed step included, after which `git worktree list` names it no more. A build that
-fails removes the worktree it added. The live diff is a temporary file that no run leaves behind.
+The tools pair each staged copy with its final file by full path. `wt132.sh remove` removes a tree
+at the end of each step, a failed step included, after which `git worktree list` names it no more.
 
 `framework-upgrade` §4:
-- step 1: no file of `System/Docs/` states a platform of the archive chain, and none changes.
-  `System/Docs/ORCHESTRATOR.md:327@6f3d65c` `test_slot_links.py` names the tests of TASK 115, which
-  stays true when TC-W19 and TC-W20 join;
+- step 1: no file of `System/Docs/` names a call of `relpath` of the archive chain, and none
+  changes;
 - step 2: no skill version changes, so `System/Docs/SKILLS.md` and `WORKFLOWS.md` keep their base
   text;
 - step 3: no core prompt changes, and no restart is needed.
@@ -97,17 +90,16 @@ edit of the change. After stage 3 the run writes only those and the retro's reco
 
 | Order | Cluster | Covers |
 | :--- | :--- | :--- |
-| A | Base check and the rules of the settings | R9.4 |
-| B | Stage 1: the tests first | R6, R7.3 |
-| C | Stage 1: the staged scripts, stubs then logic | R1 to R5, R6.7 |
-| D | Documents, workflow, records and TASK R10 in place | R7.1, R7.2, R8, R10 |
-| E | The patch | R9.1 |
-| H | The checks of the live and the patched tree | R9.2, R9.3, TASK A1–A6, A8, A9 |
-| F | The mutations | R6.8, TASK A7 |
-| G | The check of what runs | R9.3, R9.4 |
-| I | Stage 2: reviews | all |
-| J | §4.5, stage 3 and stage 4 | R9.1, R9.3–R9.5, TASK A10 |
-| K | Retro and the final report | R7.4, TASK A12 |
+| A | Base check and the rules of the settings | R6.4 |
+| B | Stage 1: the tests first | R3, TASK A3 |
+| C | Stage 1: the staged scripts, stub then logic | R1, R2 |
+| D | The changelogs and the record in place | R5 |
+| E | The patch | R6.1 |
+| H | The checks of the live and the patched tree | R3.2, R4.1, R6.2, R6.3, TASK A1, A2, A6 |
+| F | The mutations | R3.4, TASK A4 |
+| I | Stage 2: the reviews | R6.1 |
+| J | §4.5, stage 3, the check of what runs, stage 4 | R6.3, R6.4, TASK A7 |
+| K | The retro and the final report | R4.2; TASK A5 follows the push |
 
 <!-- contract:coverage -->
 
@@ -115,110 +107,77 @@ edit of the change. After stage 3 the run writes only those and the retro's reco
 
 | Requirement | Steps |
 | :--- | :--- |
-| R1 | B2, C1, C2, F1, H2 |
-| R2 | B2, C1, C3, C4, F1, H1, H2 |
-| R3 | B2, C1, C3, F1, H2 |
-| R4 | B2, C3, F1, H2 |
-| R5 | B2, C3, C4, F1, H2 |
-| R6 | B1, B2, C6, F1, H1, H2 |
-| R7 | B3, D1, H1, H2, K2 |
-| R8 | D2, D3, D4, H1 |
-| R9 | A1, A2, E1, H1–H2, G1, I1, J1–J4 |
-| R10 | B2, D5, F1, H1, H2 |
-| R11 | I1, the fix of round 1 |
-| R12 | I1, the fixes of rounds 1 and 2 |
+| R1 | B2, C2, F1, H2 |
+| R2 | B2, C1, C2, F1, H2; R2.5 and R2.6 in C1 |
+| R3 | B2, F1, H2; R3.2 in H2 |
+| R4 | H2, K2 |
+| R5 | D1, H1 |
+| R6 | A1, A2, E1, H1, H2, I1, J1–J4 |
 
 | Acceptance | Steps |
 | :--- | :--- |
 | TASK A1 | B2, C2, H2 |
-| TASK A2 | B2, C3, C4, C5, H2 |
-| TASK A3 | B2, C3, H2 |
-| TASK A4 | B2, C3, H2 |
-| TASK A5 | B2, C3, C4, H2 |
-| TASK A6 | B1, C6, H1, H2 |
-| TASK A7 | F1 |
-| TASK A8 | B3, D1, H1 |
-| TASK A9 | D2, D3, D4, H1 |
-| TASK A10 | H2, G1, J3 |
-| TASK A11 | after the push; the next task (TASK R7.4) |
-| TASK A12 | K2 |
-| TASK A13 | B2, D5, H1 |
-| TASK A14 | I1, the fixes of rounds 1 and 2 |
+| TASK A2 | B2, C1, C2, H2 |
+| TASK A3 | B2, H2 |
+| TASK A4 | F1 |
+| TASK A5 | after the push; the next task (TASK R4.2) |
+| TASK A6 | D1, H1 |
+| TASK A7 | H1, H2, J1–J3 |
 
 | Use case | Steps |
 | :--- | :--- |
-| UC-1, main flow | C2 (step 1), C3 (steps 2, 3), C4 (step 4), H2 |
-| UC-1, alternatives 1a to 1c | TC-W7, TC-W8, TC-W2, TC-W4 of B2 |
-| UC-1, alternatives 2a, 2b | TC-W14, TC-W27 of B2 |
-| UC-2 | B3, D1, H1, K2; its outcome is TASK A11 |
+| UC-1, main flow | C1, C2, H2 |
+| UC-1, alternatives 1a, 1b | TC-D5 of B2 |
 
 ### Tests known red until a later step
 
 | Test | Red from | Green at | Reason |
 | :--- | :--- | :--- | :--- |
-| The TC-W tests of the five staged modules that test new behaviour | B2, in the red tree | C2 to C4, in the dev tree | they test the staged scripts |
-| The changed TC-G22 and `test_platform_without_o_nofollow_refuses` | B2, in the red tree | C3 and C4, in the dev tree | they assert the open of TASK R2.2 |
-| TC-C9 of `tests/test_session_state_contract.py` | B3 | D1 | it tests the step of TASK R7.1 |
-| TC-W28 of `.agent/tools/test_archive_protocol.py` | B2 | D5 | it tests TASK R10 |
+| TC-D1 to TC-D5 | B2, in the red tree | C2, in the dev tree | they test the staged scripts |
 
 ## Declared paths
 
 Edited by the stage-3 patch only:
 
-- `.agent/tools/archive_move.py`
 - `.agent/tools/rebase_links.py`
 - `.agent/tools/slot_links.py`
-- `.agent/tools/task_id_tool.py`
-- `.agent/tools/test_rebase_links.py`
 - `.agent/tools/test_slot_links.py`
-- `.agent/tools/test_task_id_tool.py`
-- `tests/test_archive_move.py`
 - `tests/test_script_guards.py`
 
 Edited in place:
 
-- `.agent/tools/archive_protocol.py`
-- `.agent/tools/test_archive_protocol.py`
-- `tests/test_session_state_contract.py`
-- `.github/workflows/framework-gates.yml`
-- `docs/ARCHITECTURE.md`
-- `docs/backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md`
 - `CHANGELOG.md`
 - `CHANGELOG.ru.md`
+- `docs/KNOWN_ISSUES.md`
+- `docs/issues/arc-14-the-inbound-walk-exits-1-on-windows-with-python-3-14-when-the-work-tree-holds-a-directory-named-nul.md`
 
 Created:
 
-- `docs/reviews/framework-audit-131-stage3.diff`
+- `docs/reviews/framework-audit-132-stage3.diff`
 
 Created at stage 1 and removed at stage 3:
 
-- `.agent/tools/staged_archive_move.py`
 - `.agent/tools/staged_rebase_links.py`
 - `.agent/tools/staged_slot_links.py`
-- `.agent/tools/staged_task_id_tool.py`
-- `.agent/tools/staged_test_rebase_links.py`
 - `.agent/tools/staged_test_slot_links.py`
-- `.agent/tools/staged_test_task_id_tool.py`
-- `tests/staged_archive_move.py`
 - `tests/staged_script_guards.py`
 
-The run's `docs/TASK.md`, `docs/PLAN.md`, the audit record `docs/reviews/framework-audit-131.md`
-and the archive pair of TASK 130 are declared by `framework-upgrade` §5:
-`docs/tasks/task-130-audit-the-copies-that-run.md` and
-`docs/plans/plan-130-audit-the-copies-that-run.md`.
+The run's `docs/TASK.md`, `docs/PLAN.md`, the audit record `docs/reviews/framework-audit-132.md`
+and the archive pair of TASK 131 are declared by `framework-upgrade` §5:
+`docs/tasks/task-131-archive-chain-windows.md` and
+`docs/plans/plan-131-archive-chain-windows.md`.
 
-**Rollback point.** Base `6f3d65c8d085c48ae36e2e63a7f47fc9ac2b8dce`.
+**Rollback point.** Base `6aedb2203c26e6f6c745a362f950008e63e5a291`.
 
 - No file outside the repository is edited except the session's scratchpad.
-- The scratchpad holds the tools and logs of this run, `tools-131/` and `logs-131/`:
-  - `wt131.sh` builds and removes the red tree, the dev tree and the patched tree;
-  - `stage3_edit131.py` makes the edit of stage 3 in the worktree of E1: it copies each staged
-    file over its final name, by full path, keeping the final file's mode;
-  - `mutate131.py` runs the mutations of F1;
-  - `list_tests131.py` runs in H1 and H2;
-  - `check.py`, `gates.py`, `bytescan.py`, `regcheck.py` and `rules_check.py` are reused from
-    `tools-128/`.
-- No tool holds a whole repository file. `rules_131.json` holds the SHA-256 of each allow rule and
+- The scratchpad holds the tools and logs of this run, `tools-132/` and `logs-132/`:
+  - `wt132.sh` builds and removes the live, red, dev and patched trees, and the tree of `gen`;
+  - `stage3_edit132.py` makes the edit of stage 3 in a worktree: it copies each staged file over
+    its final name, by full path, keeping the final file's mode;
+  - `guard132.sh` lists `.agent/sessions/` around a run;
+  - `mutate131.py` and `list_tests131.py` are reused from `tools-131/`, and `check.py`,
+    `gates.py`, `bytescan.py`, `regcheck.py` and `rules_check.py` from `tools-128/`.
+- No tool holds a whole repository file. `rules_132.json` holds the SHA-256 of each allow rule and
   each top-level key that the reading at §2.2 found, and no rule's text.
 - Each staged file starts as a copy of its base file, made with `cp -p` inside the repository.
 - Each worktree is removed after each use.
@@ -233,20 +192,13 @@ and the archive pair of TASK 130 are declared by `framework-upgrade` §5:
       `git ls-files --error-unmatch`, and each created path gives `git check-ignore -q` exit 1.
       Each path matches `[A-Za-z0-9._/-]+`, has no `.git` or `..` segment, and does not start with
       `/`. `git worktree list` names the main worktree and no other but the prunable registrations
-      of earlier sessions, a finding before the task. The run then removes from the scratchpad
-      what earlier runs left there, and the audit record lists each removal:
-  - `briefs-130/`, `logs-130/`, `tools-130/` and the empty `wt-130/`;
-  - `m131/`, the roots of the measurements of TASK §8.
-- [x] A2 `rules_check.py compare` with the full scratchpad path of `rules_131.json`: the local and
-      the user settings hash as at the reading of §2.2 (TASK R9.4). A changed file takes the steps
+      of earlier sessions, a finding before the task.
+- [x] A2 `rules_check.py compare` with the full scratchpad path of `rules_132.json`: the local and
+      the user settings hash as at the reading of §2.2 (TASK R6.4). A changed file takes the steps
       of J1. The audit record names each file of the change that a rule of the local or the user
-      settings runs:
-  - `.agent/tools/task_id_tool.py`: the local rules `bcddea47eb1b` and `20890709883a`, and the
-    user rules `f23abd494daf` and `0b6b1d85891c` through the links of the sibling checkout;
-  - the modules of `tests/`, and through them the scripts: the local rule `ca2c33383ded`.
-    `tests/test_archive_move.py` and `tests/test_script_guards.py` run the four scripts,
-    `tests/test_committed_settings.py` loads `archive_move.py`, and
-    `tests/test_language_independence.py` loads `task_id_tool.py` and `archive_protocol.py`.
+      settings runs. The local rule `ca2c33383ded` runs the modules of `tests/`, among them
+      `tests/test_script_guards.py`, and through it both scripts. No rule of either file names
+      `rebase_links.py` or `slot_links.py`.
 
   Three rules can reach any code, and no finite check covers them. The audit record names each as
   a finding before the task: the local rule `881e39b164a5`, and the user rules `89216e2cf097` and
@@ -254,291 +206,117 @@ and the archive pair of TASK 130 are declared by `framework-upgrade` §5:
 
 ## Cluster B — stage 1: the tests first
 
-- [x] B1 The read of TASK R6.7 over each test of the step of TASK R7.1, with the assumptions that
-      R6.7 lists. It ran during the freeze of Mode B as a read-only agent, and TASK revision 5
-      states what it found. The audit record lists each test with an assumption, the assumption,
-      and the edit that meets it:
-  - a skip by capability (TASK R6.5);
-  - a change (TASK R6.6);
-  - an explicit `encoding=`, or another edit that the record names.
-- [x] B2 Write the five staged test modules, each from `cp -p` of its base module. Each new test of
-      `tests/staged_script_guards.py` joins the class `TestRebaseLinksGuard` or `TestInboundGuard`,
-      which the Windows step runs:
-  - `tests/staged_archive_move.py`: TC-W1 to TC-W10, TC-W21 to TC-W23, and the case of R1.4 of
-    TC-W24;
-  - `tests/staged_script_guards.py`: TC-W11, TC-W12, TC-W14 to TC-W18, TC-W26, TC-W27, and the
-    file-mode cases of TC-W13 and TC-W24. TC-G16, TC-G17, TC-G19 and TC-G22 and the module
-    docstring change as TASK R6.6 states;
-  - `.agent/tools/staged_test_rebase_links.py`: TC-W25, and the line of TASK R6.6;
-  - `.agent/tools/staged_test_slot_links.py`: TC-W19, TC-W20, the inbound cases of TC-W13, TC-W17
-    and TC-W24, and the change of `test_platform_without_o_nofollow_refuses`;
-  - `.agent/tools/staged_test_task_id_tool.py`: the case of `_first_h1` of TC-W24.
+- [x] B1 `cp -p` each base module to its staged name: `tests/staged_script_guards.py` and
+      `.agent/tools/staged_test_slot_links.py`.
+- [x] B2 Write the tests of TASK §5 into the staged modules:
+  - `.agent/tools/staged_test_slot_links.py`: TC-D1 to TC-D4. TC-D1 to TC-D3 skip on Windows
+    (TASK R3.3);
+  - `tests/staged_script_guards.py`, class `TestRebaseLinksGuard`: TC-D5, and TC-D6 on Windows
+    only.
 
-  Each module also takes the skips and edits of TASK R6.5 and R6.6 that B1 lists.
-  `.agent/tools/test_archive_protocol.py` takes its edits and TC-W28 in place. B2 runs it on the
-  live tree, under the guard: TC-W28 is red until D5, and the rest of the module passes. The audit
-  record holds that run.
+  The stand-in of TASK R3.1 is one helper per module, a patch of `os.path.relpath`. It raises the
+  `ValueError` of `ntpath.relpath` when the last part of its path or of its start is `nul`. It
+  calls the real function otherwise. `git diff` of each staged test module against its base module
+  shows changes inside the new tests and their helpers only. The red tree of `wt132.sh red` runs
+  both staged modules by
+  their final names against the base scripts, under the guard. TC-D1 to TC-D5 fail there; TC-D6
+  skips on macOS. The audit record lists the outcome of each new test. `wt132.sh remove` then
+  removes the red tree.
 
-  These assertions make the mutations of F1 killable:
-  - TC-W2 asserts the message of step 1 or step 4 for each link, not the message of step 7;
-  - TC-W4 asserts the message of step 2 for a second hard link, not that of step 3;
-  - TC-W11 holds a case with `os.lstat` patched to report the tag `0xA0000003` at the operand:
-    exit 2 with `is a link`, and no write;
-  - TC-W19 holds the same case at the scanned file: an `UNREADABLE` record with `is a link` when
-    the tag is reported at the `os.lstat` of `_read`, and a `REFUSED` record when it is reported
-    at the `os.lstat` of `_write_file` alone. No write;
-  - TC-W19 swaps a file for a link after the `os.lstat` of `_read`, and asserts an `UNREADABLE`
-    record with `changed during the run` and no record of the link's target. It swaps one after
-    the `os.lstat` of `_write_file`, to a file outside the root, and asserts a `REFUSED` record with
-    `changed during the run`;
-  - TC-W22 calls `main` in the test process, and asserts its JSON error on stderr;
-  - TC-W14 runs the `--json` case with stdout in UTF-8, and asserts that every byte is below 128.
+## Cluster C — stage 1: the staged scripts, stub then logic
 
-  The red tree of `wt131.sh red` runs each staged module by its final name. The audit record lists
-  the outcome of each new and changed test against the base: red, or green with the reason. TC-W9
-  and the file-mode case of TC-W13 may pass on macOS at the base. A TC-W test that runs on Windows only is
-  skipped. `wt131.sh remove` then removes the red tree.
-- [x] B3 In `tests/test_session_state_contract.py`, TC-C8 selects the step
-      `Run the session-state tests`, and TC-C9 checks the step of TASK R7.1 (TASK R7.3). Run on the
-      live tree: TC-C8 passes, and TC-C9 fails. The audit record holds the red run.
+- [x] C1 `cp -p` each base script to its staged name. In `.agent/tools/staged_rebase_links.py`:
+  1. the stub of `_relative` (TASK R2.1) returns `os.path.relpath(path, start)` and catches
+     nothing, and each call of TASK R2.2 to R2.4 goes through it. The dev tree of `wt132.sh dev`
+     runs both staged test modules under the guard: every test of the base passes, and TC-D5 is
+     red. TC-D1 to TC-D4 are red too: `staged_slot_links.py` is still a copy of the base. The audit
+     record holds the run;
+  2. the catch of R2.1, and the checks of TASK R2.2 to R2.4. The check of R2.4 runs in `_main`,
+     after `_leaves_tree`, for `--from` and `--to`;
+  3. the audit record lists each call of `os.path.relpath` of the staged `rebase_links.py`, with
+     the kind of each of its two arguments (TASK R2.5). It names the two callers of TASK R2.6 at
+     the base, with the line that shows each reason.
+- [x] C2 In `.agent/tools/staged_slot_links.py`, one nested helper of `_walk` derives the text of
+      TASK R1.1, and the three sites of TASK R1.2 call it with their own paths. The dev tree of
+      `wt132.sh dev` runs, under the guard:
+  1. the two staged test modules: TC-D1 to TC-D5 pass, and every test of the base passes;
+  2. the whole step of TASK 131 R7.1, in a new dev tree.
 
-## Cluster C — stage 1: the staged scripts, stubs then logic
+  The audit record holds both runs.
 
-Each staged script starts as `cp -p` of its base file. C1 to C4 run in the dev tree of
-`wt131.sh dev`, built anew for each step and removed at its end.
+## Cluster D — the changelogs and the record in place
 
-- [x] C1 Stub first. These are functions with docstrings that keep the base behaviour:
-  - `_move_by_path` of `.agent/tools/staged_archive_move.py`, which refuses as the base does;
-  - the link check of TASK R1.3 and the open of R2.2 in the three staged scripts;
-  - `_emit` of `.agent/tools/staged_rebase_links.py`, which prints as the base does.
-
-  In the dev tree, the tests of the base pass, the TC-W tests of new behaviour are red, and
-  `python3 -B .agent/tools/archive_move.py` with no operand exits 2.
-- [x] C2 Logic of `.agent/tools/staged_archive_move.py`: `_move_by_path` of TASK R1.4 to R1.7, the
-      output of R1.8, and the docstring of R1.9 with the labels `RW1` to `RW10`. `main` runs
-      `_move` where `_supported()` returns true. In the dev tree, `tests/test_archive_move.py`
-      passes but for the skips of B1 and the tests of Windows.
-- [x] C3 Logic of `.agent/tools/staged_rebase_links.py`:
-  - the open of TASK R2.2 in `_open_checked`, with its own helpers (R2.6);
-  - R3: `_emit` for each line of stdout and stderr, ASCII `--json`, and the refusal of an operand
-    that is not UTF-8;
-  - R4: the prefix and its comment;
-  - R5: a `ValueError` of `os.path.commonpath` as outside at its four checks, the checks of
-    `--from` and `--to`, and `denotes_old` with `/`.
-
-  In the dev tree, `tests/test_script_guards.py` and `.agent/tools/test_rebase_links.py` pass but
-  for the skips.
-- [x] C4 Logic of `.agent/tools/staged_slot_links.py` and `.agent/tools/staged_task_id_tool.py`:
-  - the open of TASK R2.2 in `_read` and `_write_file`, with its own helpers;
-  - the texts of R2.4, and the walk filter of R2.5;
-  - a `ValueError` of `os.path.commonpath` as outside at its three checks;
-  - `os.O_BINARY` in `_first_h1` (TASK R2.7).
-
-  The identity check and the link check of TASK R2.2 sit in one helper that both opens call. In
-  the dev tree, `.agent/tools/test_slot_links.py`, `.agent/tools/test_task_id_tool.py`,
-  `.agent/tools/test_archive_protocol.py` but TC-W28, and `tests/test_script_guards.py` pass but
-  for the skips.
-- [x] C5 Each staged file parses with `ast.parse(..., feature_version=(3, 11))`. The audit record
-      lists each call that the change adds with the version of Python that added it. A call that
-      Python 3.11 lacks returns to C2 to C4.
-- [x] C6 The read of TASK R6.7 over each new and changed test of B2 and B3, as B1 reads the tests
-      of the base. It names TC-W6, whose swaps meet the open descriptor of the source on Windows
-      (TASK D23). The audit record lists it beside the read of B1 (TASK A6).
-- [x] C7 One run of the whole step of TASK R7.1 in a new dev tree passes but for the skips, the
-      tests of Windows, and TC-W28 before D5.
-
-## Cluster D — documents, workflow and records in place
-
-- [x] D1 `.github/workflows/framework-gates.yml`: the step `Run the archive-chain tests` in both
-      Windows jobs, after the step `Run the session-state tests` (TASK R7.1, R7.2). TC-C8 and TC-C9
-      then pass.
-- [x] D2 `docs/ARCHITECTURE.md`: the paragraph on archiving states the branch of each script on a
-      platform without `dir_fd` or `O_NOFOLLOW` (TASK R8.1).
-- [x] D3 `CHANGELOG.md` and `CHANGELOG.ru.md`: v3.50.0, with no migration (TASK R8.2). Each entry
-      names the branches of TASK R1 to R5, the step of R7.1, and the UTF-8 reads and writes of
-      `archive_protocol.py` (R10).
-- [x] D4 The WI-39 record: a progress blockquote after its last one, on the prefix of TASK R4. Its
-      index line in `docs/BACKLOG.md` stays (TASK R8.3).
-- [x] D5 `.agent/tools/archive_protocol.py`: the four calls of TASK R10 pass `encoding="utf-8"`.
-      `.agent/tools/test_archive_protocol.py` then passes on the live tree, TC-W28 among its tests
-      (TASK A13).
+- [x] D1 In place, each checked by `regcheck.py` (0 warn) and `bytescan.py`:
+  - `CHANGELOG.md` and `CHANGELOG.ru.md`: v3.50.1, under Fixed (TASK R5.1);
+  - the record of ARC-14: `status: fixed`, `resolved_at` and `resolved_by: TASK 132`, and the
+    resolution blockquote at the top of the body that `known-issues-format` requires. Its index
+    line in `docs/KNOWN_ISSUES.md` takes the status and a summary of the fix (TASK R5.2).
 
 ## Cluster E — the patch
 
-- [x] E1 `wt131.sh gen` writes the patch `docs/reviews/framework-audit-131-stage3.diff` against the
-      live tree. It prints the SHA-256 of each file that the patch edits, after the edit, and
-      removes its worktree. On a non-zero exit, the run removes the partial patch and stops. The
-      patch gives each of the nine final files of TASK R9.1 the bytes of its staged copy, touches
-      no other path, and holds no staged copy.
-
-  `git apply --check` passes on the live tree, and `git worktree list` no longer names the worktree
-  of `gen`. The run prints the SHA-256 of the patch, the SHA-256 and mode of each staged copy, and
-  the SHA-256 of each file that the patch edits, before the edit.
+- [x] E1 `wt132.sh gen` builds the live tree, makes the edit of stage 3 in it, and prints the diff of
+      the four final files; it removes its own worktree. The run writes that diff to
+      `docs/reviews/framework-audit-132-stage3.diff`: each final file of TASK R6.1 with the bytes of
+      its staged copy, no other path, no mode line and no staged copy. After a failed `gen`, the
+      run removes the partial patch. `git apply --check` passes on the live tree. The audit record
+      holds the SHA-256 of the patch, and of each file that it edits before and after the edit,
+      with each mode.
 
 ## Cluster H — the checks of the live and the patched tree
 
-- [x] H1 On the live tree:
-  - `gates.py`, the steps of `.github/workflows/framework-gates.yml`: every step passes, the
-    session-state step and the step of TASK R7.1 among them (TASK A6, A8);
-  - `git diff --quiet <base> --` exits 0 for each of the nine final files of TASK R9.1, for
-    `.agent/skills/skill-archive-task/SKILL.md` and for `.agent/skills/skill-safe-commands/SKILL.md`
-    (TASK R8.4);
-  - `list_tests131.py <repo>`: no listing names a staged file. The listings are pytest's `--co`
-    from the root, from `tests/`, from `.agent/` and from `.agent/tools/`, the unittest discovery
-    of `tests`, and the curated suite of `tests/run_tests.py`. Each exits 0 but the one from
-    `.agent/`. That one exits 2 with the 21 errors of collection of the base, a finding before the
-    task: packages of `scripts/tests` under `.agent/skills/` share the name `tests`. It still
-    names the four test modules of `.agent/tools/`;
-  - `regcheck.py` of every changed document finds no warning on an added line (TASK A9);
-  - `bytescan.py` of every changed and created file finds nothing;
-  - every path of `git status` is declared.
-- [x] H2 `wt131.sh make` builds the patched tree. There:
-  - `gates.py` passes every step; the curated suite runs the new `tests/test_archive_move.py` and
-    `tests/test_script_guards.py` (TASK A1 to A6);
-  - each final file of TASK R9.1 equals its staged copy byte for byte;
-  - `python3 -m pytest` of the step of TASK R7.1 reports its counts; the audit record compares
-    them with the 314 tests of the base (TASK §8);
-  - `list_tests131.py` gives the listings of H1, with the exit codes and the errors of H1;
-  - `grep -c 'or the platform' .agent/tools/slot_links.py` prints 0 (TASK A2);
-  - under each platform stand-in of TASK R6.2, the file mode on a copy of the archive of TASK 130
-    exits 0. The inbound mode with `--dry-run` exits 3 with the two records of the archive in §1.
-    TC-W10 and these runs cover the branch `_move` of a real platform: no run under the rule of
-    `archive_move.py` moves the live `docs/TASK.md`.
-
-  `wt131.sh remove` then removes the patched tree. The run writes nothing in the tree from
-  `wt131.sh make` to the end of H2.
+- [x] H1 The live tree, under the guard:
+  - `gates.py`: each step passes. The step of TASK 131 R7.1 runs the base scripts;
+  - the four final files and the texts of TASK R5.3 equal the base;
+  - `list_tests131.py`: no listing names a staged file, and each exits as at PLAN 131 H1;
+  - `regcheck.py`: 0 warn on each changed document. `bytescan.py`: each changed and created file
+    is clean. Each path of `git status` is declared.
+- [x] H2 The patched tree of `wt132.sh make`, under the guard:
+  - `gates.py`: each step passes. The step of TASK 131 R7.1 runs TC-D1 to TC-D5, with TC-D6
+    skipped;
+  - each final file equals its staged copy;
+  - the file mode on the archive of TASK 131 with `--dry-run`, and the inbound mode with
+    `--dry-run` and `--since` of that task's base. Each exits as at the archive of §1, with no
+    stand-in and with the platform stand-ins of TASK 131 R6.2;
+  - in a temporary root under the session's scratchpad, removed after the runs, each run below
+    with the stand-in of TASK R3.1. No run ends in a traceback:
+    - the file mode on a document with `[n](nul)`: exit 3, an `ESCAPES_ROOT` record;
+    - the operand `docs/tasks/nul`: exit 2;
+    - `--to nul`, and `--from nul`: exit 2;
+    - the walk of the inbound mode, with `os.lstat` also failing for a directory `nul`: exit 3,
+      and an `UNREADABLE` record for `nul`;
+  - the source of TC-W16 equals that of the base, and the live and the patched tree skip the same
+    tests of the base (TASK R3.2).
 
 ## Cluster F — the mutations
 
-- [x] F1 After H2 passes, `wt131.sh make` builds the patched tree again. `mutate131.py` runs each
-      mutation of the table in that worktree, and `wt131.sh remove` removes it at the end, also
+- [x] F1 After H2 passes, `wt132.sh make` builds the patched tree again. `mutate131.py` runs each
+      mutation of the table in that worktree, and `wt132.sh remove` removes it at the end, also
       after an error. The run hashes the live tree before and after F1; a difference stops the
       run. For each mutation:
   1. a control run of the named test on the unmutated tree passes;
   2. each edit of the mutation replaces one exact text, which occurs once in its file;
   3. the named test then ends `failed`: pytest exits 1, and its summary names a failed test and no
-     error of collection or of setup. An exception raised in the test's call counts as a failure;
+     error of collection or of setup;
   4. the file gets back its bytes, and its SHA-256 equals the one before the mutation.
 
-  The audit record holds each mutation with its result. A mutation marked `W` is killed only by a
-  test that runs on Windows: F1 runs it, and records `not killed on macOS` (TASK R6.8, A7). A
-  mutation without `W` that survives returns to B2, red first: its test gains the assertion that
-  kills it. C, E1, H1, H2 and F1 then run again.
+  A mutation marked `W` is killed only by a test that runs on Windows: F1 runs it, and records
+  `not killed on macOS` (TASK A4). When a mutation without `W` survives, the run returns to B2, red
+  first: its test gains the assertion that kills it. C, E1, H1, H2 and F1 then run again.
 
 | # | File | Mutation | Test |
 | :--- | :--- | :--- | :--- |
-| 1 | archive_move | `main` runs `_move` on every platform | TC-W1 |
-| 2 | archive_move | step 1 accepts a link at `docs` | TC-W2 |
-| 3 | archive_move | step 4 accepts a link at the destination directory | TC-W2 |
-| 4 | archive_move | the link check drops its reparse-tag clause | TC-W2 |
-| 5 | archive_move | the link check drops the name-surrogate mask | TC-W2 |
-| 6 | archive_move | two edits: step 5 removed, and `O_EXCL` dropped from step 6 | TC-W3 |
-| 7 | archive_move | step 2 drops the hard-link check | TC-W4 |
-| 8 | archive_move | step 2 drops the read-only check | TC-W4 |
-| 9 | archive_move | step 7 drops its directory checks | TC-W5 |
-| 10 | archive_move | step 9 removed | TC-W6 |
-| 11 | archive_move | a refusal at step 9 removes the archive in every case | TC-W6 |
-| 12 | archive_move | the tries of R1.6 reduced to one | TC-W7 |
-| 13 | archive_move | no check of step 9 before a try of step 10 | TC-W7 |
-| 13b | archive_move | as 13 | TC-W43 |
-| 14 | archive_move | no check of the source before a try of the archive's removal | TC-W7 |
-| 15 | archive_move | a failure of step 10 keeps the archive | TC-W7; on Windows TC-W8 |
-| 16 | archive_move | `main` runs `_move_by_path` where `_supported()` returns true | TC-W10 |
-| 17 | archive_move | step 3 drops its identity check | TC-W21 |
-| 18 | archive_move | the handler of R1.7 removed | TC-W22 |
-| 19 | archive_move | a created directory is not removed | TC-W22 |
-| 20 | archive_move | `os.rmdir` of R1.5 not tried again | TC-W22 |
-| 21 | archive_move | the docstring loses the label `RW5` | TC-W23 |
-| 22 | archive_move | step 3 drops `O_BINARY` | TC-W24 |
-| 23 | archive_move | step 6 drops `O_BINARY` | TC-W24 |
-| 24 | rebase_links | the open of R2.2 drops its identity check | TC-W11 |
-| 25 | rebase_links | the open of R2.2 drops its link check | TC-W11 |
-| 26 | rebase_links | the open of R2.2 drops `O_BINARY` | TC-W24 |
-| 27 | rebase_links | the record line of the text output written with `print` | TC-W14 |
-| 28 | rebase_links | `--json` with `ensure_ascii=False` | TC-W14 |
-| 29 | rebase_links | an operand that is not UTF-8 left unhandled | TC-W15 |
-| 30 | rebase_links | the prefix of R4.2 removed | TC-W16 |
-| 31–34 | rebase_links | a `ValueError` of `commonpath` left unhandled, at each of the four checks | TC-W17 |
-| 35 | rebase_links | the drive clause of R5.2 removed | TC-W18 |
-| 36 | rebase_links | the root clause of R5.2 removed | TC-W18 |
-| 37 | rebase_links | `denotes_old` keeps `os.sep` | TC-W25 |
-| 38 | slot_links | the module reads its link check from `rebase_links` | TC-W26 |
-| 39 | rebase_links | two edits: the file mode drops both checks that the operand's directory lies inside | TC-G13; on Windows TC-W12 |
-| 40 | rebase_links | the file mode drops the check of `_adds_parts` | TC-G31; on Windows TC-W27 |
-| 41 | slot_links | the open helper of R2.2 drops its identity check | TC-W19 |
-| 42 | slot_links | the open helper of R2.2 drops its link check | TC-W19 |
-| 43 | archive_protocol | the read of line 400 drops `encoding` | TC-W28 |
-| 44 | slot_links | the walk filter of R2.5 removed | TC-W20 |
-| 45–47 | slot_links | a `ValueError` of `commonpath` left unhandled, at each of the three checks | TC-W17 |
-| 48 | slot_links | the opens of R2.2 drop `O_BINARY` | TC-W24 |
-| 49 | task_id_tool | `_first_h1` drops `O_BINARY` | TC-W24 |
-| 50 W | archive_move | step 3 drops `O_BINARY` on Windows only | TC-W9 |
-| 51 W | archive_move | step 6 drops `O_BINARY` on Windows only | TC-W9 |
-| 52 W | rebase_links | the open of R2.2 drops `O_BINARY` on Windows only | TC-W13, file mode |
-| 53 W | slot_links | the opens of R2.2 drop `O_BINARY` on Windows only | TC-W13, inbound mode |
-| 54 | archive_protocol | the write of line 491 drops `encoding` | TC-W28 |
-| 55 | archive_move | step 3 drops its check of one hard link | TC-W29 |
-| 56 | archive_move | step 7 drops its check of `docs` | TC-W30 |
-| 57 | archive_move | step 7 drops its check of the destination | TC-W31 |
-| 58 | archive_move | the undo drops its check of the archive's identity, before each try | TC-W31 |
-| 59 | archive_move | the undo after step 7 or 8 removes the archive with no tries | TC-W32 |
-| 60 | archive_move | a failed step 10 gives a plain refusal | TC-W33 |
-| 61 | archive_move | the message of a failed removal of the archive takes another form | TC-W33 |
-| 62 | archive_move | the undo drops its checks of the directories | TC-W34 |
-| 63 | archive_move | step 2 drops the encrypted attribute | TC-W35 |
-| 64 | archive_move | the check of step 9 drops the size and the time | TC-W36 |
-| 64b | archive_move | as 64 | TC-W43 |
-| 65 | rebase_links | the open of R2.2 opens an entry that is not a regular file | TC-W37 |
-| 66 | slot_links | the open of R2.2 opens an entry that is not a regular file | TC-W37 |
-| 67 | rebase_links | `_descriptor_path` imports `fcntl` on every platform | TC-W38 |
-| 68 | slot_links | `_descriptor_path` imports `fcntl` on every platform | TC-W38 |
-| 69 | rebase_links | the check of R5.5 removed | TC-W39 |
-| 69b | rebase_links | `_refuse_operand` drops its call of the check of R5.5 | TC-W39 |
-| 70 | slot_links | `_dir_link` lets the walk enter a directory whose `lstat` fails | TC-W40 |
-| 71 | rebase_links | a fence closes on LF only | TC-W41 |
-| 71b | rebase_links | as 71 | TC-W41, inbound mode |
-| 72 | rebase_links | a blank line of a code span is of LF only | TC-W41 |
-| 72b | rebase_links | as 72 | TC-W41, inbound mode |
-| 73 | rebase_links | the check of a UNC `--repo-root` removed | TC-W42 |
-| 73b | rebase_links | `_unc` returns false | TC-W42 |
-| 74 | task_id_tool | `_unc` returns false | TC-W42 |
-| 74b W | task_id_tool | the check of a UNC `--tasks-dir` removed | TC-W42, on Windows |
-| 75 | rebase_links | the open of R2.2 drops `O_NONBLOCK` | TC-W24 |
-| 76 | slot_links | the open of R2.2 drops `O_NONBLOCK` | TC-W24 |
-| 77 | archive_move | the undo removes the archive with no check before a later try | TC-W44 |
-| 78 | archive_move | the undo keeps a file of step 6 with no word of it | TC-W45 |
-| 79 | archive_move | no check of the directories before the removal of the created directory | TC-W46 |
-| 80 | archive_move | no check of the directories before a later try of that removal | TC-W46 |
-| 81 | rebase_links | `_unc` drops the prefix `\??\` | TC-W42 |
-| 81b | task_id_tool | `_unc` drops the prefix `\??\` | TC-W42 |
-| 82 | rebase_links | `_unc` drops its check that paths have drives | TC-W42 |
-| 82b | task_id_tool | `_unc` drops its check that paths have drives | TC-W42 |
-| 83 | rebase_links | the check of R5.5 drops its check that paths have drives | TC-W39 |
-
-## Cluster G — the check of what runs
-
-- [x] G1 The check of `framework-upgrade` §3 step 4 with `check.py`, for each allowed command that
-      reaches a file edited in place (TASK R9.3). Each command exits 0, but a bare pytest from
-      `.agent/`, which exits 2 with the 21 errors of collection of H1:
-  1. the committed rule `68c87931dedb` from the root, from `tests/`, from `.agent/` and from
-     `.agent/tools/`. From `.agent/` it imports the test modules of `.agent/tools/` and runs none;
-     the run from `.agent/tools/` runs them;
-  2. the committed rule `e97c6d7e4fe6` from the same four directories;
-  3. the local rule `ca2c33383ded` from the root;
-  4. the committed rule `a8ddacaa1aa9` from the root.
-
-  Until stage 3, the rules of the scripts run the base files, and no rule runs a staged copy.
-  - A difference of the stop rule ends G1, as that rule states.
-  - A difference that code of the change writes fails the check. The fix returns to its cluster,
-    red first, then E1, H1, H2, F1 and G1.
-  - A difference that other code writes is a finding before the task, named to the operator.
-  - The run puts back each difference as `framework-upgrade` §3 step 4 states, whichever code
-    wrote it.
-  - A non-zero exit that code of the change causes fails the check, as a difference does. Any
-    other non-zero exit is named to the operator, who decides.
-
-  The audit record holds each command, by the prefix of its rule, with its directory, its exit code
-  and its result.
+| 1 | slot_links | the record of an error of `os.walk` takes `os.path.relpath` | TC-D2 |
+| 2 | slot_links | the record of a failed `os.lstat` takes `os.path.relpath` | TC-D1 |
+| 3 | slot_links | the list of files takes `os.path.relpath` | TC-D3 |
+| 4 | slot_links | the text of R1.1 keeps the separator that follows the root | TC-D4 |
+| 5 | slot_links | the root gives an empty path, not `.` | TC-D2 |
+| 6 | rebase_links | `_relative` catches no `ValueError` | TC-D5; on Windows TC-D6 |
+| 7 | rebase_links | the check of TASK R2.2 removed | TC-D5; on Windows TC-D6 |
+| 8 | rebase_links | the check of TASK R2.3 removed | TC-D5; on Windows TC-D6 |
+| 9 | rebase_links | the check of TASK R2.4 removed | TC-D5; on Windows TC-D6 |
+| 10 | rebase_links | the check of TASK R2.4 skips `--to` | TC-D5; on Windows TC-D6 |
+| 11 | rebase_links | the check of TASK R2.4 skips `--from` | TC-D5 |
+| 12 W | slot_links | the text of R1.1 keeps `os.sep` | TC-D4 on Windows |
 
 ## Cluster I — stage 2: the reviews
 
@@ -548,118 +326,84 @@ Each staged script starts as `cp -p` of its base file. C1 to C4 run in the dev t
   - After each round, the run takes the listing of the live-state guard and lists the scratchpad.
     It removes each copy of a repository file that a reviewer left there, and the audit record
     lists each.
-  - A fix round runs the steps of the clusters it touches, red first, then E1, H1, H2, F1 and G1.
+  - A fix round runs the steps of the clusters it touches, red first, then E1, H1, H2 and F1.
   - An `INCOMPLETE` security audit is not a round: `security-audit` §6.2 re-runs the unfinished
     part once, and then the operator decides.
-  - A round may find only LOW routes of a class that an earlier round fixed. The operator then
-    chooses a residual in the TASK with one backlog record, or one more round. A PLAN revision
-    declares the record's path before it is written.
-  - The fix of round 1 (TASK D24 to D26) runs the steps of B, C and D that it touches, under the
-    guard:
-    1. the staged test modules first: the fixtures of LF bytes, the cleanup of TC-W2, the junctions
-       through `_winapi.CreateJunction`, the style findings, and TC-W29 to TC-W42, red in a red
-       tree;
-    2. the staged scripts: R1.4 steps 2 and 9, R1.5, R1.9, R2.2, R2.3, R2.5, R5.5, R11 and R12,
-       green in a dev tree, then the whole step of TASK R7.1 in a new dev tree;
-    3. TASK D7 and the docstring of `archive_move.py` gain RW11; `docs/ARCHITECTURE.md` and both
-       changelogs state R11 and R12;
-    4. E1, H1, H2, F1 with the table below, and G1; then round 2 of I1.
-  - The fix of round 2 (TASK D28) runs the same way, under the guard:
-    1. the staged test modules first: TC-W30, TC-W31, TC-W39, TC-W41 of the inbound mode, TC-W42
-       and the style findings; TC-W43 to TC-W46, red in a dev tree with the staged scripts of
-       round 1;
-    2. the staged scripts: R1.4 step 9, R1.5, R1.6 and R12.1, green in a new dev tree;
-    3. TASK D7 and the docstring of `archive_move.py` gain RW12, and change RW2 and RW11;
-       `docs/ARCHITECTURE.md` and both changelogs state the encrypted source and the forms of
-       R12.1;
-    4. E1, H1, H2, F1 with the table below, and G1; then round 3 of I1, the last of the bound.
 
-## Cluster J — §4.5, stage 3 and stage 4
+## Cluster J — §4.5, stage 3, the check of what runs, stage 4
 
 - [x] J1 §4.5: `check_positional_refs.py --targets-changed`, then with `--fix`; the audit record
       lists every file a repair touched. Then `rules_check.py compare` reads the local and the user
-      settings again (TASK R9.4):
-  - a rule that the reading at §2.2 lacks, and that runs a file of the change, stops the run for
-    the operator;
-  - on exit 2, a changed file with no new allow rule, the run names each changed top-level key to
-    the operator, and the operator decides whether the run continues;
-  - the audit record names the outcome and quotes no rule.
+      settings again (TASK R6.4). When a rule that the reading at §2.2 lacks runs a file of the
+      change, the run stops for the operator.
 - [x] J2 Stage 3:
   1. the patch and each staged copy hash to the values that I1 quoted;
-  2. the audit record holds:
-     - the patch text in a `~~~~diff` fence;
-     - the SHA-256 and mode of each staged copy and of each file that the patch edits;
+  2. the audit record holds the patch text in a `~~~~diff` fence, and the SHA-256 and mode of each
+     staged copy and of each file that the patch edits;
   3. each file that the patch edits hashes to its value before the edit in E1; then
      `git apply --whitespace=nowarn` of the patch;
-  4. postconditions, all before step 5: each final file hashes to its staged copy and keeps its
-     mode, and `git apply --check -R` passes;
+  4. postconditions: each final file hashes to its staged copy and keeps its mode, and
+     `git apply --check -R` passes;
   5. `rm --` each staged copy. The audit record lists each removal; a failed `rm` is a failed
      postcondition.
 
   A mismatch at step 1 or step 3 means STOP: the patch returns to I1. A non-zero exit of
-  `git apply` means STOP and report; `git apply` is atomic, so nothing was applied.
-- [x] J3 The gates again, from the repository root:
-  - `gates.py`, `regcheck.py` of the changed documents, and `bytescan.py`;
-  - the check of `framework-upgrade` §3 step 4 with `check.py` for the commands of G1, each with
-    the exit code of G1. It also runs each rule that now runs a file of the change, with the exit
-    code named:
-    - the committed rule `4e5ef4a6bcd5`: no operand, exit 2. The pairs `docs/TASK.md
-      docs/tasks/x.md` and `docs/README.md docs/tasks/task-001-x.md`, which `_parse` refuses by
-      their form, each exit 1;
-    - the committed rule `ce6cfae3843d`: `--help`, exit 0. The file mode with `--dry-run` on the
-      archive of TASK 130, exit 0, and again with `--json`, exit 0. The operand `README.md`, exit 2.
-      The operand of that archive with `--from /x`, exit 2. `--inbound` with `--dry-run` as at §1
-      of the audit record, exit 3, and again with `--json`, exit 3;
-    - the committed rule `274abb280e58`: the slug of TASK 131 with `--proposed-id 131` and
-      `--no-correction`, exit 0. Every form of the script reaches `_first_h1` through its scan of
-      `docs/tasks/`, the only code that TASK R2.7 changes;
-    - the local rules `bcddea47eb1b` and `20890709883a`, and the user rules `f23abd494daf` and
-      `0b6b1d85891c`, each as its rule approves it, exit 0.
+  `git apply` means STOP and report.
+- [x] J3 The run runs the gates again, from the repository root, under the guard: `gates.py`,
+      `regcheck.py` of the changed documents, and `bytescan.py`. Then it runs the check of
+      `framework-upgrade` §3 step 4 with `check.py`, for each allowed command that reaches the
+      change, each with the exit code named. Each command of `ce6cfae3843d` runs from the root as
+      `python3 .agent/tools/rebase_links.py` with its arguments, and `<A>` stands for
+      `docs/tasks/task-131-archive-chain-windows.md`:
+  - the committed rules `68c87931dedb` and `e97c6d7e4fe6` from the root, from `tests/` and from
+    `.agent/tools/`, exit 0, and from `.agent/`, exit 2 with the 21 errors of collection of the
+    base;
+  - the local rule `ca2c33383ded` and the committed rule `a8ddacaa1aa9` from the root, exit 0;
+  - the committed rule `ce6cfae3843d`:
+    - `rebase_links.py --help`, exit 0;
+    - `rebase_links.py <A> --from docs --to docs/tasks --dry-run`, exit 0;
+    - `rebase_links.py docs/tasks/nul --from docs --to docs/tasks --dry-run`, exit 2, refused as
+      no markdown file;
+    - `rebase_links.py <A> --from docs --to nul --dry-run`, exit 0: `posixpath.relpath` raises no
+      `ValueError` for these paths, so R2.4 refuses `nul` only on Windows, or under the stand-in of
+      H2 and TC-D5;
+    - `rebase_links.py --inbound --task <A> --plan docs/plans/plan-131-archive-chain-windows.md
+      --since 6f3d65c8d085c48ae36e2e63a7f47fc9ac2b8dce --dry-run`, exit 3, as at §1 of the audit
+      record.
 
-    The run first attributes each difference and each exit code other than the one named. One
-    that code of the change causes is a failed gate of stage 3. One that other code causes goes to
-    the operator as at G1. A difference of the stop rule ends J3, as that rule states, and starts
-    no Failure path;
-  - the local and the user settings are read again, as at J1;
-  - every path of `git status` is declared.
+  The three rules of A2 that can reach any code stay findings before the task. The run first
+  attributes each difference and each exit code other than the one named. One that code of the
+  change causes is a failed gate of stage 3. A difference of the stop rule ends J3, as that rule
+  states, and starts no Failure path. The local and the user settings are read again, as at J1.
+  Every path of `git status` is declared.
 - [x] J4 Stage 4: a `code-reviewer` and a `security-auditor` on the applied patch, at the new
       fingerprint. Each brief states the boundary of `framework-upgrade` §3 step 4. After the
       round, the guard and the scratchpad are checked as in I1.
 
-**Failure** (`framework-upgrade` §3 step 4, as written):
+**Failure** (`framework-upgrade` §3 step 4, as written): a failed postcondition or gate of J2 or
+J3, or a J4 review that is rejected or `FAIL`, other than an `INCOMPLETE` audit alone.
+1. The run writes each staged copy back from its final file when that file still hashes to the
+   copy's SHA-256 in the audit record, with the mode recorded at J2 step 2. A mismatch means STOP.
+2. It runs `git apply -R --whitespace=nowarn` of the same patch.
+3. Each file's SHA-256 and mode then equal those of J2 step 2; a mismatch, or a non-zero exit,
+   means STOP.
+4. The audit record names the restore, and lists TASK R1 to R3 and R6.1 under
+   `Pending after restore`. It also lists the texts that already state the change: the entries
+   v3.50.1 of both changelogs, and the record of ARC-14 and its index line. The operator decides
+   what follows.
 
-- A failed postcondition or gate of J2 or J3, or a J4 review that is rejected or `FAIL`, other
-  than an `INCOMPLETE` audit alone. A difference of the stop rule is not such a failure.
-  1. The run writes each staged copy back from its final file when that file still hashes to the
-     copy's SHA-256 in the audit record. It gives the copy the mode recorded at J2 step 2. A
-     mismatch means STOP.
-  2. It runs `git apply -R --whitespace=nowarn` of the same patch.
-  3. Each file's SHA-256 and mode then equal those of J2 step 2; a mismatch, or a non-zero exit,
-     means STOP.
-  4. The audit record names the restore, and lists TASK R1 to R6 and R9.1 under
-     `Pending after restore`. It also lists the texts that already state the change:
-     - the entries v3.50.0 of both changelogs;
-     - the paragraph of `docs/ARCHITECTURE.md`;
-     - the progress note of the WI-39 record, and the step of the workflow;
-     - the calls of TASK R10 in `.agent/tools/archive_protocol.py`.
-
-     The operator decides what follows.
-  5. A change of the text of a staged file after the restore returns the change to stage 1. B2 or
-     C then writes it again, red first, and E1, H1, H2, F1, G1 and I1 follow.
-- An `INCOMPLETE` J4 security audit as the only failure: steps 1 to 3 of the restore. Then
-  `security-audit` §6.2 re-runs the unfinished part with the recorded patch. On a pass, J1 to J3
-  run again, and then J4 on the new fingerprint. Otherwise the operator decides, and steps 4 and 5
-  follow.
+An `INCOMPLETE` J4 security audit as the only failure: steps 1 to 3 of the restore. Then
+`security-audit` §6.2 re-runs the unfinished part with the recorded patch. On a pass, J1 to J3 run
+again, and then J4 on the new fingerprint. Otherwise the operator decides, and step 4 follows.
 
 ## Cluster K — the retro and the final report
 
-- [x] K1 `framework-upgrade` §6 with the run id `framework-upgrade-task-131-archive-chain-windows`.
+- [x] K1 `framework-upgrade` §6 with the run id `framework-upgrade-task-132-arc-14-walk-relpath`.
       The audit record lists any record that the retro files. Such a record is no declared path,
       so a fallback after the retro stops at §5 step 1 and asks the operator.
-- [x] K2 The run's last message names the step `Run the archive-chain tests` of both Windows jobs,
-      and asks the operator to commit and push (TASK A12). It says that the next task reads the
-      first run of the step (TASK R7.4). It names R10, which the orchestrator added to the scope
-      (TASK D21); the operator heard of it before I1.
+- [x] K2 The run's last message asks the operator to commit and push, and says that the next task
+      reads the first run of the step `Run the archive-chain tests` (TASK R4.2), TC-W16 and TC-D6
+      among its tests.
 
 ## Schedule
 
@@ -669,17 +413,16 @@ Each staged script starts as `cp -p` of its base file. C1 to C4 run in the dev t
 {
   "schema": "plan-schedule/v1",
   "tasks": [
-    {"id": "131.A", "title": "Base check", "stage": "Build", "est": 1, "deps": [], "status": "done"},
-    {"id": "131.B", "title": "Stage 1 tests", "stage": "Build", "est": 4, "deps": ["131.A"], "status": "done"},
-    {"id": "131.C", "title": "Staged scripts", "stage": "Build", "est": 4, "deps": ["131.B"], "status": "done"},
-    {"id": "131.D", "title": "Docs and records", "stage": "Build", "est": 1, "deps": ["131.B"], "status": "done"},
-    {"id": "131.E", "title": "The patch", "stage": "Build", "est": 1, "deps": ["131.C", "131.D"], "status": "done"},
-    {"id": "131.H", "title": "Checks of the trees", "stage": "Closure", "est": 2, "deps": ["131.E"], "status": "done"},
-    {"id": "131.F", "title": "Mutations", "stage": "Closure", "est": 2, "deps": ["131.H"], "status": "done"},
-    {"id": "131.G", "title": "What runs", "stage": "Closure", "est": 1, "deps": ["131.F"], "status": "done"},
-    {"id": "131.I", "title": "Stage 2 reviews", "stage": "Closure", "est": 3, "deps": ["131.G"], "status": "done"},
-    {"id": "131.J", "title": "Stage 3 and 4", "stage": "Closure", "est": 2, "deps": ["131.I"], "status": "done"},
-    {"id": "131.K", "title": "Retro and report", "stage": "Closure", "est": 1, "deps": ["131.J"], "status": "done"}
+    {"id": "132.A", "title": "Base check", "stage": "Build", "est": 1, "deps": [], "status": "done"},
+    {"id": "132.B", "title": "Stage 1 tests", "stage": "Build", "est": 1, "deps": ["132.A"], "status": "done"},
+    {"id": "132.C", "title": "Staged scripts", "stage": "Build", "est": 1, "deps": ["132.B"], "status": "done"},
+    {"id": "132.D", "title": "Changelogs and record", "stage": "Build", "est": 1, "deps": ["132.B"], "status": "done"},
+    {"id": "132.E", "title": "The patch", "stage": "Build", "est": 1, "deps": ["132.C", "132.D"], "status": "done"},
+    {"id": "132.H", "title": "Checks of the trees", "stage": "Closure", "est": 1, "deps": ["132.E"], "status": "done"},
+    {"id": "132.F", "title": "Mutations", "stage": "Closure", "est": 1, "deps": ["132.H"], "status": "done"},
+    {"id": "132.I", "title": "Stage 2 reviews", "stage": "Closure", "est": 2, "deps": ["132.F"], "status": "done"},
+    {"id": "132.J", "title": "Stage 3 and 4", "stage": "Closure", "est": 1, "deps": ["132.I"], "status": "done"},
+    {"id": "132.K", "title": "Retro and report", "stage": "Closure", "est": 1, "deps": ["132.J"], "status": "done"}
   ]
 }
 ```
@@ -695,27 +438,26 @@ gantt
   accDescr: Each bar starts when its last dependency ends and lasts its estimate, the axis counts estimate hours from the start, not dates.
   dateFormat x
   axisFormat %Q
-  tickInterval 5millisecond
+  tickInterval 2millisecond
   todayMarker off
   section Build
-    131.A Base check:done, crit, t131xA, 0, 1ms
-    131.B Stage 1 tests:done, crit, t131xB, 1, 4ms
-    131.C Staged scripts:done, crit, t131xC, 5, 4ms
-    131.D Docs and records:done, t131xD, 5, 1ms
-    131.E The patch:done, crit, t131xE, 9, 1ms
+    132.A Base check:done, crit, t132xA, 0, 1ms
+    132.B Stage 1 tests:done, crit, t132xB, 1, 1ms
+    132.C Staged scripts:done, crit, t132xC, 2, 1ms
+    132.D Changelogs and record:done, t132xD, 2, 1ms
+    132.E The patch:done, crit, t132xE, 3, 1ms
   section Closure
-    131.H Checks of the trees:done, crit, t131xH, 10, 2ms
-    131.F Mutations:done, crit, t131xF, 12, 2ms
-    131.G What runs:done, crit, t131xG, 14, 1ms
-    131.I Stage 2 reviews:done, crit, t131xI, 15, 3ms
-    131.J Stage 3 and 4:done, crit, t131xJ, 18, 2ms
-    131.K Retro and report:done, crit, t131xK, 20, 1ms
+    132.H Checks of the trees:done, crit, t132xH, 4, 1ms
+    132.F Mutations:done, crit, t132xF, 5, 1ms
+    132.I Stage 2 reviews:done, crit, t132xI, 6, 2ms
+    132.J Stage 3 and 4:done, crit, t132xJ, 8, 1ms
+    132.K Retro and report:done, crit, t132xK, 9, 1ms
 ```
 
 Legend: green fill — done · red border — critical path.
 
 Ready to start: none.
 
-Critical path — 21 h by estimates, 10 of 10 tasks done, 0 h remaining: 131.A → 131.B → 131.C → 131.E → 131.H → 131.F → 131.G → 131.I → 131.J → 131.K.
+Critical path — 10 h by estimates, 9 of 9 tasks done, 0 h remaining: 132.A → 132.B → 132.C → 132.E → 132.H → 132.F → 132.I → 132.J → 132.K. Also at zero slack: 132.D.
 
 <!-- generated:plan-gantt-end -->

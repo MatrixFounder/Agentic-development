@@ -32,7 +32,9 @@ skill directory at any `--path` or path-shaped name. This file pins:
   and after the open, refuses a junction, keeps every byte, writes any text in any stream
   encoding, refuses an operand that is not UTF-8, finds no `.pyc` under a relative null device,
   treats paths on two drives as outside, and keeps its own helpers (``TC-W11`` to ``TC-W18``,
-  ``TC-W24``, ``TC-W26``, ``TC-W27``, TASK 131).
+  ``TC-W24``, ``TC-W26``, ``TC-W27``, TASK 131);
+* a link, an operand, `--from` or `--to` that names a device, such as `nul`, ends in a record or
+  a refusal, not in a traceback (``TC-D5``, ``TC-D6``, TASK 132, ARC-14).
 
 A test that makes a symbolic link skips where this process cannot make one, and a test whose
 premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5, D22).
@@ -154,6 +156,21 @@ def _can_symlink():
 
 NEEDS_SYMLINK = unittest.skipUnless(_can_symlink(), "this process cannot make a symbolic link")
 WINDOWS_ONLY = unittest.skipUnless(os.name == "nt", "a behaviour of Windows")
+
+
+def _device_relpath():
+    """TASK 132 R3.1: `os.path.relpath` as Windows runs it for a path that names a device.
+
+    It raises the `ValueError` of `ntpath.relpath` when the last part of its path or of its start
+    is `nul`. It calls the real function otherwise.
+    """
+    real = os.path.relpath
+
+    def relpath(path, start=os.curdir):
+        if any(os.path.basename(os.path.normpath(part)) == "nul" for part in (path, start)):
+            raise ValueError("path is on mount '\\\\.\\nul', start on mount 'C:'")
+        return real(path, start)
+    return mock.patch("os.path.relpath", side_effect=relpath)
 #: TASK 131 R6.5: a premise of POSIX that Windows does not hold.
 POSIX_PREMISE = os.name == "nt"
 #: The characters that a name on NTFS cannot hold.
@@ -1123,6 +1140,78 @@ class TestRebaseLinksGuard(unittest.TestCase):
                                "--repo-root", "\\\\localhost\\nowhere"], self.root)
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertIn("--repo-root is a UNC or device path", result.stderr)
+
+    # --- TASK 132: a path that names a device (ARC-14) ------------------------------------------
+
+    def main_in_root(self, module, args):
+        """Exit code and stderr of `module._main(args)` in the root, under the stand-in."""
+        out, err = io.StringIO(), io.StringIO()
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        try:
+            with _device_relpath(), contextlib.redirect_stdout(out), \
+                    contextlib.redirect_stderr(err):
+                code = module._main(args)
+        finally:
+            os.chdir(cwd)
+        return code, err.getvalue()
+
+    def test_d5_a_link_to_a_device(self):
+        # base-fail: `relpath` raises for the link to `nul`, and the file mode ends in a traceback.
+        module = _module(REBASE, "rebase_links_under_test")
+        with _device_relpath():
+            _text, records = module.rebase_document_links(
+                "[a](ARCHITECTURE.md) [n](nul)\n", "docs", "docs/tasks", str(self.root))
+        self.assertEqual([r.action for r in records], ["REWRITTEN", "ESCAPES_ROOT"])
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text("[a](ARCHITECTURE.md) [n](nul)\n", encoding="utf-8")
+        code, err = self.main_in_root(module, ["docs/tasks/t.md", "--from", "docs",
+                                               "--to", "docs/tasks"])
+        self.assertEqual(code, 3, err)
+        self.assertEqual(moved.read_text(encoding="utf-8"), "[a](../ARCHITECTURE.md) [n](nul)\n")
+
+    def test_d5_an_operand_that_names_a_device(self):
+        # base-fail: `_under_git` calls `relpath`, which raises for `docs/tasks/nul`.
+        module = _module(REBASE, "rebase_links_under_test")
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        with _device_relpath():
+            self.assertEqual(module._refuse_operand("docs/tasks/nul"),
+                             "lies outside the working directory")
+        code, err = self.main_in_root(module, ["docs/tasks/nul", "--from", "docs",
+                                               "--to", "docs/tasks"])
+        self.assertEqual(code, 2, err)
+        self.assertIn("docs/tasks/nul: lies outside the working directory", err)
+
+    def test_d5_a_from_or_to_that_names_a_device(self):
+        # base-fail: each rewrite calls `relpath` from `--to`, which raises for `nul`; `--from nul`
+        # exits 3 at the base.
+        module = _module(REBASE, "rebase_links_under_test")
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text(LINKED, encoding="utf-8")
+        for option, args in (("--to", ["--from", "docs", "--to", "nul"]),
+                             ("--from", ["--from", "nul", "--to", "docs/tasks"])):
+            with self.subTest(option=option):
+                code, err = self.main_in_root(module, ["docs/tasks/t.md", *args])
+                self.assertEqual(code, 2, err)
+                self.assertIn(f"{option} does not lie inside the working directory", err)
+                self.assertEqual(moved.read_text(encoding="utf-8"), LINKED)
+
+    @WINDOWS_ONLY
+    def test_d6_a_device_on_windows(self):
+        moved = self.root / "docs" / "tasks" / "t.md"
+        moved.write_text("[n](nul)\n", encoding="utf-8")
+        result = self.rebase("docs/tasks/t.md")
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn("[ESCAPES_ROOT]", result.stdout)
+        self.assertEqual(moved.read_text(encoding="utf-8"), "[n](nul)\n")
+        result = self.rebase("docs/tasks/nul")
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("lies outside the working directory", result.stderr)
+        result = _run(REBASE, ["docs/tasks/t.md", "--from", "docs", "--to", "nul"], self.root)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("--to does not lie inside the working directory", result.stderr)
 
 
 class TestInboundGuard(unittest.TestCase):

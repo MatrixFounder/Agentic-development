@@ -16,6 +16,25 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.50.1 — The inbound walk and the file mode of `rebase_links.py` end without a traceback on a path that names a device (TASK 132)**
+
+#### Fixed
+
+- **A path that names a device, on Windows (ARC-14).** There `os.path.relpath` resolves a path
+  whose last part names a reserved device, such as `nul`, to `\\.\nul`, and raises `ValueError`.
+  The first Windows run of the step `Run the archive-chain tests` failed on Python 3.14: the
+  inbound walk ended with `unexpected: ValueError` on a directory named `nul`. Now:
+  - the walk of the inbound mode reads each path from its text, and records a directory that it
+    cannot read as `UNREADABLE`;
+  - the file mode counts such a path as one outside. A link to it is `ESCAPES_ROOT` and stays as
+    written; an operand, a `--from` or a `--to` that names it exits 2.
+
+#### Notes
+
+- Git for Windows checks out no file named after a device by default. The Windows jobs confirm
+  the fix after the push.
+- No migration is needed: no skill version changes, and no state changes its format.
+
 ### **v3.50.0 — The archive chain runs on Windows, and the file mode of `rebase_links.py` ends without a traceback (TASK 131)**
 
 #### Fixed

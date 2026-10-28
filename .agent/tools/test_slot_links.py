@@ -18,6 +18,9 @@ set for the test process so that the module's own git calls read no operator con
 TC-W13, TC-W17, TC-W19, TC-W20 and TC-W24 (TASK 131) pin the inbound mode on a platform without
 `O_NOFOLLOW`, Windows among them. A test that makes a symbolic link or a FIFO skips where the
 platform cannot, and a test whose premise is a behaviour of POSIX skips on Windows (TASK 131 R6.5).
+TC-D1 to TC-D4 (TASK 132) pin the paths of the walk, read as text: on Windows `os.path.relpath`
+raises for a path that names a device, such as `nul` (ARC-14). TC-D1 to TC-D3 skip on Windows,
+where a plain path names that device.
 """
 
 import contextlib
@@ -1139,3 +1142,88 @@ def test_w41_a_crlf_subtask_with_a_fence(project):
                                     b"[" + label + b"](task-033-admission-core-v1.md)")
     assert path.read_bytes() == expected
 
+
+# --- TASK 132: the walk reads each path as text (ARC-14) ------------------------------------------
+
+NOT_ON_WINDOWS = pytest.mark.skipif(
+    os.name == "nt", reason="a plain path names the device nul on Windows (TASK 132 R3.3)")
+
+
+def device_relpath(always=False):
+    """TASK 132 R3.1: `os.path.relpath` as Windows runs it for a path that names a device.
+
+    It raises the `ValueError` of `ntpath.relpath` when the last part of its path or of its start
+    is `nul`, or on every call when `always` is true. It calls the real function otherwise.
+    """
+    real = os.path.relpath
+
+    def relpath(path, start=os.curdir):
+        if always or any(os.path.basename(os.path.normpath(part)) == "nul"
+                         for part in (path, start)):
+            raise ValueError("path is on mount '\\\\.\\nul', start on mount 'C:'")
+        return real(path, start)
+    return mock.patch("os.path.relpath", side_effect=relpath)
+
+
+@NOT_ON_WINDOWS
+def test_d1_a_directory_nul_whose_lstat_fails(project):
+    # base-fail: the record of the failed `os.lstat` calls `relpath`, which raises (ARC-14).
+    write(project, "nul/x.md", "[x](../docs/TASK.md)\n")
+    real_lstat = os.lstat
+
+    def lstat(path, *args, **kwargs):
+        if os.path.basename(os.fspath(path)) == "nul":
+            raise OSError(errno.EINVAL, "Invalid argument")
+        return real_lstat(path, *args, **kwargs)
+    unreadable = []
+    with device_relpath(), mock.patch("os.lstat", side_effect=lstat):
+        found = slot_links._walk(str(project), unreadable)
+    assert TASK in found and "nul/x.md" not in found
+    assert [(r.file, r.action) for r in unreadable] == [("nul", "UNREADABLE")]
+
+
+@NOT_ON_WINDOWS
+def test_d2_a_directory_nul_whose_scandir_fails(project):
+    # base-fail: the record of the error of `os.walk` calls `relpath`, which raises (ARC-14).
+    write(project, "nul/x.md", "[x](../docs/TASK.md)\n")
+    real_scandir, failing = os.scandir, {str(project / "nul")}
+
+    def scandir(path=".", *args, **kwargs):
+        if os.fspath(path) in failing:
+            raise PermissionError(errno.EACCES, "Permission denied", os.fspath(path))
+        return real_scandir(path, *args, **kwargs)
+    unreadable = []
+    with device_relpath(), mock.patch("os.scandir", side_effect=scandir):
+        found = slot_links._walk(str(project), unreadable)
+    assert TASK in found and "nul/x.md" not in found
+    assert [(r.file, r.action) for r in unreadable] == [("nul", "UNREADABLE")]
+    # TASK 132 R1.1: the root itself is `.`.
+    failing.add(str(project))
+    unreadable.clear()
+    with mock.patch("os.scandir", side_effect=scandir):
+        assert slot_links._walk(str(project), unreadable) == []
+    assert [(r.file, r.action) for r in unreadable] == [(".", "UNREADABLE")]
+
+
+@NOT_ON_WINDOWS
+def test_d3_a_file_named_nul_is_listed(project):
+    # base-fail: the list of files calls `relpath`, which raises for `nul` (ARC-14).
+    write(project, "docs/nul", "x\n")
+    unreadable = []
+    with device_relpath():
+        found = slot_links._walk(str(project), unreadable)
+    assert "docs/nul" in found and TASK in found
+    assert unreadable == []
+
+
+def test_d4_the_walk_calls_no_relpath(project):
+    # base-fail: the base derives each path with `relpath`.
+    write(project, "docs/a/b/c.md", "c\n")
+    write(project, "notes/d.txt", "d\n")
+    root = str(project)
+    expected = sorted(os.path.relpath(os.path.join(dirpath, name), root).replace(os.sep, "/")
+                      for dirpath, _dirnames, filenames in os.walk(root) for name in filenames)
+    unreadable = []
+    with device_relpath(always=True):
+        assert slot_links._walk(root, unreadable) == expected
+    assert unreadable == []

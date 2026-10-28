@@ -16,6 +16,34 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.52.1 — The review fixes of TASK 135: a created path stops the put-back, and step 4 keeps no bare reference**
+
+#### Fixed
+
+- **The put-back waits for the operator.** A path that a checked command created stops the run,
+  and the operator removes or keeps it before the next check. Before, the run went on, and the
+  next check could not see the same write again.
+- **The site list is part of its finding**, so it agrees with the closed list of
+  `developer-guidelines` §6.4. The fix decides whether a finding is one site of a class. A site is
+  each write, removal, creation and open of the finding's state, or each route of its input.
+- **The narrow round is the operator's choice**, and its briefs limit it to the last fix and the
+  lines that fix touches.
+- **A fix of prose** adds a clause only where narrowing one cannot answer the finding. The fixer's
+  brief states the rule.
+- The check hashes the user's three files following a link, or records their absence. A restored
+  file whose hash differs stops the run as the other stops do.
+
+#### Changed
+
+- Step 4 of `framework-upgrade` keeps no bare reference to a task or a backlog record: a consumer
+  numbers its own. It holds 1616 words, against 1623 at v3.51.0.
+- `System/Docs/WORKFLOWS.md` names the narrow round in its review boundary.
+
+#### Notes
+
+- The code review of TASK 135 ran after its commit, by the operator's decision.
+  `tests/test_run_safety_rules.py` pins the new step 4.
+
 ### **v3.52.0 — Stage 2 of `framework-upgrade` gains a narrow round and a site list, and its put-back removes nothing (TASK 135)**
 
 #### Changed

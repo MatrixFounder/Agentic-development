@@ -142,8 +142,8 @@ therefore taken here, before §1. Git holds every state this run can return to.
    lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
    `refs/stash`. It adds the output of `git rev-parse HEAD` and `git ls-files -s -v`, and the
    SHA-256 of what the user's `~/.gitconfig`, `~/.config/git/config` and `~/.claude/settings.json`
-   hold, through a link. Each git command of the check and of the put-back runs with
-   `-c core.fsmonitor=false`. The process then runs the command as the rule approves it, with
+   hold, following a link, or their absence. Each git command of the check and of the put-back runs
+   with `-c core.fsmonitor=false`. The process then runs the command as the rule approves it, with
    `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
    lists again. The audit record names the code that wrote each difference, read from that code or
    from the command's output.
@@ -153,24 +153,22 @@ therefore taken here, before §1. Git holds every state this run can return to.
      that code writes into a temporary directory, which it removes.
    - A difference that other code writes is a finding before the task.
 
-   After the check, the run puts back each difference that the command was not meant to write, and
-   removes nothing. A difference under `.git` or in a file of the user, or a file of the first
-   listing that the second lacks, stops the run. The run names each difference to the operator and
-   runs no further git command. Otherwise:
+   After the check, the run handles each difference that the command was not meant to write, and
+   removes nothing. One under `.git` or in a file of the user, a created path, or a file of the
+   first listing that the second lacks stops the run. The run names each difference to the operator
+   and runs no further git command. Otherwise:
    - it restores a tracked file that no kind of §5 step 1 declares, with
      `git -c core.fsmonitor=false restore --source=<base> --staged --worktree -- ':(literal)<path>'`.
-     A file whose hash then differs from the first listing stops the run;
+     A file whose hash then differs from the first listing stops the run as above;
    - it records a changed session state again through `update_state.py`;
-   - it names every other difference to the operator, each created path and the run's own records
-     among them.
+   - it names every other difference to the operator, its own records among them.
 
    The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
    where a failed check is a failed gate. The audit record holds each command, with its paths
-   relative to the repository root, and its result (TASK 122).
+   relative to the repository root, and its result.
 
-   A change that only narrows what runs without a prompt, such as a removed allow rule, may land
-   at once. Before the edit, a check shows that it narrows, and the audit record holds the check's
-   output:
+   A change that only narrows what runs without a prompt may land at once. Before the edit, a check
+   shows that it narrows, and the audit record holds the check's output:
    - a base entry of the same list covers each new allow rule, `additionalDirectories` entry and
      `allowed-tools` entry;
    - each base deny or ask rule and `disallowedTools` entry is still present, or a new entry of the
@@ -193,25 +191,26 @@ therefore taken here, before §1. Git holds every state this run can return to.
       <!-- loop:stage2-review-retry -->
       - **Bound: max 3 review rounds.** A round is one code review and one security audit of the
         same fingerprint. A round that does not pass returns the run to the fix of its findings.
-        The §6.2 re-run of an `INCOMPLETE` audit is not a round. Still failing after the 3rd
-        round: **STOP** and escalate to the operator with the open findings; the operator
-        decides what follows. A round past the bound may be narrow, checking only the last fix
-        and the lines it touches (WI-56).
-      - **The fix.** A fix of rule text removes or narrows a clause before it adds one. When a
-        finding is one site of a class, the audit record lists each such site in the change: each
-        write, removal, creation and open of that state, on each code path. Each site has a fix
-        and a test, or the reason the class cannot occur there. The next round's brief cites the
-        list (WI-58).
-      - **LOW routes of a fixed class.** A round whose findings are all LOW, each a route of a
-        class that an earlier round of this run fixed, proposes to the operator before the next
-        round: the scope of each route as a residual in the TASK, and one backlog record that
-        holds them. The operator chooses between that record and one more round (WI-48).
+        The §6.2 re-run of an `INCOMPLETE` audit is not a round. Still failing after the 3rd round:
+        **STOP** and escalate to the operator with the open findings; the operator decides what
+        follows. Past the bound, the operator may choose a narrow round, whose briefs limit it to
+        the last fix and the lines that fix touches.
+      - **The fix.** Its brief states that a fix of prose adds a clause only where narrowing one
+        cannot answer the finding. When the fix classes a finding as one site of a class, the audit
+        record lists each such site in the change as part of that finding (`developer-guidelines`
+        §6.4). A site is each write, removal, creation and open of the finding's state, or each
+        route of its input, on each code path. Each site has a fix and a test, or the reason the
+        class cannot occur there. The next round's brief cites the list.
+      - **LOW routes of a fixed class.** A round can find only LOW routes, each of a class that an
+        earlier round of this run fixed. Before the next round, the run then proposes to the
+        operator the scope of each route as a residual in the TASK, and one backlog record that
+        holds them. The operator chooses between that record and one more round.
       - **Boundary.** A review round checks the change against its TASK and the lines it touches.
         Code that the change makes run, or run without a prompt, is among those lines. Any other
         finding, unless the change causes it as a regression, is one line in the audit record, with
         its severity, marked as before the task. Such a finding does not set the round's verdict;
-        one of CRITICAL or HIGH severity is named to the operator when the round ends. A new backlog
-        record needs the operator's decision. Each reviewer's brief states this boundary (WI-52).
+        one of CRITICAL or HIGH severity is named to the operator when the round ends. A new
+        backlog record needs the operator's decision. Each reviewer's brief states this boundary.
    3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
       into its file, or the new code over the code it replaces, and removes the copy under the new
       name. Only the retro's records follow this edit. The same edit adds a settings test that
@@ -228,9 +227,6 @@ therefore taken here, before §1. Git holds every state this run can return to.
    - In every other case, a failed gate, a rejected code review or a `FAIL` among them, the
      operator decides what follows. A registration, or the code it runs, whose text changes
      returns to stage 1.
-
-   **Why.** TASK 111 registered a PreToolUse hook while building it, and the hook asked for
-   approval on the orchestrator's and the reviewers' own commands in Auto mode.
 
 ## 4. Documentation & Finalization
 1. **Docs**: Update `System/Docs/` to match new reality.

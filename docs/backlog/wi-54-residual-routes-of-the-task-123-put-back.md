@@ -16,11 +16,12 @@ resolved_by: 'TASK 135'
 
 > **Done 2026-10-28 (TASK 135).** Option 1 (TASK 135 D3, R4 to R6).
 >
-> - The put-back of `framework-upgrade` §3 step 4 removes nothing: it names each created path to
->   the operator. S3-1 and S3-2 close by construction.
-> - The check hashes what the user's three files hold, through a link (R3-2). The restore command
->   carries `-c core.fsmonitor=false`, and a file whose hash then differs stops the run (R3-4,
->   I-2).
+> - The put-back of `framework-upgrade` §3 step 4 removes nothing. A created path stops the run
+>   for the operator, who removes or keeps it before the next check (the code review of TASK 135,
+>   M1). S3-1 and S3-2 close by construction.
+> - The check hashes what the user's three files hold, following a link, or their absence (R3-2).
+>   The restore command carries `-c core.fsmonitor=false`, and a file whose hash then differs stops
+>   the run (R3-4, I-2).
 > - `tests/test_run_safety_rules.py` pins step 4.
 
 **Signal.** TASK 123 added a check of what a change runs to `framework-upgrade` §3 step 4, and a

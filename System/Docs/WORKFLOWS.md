@@ -410,11 +410,12 @@ labelled with the answer.
    `git restore --source=<base>`, and checks that only the audit remains. No copy is written
    outside version control.
 5. **Review Boundary:** Stage-2 reviews (`framework-upgrade` §3 step 4) check the change against
-   its TASK and the lines it touches. Code that the change makes run, or run without a prompt,
-   is among those lines. Any other finding, unless the change causes it as a regression, is one
-   line in the audit record, with its severity, and does not set the round's verdict. A CRITICAL
-   or HIGH finding of that kind is named to the operator. A new backlog record needs the
-   operator's decision.
+   its TASK and the lines it touches. A narrow round, which the operator may choose past the bound
+   of three rounds, checks only the last fix and the lines that fix touches. Code that the change
+   makes run, or run without a prompt, is among those lines. Any other finding, unless the change
+   causes it as a regression, is one line in the audit record, with its severity, and does not set
+   the round's verdict. A CRITICAL or HIGH finding of that kind is named to the operator. A new
+   backlog record needs the operator's decision.
 6. **Allowed Commands:** `framework-upgrade` §3 step 4 counts the allow rules of
    `.claude/settings.json`, `.claude/settings.local.json`, the user's `~/.claude/settings.json` and
    the `allowed-tools` of skills and commands. When an allowed command runs code of the change, the

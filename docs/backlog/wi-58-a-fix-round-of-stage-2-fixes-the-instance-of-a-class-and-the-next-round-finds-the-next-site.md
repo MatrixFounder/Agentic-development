@@ -21,9 +21,11 @@ resolved_by: 'TASK 135'
 
 > **Done 2026-10-28 (TASK 135).** Option 1 (TASK 135 D5, R3).
 >
-> - "The fix" of stage 2 in `framework-upgrade` §3 step 4: when a finding is one site of a class,
->   the audit record lists each such site in the change, with a fix and a test or the reason the
->   class cannot occur there. The next round's brief cites the list.
+> - "The fix" of stage 2 in `framework-upgrade` §3 step 4: the fix can class a finding as one site
+>   of a class. The audit record then lists each such site in the change as part of that finding
+>   (`developer-guidelines` §6.4), with a fix and a test or the reason the class cannot occur
+>   there. A site is each write, removal, creation and open of the finding's state, or each route
+>   of its input. The next round's brief cites the list.
 > - `tests/test_run_safety_rules.py` pins step 4. The second half of the acceptance, a run whose
 >   audit record holds the list, waits for the next such run.
 

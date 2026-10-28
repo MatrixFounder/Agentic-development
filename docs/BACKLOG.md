@@ -73,10 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-58** [A fix round of stage 2 fixes the instance of a class, and the next round finds the next site](backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md) — effort `S`, status `open`, opened 2026-10-28
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
-- **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `open`, opened 2026-10-27
-- **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `open`, opened 2026-10-15
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-49** [The history secret scan runs git in the scanned tree's repository](backlog/wi-49-the-history-secret-scan-runs-git-in-the-scanned-trees-repository.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08
@@ -95,6 +92,9 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-58** [A fix round of stage 2 fixes the instance of a class, and the next round finds the next site](backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md) — effort `S`, status `done`, opened 2026-10-28 · **done 2026-10-28** (TASK 135): a site list for a finding that is one site of a class
+- **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `done`, opened 2026-10-27 · **done 2026-10-28** (TASK 135): a narrow round past the bound; a fix of rule text narrows before it adds
+- **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `done`, opened 2026-10-15 · **done 2026-10-28** (TASK 135): the put-back removes nothing; hash through a link; the fsmonitor flag
 - **WI-55** [A dependency audit misses the copies that a bundle embeds](backlog/wi-55-a-dependency-audit-misses-the-copies-that-a-bundle-embeds.md) — effort `S`, status `done`, opened 2026-10-27 · **done 2026-10-27** (TASK 130): `security-audit` §3 and `requirements-analysis` §3 hold the rule
 - **WI-53** [Mermaid's HTML labels are cut on GitHub, and the render check cannot see it](backlog/wi-53-mermaid-html-labels-are-cut-on-github.md) — effort `M`, status `done`, opened 2026-10-14 · **done 2026-10-14** (TASK 121): `themeCSS`, plain second lines, `font_swap`
 - **WI-52** [Stage-2 reviews can widen a framework-upgrade task beyond its changed lines](backlog/wi-52-stage-2-reviews-can-widen-a-framework-upgrade-task-beyond-its-changed-lines.md) — effort `S`, status `done`, opened 2026-10-09 · **done 2026-10-09** (TASK 120): a review boundary for stage 2

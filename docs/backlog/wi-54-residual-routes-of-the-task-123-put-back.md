@@ -1,16 +1,27 @@
 ---
 id: WI-54
 type: work-item
-status: open
+status: done
 opened_at: 2026-10-15
 slug: wi-54-residual-routes-of-the-task-123-put-back
 effort: S
 value: 'the put-back of framework-upgrade §3 step 4 never deletes the only copy of a file, and never acts through a link'
 source: 'TASK 123 stage 2, round 3 (D20)'
 component: '.agent/workflows/framework-upgrade.md'
+resolved_at: 2026-10-28
+resolved_by: 'TASK 135'
 ---
 
 # WI-54 — Residual routes of the TASK 123 put-back
+
+> **Done 2026-10-28 (TASK 135).** Option 1 (TASK 135 D3, R4 to R6).
+>
+> - The put-back of `framework-upgrade` §3 step 4 removes nothing: it names each created path to
+>   the operator. S3-1 and S3-2 close by construction.
+> - The check hashes what the user's three files hold, through a link (R3-2). The restore command
+>   carries `-c core.fsmonitor=false`, and a file whose hash then differs stops the run (R3-4,
+>   I-2).
+> - `tests/test_run_safety_rules.py` pins step 4.
 
 **Signal.** TASK 123 added a check of what a change runs to `framework-upgrade` §3 step 4, and a
 put-back after it. Round 3 of its stage-2 review, the last that the bound allows, passed. Its

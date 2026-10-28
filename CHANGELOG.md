@@ -16,6 +16,31 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.52.0 — Stage 2 of `framework-upgrade` gains a narrow round and a site list, and its put-back removes nothing (TASK 135)**
+
+#### Changed
+
+- **`framework-upgrade` §3 step 4, stage 2.**
+  - Past the bound of three rounds, the operator may choose a narrow round. It checks only the last
+    fix and the lines that the fix touches (WI-56). TASK 130 and TASK 133 each passed in one.
+  - "The fix": a fix of rule text removes or narrows a clause before it adds one (WI-56). When a
+    finding is one site of a class, the audit record lists each such site in the change, with a
+    fix and a test or the reason the class cannot occur there. The next round's brief cites the
+    list (WI-58).
+- **The put-back removes nothing** (WI-54). It restores tracked files and names every other
+  difference, each created path among them, to the operator. A command that copies a file and
+  then overwrites it no longer loses the only copy, and no removal follows a link.
+- **Two wordings** (WI-54): the check hashes what the user's three files hold, through a link. The
+  restore command carries `-c core.fsmonitor=false`, and a restored file whose hash differs from
+  the first listing stops the run.
+- Step 4 does not grow: 1622 words, against 1623 at the base. Three history sentences became
+  references to their records, and four stated reasons left the text. No rule changed for it.
+
+#### Notes
+
+- `tests/test_run_safety_rules.py` pins the new step 4. No script changes.
+- TASK 135 ran in Light Mode by the operator's decision: the change runs nothing.
+
 ### **v3.51.0 — `run-feedback` runs on Windows, and `mine` finds the transcripts of its root (TASK 133)**
 
 #### Fixed

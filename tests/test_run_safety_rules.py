@@ -51,13 +51,12 @@ STEP_4 = _flat("""
    user's `~/.claude/settings.json`, and the `allowed-tools` of a skill or a command. A command that
    one of them approves is an allowed command, and a rule names a file also through a symbolic link
    that resolves to it. Rules that managed settings or plugins add, and the commands that the Auto
-   mode classifier approves, lie outside this count; the operator answers for them. Git holds
-   neither the local file nor the user's, and Claude Code adds a rule to one of them when the
-   operator approves a command permanently. The run reads both when §2.2 writes the PLAN, again at
-   §4.5, and again after the gates of stage 3. A rule added since the first reading that runs a
-   file the change adds or edits in place, directly or through other code, stops the run for the
-   operator. The audit record names each file of the change that a rule of either file runs,
-   directly or through other code, and quotes no such rule.
+   mode classifier approves, lie outside this count; the operator answers for them. The run reads
+   the local file and the user's when §2.2 writes the PLAN, again at §4.5, and again after the
+   gates of stage 3. A rule added since the first reading that runs a file the change adds or edits
+   in place, directly or through other code, stops the run for the operator. The audit record names
+   each file of the change that a rule of either file runs, directly or through other code, and
+   quotes no such rule.
 
    Test modules and fixtures that no rule names by path are exempt, and so is code that runs
    without a prompt only through them. A rule that names a directory, such as `discover -s tests`,
@@ -73,11 +72,10 @@ STEP_4 = _flat("""
    edits. For each command, one process lists every file and directory under the repository root,
    each regular file with its SHA-256, ignored files included and no link followed. Of `.git` it
    lists every file but `index` and those under `objects` and `logs`, and of `logs` it lists
-   `refs/stash`, which holds every stash. It adds the output of `git rev-parse HEAD` and
-   `git ls-files -s -v`, and lists the user's `~/.gitconfig`, `~/.config/git/config` and
-   `~/.claude/settings.json`. Each git command of the check and of the put-back runs with
-   `-c core.fsmonitor=false`, so that git runs no file-system monitor that the checked command
-   configured. The process then runs the command as the rule approves it, with
+   `refs/stash`. It adds the output of `git rev-parse HEAD` and `git ls-files -s -v`, and the
+   SHA-256 of what the user's `~/.gitconfig`, `~/.config/git/config` and `~/.claude/settings.json`
+   hold, through a link. Each git command of the check and of the put-back runs with
+   `-c core.fsmonitor=false`. The process then runs the command as the rule approves it, with
    `PYTHONDONTWRITEBYTECODE=1` and `PYTEST_ADDOPTS=-p no:cacheprovider` in its environment, and
    lists again. The audit record names the code that wrote each difference, read from that code or
    from the command's output.
@@ -87,25 +85,24 @@ STEP_4 = _flat("""
      that code writes into a temporary directory, which it removes.
    - A difference that other code writes is a finding before the task.
 
-   After the check, the run puts back each difference that the command was not meant to write. A
-   difference under `.git` or in a file of the user, or a file of the first listing that the second
-   lacks, stops the run. The run names each difference to the operator and runs no further git
-   command. Otherwise:
-   - it removes each file that the command created, and then each directory that it created;
+   After the check, the run puts back each difference that the command was not meant to write, and
+   removes nothing. A difference under `.git` or in a file of the user, or a file of the first
+   listing that the second lacks, stops the run. The run names each difference to the operator and
+   runs no further git command. Otherwise:
    - it restores a tracked file that no kind of §5 step 1 declares, with
-     `git restore --source=<base> --staged --worktree -- ':(literal)<path>'`, and checks that the
-     file hashes as in the first listing;
+     `git -c core.fsmonitor=false restore --source=<base> --staged --worktree -- ':(literal)<path>'`.
+     A file whose hash then differs from the first listing stops the run;
    - it records a changed session state again through `update_state.py`;
-   - it names every other difference to the operator, the run's own records among them.
+   - it names every other difference to the operator, each created path and the run's own records
+     among them.
 
    The check runs with the gates of §3.3, and for the code of stage 3 with the gates of stage 3,
    where a failed check is a failed gate. The audit record holds each command, with its paths
-   relative to the repository root, and its result. TASK 122 unblocked the bare pytest run, and a
-   test it reached rewrote the live session state.
+   relative to the repository root, and its result (TASK 122).
 
    A change that only narrows what runs without a prompt, such as a removed allow rule, may land
-   at once: it runs nothing new, and at worst a command asks. Before the edit, a check shows that
-   it narrows, and the audit record holds the check's output:
+   at once. Before the edit, a check shows that it narrows, and the audit record holds the check's
+   output:
    - a base entry of the same list covers each new allow rule, `additionalDirectories` entry and
      `allowed-tools` entry;
    - each base deny or ask rule and `disallowedTools` entry is still present, or a new entry of the
@@ -130,20 +127,23 @@ STEP_4 = _flat("""
         same fingerprint. A round that does not pass returns the run to the fix of its findings.
         The §6.2 re-run of an `INCOMPLETE` audit is not a round. Still failing after the 3rd
         round: **STOP** and escalate to the operator with the open findings; the operator
-        decides what follows.
+        decides what follows. A round past the bound may be narrow, checking only the last fix
+        and the lines it touches (WI-56).
+      - **The fix.** A fix of rule text removes or narrows a clause before it adds one. When a
+        finding is one site of a class, the audit record lists each such site in the change: each
+        write, removal, creation and open of that state, on each code path. Each site has a fix
+        and a test, or the reason the class cannot occur there. The next round's brief cites the
+        list (WI-58).
       - **LOW routes of a fixed class.** A round whose findings are all LOW, each a route of a
         class that an earlier round of this run fixed, proposes to the operator before the next
         round: the scope of each route as a residual in the TASK, and one backlog record that
-        holds them. The operator chooses between that record and one more round. TASK 116 ran
-        seven rounds; from round 4 on, each found a narrower route of one class (WI-48).
+        holds them. The operator chooses between that record and one more round (WI-48).
       - **Boundary.** A review round checks the change against its TASK and the lines it touches.
         Code that the change makes run, or run without a prompt, is among those lines. Any other
         finding, unless the change causes it as a regression, is one line in the audit record, with
         its severity, marked as before the task. Such a finding does not set the round's verdict;
         one of CRITICAL or HIGH severity is named to the operator when the round ends. A new backlog
-        record needs the operator's decision. Each reviewer's brief states this boundary. TASK 119
-        filed two records from such findings, and the operator removed them. WI-52 records this
-        rule.
+        record needs the operator's decision. Each reviewer's brief states this boundary (WI-52).
    3. **Registration.** After §4.5, the last edit of the change copies the registration verbatim
       into its file, or the new code over the code it replaces, and removes the copy under the new
       name. Only the retro's records follow this edit. The same edit adds a settings test that

@@ -1,6 +1,6 @@
 # PLAN 133 — `run-feedback` runs on Windows, `mine` finds the transcripts of its root, and the residuals of TASK 132 close
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 12) · **Covers:** R1–R9 · **Acceptance:** TASK A1–A11.
+**TASK:** [docs/TASK.md](../tasks/task-133-run-feedback-windows.md) (revision 12) · **Covers:** R1–R9 · **Acceptance:** TASK A1–A11.
 
 **Revision:** 10. Revision 10 follows the narrow round 4 of stage 2 and TASK D11. The fix round runs
 B2, C2 and D1 again, red first, then E1, H1, H2 and F1. F1 rewords mutation 54 and gains mutations

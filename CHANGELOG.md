@@ -16,6 +16,45 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.53.0 — Allow-listed scripts import no module planted beside them (TASK 134)**
+
+#### Security
+
+- **14 scripts that an allow rule runs with no prompt drop their own directory from `sys.path`**
+  before any other import (WI-39). Before, a file such as `json.py`, `re.py` or `__future__.py`
+  planted beside one of them ran at the next approved call. The scripts are `scan_register.py`,
+  `selftest_scan.py`, `lint_mermaid.py`, `plan_gantt.py`, `init_skill.py`, `validate_skill.py` and
+  `task_id_tool.py`. The five of `System/scripts/`, `tests/run_tests.py`, and `run_audit.py` of a
+  local rule join them. An entry leaves by real path and by device and inode, so a path in other
+  letter case or through a link is matched too.
+- **A script that loads code beside it loads each sibling by its path.** `lint_mermaid.py`,
+  `plan_gantt.py`, `selftest_scan.py`, `init_skill.py`, `validate_skill.py` and `run_audit.py`
+  read and write no bytecode in `__pycache__/`. A package, an extension module or a `.pyc` planted
+  under a sibling's name is never chosen.
+- **`tests/run_tests.py`** guards its own imports. It appends `tests/` to the end of `sys.path`
+  for its discovery, loads the installer tests' `_base` by its path, and imports `subprocess` and
+  `platform` before the discovery, so their probes for `msvcrt`, `fcntl` and `_wmi` read no file
+  of `tests/`. The test modules that it runs stay unguarded (TASK 134 §5).
+
+#### Changed
+
+- Nine scripts no longer start with `from __future__ import annotations`: the statement imports
+  `__future__` before any guard can run. No annotation needed quoting for Python 3.11.
+- `tests/test_allow_listed_imports.py` plants every imported name beside a copy of each script,
+  and pins the 17 copies of the guard, `update_state.py`, `archive_move.py` and `rebase_links.py`
+  among them, to two codes, the second extending the first. The tooling step of CI runs it.
+
+#### Notes
+
+- Residuals (TASK 134 §5): a file planted inside the directory of a sibling package
+  (`mermaid_model/`, `lint_mermaid_parts/`, `audit/`); the test modules that `run_tests.py` runs;
+  an executable on `PATH`; the scripts of the local rules but `run_audit.py`.
+- WI-59 records three routes outside WI-39: `run_audit.py --scan-type all` runs `pip-audit` in the
+  scanned tree, the `python3 -m pytest` rules import a planted `pytest.py`, and the venv of the
+  work tree runs its `.pth` files at start.
+- `Universal-skills/skills/skill-creator` holds a copy of `init_skill.py` and `validate_skill.py`;
+  this release copies both there.
+
 ### **v3.52.1 — The review fixes of TASK 135: a created path stops the put-back, and step 4 keeps no bare reference**
 
 #### Fixed

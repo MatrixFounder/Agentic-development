@@ -73,12 +73,12 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-59** [A file planted in the work tree runs under the pytest rules, a full audit scan and the venv's start](backlog/wi-59-a-file-planted-in-the-work-tree-runs-under-the-pytest-rules-a-full-audit-scan-and-the-venv-s-start.md) — effort `M`, status `open`, opened 2026-10-29
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-49** [The history secret scan runs git in the scanned tree's repository](backlog/wi-49-the-history-secret-scan-runs-git-in-the-scanned-trees-repository.md) — effort `M`, status `open`, opened 2026-10-09
 - **WI-43** [Review follow-ups of the inbound slot-link mode](backlog/wi-43-review-follow-ups-of-the-inbound-slot-link-mode.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-41** [KaTeX advisory GHSA-238p-pmpm-9mq7 in the renderer lockfiles](backlog/wi-41-katex-advisory-ghsa-238p-pmpm-9mq7-in-the-renderer-lockfiles.md) — effort `S`, status `open`, opened 2026-10-08 · progress 2026-10-27 (TASK 129): the lockfiles audit clean; the bundled DOMPurify and KaTeX copies still run
-- **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `open`, opened 2026-10-08
 - **WI-36** [Command substitution inside an allow-approved command](backlog/wi-36-command-substitution-inside-an-allow-approved-command.md) — effort `S`, status `open`, opened 2026-10-06
 - **WI-34** [An anchor hook for relative-path allow rules in a nested checkout](backlog/wi-34-anchor-hook-for-relative-path-allow-rules-in-a-nested-checkout.md) — effort `L`, status `open`, opened 2026-10-06
 - **WI-29** [Installer leaves declared skill development paths out of copy installs](backlog/wi-29-installer-leaves-declared-skill-development-paths-out-of-copy-installs.md) — effort `M`, status `open`, opened 2026-10-03
@@ -92,6 +92,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-29** (TASK 134): each allow-listed script drops its directory from `sys.path`; siblings load by path
 - **WI-58** [A fix round of stage 2 fixes the instance of a class, and the next round finds the next site](backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md) — effort `S`, status `done`, opened 2026-10-28 · **done 2026-10-28** (TASK 135): a site list for a finding that is one site of a class
 - **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `done`, opened 2026-10-27 · **done 2026-10-28** (TASK 135): a narrow round past the bound; a fix of rule text narrows before it adds
 - **WI-54** [Residual routes of the TASK 123 put-back](backlog/wi-54-residual-routes-of-the-task-123-put-back.md) — effort `S`, status `done`, opened 2026-10-15 · **done 2026-10-28** (TASK 135): the put-back removes nothing; hash through a link; the fsmonitor flag

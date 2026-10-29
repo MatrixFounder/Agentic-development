@@ -1,11 +1,30 @@
 #!/usr/bin/env python3
 """Run skill validation across all local skills."""
 
-from __future__ import annotations
+import os
+import sys
+
+# Run as a script, the script's own directory leaves `sys.path` before any other import, matched by
+# real path and by device and inode, so a module planted beside the script is never imported.
+if __name__ == "__main__":
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
 
 import argparse
 import subprocess
-import sys
 from pathlib import Path
 
 

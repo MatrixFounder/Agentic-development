@@ -16,7 +16,7 @@
 The planner splits a sub-task further with a letter suffix: `task-033-05a-sqltest-db.md`, `08b`,
 `33b`. `task_id_tool.py` reads a sub-task from the filename only:
 
-- `.agent/tools/task_id_tool.py:78` `SUBTASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-(\d+)-.+\.md$')`
+- `.agent/tools/task_id_tool.py:99` `SUBTASK_FILENAME_RE = re.compile(r'^task-(\d{3,})-(\d+)-.+\.md$')`
 
 `get_parent_archive_ids()` therefore counts `task-033-05a-sqltest-db.md` as a parent archive.
 `task_id_tool.py "admission-core-v1" --proposed-id 033 --no-correction` returns `conflict` and

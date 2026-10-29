@@ -10,10 +10,37 @@ Exit: 0 every requested part ran and no gate cause; 1 a `--fail-on` cause (a fin
       directory or a non-positive `--max-size`; 2 a usage error (argparse); 3 a requested part did
       not run.
 """
-import argparse
-import json
+
 import os
 import sys
+
+# Run as a script, the script's own directory leaves `sys.path` before any other import, matched by
+# real path and by device and inode, so a module planted beside the script is never imported. No
+# `.pyc` is written or read from a `__pycache__/`, and the siblings load by their path (`_load`).
+if __name__ == "__main__":
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
+    sys.dont_write_bytecode = True
+    if os.path.isabs(os.devnull):
+        sys.pycache_prefix = os.path.join(os.devnull, "run_audit-pycache")
+    else:
+        sys.pycache_prefix = os.path.join(os.path.realpath(__file__), "pycache")
+
+import argparse
+import json
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -24,6 +51,32 @@ try:
 except AttributeError:
     pass  # Python < 3.7
 
+
+def _load(name, package=False):
+    """The sibling module or package `name`, loaded by its path beside this file.
+
+    A file planted beside the script under a sibling's name is never chosen. A package loads from
+    its `__init__.py`, and the spec gives it its own directory to search for its submodules. A
+    module that `sys.modules` holds is reused, so the import statements after the loads search no
+    path.
+    """
+    if name in sys.modules:
+        return sys.modules[name]
+    import importlib.util
+    here = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(here, name, "__init__.py") if package else os.path.join(here, name + ".py")
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules[name]
+        raise
+    return module
+
+
+_load("audit", package=True)
 from audit import (
     SEVERITY_ORDER,
     __version__ as AUDIT_VERSION,

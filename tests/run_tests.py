@@ -1,7 +1,38 @@
-import unittest
+import os
 import sys
+
+# Run as a script, the script's own directory leaves `sys.path` before any other import, matched by
+# real path and by device and inode, so a module planted beside the script is never imported. No
+# `.pyc` is written or read from a `__pycache__/`. The test modules that it runs are not guarded.
+if __name__ == "__main__":
+    def _identity(path):
+        """`(st_dev, st_ino)` of `path`, or None where it cannot be read or has no inode."""
+        try:
+            st = os.stat(path)
+        except OSError:
+            return None
+        return (st.st_dev, st.st_ino) if st.st_ino else None
+
+    _DIRS = {os.path.dirname(os.path.abspath(__file__)),
+             os.path.dirname(os.path.realpath(__file__))}
+    _NAMES = {os.path.normcase(os.path.realpath(path)) for path in _DIRS}
+    _IDS = {_identity(path) for path in _DIRS} - {None}
+    sys.path[:] = [entry for entry in sys.path
+                   if os.path.normcase(os.path.realpath(entry or os.curdir)) not in _NAMES
+                   and _identity(entry or os.curdir) not in _IDS]
+    sys.dont_write_bytecode = True
+    if os.path.isabs(os.devnull):
+        sys.pycache_prefix = os.path.join(os.devnull, "run_tests-pycache")
+    else:
+        sys.pycache_prefix = os.path.join(os.path.realpath(__file__), "pycache")
+
+import unittest
 import json
 import re
+# Imported before the discovery, where `tests/` is on the path: each probes on import for a module
+# that some platforms lack, `subprocess` for `msvcrt` or `fcntl` and `platform` for `_wmi`.
+import platform  # noqa: F401
+import subprocess  # noqa: F401
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -135,11 +166,21 @@ def load_tests(loader, standard_tests, pattern):
     `.is_file()` would turn the drift this list exists to prevent into a silent one: rename
     the file and the runner quietly returns to its old count while still printing OK.
 
+    Each discovered directory is appended to the end of `sys.path` first, so `unittest` does not
+    insert it at the front: the standard library and the installed packages stay ahead of a module
+    planted in `tests/` (TASK 134 R5).
+
     Raises:
         FileNotFoundError: If a module named in :data:`CURATED_UNITTEST_MODULES` is gone.
     """
     installer_dir = PROJECT_ROOT / "tests" / "installer"
+    for directory in (PROJECT_ROOT / "tests", installer_dir):
+        if str(directory) not in sys.path:
+            sys.path.append(str(directory))
     if installer_dir.is_dir():
+        # the installer tests' helper, by its path: `tests/` stands before `tests/installer/`
+        if (installer_dir / "_base.py").is_file() and "_base" not in sys.modules:
+            load_module_from_path("_base", installer_dir / "_base.py")
         standard_tests.addTests(
             loader.discover(start_dir=str(installer_dir),
                             top_level_dir=str(installer_dir))

@@ -162,7 +162,9 @@ class TestNames(unittest.TestCase):
                     self.assertIs(getattr(lm, name), getattr(defining, name))
 
     def test_the_thin_file_defines_the_command_line_and_lists_every_name(self):
-        self.assertEqual(bound_at_top(SCRIPTS / "lint_mermaid.py"), set(COMMAND_LINE) | {"__all__"})
+        # `_load` loads the siblings by their path (TASK 134); it is no name of the command line
+        self.assertEqual(bound_at_top(SCRIPTS / "lint_mermaid.py"),
+                         set(COMMAND_LINE) | {"__all__", "_load"})
         self.assertEqual(lm.main.__module__, "lint_mermaid")
         every = [name for names in NAMES.values() for name in names] + list(COMMAND_LINE)
         self.assertEqual(lm.__all__, every)

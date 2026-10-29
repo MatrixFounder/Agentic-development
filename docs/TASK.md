@@ -1,4 +1,4 @@
-# TASK 135 — [LIGHT] Stage 2 of `framework-upgrade` gains a narrow round and a site list, and its put-back removes nothing
+# TASK 134 — Allow-listed scripts import no module planted beside them (WI-39)
 
 <!-- contract:meta -->
 
@@ -6,111 +6,179 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 135 |
-| Slug | stage2-narrow-round-and-put-back |
-| Type | Framework Upgrade, Light Mode (D1) |
-| Source | WI-54, WI-56, WI-58; the operator's request of 2026-10-28 |
-| Base revision | `88d21619ce14ec7fb6dc1c37eb5b7032b2885d98` |
-| Closes | WI-54, WI-56, WI-58 |
-| Archive name | `task-135-stage2-narrow-round-and-put-back.md` |
+| Task ID | 134 |
+| Slug | allow-listed-script-imports |
+| Type | Framework Upgrade, reduced process (D1) |
+| Source | WI-39; TASK 133 D1; the operator's request of 2026-10-28 |
+| Base revision | `48e10ea` |
+| Closes | WI-39 |
+| Archive name | `task-134-allow-listed-script-imports.md` |
 | Revision | 2 |
 
-**Request.** The operator took WI-56 and WI-54 as one task, and WI-58 with its option 1. All three
-edit `framework-upgrade` §3 step 4. The bound of stage 2 names no narrow round, though the operator
-chose one in TASK 130 (D17) and in TASK 133 (D10, D11).
+**Request.** WI-39: a module planted beside a Python script that an allow rule runs is imported
+before the script's own code, at the next approved call, with no prompt. TASK 115, 127 and 128
+closed it for `rebase_links.py`, `archive_move.py` and `update_state.py`. TASK 133 D1 set the rest
+as this task: the 13 scripts that the committed rules run, and `run_audit.py` of the local rules.
 
-**Revision 2** follows the code review of commit `13ba348`, which ran after the commit (D7): CHANGES
-REQUESTED, with two MAJOR, ten MINOR and thirteen NIT findings. The fix pass:
-- M1: a created path stops the run for the operator (R4);
-- M2, m3, m4: the site list is part of the finding, by `developer-guidelines` §6.4, and names the
-  state or the input of the finding (R3);
-- m1, m2: the narrow round is the operator's choice, and its briefs set its scope (R1);
-- m5, m6: the rule on a fix of prose, which the fixer's brief states (R2); D4 names the half of
-  option 2 that is not taken;
-- m7, m8, m9, n6: the wording of the put-back and of the user's files (R4 to R6);
-- n1, n2: the pins of §2 and the method of TC-3; n3: one sentence split; n4: the test's docstring;
-  n7: `System/Docs/WORKFLOWS.md`; n5, n12, n13: step 4 keeps no bare reference (D8).
+**Revision 2** follows the code review (CHANGES REQUESTED: one MAJOR, seven MINOR, eleven NIT)
+and the security audit (PASS: four MEDIUM, six LOW, all before the task but for M1a). The fix
+pass:
+- `run_tests.py` loads the installer tests' `_base` by its path: with `tests/` before
+  `tests/installer/` on the path, a `_base.py` planted in `tests/` stood in for it (M1a, a
+  regression of revision 1). It imports `platform` before the discovery, whose probe for `_wmi`
+  read `tests/` on POSIX (MAJOR-1, L1). Its comment names no `_load` (MINOR-2);
+- TC-AL1 pins each script's exit code, and two fixtures reach the work (MINOR-1). TC-AL3 runs the
+  runner too (MINOR-3). TC-AL4 plants in `tests/installer/` and plants `_base` and `_wmi`. TC-AL5
+  finds each change of `sys.path` outside the guard, and checks the runner's early imports (N2, N6);
+- R5 and §5 state the runner's residual (D8), and the documents name the scripts that a committed
+  rule runs (MINOR-5, MINOR-6, L2, N1, N3, N9); one positional reference is repaired (MINOR-4);
+- the three findings outside WI-39 go to one backlog record, WI-59 (D9).
 
-Not taken:
-- m10, the process of D1, which the operator chose;
-- n8, the second half of the acceptance of WI-58, which the record names as pending;
-- n9 and n10, which the hash stop and the operator's reading cover;
-- the three findings before the task.
+Not taken: the Windows jobs (MINOR-7, L5). The guard's code is pinned to that of
+`rebase_links.py`, which TC-W16 runs on Windows, and a failure of an unrelated script there would
+block the jobs. N4 and N5, a split of TC-AL2 and a cache of the clean runs, change no result.
 
-Step 4 holds 1616 words.
+**Measured at the base** (2026-10-28, Python 3.14.8, macOS):
+- none of the 14 scripts removes its own directory from `sys.path`. Five insert it again at module
+  level: `selftest_scan.py`, `lint_mermaid.py` and `plan_gantt.py` at the front, `init_skill.py`
+  and `validate_skill.py` at the end;
+- a `__future__.py` planted beside a script that starts with `from __future__ import annotations`
+  runs before the script's first line of code. Nine of the 14 scripts start so. The statement must
+  be the first of its module, so no guard can precede it;
+- a static check of the nine scripts finds no annotation that Python 3.11 evaluates at definition
+  time and that names a value not yet bound.
 
 ## 1. Decisions
 
-- D1, 2026-10-28, operator: Light Mode. The run has a `[LIGHT]` TASK, the edit and its pinning
-  test, the test run, one code reviewer with the exhaustive prompt and one fix pass. Rejected: the
-  full `/framework-upgrade` and a reduced one — the cost of a run, which the operator named. The
-  change alters nothing that runs, so stages 1 to 4 of step 4 do not apply to it.
-- D2, 2026-10-28, operator: the scope is the three records. Step 4 does not grow: its word count
-  after the edit is at most 1623, the count at the base.
-- D3, 2026-10-28, operator: WI-54 option 1. The put-back removes nothing.
-- D4, 2026-10-28, operator: WI-56 options 1 and 2, both in `framework-upgrade.md`.
-  `developer-guidelines` is not edited. The test-first half of option 2 is not taken: a fix of
-  prose has no scenario that a test runs, and the pin of step 4 fails on any change of its words.
-- D5, 2026-10-28, operator: WI-58 option 1. A site list is due only for a finding that the fix
-  classes as one site of a class.
-- D6, 2026-10-28, orchestrator: the ID is 135. TASK 133 D1 holds 134 for WI-39.
-- D7, 2026-10-28, operator: the commit precedes the code review, and the fixes land in a commit of
-  their own.
-- D8, 2026-10-28, operator: step 4 keeps no bare reference to a task or a record. A consumer of
-  the workflow numbers its own tasks and records.
+- D1, 2026-10-28, operator: a reduced process. The run has a TASK and a PLAN, edits in place, the
+  tests first and red, and the gates. At the end, one code reviewer with the exhaustive prompt and
+  one security auditor review the change, and one fix pass follows. Rejected: the full
+  `/framework-upgrade`, for its cost, and Light Mode, which has no security audit for a change of
+  security. Skipped: the meta-audits of Mode A and Mode B, the staged copies and stages 1 to 4 of
+  `framework-upgrade` §3 step 4, and the check of each allowed command.
+- D2, 2026-10-28, operator: the guard works at the level of the script. A sibling module or
+  package loads by explicit path. The submodules of a package load by the path search inside the
+  package's own directory, as at the base (§5, residual 1).
+- D3, orchestrator: the nine scripts lose `from __future__ import annotations`. The base needs no
+  annotation quoted for Python 3.11.
+- D4, orchestrator: one test module checks all 14 scripts from one table, as TC-G11 of TASK 115
+  checks `rebase_links.py`.
+- D5, orchestrator: the other scripts of the local rules stay out: `analyze_gaps.py`, the test
+  modules that a rule runs by path, and the paths into other checkouts. The local settings are the
+  operator's; TASK 133 D1 named `run_audit.py` only.
+- D6, orchestrator: `Universal-skills/skills/skill-creator` is a copy. The run copies the two
+  changed scripts there, and the operator commits that repository.
+- D8, 2026-10-29, operator: `run_tests.py` guards its own imports and the two probes; the test
+  modules that it runs, and what they import and start, stay a residual (§5, residual 2).
+- D9, 2026-10-29, operator: three findings of the security audit outside WI-39 go to one backlog
+  record: the scanners of `run_audit.py`, the `pytest` rules, and the start files of `.venv`.
+- D7, 2026-10-29, operator: each script keeps its own copy of the guard. A shared module would be
+  found by the path search that the guard closes, and a skill imports nothing from outside its
+  directory. A test pins the 17 copies, the three older ones among them, to one code, and the
+  comment and `_load` to one text in each group. Each copy's comment has two or three lines.
 
 ## 2. Requirements
 
 <!-- contract:requirements -->
 
-- R1 (WI-56 option 1) — past the bound of stage 2, the operator may choose a narrow round. Its
-  briefs limit it to the last fix and the lines that the fix touches.
-- R2 (WI-56 option 2) — the fixer's brief states that a fix of prose adds a clause only where
-  narrowing one cannot answer the finding.
-- R3 (WI-58 option 1) — the fix can class a finding as one site of a class. The audit record then
-  lists each such site in the change, as part of that finding (`developer-guidelines` §6.4). A site
-  is each write, removal, creation and open of the finding's state, or each route of its input, on
-  each code path. Each site has a fix and a test, or the reason the class cannot occur there. The
-  brief of the next round cites the list.
-- R4 (WI-54 option 1, S3-1, S3-2) — the put-back removes no file and no directory. A path that the
-  command created stops the run for the operator.
-- R5 (WI-54, R3-2) — the check hashes what the user's three files hold, following a link, or their
-  absence.
-- R6 (WI-54, R3-4, I-2) — the restore command of the put-back carries `-c core.fsmonitor=false`. A
-  restored file that hashes otherwise than in the first listing stops the run.
-- R7 (D2) — the word count of step 4 is at most 1623. No rule of step 4 changes for it:
-  - three history sentences become references: (WI-48), (WI-52), (TASK 122). Revision 2 removes
-    them, and the other references of step 4 (D8);
-  - four reasons leave the text: the sentence on where Claude Code adds an allow rule, "which holds
-    every stash", the purpose of `-c core.fsmonitor=false`, and "it runs nothing new, and at worst
-    a command asks".
-- R8 — WI-54, WI-56 and WI-58 are closed in their records and in `docs/BACKLOG.md`; both
-  changelogs carry the release.
+The 14 scripts, by group; `S/` stands for `.agent/skills/`:
+- A, no sibling: `S/artifact-formalizer/scripts/scan_register.py`, `.agent/tools/task_id_tool.py`,
+  and `check_prompt_references.py`, `doctor.py`, `security_lint.py`, `smoke_workflows.py` and
+  `validate_skills.py` of `System/scripts/`;
+- B, siblings, named in brackets:
+  - `S/artifact-formalizer/scripts/selftest_scan.py` (`scan_register`);
+  - `S/mermaid-authoring-guidelines/scripts/lint_mermaid.py` (`mermaid_model`, `planarity`,
+    `lint_mermaid_parts`) and `plan_gantt.py` (`mermaid_model`);
+  - `S/skill-creator/scripts/init_skill.py` and `validate_skill.py` (`skill_utils`);
+  - `S/security-audit/scripts/run_audit.py` (`audit`);
+- C, a test runner: `tests/run_tests.py`.
 
-**Out of scope.**
-
-- `developer-guidelines` (D4);
-- a lighter `framework-upgrade` as a whole, which the operator discusses separately (D2);
-- the two `INBOUND` records of the archive of TASK 133: `CHANGELOG.md:3773@88d2161`,
-  `CHANGELOG.ru.md:3806@88d2161`, slot links that TASK 133 did not write.
+- **R1** Each of the 14 scripts runs, under `if __name__ == "__main__":` and before any import but
+  `os` and `sys`, the guard of TASK 127 R6.1. An entry of `sys.path` leaves when its real path, in
+  `os.path.normcase`, or its `(st_dev, st_ino)` matches the directory of `__file__` as called or of
+  its real path.
+- **R2** Each script of groups B and C also sets `sys.dont_write_bytecode` and a
+  `sys.pycache_prefix` under `os.devnull`. Where `os.devnull` is a relative path, the prefix lies
+  under the script's own real path (TASK 131 R4).
+- **R3** Each script of group B loads its siblings by explicit path, with
+  `importlib.util.spec_from_file_location`, a package with `submodule_search_locations`. It loads
+  them in the order of their imports, and reuses a module that `sys.modules` already holds. No
+  script inserts its own directory into `sys.path` at module level. A test that imports the module
+  keeps its own path.
+- **R4** The nine scripts that start with `from __future__ import annotations` no longer hold the
+  statement: `scan_register.py`, `selftest_scan.py`, `lint_mermaid.py`, `plan_gantt.py`, and the
+  five of `System/scripts/`.
+- **R5** `tests/run_tests.py` appends `tests/` and `tests/installer/` to the end of `sys.path`
+  before its discovery, so `unittest` does not insert them at the front. It loads the installer
+  tests' `_base` by its path. It imports `subprocess` and `platform` before the discovery: on
+  import, `subprocess` probes for `msvcrt` or `fcntl`, and `platform` for `_wmi`, which one platform
+  or another lacks.
+- **R6** The exit codes, the output and the files written of each script stay as at the base.
+- **R7** WI-39 closes in its record and in `docs/BACKLOG.md`; both changelogs carry the release.
+  `Universal-skills/skills/skill-creator/scripts/` receives the two changed scripts (D6).
 
 ## 3. Files
 
-- `.agent/workflows/framework-upgrade.md`
-- `tests/test_run_safety_rules.py`
-- `docs/backlog/wi-54-residual-routes-of-the-task-123-put-back.md`
-- `docs/backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md`
-- `docs/backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md`
-- `docs/BACKLOG.md`
-- `CHANGELOG.md`, `CHANGELOG.ru.md`
-- `System/Docs/WORKFLOWS.md` (revision 2)
-- `docs/TASK.md`; the archive pair of TASK 133
+- the 14 scripts of §2;
+- `tests/test_allow_listed_imports.py` (new), and `.github/workflows/framework-gates.yml`, whose
+  tooling step runs it;
+- `S/mermaid-authoring-guidelines/scripts/tests/test_lint_mermaid_package.py`: `_load` is a name
+  of the thin file;
+- `docs/ARCHITECTURE.md`: the rule of the guard;
+- `docs/backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md`,
+  `docs/BACKLOG.md`;
+- `CHANGELOG.md`, `CHANGELOG.ru.md`;
+- `docs/TASK.md`, `docs/PLAN.md`; the archive of TASK 135;
+- revision 2: `docs/backlog/wi-59-*.md` and its index line (D9), and the line of
+  `.agent/tools/task_id_tool.py` that `docs/tasks/task-114-subtask-classified-by-h1.md` cites,
+  which `check_positional_refs.py --fix` repaired.
 
 ## 4. Acceptance
 
-- TC-1 — `tests/test_run_safety_rules.py`: `STEP_4` equals step 4 of the edited workflow → pass;
-  fails when a word of step 4 differs from the pinned text.
-- TC-2 — the full suite, `python3 tests/run_tests.py` → the same result as at the base.
-- TC-3 — a word count of step 4, from `4. **Hooks` up to the line `## 4. Documentation`, which it
-  excludes → at most 1623.
-- TC-4 — `scan_register.py` on the edited lines → no new finding.
+<!-- contract:acceptance -->
+
+In `tests/test_allow_listed_imports.py`, each test copies a script and the files it loads into a
+temporary directory and plants modules beside the copy. A planted module creates a sentinel file
+when it runs. The planted names are each top-level module that the script and its siblings import,
+`__future__`, `msvcrt`, `_winapi` and `fcntl`.
+
+- TC-AL1: each of the 14 scripts, run as an allow rule runs it, with arguments that reach its
+  work. Its exit code equals that of a run with nothing planted, which ends without a traceback,
+  and no sentinel exists.
+- TC-AL2: each script of group B, with a package and an extension module planted under the name
+  of each sibling module. A `.pyc` is planted in `__pycache__/` for each sibling module and for a
+  submodule of each sibling package. The exit code is as in TC-AL1, and no sentinel exists.
+- TC-AL3: TC-AL1 for one script of each group, through a path in other letter case, where the
+  volume ignores letter case.
+- TC-AL4: `run_tests.py` with stub test modules that import `subprocess`, `platform` and
+  `colorsys`, which nothing imports before the discovery. Those names, `_wmi`, `msvcrt` and
+  `_winapi` are planted in the stub `tests/` and `tests/installer/`, and `_base` in `tests/`: exit
+  0, and no sentinel.
+- TC-AL5: none of the 14 scripts holds `from __future__` or inserts a directory into `sys.path` at
+  module level, and each runs its guard before any import but `os` and `sys`. The copies of the
+  guard are as D7 states.
+- TC-AL6: the gates of `framework-gates.yml` pass, on this machine with Python 3.14 and in CI with
+  Python 3.11 and 3.14.
+
+Each of TC-AL1 to TC-AL5 fails on the base.
+
+<!-- contract:out-of-scope -->
+
+## 5. Out of scope and residuals
+
+1. A directory or an extension module planted inside the directory of a sibling package, under
+   the name of a submodule, wins the path search of that package: `mermaid_model/`,
+   `lint_mermaid_parts/`, `audit/` (D2). A `.pyc` there wins only under a name with no source;
+   the prefix keeps `__pycache__/` from being read.
+2. `run_tests.py` runs the test modules of `tests/` and `tests/installer/` (D8). Such a module
+   imports from those directories, `_base.py` puts `System/scripts/` first on the path, and some
+   start scripts of `System/scripts/` that carry no guard. The discovery of `tests/installer/` also
+   imports a planted `test*.py` and a planted package. So a file planted there can run under the
+   rule of `run_tests.py`, as one in the working directory can under the `pytest` rules.
+3. An executable on `PATH` that a script runs, such as the scanners of `run_audit.py`.
+4. The scripts of the local rules that D5 leaves out, `analyze_gaps.py` among them.
+5. The findings that D9 records in WI-59:
+   - the scanners of `run_audit.py --scan-type all` run in the scanned tree;
+   - the `python3 -m pytest` rules import a planted `pytest.py`;
+   - a `.pth` file or `sitecustomize.py` in the `.venv` of the work tree runs at the start of each
+     `python3`.

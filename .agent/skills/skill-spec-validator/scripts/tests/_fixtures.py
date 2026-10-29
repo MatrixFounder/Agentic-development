@@ -29,11 +29,11 @@ def load_validator():
 
 validate = load_validator()
 
-# The bypass token is assembled rather than written literally: `validate.py`
-# tests for it as a bare substring ANYWHERE in TASK.md, so a file that merely
-# mentions it disables its own gate — including, if we were careless, this
-# fixture module's docstring leaking into a fixture.
-BYPASS_TOKEN = "[BYPASS_" + "VALIDATION]"
+# Written out, and not taken from `validate.BYPASS_TOKEN`, so a change of the
+# token fails these tests. `validate.py` reads it only in the first h1 of
+# TASK.md (FW-1); before, a mention anywhere disabled the gate, and this
+# constant was assembled from two halves to stay out of the fixtures.
+BYPASS_TOKEN = "[BYPASS_VALIDATION]"
 
 
 def write(path, text):

@@ -7,6 +7,7 @@ Every heading fixture in R1 is copied VERBATIM from a file in `docs/tasks/` —
 invented shapes are what let the matcher drift away from the corpus in the first
 place (WI-1: the gate had never once passed on a shipped artifact).
 """
+import re
 import sys
 import tempfile
 import unittest
@@ -122,34 +123,96 @@ class TestTaskMode(TaskModeTestCase):
         self.assertIn("not found", out)
 
 
+class TestEncoding(unittest.TestCase):
+    """Every file is read as UTF-8. With the locale's encoding, cp1252 on
+    Windows, a BOM decodes to three letters that hide the title's `#`, and a
+    Cyrillic TASK.md can fail to decode."""
+
+    def test_every_read_names_utf8(self):
+        src = fx.VALIDATE_PY.read_text(encoding="utf-8")
+        calls = re.findall(r"\b(?:open|read_text)\([^)]*\)", src)
+        self.assertTrue(calls)
+        for call in calls:
+            with self.subTest(call=call):
+                self.assertRegex(call, r"encoding=(['\"])utf-8\1")
+
+
 class TestBypass(TaskModeTestCase):
-    """R4 — the escape hatch, and the fact that it is a BARE SUBSTRING."""
+    """R4 — the escape hatch counts only in the document's title (FW-1)."""
 
     def test_bypass_short_circuits_task_mode(self):
-        broken = "# Spec\n\nNo RTM at all. %s\n" % fx.BYPASS_TOKEN
+        broken = "# Spec %s\n\nNo RTM at all.\n" % fx.BYPASS_TOKEN
         code, out = fx.run(validate.validate_task, self.task(broken))
         self.assertEqual(code, 0)
         self.assertIn("bypassed", out)
 
     def test_bypass_short_circuits_plan_mode(self):
-        task = self.task("# Spec\n\nNo RTM. %s\n" % fx.BYPASS_TOKEN)
+        task = self.task("# Spec %s\n\nNo RTM.\n" % fx.BYPASS_TOKEN)
         plan = str(fx.write(self.tmp / "PLAN.md", fx.plan_md("- [ ] nothing")))
         code, out = fx.run(validate.validate_plan, plan, task)
         self.assertEqual(code, 0)
         self.assertIn("bypassed", out)
 
-    def test_token_merely_mentioned_in_prose_still_bypasses(self):
-        """Pinned as CURRENT behavior, not endorsed: a spec that documents the
-        token disables its own gate and prints a line that reads like a pass.
-        This bit the first draft of TASK 092's own spec. Tightening it is a
-        behavior change to a live gate and belongs to the owner."""
+    def test_title_below_a_comment_or_a_bom_bypasses(self):
+        """The title is the first H1, not line 1: consumer TASKs put
+        `<!-- contract:meta -->` above it. A BOM does not hide line 1's `#`.
+        A backtick run indented four spaces, or of two backticks, opens no
+        fence."""
+        for text in ("<!-- contract:meta -->\n\n# Spec %s\n\nNo RTM.\n",
+                     "\ufeff# Spec %s\n\nNo RTM.\n",
+                     "    ```\n# Spec %s\n\nNo RTM.\n",
+                     "``\n# Spec %s\n\nNo RTM.\n"):
+            with self.subTest(text=text):
+                code, out = fx.run(validate.validate_task,
+                                   self.task(text % fx.BYPASS_TOKEN))
+                self.assertEqual(code, 0)
+                self.assertIn("bypassed", out)
+
+    def test_token_mentioned_in_prose_does_not_bypass(self):
+        """A spec that documented the token used to disable its own gate and
+        print a line that reads like a pass (TASK 090, TASK 092)."""
         text = fx.task_md() + (
             "\n## 4. Notes\n\nUse %s only with a written justification.\n"
             % fx.BYPASS_TOKEN)
         code, out = fx.run(validate.validate_task, self.task(text))
-        self.assertEqual(code, 0)
-        self.assertIn("bypassed", out)
-        self.assertNotIn("Found 2 requirements", out)  # never reached the table
+        self.assertEqual(code, 0, out)
+        self.assertIn("Found 2 requirements", out)
+        self.assertNotIn("bypassed", out)
+
+    def test_token_outside_the_title_does_not_bypass(self):
+        """Each decoy stands above the title, so a predicate that took it for
+        the title returns True before `# Spec` is reached."""
+        placements = {
+            "prose": "# Spec\n\nUse %s only with a reason.\n",
+            "backtick fence above the title": "```\n# %s\n```\n\n# Spec\n",
+            "tilde fence above the title": "~~~\n# %s\n~~~\n\n# Spec\n",
+            "a shorter closer": "````\n```\n# %s\n````\n\n# Spec\n",
+            "a closer of the other character": "```\n~~~\n# %s\n```\n\n# Spec\n",
+            "a closer with an info string": "```\n``` x\n# %s\n```\n\n# Spec\n",
+            "an unclosed fence": "```\n# Spec %s\n",
+            "an h2 above the title": "## Notes %s\n\n# Spec\n",
+            "indented code above the title": "    # %s\n\n# Spec\n",
+            "a hash after U+2028": "Text\u2028# %s\n\n# Spec\n",
+            "a later h1": "# Spec\n\n# Notes %s\n",
+            "a later h1 below a BOM": "\ufeff# Spec\n\n# Notes %s\n",
+            "no h1 at all": "%s\n\n## Notes\n",
+        }
+        for name, text in placements.items():
+            with self.subTest(placement=name):
+                code, out = fx.run(validate.validate_task,
+                                   self.task(text % fx.BYPASS_TOKEN))
+                self.assertEqual(code, 1, out)
+                self.assertIn("section missing", out)
+                self.assertNotIn("bypassed", out)
+
+    def test_mention_in_prose_leaves_plan_coverage_running(self):
+        task = self.task(fx.task_md() + (
+            "\n## 4. Notes\n\n%s is not used.\n" % fx.BYPASS_TOKEN))
+        plan = str(fx.write(self.tmp / "PLAN.md", fx.plan_md("- [ ] R1 only")))
+        code, out = fx.run(validate.validate_plan, plan, task)
+        self.assertEqual(code, 1, out)
+        self.assertIn("['R2']", out)
+        self.assertNotIn("bypassed", out)
 
 
 # --- R5 / R6: --mode plan -----------------------------------------------------

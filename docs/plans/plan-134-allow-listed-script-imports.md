@@ -1,6 +1,6 @@
 # PLAN 134 — Allow-listed scripts import no module planted beside them (WI-39)
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 2) · **Covers:** R1–R7 · **Acceptance:** TC-AL1–TC-AL6.
+**TASK:** [docs/TASK.md](../tasks/task-134-allow-listed-script-imports.md) (revision 2) · **Covers:** R1–R7 · **Acceptance:** TC-AL1–TC-AL6.
 
 **Process:** reduced (TASK D1). Edits are in place; the tests come first and run red.
 

@@ -1,7 +1,7 @@
 ---
 id: FW-1
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-07-20
 category: validation
 severity: SEV-4
@@ -9,9 +9,18 @@ slug: validator-bypass-substring
 component: skill-spec-validator
 fingerprint: 823677cffc508f6b
 finding_ref: fnd-20260720-193131-823677cf
+resolved_at: 2026-10-29
+resolved_by: TASK 136
 ---
 
 # FW-1 — Spec-validator bypass token matches anywhere in content
+
+> **Resolved 2026-10-29 by TASK 136.** `validate.py` reads the token only in the first h1 outside
+> a fenced block, in both modes, through `bypass_requested()`. A token in prose, in a fenced line,
+> in a later h1 or in an h2 leaves both checks running; an h1 below `<!-- contract:meta -->` still
+> bypasses. This record's reproduction now exits 1 with `section missing`. `TestBypass` in
+> `scripts/tests/test_validate.py` pins each placement, and `SKILL.md` §3 states the rule. The
+> script reads each file as UTF-8, so a BOM is dropped on every platform (`TestEncoding`).
 
 ## Summary
 `validate.py` treats `[BYPASS_VALIDATION]` as a plain substring (`if "[BYPASS_VALIDATION]" in content`). Any TASK.md that merely *mentions* the token — e.g. a requirement documenting the bypass, or an acceptance criterion about it — silently disables ALL RTM validation and exits 0.

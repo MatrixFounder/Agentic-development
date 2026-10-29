@@ -246,7 +246,7 @@ mistyped.
 
 ## 8. Validation Evidence
 
-- **Selftest**: `python3 scripts/selftest_scan.py` — 192 cases. `TC-META-01` asserts the battery ran
+- **Selftest**: `python3 scripts/selftest_scan.py` — 194 cases. `TC-META-01` asserts the battery ran
   that many, and a second case reads this number out of this file. A dropped case is then a red run
   rather than a smaller self-consistent total. They cover the schema, masking, every detector, the
   probe contract, diagnostics, sections, the terms downgrade and every exit code. Each finding of

@@ -86,8 +86,6 @@ KNOWN_NON_RTM_SHAPES = frozenset({
     'analysis phase: the "traceability matrix"',
 })
 
-BYPASS = "[BYPASS_" + "VALIDATION]"
-
 
 def find_repo_root():
     """The framework checkout, or None when installed into a consumer repo."""
@@ -208,7 +206,7 @@ class TestGateLivenessOnTheCorpus(unittest.TestCase):
         texts = dict(_corpus())  # already in memory — do not re-open (M-03)
         passing = []
         for path in sorted(candidates):
-            if BYPASS in texts.get(path, ""):
+            if validate.bypass_requested(texts.get(path, "")):
                 continue  # a bypassed file proves nothing about the matcher
             code, _out = fx.run(validate.validate_task, str(path))
             if code == 0:

@@ -2,7 +2,7 @@
 name: skill-spec-validator
 description: Validates conformance between TASK.md (RTM) and PLAN.md (Atomic Checklists).
 tier: 2
-version: 1.1
+version: 1.2
 ---
 
 # Skill: Spec Validator
@@ -40,14 +40,14 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
 
 ## 3. Failure Handling
 - **Exit Code 1**: Issues found. Orchestrator should trigger a **Correction Loop** (instruct Analyst/Planner to fix).
-- **Bypass**: If validation is buggy, add the bypass token — `BYPASS_VALIDATION` in square brackets —
-  to `TASK.md`.
-  > [!WARNING]
-  > The bypass is a **bare substring test anywhere in `TASK.md`**, so a spec that merely *mentions*
-  > the token switches its own gate off and prints `Validation bypassed …` with exit 0 — which reads
-  > like a pass. Write it only when you mean it (that is why this section spells the token out
-  > instead of quoting it). Pinned by a test, deliberately not "fixed": tightening it is a behavior
-  > change to a live gate.
+- **Bypass**: If validation is buggy, add `[BYPASS_VALIDATION]` to the title of `TASK.md`. Both
+  modes then print `Validation bypassed …` and exit 0.
+  - The title is the first h1 (`# …`) outside a fenced block, also below a comment such as
+    `<!-- contract:meta -->`.
+  - The token anywhere else is text: in prose, in a fenced line, in a later h1 or an h2. Both
+    checks then run (FW-1).
+  - Not parsed: HTML blocks, front matter and list containers. A `#` line inside one of them,
+    above the title, counts as the title. A setext h1 (`Title` over `===`) is not a title.
 
 ## 4. Dependencies
 - Python 3 (stdlib only)
@@ -68,6 +68,7 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   `Note: …` line whenever the RTM section held more than one table (RF-6): how many tables were
   read as one RTM, and which tables were **not** read, named by their columns. The verdict may
   cover part of a section; it may not do so quietly.
+- **Input:** UTF-8 text. A file in another encoding stops with a `UnicodeDecodeError`, exit 1.
 - **Idempotent and read-only**; no dry-run needed because it never writes.
 
 ## Safety Boundaries
@@ -79,7 +80,7 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   state); the corpus tests below exist to make that failure loud.
 
 ## Validation Evidence
-- **Local verification:** `bash scripts/tests/run_tests.sh` — 57 tests, stdlib `unittest`, with a
+- **Local verification:** `bash scripts/tests/run_tests.sh` — 61 tests, stdlib `unittest`, with a
   **zero-test-discovery guard** (a run that executes nothing is a FAILURE, not a green gate) and a
   guard that the corpus tests actually RAN rather than skipped inside this repo.
 - **Coverage:** the 8 RTM heading shapes `docs/tasks/` actually ships (fixtures copied verbatim) +
@@ -121,6 +122,9 @@ python3 scripts/validate.py --mode plan /absolute/path/to/docs/PLAN.md /absolute
   table rather than a foreign one. `compat_diff.py` compares **verdicts** and would have called
   this change clean while it silently altered a quarter-hundred counts — so a count sweep belongs
   beside it whenever what changes is how much of a document is read, not whether it passes.
+  **Measured for the title-only bypass (FW-1, TASK 136), old = `33e497f`: `0 of 1852 artifacts
+  changed verdict across 12 project(s)`.** No archived task in those projects carries the token
+  in its title.
 - **Proof the guard bites:** re-injecting each historical regression makes the suite red —
   the pre-TASK-090 `^## Requirements Traceability$` matcher → 28 failures (incl. every corpus test);
   the literal `[**R-1**]` PLAN token → 7 failures. Re-verify with those two edits, not by reading.

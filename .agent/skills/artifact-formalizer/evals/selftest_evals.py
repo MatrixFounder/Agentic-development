@@ -509,11 +509,14 @@ def t_report_pin():
 
 
 #: A count is `<n> case(s)` following a `selftest_evals.py` mention with no full
-#: stop between them. `TC-SHIP-08` exempts every claim naming this battery, so
-#: this case is the only reader of these sites -- and it read `README.md` alone
-#: while `SKILL.md` and `SKILLS.md` said 59 against a pinned 78 (TASK 106). The
-#: anchor keeps `SKILLS.md`'s `192-case battery`, which precedes the mention in
-#: the same list item, out of reach: that count belongs to the other battery.
+#: stop between them. `TC-SHIP-08` exempts this span and reads the rest of the
+#: claim (REG-19), so this case is the only reader of the counts inside it -- and
+#: it read `README.md` alone while `SKILL.md` and `SKILLS.md` said 59 against a
+#: pinned 78 (TASK 106). The anchor keeps the scanner battery's count in
+#: `SKILLS.md`, which precedes the mention in the same list item, out of reach:
+#: that count belongs to the other battery, and `TC-SHIP-08` reads it.
+#: `EVAL_SPAN` of `scripts/selftest_scan.py` copies this pattern, and
+#: `TC-SHIP-08c` holds the two equal.
 #: Every count inside the span is read, not the first: `78 cases (59 before)`
 #: would otherwise pass. A count spans a line break, so a re-wrap between the
 #: numeral and `cases` is not a deletion. A numeral continuing another number --

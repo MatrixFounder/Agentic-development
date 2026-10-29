@@ -130,7 +130,7 @@ the matching `## <category>` heading here, in ID order.
 - **REG-16** [Dropping the `flags` key from entries no case references removes findings silently](issues/reg-16-dropping-the-flags-key-from-entries-no-case-references-removes-findings-silently.md) — severity `SEV-3`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): `SHIPPED_SURFACES` carries each entry's `flags`, and the roster re-runs every entry declaring `i` against a case-flipped copy of its own probe
 - **REG-17** [Widening `SKIP_LINE` blinds rule 1 to list prose with both gates green](issues/reg-17-widening-skip-line-blinds-rule-1-to-list-prose-with-both-gates-green.md) — severity `SEV-3`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): every rule-1 and rule-3 fixture runs as a bare line and as a list item; the reproduction exits 2 at `12/18` with six DEAD rows
 - **REG-18** [The rule-5 glyph sets are unpinned in size and membership](issues/reg-18-the-rule-5-glyph-sets-are-unpinned-in-size-and-membership.md) — severity `SEV-4`, status `fixed`, opened 2026-08-04 · **fixed 2026-08-04** (TASK 100): the battery imports the scanner and pins both frozensets by membership, printing the symmetric difference
-- **REG-19** [TC-SHIP-08 exempts a whole list item, so SKILLS.md's 192-case count is read by no case](issues/reg-19-tc-ship-08-exempts-a-whole-list-item-so-skills-md-s-192-case-count-is-read-by-no-case.md) — severity `SEV-4`, status `open`, opened 2026-10-02
+- **REG-19** [TC-SHIP-08 exempts a whole list item, so SKILLS.md's 192-case count is read by no case](issues/reg-19-tc-ship-08-exempts-a-whole-list-item-so-skills-md-s-192-case-count-is-read-by-no-case.md) — severity `SEV-4`, status `fixed`, opened 2026-10-02 · **fixed 2026-10-29** (TASK 136): `TC-SHIP-08` exempts only the `selftest_evals.py` span, and `TC-SHIP-08b` pins it
 
 
 ## session-state
@@ -149,7 +149,7 @@ the matching `## <category>` heading here, in ID order.
 
 ## validation
 
-- **FW-1** [Spec-validator bypass token matches anywhere in content](issues/validator-bypass-substring.md) — severity `SEV-4`, status `open`, opened 2026-07-20
+- **FW-1** [Spec-validator bypass token matches anywhere in content](issues/validator-bypass-substring.md) — severity `SEV-4`, status `fixed`, opened 2026-07-20 · **fixed 2026-10-29** (TASK 136): the token counts only in the first h1 outside a fenced block
 - **VAL-1** [validate_skill.py passes frontmatter that strict YAML parsers reject (unquoted colon in description)](issues/val-1-validate-skill-py-passes-frontmatter-that-strict-yaml-parsers-reject-unquoted-colon-in-description.md) — severity `SEV-4`, status `fixed`, opened 2026-07-13
 - **VAL-2** [run_eval.py trigger probe false-negatives: name competition with installed skill and first-call strictness](issues/val-2-run-eval-py-trigger-probe-false-negatives-name-competition-with-installed-skill-and-first-call-strictness.md) — severity `SEV-3`, status `fixed`, opened 2026-07-13 · **fixed 2026-07-30** (v3.21.10, `31db854`): both names counted, exact matching, an 8-call budget across message boundaries; instrument failure now distinguishable from a real non-trigger
 

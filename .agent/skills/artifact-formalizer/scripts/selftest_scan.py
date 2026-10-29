@@ -292,7 +292,16 @@ SHIPPED_STATUS_GLYPHS = frozenset("\u2713\u2717\u2705\u274C\u2611\u2612\u2610")
 #: that nothing compared against anything: the drift had already shipped, 128
 #: documented against 145 running (REG-8). `TC-META-01` pins the run against
 #: this number, `TC-SHIP-08` pins the documents against it.
-EXPECTED_CASES = 192
+EXPECTED_CASES = 194
+
+#: How many counts of this battery each `TC-SHIP-08` site states. A count
+#: deleted from a site fails as a drifted one does (REG-19).
+SITE_COUNTS = {"SKILL.md": 1, "SKILLS.md": 2, "measurement-baseline.md": 0}
+
+#: The span from a `selftest_evals.py` mention to the next full stop: the counts
+#: of the eval battery, which `TC-SHIP-08` leaves to `TC-EV-13b`. A copy of
+#: `EVAL_SPAN` in `evals/selftest_evals.py`; `TC-SHIP-08c` holds the two equal.
+EVAL_SPAN = re.compile(r"selftest_evals\.py\b([^.]*)")
 
 
 def check(name, cond, detail=""):
@@ -977,10 +986,11 @@ def t_shipped():
     # now state its size too. Without an exemption every eval-battery count
     # would be asserted equal to this file's, which is a different instrument
     # measuring a different thing. Keyed on the identifier and never on the
-    # file, exactly as the release exemption above: a claim naming
-    # `selftest_evals` or `evals/` is a claim about that battery, and a
-    # present-tense claim about THIS battery is still covered.
-    other_battery = re.compile(r"selftest_evals|\bevals/")
+    # file, exactly as the release exemption above. The exemption is EVAL_SPAN,
+    # the span `TC-EV-13b` reads in `SKILL.md` and `SKILLS.md`: that case asserts
+    # the counts inside it, and this one reads the rest of the claim (REG-19).
+    # `measurement-baseline.md` states no count of either battery, and the
+    # `unread` term below holds it so.
     # The unit is the paragraph, THEN the list item inside it. Both sites state
     # the two counts as adjacent bullets of one list, which is a single
     # blank-line paragraph -- so a paragraph-only unit exempted this battery's
@@ -988,23 +998,64 @@ def t_shipped():
     # below is what caught that: an exemption wide enough to swallow every claim
     # fails rather than passing on nothing. Continuation lines stay with their
     # item, so the hard-wrap reason the release exemption records still holds.
-    stated = []
-    for p in present:
-        for para in re.split(r"\n[ \t]*\n", open(p, encoding="utf-8").read()):
+    def counts(text):
+        """This battery's counts, and the counts inside EVAL_SPAN, of the
+        claims that name no release."""
+        found, spanned = [], []
+        for para in re.split(r"\n[ \t]*\n", text):
             for claim in re.split(r"\n(?=[ \t]*[-*+][ \t])", para):
-                if release.search(claim) or other_battery.search(claim):
+                if release.search(claim):
                     continue
-                for n in re.findall(r"\b(\d+)[ -]cases?\b", claim):
-                    stated.append((os.path.basename(p), int(n)))
-    # EVERY match is asserted, not the first: a second, newly-added claim in a
-    # file already covered is then a red run rather than a silent pass. And a
-    # present file that states NO count fails too -- deleting the numeral is
-    # the same defect as letting it drift.
+                spanned += [int(n) for span in EVAL_SPAN.findall(claim)
+                            for n in re.findall(r"\b(\d+)(?:\s+|-)cases?\b", span)]
+                claim = EVAL_SPAN.sub("", claim)
+                found += [int(n) for n in re.findall(r"\b(\d+)[ -]cases?\b", claim)]
+        return found, spanned
+
+    read = {os.path.basename(p): counts(open(p, encoding="utf-8").read())
+            for p in present}
+    found = {name: ns for name, (ns, _) in read.items()}
+    stated = [(name, n) for name, ns in found.items() for n in ns]
+    # EVERY match is asserted, not the first, and each site states the number
+    # of counts SITE_COUNTS pins. A count added to a site, or deleted from one,
+    # is then a red run rather than a silent pass: deleting the numeral is the
+    # same defect as letting it drift.
+    per_site = {name: len(ns) for name, ns in found.items()}
+    pinned = {name: SITE_COUNTS[name] for name in per_site}
+    # `TC-EV-13b` reads the span in `SKILL.md` and `SKILLS.md` only. A count
+    # inside the span at another site would be read by neither case.
+    unread = {name: sp for name, (_, sp) in read.items()
+              if sp and name not in ("SKILL.md", "SKILLS.md")}
     check("TC-SHIP-08 every stated case count equals EXPECTED_CASES",
-          not present or (bool(stated)
+          not present or (bool(stated) and per_site == pinned and not unread
                           and all(n == EXPECTED_CASES for _, n in stated)),
-          f"stated={stated} expected={EXPECTED_CASES} absent="
+          f"stated={stated} expected={EXPECTED_CASES} counts per site="
+          f"{per_site} pinned={pinned} unread={unread} absent="
           f"{[os.path.basename(p) for p in sites if p not in present]}")
+    # REG-19. `SKILLS.md` states this battery's count in a list item that also
+    # names the eval battery, and an item-wide exemption left that count read by
+    # no case. The item is written here, so the pin holds in a vendored copy
+    # that ships without `System/Docs/`. One count precedes the span and one
+    # follows its full stop on the span's last line, so an exemption that ends
+    # at a line end, or runs to the end of the item, fails too.
+    item = ("- **Mode C** (`evals/`, TASK 101). The 190-case\n"
+            "  battery covers the scanner. `evals/selftest_evals.py` runs\n"
+            "  78 cases. A 191-case run follows.\n")
+    check("TC-SHIP-08b a list item naming both batteries keeps this battery's count",
+          counts(item)[0] == [190, 191],
+          f"read={counts(item)[0]} expected=[190, 191]")
+    # EVAL_SPAN copies the pattern `TC-EV-13b` reads with. If that one ended
+    # sooner, a count past its end would be read by neither case: REG-19 again.
+    # The pattern is read from the source, so nothing under `evals/` is imported.
+    evals_src = os.path.join(SKILL, "evals", "selftest_evals.py")
+    there = None
+    if os.path.exists(evals_src):
+        m = re.search(r'^EVAL_SPAN = re\.compile\(r"([^"]*)"\)$',
+                      open(evals_src, encoding="utf-8").read(), re.M)
+        there = m and m.group(1)
+    check("TC-SHIP-08c the exemption is the span TC-EV-13b reads",
+          not os.path.exists(evals_src) or there == EVAL_SPAN.pattern,
+          f"here={EVAL_SPAN.pattern!r} there={there!r}")
 
     # REG-9. Reverting §4 row `:65` of `measurement-baseline.md` from
     # `not adopted` back to `adopted at info in RU only` left the battery at

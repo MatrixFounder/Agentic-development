@@ -16,6 +16,35 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.53.1 — The bypass token counts only in the title, and two stale claims are corrected (TASK 136)**
+
+#### Fixed
+
+- **`skill-spec-validator`: the bypass token counts only in the title of `TASK.md`** (FW-1).
+  `validate.py` reads `[BYPASS_VALIDATION]` in the first h1 outside a fenced block, also below
+  `<!-- contract:meta -->`. Before, a mention anywhere in the file switched off the RTM check and
+  the PLAN coverage check, and the run printed `Validation bypassed …` with exit 0. A copy of a
+  shipped TASK with one mention in prose, against its PLAN without one requirement, now fails with
+  that requirement's ID.
+- **`validate.py` reads `TASK.md` and `PLAN.md` as UTF-8**, so the title rule drops a leading BOM
+  on every platform. Before, it used the locale's encoding, and on Windows a Cyrillic file could
+  fail to decode.
+- **`artifact-formalizer`: `TC-SHIP-08` reads the scanner battery's count in
+  `System/Docs/SKILLS.md`** (REG-19). The exemption for the eval battery is the span from a
+  `selftest_evals.py` mention to the next full stop, not the whole list item. `TC-SHIP-08b` and
+  `TC-SHIP-08c` pin it, and `SITE_COUNTS` pins how many counts each site states, so a deleted
+  count fails too. The battery holds 194 cases.
+
+#### Changed
+
+- The comment above `OTHER_KEYWORDS` in `mermaid_model/kinds.py` states the measured renders of a
+  `zenuml` fence: v11 and v12 draw it with the plugin, and the 10.9.8 render fails
+  `render_check.py`. MA-SYN-07 still reports `zenuml` as an error.
+
+#### Notes
+
+- A token outside the title no longer bypasses the gate. Move it into the h1 of `TASK.md`.
+
 ### **v3.53.0 — Allow-listed scripts import no module planted beside them (TASK 134)**
 
 #### Security

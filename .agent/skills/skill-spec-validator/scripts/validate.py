@@ -50,6 +50,39 @@ ANCHOR_RTM = re.compile(
 #: and the table parser stops at the first non-table line anyway.
 _SECTION_END = re.compile(r'^## ', re.MULTILINE)
 
+# --- Bypass (FW-1) -----------------------------------------------------------
+#
+# The escape hatch is the token in the document's TITLE: the first ATX h1
+# outside a fenced block. It was a bare substring test over the whole file, so
+# a TASK that merely quoted the token -- a decision, an open question, a
+# requirement about this validator -- switched off the RTM check AND the PLAN
+# coverage check and printed a line that reads like a pass (TASK 090, 092).
+# The first h1 is searched, not line 1: consumer TASKs put a
+# `<!-- contract:meta -->` comment or a Meta block above it.
+# The callers read UTF-8 in universal-newline mode, so a line ends at `\n`
+# only: `splitlines()` also breaks at U+2028 and `\x0c`, which CommonMark does
+# not. A leading BOM is dropped, so it cannot hide line 1's `#`.
+# Not parsed: HTML blocks, front matter, setext headings, list containers.
+BYPASS_TOKEN = "[BYPASS_VALIDATION]"
+_FENCE = re.compile(r'^ {0,3}(`{3,}|~{3,})')
+_H1 = re.compile(r'^ {0,3}#(?:[ \t]|$)')
+
+
+def bypass_requested(content):
+    """True when the first h1 outside a fenced block carries BYPASS_TOKEN."""
+    fence = None
+    for line in content.lstrip("\ufeff").split("\n"):
+        m = _FENCE.match(line)
+        if fence is None:
+            if m:
+                fence = m.group(1)
+            elif _H1.match(line):
+                return BYPASS_TOKEN in line
+        elif m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) \
+                and not line[m.end():].strip():
+            fence = None
+    return False
+
 
 def _anchor_block(content):
     """Slice the RTM section addressed by the anchor.
@@ -284,12 +317,12 @@ def validate_task(task_path):
         print(f"Error: File '{task_path}' not found.")
         sys.exit(1)
         
-    with open(task_path, 'r') as f:
+    with open(task_path, 'r', encoding='utf-8') as f:
         content = f.read()
         
     # check for bypass
-    if "[BYPASS_VALIDATION]" in content:
-         print("Validation bypassed via [BYPASS_VALIDATION] flag.")
+    if bypass_requested(content):
+         print(f"Validation bypassed via {BYPASS_TOKEN} flag.")
          sys.exit(0)
 
     # Locating the RTM and reading its id column is ONE decision, made in
@@ -321,12 +354,12 @@ def validate_plan(plan_path, task_path):
         print(f"Error: File '{task_path}' not found.")
         sys.exit(1)
 
-    with open(task_path, 'r') as f:
+    with open(task_path, 'r', encoding='utf-8') as f:
         task_content = f.read()
     
     # check for bypass
-    if "[BYPASS_VALIDATION]" in task_content:
-         print("Validation bypassed via [BYPASS_VALIDATION] flag.")
+    if bypass_requested(task_content):
+         print(f"Validation bypassed via {BYPASS_TOKEN} flag.")
          sys.exit(0)
 
     # Same locator as validate_task. The old code here re-derived the ids with
@@ -349,7 +382,7 @@ def validate_plan(plan_path, task_path):
         sys.exit(1)
 
     # Check PLAN for IDs
-    with open(plan_path, 'r') as f:
+    with open(plan_path, 'r', encoding='utf-8') as f:
         plan_content = f.read()
 
     # The contract is "every RTM item is referenced somewhere in the PLAN". Enforce THAT,

@@ -1,4 +1,4 @@
-# TASK 134 — Allow-listed scripts import no module planted beside them (WI-39)
+# TASK 136 — [LIGHT] The bypass token counts only in the title, TC-SHIP-08 reads SKILLS.md's count, and the zenuml comment states what the renderers do
 
 <!-- contract:meta -->
 
@@ -6,179 +6,166 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 134 |
-| Slug | allow-listed-script-imports |
-| Type | Framework Upgrade, reduced process (D1) |
-| Source | WI-39; TASK 133 D1; the operator's request of 2026-10-28 |
-| Base revision | `48e10ea` |
-| Closes | WI-39 |
-| Archive name | `task-134-allow-listed-script-imports.md` |
-| Revision | 2 |
+| Task ID | 136 |
+| Slug | bypass-in-h1-and-two-stale-claims |
+| Type | Light Mode (D1) |
+| Source | FW-1, REG-19, `docs/reviews/code-129-3-review.md:39`; the operator's request of 2026-10-29 |
+| Base revision | `33e497f7b2916c9da9e727be8a6b3816ad55aedc` |
+| Closes | FW-1, REG-19 |
+| Archive name | `task-136-bypass-in-h1-and-two-stale-claims.md` |
+| Revision | 3 |
 
-**Request.** WI-39: a module planted beside a Python script that an allow rule runs is imported
-before the script's own code, at the next approved call, with no prompt. TASK 115, 127 and 128
-closed it for `rebase_links.py`, `archive_move.py` and `update_state.py`. TASK 133 D1 set the rest
-as this task: the 13 scripts that the committed rules run, and `run_audit.py` of the local rules.
+**Request.** The operator took three items of the residual report as one `/light` task:
 
-**Revision 2** follows the code review (CHANGES REQUESTED: one MAJOR, seven MINOR, eleven NIT)
-and the security audit (PASS: four MEDIUM, six LOW, all before the task but for M1a). The fix
-pass:
-- `run_tests.py` loads the installer tests' `_base` by its path: with `tests/` before
-  `tests/installer/` on the path, a `_base.py` planted in `tests/` stood in for it (M1a, a
-  regression of revision 1). It imports `platform` before the discovery, whose probe for `_wmi`
-  read `tests/` on POSIX (MAJOR-1, L1). Its comment names no `_load` (MINOR-2);
-- TC-AL1 pins each script's exit code, and two fixtures reach the work (MINOR-1). TC-AL3 runs the
-  runner too (MINOR-3). TC-AL4 plants in `tests/installer/` and plants `_base` and `_wmi`. TC-AL5
-  finds each change of `sys.path` outside the guard, and checks the runner's early imports (N2, N6);
-- R5 and §5 state the runner's residual (D8), and the documents name the scripts that a committed
-  rule runs (MINOR-5, MINOR-6, L2, N1, N3, N9); one positional reference is repaired (MINOR-4);
-- the three findings outside WI-39 go to one backlog record, WI-59 (D9).
+- FW-1: `validate.py:291@33e497f` and `validate.py:328@33e497f` test the bypass token as a
+  substring of the whole `TASK.md`;
+- REG-19: no case reads the `192-case` count of `System/Docs/SKILLS.md:93`;
+- the comment of `mermaid_model/kinds.py:25-28@33e497f` says that no pinned renderer loads the
+  zenuml plugin. No record holds it; the code review of TASK 129 names it.
 
-Not taken: the Windows jobs (MINOR-7, L5). The guard's code is pinned to that of
-`rebase_links.py`, which TC-W16 runs on Windows, and a failure of an unrelated script there would
-block the jobs. N4 and N5, a split of TC-AL2 and a cache of the clean runs, change no result.
+**Revision 2** follows the code review of round 1: CHANGES REQUESTED, with seven MINOR and six NIT
+findings. The fix pass takes all thirteen:
 
-**Measured at the base** (2026-10-28, Python 3.14.8, macOS):
-- none of the 14 scripts removes its own directory from `sys.path`. Five insert it again at module
-  level: `selftest_scan.py`, `lint_mermaid.py` and `plan_gantt.py` at the front, `init_skill.py`
-  and `validate_skill.py` at the end;
-- a `__future__.py` planted beside a script that starts with `from __future__ import annotations`
-  runs before the script's first line of code. Nine of the 14 scripts start so. The statement must
-  be the first of its module, so no guard can precede it;
-- a static check of the nine scripts finds no annotation that Python 3.11 evaluates at definition
-  time and that names a value not yet bound.
+- 1, 13: `SKILL.md` of the validator states 60 tests and the `compat_diff.py` replay;
+- 2, 9: the coordinates of this TASK carry `@33e497f`, and D3 states the two counts apart;
+- 3, 11, 12: `EVAL_SPAN` and `SITE_COUNTS` in `selftest_scan.py`, `TC-SHIP-08c`, and a
+  `TC-SHIP-08b` item with a count after the span (R6);
+- 4, 10: a BOM, `\n` line ends, the limits in `SKILL.md` §3, and decoys above the title (R4);
+- 5, 6, 7, 8: the token constant in both messages, two comments, the place of the resolution.
+
+**Revision 3** follows round 2: CHANGES REQUESTED, with one MAJOR, one MINOR and four NIT findings.
+The review bound of `/light` was reached; the operator chose a fix of all six and a narrow round 3
+(D6). The fix pass:
+
+- N1: `validate.py` reads each file as UTF-8; under the locale's encoding a BOM hid the title (R1);
+- N2: D5 states 194;
+- N3: a count inside the eval span of `measurement-baseline.md` fails `TC-SHIP-08` (R6);
+- N4: a run of two backticks above the title opens no fence (R4);
+- N5: the comment on line ends; N6: the wrap of §0.
 
 ## 1. Decisions
 
-- D1, 2026-10-28, operator: a reduced process. The run has a TASK and a PLAN, edits in place, the
-  tests first and red, and the gates. At the end, one code reviewer with the exhaustive prompt and
-  one security auditor review the change, and one fix pass follows. Rejected: the full
-  `/framework-upgrade`, for its cost, and Light Mode, which has no security audit for a change of
-  security. Skipped: the meta-audits of Mode A and Mode B, the staged copies and stages 1 to 4 of
-  `framework-upgrade` §3 step 4, and the check of each allowed command.
-- D2, 2026-10-28, operator: the guard works at the level of the script. A sibling module or
-  package loads by explicit path. The submodules of a package load by the path search inside the
-  package's own directory, as at the base (§5, residual 1).
-- D3, orchestrator: the nine scripts lose `from __future__ import annotations`. The base needs no
-  annotation quoted for Python 3.11.
-- D4, orchestrator: one test module checks all 14 scripts from one table, as TC-G11 of TASK 115
-  checks `rebase_links.py`.
-- D5, orchestrator: the other scripts of the local rules stay out: `analyze_gaps.py`, the test
-  modules that a rule runs by path, and the paths into other checkouts. The local settings are the
-  operator's; TASK 133 D1 named `run_audit.py` only.
-- D6, orchestrator: `Universal-skills/skills/skill-creator` is a copy. The run copies the two
-  changed scripts there, and the operator commits that repository.
-- D8, 2026-10-29, operator: `run_tests.py` guards its own imports and the two probes; the test
-  modules that it runs, and what they import and start, stay a residual (§5, residual 2).
-- D9, 2026-10-29, operator: three findings of the security audit outside WI-39 go to one backlog
-  record: the scanners of `run_audit.py`, the `pytest` rules, and the start files of `.venv`.
-- D7, 2026-10-29, operator: each script keeps its own copy of the guard. A shared module would be
-  found by the path search that the guard closes, and a skill imports nothing from outside its
-  directory. A test pins the 17 copies, the three older ones among them, to one code, and the
-  comment and `_load` to one text in each group. Each copy's comment has two or three lines.
+- D1, 2026-10-29, operator: Light Mode, one TASK for the three items. The run has the edits with
+  their tests, the test run, and one code reviewer with the exhaustive prompt, in at most two
+  review cycles (`light-02-develop-task`).
+- D2, 2026-10-29, operator: FW-1 — the token counts only in the first H1 of `TASK.md`. Rejected:
+  - an HTML-comment marker — the title already carries the mode tag `[LIGHT]`, and task-050 placed
+    the token in the title;
+  - no change — one mention in prose switches off the RTM check and the PLAN coverage check (§2).
+- D3, 2026-10-29, orchestrator: the first H1 is searched, not line 1. In 8 of 1841 task files the
+  first H1 stands below `<!-- contract:meta -->` or a Meta block; 3 files have no H1 (§2).
+- D4, 2026-10-29, operator: zenuml — the comment only. MA-SYN-07, its message and the test
+  `test_keywords_no_pinned_renderer_reads` stay. The comment states the measurements of §2. The
+  claim about GitHub leaves it: this run did not measure GitHub.
+- D5, 2026-10-29, orchestrator: two new cases pin REG-19: `TC-SHIP-08b` on a list item written in
+  the case, and `TC-SHIP-08c` on the copy of `EVAL_SPAN`. The battery grows from 192 to 194, and
+  the three document sites state 194.
+- D6, 2026-10-29, operator: past the review bound of `/light`, a fix of N1 to N6 and a narrow
+  round 3 on the lines of that fix.
 
-## 2. Requirements
+## 2. Measurements of this run
 
-<!-- contract:requirements -->
+- **The bypass on copies of real tasks.** The token added to a decision or an open question of a
+  copy, and one requirement ID removed from the copy of its PLAN:
 
-The 14 scripts, by group; `S/` stands for `.agent/skills/`:
-- A, no sibling: `S/artifact-formalizer/scripts/scan_register.py`, `.agent/tools/task_id_tool.py`,
-  and `check_prompt_references.py`, `doctor.py`, `security_lint.py`, `smoke_workflows.py` and
-  `validate_skills.py` of `System/scripts/`;
-- B, siblings, named in brackets:
-  - `S/artifact-formalizer/scripts/selftest_scan.py` (`scan_register`);
-  - `S/mermaid-authoring-guidelines/scripts/lint_mermaid.py` (`mermaid_model`, `planarity`,
-    `lint_mermaid_parts`) and `plan_gantt.py` (`mermaid_model`);
-  - `S/skill-creator/scripts/init_skill.py` and `validate_skill.py` (`skill_utils`);
-  - `S/security-audit/scripts/run_audit.py` (`audit`);
-- C, a test runner: `tests/run_tests.py`.
+  | Task | ID removed | Now | With the H1 rule |
+  | :--- | :--- | :--- | :--- |
+  | TASK 132 | R3 | `bypassed`, exit 0 | `NOT covered … ['R3']`, exit 1 |
+  | TASK 133 | R5 | `bypassed`, exit 0 | `NOT covered … ['R5']`, exit 1 |
+  | whip-insight Task 042 | R11 | `bypassed`, exit 0 | `NOT covered … ['R11']`, exit 1 |
 
-- **R1** Each of the 14 scripts runs, under `if __name__ == "__main__":` and before any import but
-  `os` and `sys`, the guard of TASK 127 R6.1. An entry of `sys.path` leaves when its real path, in
-  `os.path.normcase`, or its `(st_dev, st_ino)` matches the directory of `__file__` as called or of
-  its real path.
-- **R2** Each script of groups B and C also sets `sys.dont_write_bytecode` and a
-  `sys.pycache_prefix` under `os.devnull`. Where `os.devnull` is a relative path, the prefix lies
-  under the script's own real path (TASK 131 R4).
-- **R3** Each script of group B loads its siblings by explicit path, with
-  `importlib.util.spec_from_file_location`, a package with `submodule_search_locations`. It loads
-  them in the order of their imports, and reuses a module that `sys.modules` already holds. No
-  script inserts its own directory into `sys.path` at module level. A test that imports the module
-  keeps its own path.
-- **R4** The nine scripts that start with `from __future__ import annotations` no longer hold the
-  statement: `scan_register.py`, `selftest_scan.py`, `lint_mermaid.py`, `plan_gantt.py`, and the
-  five of `System/scripts/`.
-- **R5** `tests/run_tests.py` appends `tests/` and `tests/installer/` to the end of `sys.path`
-  before its discovery, so `unittest` does not insert them at the front. It loads the installer
-  tests' `_base` by its path. It imports `subprocess` and `platform` before the discovery: on
-  import, `subprocess` probes for `msvcrt` or `fcntl`, and `platform` for `_wmi`, which one platform
-  or another lacks.
-- **R6** The exit codes, the output and the files written of each script stay as at the base.
-- **R7** WI-39 closes in its record and in `docs/BACKLOG.md`; both changelogs carry the release.
-  `Universal-skills/skills/skill-creator/scripts/` receives the two changed scripts (D6).
+- **The corpus.** 15 repositories under `~/dev-projects` that link or copy the skill hold 1841
+  task files (`docs/TASK.md`, `docs/tasks/*.md`).
+  - The token occurs in one file: `docs/tasks/task-050-hardening-quality.md:112`, in prose.
+  - The first H1 outside a fenced block is on line 1 in 1830 files, below line 1 in 8, absent
+    in 3.
+  - No file has a front matter block or a setext H1. 4 files have more than one H1.
+  - 14 repositories link the skill; `swbera-conversions` holds a copy.
+- **zenuml.** `render_check.py --forward` of the fence `zenuml` / `title Probe` / `A->B: hello`:
 
-## 3. Files
+  | Install | Plugin package | Result |
+  | :--- | :--- | :--- |
+  | v10, mermaid 10.9.8 | none | rendered; fail: text runs 148.0 px past its box |
+  | v11, mermaid 11.17.2 | `@mermaid-js/mermaid-zenuml` 0.2.3 | pass, light and dark |
+  | v12, mermaid 12.1.0 | `@mermaid-js/mermaid-zenuml` 1.0.1 | pass |
 
-- the 14 scripts of §2;
-- `tests/test_allow_listed_imports.py` (new), and `.github/workflows/framework-gates.yml`, whose
-  tooling step runs it;
-- `S/mermaid-authoring-guidelines/scripts/tests/test_lint_mermaid_package.py`: `_load` is a name
-  of the thin file;
-- `docs/ARCHITECTURE.md`: the rule of the guard;
-- `docs/backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md`,
-  `docs/BACKLOG.md`;
-- `CHANGELOG.md`, `CHANGELOG.ru.md`;
-- `docs/TASK.md`, `docs/PLAN.md`; the archive of TASK 135;
-- revision 2: `docs/backlog/wi-59-*.md` and its index line (D9), and the line of
-  `.agent/tools/task_id_tool.py` that `docs/tasks/task-114-subtask-classified-by-h1.md` cites,
-  which `check_positional_refs.py --fix` repaired.
+## 3. Requirements
 
-## 4. Acceptance
+- R1 (FW-1) — `validate.py` reads the token `[BYPASS_VALIDATION]` only in the first H1 of
+  `TASK.md`. The H1 is the first ATX heading of level 1 outside a fenced code block. The rule
+  holds in `--mode task` and in `--mode plan`.
+- R2 (FW-1) — a token outside that H1 leaves both checks running: in prose, in a fenced line, or in
+  a later H1.
+- R3 (FW-1) — `SKILL.md` §3 states the rule of R1 and loses the warning about the substring test.
+  The skill's version goes from 1.1 to 1.2.
+- R4 (FW-1) — tests:
+  - the H1 bypasses in both modes, also below a `<!-- contract:meta -->` line, a BOM, a backtick
+    line indented four spaces, or a run of two backticks;
+  - each placement of R2 does not bypass. Each decoy stands above the title:
+    - an h2, indented code, a `#` after U+2028;
+    - a fence with a shorter closer, a closer of the other character or with an info string;
+    - an unclosed fence;
+  - the test that pinned the substring test is inverted;
+  - `test_corpus.py` skips a bypassed file by the predicate of R1;
+  - the fixture of `tests/test_spec_validator.py` carries the token in its title;
+  - `TestEncoding` asserts that each `open(` and `read_text(` of `validate.py` names UTF-8, and
+    the suite passes under an ISO-8859-1 locale.
+- R5 (REG-19) — `TC-SHIP-08` exempts only the span that `TC-EV-13b` reads. The span runs from a
+  `selftest_evals.py` mention to the next full stop. The rest of the list item is read.
+- R6 (REG-19) — pins:
+  - `TC-SHIP-08b` reads a list item that names both batteries and asserts the counts of this
+    battery before the span and after its full stop;
+  - `TC-SHIP-08c` asserts that `EVAL_SPAN` of `selftest_scan.py` equals the one of
+    `evals/selftest_evals.py`;
+  - `SITE_COUNTS` pins the number of counts at each site of `TC-SHIP-08`;
+  - a count inside the eval span of a site that `TC-EV-13b` does not read fails `TC-SHIP-08`.
+
+  `EXPECTED_CASES` is 194. The sites state 194:
+  - `.agent/skills/artifact-formalizer/SKILL.md:249`;
+  - `System/Docs/SKILLS.md:90`;
+  - `System/Docs/SKILLS.md:93`.
+- R7 (REG-19) — the comment of `EVAL_SPAN` in `evals/selftest_evals.py` states the narrowed
+  exemption and cites no numeral of the other battery.
+- R8 — the comment above `OTHER_KEYWORDS` in `mermaid_model/kinds.py` states the measurements of §2
+  for zenuml. No code changes there.
+- R9 — FW-1 and REG-19 are `fixed` in their records and in `docs/KNOWN_ISSUES.md`. Both changelogs
+  carry v3.53.1.
+
+**Out of scope.**
+
+- the message of MA-SYN-07 and the name of its test (D4);
+- whether GitHub draws a zenuml fence (D4);
+- the copy of the skill in `swbera-conversions`, which keeps the substring test;
+- the two `INBOUND` records of the archive of TASK 134: `CHANGELOG.md:3865@33e497f` and
+  `CHANGELOG.ru.md:3901@33e497f`, slot links that TASK 134 did not write.
+
+## 4. Files
+
+- `.agent/skills/skill-spec-validator/scripts/validate.py`
+- `.agent/skills/skill-spec-validator/SKILL.md`
+- `.agent/skills/skill-spec-validator/scripts/tests/test_validate.py`, `test_corpus.py`,
+  `_fixtures.py`
+- `tests/test_spec_validator.py`
+- `.agent/skills/artifact-formalizer/scripts/selftest_scan.py`
+- `.agent/skills/artifact-formalizer/evals/selftest_evals.py`
+- `.agent/skills/artifact-formalizer/SKILL.md`, `System/Docs/SKILLS.md`
+- `.agent/skills/mermaid-authoring-guidelines/scripts/mermaid_model/kinds.py`
+- `docs/issues/validator-bypass-substring.md`, the record of REG-19, `docs/KNOWN_ISSUES.md`
+- `CHANGELOG.md`, `CHANGELOG.ru.md`
+- `docs/TASK.md`; the archive pair of TASK 134
 
 <!-- contract:acceptance -->
 
-In `tests/test_allow_listed_imports.py`, each test copies a script and the files it loads into a
-temporary directory and plants modules beside the copy. A planted module creates a sentinel file
-when it runs. The planted names are each top-level module that the script and its siblings import,
-`__future__`, `msvcrt`, `_winapi` and `fcntl`.
+## 5. Acceptance
 
-- TC-AL1: each of the 14 scripts, run as an allow rule runs it, with arguments that reach its
-  work. Its exit code equals that of a run with nothing planted, which ends without a traceback,
-  and no sentinel exists.
-- TC-AL2: each script of group B, with a package and an extension module planted under the name
-  of each sibling module. A `.pyc` is planted in `__pycache__/` for each sibling module and for a
-  submodule of each sibling package. The exit code is as in TC-AL1, and no sentinel exists.
-- TC-AL3: TC-AL1 for one script of each group, through a path in other letter case, where the
-  volume ignores letter case.
-- TC-AL4: `run_tests.py` with stub test modules that import `subprocess`, `platform` and
-  `colorsys`, which nothing imports before the discovery. Those names, `_wmi`, `msvcrt` and
-  `_winapi` are planted in the stub `tests/` and `tests/installer/`, and `_base` in `tests/`: exit
-  0, and no sentinel.
-- TC-AL5: none of the 14 scripts holds `from __future__` or inserts a directory into `sys.path` at
-  module level, and each runs its guard before any import but `os` and `sys`. The copies of the
-  guard are as D7 states.
-- TC-AL6: the gates of `framework-gates.yml` pass, on this machine with Python 3.14 and in CI with
-  Python 3.11 and 3.14.
-
-Each of TC-AL1 to TC-AL5 fails on the base.
-
-<!-- contract:out-of-scope -->
-
-## 5. Out of scope and residuals
-
-1. A directory or an extension module planted inside the directory of a sibling package, under
-   the name of a submodule, wins the path search of that package: `mermaid_model/`,
-   `lint_mermaid_parts/`, `audit/` (D2). A `.pyc` there wins only under a name with no source;
-   the prefix keeps `__pycache__/` from being read.
-2. `run_tests.py` runs the test modules of `tests/` and `tests/installer/` (D8). Such a module
-   imports from those directories, `_base.py` puts `System/scripts/` first on the path, and some
-   start scripts of `System/scripts/` that carry no guard. The discovery of `tests/installer/` also
-   imports a planted `test*.py` and a planted package. So a file planted there can run under the
-   rule of `run_tests.py`, as one in the working directory can under the `pytest` rules.
-3. An executable on `PATH` that a script runs, such as the scanners of `run_audit.py`.
-4. The scripts of the local rules that D5 leaves out, `analyze_gaps.py` among them.
-5. The findings that D9 records in WI-59:
-   - the scanners of `run_audit.py --scan-type all` run in the scanned tree;
-   - the `python3 -m pytest` rules import a planted `pytest.py`;
-   - a `.pth` file or `sitecustomize.py` in the `.venv` of the work tree runs at the start of each
-     `python3`.
+- TC-1 — `bash .agent/skills/skill-spec-validator/scripts/tests/run_tests.sh` → OK, with no skip
+  inside the repository.
+- TC-2 — the copy of TASK 133 with the token in a decision, against the copy of its PLAN without
+  R5 → exit 1 and `['R5']`.
+  Fails when the bypass reads the whole file.
+- TC-3 — `python3 .agent/skills/artifact-formalizer/scripts/selftest_scan.py` → `194/194`.
+- TC-4 — the reproduction of REG-19 with `The 190-case` in `System/Docs/SKILLS.md` → `TC-SHIP-08`
+  fails.
+- TC-5 — `python3 .agent/skills/artifact-formalizer/evals/selftest_evals.py` → `78/78`.
+- TC-6 — the full suite, `python3 tests/run_tests.py` → the same result as at the base.
+- TC-7 — `scan_register.py` on this TASK and on the edited document lines → no new finding.

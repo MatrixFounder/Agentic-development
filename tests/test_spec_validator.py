@@ -74,7 +74,7 @@ def test_plan_validation_honors_bypass_flag(tmp_path: Path):
     task = _write(
         tmp_path / "TASK.md",
         """
-[BYPASS_VALIDATION]
+# Spec [BYPASS_VALIDATION]
 ## Requirements Traceability
 | ID | Requirement |
 |---|---|

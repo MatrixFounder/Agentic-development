@@ -24,8 +24,10 @@ KIND_OF_KEYWORD = {
 
 #: Diagram keywords of mermaid 10.9–12.1 besides the ones `notation.json` lists. A keyword that is
 #: in neither list gives the kind "unknown". Not here: `requirement`, which the detector takes but
-#: the grammar rejects, and `zenuml`, which needs a plugin that no pinned renderer and not GitHub
-#: loads.
+#: the grammar rejects, and `zenuml`, which not every pinned install draws. The v11 and v12
+#: installs draw it with the plugin `@mermaid-js/mermaid-zenuml`. Mermaid 10.9.8 draws it with no
+#: plugin, and that render fails `render_check.py`: its text runs past its box (measured
+#: 2026-10-29, TASK 136).
 OTHER_KEYWORDS = (
     "journey", "pie", "gitGraph", "mindmap", "timeline", "quadrantChart", "requirementDiagram",
     "info", "usecase-beta", "agentflow-beta", "treeView-beta",

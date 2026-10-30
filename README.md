@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the primary version. Translations may lag behind.
 
-# Multi-Agent Software Development System v3.31.0
+# Multi-Agent Software Development System v3.55.1
 
 This framework orchestrates a multi-agent system for structured software development. It transforms vague requirements into high-quality code through a strict pipeline of specialized agents (Analyst, Architect, Planner, Developer, Reviewer, Security Auditor).
 
@@ -71,7 +71,8 @@ clone (default, `--mode symlink`) or a **full copy** (`--mode copy`, for airgapp
 Per-item relative symlinks point into it, and a managed `.gitignore` block keeps
 framework files out of your project's git history. Pre-flight conflict scanning never
 overwrites your own files (`CLAUDE.md`, `settings.json`, a user-owned `System/`, …);
-`--dry-run` previews the plan without touching the filesystem.
+`--dry-run` previews the plan without touching the filesystem. Where the system cannot create
+symlinks, such as Windows without Developer Mode, the installer falls back to `--mode copy`.
 
 #### Manual alternative — copy the folders
 
@@ -129,9 +130,10 @@ To use with Anthropic's `claude` CLI:
     - `/vdd-start-feature` — VDD Analysis + Architecture
     - `/vdd-plan` — VDD Planning phase
     - `/vdd-develop` — VDD Development phase
+    - `/vdd-develop-all` — VDD loop over all tasks
     - `/vdd-adversarial` — VDD Adversarial testing
-    - `/vdd-multi` — VDD Multi-task pipeline
-    - `/full` — Full pipeline + Security Audit
+    - `/vdd-multi` — Three parallel critics: logic, security, performance
+    - `/full` — VDD Enhanced + Security Audit (`full-robust`)
     - `/security-audit` — Security audit
     - `/base-stub-first` — Standard full pipeline
     - `/update-docs` — Documentation update
@@ -140,6 +142,8 @@ To use with Anthropic's `claude` CLI:
     - `/product-full-discovery` — Full product discovery
     - `/product-market-only` — Market-only product analysis
     - `/product-quick-vision` — Quick product vision
+    - `/run-feedback` — File the errors of a run into the ledgers
+    - `/heal-issues` — Fix the open records of the known-issues ledger
 4.  **Usage**: Run `claude` in the project root. `CLAUDE.md` loads automatically.
 
 #### 🟢 Option D: Gemini CLI
@@ -167,6 +171,18 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 ```
+
+On native Windows, activate the environment with `.venv\Scripts\Activate.ps1` (PowerShell) or
+`source .venv/Scripts/activate` (Git Bash).
+
+#### Native Windows
+Native Windows is supported with no WSL for:
+- the session state, the archive chain (`skill-archive-task`) and `run-feedback`;
+- the Mermaid renderers of `mermaid-authoring-guidelines`, under Git Bash; their install home
+  lies in `%USERPROFILE%`.
+
+CI runs these tests on `windows-latest` with Python 3.11 and 3.14. The framework's scripts read and
+write text files as UTF-8 under any code page, such as `cp1251` or `cp1252`.
 
 #### Install Dependencies (Pinned)
 ```bash
@@ -203,20 +219,23 @@ python System/scripts/doctor.py
 ### Directory Structure
 ```text
 project-root/
-├── AGENTS.md                    # [Cursor] Context & Rules
-├── GEMINI.md                    # [Antigravity] System Config
+├── AGENTS.md                    # [Cursor / Codex] Context & Rules
+├── CLAUDE.md                    # [Claude Code] System Prompt
+├── GEMINI.md                    # [Antigravity / Gemini CLI] System Config
+├── .claude/                     # [Claude Code] Slash commands, hooks, settings
 ├── .agent/
 │   ├── skills/                  # [Common] Skill Catalog
 │   │   ├── ...
 │   │   └── skill-product-*      # [Product] Strategy, Vision, Handoff
 │   ├── workflows/               # [Common] Workflow Library
-│   └── tools/                   # [Common] Tool Logic & Schemas
+│   └── tools/                   # [Common] Tool Logic & Schemas, archive scripts
 ├── System/
 │   ├── Agents/                  # [Common] Agent Personas (00-10, p00-p04)
 │   ├── Docs/                    # [Common] Framework Documentation
-│   └── scripts/                 # [Common] Tool Dispatcher
+│   └── scripts/                 # [Common] Installer, validators, tool dispatcher
 │       └── tool_runner.py
-└── src/                           # Your Source Code
+├── docs/                        # [Project] TASK, PLAN, ARCHITECTURE, archives, ledgers
+└── src/                         # Your Source Code
 ```
 
 ### 🔑 Concept Deep Dive: Blueprint vs Driver
@@ -234,6 +253,7 @@ This file is the **Executable System Instruction** for the AI Agent.
 - **Role**: Tells the agent "What to do RIGHT NOW" and "How to execute the rules".
 - **Content**: Imperative commands (MUST, CRITICAL), the Execution Pipeline (Analysis -> Architecture -> ...), and Protocol definitions.
 - **Usage**: The active prompt that "programs" the agent's behavior.
+- **Claude Code**: `CLAUDE.md` is the driver there.
 
 #### Visualization
 
@@ -273,7 +293,7 @@ graph TD
 | **Analyst** | `02_analyst_prompt.md` | Requirements elicitation, TASK creation. |
 | **TASK Reviewer** | `03_task_reviewer_prompt.md` | Quality control for Technical Specifications. |
 | **Architect** | `04_architect_prompt.md` | System design, database schema, API definition. |
-| **Arch Reviewer** | `05_architecture_reviewer_prompt.md` | Validates verification of architectural decisions. |
+| **Arch Reviewer** | `05_architecture_reviewer_prompt.md` | Validates architectural decisions before planning. |
 | **Planner** | `06_planner_prompt.md` | Breaks down implementation into atomic steps (Stub-First). |
 | **Plan Reviewer** | `07_plan_reviewer_prompt.md` | Ensures the plan is logical and testable. |
 | **Developer** | `08_developer_prompt.md` | Writes code (Stubs -> Tests -> Implementation). |
@@ -321,9 +341,8 @@ Version 3.0 introduces a modular **Skills System** that separates "Who" (Agent) 
 **[>> Source of Truth Map <<](System/Docs/SOURCE_OF_TRUTH.md)**
 **[>> Release Checklist <<](System/Docs/RELEASE_CHECKLIST.md)**
 
-By default, the system uses English prompts. To use **Russian** context:
-1.  Copy content from `Translations/RU/Agents` to `System/Agents`.
-2.  Copy content from `Translations/RU/Skills` to `.agent/skills`.
+The prompts and skills are in English. The agents write the project's artifacts in the project's
+own language ([Localization Strategy](docs/ARCHITECTURE.md#7-localization-strategy)).
 
 ---
 
@@ -355,9 +374,9 @@ You can run a workflow simply by asking the agent:
 1. **Standard**: Basic mode, focused on speed and structure (Stub-First).
 2. **VDD (Verification-Driven)**: High-reliability mode using an "Adversarial Agent" (Sarcasmotron) that harshly criticizes code.
 3. **Nested & Advanced**:
-   - **VDD Enhanced** (`run vdd-enhanced`; alias: `/vdd-enhanced`): Runs Stub-First then VDD Refinement.
-   - **VDD Multi-Adversarial** (`run vdd-multi`; alias: `/vdd-multi`): Sequential 3-critic verification (Logic → Security → Performance).
-   - **Full Robust** (`run full-robust`; alias: `/full-robust`): Runs VDD Enhanced then Security Audit.
+   - **VDD Enhanced** (`run vdd-enhanced`; alias: `/vdd-enhanced`, `/vdd` in Claude Code): Runs Stub-First then VDD Refinement.
+   - **VDD Multi-Adversarial** (`run vdd-multi`; alias: `/vdd-multi`): Three critics (Logic, Security, Performance) run in parallel where the runtime can spawn subagents, in sequence elsewhere.
+   - **Full Robust** (`run full-robust`; alias: `/full-robust`, `/full` in Claude Code): Runs VDD Enhanced then Security Audit.
 
 ### Every retry loop is bounded (v3.23.0)
 
@@ -440,7 +459,7 @@ For each pair of tasks in the plan (Stub -> Impl):
    - Recommended format: `feat(scope): description`.
 3. **Artifacts:**
    - Ensure all created artifacts (TASK, Architecture, Plan) are saved in the project documentation.
-   - **Archive TASK:** Copy the final Technical Specification to the archive: `cp docs/TASK.md docs/tasks/task-ID-name.md`.
+   - **Archive TASK:** When the next task starts, `skill-archive-task` moves `docs/TASK.md` to `docs/tasks/task-ID-slug.md` and `docs/PLAN.md` to `docs/plans/plan-ID-slug.md`.
 
 ---
 
@@ -503,7 +522,7 @@ Resume work on the Email Notifications task.
 
 **Automated Process:**
 1.  **Read State**: Agent reads `.agent/sessions/latest.yaml`.
-2.  **Restore Context**: "AH, we were in Development Phase, Task 2.1 [STUB]".
+2.  **Restore Context**: Agent announces `Restored session: Mode=..., Task=..., Status=..., Updated=<date>`. The date shows how old the state is; if `docs/TASK.md` names another task, the agent says so.
 3.  **Continue**: Resumes execution without re-analyzing the whole project.
 
 ---
@@ -521,10 +540,11 @@ During the development process, agents create various artifacts. Here is how to 
 | **BRD** | `docs/product/BRD.md` | **Quality Gate** | Business Requirements. Signed with hash. Triggers dev. |
 | **Technical Specification** | `docs/TASK.md` | **Single Source of Truth (Technical)** | **STRICTLY for current active task**. Derived from BRD. |
 | **Architecture** | `docs/ARCHITECTURE.md` | **Source of Truth (System)** | **NEVER DELETE**. Keep updated. This is the map of your system. |
-| **Known Issues** | `docs/KNOWN_ISSUES.md` | **Living Document** | Keep. Document bugs, workarounds, and complex logic explanation. |
-| **Task Archive** | `docs/tasks/task-ID-name.md` | **History / Immutable** | **Mandatory Archive**. All completed TASKs move here. Never edit after archiving. |
-| **Subtask Description** | `docs/tasks/task-ID-SubID-slug.md` | **Granular Plan** | Created by Planner. detailed steps for Developer. |
-| **Implementation Plan** | `docs/PLAN.md` (or `implementation_plan.md`) | **Transient** | Can be kept for history or deleted after task completion. |
+| **Known Issues** | `docs/KNOWN_ISSUES.md` + `docs/issues/` | **Ledger (defects)** | One record per defect in `docs/issues/`, one index line in `KNOWN_ISSUES.md` (`known-issues-format`). `/run-feedback` files records, `/heal-issues` fixes them. |
+| **Backlog** | `docs/BACKLOG.md` + `docs/backlog/` | **Ledger (work-items)** | Enhancements and signals with no broken contract. Same format. |
+| **Task Archive** | `docs/tasks/task-ID-slug.md` | **History / Immutable** | **Mandatory Archive**. All completed TASKs move here (`skill-archive-task`). Never edit after archiving. |
+| **Subtask Description** | `docs/tasks/task-ID-SubID-slug.md` | **Granular Plan** | Created by Planner. Detailed steps for Developer. |
+| **Implementation Plan** | `docs/PLAN.md` (or `implementation_plan.md`) | **Transient** | Archived with its TASK to `docs/plans/plan-ID-slug.md`. |
 | **Test Report** | `tests/tests-{TaskID}/...` | **Proof of Quality** | Created by Developer. Contains verification results. |
 | **Walkthrough** | `walkthrough.md` | **Proof of Work** | Created after verification. Demonstrates changes and validation results. |
 | **Task Checklist** | `task.md` | **Transient** | Task tracking. Reset/overwrite for new tasks. |
@@ -534,7 +554,7 @@ During the development process, agents create various artifacts. Here is how to 
 **Strict Artefact Rules (New v2.1):**
 1. **One Task = One TASK**: `docs/TASK.md` always reflects *only* what is being built right now.
 2. **Archive Strategy**:
-   - **Before** starting a fundamentally new task: Archive `docs/TASK.md` -> `docs/tasks/task-00N-name.md`.
+   - **Before** starting a fundamentally new task: Archive `docs/TASK.md` -> `docs/tasks/task-NNN-slug.md` and `docs/PLAN.md` -> `docs/plans/plan-NNN-slug.md` (`skill-archive-task`).
    - **During** the task: Only overwrite `docs/TASK.md`. Never append.
 3. **Cleanup**:
    - **Keep**: All `docs/*` files that describe the *current* state of the system.
@@ -600,8 +620,9 @@ TASK:
 <a id="starter-prompts"></a>
 ## 📝 Starter Prompt Templates
 
-**IMPORTANT:** To launch the process, use **Composer** (Cmd+I) or chat.
-Copy this text to activate the Orchestrator via `AGENTS.md`.
+**IMPORTANT:** Paste a template into the chat of your assistant (Claude Code, Cursor Composer,
+Gemini CLI, Codex). The system prompt (`CLAUDE.md`, `AGENTS.md` or `GEMINI.md`) activates the
+Orchestrator.
 
 ### Template 1: Developing a New Feature (Feature)
 ```text
@@ -644,7 +665,7 @@ TASK: Restore outdated documentation.
 CONTEXT:
 - Active development finished, but `docs/` are stale.
 ACTION:
-- Execute workflow `/04-update-docs` to reverse-engineer architecture and update memory.
+- Execute workflow `/update-docs` to reverse-engineer architecture and update memory.
 ```
 
 ### Template 5: Security Audit
@@ -659,6 +680,12 @@ ACTION:
 
 <a id="migration-guide"></a>
 ## 🔄 Migration from Older Versions
+
+### Upgrading within v3
+Each [release](https://github.com/MatrixFounder/Agentic-development/releases) lists its steps in
+its Migration section; [CHANGELOG.md](CHANGELOG.md) holds the details. With the installer, update
+the framework clone, then run `install.sh update` in the project: it links the items that the new
+release adds.
 
 ### Upgrading to v3.1.0 (Global Refactor)
 **Goal:** Transition from "TZ" (Техническое Задание) to "TASK" to align with the new standard.

@@ -5,6 +5,13 @@ import json
 import math
 from pathlib import Path
 
+def _reconfigure_streams():
+    """Escape what the stream cannot encode, such as a character outside `cp1252` on a Windows
+    pipe (TASK 139); a stream without `reconfigure` stays as it is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
 def load_config(skill_path):
     """Loads sizing config from json."""
     # Robust path resolution
@@ -16,7 +23,7 @@ def load_config(skill_path):
             "financials": {"hourly_rate": 100, "llm_global_accel": 0.5, "infra_cost_monthly": 200, "cac": 50, "churn_rate": 0.05, "growth_rate": 0.1, "discount_rate": 0.2},
             "risk": {"buffer_base": 1.3}
         }
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def calculate_granular_effort(stories, config):
@@ -117,6 +124,7 @@ def calculate_metrics(effective_hours, users, price, config, monthly_arpu=None, 
     }
 
 def main():
+    _reconfigure_streams()
     parser = argparse.ArgumentParser(description='Calculate Enhanced ROI')
     parser.add_argument('--file', help='Path to JSON/YAML containing user stories')
     parser.add_argument('--small', type=int, default=0, help='Legacy: Count of Small features')
@@ -138,7 +146,7 @@ def main():
         if not file_path.exists():
              print(f"Error: File {file_path} not found.")
              sys.exit(1)
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             stories = data.get('stories', [])
             

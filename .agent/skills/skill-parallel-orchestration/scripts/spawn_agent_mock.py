@@ -61,7 +61,7 @@ def main():
         
     result_path = os.path.join(args.output_dir, f"{args.task_name}.result.md")
     
-    with open(result_path, "w") as f:
+    with open(result_path, "w", encoding="utf-8") as f:
         f.write(f"# Result for {args.task_name}\n")
         f.write(f"**Goal**: {args.goal}\n\n")
         f.write("## Execution Log\n")

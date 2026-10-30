@@ -1,6 +1,6 @@
 # PLAN 138 — update_state.py names the keys it drops, and a restored session names the date of its state (WI-60, WI-61)
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 2) · **Covers:** R1–R5 · **Acceptance:** TC-K1–TC-K4, TC-B1, TC-B2.
+**TASK:** [docs/TASK.md](../tasks/task-138-dropped-keys-and-state-date.md) (revision 2) · **Covers:** R1–R5 · **Acceptance:** TC-K1–TC-K4, TC-B1, TC-B2.
 
 **Process:** reduced (TASK D1). Edits are in place; the tests come first and run red.
 

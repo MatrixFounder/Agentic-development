@@ -453,6 +453,19 @@ Every skill must be assigned a **TIER** in its YAML frontmatter to support Lazy 
 All new skills must be generated using `skill-creator`.
 - **Reason:** Enforces directory structure (`scripts/`, `examples/`, `tests/`) and runs validation checks (`validate_skill.py`).
 
+### Rule 5: Text in UTF-8 (TASK 139)
+A script under `.agent/` or `System/`, other than a test or an eval, passes `encoding="utf-8"` to
+each `open`, `read_text` and `write_text` of a text file. With no `encoding=` the codec is the one
+of the locale, such as `cp1251` or `cp1252` on native Windows (PT-1).
+*Enforcement:* `tests/test_text_encoding.py` reports each such call that gives no encoding; it
+does not check the value. The tooling job and both Windows jobs of `framework-gates.yml` run it.
+
+Before a push, the tests that the Windows jobs of `framework-gates.yml` and
+`mermaid-render-windows.yml` run also run on the local machine under `PYTHONIOENCODING=cp1252`.
+On a Windows runner a script writes to a pipe in `cp1252`; on macOS or Linux it writes UTF-8. A
+test that reads UTF-8 then passes on the local machine and fails on the runner (TASK 138: a `§` on
+stderr).
+
 **[>> Read Full Skills Documentation <<](../System/Docs/SKILLS.md)**
 
 ## 9. Framework Installer Subsystem

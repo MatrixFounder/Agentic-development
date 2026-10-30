@@ -1,10 +1,12 @@
 ---
 id: PT-1
 type: known-issue
-status: open
+status: fixed
 opened_at: 2026-10-29
 category: portability
 severity: SEV-4
+resolved_at: 2026-10-30
+resolved_by: TASK 139
 slug: pt-1-four-scripts-read-or-write-text-in-the-encoding-of-the-locale
 provenance: machine
 component: framework-scripts

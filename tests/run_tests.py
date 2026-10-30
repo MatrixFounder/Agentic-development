@@ -152,6 +152,8 @@ CURATED_UNITTEST_MODULES = (
     # TASK 112 — the archive script and the guards of the scripts that allow rules run (WI-35).
     "test_archive_move",
     "test_script_guards",
+    # TASK 139 — the scripts under .agent/ and System/ read and write text in UTF-8 (PT-1).
+    "test_text_encoding",
 )
 
 

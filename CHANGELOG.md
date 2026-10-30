@@ -16,6 +16,29 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.55.1 — Four scripts read and write text in UTF-8 (TASK 139)**
+
+#### Fixed
+
+- **Four scripts pass `encoding="utf-8"` to each read and write of a text file** (PT-1):
+  `generate_wrappers.py` and `spawn_agent_mock.py` of `skill-parallel-orchestration`,
+  `trigger_technical.py` of `skill-product-handoff` and `calculate_roi.py` of
+  `skill-product-solution-blueprint`. Before, they used the codec of the locale. On native Windows
+  with `cp1251`, `generate_wrappers.py --check` reported each of its 12 wrappers as drift and
+  exited 1.
+- **`generate_wrappers.py` and `calculate_roi.py` escape on stdout and stderr what the codec of
+  the stream cannot encode.** Before, `calculate_roi.py` ended in `UnicodeEncodeError` on the
+  emoji of its report when its output went to a `cp1252` pipe.
+
+#### Added
+
+- **`tests/test_text_encoding.py`** fails on a call of `open`, `io.open`, `builtins.open`,
+  `os.fdopen`, `Path.open`, `read_text` or `write_text` that opens text with no encoding, in a
+  script under `.agent/` or `System/`. Tests and evals are out of its scope. The curated suite
+  and both Windows jobs of `framework-gates.yml` run it.
+- **`docs/ARCHITECTURE.md` §8, Rule 5:** before a push, the tests of the Windows jobs also run on
+  the local machine under `PYTHONIOENCODING=cp1252`.
+
 ### **v3.55.0 — update_state.py names the keys it drops, and a restored session names its date (TASK 138)**
 
 #### Changed

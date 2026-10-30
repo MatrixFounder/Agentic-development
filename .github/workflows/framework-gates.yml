@@ -313,6 +313,8 @@ jobs:
   # there: on the floor and the main version of README §3, as the tooling job does. One version
   # per job, since `tests/test_python_floor.py` allows one version matrix in this file. Bash, so
   # that a failed command fails its step; under PowerShell only the last command of a block does.
+  # Before a push, the tests of these jobs also run locally under `PYTHONIOENCODING=cp1252`
+  # (docs/ARCHITECTURE.md §8, Rule 5; TASK 139).
   session-state-windows-floor:
     name: Session state on Windows (3.11)
     runs-on: windows-latest
@@ -348,6 +350,10 @@ jobs:
       - name: Run the run-feedback tests
         run: python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q
 
+      # TASK 139 D6: the check of text encodings, where the codec of the locale is cp1252.
+      - name: Run the text-encoding check
+        run: python -m pytest -p no:cacheprovider -q tests/test_text_encoding.py
+
   session-state-windows-main:
     name: Session state on Windows (3.14)
     runs-on: windows-latest
@@ -382,3 +388,7 @@ jobs:
       # tests of TC-WN1 to TC-WN5 run. The next task reads the first run (TASK 133 R8.8).
       - name: Run the run-feedback tests
         run: python -m pytest -p no:cacheprovider .agent/skills/run-feedback/scripts/tests -q
+
+      # TASK 139 D6: the check of text encodings, where the codec of the locale is cp1252.
+      - name: Run the text-encoding check
+        run: python -m pytest -p no:cacheprovider -q tests/test_text_encoding.py

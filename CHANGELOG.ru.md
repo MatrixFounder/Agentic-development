@@ -16,6 +16,29 @@
 
 ## 🇷🇺 Русская версия
 
+### **v3.55.1 — Четыре скрипта читают и пишут текст в UTF-8 (TASK 139)**
+
+#### Исправлено
+
+- **Четыре скрипта передают `encoding="utf-8"` при каждом чтении и записи текстового файла**
+  (PT-1): `generate_wrappers.py` и `spawn_agent_mock.py` из `skill-parallel-orchestration`,
+  `trigger_technical.py` из `skill-product-handoff` и `calculate_roi.py` из
+  `skill-product-solution-blueprint`. Раньше они брали кодировку локали. На Windows без WSL с
+  локалью `cp1251` скрипт `generate_wrappers.py` с ключом `--check` объявлял расхождением каждую
+  из 12 обёрток и завершался с кодом 1.
+- **`generate_wrappers.py` и `calculate_roi.py` экранируют в stdout и stderr символы, которые
+  кодировка потока не передаёт.** Раньше `calculate_roi.py` падал с `UnicodeEncodeError` на эмодзи
+  своего отчёта, когда вывод шёл в канал с `cp1252`.
+
+#### Добавлено
+
+- **`tests/test_text_encoding.py`** падает на вызове `open`, `io.open`, `builtins.open`,
+  `os.fdopen`, `Path.open`, `read_text` или `write_text`, который открывает текст без кодировки,
+  в скрипте под `.agent/` или `System/`. Тесты и evals в его область не входят. Его запускают
+  курируемый набор и оба Windows-задания `framework-gates.yml`.
+- **`docs/ARCHITECTURE.md` §8, правило 5:** перед push тесты Windows-заданий также запускаются
+  на локальной машине под `PYTHONIOENCODING=cp1252`.
+
 ### **v3.55.0 — update_state.py называет удалённые ключи, а восстановленная сессия — свою дату (TASK 138)**
 
 #### Изменено

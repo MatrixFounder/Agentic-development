@@ -45,7 +45,7 @@ def trigger_technical(brd_path, task_output_path):
 ---
 """
     
-        with open(task_output_path, 'w') as f:
+        with open(task_output_path, 'w', encoding='utf-8') as f:
             f.write(task_content)
             
         print(f"SUCCESS: Technical Triggered. Task created at {task_output_path}")

@@ -117,7 +117,7 @@ the matching `## <category>` heading here, in ID order.
 
 ## portability
 
-- **PT-1** [Four scripts read or write text in the encoding of the locale](issues/pt-1-four-scripts-read-or-write-text-in-the-encoding-of-the-locale.md) — severity `SEV-4`, status `open`, opened 2026-10-29
+- **PT-1** [Four scripts read or write text in the encoding of the locale](issues/pt-1-four-scripts-read-or-write-text-in-the-encoding-of-the-locale.md) — severity `SEV-4`, status `fixed`, opened 2026-10-29 · **fixed 2026-10-30** (TASK 139): the seven calls pass `encoding="utf-8"`, and `tests/test_text_encoding.py` fails on a text call with no encoding under `.agent/` and `System/`
 
 ## register
 

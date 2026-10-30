@@ -662,6 +662,106 @@ class ScalarTestCase(_RootCase):
         self.assert_yaml_equal(self.text(), "current_task.name", "")
 
 
+class DroppedKeysTestCase(_RootCase):
+    """TASK 138 R1, R2 (WI-60): the run names on stderr each top-level key it drops."""
+
+    MESSAGE = "update_state.py: dropped keys that it does not write: "
+    TAIL = "; tell the operator (skill-session-state SKILL.md section 1, Owner)"
+
+    def stderr(self, proc):
+        return proc.stderr.decode("utf-8", "backslashreplace")
+
+    def test_tck1_a_key_written_by_hand_is_named(self):
+        self.write_state(V1_STATE)
+        proc = self.run_ok(ARGS)
+        err = self.stderr(proc)
+        self.assertEqual(err.strip(), self.MESSAGE + "current_task_2026_09_17" + self.TAIL)
+        # ASCII in any code page of a console or a pipe (review B1)
+        self.assertTrue(err.isascii(), err)
+        # R2: stdout and the written state as at the base (review M1)
+        self.assertEqual(proc.stdout.decode("utf-8").splitlines(),
+                         ["Session state updated: %s (Locked)" % self.state])
+        self.assertNotIn("current_task_2026_09_17", self.text())
+
+    def test_tck2_a_state_of_the_schema_and_no_state_name_nothing(self):
+        self.assertEqual(self.stderr(self.run_ok(ARGS)), "")
+        proc = self.run_ok(ARGS + ["--add_blocker", "b", "--add_decision", "d",
+                                   "--add_completed_task", "t"])
+        self.assertEqual(self.stderr(proc), "")
+        self.assertEqual(self.stderr(self.run_ok(ARGS)), "")
+
+    def test_tck3_top_level_keys_once_each_in_their_order(self):
+        self.write_state("schema_version: 2\n"
+                         "# a comment: not a key\n"
+                         "zeta_note: \"by hand\"\n"
+                         "current_task:\n"
+                         "  name: \"t\"\n"
+                         "  nested_by_hand: 1\n"
+                         "active_blockers:\n"
+                         "  - \"item: with a colon\"\n"
+                         "alpha.extra-key: 2\n"
+                         "2026-09-17: \"history by date\"\n"
+                         "https://example.com/not-a-key\n"
+                         "zeta_note: \"again\"\n")
+        err = self.stderr(self.run_ok(ARGS))
+        self.assertEqual(err.strip(),
+                         self.MESSAGE + "zeta_note, alpha.extra-key, 2026-09-17" + self.TAIL)
+        for word in ("nested_by_hand", "comment", "item", "https"):
+            self.assertNotIn(word, err)
+
+    def test_tck3_a_key_of_any_script_is_named_and_a_quoted_one_is_not(self):
+        # review M3: a team writes its notes in its own language; D3 leaves quoted keys out
+        module = load_script("update_state_tck3")
+        self.assertEqual(module.dropped_keys("\u0438\u0441\u0442\u043e\u0440\u0438\u044f: x\n"
+                                             "\"quoted\": x\nmy note: x\n"),
+                         ["\u0438\u0441\u0442\u043e\u0440\u0438\u044f"])
+
+    def test_tck4_the_keys_of_the_schema_are_never_named(self):
+        self.write_state("schema_version: 2\nsession_id: \"s\"\nlast_updated: \"x\"\n"
+                         "mode: \"M\"\ncurrent_task:\n  name: \"t\"\n"
+                         "context_summary: \"x\"\nactive_blockers:\n  []\n"
+                         "recent_decisions:\n  []\ncompleted_tasks:\n  []\n")
+        self.assertEqual(self.stderr(self.run_ok(ARGS)), "")
+
+    def test_tck5_many_keys_are_read_in_linear_time_and_named_in_part(self):
+        # audit F1, F2: the run holds the lock while it reads, and the line stays short
+        self.write_state("".join("key_%d: x\n" % n for n in range(100000)))
+        start = time.monotonic()
+        proc = self.run_ok(ARGS)
+        elapsed = time.monotonic() - start
+        self.assertLess(elapsed, 4.0, f"the run took {elapsed:.1f} s")
+        err = self.stderr(proc)
+        self.assertIn(self.MESSAGE + ", ".join("key_%d" % n for n in range(20))
+                      + " and 99980 more" + self.TAIL, err)
+
+    def test_tck6_a_long_name_is_cut(self):
+        module = load_script("update_state_tck6")
+        line = module.dropped_message(["k" * 100])
+        self.assertIn(self.MESSAGE + "k" * 64 + "..." + self.TAIL, line)
+
+    def test_tck7_a_closed_stderr_changes_no_exit_code(self):
+        # audit F3: the state is written; a reader of stderr that is gone fails nothing
+        self.write_state(V1_STATE)
+        proc = subprocess.Popen([sys.executable, str(SCRIPT)] + ARGS, cwd=str(self.root),
+                                env=clean_env(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc.stderr.close()
+        out, _ = proc.communicate(timeout=120)
+        self.assertEqual(proc.returncode, 0, out)
+        self.assertNotIn("current_task_2026_09_17", self.text())
+
+    def test_tck8_a_failed_write_names_no_key(self):
+        # review M2: the keys are named only once the state is written
+        self.write_state(V1_STATE)
+        module = load_script("update_state_tck8")
+        warned = []
+        with mock.patch.object(module.os, "replace", side_effect=OSError(5, "Input/output error")), \
+                mock.patch.object(module, "_warn", side_effect=warned.append):
+            code, out = self.run_main(module, ARGS)
+        self.assertEqual(code, 1, out)
+        self.assertEqual(warned, [])
+        self.assertIn("current_task_2026_09_17", self.text())
+
+
 class ImportPathTestCase(_RootCase):
     """TASK 127 R6, WI-39: no module planted beside the script runs (TC-12, TC-13)."""
 

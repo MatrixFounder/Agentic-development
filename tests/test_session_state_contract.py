@@ -10,7 +10,7 @@ TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5 and 
 * the skill names no tool of one vendor and no lock that the script does not take, and §3 keeps
   its paragraph for roles that cannot run a command (``TC-C3``);
 * the skill's §1 states the file format, the refusal of a link and the temporary file, its §6 the
-  lock and `os.replace`, and its version is 1.3 (``TC-C4``);
+  lock and `os.replace`, and its version is 1.4 (``TC-C4``, 1.4 since TASK 138);
 * the guide names `current_task.status`, the three platforms, UTF-8 and the dropped key; its §1
   names the temporary file, and its §6 the link (``TC-C5``);
 * the CI pytest step runs the skill's tests and this module (``TC-C6``);
@@ -19,7 +19,10 @@ TC-C1 to TC-C7 of TASK 127 §5, with TC-C4, TC-C5 and TC-C8 of TASK 128 §5 and 
 * two jobs on `windows-latest`, with Python 3.11 and 3.14 and the shell bash, run the skill's
   tests and this module (``TC-C8``);
 * each Windows job then runs the tests of the archive chain, with the ids and names of TASK 128
-  (``TC-C9``).
+  (``TC-C9``);
+* the three bootstrap files, the skill's §2 and the guide's §1 name `last_updated`, and the skill's
+  §1 quotes the stderr line of the dropped keys as the script writes it and the rule to report
+  them (``TC-B1``, TASK 138).
 """
 import re
 import unittest
@@ -97,6 +100,27 @@ class RulesTestCase(unittest.TestCase):
         self.assert_holds(heading_section(guide, "1. How It Works"), DISAGREE, "the guide's §1")
         self.assert_holds(heading_section(guide, "Risk A"), DISAGREE, "the guide's Risk A")
 
+    def test_b1_the_boot_names_the_date_of_the_state(self):
+        # TASK 138 R3, R4 (WI-61): a restored state names `last_updated`; the skill names the
+        # stderr line of the dropped keys (WI-60)
+        claude = read(ROOT / "CLAUDE.md")
+        self.assert_holds(between(claude, "**ON SESSION START**", "**ON PHASE BOUNDARY**"),
+                          ("last_updated",), "CLAUDE.md ON SESSION START")
+        for name in ("AGENTS.md", "GEMINI.md"):
+            self.assert_holds(heading_section(read(ROOT / name), "SESSION RESTORATION"),
+                              ("last_updated",), f"{name} SESSION RESTORATION")
+        skill = read(SKILL)
+        self.assert_holds(heading_section(skill, "2. Boot Protocol"), ("last_updated",),
+                          "SKILL.md \u00a72")
+        prefix = "update_state.py: dropped keys that it does not write: "
+        self.assert_holds(heading_section(skill, "1. The Session File"),
+                          ("stderr", prefix, "the operator in the same reply", "act on none"),
+                          "SKILL.md \u00a71")
+        script = read(SKILL.parent / "scripts" / "update_state.py")
+        self.assert_holds(script, (prefix,), "update_state.py")
+        self.assert_holds(heading_section(read(GUIDE), "1. How It Works"), ("last_updated",),
+                          "the guide's \u00a71")
+
     def test_c3_the_skill_names_no_vendor_tool_and_no_other_lock(self):
         skill = read(SKILL)
         for word in ("task_boundary", "read_file", "view_file", "lockf", "Shared Lock"):
@@ -106,7 +130,7 @@ class RulesTestCase(unittest.TestCase):
 
     def test_c4_the_skill_states_the_format_and_the_lock(self):
         skill = read(SKILL)
-        self.assertRegex(skill.split("---", 2)[1], r"(?m)^version: 1\.3$")
+        self.assertRegex(skill.split("---", 2)[1], r"(?m)^version: 1\.4$")
         self.assert_holds(heading_section(skill, "1. The Session File"),
                           ("`schema_version: 2`", "UTF-8", "drops a key", "is a link",
                            "temporary file"), "SKILL.md §1")

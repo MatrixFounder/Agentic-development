@@ -8,7 +8,7 @@ This document explains the mechanism, rationale, and configuration of the Sessio
 
 ## 1. How It Works
 
-1.  **Boot Protocol**: On session start, agents check `.agent/sessions/latest.yaml`. If found, they restore the last known state (`Mode`, `Task`, `Summary`).
+1.  **Boot Protocol**: On session start, agents check `.agent/sessions/latest.yaml`. If found, they restore the last known state (`Mode`, `Task`, `Summary`) and name the date that its `last_updated` states (TASK 138). A state left behind under the same task ID restores as current; its date shows how old it is.
 2.  **Tracking**: At every phase boundary, the agent executes `update_state.py` to persist the new state atomically.
 3.  **Conflict Resolution**: If the user's new prompt conflicts with the file (e.g., "Start task X"), the **User takes precedence**.
 4.  **Multi-Task**: Completed tasks are tracked in the `completed_tasks` list to preserve history within a single session.
@@ -69,6 +69,7 @@ I have adversarialy analyzed potential downsides:
 **Result:** On reboot, Agent restores a state that is 1 step behind reality.
 **Mitigation:** `GEMINI.md` Conflict Resolution Rule (User > File). User says "No, we are done with that", Agent obeys.
 **Mitigation (TASK 127):** two rules of §1. The failure rule: If `update_state.py` exits non-zero, the agent tells the operator in the same reply, and does not write the file by hand. The disagreement check: when the task IDs differ, the announcement says `Session state and docs/TASK.md disagree`. A team on Windows reported the case they close: the script failed at every phase boundary, and the state stayed three tasks old with no one told.
+**Mitigation (TASK 138):** the announcement names the date that `last_updated` states, so a state left behind under the same task ID shows its age.
 **Verdict:** Manageable.
 
 ### Risk B: Confusion with IDE Features
@@ -104,7 +105,7 @@ The session file is UTF-8 YAML, and its first line is `schema_version: 2`. If th
 
 **Tip:** You can also simply delete the file to force a "fresh start".
 
-**Note:** the script drops a key that it does not write, so a key added by hand is gone after the next run. An agent never edits the file in place of a failed run of the script (§1, Failure Rule).
+**Note:** the script drops a key that it does not write, so a key added by hand is gone after the next run; the run names such keys on stderr (TASK 138). An agent never edits the file in place of a failed run of the script (§1, Failure Rule).
 
 **Links:** a link at `.agent/sessions`, at `latest.yaml` or at `latest.yaml.lock`, or an entry of another kind there, stops every run of the script with exit 1. Its message says that the path is a link, or names the kind that it expected. Remove the link, or replace it with a directory or a regular file of your own. A link above them, at `.agent` or a parent directory, is followed. State shared between checkouts through a link is not supported (TASK 128).
 

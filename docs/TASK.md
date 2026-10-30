@@ -1,4 +1,4 @@
-# TASK 137 — The Mermaid renderers run on native Windows (MR-1)
+# TASK 138 — update_state.py names the keys it drops, and a restored session names the date of its state (WI-60, WI-61)
 
 <!-- contract:meta -->
 
@@ -6,346 +6,145 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 137 |
-| Slug | mermaid-renderers-windows |
-| Type | Standard pipeline of a TIER 2 skill, reduced process (D3) |
-| Source | MR-1; the Windows report of loyalty-api-java (2026-10-28); the operator's request of 2026-10-29 |
-| Base revision | `f4588ea` |
-| Closes | MR-1 |
-| Archive name | `task-137-mermaid-renderers-windows.md` |
-| Revision | 4 |
+| Task ID | 138 |
+| Slug | dropped-keys-and-state-date |
+| Type | Framework upgrade of a TIER 0 skill, reduced process (D1) |
+| Source | WI-60, WI-61; the Windows report of loyalty-api-java (2026-10-26, 2026-10-28); the operator's request of 2026-10-30 |
+| Base revision | `cf20d49` |
+| Closes | WI-60, WI-61 |
+| Archive name | `task-138-dropped-keys-and-state-date.md` |
+| Revision | 2 |
 
-**Request.** The operator filed the four open items of the Windows report and set their order:
-MR-1, WI-60, WI-61, PT-1. This task is MR-1: on native Windows `setup_renderers.sh` accepts no
-browser, so `render_check.py` renders no figure. Windows means Windows 10 or later with Git Bash,
-Node.js 22.13 or later and Python 3.11 or later.
+**Request.** The operator set the order of the open items of the Windows report: MR-1 (TASK 137),
+then WI-60 and WI-61 as one task, then PT-1. This task is WI-60 and WI-61.
 
-**Revision 2** follows the code review (CHANGES REQUESTED: one MAJOR, eight MINOR, eleven NIT)
-and the security audit (FAIL: one CRITICAL, one MEDIUM, four LOW, eight INFO) of `76a02aa`. The
-fix pass:
-- C-1: the browser floor moves to 156.0.8078.73 (D11);
-- M-1 and m3: on Windows the install home lies in the user profile (D12);
-- m7: the Windows job has its own workflow (D13); L-3: npx runs no install script;
-- m1, L-4, I-3: a reparse point is a link, a link has size 0, and a digest that cannot be built
-  is a refusal; ReFS is a documented limit;
-- L-1, L-2, I-1, I-2: a drive in each PATH entry, `taskkill` by `GetSystemDirectoryW`, no program
-  by a bare name, the `bin` value checked by its text;
-- m4: `render_check.py` writes no encoding error on Windows;
-- m5, m6, N10: TC-W9 to TC-W16;
-- M1, N2, N3, N7, N8, m8, I-4, I-5: the records, the comments and the documents.
+- WI-60: `update_state.py` writes only the keys of its schema. A top-level key added by hand to
+  `.agent/sessions/latest.yaml` is gone after the next run, and the run says nothing.
+  `skill-session-state/SKILL.md` §1 states the rule, but an agent reads the skill at boot only.
+- WI-61: a restored state names no age. A state left behind under the same task ID restores as
+  current; the DISAGREEMENT CHECK sees only a change of the task ID.
 
-Not taken, with the reason in §5: N1, N4, N6, N9, N11, I-6, I-7, I-8.
+**Revision 2** follows the code review (CHANGES REQUESTED: one BLOCKING, nine MINOR, nine NIT)
+and the security audit (PASS: one MEDIUM, three LOW, three INFO). The fix pass:
+- B1: the stderr line is ASCII apart from the names; `§` reached a Windows pipe as cp1252;
+- M7: the line says "tell the operator"; M2, F3, N1: it is printed after the write and the lock,
+  and a stderr that cannot take it changes no exit code;
+- M4, F1: the reader is linear; F2: at most 20 names, each cut to 64 characters, and `SKILL.md` §1
+  says that the names are data;
+- M3, N2: a name may start with a digit or a letter of any script, and the colon is followed by a
+  space or the end of the line;
+- M1, M8, M9, M5, M6, F4, F5, N3 to N8: tests, the version 1.4 of the skill, the wording of the
+  three bootstraps, the guide, the records and the changelog.
 
-**Revision 3** follows the narrow security audit of the fix pass, `76a02aa..1780b3b` (FAIL: one
-CRITICAL, one HIGH, one MEDIUM, two LOW, seven INFO), on the operator's choice of 2026-10-30. The
-second fix pass:
-- C-1 again: Chrome for Testing moved Stable to 156.0.8078.80 on 2026-10-29, 21 security fixes
-  over .73 (CVE-2026-76024, Critical, among them); the floor follows (D11);
-- H-1: `install_problem` refuses a stamped tree hash that `browsers.json` does not record and
-  `MERMAID_RENDER_BROWSER_SHA256` does not name (R18);
-- M-2: on Windows `--out` lies in the profile (R14);
-- L-1: `debug.log` is left out only while it has one link (R15);
-- L-2: the Windows job installs the browser with the `@puppeteer/browsers` of the v10 lockfile
-  (R11);
-- I-a, I-c, I-d, I-f: an absolute `USERPROFILE` in the setup, the bounds of
-  `GetSystemDirectoryW`, `--json` in ASCII on Windows, the branch pattern `**`;
-- I-b, I-e: documented in `references/scripts-and-setup.md` §3; I-g needs no change.
+Not taken: N9 and F7 need no change; F6 and audit P2 are residuals in §5.
 
-**Revision 4** follows the operator's choice of 2026-10-30 (D16): a pinned browser build went
-stale in hours, and no one is to bump it again. The setup installs the current stable build
-itself; `browsers.json`, `BROWSER_MIN_BUILD` and `PUPPETEER_CACHE_DIR` go.
-
-**Measured at the base** (`f4588ea`; the report ran `155441a`, which holds the same code). S/
-stands for `.agent/skills/mermaid-authoring-guidelines/scripts/` in prose; each positional
-reference below names its full path:
-1. The glob of `browser_candidates` names no `.exe`. Node reads the path without `.exe` and fails
-   with `ENOENT` (the report).
-   `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh:219@f4588ea`
-   `chrome-headless-shell-*/chrome-headless-shell; do`
-2. Node on Windows defines no `process.getuid` (the report).
-   `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh:281@f4588ea`
-   `uid = process.getuid()`
-3. The owner and mode checks read `st.uid`, `st.gid` and the bits `0o002` and `0o020`. Node on
-   Windows reports a writable file with mode `0o666`.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh:282@f4588ea`
-   `const open = (st, full) =>`
-4. `private_problem` reads the owner and mode that Git Bash emulates. Git for Windows mounts its
-   drives with `noacl`, so the bits do not reflect the ACL.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/setup_renderers.sh:164@f4588ea`
-   `private_problem() {`
-5. Python on Windows reports a writable `.exe` with mode `0o777`, so each browser is refused.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py:470@f4588ea`
-   `if mode & stat.S_IWOTH or`
-6. The stat digest holds `st_dev`, `st_mode` and `st_ctime_ns`. On Windows Python reports the
-   64-bit volume serial, adds `0o111` to the mode of an `.exe`, and reports the creation time as
-   `st_ctime`. Node reports the 32-bit serial, no `0o111`, and the change time. Not run on
-   Windows; read from the CPython and libuv sources.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py:399@f4588ea`
-   `str(st.st_mode), str(st.st_size),`
-7. On Windows `.bin/mmdc` is a shell script, which `CreateProcess` does not run (`WinError 193`).
-   Each render ends `not_rendered`.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py:697@f4588ea`
-   `cmd = [str(renderer.mmdc), "-q",`
-8. Neither `os.killpg` nor `signal.SIGKILL` exists on Windows, so a render that times out raises
-   `AttributeError`.
-   `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py:653@f4588ea`
-   `os.killpg(proc.pid, sig)`
-   `.agent/skills/mermaid-authoring-guidelines/scripts/render_check.py:685@f4588ea`
-   `_signal_group(proc, signal.SIGKILL)`
-9. `browsers.json` of the skill records a tree hash for `mac_arm` only.
-
-Causes 3 to 9 hide behind causes 1 and 2: no run on Windows has reached them.
+**Measured at the base** (`cf20d49`):
+1. `parse_simple_yaml` reads `session_id` and the three lists; `generate_yaml` writes the nine keys
+   of the schema. Any other top-level key is not read and not written.
+   `.agent/skills/skill-session-state/scripts/update_state.py:169@cf20d49`
+   `def parse_simple_yaml(content):`
+2. On success the run prints `Session state updated: <path> (Locked)` and nothing else.
+3. The announcement of a restored state names the mode, the task and the status, not
+   `last_updated`. `CLAUDE.md:18@cf20d49` `"Restored session: Mode=[mode], Task=[task_name],`
+4. `GEMINI.md` and `AGENTS.md` have no announcement text in step 2 of their bootstrap; they tell
+   the agent to read the file. `SKILL.md` §2 and `System/Docs/SESSION_CONTEXT_GUIDE.md` §1 name
+   the restored fields.
 
 ## 1. Decisions
 
-- D1, 2026-10-29, operator: on Windows the browser check keeps the tree hash and the stat digest,
-  and makes no owner or mode check. Rejected: the hash plus a path under `%USERPROFILE%`, which
-  refuses a `PUPPETEER_CACHE_DIR` set elsewhere; the hash plus a read of the ACL, whose `icacls`
-  output is localized and slow to parse.
-- D2, 2026-10-29, operator: the Windows CI job measures the tree hash of the `win64` build by a
-  smoke render, and `browsers.json` records it. Rejected: an override that the operator sets on
-  each Windows machine.
-- D3, 2026-10-29, operator: a reduced process, as TASK 134 D1. The run has a TASK and a PLAN,
-  edits in place, the tests first and red, and the gates. One code reviewer with the exhaustive
-  prompt and one security auditor review the change, and one fix pass follows. Rejected: the
-  standard pipeline with its reviewer gates, for its cost; Light Mode, which has no security audit
-  for a change of a security check. The skill is TIER 2, so `/framework-upgrade` does not apply.
-- D4, orchestrator: on Windows a row of the stat digest is `[path, kind, inode, size, mtime in
-  ns]`, with size 0 for a directory. Measured in CI run 40920523466 over the 297 entries of the
-  `win64` build:
-  - Node and Python agree on the inode, the mtime and the birth time of each entry;
-  - they differ on `st_dev` (297 entries), `st_ctime_ns` (296) and `st_mode` (8: the `.exe`
-    files and directories);
-  - they differ on the size of 3 directories: Python reports the size of the NTFS index
-    allocation, 4096, and Node reports 0.
-- D5, orchestrator: the setup takes the platform from Node (`process.platform`), and
-  `render_check.py` from `os.name`. Node reads the browser in the setup, so its view decides the
-  form of the paths.
-- D6, orchestrator: on Windows a render runs `node` with the script that the `bin` field of
-  `@mermaid-js/mermaid-cli/package.json` names for `mmdc`. It never runs `mmdc.cmd`: `cmd.exe`
-  parses the arguments of a `.cmd` file again.
-- D7, orchestrator: on Windows a command that times out ends with its process tree, through
-  `taskkill.exe /T /F /PID` by its path under `%SystemRoot%\System32`.
-- D8, 2026-10-29, operator: the Windows job runs on the branch `task-137-mermaid-windows`,
-  pushed to `origin`. The operator's yes covers the pushes of P5 on that branch; the merge into
-  `main` waits for the operator's word.
-- D9, orchestrator: on Windows `render_check.py` starts `node` by the absolute path of the first
-  `node.exe` in an absolute entry of `PATH`. `CreateProcess` searches the directory of the caller
-  for a bare name before `PATH`, so a `node.exe` planted in the project would run.
-- D11, 2026-10-29, operator, superseded by D16: the browser floor `BROWSER_MIN_BUILD` moves to the stable build of
-  Chrome for Testing, in this task (audit C-1). Advisories cover 150.0.7871.24: CVE-2026-17655
-  (Critical, ANGLE) is fixed in 151.0.7922.72. Revision 2 set 156.0.8078.73; revision 3 sets
-  156.0.8078.80, Stable from 2026-10-29 22:14 UTC. `browsers.json` records 156.0.8078.80 only:
-  mac_arm measured on its install and on the official archive, win64 on the archive and by the
-  Windows job. The evidence of `references/` is rendered again
-  on it. Rejected: a separate task, which renders the evidence twice; keeping 150.
-- D12, 2026-10-29, operator: on Windows the install home and the install directories lie in
-  `%USERPROFILE%`, and both scripts default to it (audit M-1, review m3). Its default ACL keeps
-  other users out. `PUPPETEER_CACHE_DIR` stays free (D1). Rejected: a private ACL written by the
-  setup on a new home only; a statement in the documents only.
-- D13, 2026-10-29, operator: the Windows job runs in its own workflow, on a change of the skill
-  or of that workflow, with a timeout of 30 minutes (review m7). Rejected: each push.
-- D14, orchestrator, 2026-10-30: on Windows the tree hash and the stat digest leave out the
-  top-level file `debug.log` of the browser directory, and a directory row has mtime 0. CI run
-  40953801835 showed that a render with build 156 creates that file beside
-  `chrome-headless-shell.exe`, the default of Chromium logging on Windows, and changes the mtime
-  of the directory; Chrome never reads the file. A `debug.log` of another kind, or one in a
-  subdirectory, stays an entry. Rejected: a browser argument that moves the log, which changes
-  `puppeteer.json` on every platform and depends on which process logs.
-- D16, 2026-10-30, operator: the browser follows the stable channel of Chrome for Testing, and the
-  repository keeps no build number. The setup installs `chrome-headless-shell@stable` with the
-  `@puppeteer/browsers` of the first install, which its lockfile pins, from
-  `https://storage.googleapis.com/chrome-for-testing-public` into `<home>/chrome`, and removes the
-  older builds there. It trusts that browser as downloaded over HTTPS; the stamp records its tree
-  hash, its stat digest and the date of the install. `render_check.py` refuses a stamp without
-  the date and names a browser installed more than 30 days before the render.
-  `MERMAID_RENDER_CHROME` with `MERMAID_RENDER_BROWSER_SHA256` stays for a browser at hand.
-  Rejected: a pinned build bumped by hand (D11), which the narrow audit found stale within a day;
-  a pin kept with the risk accepted, which each later audit would report again.
-- D15, 2026-10-30, operator: the flags, exit codes, inputs, outputs and setup rules of `SKILL.md`
-  §4 and §5 move to the new `references/scripts-and-setup.md`. `SKILL.md` keeps the commands,
-  the rule of negative fences and the rules an agent acts on. It held 3014 words against the
-  budget of 3000 (TC-ME-32) with the Windows rules; it holds 2737 after the move. Rejected: a
-  higher budget, paid at each load of the skill.
-- D10, orchestrator: on Windows the Node check of the setup resolves the browser path with
-  `fs.realpathSync.native`. It returns the long canonical path, as `os.path.realpath` does in
-  Python; `fs.realpathSync` keeps a short `8.3` name such as `RUNNER~1`.
+- D1, 2026-10-30, operator: WI-60 and WI-61 are one task, under the reduced process of TASK 134
+  D1. The run has a TASK and a PLAN, edits in place, the tests first and red, and the gates. One
+  code reviewer with the exhaustive prompt and one security auditor review the change, and one
+  fix pass follows. Skipped: the meta-audits and stages 1 to 4 of `/framework-upgrade`.
+- D2, orchestrator: WI-60 takes option 1 at its minimum. The run names each dropped key on
+  stderr and exits 0. Rejected:
+  - a copy of the old file (`latest.yaml.bak`): one more entry in `.agent/sessions/`, with the
+    link guards of TASK 128 to repeat;
+  - keeping unknown keys, which contradicts the owner rule;
+  - refusing the write, which fails each phase boundary.
+- D3, orchestrator, revised: a key is a line that starts at column 0 with a name of word
+  characters, `.` and `-`, then a colon and a space or the end of the line. A word character is a
+  letter, a digit or `_` of any script, never a control or format character, so the message prints
+  no escape sequence. Nested, quoted and spaced keys are not named.
+- D4, orchestrator: WI-61 takes option 2. The announcement names the date of `last_updated`.
+  Rejected: option 1, a comparison with the last commit of `docs/TASK.md`, which adds a rule and
+  misses a TASK edited without a commit.
 
 ## 2. Requirements
 
 <!-- contract:requirements -->
 
-Windows here is the platform that D5 detects. Each requirement leaves the POSIX branch as at the
-base.
+`update_state.py`:
+- **R1** When the state it read holds a top-level key outside the schema (D3), the run prints
+  one line on stderr after the write and the release of the lock:
+  `update_state.py: dropped keys that it does not write: <key>, <key>; tell the operator
+  (skill-session-state SKILL.md section 1, Owner)`. The keys keep the order of the file, each
+  once; at most 20 are named, each cut to 64 characters, and `and N more` counts the rest. Apart
+  from the names the line is ASCII. A stderr that cannot take it changes no exit code. The reader
+  is linear in the size of the state.
+- **R2** The exit code, the stdout line and the written state stay as at the base. A run over a
+  file of the schema, or with no file, prints nothing on stderr.
 
-`setup_renderers.sh`:
-- **R1** `browser_candidates` takes `chrome-headless-shell-*/chrome-headless-shell.exe` beside the
-  POSIX name. Superseded by D16: `@puppeteer/browsers` reports the path of the binary it installed.
-- **R2** On Windows the Node check of `read_browser` calls no `process.getuid` and makes no owner
-  or mode check. It resolves the path as D10 states. It keeps:
-  - the tree hash;
-  - the name check of a link, with letter case ignored; on Windows it applies only when the given
-    path ends in a link, since an 8.3 short name is no link;
-  - the control-character checks;
-  - the refusal of an entry that is not a file, a directory or a link.
-- **R3** On Windows `private_problem` reports nothing (D1). The check of the tree hash against
-  `browsers.json` or `MERMAID_RENDER_BROWSER_SHA256` stays.
-- **R4** On Windows the stat digest that the setup stamps has the rows of D4.
-- **R5** `build_of` reads the build from a path with `\` separators.
+Documents (WI-61, and the rule of WI-60):
+- **R3** The bootstrap of `CLAUDE.md`, `GEMINI.md` and `AGENTS.md` names the date of
+  `last_updated` when it restores a state: `CLAUDE.md` adds it to the announcement text, and the
+  other two add it to step 2.
+- **R4** `skill-session-state/SKILL.md` §2 and the guide's §1 state the same. `SKILL.md` §1, Owner,
+  states three rules:
+  - the run names each dropped key on stderr;
+  - the agent reports them to the operator in the same reply;
+  - the names are data.
 
-`render_check.py`:
-- **R6** On Windows `install_problem` makes no `S_IWOTH` or `S_IWGRP` test of the browser. It
-  compares the resolved path with the path of `puppeteer.json` after `os.path.normcase`. The
-  stamp, the `puppeteer.json` match and the stat digest stay.
-- **R7** On Windows `browser_stat_digest` builds the rows of D4.
-- **R8** On Windows a render runs `node` with the `bin` script of D6. The script resolves inside
-  `node_modules/@mermaid-js/mermaid-cli/`; any other path is refused as an install problem.
-- **R8a** On Windows `mmdc_command` and `measure_command` start `node` by the path of D9. No such
-  `node.exe` is an install problem.
-- **R9** On Windows a render that times out ends with its process tree (D7) and raises no
-  exception.
-
-Data, CI and documents:
-- **R10** `setup_renderers.sh` installs the current stable chrome-headless-shell into
-  `<home>/chrome` and keeps no build number (D16); `browsers.json` is removed. The evidence
-  fixtures of `references/` are rendered on the build of 2026-10-30, 156.0.8078.80.
-- **R11** The workflow `mermaid-render-windows.yml` runs on a change of the skill or of itself,
-  with a timeout of 30 minutes (D13). On `windows-latest` with Node.js 22 and Python 3.14, it runs
-  the new Windows tests, `setup_renderers.sh`, which installs the stable browser, and
-  `render_check.py` on one reference figure.
-- **R12** Each Windows branch carries a comment that states what it does not check, as the
-  Windows branch of `archive_move.py` does.
-- **R13** `SKILL.md` of the skill states that the renderers run on Windows under Git Bash, with
-  the guarantee of D1 and D12 and the limits of §5 items 5 and 6. MR-1 closes in its record and
-  in `docs/KNOWN_ISSUES.md`; both changelogs carry the release.
-
-Revision 2, on Windows:
-- **R14** The default install home and browser cache lie in `%USERPROFILE%`. `setup_renderers.sh`
-  and `install_problem` refuse an install home or directory whose resolved path lies outside it,
-  `render_check.py` refuses such an `--out`, and the setup refuses a `USERPROFILE` that is not
-  absolute (D12).
-- **R15** The stat digest reads a reparse point, a junction among them, as a link and does not
-  enter it, and a link row has size 0 on both sides. Both checks leave out the top-level file
-  `debug.log` while it has one link, and a directory row has mtime 0 (D14). A digest that raises `ValueError` or
-  `RecursionError` is refused as a changed browser.
-- **R16** `_run` starts no program named by a relative path or a bare name. `node_executable`
-  takes an entry with a drive only. `taskkill` comes from the directory of
-  `GetSystemDirectoryW` when its result fits the buffer and is absolute. `mmdc_script` refuses a `bin` value with a drive, a root or `..` before
-  it resolves a path.
-- **R17** `render_check.py` writes its output with `backslashreplace` for a character that the
-  code page of the console or the pipe cannot hold, and its `--json` output in ASCII.
-
-Revision 3, on every platform:
-- **R18** `install_problem` refuses a stamp without the date of the install, so an install of a
-  pinned build made before D16 runs again only after a new setup. `browser_age_note` names a
-  browser installed more than 30 days before the render (D16).
+  The skill's version is 1.4.
+- **R5** WI-60 and WI-61 close in their records and in `docs/BACKLOG.md`; both changelogs carry the
+  release.
 
 ## 3. Files
 
-- `S/setup_renderers.sh`, `S/render_check.py`;
-- `S/tests/test_renderers_windows.py` (new); `S/tests/test_setup_renderers.py`, whose build above
-  the floor is derived from it;
-- `.github/workflows/mermaid-render-windows.yml` (new, D13); `docs/ARCHITECTURE.md`;
-- the evidence fixtures `paired-examples-geometry.json` and `references-geometry.json`;
-- `assets/renderers/browsers.json` and `SKILL.md` of the skill; `references/scripts-and-setup.md`
-  (new, D15) and its entry in `references-geometry.json`;
-- `docs/issues/mr-1-*.md`, `docs/KNOWN_ISSUES.md`;
+- `.agent/skills/skill-session-state/scripts/update_state.py` and its tests;
+- `.agent/skills/skill-session-state/SKILL.md`, `System/Docs/SESSION_CONTEXT_GUIDE.md`;
+- `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`; `tests/test_session_state_contract.py`;
+- `docs/backlog/wi-60-*.md`, `docs/backlog/wi-61-*.md`, `docs/BACKLOG.md`;
 - `CHANGELOG.md`, `CHANGELOG.ru.md`;
-- `docs/TASK.md`, `docs/PLAN.md`; the archive of TASK 136.
+- `docs/TASK.md`, `docs/PLAN.md`; the archive of TASK 137.
 
 ## 4. Acceptance
 
 <!-- contract:acceptance -->
 
-On POSIX the tests simulate Windows. For the setup, a module that `NODE_OPTIONS` preloads sets
-`process.platform` to `win32` and removes `process.getuid`. For `render_check.py`, a test patches
-its platform flag.
-
-- TC-W1 — the setup, simulated Windows, a stand-in `chrome-headless-shell.exe` of mode `0o777`
-  whose hash the override vouches for → exit 0, and `puppeteer.json` names the `.exe`.
-- TC-W2 — TC-W1 with no override → exit 1, and the message says the hash is not recorded.
-- TC-W3 — the stat digest that TC-W1 stamps equals `browser_stat_digest` of the same directory
-  under the Windows flag.
-- TC-W4 — `install_problem` under the Windows flag, the install of TC-W1 → `None`. A byte
-  appended to a file of the browser directory → a problem that names the stat digest.
-- TC-W5 — `mmdc_command` under the Windows flag, `PATH` of `.` and a directory with a stand-in
-  `node.exe` → that `node.exe` and the `bin` script; `measure_command` → the same `node.exe`. A
-  `bin` that leads outside the package, or a `PATH` of `.` only → an install problem.
-- TC-W6 — `_run` under the Windows flag, a command that times out → `taskkill.exe` by its
-  absolute path with `/T /F /PID <pid>`, and no exception.
-- TC-W7 — the job of R11 → `setup_renderers.sh` exits 0, and `render_check.py` reports the figure
-  `pass` with exit 0.
-- TC-W8 — `test_setup_renderers.py` and `test_render_check.py` pass on POSIX; the one change
-  derives a build above the floor from it.
+- TC-K1 — a state with the hand-written key `current_task_2026_09_17` → exit 0, and stderr names
+  that key and `SKILL.md §1`.
+- TC-K2 — a state of the schema, and no state → exit 0, and stderr is empty.
+- TC-K3 — a state with two unknown keys, one of them twice, a nested unknown key, a comment and a
+  list item → stderr names the two top-level keys once each, in their order.
+- TC-K4 — the keys of the schema → none named, the version line included.
+- TC-B1 — the documents:
+  - the boot sections of the three bootstrap files, `SKILL.md` §2 and the guide's §1 → each names
+    `last_updated`;
+  - `SKILL.md` §1 → quotes the prefix of the stderr line as the script writes it, and states the
+    rule to report the keys and the rule to act on none.
+- TC-B2 — the gates of `framework-gates.yml` pass, on this machine and in CI.
 
 Revision 2:
-- TC-W9 — the setup with `USERPROFILE` beside the home → exit 1, "lies outside %USERPROFILE%";
-  `install_problem` with that profile → the same refusal.
-- TC-W10 — `_run` under the Windows flag with `["node", "-v"]` → refused, and no process starts.
-- TC-W11 — `mmdc_script` with a `bin` value of a drive, a root, a share or `..` → refused with
-  `Path.resolve` patched to fail; a `src/cli.js` linked outside the package → refused.
-- TC-W12 — `install_problem` whose digest raises `UnicodeEncodeError` or `RecursionError` →
-  "changed since the setup hashed it".
-- TC-W1, TC-W5, TC-W6 gain: a link to the browser named in other letter case is accepted; a
-  quoted `PATH` entry is read; the timed-out command has exited when `_run` returns.
-- Native only, in the Windows job:
-  - TC-W13 — an 8.3 short cache path → stamped in its long form;
-  - TC-W14 — a stamped path in other letter case → the same browser;
-  - TC-W15 — a junction in the browser directory → a link on both sides;
-  - TC-W16 — a timed-out command → its grandchild ends.
+- TC-K1 gains: the line is ASCII and stdout is the one line of the base.
+- TC-K3 gains: a key of digits and `-` is named, a URL at column 0 is not; `dropped_keys` names a
+  Cyrillic key and no quoted or spaced one.
+- TC-K5 — a state of 100,000 keys → the run ends within 4 s and names 20 and `and 99980 more`.
+- TC-K6 — a name of 100 characters → cut to 64 and `...`.
+- TC-K7 — stderr a closed pipe → exit 0, and the state is written.
+- TC-K8 — a failed move of the state → exit 1, and no key is named.
 
-- TC-W17 — a `debug.log` beside the browser:
-  - present at the setup → the hash without it is accepted, and the stamped digest equals the
-    render check's;
-  - written or appended after the setup → no problem;
-  - a directory of that name → "changed since the setup hashed it".
-
-Revision 3:
-- TC-W17 gains: a `debug.log` with a second link → hashed at the setup, and refused after it.
-- TC-W18 — `rc.main` under the Windows flag with `--out` outside `USERPROFILE` → exit 3,
-  "lies outside %USERPROFILE%".
-- TC-W19 — `_json_out` under the Windows flag with Cyrillic, an arrow and an emoji → ASCII that
-  reads back to the report.
-- `test_render_check.py`: a stamp without the date of the install → refused; a browser installed
-  31 days before → named, and 30 days before → not named.
-- `test_setup_renderers.py`, revision 4:
-  - the installed browser → stamped with its hash, its digest and the date;
-  - a browser the tool cannot install → the step fails and names `MERMAID_RENDER_CHROME`;
-  - a browser of `MERMAID_RENDER_CHROME` → runs with its hash only;
-  - an installed browser that links outside `<home>/chrome` → refused;
-  - an older build in the cache → removed.
-
-On POSIX, 38 mutations each revert one branch of this task, and a test fails for each: 32 of
-the Windows branches and 6 of D16.
-
-Each of TC-W1 to TC-W6 fails on the base.
+Each of TC-K1, TC-K3 and TC-B1 fails on the base. Under `PYTHONIOENCODING=cp1252` the tests of
+the dropped keys pass.
 
 <!-- contract:out-of-scope -->
 
 ## 5. Out of scope and residuals
 
-1. A `--with-browser` flag that runs the browser install (the report's proposal 3).
-2. Drive-letter paths (`C:\…`) in `MERMAID_RENDER_HOME`, `PUPPETEER_CACHE_DIR` and
-   `MERMAID_RENDER_CHROME`. In Git Bash they take the form `/c/…`, as at the base.
-3. A run of `setup_renderers.sh` from PowerShell or `cmd.exe`; it needs bash.
-4. The other test modules of the skill on Windows; many of them test POSIX modes.
-5. On Windows, a file of the browser directory overwritten in place with its size and mtime
-   restored is not detected after the setup (D1, D4), nor is the content of `debug.log` (D14). With `PUPPETEER_CACHE_DIR` outside the
-   profile, another user who may write there can also swap the directory between the check and
-   the launch (D1, audit M-1).
-6. On a ReFS volume (Dev Drive), Python 3.12 and later report a 128-bit inode and Node a 64-bit
-   one: the digest differs, and every render is refused (review m2, audit I-3).
-7. Review N1: the header of `setup_renderers.sh`, which `--help` prints, gained the Windows
-   rules; this is the one change of POSIX output.
-8. Review N4, audit I-1: `measure_command` keeps a bare `node` as its last resort on Windows;
-   R16 refuses it in `_run`, so it never starts.
-9. Review N6: on an NTFS directory with per-directory case sensitivity, `os.path.normcase` joins
-   two names; the stat digest still detects a swap.
-10. Review N9: on the base, TC-W1 to TC-W5 fail in the setup of the test, before their bodies.
-11. Review N11: the Windows job runs Python 3.14 only; the floor 3.11 runs the session-state
-    jobs there.
-12. Audit I-6 to I-8:
-    - the tests start `cygpath` and `bash` by name;
-    - a `NODE_OPTIONS` that redefines the platform turns the POSIX checks off, and it runs code
-      in every node anyway;
-    - `pip` and `node-version: "22"` float, as in the other jobs.
+1. A key added under a mapping of the schema, such as `current_task`, a quoted key and a key with
+   a space are dropped and not named (D3; audit F6).
+2. `read_state` reads the whole file, with no limit of size; the reader is linear, and the line
+   names at most 20 keys (audit P2).
+3. `last_updated` is the date that the file states, written as local time with no zone; a state
+   written by hand may state any date (audit F5, review N9).
+4. PT-1, the encoding of four scripts: the next task.

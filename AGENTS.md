@@ -31,7 +31,8 @@ Your default file-discovery commands (`find`, `ls`, `rg`, `fd`) do **NOT** desce
 ## SESSION RESTORATION (BOOTSTRAP)
 **ON SESSION START**:
 1. Check if `.agent/sessions/latest.yaml` exists.
-2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary.
+2. **IF EXISTS**: Read it immediately to restore your Mode, TaskName, and Summary. In your first
+   reply, name the mode, the task, its status and the date that its `last_updated` states.
 3. **IF NEW**: Proceed with normal analysis.
 4. **CONFLICT RESOLUTION**: If the User's current request explicitly contradicts the restored context (e.g., "Start new task X" vs "Restored Task Y"), the **User Request takes precedence**. You must Update the session state to match the new task.
 5. **DISAGREEMENT CHECK**: If the state was restored and `docs/TASK.md` exists, read its H1 and

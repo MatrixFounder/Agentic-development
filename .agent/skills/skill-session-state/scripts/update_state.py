@@ -79,6 +79,18 @@ _YAML_UNSAFE = re.compile("[%s]" % "".join(
     for low, high in ((0x7F, 0x9F), (0x2028, 0x2029), (0xD800, 0xDFFF), (0xFFFE, 0xFFFF))))
 #: The version line; the reader takes it from the first line only (TASK 127 R3.3).
 _VERSION_LINE = re.compile(r"schema_version:\s*(\d+)\s*")
+#: The top-level keys that `generate_yaml` writes; a run drops any other (TASK 138, WI-60).
+SCHEMA_KEYS = frozenset({"schema_version", "session_id", "last_updated", "mode", "current_task",
+                         "context_summary", "active_blockers", "recent_decisions",
+                         "completed_tasks"})
+#: A top-level key: a name of word characters, `.` and `-` at column 0, then a colon and a space
+#: or the end of the line. A word character is a letter, a digit or `_` of any script, never a
+#: control or format character, so a message that quotes it prints no escape sequence (TASK 138
+#: D3).
+_TOP_KEY = re.compile(r"^(\w[\w.-]*)[ \t]*:(?=[ \t]|$)", re.MULTILINE)
+#: The stderr line names at most this many dropped keys, each cut to KEY_NAME_CHARS characters.
+DROPPED_NAMES_SHOWN = 20
+KEY_NAME_CHARS = 64
 #: `os.O_NOFOLLOW` where the platform has it; Windows has none (TASK 128 R2.3).
 _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 #: The bit of a reparse tag that marks a name surrogate: a symbolic link or a junction
@@ -166,10 +178,49 @@ def _list_items(content, key, version):
             for raw in re.findall(r'^\s+-\s+(.*)$', section.group(1), re.MULTILINE)]
 
 
+def dropped_keys(content):
+    """The top-level keys of `content` that the next write drops, in their order, each once.
+    Linear in the size of `content`: the run holds the lock while it reads (SS-6)."""
+    return list(dict.fromkeys(match.group(1) for match in _TOP_KEY.finditer(content)
+                              if match.group(1) not in SCHEMA_KEYS))
+
+
+def dropped_message(keys):
+    """The stderr line that names `keys`, or None for none (TASK 138 R1). Apart from the names
+    it is ASCII, for a console or a pipe in any code page."""
+    if not keys:
+        return None
+    shown = [key if len(key) <= KEY_NAME_CHARS else key[:KEY_NAME_CHARS] + "..."
+             for key in keys[:DROPPED_NAMES_SHOWN]]
+    more = len(keys) - len(shown)
+    names = ", ".join(shown) + (" and %d more" % more if more else "")
+    return ("update_state.py: dropped keys that it does not write: %s; tell the operator "
+            "(skill-session-state SKILL.md section 1, Owner)" % names)
+
+
+def _warn(message):
+    """`message` on stderr. A stderr that cannot take it changes nothing: the state is written
+    and the exit stays 0. A closed pipe leaves stderr on the null device, so the flush at exit
+    fails no more (TASK 138)."""
+    stream = sys.stderr
+    if stream is None:
+        return
+    try:
+        print(message, file=stream, flush=True)
+    except (OSError, ValueError):
+        try:
+            null = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(null, stream.fileno())
+            os.close(null)
+        except (OSError, ValueError):
+            pass
+
+
 def parse_simple_yaml(content):
     """
     Robustly extract specific fields from our generated YAML.
-    Does NOT aim to be a full YAML parser.
+    Does NOT aim to be a full YAML parser. `dropped_keys` holds the top-level keys outside the
+    schema, which the next write drops.
     """
     match = _VERSION_LINE.fullmatch(content.split("\n", 1)[0])
     version = int(match.group(1)) if match else 1
@@ -178,6 +229,7 @@ def parse_simple_yaml(content):
         "active_blockers": _list_items(content, "active_blockers", version),
         "recent_decisions": _list_items(content, "recent_decisions", version),
         "completed_tasks": _list_items(content, "completed_tasks", version),
+        "dropped_keys": dropped_keys(content),
     }
     if version >= SCHEMA_VERSION:
         sid = re.search(r'^session_id:\s*(.*)$', content, re.MULTILINE)
@@ -371,6 +423,7 @@ def main():
               "and the state needs one of them for its lock")
         sys.exit(1)
 
+    dropped_line = None
     try:
         # No entry of the state is a link, or of another kind (TASK 128 R2.1): the directory
         # before anything is made, the lock file before its open, the state inside the lock.
@@ -430,6 +483,9 @@ def main():
                 _write_state(fpath, yaml_content)
 
                 print(f"Session state updated: {fpath} (Locked)")
+                # The script owns the file; a key written by hand is gone, and the run says so
+                # once the lock is released (TASK 138, WI-60).
+                dropped_line = dropped_message(latest_data.get("dropped_keys"))
             finally:
                 _unlock(fd)
         finally:
@@ -437,6 +493,9 @@ def main():
     except Exception as e:
         print(f"Error updating session state: {e}")
         sys.exit(1)
+    # The state is written: the line about the dropped keys changes no exit code (TASK 138 R1).
+    if dropped_line:
+        _warn(dropped_line)
 
 if __name__ == "__main__":
     main()

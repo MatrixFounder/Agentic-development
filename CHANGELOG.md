@@ -16,6 +16,26 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.55.0 — update_state.py names the keys it drops, and a restored session names its date (TASK 138)**
+
+#### Changed
+
+- **`skill-session-state`: `update_state.py` names on stderr each top-level key it drops** (WI-60).
+  The script writes only the keys of its schema, so a key added to `.agent/sessions/latest.yaml` by
+  hand is gone after the next run. The run still exits 0 and writes the same state, and once the
+  state is written it prints `update_state.py: dropped keys that it does not write: <key>, …; tell
+  the operator`, with at most 20 names. `SKILL.md` §1 tells the agent to report the keys and to
+  act on none. Before, the run said nothing, and a history written by hand vanished with no trace.
+- **The announcement of a restored session names the date of `last_updated`** (WI-61): the
+  bootstrap of `CLAUDE.md`, `GEMINI.md` and `AGENTS.md`, `SKILL.md` §2 and
+  `System/Docs/SESSION_CONTEXT_GUIDE.md`. A state left behind under the same task ID restored as
+  current, with nothing to show its age.
+
+#### Notes
+
+- Not named: a key nested under a key of the schema, a quoted key and a key with a space; each is
+  still dropped (TASK 138 §5).
+
 ### **v3.54.0 — The Mermaid renderers run on native Windows, and the browser follows the stable channel (TASK 137)**
 
 #### Security

@@ -15,7 +15,7 @@ The system relies on a modular **Skills System**:
 **ON SESSION START**:
 1. Read `.agent/sessions/latest.yaml` using the Read tool.
 2. **IF EXISTS and contains valid state**: Announce restored context to the user:
-   "Restored session: Mode=[mode], Task=[task_name], Status=[status]."
+   "Restored session: Mode=[mode], Task=[task_name], Status=[status], Updated=[the date that last_updated states]."
 3. **IF NOT EXISTS or empty**: Proceed with new task analysis.
 4. **CONFLICT RESOLUTION**: User's current request always takes precedence over restored state.
 5. **DISAGREEMENT CHECK**: If the state was restored and `docs/TASK.md` exists, read its H1 and

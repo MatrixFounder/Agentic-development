@@ -73,8 +73,6 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-61** [The session bootstrap gives no sign that a restored state is stale](backlog/wi-61-the-session-bootstrap-gives-no-sign-that-a-restored-state-is-stale.md) — effort `S`, status `open`, opened 2026-10-29
-- **WI-60** [update_state.py drops a key added by hand and names no key](backlog/wi-60-update-state-py-drops-a-key-added-by-hand-and-names-no-key.md) — effort `S`, status `open`, opened 2026-10-29
 - **WI-59** [A file planted in the work tree runs under the pytest rules, a full audit scan and the venv's start](backlog/wi-59-a-file-planted-in-the-work-tree-runs-under-the-pytest-rules-a-full-audit-scan-and-the-venv-s-start.md) — effort `M`, status `open`, opened 2026-10-29
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
@@ -94,6 +92,8 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-61** [The session bootstrap gives no sign that a restored state is stale](backlog/wi-61-the-session-bootstrap-gives-no-sign-that-a-restored-state-is-stale.md) — effort `S`, status `done`, opened 2026-10-29 · **done 2026-10-30** (TASK 138): the restore announcement names the date of `last_updated`
+- **WI-60** [update_state.py drops a key added by hand and names no key](backlog/wi-60-update-state-py-drops-a-key-added-by-hand-and-names-no-key.md) — effort `S`, status `done`, opened 2026-10-29 · **done 2026-10-30** (TASK 138): the run names each dropped top-level key on stderr
 - **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-29** (TASK 134): each allow-listed script drops its directory from `sys.path`; siblings load by path
 - **WI-58** [A fix round of stage 2 fixes the instance of a class, and the next round finds the next site](backlog/wi-58-a-fix-round-of-stage-2-fixes-the-instance-of-a-class-and-the-next-round-finds-the-next-site.md) — effort `S`, status `done`, opened 2026-10-28 · **done 2026-10-28** (TASK 135): a site list for a finding that is one site of a class
 - **WI-56** [A fix of rule text in stage 2 gives the next round new text to review](backlog/wi-56-a-fix-of-rule-text-in-stage-2-gives-the-next-round-new-text-to-review.md) — effort `S`, status `done`, opened 2026-10-27 · **done 2026-10-28** (TASK 135): a narrow round past the bound; a fix of rule text narrows before it adds

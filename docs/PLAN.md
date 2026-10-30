@@ -1,28 +1,18 @@
-# PLAN 137 — The Mermaid renderers run on native Windows (MR-1)
+# PLAN 138 — update_state.py names the keys it drops, and a restored session names the date of its state (WI-60, WI-61)
 
-**TASK:** [docs/TASK.md](TASK.md) (revision 2) · **Covers:** R1–R13 · **Acceptance:** TC-W1–TC-W8.
+**TASK:** [docs/TASK.md](TASK.md) (revision 2) · **Covers:** R1–R5 · **Acceptance:** TC-K1–TC-K4, TC-B1, TC-B2.
 
-**Process:** reduced (TASK D3). Edits are in place; the tests come first and run red.
+**Process:** reduced (TASK D1). Edits are in place; the tests come first and run red.
 
 ## Steps
 
-- [x] P1 **Tests first.** `scripts/tests/test_renderers_windows.py` holds TC-W1 to TC-W6. The
-      setup tests reuse the stand-ins of `test_setup_renderers.py` and preload a module through
-      `NODE_OPTIONS` that sets `process.platform` to `win32` and removes `process.getuid`. On the
-      base each of TC-W1 to TC-W6 fails; the run records why.
-- [x] P2 **Setup** (R1 to R5, R12): the `.exe` candidate, the Windows branch of the Node check,
-      `private_problem` and the stat rows on Windows, `build_of` on `\` paths.
-- [x] P3 **Render check** (R6 to R9, R12): the platform flag, `install_problem`,
-      `browser_stat_digest`, `mmdc_command` and `_run` on Windows.
-- [x] P4 **Green on POSIX.** TC-W1 to TC-W6 pass; TC-W8: the skill's test suites pass unchanged,
-      and each step of `framework-gates.yml` that runs here passes. One mutation per script
-      reverts one Windows branch, and its test fails.
-- [x] P5 **Windows job** (R11, D2, D8): a job on `windows-latest` that installs the pinned build,
-      prints its tree hash with `--dry-run`, and runs the setup, `render_check.py` on one reference
-      figure and the new tests. The first push measures the hash with the override set from the
-      dry run; `browsers.json` then records it (R10), and the next push runs with no override
-      (TC-W7). Each push waits for the operator's yes; a failure on Windows goes back to P2 or P3.
-- [x] P6 **Records** (R13): `SKILL.md`, MR-1 and `docs/KNOWN_ISSUES.md`, both changelogs.
-- [x] P7 **Reviews.** One code reviewer with the exhaustive prompt and one security auditor, in
-      parallel, on the same fingerprint; then one fix pass, the gates again and the Windows job.
-- [x] P8 **Commit** on the operator's word: the work branch merges into `main`.
+- [x] P1 **Tests first.** TC-K1 to TC-K4 in `test_update_state.py`; TC-B1 in
+      `tests/test_session_state_contract.py`. On the base TC-K1, TC-K3 and TC-B1 fail.
+- [x] P2 **Script** (R1, R2): the dropped keys read from the state, the stderr line after the write.
+- [x] P3 **Documents** (R3, R4): the three system prompts, `SKILL.md` §1 and §2, the guide's §1.
+- [x] P4 **Green.** The tests of the skill and the contract tests pass, and each step of
+      `framework-gates.yml` that runs here passes. One mutation per requirement fails a test.
+- [x] P5 **Records** (R5): WI-60, WI-61, `docs/BACKLOG.md`, both changelogs, v3.55.0.
+- [x] P6 **Reviews.** One code reviewer with the exhaustive prompt and one security auditor, in
+      parallel; then one fix pass and the gates again.
+- [x] P7 **Commit** on the operator's word.

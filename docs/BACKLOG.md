@@ -73,6 +73,8 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-61** [The session bootstrap gives no sign that a restored state is stale](backlog/wi-61-the-session-bootstrap-gives-no-sign-that-a-restored-state-is-stale.md) — effort `S`, status `open`, opened 2026-10-29
+- **WI-60** [update_state.py drops a key added by hand and names no key](backlog/wi-60-update-state-py-drops-a-key-added-by-hand-and-names-no-key.md) — effort `S`, status `open`, opened 2026-10-29
 - **WI-59** [A file planted in the work tree runs under the pytest rules, a full audit scan and the venv's start](backlog/wi-59-a-file-planted-in-the-work-tree-runs-under-the-pytest-rules-a-full-audit-scan-and-the-venv-s-start.md) — effort `M`, status `open`, opened 2026-10-29
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09

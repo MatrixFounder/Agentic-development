@@ -3,7 +3,7 @@
 #
 # Installs mermaid-cli with an exact mermaid version per tag into
 #   ${MERMAID_RENDER_HOME:-$HOME/.cache/mermaid-authoring-guidelines}/<tag>/
-# and writes <tag>/puppeteer.json pointing at a cached chrome-headless-shell.
+# and writes <tag>/puppeteer.json pointing at the installed chrome-headless-shell.
 #
 #   v10  mermaid-cli 10.9.1  + mermaid 10.9.8   (floor)
 #   v11  mermaid-cli 11.17.0 + mermaid 11.17.2  (the version GitHub runs)
@@ -11,26 +11,36 @@
 #
 # Source of each install: assets/renderers/<tag>/package.json and package-lock.json, installed
 # with `npm ci --ignore-scripts`. The only install script in the three lockfiles is puppeteer's
-# browser download, which is not wanted: the script reuses a cached chrome-headless-shell from
-# ${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}/chrome-headless-shell/ of build
-# BROWSER_MIN_BUILD or newer (the build the committed render evidence was measured with), or the
-# binary named by MERMAID_RENDER_CHROME. It never downloads a browser. A browser is used only when
-# the tree hash of its directory is recorded in assets/renderers/browsers.json, or equals
+# browser download, which is not wanted. The browser is the current stable chrome-headless-shell
+# of Chrome for Testing (TASK 137 D16): the @puppeteer/browsers of the first install, whose
+# version its lockfile pins, downloads it from BROWSER_BASE_URL into $RENDER_HOME/chrome, once per
+# stable build, and removes the older builds there. This repository keeps no build number, so the
+# security fixes of the browser arrive with the next run of this script. The browser so installed
+# is trusted as downloaded. MERMAID_RENDER_CHROME names another browser binary instead, in a
+# directory that holds that browser only; it runs only when the tree hash of its directory equals
 # MERMAID_RENDER_BROWSER_SHA256, which the operator sets after confirming where the browser came
 # from (TASK 110 R7.3). The tree hash is the sha256 of one JSON line per file and symbolic link
 # under the directory that holds the executable, every symbolic link of the path resolved (see
-# read_browser). That directory and the one above it must be private. MERMAID_RENDER_CHROME names
-# the browser binary itself, in a directory that holds that browser only. The resolved path is written
-# into puppeteer.json and, with the accepted hash, into each install as .browser.sha256;
-# render_check.py runs no install without it (R7.7).
+# read_browser). That directory and the one above it must be private. The resolved path is
+# written into puppeteer.json and, with the hash and the date of the install, into each install
+# as .browser.sha256; render_check.py runs no install without it (R7.7), and it names a browser
+# installed more than 30 days before the render.
 #
 # Never installs globally and never writes inside a git work tree; a home with a `.` or `..`
 # segment is refused, since `mkdir -p` would follow it. The home must be private: it, or its
 # nearest existing directory, belongs to this user or root, and no other user may write in it
 # (its group only when that group is the user's own, named as the user); a new home is made
-# with mode 0700. PUPPETEER_CACHE_DIR and MERMAID_RENDER_CHROME must be absolute paths. The npm
-# cache lives in $RENDER_HOME/.npm-cache, so nothing is written to ~/.npm. The browser keeps its
-# sandbox; `--no-sandbox` is written into puppeteer.json only when MERMAID_RENDER_NO_SANDBOX=1.
+# with mode 0700. On Windows Git Bash shows no owner or mode that tells who may write: there the
+# home must lie in the user profile, %USERPROFILE%, whose ACL keeps other users out, and its
+# default lies in it (TASK 137 D12); a browser that MERMAID_RENDER_CHROME names is not checked
+# there (D1). The checks of the browser there leave out the top-level file
+# debug.log of one link, which Chrome writes beside its executable on Windows and never reads, and
+# the mtime of a directory (D14). Not seen there: a file of the browser overwritten in place with its size
+# and mtime restored; on a ReFS volume (Dev Drive) the stat digest never matches, so every render
+# is refused. MERMAID_RENDER_CHROME must be an absolute
+# path. The npm cache lives in $RENDER_HOME/.npm-cache, so nothing is written to ~/.npm. The
+# browser keeps its sandbox; `--no-sandbox` is written into puppeteer.json only when
+# MERMAID_RENDER_NO_SANDBOX=1.
 # The browser resolves no host name, localhost included, and uses no proxy
 # (--host-resolver-rules, --no-proxy-server), and puppeteer talks to it over a pipe ("pipe":
 # true), so no DevTools port opens and a render fetches nothing from the network.
@@ -64,7 +74,9 @@
 # Exit:  0 installed (or planned, with --dry-run); 1 a step failed, and the message names it,
 #        a browser with no accepted tree hash included; 3 usage error.
 #
-# Compatible with bash 3.2 (macOS) and Linux bash.
+# Compatible with bash 3.2 (macOS), Linux bash and Git Bash on Windows. On Windows (TASK 137) the
+# binary is chrome-headless-shell.exe, the paths of the variables take the form /c/..., and
+# no owner or mode is checked: the tree hash and the stat digest guard the browser there.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -72,16 +84,18 @@ SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 ASSETS="$SKILL_DIR/assets/renderers"
 NOTATION="$SKILL_DIR/assets/notation.json"
 RENDER_HOME="${MERMAID_RENDER_HOME:-$HOME/.cache/mermaid-authoring-guidelines}"
-BROWSER_CACHE="${PUPPETEER_CACHE_DIR:-$HOME/.cache/puppeteer}"
+# The browser: the stable channel of Chrome for Testing, from Google's storage (TASK 137 D16).
+BROWSER_CHANNEL='chrome-headless-shell@stable'
+BROWSER_BASE_URL='https://storage.googleapis.com/chrome-for-testing-public'
 # The browser arguments of every puppeteer.json; render_check.py BROWSER_ARGS holds the same.
 NET_BLOCK_ARG='--host-resolver-rules=MAP * ~NOTFOUND'
 NO_PROXY_ARG='--no-proxy-server'
-BROWSER_MIN_BUILD='150.0.7871.24'
-BROWSER_TABLE="$ASSETS/browsers.json"
 BROWSER_STAMP='.browser.sha256'
 
 FORWARD=0
 DRY_RUN=0
+# 1 when Node reports Windows; set in the step 'check node and npm' (TASK 137 D5).
+WINDOWS=0
 STEP="arguments"
 
 usage() {
@@ -163,6 +177,10 @@ inside_git_work_tree() {
 # private_dir_problem makes the same check).
 private_problem() {
   local d="$1"
+  # Windows: Git Bash emulates the owner and the mode, and mounts with `noacl`, so neither shows
+  # who may write. Nothing is checked there; the tree hash and the stat digest guard the browser
+  # (TASK 137 D1), as render_check.py private_dir_problem checks nothing there.
+  if [ "$WINDOWS" -eq 1 ]; then return 0; fi
   while [ ! -e "$d" ]; do d="$(dirname "$d")"; done
   if [ -z "$(find -H "$d" -prune \( -user "$(id -u)" -o -user 0 \) -print)" ]; then
     echo "$d belongs to another user"
@@ -174,10 +192,28 @@ private_problem() {
   fi
 }
 
+# Windows: prints why <dir>, its nearest existing directory resolved, lies outside the user
+# profile, or nothing; prints nothing on POSIX (TASK 137 D12, render_check.py profile_problem).
+profile_problem() {
+  [ "$WINDOWS" -eq 1 ] || return 0
+  local d="$1" tail="" base lower_d lower_base
+  base="$(cd "$PROFILE" 2>/dev/null && pwd -P)" || { echo "the user profile $PROFILE cannot be entered"; return 0; }
+  while [ ! -e "$d" ]; do tail="/${d##*/}$tail"; d="$(dirname "$d")"; done
+  d="$(cd "$d" 2>/dev/null && pwd -P)" || { echo "cannot enter the directory above $1"; return 0; }
+  lower_d="$(printf '%s' "$d$tail/" | tr '[:upper:]' '[:lower:]')"
+  lower_base="$(printf '%s' "$base/" | tr '[:upper:]' '[:lower:]')"
+  case "$lower_d" in
+    "$lower_base"*) ;;
+    *) echo "$1 lies outside %USERPROFILE% ($PROFILE); on Windows the install home lies in the user profile, whose ACL keeps other users out" ;;
+  esac
+}
+
 check_private() {
   local problem
   problem="$(private_problem "$1")"
   [ -z "$problem" ] || fail "$problem; use a directory of your own"
+  problem="$(profile_problem "$1")"
+  [ -z "$problem" ] || fail "$problem"
 }
 
 # A field of a JSON file, read with node: json_field <file> <dotted.key.path>
@@ -202,37 +238,40 @@ sha256_of() {
   fi
 }
 
-# Candidate chrome-headless-shell binaries, the preferred version first, then newest first. A
-# cached build older than BROWSER_MIN_BUILD is never offered: untrusted figures render in it.
-browser_candidates() {
-  local preferred="$1" base="$BROWSER_CACHE/chrome-headless-shell" d ver exe
+# Prints the browser executable for the installs: the binary MERMAID_RENDER_CHROME names, or the
+# stable chrome-headless-shell, which the @puppeteer/browsers of the install <dir> installs into
+# BROWSER_HOME. A build already there is reported without a download. Fails the current step
+# when the tool cannot install it, offline among others: fetch_browser <dir>
+fetch_browser() {
+  local tool="$1/node_modules/.bin/browsers" out log
   if [ -n "${MERMAID_RENDER_CHROME:-}" ]; then
     echo "$MERMAID_RENDER_CHROME"
     return 0
   fi
-  [ -d "$base" ] || return 0
-  {
-    for d in "$base"/*/; do
-      [ -d "$d" ] || continue
-      ver="${d%/}"; ver="${ver##*/}"; ver="${ver#*-}"
-      version_ge "$ver" "$BROWSER_MIN_BUILD" || continue
-      for exe in "$d"chrome-headless-shell-*/chrome-headless-shell; do
-        if [ -x "$exe" ]; then
-          if [ -n "$preferred" ] && [ "$ver" = "$preferred" ]; then
-            echo "999999.0.0.0 $exe"
-          else
-            echo "$ver $exe"
-          fi
-        fi
-      done
-    done
-  } | sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr | cut -d' ' -f2-
+  [ -x "$tool" ] || fail "no @puppeteer/browsers in $1/node_modules/.bin"
+  ( umask 077 && mkdir -p "$BROWSER_HOME" ) || fail "cannot create $BROWSER_HOME"
+  check_private "$BROWSER_HOME"
+  log="$(mktemp "${TMPDIR:-/tmp}/mermaid-browser.XXXXXX")"
+  if ! out="$("$tool" install "$BROWSER_CHANNEL" --path "$BROWSER_HOME" \
+                --base-url "$BROWSER_BASE_URL" --format '{{buildId}}	{{path}}' 2>"$log")"; then
+    out="$(head -c 600 "$log" 2>/dev/null || true)"
+    rm -f "$log"
+    fail "cannot install $BROWSER_CHANNEL into $BROWSER_HOME: $out; without the network the operator may name a browser at hand with MERMAID_RENDER_CHROME and its tree hash with MERMAID_RENDER_BROWSER_SHA256"
+  fi
+  rm -f "$log"
+  out="$(printf '%s\n' "$out" | tail -n 1)"
+  case "$out" in
+    *"	"*) echo "${out#*	}" ;;
+    *) fail "cannot read the browser that @puppeteer/browsers installed: $out" ;;
+  esac
 }
 
-# The build of a cached chrome-headless-shell, read from its directory name, or "unknown".
+# The build of an installed chrome-headless-shell, read from its directory name, or "unknown".
 build_of() {
-  local d
-  d="$(dirname "$(dirname "$1")")"; d="${d##*/}"
+  local d="$1"
+  # Node gives a Windows path with `\` separators.
+  if [ "$WINDOWS" -eq 1 ]; then d="${d//\\//}"; fi
+  d="$(dirname "$(dirname "$d")")"; d="${d##*/}"
   case "$d" in
     *-[0-9]*.[0-9]*) echo "${d#*-}" ;;
     *) echo "unknown" ;;
@@ -252,7 +291,10 @@ build_of() {
 # a launcher, not the browser (TASK 110 review rounds 2 and 3). BROWSER_STAT is the sha256 of one
 # JSON line per entry, the directory itself included: [path, kind, dev, inode, mode, size, mtime
 # in ns, ctime in ns]. It is stamped, and every render compares it, so a file changed or swapped
-# after the hash shows (review round 3, N1).
+# after the hash shows (review round 3, N1). On Windows no entry is checked for its owner or
+# mode, a stat line is [path, kind, inode, size, mtime in ns], with size 0 for a directory and a
+# link and mtime 0 for a directory, and the top-level file debug.log is left out of both
+# (TASK 137 D1, D4, D14).
 BROWSER_CACHE_LINES=""
 read_browser() {
   local given="$1" line out status rest own_gid=-1
@@ -271,15 +313,28 @@ EOF_CACHE
   if [ -z "${out:-}" ]; then
     out="$(node -e 'const fs = require("fs"), path = require("path"), crypto = require("crypto");
       const bad = (s) => /[\u0000-\u001f\u007f]/.test(s);
+      // Windows (TASK 137): the long canonical path, which Python os.path.realpath also gives
+      // (D10); names compared without letter case, as NTFS compares them; no owner or mode
+      // check, since Node reports no owner there and mode 0o666 for each writable file, so the
+      // tree hash and the stat digest are the checks (D1); stat rows of the fields that Node
+      // and Python read alike there, with size 0 for a directory and a link (D4); no mtime of a
+      // directory, and no top-level file debug.log of one link, which Chrome writes there
+      // beside its executable, the default of its logging on Windows, and never reads (D14).
+      const win = process.platform === "win32";
+      const fold = (s) => win ? s.toLowerCase() : s;
       try {
         const given = process.argv[1];
         if (bad(given)) throw new Error("the browser path holds a control character");
-        const exe = fs.realpathSync(given);
+        const exe = (win ? fs.realpathSync.native : fs.realpathSync)(given);
         if (bad(exe)) throw new Error("the resolved browser path holds a control character");
-        if (path.basename(exe) !== path.basename(given))
+        // On Windows an 8.3 short name differs from the long one with no link between them: there
+        // the names count only when the given path ends in a link (TASK 137, TC-W13).
+        const linked = fs.lstatSync(given).isSymbolicLink();
+        if ((!win || linked) && fold(path.basename(exe)) !== fold(path.basename(given)))
           throw new Error(given + " leads to " + exe + " under another name, which may be a launcher; name the browser binary itself");
-        const ownGid = Number(process.argv[2]), uid = process.getuid();
+        const ownGid = Number(process.argv[2]), uid = win ? -1 : process.getuid();
         const open = (st, full) => {
+          if (win) return;
           if (st.uid !== uid && st.uid !== 0) throw new Error(full + " belongs to another user");
           if (st.mode & 0o002) throw new Error(full + " is writable by every user");
           if ((st.mode & 0o020) && st.gid !== ownGid) throw new Error(full + " is writable by its group");
@@ -287,14 +342,17 @@ EOF_CACHE
         const rows = [], stats = [];
         const stamp = (full, rel, kind) => {
           const st = fs.lstatSync(full, {bigint: true});
-          stats.push([rel, kind, String(st.dev), String(st.ino), String(st.mode), String(st.size),
-                      String(st.mtimeNs), String(st.ctimeNs)]);
+          stats.push(win ? [rel, kind, String(st.ino), kind === "file" ? String(st.size) : "0",
+                            kind === "dir" ? "0" : String(st.mtimeNs)]
+                         : [rel, kind, String(st.dev), String(st.ino), String(st.mode),
+                            String(st.size), String(st.mtimeNs), String(st.ctimeNs)]);
         };
         const walk = (dir, rel) => {
           for (const name of fs.readdirSync(dir)) {
             if (bad(name)) throw new Error("a name under " + dir + " holds a control character");
             const full = path.join(dir, name), r = rel ? rel + "/" + name : name;
             const st = fs.lstatSync(full);
+            if (win && r === "debug.log" && st.isFile() && st.nlink === 1) continue;
             if (!st.isSymbolicLink()) open(st, full);
             stamp(full, "./" + r, st.isSymbolicLink() ? "link" : st.isDirectory() ? "dir" : "file");
             if (st.isSymbolicLink()) rows.push(["link", "./" + r, fs.readlinkSync(full)]);
@@ -338,11 +396,12 @@ $given	$out" ;;
 }
 
 # Succeeds when the browser named by <executable> may run: its directory and the one above are
-# private, and its tree hash is recorded in BROWSER_TABLE or equals MERMAID_RENDER_BROWSER_SHA256,
-# which only the operator sets. Sets BROWSER_EXE, BROWSER_HASH and, on a refusal,
-# BROWSER_PROBLEM: browser_accepted <executable>
+# private, and either it lies in BROWSER_HOME, where fetch_browser installed it, or its tree hash
+# equals MERMAID_RENDER_BROWSER_SHA256, which only the operator sets, for the binary that
+# MERMAID_RENDER_CHROME names. Sets BROWSER_EXE, BROWSER_HASH and, on a refusal, BROWSER_PROBLEM:
+# browser_accepted <executable>
 browser_accepted() {
-  local recorded d problem
+  local d problem
   read_browser "$1"
   [ -z "$BROWSER_PROBLEM" ] || return 1
   for d in "$(dirname "$BROWSER_EXE")" "$(dirname "$(dirname "$BROWSER_EXE")")"; do
@@ -352,20 +411,22 @@ browser_accepted() {
       return 1
     fi
   done
-  if [ -n "${MERMAID_RENDER_BROWSER_SHA256:-}" ] && [ "$BROWSER_HASH" = "$MERMAID_RENDER_BROWSER_SHA256" ]; then
+  if [ -n "${MERMAID_RENDER_CHROME:-}" ]; then
+    if [ -n "${MERMAID_RENDER_BROWSER_SHA256:-}" ] && [ "$BROWSER_HASH" = "$MERMAID_RENDER_BROWSER_SHA256" ]; then
+      return 0
+    fi
+    BROWSER_PROBLEM="not vouched"
+    return 1
+  fi
+  # The downloaded browser: its resolved path lies in BROWSER_HOME, so no link leads elsewhere.
+  if node -e 'const fs = require("fs"), path = require("path");
+              const real = process.platform === "win32" ? fs.realpathSync.native : fs.realpathSync;
+              const rel = path.relative(real(process.argv[1]), process.argv[2]);
+              process.exit(rel && !rel.startsWith("..") && !path.isAbsolute(rel) ? 0 : 1);' \
+       "$BROWSER_HOME" "$BROWSER_EXE"; then
     return 0
   fi
-  recorded="$(node -e 'const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-                       for (const b of t.browsers || []) process.stdout.write(String(b.tree_sha256) + "\n");' \
-                "$BROWSER_TABLE")" || { BROWSER_PROBLEM="cannot read $BROWSER_TABLE"; return 1; }
-  case "
-$recorded
-" in
-    *"
-$BROWSER_HASH
-"*) return 0 ;;
-  esac
-  BROWSER_PROBLEM="not recorded"
+  BROWSER_PROBLEM="$BROWSER_EXE lies outside $BROWSER_HOME, where the setup installs the browser"
   return 1
 }
 
@@ -413,6 +474,22 @@ STEP="check node and npm"
 command -v node >/dev/null 2>&1 || fail "node is not on PATH"
 command -v npm >/dev/null 2>&1 || fail "npm is not on PATH"
 NODE_VERSION="$(node -p 'process.versions.node')"
+# Node reads the browser, so its view of the platform decides the form of the paths and the
+# checks that apply (TASK 137 D5).
+if [ "$(node -p 'process.platform')" = "win32" ]; then WINDOWS=1; fi
+# Windows: the profile holds the defaults, as Node os.homedir() and Python expanduser read it;
+# Git Bash may set HOME elsewhere (TASK 137 D12).
+PROFILE=""
+if [ "$WINDOWS" -eq 1 ]; then
+  [ -n "${USERPROFILE:-}" ] || fail "USERPROFILE is not set; on Windows the install home lies in the user profile"
+  PROFILE="$USERPROFILE"
+  if command -v cygpath >/dev/null 2>&1; then PROFILE="$(cygpath -u "$USERPROFILE")"; fi
+  case "$PROFILE" in
+    /*) ;;
+    *) fail "USERPROFILE is not an absolute path: $USERPROFILE" ;;
+  esac
+  RENDER_HOME="${MERMAID_RENDER_HOME:-$PROFILE/.cache/mermaid-authoring-guidelines}"
+fi
 
 STEP="check the install home"
 case "$RENDER_HOME" in
@@ -426,13 +503,11 @@ if inside_git_work_tree "$RENDER_HOME"; then
   fail "$RENDER_HOME lies inside a git work tree; set MERMAID_RENDER_HOME to a directory outside any repository"
 fi
 check_private "$RENDER_HOME"
+# The stable browser that fetch_browser installs (TASK 137 D16).
+BROWSER_HOME="$RENDER_HOME/chrome"
 
 STEP="check the browser paths"
 # Every render runs in an install directory; a relative path would be read from there.
-case "$BROWSER_CACHE" in
-  /*) ;;
-  *) fail "PUPPETEER_CACHE_DIR must be an absolute path: $BROWSER_CACHE" ;;
-esac
 case "${MERMAID_RENDER_CHROME:-/}" in
   /*) ;;
   *) fail "MERMAID_RENDER_CHROME must be an absolute path: $MERMAID_RENDER_CHROME" ;;
@@ -444,9 +519,6 @@ for tag in $TAGS; do
   [ -f "$ASSETS/$tag/package-lock.json" ] || fail "missing $ASSETS/$tag/package-lock.json"
 done
 [ -f "$NOTATION" ] || fail "missing $NOTATION"
-# The browser download tool named in a failure hint: the exact version the v11 lockfile pins.
-BROWSERS_TOOL="$(json_field "$ASSETS/v11/package-lock.json" "packages.node_modules/@puppeteer/browsers.version")" \
-  || fail "cannot read $ASSETS/v11/package-lock.json"
 
 for tag in $TAGS; do
   STEP="node version for $tag"
@@ -475,26 +547,16 @@ if [ "$DRY_RUN" -eq 1 ]; then
     esac
     say "  copy $ASSETS/$tag/{package.json,package-lock.json} -> $RENDER_HOME/$tag/"
     say "  (cd $RENDER_HOME/$tag && PUPPETEER_SKIP_DOWNLOAD=1 npm_config_cache=$RENDER_HOME/.npm-cache npm ci --ignore-scripts)"
-    found="$(browser_candidates "")"
-    if [ -n "$found" ]; then
-      old_ifs="$IFS"
-      IFS='
-'
-      set -f  # a path is one candidate, never a glob
-      for exe in $found; do
-        IFS="$old_ifs"
-        if browser_accepted "$exe"; then
-          say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: accepted"
-        elif [ -n "$BROWSER_HASH" ] && [ "$BROWSER_PROBLEM" = "not recorded" ]; then
-          say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: refused, not recorded"
-        else
-          say "  browser: $exe (build $(build_of "$exe")): refused: $BROWSER_PROBLEM"
-        fi
-      done
-      set +f
-      IFS="$old_ifs"
+    if [ -n "${MERMAID_RENDER_CHROME:-}" ]; then
+      if browser_accepted "$MERMAID_RENDER_CHROME"; then
+        say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: accepted"
+      elif [ -n "$BROWSER_HASH" ] && [ "$BROWSER_PROBLEM" = "not vouched" ]; then
+        say "  browser: $BROWSER_EXE (build $(build_of "$BROWSER_EXE")), tree sha256 $BROWSER_HASH: refused, MERMAID_RENDER_BROWSER_SHA256 does not name it"
+      else
+        say "  browser: $MERMAID_RENDER_CHROME: refused: $BROWSER_PROBLEM"
+      fi
     else
-      say "  browser: none at or above $BROWSER_MIN_BUILD under $BROWSER_CACHE/chrome-headless-shell"
+      say "  browser: $BROWSER_CHANNEL from $BROWSER_BASE_URL into $BROWSER_HOME, with the @puppeteer/browsers of the install"
     fi
     say "  write $RENDER_HOME/$tag/puppeteer.json, the empty .puppeteerrc.json and $BROWSER_STAMP, and verify them with a smoke render run in $RENDER_HOME/$tag"
   done
@@ -506,6 +568,8 @@ fi
 
 # ----------------------------------------------------------------------------------- install
 
+FETCHED=""
+TODAY="$(date -u +%Y-%m-%d)"
 STEP="create the install home"
 ( umask 077 && mkdir -p "$RENDER_HOME" ) || fail "cannot create $RENDER_HOME"
 check_private "$RENDER_HOME"
@@ -552,13 +616,6 @@ for tag in $TAGS; do
   pptr="$(json_field "$dest/node_modules/puppeteer/package.json" version)" \
     || fail "cannot read $dest/node_modules/puppeteer/package.json"
   pptr_major="${pptr%%.*}"
-  preferred=""
-  for revisions in "$dest/node_modules/puppeteer-core/lib/cjs/puppeteer/revisions.js" \
-                   "$dest/node_modules/puppeteer-core/lib/puppeteer/revisions.js"; do
-    if [ -z "$preferred" ] && [ -f "$revisions" ]; then
-      preferred="$(sed -n "s/.*'chrome-headless-shell': '\([0-9.]*\)'.*/\1/p" "$revisions" | head -n 1)"
-    fi
-  done
   if [ "$pptr_major" -ge 22 ] 2>/dev/null; then
     headless="shell"
   else
@@ -566,55 +623,42 @@ for tag in $TAGS; do
   fi
   # Puppeteer's search for a configuration ends at this file (render_check.py PUPPETEER_RC).
   printf '{}\n' > "$dest/.puppeteerrc.json" || fail "cannot write $dest/.puppeteerrc.json"
-  chosen=""
-  chosen_hash=""
-  chosen_stat=""
-  refused=""
-  smoked=0
-  SMOKE_LOG=""
-  candidates="$(browser_candidates "$preferred")"
-  [ -n "$candidates" ] || fail "no chrome-headless-shell at or above $BROWSER_MIN_BUILD under $BROWSER_CACHE/chrome-headless-shell and MERMAID_RENDER_CHROME is unset; install one with 'npx --yes @puppeteer/browsers@$BROWSERS_TOOL install chrome-headless-shell@$BROWSER_MIN_BUILD --path $BROWSER_CACHE', the build $BROWSER_TABLE records, and run this script again; another build needs MERMAID_RENDER_BROWSER_SHA256, which the operator sets"
-  old_ifs="$IFS"
-  IFS='
-'
-  set -f  # a path is one candidate, never a glob
-  for exe in $candidates; do
-    IFS="$old_ifs"
-    if ! browser_accepted "$exe"; then
-      if [ "$BROWSER_PROBLEM" = "not recorded" ]; then
-        say "$tag: browser $exe refused: tree sha256 $BROWSER_HASH is not recorded in $BROWSER_TABLE"
-        refused="$refused $BROWSER_HASH"
-      else
-        say "$tag: browser $exe refused: $BROWSER_PROBLEM"
-      fi
-      continue
-    fi
-    # The resolved path runs and is stamped: the browser that was hashed is the one that runs.
-    write_puppeteer_config "$dest/puppeteer.json" "$BROWSER_EXE" "$headless"
-    smoked=1
-    if smoke_render "$dest" "$dest/puppeteer.json"; then
-      chosen="$BROWSER_EXE"
-      chosen_hash="$BROWSER_HASH"
-      chosen_stat="$BROWSER_STAT"
-      break
-    fi
-  done
-  set +f
-  IFS="$old_ifs"
-  if [ -z "$chosen" ]; then
-    rm -f "$dest/puppeteer.json" "$dest/$BROWSER_STAMP"
-    if [ "$smoked" -eq 0 ] && [ -n "$refused" ]; then
-      fail "no browser for $tag is accepted (tree sha256:$refused); the operator may confirm where this browser came from, then set MERMAID_RENDER_BROWSER_SHA256 to its tree hash and run this script again; an agent stops here and reports this refusal"
-    fi
-    if [ "$smoked" -eq 0 ]; then
-      fail "no browser for $tag is accepted; each refusal is named above; an agent stops here and reports it"
-    fi
-    fail "no cached chrome-headless-shell renders with $tag under the sandbox and the network block; last log: $SMOKE_LOG"
+  if [ -z "$FETCHED" ]; then
+    FETCHED="$(fetch_browser "$dest")"
   fi
-  printf '%s  %s\nstat %s\n' "$chosen_hash" "$chosen" "$chosen_stat" > "$dest/$BROWSER_STAMP" \
-    || fail "cannot write $dest/$BROWSER_STAMP"
-  say "$tag: mermaid $installed, puppeteer $pptr, browser $chosen (build $(build_of "$chosen"), headless: $headless, tree sha256 $chosen_hash)"
+  if ! browser_accepted "$FETCHED"; then
+    rm -f "$dest/puppeteer.json" "$dest/$BROWSER_STAMP"
+    if [ "$BROWSER_PROBLEM" = "not vouched" ]; then
+      fail "the browser $BROWSER_EXE (tree sha256 $BROWSER_HASH) is not the one MERMAID_RENDER_BROWSER_SHA256 names; the operator may confirm where this browser came from, then set MERMAID_RENDER_BROWSER_SHA256 to its tree hash and run this script again; an agent stops here and reports this refusal"
+    fi
+    fail "the browser $FETCHED is refused: $BROWSER_PROBLEM; an agent stops here and reports it"
+  fi
+  # The resolved path runs and is stamped: the browser that was hashed is the one that runs.
+  write_puppeteer_config "$dest/puppeteer.json" "$BROWSER_EXE" "$headless"
+  SMOKE_LOG=""
+  if ! smoke_render "$dest" "$dest/puppeteer.json"; then
+    rm -f "$dest/puppeteer.json" "$dest/$BROWSER_STAMP"
+    fail "the browser $BROWSER_EXE does not render with $tag under the sandbox and the network block; last log: $SMOKE_LOG"
+  fi
+  printf '%s  %s\nstat %s\ninstalled %s\n' "$BROWSER_HASH" "$BROWSER_EXE" "$BROWSER_STAT" "$TODAY" \
+    > "$dest/$BROWSER_STAMP" || fail "cannot write $dest/$BROWSER_STAMP"
+  say "$tag: mermaid $installed, puppeteer $pptr, browser $BROWSER_EXE (build $(build_of "$BROWSER_EXE"), headless: $headless, tree sha256 $BROWSER_HASH)"
 done
+
+# The older stable builds leave BROWSER_HOME once each install runs the new one.
+if [ -z "${MERMAID_RENDER_CHROME:-}" ] && [ -n "$FETCHED" ]; then
+  STEP="remove the older browsers"
+  keep="$(build_of "$FETCHED")"
+  if [ "$keep" != "unknown" ]; then
+    for d in "$BROWSER_HOME"/chrome-headless-shell/*/; do
+      [ -d "$d" ] || continue
+      case "${d%/}" in
+        *-"$keep") ;;
+        *) rm -rf "${d%/}" || say "could not remove ${d%/}" ;;
+      esac
+    done
+  fi
+fi
 
 if [ "${MERMAID_RENDER_NO_SANDBOX:-}" = "1" ]; then
   say "warning: MERMAID_RENDER_NO_SANDBOX=1, the browser runs without its sandbox"

@@ -16,6 +16,62 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.54.0 — The Mermaid renderers run on native Windows, and the browser follows the stable channel (TASK 137)**
+
+#### Security
+
+- **`mermaid-authoring-guidelines`: the browser follows the stable channel of Chrome for Testing,
+  and no build number is pinned.** `setup_renderers.sh` installs the current stable
+  chrome-headless-shell with the `@puppeteer/browsers` that the lockfiles pin, from
+  `https://storage.googleapis.com/chrome-for-testing-public` into
+  `<home>/chrome`, and removes the older builds there; each run takes the security fixes of the
+  day. Before, the setup accepted a cached build of a pinned number, which published advisories
+  covered: 150.0.7871.24 (CVE-2026-17655, Critical, ANGLE), and later 156.0.8078.73, which the
+  stable update of the same day fixed. `assets/renderers/browsers.json`, `BROWSER_MIN_BUILD` and
+  `PUPPETEER_CACHE_DIR` are removed; `MERMAID_RENDER_CHROME` with `MERMAID_RENDER_BROWSER_SHA256`
+  remains for a browser at hand.
+- **`render_check.py` refuses an install stamped before this release**, and names a browser
+  installed more than 30 days before the render. Run `setup_renderers.sh` again once.
+
+#### Fixed
+
+- **`setup_renderers.sh` accepts a browser on native Windows** (MR-1). Under Git Bash it finds
+  `chrome-headless-shell.exe`, calls no `process.getuid`, and checks no owner or mode: Windows
+  reports none that shows who may write. There the install home must lie in `%USERPROFILE%`, the
+  default home and the browser in it lie there, and the browser is checked by its tree
+  hash and its stat digest. Before, the setup refused every browser: `ENOENT` for the path
+  without `.exe`, then `process.getuid is not a function`.
+- **`render_check.py` renders on native Windows.**
+  - It starts `node.exe` by its absolute path, from a `PATH` entry with a drive, with the `mmdc`
+    script that the `package.json` of mermaid-cli names. npm writes `.bin/mmdc` there as a shell
+    script, which Windows does not start, and no program starts by a bare name.
+  - A render that times out ends with its process tree through `taskkill`, found by
+    `GetSystemDirectoryW`.
+  - The stat digest holds the fields that Node and Python read alike there: inode, size and
+    mtime, with size 0 for a directory and a link and no mtime for a directory. The file
+    `debug.log` of one link that Chrome writes beside its executable there is left out. A junction is a link,
+    and a digest that cannot be built is a refusal, not a traceback.
+  - Output takes `backslashreplace` for a character the code page cannot hold, and `--json`
+    escapes each character outside ASCII. `--out` must lie in `%USERPROFILE%`, as the install.
+  - Before, each browser was refused for its mode `0o777`, and no render ran.
+
+#### Added
+
+- The workflow `Mermaid renderers on Windows` runs the tests of the
+  Windows branches (`test_renderers_windows.py`), the setup, which installs the stable browser,
+  and one render. It runs when the
+  skill or the workflow changes, with a timeout of 30 minutes. On POSIX the tests simulate
+  Windows; four of them run on Windows only.
+
+#### Changed
+
+- `SKILL.md` of `mermaid-authoring-guidelines` keeps the commands and the rules an agent acts on;
+  the flags, exit codes, inputs, outputs and setup rules move to the new
+  `references/scripts-and-setup.md`. `SKILL.md` falls from 3014 to 2737 words, under its budget
+  of 3000.
+- The ledger files the open items of the Windows report of loyalty-api-java (2026-10-28): MR-1,
+  closed here, and WI-60, WI-61 and PT-1.
+
 ### **v3.53.1 — The bypass token counts only in the title, and two stale claims are corrected (TASK 136)**
 
 #### Fixed

@@ -95,7 +95,9 @@ parent for a configuration and runs one written in JavaScript (`.puppeteerrc.cjs
 install directory ends that search there. An install runs only when it holds that file and when
 the install home and the install directory are private (`private_dir_problem`): they belong to
 this user or root, and no other user may write in them. `--out` must be private too, or another
-user could plant a symlink under the predictable name of a render.
+user could plant a symlink under the predictable name of a render. Windows reports no owner or
+mode that shows who may write: there the install home, the install directory and `--out` must
+lie in the user profile (`profile_problem`, TASK 137 D12).
 
 Standard library only; node, the installs and the browser are needed only to render.
 """
@@ -103,6 +105,7 @@ Standard library only; node, the installs and the browser are needed only to ren
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import os
@@ -115,7 +118,7 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -128,6 +131,13 @@ DEFAULT_HOME = Path(os.path.expanduser("~")) / ".cache" / "mermaid-authoring-gui
 SCRIPTS_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPTS_DIR.parent
 MEASURE_SCRIPT = SCRIPTS_DIR / "measure_text.mjs"
+
+#: Windows: the browser check, the stat digest, the start of node and the end of a timed-out
+#: command take their Windows branch (TASK 137).
+WINDOWS = os.name == "nt"
+
+#: Days after the install of the browser at which a run names it (TASK 137 D16).
+BROWSER_MAX_AGE_DAYS = 30
 
 RENDER_TIMEOUT_S = 180
 MEASURE_TIMEOUT_S = 120
@@ -276,8 +286,11 @@ def private_dir_problem(path: Path) -> Optional[str]:
     its group only when that group is this user's own (`_own_group`, as user-private-group
     systems make). Another user could otherwise plant an install, a puppeteer configuration or
     a symlink under the name of a render (TASK R7.9). A symlink is read as what it reaches.
+
+    On Windows nothing is checked: Python reports no owner there, and a mode of 0o666 or 0o777
+    for each writable entry (TASK 137 D1). `profile_problem` checks the install there.
     """
-    if not hasattr(os, "geteuid"):
+    if WINDOWS or not hasattr(os, "geteuid"):
         return None
     p = Path(path).expanduser().absolute()
     while not p.exists() and p != p.parent:
@@ -292,6 +305,29 @@ def private_dir_problem(path: Path) -> Optional[str]:
         return "%s is writable by every user" % p
     if st.st_mode & stat.S_IWGRP and not _own_group(st.st_gid):
         return "%s is writable by its group" % p
+    return None
+
+
+def profile_problem(path: Path) -> Optional[str]:
+    """On Windows, why *path* lies outside the user profile (`%USERPROFILE%`), or None; None on
+    POSIX (TASK 137 D12). The default ACL of the profile keeps other users out, so it stands in
+    for the owner and mode checks of `private_dir_problem` there. Both paths are resolved, so a
+    link or a junction in the profile that leads elsewhere is outside."""
+    if not WINDOWS:
+        return None
+    profile = os.environ.get("USERPROFILE", "")
+    if not os.path.isabs(profile):
+        return ("USERPROFILE is not an absolute path; on Windows a renderer runs only from the "
+                "user profile")
+    here = os.path.normcase(os.path.realpath(str(path)))
+    base = os.path.normcase(os.path.realpath(profile))
+    try:
+        inside = os.path.commonpath([here, base]) == base
+    except ValueError:  # another drive
+        inside = False
+    if not inside:
+        return ("%s lies outside %%USERPROFILE%% (%s); on Windows a renderer runs only from the "
+                "user profile, whose ACL keeps other users out" % (path, profile))
     return None
 
 
@@ -389,15 +425,36 @@ def browser_stat_digest(root: Path) -> str:
     one JSON line per entry under *root*, *root* itself included, sorted bytewise by path:
     `[path, kind, dev, inode, mode, size, mtime in ns, ctime in ns]`, numbers as decimal strings.
     A symbolic link is an entry and is not followed. Reading a file changes none of these; writing,
-    renaming or replacing one changes its ctime at least, which no user can set."""
+    renaming or replacing one changes its ctime at least, which no user can set.
+
+    On Windows a row is `[path, kind, inode, size, mtime in ns]`, with size 0 for a directory and
+    a link and mtime 0 for a directory (TASK 137 D4, D14). A reparse point, a junction among them,
+    is a link there, as Node reads it, and the walk does not enter it. The top-level file
+    `debug.log` with one link is left out there: Chrome writes it beside its executable, the
+    default of its logging on Windows, and never reads it. Python and Node report the device, the
+    mode and the ctime differently there: a 64-bit and a 32-bit volume serial, `0o111` added to an
+    `.exe` by Python only, and the creation and the change time. For a directory with an index
+    allocation Python reports its size, and Node 0. A file overwritten in place with its size and
+    mtime restored is not seen there. On ReFS Python reports a 128-bit inode and Node a 64-bit
+    one, and a reparse point that is no link, such as a OneDrive placeholder, is a file to Node:
+    the digest then differs, and each render is refused."""
     root = Path(root)
     rows = []
 
     def entry(path: Path, rel: str) -> None:
         st = os.lstat(path)
         kind = "link" if stat.S_ISLNK(st.st_mode) else "dir" if stat.S_ISDIR(st.st_mode) else "file"
-        rows.append([rel, kind, str(st.st_dev), str(st.st_ino), str(st.st_mode), str(st.st_size),
-                     str(st.st_mtime_ns), str(st.st_ctime_ns)])
+        if WINDOWS and getattr(st, "st_file_attributes", 0) & 0x400:  # FILE_ATTRIBUTE_REPARSE_POINT
+            kind = "link"
+        if WINDOWS and rel == "./debug.log" and kind == "file" and st.st_nlink == 1:
+            return
+        if WINDOWS:
+            size = 0 if kind in ("dir", "link") else st.st_size
+            mtime = 0 if kind == "dir" else st.st_mtime_ns
+            rows.append([rel, kind, str(st.st_ino), str(size), str(mtime)])
+        else:
+            rows.append([rel, kind, str(st.st_dev), str(st.st_ino), str(st.st_mode),
+                         str(st.st_size), str(st.st_mtime_ns), str(st.st_ctime_ns)])
         if kind == "dir":
             for name in os.listdir(path):
                 entry(path / name, (rel + "/" if rel != "." else "./") + name)
@@ -410,6 +467,25 @@ def browser_stat_digest(root: Path) -> str:
     return hashlib.sha256(text.encode("utf-8", "surrogateescape")).hexdigest()
 
 
+def browser_age_note(renderer: Renderer, today: Optional[datetime.date] = None) -> Optional[str]:
+    """A line that names a browser installed more than BROWSER_MAX_AGE_DAYS before *today*, or
+    None. The setup installs the stable chrome-headless-shell of its day (TASK 137 D16); a run of
+    it takes the security fixes of the later builds."""
+    try:
+        lines = (Path(renderer.root) / BROWSER_STAMP).read_text(encoding="utf-8").splitlines()
+        found = re.fullmatch(r"installed (\d{4}-\d{2}-\d{2})", lines[2] if len(lines) > 2 else "")
+        installed = datetime.date.fromisoformat(found.group(1)) if found else None
+    except (OSError, ValueError):
+        installed = None
+    if installed is None:
+        return None
+    age = ((today or datetime.date.today()) - installed).days
+    if age <= BROWSER_MAX_AGE_DAYS:
+        return None
+    return ("the browser of %s was installed on %s, %d days ago; run setup_renderers.sh to install "
+            "the current stable build and its security fixes" % (renderer.tag, installed, age))
+
+
 def install_problem(renderer: Renderer) -> Optional[str]:
     """Why a renderer's install may not run, or None (TASK R7.9).
 
@@ -419,20 +495,33 @@ def install_problem(renderer: Renderer) -> Optional[str]:
     TASK 110 R7.7: `.lock.sha256`, the sha256 of the committed lockfile of its tag, and
     BROWSER_STAMP, the accepted tree hash of the browser with the path `puppeteer.json` names. An
     install made before the lockfile changed, or before the browser pin, is refused, and the
-    message says to run `setup_renderers.sh` again. A browser whose path no longer resolves to
-    itself, whose executable another user may write, or whose directory or the one above it
+    message says to run `setup_renderers.sh` again. So is a stamp without the date of the install,
+    which each setup since TASK 137 writes. A browser whose
+    path no longer resolves to itself, whose executable another user may write, or whose
+    directory or the one above it
     another user may change is refused too; that message names the path, since a new setup does
     not change it. A stamp without the stat digest, or a browser directory whose stat digest
     differs from it, is refused with the advice to run the setup again (TASK 110 review round 3).
+
+    On Windows no directory or file is checked for its owner or mode, and the resolved browser
+    path is compared without letter case (TASK 137 D1, R6). The install needs a `node.exe` on an
+    absolute PATH entry (`node_executable`) and the mmdc script of `mmdc_script`.
     """
     root = Path(renderer.root)
     for d in (root.parent, root):
-        problem = private_dir_problem(d)
+        problem = private_dir_problem(d) or profile_problem(d)
         if problem:
             return "%s; a renderer runs only from directories no other user may change" % problem
     if _load_puppeteer_config(root / PUPPETEER_RC) != {}:
         return ("%s is not the empty puppeteer configuration setup_renderers.sh writes; run "
                 "setup_renderers.sh again" % (root / PUPPETEER_RC))
+    if WINDOWS:
+        if node_executable() is None:
+            return ("no node.exe in an absolute PATH entry; a render on Windows starts node by "
+                    "its path, never by its name from the current directory")
+        _script, problem = mmdc_script(root)
+        if problem:
+            return problem
     lock = SKILL_DIR / "assets" / "renderers" / renderer.tag / "package-lock.json"
     try:
         want = hashlib.sha256(lock.read_bytes()).hexdigest()
@@ -454,20 +543,29 @@ def install_problem(renderer: Renderer) -> Optional[str]:
     stat_line = re.fullmatch(r"stat ([0-9a-f]{64})", lines[1] if len(lines) > 1 else "")
     if not stat_line:
         return "%s holds no stat digest; run setup_renderers.sh again" % stamp
+    # An install stamped before TASK 137 runs a browser of a pinned build, which may lack the
+    # security fixes of later builds (audit H-1): it runs again only after a new setup.
+    if not re.fullmatch(r"installed \d{4}-\d{2}-\d{2}", lines[2] if len(lines) > 2 else ""):
+        return ("%s holds no date of the install: the install predates the browser that follows "
+                "the stable channel (TASK 137); run setup_renderers.sh again" % stamp)
     cfg = _load_puppeteer_config(Path(renderer.puppeteer_config)) or {}
     if browser != cfg.get("executablePath"):
         return ("%s names another browser than %s; run setup_renderers.sh again"
                 % (stamp, renderer.puppeteer_config))
     # The setup resolved every link of the path and hashed that directory. A link put in place of
     # a directory above it since then makes the path resolve elsewhere (review round 2, N1).
-    if os.path.realpath(browser) != browser:
+    # NTFS ignores letter case (TASK 137 R6).
+    norm = os.path.normcase if WINDOWS else str
+    if norm(os.path.realpath(browser)) != norm(browser):
         return ("%s no longer resolves to itself; a link above it leads to another browser"
                 % browser)
     try:
         mode = os.stat(browser).st_mode
     except OSError as exc:
         return "%s cannot be read: %s" % (browser, exc)
-    if mode & stat.S_IWOTH or (mode & stat.S_IWGRP and not _own_group(os.stat(browser).st_gid)):
+    # Windows reports mode 0o777 for each writable .exe, whoever may write it (TASK 137 D1).
+    if not WINDOWS and (mode & stat.S_IWOTH
+                        or (mode & stat.S_IWGRP and not _own_group(os.stat(browser).st_gid))):
         return "%s may be written by another user; the browser runs only unchanged" % browser
     # The setup hashed the browser directory and found it private; one that another user may
     # change since then is refused (TASK 110 review round 1, L1).
@@ -480,6 +578,10 @@ def install_problem(renderer: Renderer) -> Optional[str]:
         current = browser_stat_digest(Path(browser).parent)
     except OSError as exc:
         return "%s cannot be read: %s" % (Path(browser).parent, exc)
+    except (ValueError, RecursionError) as exc:
+        # A name that UTF-8 cannot carry, or a walk without end (TASK 137): a change, refused.
+        return ("%s changed since the setup hashed it (%s); run setup_renderers.sh again, which "
+                "hashes it anew" % (Path(browser).parent, type(exc).__name__))
     if current != stat_line.group(1):
         return ("%s changed since the setup hashed it; run setup_renderers.sh again, which hashes "
                 "it anew" % Path(browser).parent)
@@ -648,6 +750,86 @@ def missing_reason(tag: str, renderers: dict, notation: dict, home: Path) -> str
                " --forward" if tag == notation["renderers"].get("forward") else ""))
 
 
+def node_executable() -> Optional[str]:
+    """The node that a render starts: `node` on POSIX. On Windows, the absolute path of the first
+    `node.exe` in an absolute PATH entry, or None (TASK 137 D9). `CreateProcess` searches the
+    directory of the caller for a bare name before PATH, so a `node.exe` planted in the project
+    would run."""
+    if not WINDOWS:
+        return "node"
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        entry = entry.strip('"')
+        exe = os.path.join(entry, "node.exe")
+        # A rooted entry with no drive resolves against the current drive; Python before 3.13
+        # calls it absolute. The drive is read on Windows itself only.
+        if (os.path.isabs(entry) and (os.name != "nt" or os.path.splitdrive(entry)[0])
+                and os.path.isfile(exe)):
+            return exe
+    return None
+
+
+def mmdc_script(root: Path) -> tuple:
+    """`(script, None)`: the script that `bin.mmdc` of the install's mermaid-cli package.json
+    names, resolved inside that package; or `(None, why)`. On Windows a render runs it with node
+    (TASK 137 D6): npm writes `.bin/mmdc` there as a shell script, which `CreateProcess` does not
+    run, and `mmdc.cmd` hands its arguments to `cmd.exe`, which parses them again."""
+    package = Path(root) / "node_modules" / "@mermaid-js" / "mermaid-cli"
+    manifest = package / "package.json"
+    try:
+        with open(manifest, encoding="utf-8") as fh:
+            bin_field = json.load(fh).get("bin")
+    except (OSError, ValueError, AttributeError):
+        bin_field = None
+    name = bin_field.get("mmdc") if isinstance(bin_field, dict) else None
+    if not isinstance(name, str) or not name:
+        return None, "%s names no mmdc script; run setup_renderers.sh again" % manifest
+    # A drive, a root or `..` is refused by the text, before a UNC value opens a share.
+    pure = PureWindowsPath(name)
+    if pure.drive or pure.root or ".." in pure.parts:
+        return None, ("the mmdc script %s of %s lies outside %s; run setup_renderers.sh again"
+                      % (name, manifest, package))
+    base = package.resolve()
+    script = (package / name).resolve()
+    if base not in script.parents or not script.is_file():
+        return None, ("the mmdc script %s of %s lies outside %s or is missing; run "
+                      "setup_renderers.sh again" % (name, manifest, base))
+    return script, None
+
+
+def taskkill_path() -> str:
+    """`taskkill.exe` in the system directory that `GetSystemDirectoryW` reports, which no
+    environment variable sets (TASK 137 D7); `C:\\Windows\\System32` where that call is absent."""
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(260)
+        n = ctypes.windll.kernel32.GetSystemDirectoryW(buf, 260)
+        if 0 < n < 260 and os.path.isabs(buf.value):
+            return os.path.join(buf.value, "taskkill.exe")
+    except (ImportError, AttributeError, OSError):
+        pass
+    return r"C:\Windows\System32\taskkill.exe"
+
+
+def _end_tree(proc) -> None:
+    """End a timed-out command and its child processes on Windows (TASK 137 D7): `taskkill /T /F`
+    by `taskkill_path`, then the command itself. No signal reaches a process group there, and
+    puppeteer acts on no SIGTERM, so the browser gets no chance to close: it ends with the tree,
+    and with the pipe that `config_problem` requires it also ends when node does."""
+    try:
+        subprocess.run([taskkill_path(), "/T", "/F", "/PID", str(proc.pid)],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=TERM_GRACE_S)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+    try:
+        proc.communicate(timeout=TERM_GRACE_S)
+    except subprocess.TimeoutExpired:
+        pass
+
+
 def _signal_group(proc, sig) -> None:
     try:
         os.killpg(proc.pid, sig)
@@ -664,12 +846,17 @@ def _run(cmd: list, timeout: int, cwd: Path) -> tuple:
     The command runs in *cwd*, the install directory of its renderer: puppeteer reads a
     configuration from its working directory and the parents of it, and runs one written in
     JavaScript, so a command run in the caller's directory would run the file a checked-out
-    project holds (TASK R7.9). It runs in its own process group. On a timeout the group gets
-    SIGTERM, on which puppeteer closes the browser it started, and SIGKILL TERM_GRACE_S later.
+    project holds (TASK R7.9). On POSIX it runs in its own process group. On a timeout the group
+    gets SIGTERM, on which puppeteer closes the browser it started, and SIGKILL TERM_GRACE_S later.
     The browser runs in a group of its own; it talks to puppeteer over the pipe that
     `config_problem` requires, so it exits once the command is gone. Output is decoded as UTF-8
-    whatever the locale.
+    whatever the locale. On Windows a timed-out command ends through `_end_tree`, and a program
+    named by a relative path or a bare name is refused: `CreateProcess` would search the caller's
+    directory for it (TASK 137 D9).
     """
+    if WINDOWS and not os.path.isabs(cmd[0]):
+        return None, "", ("refused to start %s: on Windows a render starts a program by its "
+                          "absolute path only" % cmd[0])
     try:
         proc = subprocess.Popen(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 start_new_session=True)
@@ -678,12 +865,15 @@ def _run(cmd: list, timeout: int, cwd: Path) -> tuple:
     try:
         out, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
-        _signal_group(proc, signal.SIGTERM)
-        try:
-            proc.communicate(timeout=TERM_GRACE_S)
-        except subprocess.TimeoutExpired:
-            _signal_group(proc, signal.SIGKILL)
-            proc.communicate()
+        if WINDOWS:
+            _end_tree(proc)
+        else:
+            _signal_group(proc, signal.SIGTERM)
+            try:
+                proc.communicate(timeout=TERM_GRACE_S)
+            except subprocess.TimeoutExpired:
+                _signal_group(proc, signal.SIGKILL)
+                proc.communicate()
         return None, "", "timed out after %d s" % timeout
     return (proc.returncode, out.decode("utf-8", errors="replace"),
             err.decode("utf-8", errors="replace"))
@@ -694,8 +884,15 @@ def mmdc_command(renderer: Renderer, mmd: Path, svg: Path, config: Path, backgro
     """The mmdc command line of one render. mermaid-cli 12 gets `-t default` for a light render."""
     if theme is None and _major(renderer.cli) >= 12:
         theme = FORWARD_LIGHT_THEME
-    cmd = [str(renderer.mmdc), "-q", "-p", str(renderer.puppeteer_config), "-c", str(config),
-           "-i", str(mmd), "-o", str(svg), "-b", background]
+    head = [str(renderer.mmdc)]
+    if WINDOWS:
+        # node and the script of package.json (TASK 137 D6, D9); install_problem refuses an
+        # install that has neither, and `.bin/mmdc` then does not start.
+        node, (script, _problem) = node_executable(), mmdc_script(renderer.root)
+        if node and script:
+            head = [node, str(script)]
+    cmd = head + ["-q", "-p", str(renderer.puppeteer_config), "-c", str(config),
+                  "-i", str(mmd), "-o", str(svg), "-b", background]
     if theme:
         cmd += ["-t", theme]
     if _major(renderer.cli) >= 12:
@@ -710,8 +907,10 @@ def measure_command(renderer: Renderer, svg: Path, png: Path, background: str,
     """The `measure_text.mjs` command line of one render. A render whose tag is in
     `renderers.font_swap.tags` also passes `--font-swap` with its stylesheet: the script then
     redraws the HTML labels in GitHub's font and measures them again (TASK 121 R3.2)."""
-    cmd = ["node", str(MEASURE_SCRIPT), str(renderer.puppeteer_config), str(svg),
-           "--png", str(png), "--scale", str(PNG_SCALE), "--background", background]
+    # On Windows node starts by its path (TASK 137 D9); install_problem refuses an install
+    # without one, so the name is reached on POSIX only.
+    cmd = [node_executable() or "node", str(MEASURE_SCRIPT), str(renderer.puppeteer_config),
+           str(svg), "--png", str(png), "--scale", str(PNG_SCALE), "--background", background]
     swap = (notation.get("renderers") or {}).get("font_swap") or {}
     if renderer.tag in (swap.get("tags") or []) and swap.get("css"):
         cmd += ["--font-swap", str(swap["css"])]
@@ -1309,19 +1508,45 @@ def _write_evidence(out_dir: Path, report: dict) -> Optional[str]:
     return None
 
 
+def _json_out(report: dict) -> str:
+    """The JSON of *report* for stdout. On Windows each character outside ASCII becomes a JSON
+    escape: a pipe there writes the ANSI code page, whose `backslashreplace` would make the JSON
+    invalid (TASK 137)."""
+    text = json_text(report, indent=1)
+    if not WINDOWS:
+        return text
+    out = []
+    for ch in text:
+        code = ord(ch)
+        if code < 0x80:
+            out.append(ch)
+        elif code > 0xFFFF:
+            code -= 0x10000
+            out.append("\\u%04x\\u%04x" % (0xD800 + (code >> 10), 0xDC00 + (code & 0x3FF)))
+        else:
+            out.append("\\u%04x" % code)
+    return "".join(out)
+
+
 def _stop_early(report: dict, as_json: bool, reasons: list) -> int:
     """Print a run that rendered nothing: the report (with --json) and its reasons; exit 2."""
     report["exit"] = EXIT_NOT_RENDERED
     if not report["summary"]:
         report["summary"] = _summary([], [])
     if as_json:
-        _say(json_text(report, indent=1), lines=True)
+        _say(_json_out(report), lines=True)
     for reason in reasons:
         _say("not rendered: %s" % reason, file=sys.stderr if as_json else sys.stdout)
     return EXIT_NOT_RENDERED
 
 
 def main(argv: Optional[list] = None) -> int:
+    if WINDOWS:
+        # Python writes a pipe on Windows in the ANSI code page, which cannot hold every label
+        # a figure quotes (TASK 137).
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                stream.reconfigure(errors="backslashreplace")
     p = build_parser()
     try:
         args = p.parse_args(argv)
@@ -1376,7 +1601,7 @@ def main(argv: Optional[list] = None) -> int:
         if problem:
             _say("render_check.py: --out: %s" % problem, file=sys.stderr)
             return EXIT_USAGE
-        problem = private_dir_problem(out_dir)
+        problem = private_dir_problem(out_dir) or profile_problem(out_dir)
         if problem:
             _say("render_check.py: --out %s: %s; renders are written only where no other user "
                   "may plant a file: pass a directory of your own, such as one `mktemp -d` makes"
@@ -1389,6 +1614,10 @@ def main(argv: Optional[list] = None) -> int:
     home = render_home()
     renderers = find_renderers(home, n)
     available = [t for t in tags if t in renderers]
+    for t in available:
+        note = browser_age_note(renderers[t])
+        if note:
+            _say("render_check.py: %s" % note, file=sys.stderr)
     report = {"tool": "render_check", "schema": "render-check/v2",
               "generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
               "column_px": n["column_px"], "instruments": instrument_sha256(),
@@ -1462,7 +1691,7 @@ def main(argv: Optional[list] = None) -> int:
             if code == EXIT_PASS:
                 code = EXIT_NOT_RENDERED
             report["exit"] = code
-        _say(json_text(report, indent=1), lines=True)
+        _say(_json_out(report), lines=True)
         stream = sys.stderr
     else:
         for line in _text_report(report, out_dir):

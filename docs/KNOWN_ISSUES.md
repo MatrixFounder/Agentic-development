@@ -42,6 +42,8 @@ slug: at-6-teamdelete-does-not-clean-up-after-protocol-shutdown  # == filename s
 | `VAL-N` | `validation` | `skill-creator` validation-gate blind spots (validate_skill.py, structural checks). |
 | `RF-N` | `feedback` | `run-feedback` protocol/CLI defects (capture, triage, filing, doctor/init gates). |
 | `TS-N` | `test-suite` | The framework's own test suite: runners, fixtures and scratch space under `tests/`. |
+| `MR-N` | `mermaid` | `mermaid-authoring-guidelines` scripts: the figure lint, the render check and the renderer setup. |
+| `PT-N` | `portability` | A script that fails on a platform or an OS encoding the framework supports (native Windows, `cp1251`) and that no component category covers. |
 
 **Status vocabulary:** `open` · `fixed` · `documented` (accepted; guidance written) ·
 `by-design` (intended trade-off, not a defect) · `mitigated` · `wontfix`.
@@ -108,6 +110,14 @@ the matching `## <category>` heading here, in ID order.
 ## hooks
 
 - **HK-1** [PostToolUse fires only on successful tool calls — cannot capture Bash failures](issues/hk-1-posttooluse-fires-only-on-successful-tool-calls-cannot-capture-bash-failures.md) — status `documented`, opened 2026-07-13
+
+## mermaid
+
+- **MR-1** [The renderer setup and the render check refuse every browser on native Windows](issues/mr-1-the-renderer-setup-and-the-render-check-refuse-every-browser-on-native-windows.md) — severity `SEV-3`, status `fixed`, opened 2026-10-29 · **fixed 2026-10-30** (TASK 137): the setup and the render check run on Windows under Git Bash, on browser build 156
+
+## portability
+
+- **PT-1** [Four scripts read or write text in the encoding of the locale](issues/pt-1-four-scripts-read-or-write-text-in-the-encoding-of-the-locale.md) — severity `SEV-4`, status `open`, opened 2026-10-29
 
 ## register
 

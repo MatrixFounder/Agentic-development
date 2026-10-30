@@ -612,9 +612,8 @@ needs no load.
 | `scripts/svg_geometry.py` | library | a thin file over `svg_geometry_parts/`: binds every name of its modules, holds the debug command line | fixture tests |
 | `scripts/svg_geometry_parts/` | library | crossings, edges through nodes and titles, overlaps, size, swapped-font labels, from an SVG; one module per section | fixture tests |
 | `scripts/render_check.py` | CLI | renders with pinned installs, measures text, swaps the font of the 11.17.2 renders, calls `svg_geometry` | no |
-| `scripts/setup_renderers.sh` | CLI | installs the pinned renderers into a cache outside the repository | no |
+| `scripts/setup_renderers.sh` | CLI | installs the pinned renderers and the stable browser into a cache outside the repository | no |
 | `assets/renderers/<tag>/` | data | `package.json` and lockfile per pinned renderer, installed with `npm ci` | — |
-| `assets/renderers/browsers.json` | data | tree sha256 of each browser build the setup accepts without the operator's hash | read by tests |
 | `scripts/plan_gantt.py` | CLI | schedule from a task list; writes or checks the plan chart block | yes |
 | `evals/` | instruments | the A/B evaluation of the skill (§10.4) | selftest only |
 
@@ -745,20 +744,23 @@ scripts only.
   - v12: mermaid 12.1.0, with DOMPurify 3.4.12 and KaTeX 0.16.47; `@mermaid-js/mermaid-zenuml`
     1.0.1, with DOMPurify 3.3.1.
 
-  Puppeteer 25.16.0 pins chrome-headless-shell 156.0.8078.47, whose tree hash `browsers.json` does
-  not record. The setup accepts that build only when the operator sets
-  `MERMAID_RENDER_BROWSER_SHA256` to its hash. Otherwise it runs a cached 150.0.7871.24, the one
-  build that `browsers.json` records, for mac_arm. On another platform every build needs that
-  variable.
-- The setup accepts a browser only when the tree hash of its directory is in
-  `assets/renderers/browsers.json` or equals `MERMAID_RENDER_BROWSER_SHA256`, set by the operator,
-  and when that directory and the one above it are private. It resolves every symbolic link of
+  The browser is the current stable chrome-headless-shell of Chrome for Testing (TASK 137 D16).
+  The setup installs it with the `@puppeteer/browsers` of the first install, whose version the
+  lockfile pins, from `https://storage.googleapis.com/chrome-for-testing-public` into
+  `<home>/chrome`, and removes the older builds there. The repository keeps no build number: a
+  pinned build went stale in hours (150.0.7871.24 under CVE-2026-17655, then 156.0.8078.73 under
+  21 fixes of 156.0.8078.80), and each run of the setup takes the fixes of the day.
+- The setup accepts the browser it installed when the resolved path lies in `<home>/chrome` and
+  that directory and the one above it are private. A browser that `MERMAID_RENDER_CHROME` names
+  runs only when the tree hash of its directory equals `MERMAID_RENDER_BROWSER_SHA256`, set by
+  the operator. It resolves every symbolic link of
   the browser path once and writes that path into `puppeteer.json` and into the stamp. The hash
   covers the directory of the executable only, so `MERMAID_RENDER_CHROME` names the browser binary
   in a directory that holds that browser only.
 - `render_check.py` refuses an install in seven cases (TASK 110 R7.3, R7.7):
   - its lockfile stamp is stale;
-  - its browser stamp is missing, or holds no tree hash or no stat digest;
+  - its browser stamp is missing, or holds no tree hash, no stat digest or no date of the
+    install (TASK 137 D16);
   - the stamp names another browser than `puppeteer.json`;
   - the browser path no longer resolves to itself;
   - another user may write the executable;
@@ -767,7 +769,23 @@ scripts only.
 
   It does not hash the browser again. It compares the stat digest: the inode, size, mtime and
   ctime of every entry, read with `lstat` at every render. A change of metadata alone, such as an
-  extended attribute or a remount, also refuses the install until the setup runs again.
+  extended attribute or a remount, also refuses the install until the setup runs again. A browser
+  installed more than 30 days before the render is named on stderr, with the advice to run the
+  setup.
+- On native Windows (Git Bash, TASK 137) no owner or mode is read: Windows reports none that
+  shows who may write. Instead:
+  - the install home, the install directories and `--out` must lie in `%USERPROFILE%`, whose
+    default ACL keeps other users out (D12); the browser directory may lie anywhere (D1);
+  - the stat digest holds the inode, the size and the mtime of each entry, with size 0 for a
+    directory and a link and mtime 0 for a directory, since Node and Python read the device, the
+    mode and the ctime differently there (D4);
+  - the tree hash and the stat digest leave out the top-level file `debug.log` of one link,
+    which Chrome writes beside its executable on Windows and never reads (D14);
+  - a render starts `node.exe` by its absolute path, with the `mmdc` script of mermaid-cli's
+    `package.json`, and a render that times out ends with its process tree through `taskkill`.
+
+  A file overwritten in place with its size and mtime restored is not seen there, and on ReFS the
+  digest does not match, so each render is refused.
 - The browser resolves no host name, localhost included, uses no proxy, and talks to puppeteer
   over a pipe; `render_check.py` refuses a config that lacks these arguments.
 - Every node process runs inside its install directory, which holds an empty `.puppeteerrc.json`.

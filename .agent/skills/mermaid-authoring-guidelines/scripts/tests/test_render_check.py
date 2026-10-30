@@ -14,6 +14,7 @@ text, and text past the figure's edge; and that a puppeteer configuration of the
 directory never runs.
 """
 import ast
+import datetime
 import io
 import hashlib
 import json
@@ -544,8 +545,13 @@ class TestPrintsNoControlCharacter(StubbedRun):
             if len(node.args) > 2 or any(k.arg == "lines" for k in node.keywords):
                 first = node.args[0] if node.args else None
                 keep.append(isinstance(first, ast.Call) and isinstance(first.func, ast.Name)
-                            and first.func.id == "json_text")
+                            and first.func.id in ("json_text", "_json_out"))
         self.assertEqual(keep, [True, True])
+        # `_json_out` prints json_text output, escaped to ASCII on Windows only (TASK 137)
+        body = next(n for n in ast.walk(tree)
+                    if isinstance(n, ast.FunctionDef) and n.name == "_json_out")
+        self.assertIn("json_text", {c.func.id for c in ast.walk(body)
+                                    if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)})
 
 
 class TestRunOutcomes(StubbedRun):
@@ -881,6 +887,10 @@ class TestFixture(StubbedRun):
 # ----------------------------------------------------------------------------- renderer config
 
 
+#: The tree hash that `write_stamps` stamps for the stand-in browser.
+STAND_IN_TREE = "a" * 64
+
+
 def write_config(test, folder, **over):
     """An install as setup_renderers.sh leaves it, in `<folder>/home/v11`: private directories,
     the empty PUPPETEER_RC, and a puppeteer.json whose keys the keyword arguments replace (the
@@ -918,16 +928,18 @@ def stand_in_browser(folder):
     return exe
 
 
-def write_stamps(root, tag, browser, lock=None):
+def write_stamps(root, tag, browser, lock=None, installed=None):
     """The stamps setup_renderers.sh writes (TASK 110 R7.7): the sha256 of the committed lockfile
-    of *tag*, and the accepted tree hash with the browser path."""
+    of *tag*, and the accepted tree hash with the browser path, its stat digest and the date of
+    the install, today unless *installed* names one (TASK 137 D16)."""
     lock_file = rc.SKILL_DIR / "assets" / "renderers" / tag / "package-lock.json"
     (root / ".lock.sha256").write_text(
         (lock or hashlib.sha256(lock_file.read_bytes()).hexdigest()) + "\n", encoding="utf-8")
     parent = Path(browser).parent
     digest = rc.browser_stat_digest(parent) if parent.is_dir() else "0" * 64
-    (root / ".browser.sha256").write_text("%s  %s\nstat %s\n" % ("a" * 64, browser, digest),
-                                          encoding="utf-8")
+    day = installed or datetime.date.today().isoformat()
+    (root / ".browser.sha256").write_text("%s  %s\nstat %s\ninstalled %s\n"
+                                          % (STAND_IN_TREE, browser, digest, day), encoding="utf-8")
 
 
 class TestInstallStamps(unittest.TestCase):
@@ -940,6 +952,30 @@ class TestInstallStamps(unittest.TestCase):
 
     def test_a_stamped_install_runs(self):
         self.assertIsNone(rc.install_problem(self.renderer))
+
+    def test_a_stamp_without_the_date_of_the_install_is_refused(self):
+        # TASK 137 D16, audit H-1: an install of a pinned browser build runs after a new setup only
+        stamp = self.renderer.root / rc.BROWSER_STAMP
+        lines = stamp.read_text(encoding="utf-8").splitlines()
+        stamp.write_text("\n".join(lines[:2]) + "\n", encoding="utf-8")
+        problem = rc.install_problem(self.renderer)
+        self.assertIsNotNone(problem)
+        self.assertIn("holds no date of the install", problem)
+        self.assertIn("run setup_renderers.sh again", problem)
+
+    def test_a_browser_older_than_the_limit_is_named(self):
+        # TASK 137 D16: a run names a browser that a new setup would replace
+        browser = str(stand_in_browser(self.dir))
+        today = datetime.date(2026, 10, 30)
+        for days, named in ((rc.BROWSER_MAX_AGE_DAYS, False), (rc.BROWSER_MAX_AGE_DAYS + 1, True)):
+            with self.subTest(days=days):
+                day = (today - datetime.timedelta(days=days)).isoformat()
+                write_stamps(self.renderer.root, "v11", browser, installed=day)
+                note = rc.browser_age_note(self.renderer, today=today)
+                self.assertEqual(note is not None, named, note)
+                if named:
+                    self.assertIn("run setup_renderers.sh", note)
+                self.assertIsNone(rc.install_problem(self.renderer))
 
     def test_a_stale_lock_stamp_is_refused(self):
         write_stamps(self.renderer.root, "v11", str(stand_in_browser(self.dir)), lock="0" * 64)

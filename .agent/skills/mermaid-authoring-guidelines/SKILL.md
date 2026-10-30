@@ -72,43 +72,29 @@ language: scripts find caption and legend by their position, never by a word.
 
 ## 4. Script Contract
 
-- **Commands**, run from the project root as
-  `python3 .agent/skills/mermaid-authoring-guidelines/scripts/<script>`; `scripts/` below stands
-  for that directory:
-  - `python3 scripts/lint_mermaid.py <file.md|file.mmd> [--json] [--inventory] [--probe]` — exit
-    0 no error, 1 error found, 2 internal failure or dead rule, 3 usage.
-  - `python3 scripts/render_check.py <file> [--no-dark] [--forward] [--versions v11,v10] [--json]
-    [--out DIR] [--fixture FILE]` — exit 0 pass; 1 a figure fails or does not parse; 2 not
-    rendered: renderers or browser absent, a required render left out by `--no-dark` or
-    `--versions`, or no mermaid fence; 3 usage. It renders 11.17.2, 10.9.8 and a dark 11.17.2 by
-    default. A figure of a kind it does not model passes as `pass, geometry not checked`.
-  - `bash scripts/setup_renderers.sh [--forward] [--dry-run]` — installs the pinned renderers once.
-  - `python3 scripts/plan_gantt.py <plan.json|PLAN.md> [--write DOC | --check DOC] [--stages A,B]
-    [--strict]` — exit 0 ok, 1 stale block or invalid plan, 2 internal failure, 3 usage.
+- **Commands**, run from the project root on
+  `.agent/skills/mermaid-authoring-guidelines/scripts/<script>`, with `python3` or, for the
+  setup, `bash`:
+  - `lint_mermaid.py <file.md|file.mmd>` — the lint;
+  - `render_check.py <file>` — the render check; exit 2 means not rendered, not a failure;
+  - `setup_renderers.sh` — installs the pinned renderers once;
+  - `plan_gantt.py <plan.json|PLAN.md> --write DOC` — the plan chart.
+- **Flags, exit codes, inputs, outputs, idempotency**: `references/scripts-and-setup.md` §1–2.
 - **Negative fences**: a fence whose last line is `%% negative: <names>` shows a defect on purpose.
   The marker counts only in this skill's `references/` and `scripts/tests/fixtures/`; how each
   instrument grades it: `references/review-checklist.md` §3, Evidence labels. Never write the
   marker in a project document: there the lint reports the error MA-NEG-03, and both checks grade
   the fence as a figure.
-- **Inputs**: Markdown or `.mmd` files; for plans, a JSON schedule or the JSON block under
-  `<!-- contract:schedule -->` in a `PLAN.md`.
-- **Outputs**: findings (text or JSON). Renders go outside the repository: to `--out`, or under
-  the cache, where the check keeps the newest 20 `check-*` directories.
-- **Thresholds and settings**: `assets/notation.json` only.
-- **Idempotency**: the lint and `--check` write nothing. `--write` rewrites the marked block,
-  `--fixture` its file, and the setup script its cache.
-- **Dry-run support**: `setup_renderers.sh --dry-run`.
 
 ## 5. Safety Boundaries
 
 - **Allowed scope**: the document the task names, and scratch files outside the repository.
 - **Default exclusions**: archived artifacts (`docs/tasks/`, `docs/plans/`) and ledger records.
-- **Network**: `setup_renderers.sh` downloads pinned npm packages once, into
-  `${MERMAID_RENDER_HOME:-~/.cache/mermaid-authoring-guidelines}`, never globally and never into a
-  repository. Run it only when the operator allows npm downloads. A render fetches nothing: no
-  host resolves, no proxy, a pipe to puppeteer.
-- **Browser**: the sandbox stays on. Only the operator sets `MERMAID_RENDER_NO_SANDBOX=1` or
-  `MERMAID_RENDER_BROWSER_SHA256`; an agent reports a refused browser and stops.
+- **Renderers**: run `setup_renderers.sh` only when the operator allows downloads: npm packages
+  and the current stable browser. Only the
+  operator sets `MERMAID_RENDER_NO_SANDBOX=1` or `MERMAID_RENDER_BROWSER_SHA256`; an agent reports
+  a refused browser and stops. Network, browser and Windows rules:
+  `references/scripts-and-setup.md` §3.
 - **Optional artifacts**: absent renderers do not block authoring; they make the hand-off say
   `not rendered`.
 
@@ -293,6 +279,6 @@ document, each with the fix that passed both renderers and a line-by-line check 
 
 - `assets/notation.json` — budgets, thresholds, settings lines, palettes, allowed and avoided kinds.
 - `references/` — per-kind notation, layout and planarity, ASCII, renderer facts, paired examples,
-  the review checklist, eval results.
+  the review checklist, eval results, the scripts and the renderer setup.
 - `scripts/` — the lint, the render check and its setup, the plan chart generator.
 - `evals/` — the A/B evaluation; `evals/README.md` states what it measures.

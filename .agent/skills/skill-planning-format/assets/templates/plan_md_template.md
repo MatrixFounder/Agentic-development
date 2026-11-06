@@ -50,7 +50,7 @@
   anchor below. It never parses the task records above. The block holds one entry per task
   record, with the record's `id`. Keys stay as written; `title` and `stage` take the project's
   language. `est` is an integer number of hours. Every task starts as `"status": "not-started"`;
-  the develop workflows change it (`skill-planning-format` §2.2). The script
+  the executor of each task changes it (`skill-planning-format` §2.2). The script
   writes the plan chart between the two `generated:` markers. Keep both markers, also in a plan
   without a chart, and write nothing between them by hand. Chart rule and commands:
   `skill-planning-format` §2.1.

@@ -16,12 +16,14 @@ contract:
 1. Read `System/Agents/08_developer_prompt.md` to understand the Development phase.
 2. Pick a task from `docs/tasks/`. **Plan status**: set it `in-progress` by the rule of
    `skill-planning-format` §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md`
-   and its `--check`.
+   and its `--check`. An agent dispatched to a single task skips every plan-status and checklist
+   edit of this workflow and reports instead (`skill-planning-format` §2.2 step 7).
 3. Implement the task using the Stub-First approach:
     - Create stubs/interfaces first.
     - Verify rendering/compilation.
     - Implement logic.
-4. Initiate Code Review.
+4. Initiate Code Review. **Checklist**: before each review, tick the items whose deliverables are
+   in place, and untick the items a review rejects (`skill-planning-format` §2.2 step 6).
     <!-- loop:dev-review -->
     - **Verification Loop**: Read `System/Agents/09_code_reviewer_prompt.md`. 
     - If the Reviewer requests changes:

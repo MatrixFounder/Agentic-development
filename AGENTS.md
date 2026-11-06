@@ -114,6 +114,7 @@ Before starting the standard pipeline, check if the user's request matches a wor
    - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
    - **SKILL CREATION GATE**: Before creating ANY file in `.agent/skills/`, you **MUST** run `python3 .agent/skills/skill-creator/scripts/init_skill.py <name> --tier <N>`. Manual creation is **PROHIBITED**. For modifying existing skills, use `skill-enhancer`.
    - Verify with `System/Agents/09_code_reviewer_prompt.md` using `code-review-checklist`.
+   - **Plan record**: whoever starts a task of `docs/PLAN.md` keeps its status and checklist by `skill-planning-format` §2.2 — at the start, the hand-back and the review verdict. That is you when you run the task inline, through a develop workflow or through developer and reviewer subagents, unless an agent dispatched you to that one task.
    - **Chain execution**: For executing all tasks in `docs/PLAN.md` automatically, use `/develop-all` (standard Developer→Reviewer loop, auto-commits at end) or `/vdd-develop-all` (per-task adversarial Sarcasmotron review, mandatory inter-task HITL gate, **no auto-commit**, resumable from session-state, max 3 REJECTED iterations before escalation).
 
 ## BEHAVIOR RULES

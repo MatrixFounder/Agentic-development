@@ -116,6 +116,10 @@ DEVELOP_WORKFLOWS = (".agent/workflows/03-develop-single-task.md",
                      ".agent/workflows/vdd-03-develop.md",
                      ".agent/workflows/vdd-05-run-full-task.md")
 STATUS_RULE = "`skill-planning-format` §2.2"
+#: TASK 140 R4: the step of §2.2 that ticks and unticks a task's checklist.
+CHECKLIST_RULE = "`skill-planning-format` §2.2 step 6"
+#: TASK 140 R2: the orchestrator prompt that points an orchestrator to §2.2.
+ORCHESTRATOR_PROMPT = "System/Agents/01_orchestrator.md"
 STATUS_WRITE = "plan_gantt.py docs/PLAN.md --write docs/PLAN.md"
 #: R10.4 — the four review checklists.
 CHECKLISTS = {name: f".agent/skills/{name}/SKILL.md" for name in (
@@ -145,14 +149,19 @@ SURFACES = {
     # R10.4 checklists
     CHECKLISTS["architecture-review-checklist"]: _CHECKLIST_PINS,
     CHECKLISTS["plan-review-checklist"]: _CHECKLIST_PINS + (
-        GANTT, "--check", SCHEDULE_ANCHOR, GANTT_START, GANTT_END, "`not-started`"),
+        GANTT, "--check", SCHEDULE_ANCHOR, GANTT_START, GANTT_END, "`not-started`",
+        "the executor of each task sets them"),
     CHECKLISTS["task-review-checklist"]: _CHECKLIST_PINS,
     CHECKLISTS["code-review-checklist"]: _CHECKLIST_PINS,
     # R10.5 workflows
     **{name: (FIGURE_LINT,) + ((GANTT, "--check") if plan else ())
        for name, plan in GATE_WORKFLOWS.items()},
     # TASK 110 R8.2 develop workflows
-    **{name: (STATUS_RULE, "`in-progress`", "`done`", STATUS_WRITE) for name in DEVELOP_WORKFLOWS},
+    **{name: (STATUS_RULE, "`in-progress`", "`done`", STATUS_WRITE, CHECKLIST_RULE)
+       for name in DEVELOP_WORKFLOWS},
+    # TASK 140 R2 the orchestrator prompt
+    ORCHESTRATOR_PROMPT: (STATUS_RULE, "`in-progress`", "`done`", "hand-back",
+                          "**Plan record:**"),
     # R10.6 permissions
     ARCHITECT_AGENT: (SKILL, LINT, RENDER),
     SETTINGS: (SKILL, LINT, GANTT),
@@ -167,7 +176,8 @@ SURFACES = {
     THREAT_MODEL: (SKILL, "flowchart", "the data and its protocol"),
     REVERSE: (SKILL, "Write the text", "from that text"),
     PLANNING_FORMAT: (SKILL, GANTT, SCHEDULE_ANCHOR, SCHEDULE_SCHEMA, GANTT_START, GANTT_END),
-    PLAN_TEMPLATE: (SCHEDULE_ANCHOR, SCHEDULE_SCHEMA, GANTT_START, GANTT_END),
+    PLAN_TEMPLATE: (SCHEDULE_ANCHOR, SCHEDULE_SCHEMA, GANTT_START, GANTT_END,
+                    "the executor of each task changes it"),
     PLAN_EXAMPLE: (SEQUENCE_ANCHOR, SCHEDULE_ANCHOR, SCHEDULE_SCHEMA, GANTT_START, GANTT_END),
 }
 #: R10.2 — the §4.4 rows of the skill: anchor → (its consumer, relative to the skill's `scripts/`
@@ -321,7 +331,8 @@ def _update_state_commands(text):
 
 
 class TestPlanStatus(unittest.TestCase):
-    """TASK 110 R8: the develop workflows set a task's plan status by one rule."""
+    """TASK 110 R8, TASK 140: the executor of a plan's task keeps its status and checklist by one
+    rule."""
 
     def test_the_rule_states_its_steps_and_skips(self):
         body = _section(_read(PLANNING_FORMAT), r"^2\.2\b")
@@ -330,6 +341,127 @@ class TestPlanStatus(unittest.TestCase):
                             "--check docs/PLAN.md", "changes the value", "never adds an entry",
                             "no schedule anchor", "not installed", "allow-list"), body)
         self.assertEqual(missing, [], f"{PLANNING_FORMAT} §2.2: missing {missing}")
+
+    def test_the_rule_binds_the_executor_and_the_checklist(self):
+        """TASK 140 R1: §2.2 binds whoever starts the task; step 6 is the checklist, step 7 the
+        one writer."""
+        text = _read(PLANNING_FORMAT)
+        body = _section(text, r"^2\.2\b")
+        self.assertIsNotNone(body, f"{PLANNING_FORMAT}: no section 2.2")
+        missing = _missing((
+            "The executor of a plan's task keeps the task's `status`",
+            "The executor is the agent that starts the task and was not dispatched to that task",
+            "An orchestrator is the executor of each task it starts",
+            "An agent dispatched to run a chain of tasks is the executor of each task it starts",
+            "hands back once, with the verdict",
+            "inline, through a develop workflow, or through developer and reviewer subagents",
+            "may itself run a develop workflow (step 7)",
+            "The hand-back is the moment the task goes to its review", "before the review",
+            "`- [ ]` and `- [x]` items", "turns `- [x]`", "turns `- [ ]` again",
+            "no review rejects stays ticked", "only the review settles", "names it in its report",
+            "runs neither command of step 2", "skips of step 4 do not apply",
+            "edits neither, also when it runs a develop workflow"), body)
+        self.assertEqual(missing, [], f"{PLANNING_FORMAT} §2.2: missing {missing}")
+        self.assertNotIn("a develop workflow keeps", _flat(body))
+        self.assertTrue(_near(body, "only the review settles", "turns `- [x]`", span=80),
+                        f"{PLANNING_FORMAT} §2.2 step 6: the approval ticks a review-settled item")
+        step1 = _section(text, r"^2\.1\b")
+        self.assertEqual(_missing(("The executor of each task changes the status (§2.2)",), step1),
+                         [], f"{PLANNING_FORMAT} §2.1 step 1")
+        self.assertRegex(body, r"(?m)^6\. The checklist of a task is")
+        self.assertRegex(body, r"(?m)^7\. Only the executor edits the status and the checklist")
+
+    def test_an_orchestrator_is_pointed_to_the_rule(self):
+        """TASK 140 R2, R3: item 10 of the orchestrator prompt and step 4 of each system prompt
+        cite §2.2 for an orchestrator that runs a plan's tasks inline, through a develop workflow
+        or through subagents."""
+        problems = []
+        item = _section(_read(ORCHESTRATOR_PROMPT), r"^10\. Execution Init")
+        if item is None:
+            problems.append(f"{ORCHESTRATOR_PROMPT}: no item 10. Execution Init")
+        else:
+            problems += [f"{ORCHESTRATOR_PROMPT} item 10: missing {n!r}" for n in _missing(
+                ("**Plan record:**", STATUS_RULE, "`in-progress`", "hand-back", "`done`",
+                 "hand-back of item 12", "only the review settles", "still unticked", "inline",
+                 "through a develop workflow", "subagents", "several at once"), item)]
+        for rel in BOOTSTRAP:
+            text = _read(rel)
+            start = text.find("4. **Development Phase**")
+            end = text.find("## BEHAVIOR RULES", start)
+            if start < 0 or end < 0:
+                problems.append(f"{rel}: no step 4 Development Phase")
+                continue
+            problems += [f"{rel} step 4: missing {n!r}" for n in _missing(
+                ("**Plan record**", STATUS_RULE, "hand-back",
+                 "unless an agent dispatched you to that one task", "inline",
+                 "through a develop workflow", "subagents"), text[start:end])]
+        rows = _section(_read(ARCHITECTURE), r"^10\.6\b") or ""
+        self.assertTrue(any("`01_orchestrator.md`" in row[0] and STATUS_RULE in row[1]
+                            and "each task it starts" in row[1] for row in _table_rows(rows)),
+                        f"{ARCHITECTURE} §10.6: no row for {ORCHESTRATOR_PROMPT}")
+        self.assertEqual(problems, [], "\n".join(problems))
+
+    def test_each_develop_workflow_cites_the_checklist_step(self):
+        """TASK 140 R4: the hand-back step ticks and the rejection step unticks, each by §2.2
+        step 6; the roast that a reviewer may run alone holds neither."""
+        tick, untick = re.compile(r"(?i)\btick\b"), re.compile(r"(?i)\buntick\b")
+        spans = (
+            (DEVELOP_WORKFLOWS[0], "4. Initiate Code Review", "<!-- loop:dev-review -->",
+             (tick, untick)),
+            (DEVELOP_WORKFLOWS[1], "**Step 2.3 (Hand-back)**", "3. **The Roast", (tick,)),
+            (DEVELOP_WORKFLOWS[1], "- **REJECTED**", "- **Bound", (untick,)),
+            (DEVELOP_WORKFLOWS[2], "Step B — Verification", "Step C — Sarcasmotron-roast",
+             (tick,)),
+            (DEVELOP_WORKFLOWS[2], "- REJECTED → ", "On the 3rd consecutive REJECTED", (untick,)),
+        )
+        for rel, first, last, words in spans:
+            text = _read(rel)
+            start = text.find(first)
+            end = text.find(last, start + 1)
+            self.assertTrue(start >= 0 and end > start, f"{rel}: no span {first!r} .. {last!r}")
+            span = " ".join(text[start:end].split())
+            self.assertIn(CHECKLIST_RULE, span, f"{rel}: {first!r}")
+            for word in words:
+                self.assertRegex(span, word, f"{rel}: {first!r}")
+        roasts = ((DEVELOP_WORKFLOWS[1], "3. **The Roast", "4. **Refinement Strategy**"),
+                  (DEVELOP_WORKFLOWS[2], "Step C — Sarcasmotron-roast", "Step D — Refinement"))
+        for rel, first, last in roasts:
+            text = _read(rel)
+            roast = text[text.find(first):text.find(last)]
+            self.assertTrue(roast, f"{rel}: no span {first!r} .. {last!r}")
+            for word in (tick, untick):
+                self.assertNotRegex(roast, word, f"{rel}: the roast holds no checklist edit")
+        guard = ("An agent dispatched to a single task skips every plan-status and checklist edit "
+                 "of this workflow and reports instead (`skill-planning-format` §2.2 step 7)")
+        first_edits = ((DEVELOP_WORKFLOWS[0], "2. Pick a task", "3. Implement"),
+                       (DEVELOP_WORKFLOWS[1], "**Step 2.1 (Builder)**", "**Step 2.2"),
+                       (DEVELOP_WORKFLOWS[2], "Step A — Builder", "Step B — Verification"))
+        for rel, first, last in first_edits:
+            text = _read(rel)
+            start = text.find(first)
+            end = text.find(last, start + 1)
+            self.assertTrue(start >= 0 and end > start, f"{rel}: no span {first!r} .. {last!r}")
+            self.assertIn(guard, " ".join(text[start:end].split()),
+                          f"{rel}: the guard of step 7 at the first plan edit")
+
+    def test_the_docs_name_the_executor(self):
+        """TASK 140 R5: the docs that describe §2.2 name the executor and the checklist."""
+        pins = {
+            "System/Docs/SKILLS.md": (
+                "§2.2: the executor of a task keeps its status and checklist",),
+            "System/Docs/WORKFLOWS.md": (
+                "Keeps the task's status, plan chart and checklist (`skill-planning-format` §2.2)",
+                "Keeps each task's status and checklist (`skill-planning-format` §2.2)",
+                "and keeps its status and checklist (`skill-planning-format` §2.2)"),
+            ".agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py": (
+                "the executor of each task sets the status",),
+            ".claude/agents/developer.md": (
+                "Do not edit the plan status or the checklist of your task",
+                "`skill-planning-format` §2.2 step 7"),
+        }
+        problems = [f"{rel}: missing {n!r}" for rel, needles in pins.items()
+                    for n in _missing(needles, _read(rel))]
+        self.assertEqual(problems, [], "\n".join(problems))
 
     def test_vdd05_sets_done_after_a_merge_only(self):
         text = _read(DEVELOP_WORKFLOWS[2])

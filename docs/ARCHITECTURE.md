@@ -735,7 +735,8 @@ scripts only.
 | `05_architecture_reviewer_prompt.md`, `07_plan_reviewer_prompt.md` and four review checklists | figure items over caller-supplied lint and render output; the plan reviewer also gets `plan_gantt.py --check` output |
 | workflows `01-start-feature.md`, `vdd-01-start-feature.md`, `02-plan-implementation.md`, `vdd-02-plan.md` | the caller runs the figure lint, and `plan_gantt.py --check` for a plan, before the reviewer's brief |
 | plan template and `PLAN_EXAMPLE.md` of `skill-planning-format` | the schedule block, `not-started` per task, and the generated region |
-| workflows `03-develop-single-task.md`, `vdd-03-develop.md`, `vdd-05-run-full-task.md` | set a task `in-progress` and `done` and run `plan_gantt.py --write` (`skill-planning-format` §2.2) |
+| workflows `03-develop-single-task.md`, `vdd-03-develop.md`, `vdd-05-run-full-task.md` | set `in-progress` and `done`, run `plan_gantt.py --write`, tick and untick (`skill-planning-format` §2.2) |
+| `01_orchestrator.md` §6 item 10; step 4 of `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` | an orchestrator keeps the plan record of each task it starts, by `skill-planning-format` §2.2 |
 | `.claude/agents/architect.md` | the architect may run the lint and the render check |
 | `.claude/settings.json` | the lint and `plan_gantt.py --check` run without approval; the render check asks |
 | `skill-phase-context`, `SKILL_TIERS.md`, bootstrap files | the conditional load |

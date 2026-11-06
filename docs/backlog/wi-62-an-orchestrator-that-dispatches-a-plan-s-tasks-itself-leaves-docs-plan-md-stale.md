@@ -1,15 +1,23 @@
 ---
 id: WI-62
 type: work-item
-status: open
+status: done
 opened_at: 2026-11-06
 slug: wi-62-an-orchestrator-that-dispatches-a-plan-s-tasks-itself-leaves-docs-plan-md-stale
 effort: S
 value: 'docs/PLAN.md shows the state of the work while the work runs, whoever dispatches its tasks'
 source: 'whip-insight task-045 and task-046 (operator, 2026-11-05 and 2026-11-06)'
+resolved_at: 2026-11-06
+resolved_by: 'TASK 140'
 ---
 
 # WI-62 — An orchestrator that dispatches a plan's tasks itself leaves docs/PLAN.md stale
+
+> **Done 2026-11-06 (TASK 140).** Option 2, chosen by the operator on 2026-11-06 (TASK 140
+> R1–R4): `skill-planning-format` §2.2 binds the executor of a plan's task, an orchestrator that
+> runs the task inline or through subagents included. Step 6 keeps the checklist; step 7 names
+> one writer. `01_orchestrator.md`, step 4 of the three system prompts and the workflows `03`,
+> `vdd-03` and `vdd-05` point to it.
 
 > Filed on the operator's request of 2026-11-06 (whip-insight, task-046: «правило по обновлению плана в процессе
 > закрытия подзадач надо как-то добавить в сам framework Agentic development»). Behaviour change of the planning

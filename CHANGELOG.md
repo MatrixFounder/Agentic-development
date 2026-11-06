@@ -14,10 +14,12 @@
 - ...
 -->
 
-## [Unreleased]
+## 🇺🇸 English Version (Primary)
 
-### 🇺🇸 English
+### **v3.56.0 — The executor of a plan's task keeps its status and checklist current (TASK 140)**
+
 #### Added
+
 - **A latency or cost figure behind a decision is computed along the whole path**
   (`developer-guidelines` v1.12 → v1.13, §1.5; `vdd-adversarial` v1.10 → v1.11, §3). The builder
   counts every step that passes a queue or a shared worker, with what stands ahead of that step
@@ -26,7 +28,35 @@
   a finding. Source: a project retro, where a residual quoted as K × t was 2 × K × t and the user
   first decided on the half.
 
-## 🇺🇸 English Version (Primary)
+#### Changed
+
+- **`skill-planning-format` §2.2 binds the executor of a plan's task** (WI-62; v1.5 → v1.6). The
+  executor is the agent that starts the task and was not dispatched to that task. It runs the
+  task inline, through a develop workflow, or through developer and reviewer subagents. An agent
+  dispatched to run a chain of tasks is the executor of each task it starts. Before, §2.2 bound the develop workflows only, and an orchestrator that ran a
+  plan's tasks itself left `docs/PLAN.md` at its planning values.
+- **§2.2 step 6: the executor keeps the checklist of a task**, the items of its record under
+  `docs/tasks/` and of its entry in `docs/PLAN.md`:
+  - at the hand-back, before the review, the executor ticks each item reported in place;
+  - when a review rejects a deliverable, the executor unticks its item;
+  - at the approval, the executor ticks each item that only the review settles, and names each
+    item still unticked in its report.
+
+  For a tick, the executor runs no `plan_gantt.py` command.
+- **§2.2 step 7: only the executor edits the status and the checklist.** A dispatched developer or
+  reviewer reports what is in place or rejected, also when it runs a develop workflow.
+- **These surfaces point to §2.2:**
+  - `01_orchestrator.md` §6 item 10;
+  - step 4 "Development Phase" of `CLAUDE.md`, `GEMINI.md` and `AGENTS.md`;
+  - the hand-back and the rejection steps of `03-develop-single-task`, `vdd-03-develop` and
+    `vdd-05-run-full-task`. Each of the three tells an agent dispatched to a single task to skip
+    its plan edits.
+
+  The developer wrapper `.claude/agents/developer.md` tells a dispatched developer to edit neither
+  the status nor the checklist. The plan template, `plan-review-checklist` (v1.3 → v1.4),
+  `docs/ARCHITECTURE.md` §10.6, `System/Docs/SKILLS.md`, `System/Docs/WORKFLOWS.md` and the
+  docstring of `plan_gantt.py` name the executor. `tests/test_mermaid_wiring.py` pins the rule
+  and its pointers.
 
 ### **v3.55.1 — Four scripts read and write text in UTF-8 (TASK 139)**
 

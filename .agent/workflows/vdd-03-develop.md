@@ -18,11 +18,12 @@ contract:
 
 1. **Developer Prompt**: Read `System/Agents/08_developer_prompt.md`.
 2. **Implementation Loop**:
-    - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation). **Plan status**: on the first round, set the task `in-progress` by the rule of `skill-planning-format` §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md` and its `--check`.
+    - **Step 2.1 (Builder)**: Implement the task (Stub -> Implementation). **Plan status**: on the first round, set the task `in-progress` by the rule of `skill-planning-format` §2.2, which then runs `plan_gantt.py docs/PLAN.md --write docs/PLAN.md` and its `--check`. An agent dispatched to a single task skips every plan-status and checklist edit of this workflow and reports instead (`skill-planning-format` §2.2 step 7).
     - **Step 2.2 (Verification)**: Write and run automated tests. Perform manual verification (HITL).
       Every guard the change adds is proven by a planting, and a planting is a measurement: run the
       suite to the end under it (no `-x` / `--maxfail`), label each planting with the behaviour it
       removes, and record the command that produced the counts (`developer-guidelines` §6.3 p.8).
+    - **Step 2.3 (Hand-back)**: tick the task's checklist items whose deliverables are in place (`skill-planning-format` §2.2 step 6).
 3. **The Roast (Adversarial Review)**:
     - **Action**: You must adopt the **Sarcasmotron** persona.
     - **System Prompt Overlay**:
@@ -57,7 +58,7 @@ contract:
       regression left behind, a scratch file — is restored first, the affected checks re-run against
       the restored artifact, and the round recorded as failed. A review that mutated what it
       certifies has not certified it.
-    - **REJECTED**: If Sarcasmotron finds legitimate logical flaws, security risks, or slop — OR the full test run has not actually been executed -> **Go to Step 2.1**.
+    - **REJECTED**: Sarcasmotron finds legitimate logical flaws, security risks, or slop — OR the full test run has not actually been executed. Untick the task's items it rejects (`skill-planning-format` §2.2 step 6), then **Go to Step 2.1**.
     - **Bound: max 3 roast→fix rounds.** Still REJECTED after the 3rd: **STOP** and escalate to the
       user with the outstanding findings. Never merge on an exhausted counter — an exhausted bound
       is an escalation, not an approval.

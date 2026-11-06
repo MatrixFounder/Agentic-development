@@ -84,6 +84,16 @@ Follow the **Stage Cycle Pattern** defined in `skill-orchestrator-patterns`.
 **Input:** {plan_file}, {current_task}
 **Action:** Execute `08_developer_prompt`.
 **Goal:** Implementation + Tests.
+**Plan record:** you are the executor of the task. Keep its status and checklist by
+`skill-planning-format` §2.2:
+- set it `in-progress` here, and tick its items at the hand-back;
+- at the verdict of item 11, set it `done` or untick the rejected items; at the hand-back of
+  item 12, tick them again;
+- at approval, tick each item that only the review settles, and name each item still unticked in
+  your report.
+
+The rule holds inline, through a develop workflow, and when you start the developer and the
+reviewer as subagents, one chain or several at once.
 
 ### 11. Code Review
 **Input:** {modified_files}, {test_report}

@@ -134,6 +134,7 @@ Workflows are available as slash commands via `.claude/commands/` and as files i
    - **Apply STUBS first**, verify rendering/scrolling, then implement logic.
    - **SKILL CREATION GATE**: Before creating ANY file in `.agent/skills/`, you **MUST** run `python3 .agent/skills/skill-creator/scripts/init_skill.py <name> --tier <N>`. Manual creation is **PROHIBITED**. For modifying existing skills, use `skill-enhancer`.
    - Verify with `System/Agents/09_code_reviewer_prompt.md` using `code-review-checklist`.
+   - **Plan record**: whoever starts a task of `docs/PLAN.md` keeps its status and checklist by `skill-planning-format` §2.2 — at the start, the hand-back and the review verdict. That is you when you run the task inline, through a develop workflow or through developer and reviewer subagents, unless an agent dispatched you to that one task.
 
 ## BEHAVIOR RULES
 - **File Creation**: Always save intermediate artifacts (TASK, Plan) to files, do not just output them in chat.

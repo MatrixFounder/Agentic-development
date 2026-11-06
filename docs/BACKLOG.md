@@ -73,7 +73,6 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
-- **WI-62** [An orchestrator that dispatches a plan's tasks itself leaves docs/PLAN.md stale](backlog/wi-62-an-orchestrator-that-dispatches-a-plan-s-tasks-itself-leaves-docs-plan-md-stale.md) — effort `S`, status `open`, opened 2026-11-06
 - **WI-59** [A file planted in the work tree runs under the pytest rules, a full audit scan and the venv's start](backlog/wi-59-a-file-planted-in-the-work-tree-runs-under-the-pytest-rules-a-full-audit-scan-and-the-venv-s-start.md) — effort `M`, status `open`, opened 2026-10-29
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09
@@ -93,6 +92,7 @@ a closed item is the answer to a question someone will ask again.
 
 ## Closed
 
+- **WI-62** [An orchestrator that dispatches a plan's tasks itself leaves docs/PLAN.md stale](backlog/wi-62-an-orchestrator-that-dispatches-a-plan-s-tasks-itself-leaves-docs-plan-md-stale.md) — effort `S`, status `done`, opened 2026-11-06 · **done 2026-11-06** (TASK 140): `skill-planning-format` §2.2 binds whoever starts a plan's task and ticks its checklist
 - **WI-61** [The session bootstrap gives no sign that a restored state is stale](backlog/wi-61-the-session-bootstrap-gives-no-sign-that-a-restored-state-is-stale.md) — effort `S`, status `done`, opened 2026-10-29 · **done 2026-10-30** (TASK 138): the restore announcement names the date of `last_updated`
 - **WI-60** [update_state.py drops a key added by hand and names no key](backlog/wi-60-update-state-py-drops-a-key-added-by-hand-and-names-no-key.md) — effort `S`, status `done`, opened 2026-10-29 · **done 2026-10-30** (TASK 138): the run names each dropped top-level key on stderr
 - **WI-39** [Allow-listed scripts import a module planted beside them](backlog/wi-39-allow-listed-scripts-import-a-module-planted-beside-them.md) — effort `M`, status `done`, opened 2026-10-08 · **done 2026-10-29** (TASK 134): each allow-listed script drops its directory from `sys.path`; siblings load by path

@@ -13,7 +13,8 @@ Inputs (TASK R8.1, D19)
     "done" | "in-progress" | "not-started". A task without `status` is not started.
   * a Markdown plan holding exactly one JSON block of the same schema, `status` optional there
     too, in the fenced block that follows the anchor `<!-- contract:schedule -->`. The framework's
-    plan template writes `not-started`, and the develop workflows set the status (TASK 110 R8).
+    plan template writes `not-started`, and the executor of each task sets the status (TASK 110 R8,
+    TASK 140).
     The prose of the plan is never parsed, so a plan in
     any language yields the same chart (ARCHITECTURE invariant L1).
 

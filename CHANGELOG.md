@@ -14,6 +14,18 @@
 - ...
 -->
 
+## [Unreleased]
+
+### 🇺🇸 English
+#### Added
+- **A latency or cost figure behind a decision is computed along the whole path**
+  (`developer-guidelines` v1.12 → v1.13, §1.5; `vdd-adversarial` v1.10 → v1.11, §3). The builder
+  counts every step that passes a queue or a shared worker, with what stands ahead of that step
+  when it is enqueued, including work the operation itself enqueues while the path waits. The
+  adversarial review recomputes such a figure and reports a one-pass count of a multi-pass path as
+  a finding. Source: a project retro, where a residual quoted as K × t was 2 × K × t and the user
+  first decided on the half.
+
 ## 🇺🇸 English Version (Primary)
 
 ### **v3.55.1 — Four scripts read and write text in UTF-8 (TASK 139)**

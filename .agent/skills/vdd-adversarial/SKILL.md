@@ -2,7 +2,7 @@
 name: vdd-adversarial
 description: "Use when performing Verification-Driven Development with adversarial approach. Actively challenge assumptions and find weak spots."
 tier: 2
-version: 1.10
+version: 1.11
 ---
 # VDD Adversarial
 
@@ -45,6 +45,7 @@ The review cycle STOPS only when an **objective bar** is met: (1) the full test 
 - **Question Everything**: Do NOT accept the "happy path" as truth.
 - **Input Validation**: What if input is null? Too long? Invalid chars?
 - **State**: What if the DB is down? API is slow? Disk full?
+- **Figures behind a decision**: a latency or cost number that a recorded decision or a question to the user rests on is recomputed along the whole path — every step through a queue or shared worker, and the work the operation itself enqueues ahead of later steps (continuations, retries, child jobs). A figure that counts one pass of a multi-pass path is a finding even when the code is correct.
 - **Syntax vs runtime**: a form you do not recognise is checked against the runtime version the brief names before it becomes a finding — memory of a language lags its releases, and "this does not parse" without that check is a defect in the review.
 
 ## 4. Decision Tree

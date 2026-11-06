@@ -2,7 +2,7 @@
 name: developer-guidelines
 description: "Guidelines for the Developer role: strict adherence, no unsolicited refactoring, documentation, security."
 tier: 1
-version: 1.12
+version: 1.13
 ---
 # Developers Guidelines
 
@@ -29,6 +29,7 @@ version: 1.12
   - **Critical ambiguity** (affects architecture, user-facing behavior, data model): Record in TASK.md as Open Question. Ask user only if blocking.
   - **Implementation ambiguity** (pattern choice, internal structure): Apply professional judgment. Document the choice briefly.
   - **Trivial ambiguity** (naming, formatting): Just decide. Don't ask.
+- **A figure behind a question is part of the question:** when a decision you put to the user rests on a latency or cost estimate, compute it along the whole path — one line per step that passes a queue or a shared worker, each with what stands ahead of that step at the moment it is enqueued, including work the operation itself enqueues while the path waits (continuations, retries, child jobs). Seen once: a wait quoted as K × t counted one pass of a queue the path crossed twice; the second pass waited behind the operation's own continuations, the true figure was 2 × K × t, and the user first decided on the half.
 - **Push Back:** If you see a better approach than what was requested, explain why *before you start coding*. This applies to task interpretation, NOT to deviating from an already-approved plan or reviewer feedback (§1 Strict Adherence still governs execution).
 
 ## 1.6 Implementation Discipline

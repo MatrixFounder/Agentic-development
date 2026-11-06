@@ -73,6 +73,7 @@ a closed item is the answer to a question someone will ask again.
 ## Discovered issues / work-items
 
 <!-- feedback:discovered-issues -->
+- **WI-62** [An orchestrator that dispatches a plan's tasks itself leaves docs/PLAN.md stale](backlog/wi-62-an-orchestrator-that-dispatches-a-plan-s-tasks-itself-leaves-docs-plan-md-stale.md) — effort `S`, status `open`, opened 2026-11-06
 - **WI-59** [A file planted in the work tree runs under the pytest rules, a full audit scan and the venv's start](backlog/wi-59-a-file-planted-in-the-work-tree-runs-under-the-pytest-rules-a-full-audit-scan-and-the-venv-s-start.md) — effort `M`, status `open`, opened 2026-10-29
 - **WI-57** [The scanner audits the environment of pip-audit instead of the project](backlog/wi-57-the-scanner-audits-the-environment-of-pip-audit-instead-of-the-project.md) — effort `M`, status `open`, opened 2026-10-27
 - **WI-50** [Scanner configuration files in the scanned tree can silence the external tools](backlog/wi-50-scanner-configuration-files-in-the-scanned-tree-can-silence-the-external-tools.md) — effort `M`, status `open`, opened 2026-10-09

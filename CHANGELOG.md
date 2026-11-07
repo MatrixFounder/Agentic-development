@@ -16,6 +16,60 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.56.1 — vdd-adversarial works outside the framework (TASK 141)**
+
+#### Changed
+
+- **`vdd-adversarial` names nothing that only this framework resolves** (v1.11 → v1.12). The
+  public repository `Universal-skills` publishes a copy of it as a standalone skill and a plugin.
+  - The A/B figures cite their report by a permalink and name the measured version 1.4. For
+    class-complete coverage the note names one critic per class in parallel, with findings
+    merged by location, in place of `/vdd-multi`.
+  - The exit bar is a numbered list, in `SKILL.md` §2 and in methodology §IV. Its evidence comes
+    from whoever hands over the review: the command with its captured output or a summary of
+    it, or `NOT RUN (<reason>)`. That is the form of `skill-parallel-orchestration` §2.4, so a
+    framework brief still meets it. Methodology §IV gains the `NOT RUN` clause it lacked.
+  - "Syntax vs runtime" checks every version the project supports: the lowest version of a
+    manifest and each CI matrix entry. A version that the request names takes precedence.
+  - Linear Accountability, in `SKILL.md` §2 and methodology §V.3, requires per finding about
+    the code its line and the check that verifies its fix; a process finding names its
+    condition. An issue per change only where the project tracks issues.
+  - §2.6 states that the report link is a citation for human readers, not a fetch. §4 item 6
+    counts the untracked files in the state of a repository.
+  - The methodology glosses Sarcasmotron, Chainlink, bead and GitHub Runners.
+  - The `audit-067` IDs and the tool names `view_file` and `list_dir` are gone.
+- **The critique template of `vdd-adversarial` has a Test Evidence section** (§2; Risk Analysis
+  is now §3, Hallucination Check §4):
+  - Command and Source take `none`; an optional Tree state line takes the fingerprint, a hash
+    that counts the untracked files, or `NOT COMPUTED (<reason>)`;
+  - an unverifiable test run is a HIGH finding of the Risk Analysis table;
+  - the table has Confidence and Verification columns, and the severities are `CRITICAL`,
+    `HIGH`, `MEDIUM` and `LOW`;
+  - PASS means the exit bar is met, WARNING is not an approval, FAIL means a CRITICAL finding.
+
+  Before, §2 required confidence per finding, and the template had no place for it. The example
+  follows the template; its failed-login row keeps the client response generic.
+- **`vdd-sarcastic` v1.5 → v1.7.** It takes §2.5 Execution Mode and §2.6 Safety Boundaries from
+  its copy in `Universal-skills`, and §4 "Validation Evidence — Objective Convergence (Exit
+  Strategy)" states the exit bar in the words of `vdd-adversarial` §2. Its example writes
+  `MEDIUM` for `MED`, names a line and a check per row, and reports the unverifiable test run.
+  The four Execution Policy warnings of `validate_skill.py` are gone.
+- **The copies of both skills in `Universal-skills` are byte-identical to canonical.**
+
+#### Added
+
+- **`tests/test_skill_refs.py::TestStandaloneBundle`** fails on a reference in the bundle of
+  `vdd-adversarial` that resolves only inside this framework:
+  - a path under `docs/` of a ledger or an archive, a file `docs/<NAME>.md`, `.agent/`,
+    `.claude/agents/`, `System/Agents`, `Docs` or `scripts`;
+  - a slash command of `.claude/commands/`, or a backticked name of a framework skill or
+    command; both lists are derived from the tree;
+  - an `audit-NNN` ID, the orchestrator, the brief, `view_file`, `list_dir`.
+
+  The permalink of the A/B report passes; the same URL on `blob/main` fails.
+- **`tests/test_frozen_tree_contract.py`** lists in `EXCLUDED_SITES` the five files that now
+  carry `NOT RUN`: three of `vdd-adversarial` and two of `vdd-sarcastic`.
+
 ### **v3.56.0 — The executor of a plan's task keeps its status and checklist current (TASK 140)**
 
 #### Added

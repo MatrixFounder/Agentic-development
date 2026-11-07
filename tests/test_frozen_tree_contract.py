@@ -94,6 +94,11 @@ EXCLUDED_SITES = {
     ".agent/skills/skill-adversarial-security/SKILL.md": "persona methodology; the wrapper carries the block contract",
     ".agent/skills/skill-adversarial-performance/SKILL.md": "persona methodology; the wrapper carries the block contract",
     ".agent/skills/vdd-adversarial/SKILL.md": "persona methodology; the wrapper carries the block contract",
+    ".agent/skills/vdd-adversarial/references/vdd-methodology.md": "persona methodology; the wrapper carries the block contract",
+    ".agent/skills/vdd-adversarial/assets/template_critique.md": "report slot for the evidence line; the wrapper carries the block contract",
+    ".agent/skills/vdd-adversarial/examples/usage_example.md": "worked example of the template; the wrapper carries the block contract",
+    ".agent/skills/vdd-sarcastic/SKILL.md": "persona skin over vdd-adversarial; restates its exit bar, writes no brief",
+    ".agent/skills/vdd-sarcastic/examples/usage_example.md": "worked example of the roast; writes no brief",
 }
 
 #: The line a caller writes into the brief. Matched case-insensitively so a heading and a block

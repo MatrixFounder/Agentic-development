@@ -2,7 +2,7 @@
 name: brainstorming
 description: Use when brainstorming ideas, exploring solutions, generating options, clarifying requirements, designing architecture, or answering open-ended "how should we" and "what are the options" questions — even without the word "brainstorm".
 tier: 2
-version: 3.2
+version: 3.3
 status: active
 ---
 
@@ -18,7 +18,7 @@ Bridge the gap between a vague user intent ("Make it pop", "I need a referral sy
 - "I'll just start coding, the requirements are clear enough" → **WRONG**. Even "clear" tasks have hidden assumptions. Validate first — rework costs 3x more than upfront clarification.
 - "I'll skip idea generation and go straight to the obvious solution" → **WRONG**. The obvious solution is often the first one, not the best one. Generate at least 3 options for MEDIUM/COMPLEX tasks.
 - "The user didn't ask for alternatives, so I'll just propose one" → **WRONG**. Brainstorming means expanding the solution space. Always present options with trade-offs.
-- "I can't visualize this without a whiteboard" → **WRONG**. Text-based visualization is always possible. Pick the form with Step 0 of `mermaid-authoring-guidelines`: a list, a table, ASCII or Mermaid.
+- "I can't visualize this without a whiteboard" → **WRONG**. Text-based visualization is always possible. Pick the form with Step 0 of `mermaid-authoring-guidelines`, or without that skill by the fallback of Phase 3 Visual Thinking: a list, a table, ASCII or Mermaid.
 - "The user ignored my question, I'll guess" → **WRONG**. Don't guess on ambiguous requirements. Restate why the answer matters: *"To avoid breaking X, I need to know Y."*
 - "This is too simple for a full brainstorm" → **OK, but state it explicitly**: *"This is trivial — I propose X. Proceed?"* Never silently skip the process.
 
@@ -26,7 +26,7 @@ Bridge the gap between a vague user intent ("Make it pop", "I need a referral sy
 
 - Classify task complexity (Trivial / Medium / Complex) and adapt workflow depth
 - Generate diverse ideas using structured methodologies (SCAMPER, How Might We, Inversion, Analogy)
-- Visualize architectures and flows (form chosen by Step 0 of `mermaid-authoring-guidelines`)
+- Visualize architectures and flows (form chosen by Step 0 of `mermaid-authoring-guidelines`, or by the fallback of Phase 3)
 - Facilitate diverge → converge cycles for open-ended problems
 - Prioritize options using Impact/Effort analysis or criteria-based scoring
 - Produce appropriate output artifacts (Design Doc, Strategy Doc, Ideas Board, Technical Spec)
@@ -133,7 +133,9 @@ For **MEDIUM/COMPLEX** tasks, visualize the proposed approach — visual models 
 - **Markdown file** read on GitHub or in an IDE, such as the Design Doc: the first form in the Step 0 table that carries the information. A **Mermaid** figure follows the skill.
 - **Chat or terminal reply**: a **numbered list**, a **table** or **ASCII** in a `text figure` fence. A Mermaid fence goes into a reply only when the user asks for Mermaid source, or inside a document the user saves as a file.
 
-If the skill is not installed, use a list or a table and tell the user that the skill is absent.
+If the skill is not installed, pick the form by where the figure is read, and tell the user once per conversation that the skill is absent:
+- **Markdown file**: **Mermaid** (a flowchart or a sequence diagram) where the reader's renderer shows it, such as GitHub or an IDE preview; otherwise **ASCII** or a **structured list**.
+- **Chat or terminal reply**: a **numbered list**, a **table** or **ASCII**. A Mermaid fence goes into a reply only when the user asks for Mermaid source, or inside a document the user saves as a file.
 
 ### Prioritization
 

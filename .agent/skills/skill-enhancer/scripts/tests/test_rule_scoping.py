@@ -240,6 +240,33 @@ class TestPlaceholderScoping(unittest.TestCase):
         self.assertEqual(len(hits), 1, hits)
         self.assertIn("Why this is wrong", hits[0])
 
+    def test_a_numeric_interval_is_not_a_slot(self):
+        """`[0.028, 0.195]` clears the length and space floors and starts with
+        neither `-` nor `^`, so before the letter test it read as an unfilled
+        slot. It is a confidence interval quoted in prose -- the shape that put
+        `text-humanizer` on one side of the two gates and not the other."""
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = write_skill(tmp, "intervalskill", textwrap.dedent("""\
+                ## Evidence
+                The paired cases give delta +0.105, 95% CI [0.028, 0.195],
+                and the pressure cases give +0.167, CI [0.042, 0.286].
+                """))
+            _, report = run_json(skill)
+        self.assertEqual(gaps_matching(report, "Lazy"), [])
+
+    def test_a_slot_that_mixes_words_and_numbers_is_still_caught(self):
+        """The letter test must not become an escape hatch: one word is enough
+        to make a span prose again."""
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = write_skill(tmp, "mixedslotskill", textwrap.dedent("""\
+                ## Instructions
+                1. Report [score of 0.028 here] to the user.
+                """))
+            _, report = run_json(skill)
+        hits = gaps_matching(report, "Lazy")
+        self.assertEqual(len(hits), 1, hits)
+        self.assertIn("score of 0.028 here", hits[0])
+
     def test_a_mermaid_node_label_is_not_a_slot(self):
         with tempfile.TemporaryDirectory() as tmp:
             skill = write_skill(tmp, "mermaidskill", textwrap.dedent("""\

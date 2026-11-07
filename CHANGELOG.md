@@ -16,6 +16,55 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.56.2 — The remaining drifted copies match canonical (TASK 142)**
+
+#### Changed
+
+- **`brainstorming` keeps Mermaid without `mermaid-authoring-guidelines`** (v3.2 → v3.3). When
+  that skill is absent, a figure in a Markdown file is Mermaid where the reader's renderer
+  shows it, otherwise ASCII or a list. A figure in a chat or a terminal is a list, a table or
+  ASCII, with Mermaid only on request or inside a document the user saves. `brainstorming`
+  names the absent skill once per conversation. Before, the fallback allowed a list or a table
+  only, so the standalone copy in `Universal-skills`, which does not publish
+  `mermaid-authoring-guidelines`, lost Mermaid.
+- **`hooks-creator` v1.0 → v1.1 takes its copy from `Universal-skills`:** §3 Execution Mode and
+  §4 Safety Boundaries, which now holds the security warning; Phase 3 is "Configuration &
+  Validation Evidence", with pass criteria and a worked example; the sections after §2 are
+  renumbered. Review fixes on top:
+  - the pass criteria check an exit-0 run for exactly one JSON object with `jq -s`: `jq -e`
+    judges only the last output and passes two concatenated objects;
+  - the commands write to `mktemp` files, not to fixed names in `/tmp`;
+  - `examples/security_gate.sh` checks for `jq` and exits 2 without it, as Phase 2 requires;
+  - two duplicated lines, a duplicated example heading and two typos are gone.
+
+#### Fixed
+
+- **`skill-enhancer`'s `analyze_gaps.py` reads a bracket span with no letter, such as
+  `[0.028, 0.195]`, as data and not as an unfilled placeholder.** The fix and its two tests come
+  from the copy in `Universal-skills`.
+
+#### Added
+
+- **`Universal-skills` checks its copies of framework skills:**
+  `scripts/check_framework_copies.py` compares each copy with canonical, byte by byte, and the
+  executable bit outside Windows.
+  - It reports as drift a symlink or a special file inside a skill, and a copy that is itself a
+    symlink; it follows and reads neither.
+  - It exits 2 on an entry or a directory it cannot read, on a closed stdout, and on a sibling
+    link that resolves to a tree without `.agent/skills`. Without the sibling repository it
+    prints `SKIPPED`.
+  - Its test runs in the `test harness` job, and the workflow's pull-request paths include the
+    script.
+
+  The repository's `CLAUDE.md`, `GEMINI.md` and `AGENTS.md` state the rule: edit canonical,
+  copy, check. A copy may name a framework skill together with what to do without it;
+  `skill-creator`, `skill-enhancer` and `vdd-sarcastic` are the open exceptions.
+  `docs/CONTRIBUTING.md` points to the rule. The copies of `brainstorming`, `hooks-creator` and
+  `skill-enhancer` are byte-identical to canonical.
+- **`tests/test_skill_refs.py::TestStandaloneBundle` also holds `hooks-creator`.**
+- **WI-63:** the anchor registry has no anchor for the sections of a Light TASK (the retro of
+  TASK 141).
+
 ### **v3.56.1 — vdd-adversarial works outside the framework (TASK 141)**
 
 #### Changed

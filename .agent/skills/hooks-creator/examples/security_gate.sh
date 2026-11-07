@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Dependency check (MANDATORY, SKILL.md Phase 2): exit 2 blocks with a system error.
+command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 2; }
+
 # Use `jq` to parse JSON input. DO NOT use grep/regex on raw input.
 input=$(cat)
 

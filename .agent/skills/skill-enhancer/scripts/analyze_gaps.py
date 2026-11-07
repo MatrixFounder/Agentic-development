@@ -259,6 +259,16 @@ _WINDOWS_PATH_RE = re.compile(
 # Neither is an unfilled template slot.
 _PLACEHOLDER_NOTATION_RE = re.compile(r"^\s*[-^]")
 
+# An unfilled slot is prose the author meant to replace -- `[Why this is wrong]`,
+# `[YOUR NAME]` -- so it always carries a word. A bracket span with no letter in
+# it is data: a confidence interval (`[0.028, 0.195]`), a coordinate pair, a
+# numeric range. Measured: the two intervals in `text-humanizer/SKILL.md` were
+# the whole reason that skill failed this gate while `validate_skill.py` passed
+# it (WI-033's exact shape). Stated cost: a slot written with no letters at all
+# -- `[...]`, `[1]` -- is not reported; both are already below the length and
+# space floors the rule applies anyway.
+_PLACEHOLDER_HAS_WORD_RE = re.compile(r"[^\W\d_]")
+
 # A TODO marker is a note to self: `TODO:` / `TODO(owner)` anywhere, or a line
 # whose content STARTS with TODO once list, quote, heading and comment markers
 # are stripped -- `- TODO fix the examples`, `<!-- TODO write this -->`.
@@ -597,13 +607,15 @@ def analyze_skill(skill_path, config, json_output=False, strict=False):
 
     # Detect an unfilled template slot -- [Instruction], [Why this is wrong].
     # Markdown links are [text](url), so a `(` immediately after the bracket
-    # disqualifies. Two shapes are notation rather than a slot and are exempt:
-    # `[--flag VALUE]` (an optional CLI argument) and `[^fn-1]` (a pandoc
-    # footnote marker).
+    # disqualifies. Three shapes are notation or data rather than a slot and are
+    # exempt: `[--flag VALUE]` (an optional CLI argument), `[^fn-1]` (a pandoc
+    # footnote marker) and a letterless span such as `[0.028, 0.195]` (a
+    # confidence interval).
     placeholders = re.findall(r'\[([^\]\n\"\'\{\}\\]+)\](?!\()', body_clean)
     real_placeholders = [
         p for p in placeholders
         if len(p) > 3 and " " in p and not _PLACEHOLDER_NOTATION_RE.match(p)
+        and _PLACEHOLDER_HAS_WORD_RE.search(p)
     ]
 
     if real_placeholders:

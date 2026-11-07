@@ -114,12 +114,13 @@ class TestRealRepository(unittest.TestCase):
 
 
 #: Skills that `Universal-skills` publishes as byte-identical copies of canonical and that this
-#: class holds to the standalone rule (TASK 141). `vdd-sarcastic` is published too, but it keeps
-#: framework references (TASK 141, residual 1), so it is not listed here.
-STANDALONE_SKILLS = ("vdd-adversarial",)
+#: class holds to the standalone rule (TASK 141, TASK 142). `vdd-sarcastic`, `brainstorming`,
+#: `skill-creator` and `skill-enhancer` are published too, but each still names a framework
+#: skill or path (TASK 141 residual 1, TASK 142 §5), so they are not listed here.
+STANDALONE_SKILLS = ("vdd-adversarial", "hooks-creator")
 
-#: Backticked names a standalone bundle may cite: itself and its published sibling.
-PUBLISHED_NAMES = {"vdd-adversarial", "vdd-sarcastic"}
+#: Backticked names a standalone bundle may cite: the listed bundles and `vdd-sarcastic`.
+PUBLISHED_NAMES = {"vdd-sarcastic", *STANDALONE_SKILLS}
 
 #: Fixed framework-only forms: its paths and files, its agent wrappers, its audit IDs, its roles,
 #: and the tool names of one vendor. Workflow commands and skill names are derived below.

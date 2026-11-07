@@ -114,6 +114,7 @@ the matching `## <category>` heading here, in ID order.
 ## mermaid
 
 - **MR-1** [The renderer setup and the render check refuse every browser on native Windows](issues/mr-1-the-renderer-setup-and-the-render-check-refuse-every-browser-on-native-windows.md) — severity `SEV-3`, status `fixed`, opened 2026-10-29 · **fixed 2026-10-30** (TASK 137): the setup and the render check run on Windows under Git Bash, on browser build 156
+- **MR-2** [plan_gantt.py crashes on a cp1252 stream when its report holds an arrow](issues/mr-2-plan-gantt-py-crashes-on-a-cp1252-stream-when-its-report-holds-an-arrow.md) — severity `SEV-3`, status `fixed`, opened 2026-11-07 · **fixed 2026-11-07** (TASK 143): `plan_gantt.py` escapes on its streams what the codec cannot encode
 
 ## portability
 

@@ -2,7 +2,7 @@
 name: documentation-standards
 description: Standards for code documentation, comments, and artifact updates.
 tier: 1
-version: 1.8
+version: 1.9
 ---
 # Documentation Standards
 
@@ -278,14 +278,15 @@ the failure `skill-spec-validator` already survived once.
 
 **Registry.** Reserved anchors live in §4.4. **No gate may key on an unregistered anchor.** The
 converse is deliberately permitted: an anchor may be registered and emitted before any reader
-exists, for the required sections of pipeline artifacts (§4.4), so that the *next* gate is
-language-independent by construction instead of by remembering this rule.
+exists, for the sections that a template, or the prompt that writes the artifact, emits (§4.4),
+so that the *next* gate is language-independent by construction instead of by remembering this
+rule.
 
 ### 4.4. Reserved anchor registry
 
-`—` in **Consumer** means: emitted by the template, no reader yet, reserved so a future gate has a
-structural target. Adding a row is how a new anchor is introduced; adding a *gate* that reads an
-anchor absent from this table is a defect.
+`—` in **Consumer** means: emitted by the template or the prompt that writes the document, no
+reader yet, reserved so a future gate has a structural target. Adding a row is how a new anchor is
+introduced; adding a *gate* that reads an anchor absent from this table is a defect.
 
 | Anchor | Document | Names | Consumer |
 | :--- | :--- | :--- | :--- |
@@ -299,6 +300,10 @@ anchor absent from this table is a defect.
 | `contract:use-cases` | `docs/TASK.md` | Use cases | — |
 | `contract:acceptance` | `docs/TASK.md`, `docs/tasks/*.md` | Acceptance criteria | — |
 | `contract:open-questions` | `docs/TASK.md` | Open questions | — |
+| `contract:decisions` | `docs/TASK.md` | Decisions | — |
+| `contract:requirements` | `docs/TASK.md` | Requirements list | — |
+| `contract:files` | `docs/TASK.md` | Files the task edits | — |
+| `contract:out-of-scope` | `docs/TASK.md` | Out of scope and residuals | — |
 | `contract:sequence` | `docs/PLAN.md` | Task execution sequence | — |
 | `contract:coverage` | `docs/PLAN.md` | Use-case coverage table | — |
 | `contract:schedule` | `docs/PLAN.md` | The JSON schedule block (`plan-schedule/v1`) | `plan_gantt.py` (`mermaid-authoring-guidelines`) |

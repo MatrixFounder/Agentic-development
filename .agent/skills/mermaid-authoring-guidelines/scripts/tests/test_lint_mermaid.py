@@ -1447,8 +1447,9 @@ GUARD_PRELUDE = ""
 class TestWritesNoFile(unittest.TestCase):
     def guard(self, body, cwd):
         code = GUARD.format(scripts=str(SCRIPTS), prelude=GUARD_PRELUDE, body=body)
+        # The child writes in the codec of its own stream; decode it explicitly (TASK 143).
         proc = subprocess.run([sys.executable, "-B", "-c", code], cwd=cwd, capture_output=True, text=True,
-                              timeout=120)
+                              encoding="utf-8", errors="replace", timeout=120)
         line = next(x for x in proc.stderr.splitlines() if x.startswith("GUARD "))
         return json.loads(line[len("GUARD "):])
 

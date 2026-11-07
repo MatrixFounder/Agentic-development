@@ -3402,7 +3402,17 @@ def t_zero():
 # =========================================================================== main
 
 
+def _reconfigure_streams() -> None:
+    """Escape what the stream cannot encode, such as the `Δ_H` of the summary on a `cp1252` pipe
+    of native Windows (TASK 143, the class of MR-2); a stream without `reconfigure` stays as it
+    is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main() -> int:
+    _reconfigure_streams()
     for fn in (t_api, t_set_shape, t_prompts, t_isolation, t_keys, t_mirage, t_fixtures,
                t_fidelity_rules, t_fixes, t_unfenced, t_ascii_labels, t_duplicates, t_captions,
                t_gantt_dates, t_parts, t_number_subjects, t_invented_ends, t_ascii_budget,

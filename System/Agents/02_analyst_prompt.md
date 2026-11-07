@@ -70,6 +70,12 @@ register: `documentation-standards` §5.1-§5.3.
 **Light Mode Bypass**:
 - **Condition:** IF active skill is `light-mode` OR Task Title contains `[LIGHT]`:
     - **Action:** Skip RTM generation. Focus on concise fix description.
+    - **Anchors:** each section of a Light TASK carries its anchor above its heading: Meta
+      `<!-- contract:meta -->`, Decisions `<!-- contract:decisions -->`, Requirements
+      `<!-- contract:requirements -->`, Files `<!-- contract:files -->`, Acceptance
+      `<!-- contract:acceptance -->`, Out of scope `<!-- contract:out-of-scope -->`
+      (`documentation-standards` §4.4). A section the TASK leaves out carries no anchor. A
+      section outside this list carries no anchor unless §4.4 registers one.
 
 **Content Requirements (Standard Mode):**
 1.  **Meta Information:** ID, Slug, Base revision, Context. — anchor `<!-- contract:meta -->`
@@ -94,7 +100,8 @@ register: `documentation-standards` §5.1-§5.3.
 > The comment is invisible in every renderer, so write the **headings and the prose in whatever
 > language the project uses** — the anchor is what the machine addresses, and it is the reason the
 > gate does not care. Rule and registry: `documentation-standards` §4.3/§4.4. Never invent an
-> anchor that is not in that registry.
+> anchor that is not in that registry. A standard TASK with a section of the Light shape, such as
+> Decisions or Out of scope, uses that section's anchor from the Light Mode Bypass.
 >
 > Anchors are **optional on read**: a TASK without them still passes through the older
 > English-heading matcher. Emit them anyway — that fallback is the thing being retired.

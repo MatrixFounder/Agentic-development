@@ -199,7 +199,7 @@ __all__ = [
     "_rule_results", "lint_figures", "lint_text", "_probe_text", "run_probes", "_NUMBER",
     "_rows_numbers", "inventory", "inventoried", "counts", "_summary", "_json_text", "_shown",
     "_say", "_finding_line", "_finding_dict", "_format_text", "_cell", "_format_inventory",
-    "build_parser", "main",
+    "build_parser", "_reconfigure_streams", "main",
 ]
 
 
@@ -303,9 +303,19 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _reconfigure_streams() -> None:
+    """Escape what the stream cannot encode, such as the `→` before a finding's hint on a `cp1252`
+    pipe of native Windows (TASK 143, the class of MR-2); a stream without `reconfigure` stays as
+    it is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main(argv: Optional[list] = None, notation_path: Optional[Path] = None) -> int:
     """The CLI. *notation_path* replaces `assets/notation.json` for a test; no option reaches it,
     so the auto-approved command line cannot lint against relaxed thresholds."""
+    _reconfigure_streams()
     p = build_parser()
     try:
         args = p.parse_args(argv)

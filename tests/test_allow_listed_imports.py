@@ -197,8 +197,10 @@ class _Harness(unittest.TestCase):
     def run_script(self, root, script, args):
         env = dict(os.environ, GIT_CEILING_DIRECTORIES=str(self.tmp), HOME=str(self.tmp))
         env.pop("PYTHONPATH", None)
+        # The child writes in the codec of its own stream (TASK 143); decode it explicitly.
         return subprocess.run([sys.executable, str(script), *args], cwd=str(root), env=env,
-                              capture_output=True, text=True, timeout=300)
+                              capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=300)
 
     def run_clean(self, label, spec):
         """A run of a copy with nothing planted, which must end without a traceback."""

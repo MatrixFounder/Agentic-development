@@ -10,8 +10,8 @@ R2). These tests pin:
   it, and absolutely only the standard library, `mermaid_model` and `planarity`. `__init__.py` holds
   a docstring only (``TC-02``);
 * each of the 158 names of the package is defined in its module and bound on `lint_mermaid` to the
-  same object. The thin file defines the 11 names of the command line and `__all__`, which lists
-  the 169 names (``TC-03``);
+  same object. The thin file defines the 12 names of the command line and `__all__`, which lists
+  the 170 names (``TC-03``);
 * `RULES` holds the rules in the order of the modules and of their sources, and each rule lies in
   the module of its family (``TC-04``). The thin file imports each name from its module, in the
   order of the modules (``TC-03``).
@@ -89,7 +89,8 @@ FAMILIES = {"parse": "PARSE", "syntax": "SYN", "settings": "SET", "ids": "ID", "
             "model": "MODEL", "negatives": "NEG"}
 #: TASK 126 R2: the names of the command line, which the thin file defines.
 COMMAND_LINE = ("_summary", "_json_text", "_shown", "_say", "_finding_line", "_finding_dict",
-                "_format_text", "_cell", "_format_inventory", "build_parser", "main")
+                "_format_text", "_cell", "_format_inventory", "build_parser",
+                "_reconfigure_streams", "main")
 
 
 def _is_rule_call(node):

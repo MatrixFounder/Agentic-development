@@ -16,6 +16,48 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.56.3 — The anchor registry names the sections of a Light TASK (TASK 143)**
+
+#### Changed
+
+- **`documentation-standards` §4.4 registers `contract:decisions`, `contract:requirements`,
+  `contract:files` and `contract:out-of-scope`** for `docs/TASK.md` (WI-63; v1.8 → v1.9). These
+  are the sections of a Light TASK, and of a standard TASK that has them; no gate keys on them.
+  Before, the registry named none of them, and 28 archived tasks already carried some of them,
+  unregistered. A `—` consumer now also covers an anchor that a prompt writes, and §4.3 licenses
+  it. A section outside the list carries no anchor unless §4.4 registers one.
+- **The Light Mode Bypass of `02_analyst_prompt.md` names the anchor of each section of a
+  Light TASK.**
+
+#### Fixed
+
+- **`plan_gantt.py` escapes on stdout and stderr what the codec of the stream cannot encode**
+  (MR-2). Before, on a `cp1252` stream, such as a pipe of native Windows, a report that held the
+  `→` of a critical path ended with `UnicodeEncodeError` and exit 2. `tests/test_text_encoding.py`
+  TC-E8 runs it on a `cp1252` stream, in both Windows jobs. `test_mermaid_wiring.py` decodes the
+  output of the child explicitly. Only the preview crashed; `--check` and `--write` print no `→`.
+- **`lint_mermaid.py` escapes the same way.** Before, on a `cp1252` stream, a report that held a
+  character outside the codec, such as the `→` before each hint or figure text in another script,
+  ended with a traceback and exit 1, the exit code of an error finding, in text, `--json` and
+  `--inventory` alike. TC-E9 runs it on a `cp1252` stream; `test_lint_mermaid.py` decodes the
+  output of its child explicitly.
+- **`evals/grade_figures.py` and `evals/selftest_figure_evals.py` escape the same way.** Before,
+  the `Δ_H` of the summary ended them with exit 1 on a `cp1252` stream. TC-E10 runs the grader on
+  one. The committed report of campaign `2026-10-opus55-xhigh-r1` records the new SHA-256 of
+  `grade_figures.py`.
+
+#### Added
+
+- **`docs/ARCHITECTURE.md` §8 Rule 6: output streams escape what their codec cannot encode.** A
+  script that writes to stdout or stderr text it does not fully control calls
+  `reconfigure(errors="backslashreplace")` on both streams, first in `main()`, with no
+  `encoding=`; a test that starts a script decodes its output explicitly. The TC-E tests cover
+  four scripts; no check finds a script that lacks the call.
+- **`tests/test_mermaid_wiring.py::TestDocumentationStandards`** fails when §4.4 lacks a row
+  of a Light TASK, when the analyst prompt names an unregistered anchor or its Light Mode Bypass
+  misses one of the six, or when `docs/TASK.md` carries an unregistered or a repeated anchor
+  outside a fenced block. A TASK with no anchor passes.
+
 ### **v3.56.2 — The remaining drifted copies match canonical (TASK 142)**
 
 #### Changed

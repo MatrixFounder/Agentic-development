@@ -1,4 +1,4 @@
-# TASK 142 — [LIGHT] The remaining drifted copies match canonical, and Universal-skills checks its copies
+# TASK 143 — [LIGHT] The anchor registry names the sections of a Light TASK (WI-63)
 
 <!-- contract:meta -->
 
@@ -6,159 +6,168 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 142 |
-| Slug | drifted-skill-copies |
-| Type | Light Mode with an exception (D1, D2) |
-| Source | the operator's requests of 2026-11-07 |
-| Base revision | `d685fb040c11d73a6e9410c96a833be01e59d1f6` |
-| Universal-skills base | `82001cf` |
-| Archive name | `task-142-drifted-skill-copies.md` |
-| Revision | 3 |
+| Task ID | 143 |
+| Slug | light-task-anchors |
+| Type | Light Mode (D1) |
+| Source | WI-63, option 1; the operator's request of 2026-11-07 |
+| Base revision | `7d7746669ad5ee7c453afdba44bf0749abb2808d` |
+| Closes | WI-63, MR-2 |
+| Archive name | `task-143-light-task-anchors.md` |
+| Revision | 7 |
 
-**Request.** After TASK 141 the operator asked to bring the other drifted copies in order. Six
-skills of `Universal-skills/skills/` are full copies of canonical skills. Each copy must work
-outside this framework.
+**Request.** The operator chose option 1 of WI-63 and `/light`.
 
-**Findings of 2026-11-07** (`diff -rq -x .DS_Store -x __pycache__` of each canonical skill
-against its copy):
+**Finding.** A Light TASK has the sections Decisions, Requirements, Files and Out of scope.
+The registry of `documentation-standards` §4.4 names no anchor for them, and
+`02_analyst_prompt.md` says to never invent one. 28 archived tasks of `docs/tasks/` carry
+`contract:requirements` or `contract:out-of-scope`. TASK 141 removed four invented anchors by
+hand.
 
-1. `hooks-creator`: the copy is ahead. Copy v1.1 has §3 Execution Mode, §4 Safety Boundaries,
-   pass criteria and a worked example in Phase 3; canonical v1.0 has none of them. The Security
-   Gate example stands in both, at another place.
-2. `skill-enhancer`: the copy is ahead. Its `analyze_gaps.py` exempts a bracket span with no
-   letter, such as `[0.028, 0.195]`, from the placeholder rule, and `test_rule_scoping.py` has
-   two tests for it. Canonical has neither.
-3. `brainstorming`: canonical is ahead. Canonical v3.2 picks the form of a figure through
-   `mermaid-authoring-guidelines` and redraws the figure of `examples/demo_complex.md`. That
-   skill is not published in `Universal-skills`. Without it, canonical v3.2 allows a list or a
-   table only, so a standalone copy loses the Mermaid rule of v3.1.
-4. No check compares a copy with canonical. The drift was found by a manual `diff`.
+**Revision 2** follows the code review of cycle 1: CHANGES REQUESTED, with two MAJOR, four
+MINOR and eight NIT findings, none BLOCKING. The fix pass:
+- the MAJOR M1: the living-TASK test no longer requires an anchor, since §4.3 keeps anchors
+  optional on read; a literal test proves its detector;
+- the MAJOR M2: the index line of WI-63 moves to `## Closed`;
+- the detector follows the lookup rule of §4.3, a whole line after stripping whitespace; it also
+  skips fenced blocks, by this task's choice;
+- the rows name `docs/TASK.md` with no qualifier; the analyst prompt names the section of each
+  anchor, and says that a standard TASK with such a section uses the same anchor.
 
-**Revision 2** follows the code review of cycle 1: CHANGES REQUESTED, with one MAJOR, eight
-MINOR and twelve NIT findings, none BLOCKING. The fix pass:
-- the MAJOR: `Universal-skills/AGENTS.md` carries the rule too (R7);
-- the script checks `skills/` before the skip, reports a symlink as drift and an unreadable
-  file or directory with exit 2 (R5); the test proves each branch and the `__pycache__` entry;
-- `hooks-creator` Phase 3 checks for exactly one JSON object with `jq -s`;
-- the fallback of `brainstorming` keeps the two Mermaid exceptions of the chat case, and names
-  the absent skill once per conversation (R3);
-- rule 4 of R7 allows a framework skill named with its fallback and lists the open exceptions;
-  `docs/CONTRIBUTING.md` points to the rule;
-- `tests/test_skill_refs.py` also pins `hooks-creator` (R9 of TASK 141).
+**Revision 3** follows cycle 2: APPROVED, with five MINOR and eleven NIT findings. They are fixed
+in place with no review round 3, under the operator's standing rule of 2026-10-16. Two NITs stay:
+a no-space spelling of an anchor, and the `—` consumer that no test pins.
+- a fence closes only on its own character and length, with nothing after it (CommonMark);
+- the test reuses `ANCHOR_LITERAL` and fails on a repeated anchor;
+- §4.3 licenses an anchor for a section that a template or a prompt emits; the analyst prompt
+  allows no anchor outside the list, and its standard-mode block names the Light anchors.
 
-**Revision 3** follows cycle 2: APPROVED, with four MINOR and eighteen NIT findings. The fixes
-land in place, with no further review round (D8):
-- rule 4 lists `vdd-sarcastic` among the open exceptions (R7);
-- the script exits 2 on a closed stdout, with a quiet stderr. It also exits 2 on a directory
-  it cannot list, and on a sibling link to a tree without `.agent/skills` (R5);
-- it reports as drift a copy that is a symlink, a special file such as a FIFO, and a lost
-  executable bit (R5);
-- `hooks-creator` Phase 3 writes to `mktemp` files and applies the `jq` check to exit-0 runs;
-  `examples/security_gate.sh` checks for `jq` as Phase 2 requires.
+**Revision 4.** The retro of this task filed MR-2: `plan_gantt.py` ends with
+`UnicodeEncodeError` on a `cp1252` stream when its report holds the `→` of a critical path. The
+operator asked to fix it at once (D5, R5).
+
+**Revision 5** follows the narrow review of the MR-2 fix: CHANGES REQUESTED, with one MAJOR, one
+MINOR and nine NIT findings. The MAJOR: residual 4 was half wrong. `lint_mermaid.py` crashed on a
+`cp1252` stream before a finding's hint, the class of MR-2, also on native Windows. It is fixed
+here the same way, with TC-E9; residual 4 is gone. The MR-2 resolution corrects its body: only
+the preview of `plan_gantt.py` crashed.
+
+**Revision 6** follows a second narrow review, on the operator's request: APPROVED, with three
+MINOR and six NIT findings, fixed in place:
+- the same defect in `evals/grade_figures.py` and `evals/selftest_figure_evals.py`: both print a
+  `Δ_H`. Both escape now, with TC-E10 for the grader; the committed report of campaign
+  `2026-10-opus55-xhigh-r1` takes the new SHA-256 of `grade_figures.py`, as commit `3a6e07e` did;
+- the scope text of the lint defect covers any character outside the codec, in every output mode;
+- three tests decode the output of their child explicitly; a docstring gives the new counts.
+
+**Revision 7.** On the operator's request of 2026-11-08, `docs/ARCHITECTURE.md` §8 Rule 6 states
+the stream convention; residual 4 is gone (D6, R6).
+
+<!-- contract:decisions -->
 
 ## 1. Decisions
 
-- D1, 2026-11-07, operator: `/light`, with the exception of D2. The run has the edits, the
-  tests, one code reviewer in at most two cycles, and the security sanity check.
-- D2, 2026-11-07, operator: the check adds two files to `Universal-skills`:
-  `scripts/check_framework_copies.py` and `tests/test_framework_copies.py`.
-  **Why.** The condition "no new files" of `light-mode` escalates such a task; the operator kept
-  Light Mode. The script reads files and writes only its report.
-- D3, 2026-11-07, operator: `brainstorming` keeps Mermaid when `mermaid-authoring-guidelines` is
-  absent: Mermaid in a Markdown file whose renderer shows it, as in v3.1. A chat reply keeps the
-  rule of v3.2 (R3). Rejected: canonical v3.2 as it is — the standalone copy
-  loses Mermaid; publishing `mermaid-authoring-guidelines` — a separate, large task.
-- D4, 2026-11-07, operator: the check runs locally in `Universal-skills`. Without the sibling
-  repository it reports `SKIPPED` and exits 0.
-- D5, orchestrator: the list of copies is derived. A directory of `skills/` is a copy when
-  `.agentic-development/.agent/skills/<name>` is a directory. A new copy needs no edit of the
-  script.
-- D6, orchestrator: the copies of `hooks-creator` and `skill-enhancer` move into canonical as
-  they are. Canonical has no edit that the copies lack. The review fixes of `hooks-creator` then
-  land in canonical, and the copy takes them back.
-- D7, orchestrator: the framework release is v3.56.2. The commits wait for the operator.
-- D8, orchestrator, under the operator's standing rule of 2026-10-16: the MINOR and NIT
-  findings of the approved cycle 2 are fixed in place, with the tests and the mutants re-run and
-  no review round 3. NIT-14 stays: residual 5.
+- D1, 2026-11-07, operator: `/light`. The run has the edit, its pinning tests, the test run and
+  one code reviewer in at most two cycles. It has no meta-audit and no security audit: the
+  anchor change runs nothing, and D5 covers the scripts that it changes.
+- D2, 2026-11-07, operator: option 1 of WI-63. §4.4 registers `contract:decisions`,
+  `contract:requirements`, `contract:files` and `contract:out-of-scope` for `docs/TASK.md`, with
+  no consumer.
+- D3, orchestrator: the archived tasks stay as they are; an archive is not rewritten.
+- D4, orchestrator: the framework release is v3.56.3. The commit waits for the operator.
+- D5, 2026-11-07, operator: MR-2 is fixed in this task, and with it the same defect of
+  `lint_mermaid.py`, `grade_figures.py` and `selftest_figure_evals.py`. The fix changes four
+  scripts; it adds no input and no dependency, so the run has no security audit. Two narrow
+  review rounds check it; the operator asked for the second.
+- D6, 2026-11-08, operator: ARCHITECTURE §8 states the convention that the scripts of TASK 139
+  and of D5 follow, as Rule 6.
+
+<!-- contract:requirements -->
 
 ## 2. Requirements
 
-- **R1** Canonical `hooks-creator/SKILL.md` equals the copy (v1.1).
-- **R2** Canonical `skill-enhancer/scripts/analyze_gaps.py` and
-  `scripts/tests/test_rule_scoping.py` equal the copy.
-- **R3** Canonical `brainstorming/SKILL.md` (v3.2 → v3.3): without `mermaid-authoring-guidelines`,
-  - a figure in a Markdown file is Mermaid where the reader's renderer shows it, otherwise ASCII
-    or a list;
-  - a figure in a chat or a terminal is a list, a table or ASCII. A Mermaid fence goes into a
-    reply only when the user asks for Mermaid source, or inside a document the user saves;
-  - the skill tells the user once per conversation that the skill is absent.
-- **R4** The copies of `brainstorming`, `hooks-creator` and `skill-enhancer` are byte-identical
-  to canonical, with `.DS_Store` and `__pycache__` excluded.
-- **R5** `Universal-skills/scripts/check_framework_copies.py`:
-  - lists each copy of D5 as `ok` or `DRIFT`, and under `DRIFT` each entry as `differs`,
-    `mode differs`, `only in canonical`, `only in copy`, `symlink in …`, `special in …`, or a
-    copy that is itself a symlink;
-  - compares bytes; it skips `.DS_Store`, `__pycache__`, `.venv`, `node_modules`,
-    `.pytest_cache`, `.mypy_cache`, `.ruff_cache` and `*.pyc`;
-  - follows no symlink inside a skill and reads no special file;
-  - exit 0: every copy matches, or `SKIPPED` when `.agentic-development` does not resolve;
-  - exit 1: drift;
-  - exit 2, which takes precedence over 1:
-    - `skills/` or a canonical directory is absent or cannot be listed;
-    - no copy is found, or an entry is `unreadable`;
-    - stdout closes early;
-  - the check of `skills/` comes before the skip;
-  - takes its human channel per `CLI I/O encoding` of `Universal-skills/CLAUDE.md`.
-- **R6** `Universal-skills/tests/test_framework_copies.py` covers each branch of R5 on fixtures,
-  and runs the script on the repository itself. The `test harness` job of
-  `.github/workflows/office-skills.yml` runs it.
-- **R7** `Universal-skills/CLAUDE.md`, `GEMINI.md` and `AGENTS.md` state the rule: a copy of a
-  framework skill is edited in canonical, copied, and checked with the script. A copy may name
-  a framework skill together with what to do without it; `skill-creator`, `skill-enhancer` and
-  `vdd-sarcastic` are the open exceptions. `docs/CONTRIBUTING.md` §2 points to the rule.
-- **R8** `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md` and `README.ru.md` carry v3.56.2. The
-  commit also carries WI-63 of the TASK 141 retro.
-- **R9** `tests/test_skill_refs.py::TestStandaloneBundle` also holds `hooks-creator`.
+- **R1** `documentation-standards` §4.4 (v1.8 → v1.9) has one row per anchor of D2. Each row
+  names `docs/TASK.md` as the document, the section, and the consumer `—`.
+- **R2** The Light Mode Bypass of `02_analyst_prompt.md` names the anchor of each section of a
+  Light TASK: `contract:meta`, `contract:decisions`, `contract:requirements`, `contract:files`,
+  `contract:acceptance` and `contract:out-of-scope`. A standard TASK with such a section uses
+  the same anchor.
+- **R3** `tests/test_mermaid_wiring.py::TestDocumentationStandards` fails:
+  - when §4.4 lacks a row of D2;
+  - when `02_analyst_prompt.md` names an unregistered anchor;
+  - when `docs/TASK.md` carries an unregistered or a repeated anchor, by the lookup rule of
+    §4.3, outside fenced blocks. A TASK with no anchor passes.
+- **R4** WI-63 is `done` in its record, and its index line stands under `## Closed` of
+  `docs/BACKLOG.md`. `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md` and `README.ru.md` carry
+  v3.56.3.
+- **R5** `plan_gantt.py` escapes on stdout and stderr what the codec of the stream cannot
+  encode, as TASK 139 did for `generate_wrappers.py`:
+  - `tests/test_text_encoding.py` TC-E8 runs it on `PLAN_EXAMPLE.md` with a `cp1252` stream and
+    expects exit 0 and the critical path `1.1 \u2192 1.2`;
+  - `tests/test_mermaid_wiring.py` decodes the output of the `plan_gantt.py` child explicitly;
+  - MR-2 is `fixed` in its record and in `docs/KNOWN_ISSUES.md`;
+  - `lint_mermaid.py` escapes the same way: TC-E9 runs it on a `cp1252` stream, and
+    `test_lint_mermaid.py` decodes the output of its child explicitly;
+  - `evals/grade_figures.py` and `evals/selftest_figure_evals.py` escape the same way: TC-E10
+    runs the grader on a `cp1252` stream, and the selftest passes under `cp1252`. The committed
+    report of campaign `2026-10-opus55-xhigh-r1` records the new SHA-256 of the grader;
+    `selftest_figure_evals.py` TC-ME-22 passes.
+- **R6** `docs/ARCHITECTURE.md` §8 Rule 6: a script that writes to stdout or stderr text it does
+  not fully control calls `reconfigure(errors="backslashreplace")` on both streams, first in
+  `main()`, with no `encoding=`. A test that starts a script decodes its output explicitly. The
+  rule names its enforcement and the gap: no check finds a script that lacks the call.
+
+<!-- contract:files -->
 
 ## 3. Files
 
-- agentic-development: `.agent/skills/hooks-creator/SKILL.md`, `examples/security_gate.sh`;
-  `.agent/skills/skill-enhancer/scripts/analyze_gaps.py`, `scripts/tests/test_rule_scoping.py`;
-  `.agent/skills/brainstorming/SKILL.md`; `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md`,
-  `README.ru.md`; `tests/test_skill_refs.py`; `docs/TASK.md`; the archive of TASK 141;
-  `docs/BACKLOG.md` and the record of WI-63.
-- Universal-skills: `skills/brainstorming/SKILL.md`, `examples/demo_complex.md`;
-  `skills/hooks-creator/SKILL.md`, `examples/security_gate.sh`;
-  `scripts/check_framework_copies.py`; `tests/test_framework_copies.py`;
-  `.github/workflows/office-skills.yml`; `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`;
-  `docs/CONTRIBUTING.md`.
+- `.agent/skills/documentation-standards/SKILL.md`;
+- `System/Agents/02_analyst_prompt.md`;
+- `tests/test_mermaid_wiring.py`, `tests/test_text_encoding.py`;
+- `.agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py`, `lint_mermaid.py`,
+  `tests/test_lint_mermaid.py`, `tests/test_lint_mermaid_package.py`;
+- `.agent/skills/mermaid-authoring-guidelines/evals/grade_figures.py`,
+  `selftest_figure_evals.py`, `corpus/2026-10-opus55-xhigh-r1/report.json`;
+- `tests/test_allow_listed_imports.py`;
+- `docs/ARCHITECTURE.md`;
+- `docs/issues/mr-2-*.md`, `docs/KNOWN_ISSUES.md`;
+- `docs/backlog/wi-63-*.md`, `docs/BACKLOG.md`;
+- `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md`, `README.ru.md`;
+- `docs/TASK.md`; the archive of TASK 142.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance
 
-- TC-1 — `python3 scripts/check_framework_copies.py` in `Universal-skills` → exit 0, six copies
-  `ok`.
-- TC-2 — `python3 tests/test_framework_copies.py` → pass, also under `PYTHONIOENCODING=cp1252`.
-  It fails when the script drops a branch of R5.
-- TC-3 — the tests of canonical `skill-enhancer` and `tests/test_inline_efficiency.py` → pass.
-- TC-4 — `validate_skill.py` on the three skills, in both repositories → pass;
-  `analyze_gaps.py` → no blocking gap.
-- TC-5 — `python3 tests/run_tests.py`, `validate_skills.py`, `check_prompt_references.py` and
-  `smoke_workflows.py` in agentic-development → pass.
-- TC-6 — `python3 tests/test_shared_gate_logic.py`, `test_file_codec.py` and
-  `test_subprocess_decode.py` in `Universal-skills` → pass.
-- TC-7 — `scan_register.py` on the edited text → no warn-level finding that this run adds.
+- TC-1 — `tests/test_mermaid_wiring.py` → pass. It fails on each of these plantings:
+  - a row of D2 is removed from §4.4;
+  - `02_analyst_prompt.md` names `<!-- contract:invented -->`;
+  - `docs/TASK.md` carries `<!-- contract:invented -->`, also indented.
+
+  A `docs/TASK.md` with no anchor, or with that anchor inside a fenced block, passes.
+- TC-2 — `python3 tests/run_tests.py` → pass.
+- TC-3 — `validate_skill.py` on `documentation-standards`, `check_prompt_references.py` and
+  `smoke_workflows.py` → pass.
+- TC-4 — `scan_register.py` on the edited text → no warn-level finding that this run adds.
+- TC-5 — the reproduction of MR-2 → pass; `tests/test_text_encoding.py` → pass, also under
+  `PYTHONIOENCODING=cp1252`. TC-E8, TC-E9 and TC-E10 fail on the scripts without the escape.
+  The tests of `mermaid-authoring-guidelines` and `selftest_figure_evals.py` pass under
+  `PYTHONIOENCODING=cp1252`.
+
+<!-- contract:out-of-scope -->
 
 ## 5. Out of scope and residuals
 
-1. `skill-creator` and `skill-enhancer` name framework paths such as `.agent/` and
-   `docs/issues/`. Whether those two copies work standalone is a separate question.
-2. `vdd-sarcastic` keeps its framework references (TASK 141, residual 1).
-3. The check does not run in CI on real copies: CI has no sibling repository (D4).
-4. WI-63 stays open; it is a separate `/light` task.
-5. Both figures of `brainstorming/examples/demo_complex.md` pass `render_check.py` with a
-   `lifeline_through_label` warning each, inherited from canonical: a label crosses the DB
-   lifeline. A new participant order is a layout task of its own.
-6. `Universal-skills/CLAUDE.md` names only `GEMINI.md` as its lockstep twin, while `AGENTS.md`
-   mirrors it too; the cycle-1 MAJOR came from that gap.
+1. The 28 archived tasks keep their anchors (D3). Each carries some of the four, now registered:
+   `contract:out-of-scope` 27 of them, `contract:decisions` 13, `contract:requirements` 9.
+   Two other anchors stay unregistered: `contract:constraints` in the archive of TASK 118 and
+   `contract:measurements` in that of TASK 133.
+2. No gate keys on the four anchors; their consumer is `—`. `archive_protocol.py` ends the Meta
+   region at the next `<!-- contract:` comment, so `contract:decisions` now ends it earlier;
+   `parse_task_meta` returns the same values.
+3. The `—` of the `contract:meta` row predates this task: `archive_protocol.py` reads that
+   anchor.
+4. No check finds a script that lacks the call of Rule 6; the TC-E tests cover four scripts.
+5. Under a simulated `PYTHONIOENCODING=cp1252`, `test_allow_listed_imports.py` fails in
+   `artifact-formalizer/scripts/selftest_scan.py`: it decodes the output of its child with the
+   codec of the locale, UTF-8 there. On native Windows both sides take `cp1252`. That skill is
+   outside this diff, and no Windows job runs the file.

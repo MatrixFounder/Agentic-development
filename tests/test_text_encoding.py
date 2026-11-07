@@ -15,6 +15,12 @@ or `cp1252` on native Windows. Before TASK 139 seven calls of four scripts had n
 * `generate_wrappers.py --check` exits 0 under a locale whose codec is not UTF-8, with UTF-8 mode
   off and the streams of that locale (``TC-E3``);
 * `calculate_roi.py` writes its report to a `cp1252` stream and exits 0 (``TC-E5``);
+* `plan_gantt.py` writes a report that holds the `→` of a critical path to a `cp1252` stream and
+  exits 0 (``TC-E8``, MR-2, TASK 143);
+* `lint_mermaid.py` writes a finding with a hint, which its `→` precedes, to a `cp1252` stream
+  with no traceback, and exits as it does on UTF-8 (``TC-E9``, TASK 143);
+* `grade_figures.py` writes the `Δ_H` of its summary to a `cp1252` stream and exits 0
+  (``TC-E10``, TASK 143);
 * both Windows jobs of `framework-gates.yml` run this file (``TC-E6``, TASK 139 D6);
 * the listing takes a new file, and no test, eval, virtualenv, ignored file or tracked file gone
   from the work tree (``TC-E7``).
@@ -28,6 +34,7 @@ import codecs
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -50,6 +57,10 @@ PATH_OPEN_KEYWORDS = frozenset({"mode", "buffering", "encoding", "errors", "newl
 SKILLS = ROOT / ".agent" / "skills"
 WRAPPERS = SKILLS / "skill-parallel-orchestration" / "scripts" / "generate_wrappers.py"
 ROI = SKILLS / "skill-product-solution-blueprint" / "scripts" / "calculate_roi.py"
+GANTT = SKILLS / "mermaid-authoring-guidelines" / "scripts" / "plan_gantt.py"
+PLAN_EXAMPLE = SKILLS / "skill-planning-format" / "examples" / "PLAN_EXAMPLE.md"
+LINT = SKILLS / "mermaid-authoring-guidelines" / "scripts" / "lint_mermaid.py"
+GRADER = SKILLS / "mermaid-authoring-guidelines" / "evals" / "grade_figures.py"
 
 
 def _is_mode(node):
@@ -237,6 +248,59 @@ class TestTextEncoding(unittest.TestCase):
         self.assertEqual(run.returncode, 0, run.stderr)
         self.assertIn("Business Case Analysis", run.stdout)
 
+    def test_e8_plan_gantt_writes_to_a_cp1252_stream(self):
+        """MR-2: the critical path `1.1 → 1.2` of the example plan, on a `cp1252` stream."""
+        env = {k: v for k, v in os.environ.items() if not k.startswith("PYTHON")}
+        env.update(PYTHONIOENCODING="cp1252", PYTHONDONTWRITEBYTECODE="1")
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "PLAN.md"
+            plan.write_bytes(PLAN_EXAMPLE.read_bytes())
+            run = subprocess.run([sys.executable, "-s", str(GANTT), str(plan)], cwd=str(ROOT),
+                                 env=env, capture_output=True, text=True, encoding="cp1252",
+                                 errors="replace", timeout=60)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertNotIn("internal error", run.stderr)
+        self.assertIn("1.1 \\u2192 1.2", run.stdout)
+
+    def test_e9_lint_mermaid_writes_a_hint_to_a_cp1252_stream(self):
+        """The fixture draws findings whose hints follow a `→` (MA-SET-06, MA-DOC-01 and
+        MA-PARSE-01 on this Mermaid version); no single rule is needed."""
+        doc = "# Doc\n\n```mermaid\nflowchart LR\n  A[x (y)] --> B\n```\n"
+        runs = {}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "doc.md"
+            path.write_text(doc, encoding="utf-8")
+            for codec in ("utf-8", "cp1252"):
+                env = {k: v for k, v in os.environ.items() if not k.startswith("PYTHON")}
+                env.update(PYTHONIOENCODING=codec, PYTHONDONTWRITEBYTECODE="1")
+                runs[codec] = subprocess.run([sys.executable, "-s", str(LINT), str(path)],
+                                             cwd=str(ROOT), env=env, capture_output=True,
+                                             text=True, encoding=codec, errors="replace",
+                                             timeout=60)
+        utf8, cp1252 = runs["utf-8"], runs["cp1252"]
+        self.assertIn("\u2192", utf8.stdout, "the fixture draws no hint; TC-E9 tests nothing")
+        self.assertNotIn("Traceback", cp1252.stderr, cp1252.stderr)
+        self.assertEqual(cp1252.returncode, utf8.returncode, cp1252.stderr)
+        self.assertIn("\\u2192", cp1252.stdout)
+
+    def test_e10_grade_figures_writes_its_summary_to_a_cp1252_stream(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("PYTHON")}
+        env.update(PYTHONDONTWRITEBYTECODE="1")
+        with tempfile.TemporaryDirectory() as tmp:
+            corpus, out = Path(tmp) / "corpus", Path(tmp) / "out"
+            made = subprocess.run([sys.executable, "-s", str(GRADER), "--fixture-corpus",
+                                   str(corpus)], cwd=str(ROOT), env=env, capture_output=True,
+                                  text=True, encoding="utf-8", errors="replace", timeout=120)
+            self.assertEqual(made.returncode, 0, made.stderr)
+            env.update(PYTHONIOENCODING="cp1252")
+            run = subprocess.run([sys.executable, "-s", str(GRADER), "--corpus", str(corpus),
+                                  "--out", str(out)], cwd=str(ROOT), env=env,
+                                 capture_output=True, text=True, encoding="cp1252",
+                                 errors="replace", timeout=120)
+        self.assertNotIn("Traceback", run.stderr, run.stderr)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertIn("\\u0394", run.stdout)
+
     def test_e6_the_windows_jobs_run_this_check(self):
         try:
             import yaml
@@ -256,7 +320,6 @@ class TestTextEncoding(unittest.TestCase):
         """A new file is listed; a test, an eval, a virtualenv, an ignored file and a tracked file
         gone from the work tree are not."""
         import shutil
-        import tempfile
         if shutil.which("git") is None:
             self.skipTest("git is not available here")
         with tempfile.TemporaryDirectory() as tmp:

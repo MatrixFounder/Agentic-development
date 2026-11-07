@@ -1371,7 +1371,16 @@ def _run(args) -> int:
     return EXIT_OK
 
 
+def _reconfigure_streams() -> None:
+    """Escape what the stream cannot encode, such as the `→` of the critical path on a `cp1252`
+    pipe of native Windows (MR-2, TASK 143); a stream without `reconfigure` stays as it is."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main(argv: Optional[list] = None) -> int:
+    _reconfigure_streams()
     p = build_parser()
     try:
         args = p.parse_args(argv)

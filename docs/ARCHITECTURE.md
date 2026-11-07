@@ -466,6 +466,22 @@ On a Windows runner a script writes to a pipe in `cp1252`; on macOS or Linux it 
 test that reads UTF-8 then passes on the local machine and fails on the runner (TASK 138: a `§` on
 stderr).
 
+### Rule 6: Output streams escape what their codec cannot encode (TASK 143)
+A script under `.agent/` or `System/` writes to stdout or stderr text that it may not fully
+control: a path, a title, a figure label or a non-ASCII literal. Such a script calls
+`stream.reconfigure(errors="backslashreplace")` on both streams, first in `main()`. It passes no
+`encoding=`: the codec stays the one of the caller. Without the call, a character outside the
+codec, such as `→` or `Δ` on a `cp1252` pipe of native Windows, ends the script with
+`UnicodeEncodeError` in place of its report (MR-2). The pattern is `_reconfigure_streams()` of
+`generate_wrappers.py`.
+
+A test that starts a script as a child decodes its output with an explicit `encoding=` and
+`errors="replace"`. The codec of the output belongs to the child; a parent that decodes with its
+own locale fails under `PYTHONIOENCODING=cp1252` on a UTF-8 machine.
+*Enforcement:* `tests/test_text_encoding.py` TC-E5, TC-E8, TC-E9 and TC-E10 run `calculate_roi.py`,
+`plan_gantt.py`, `lint_mermaid.py` and `grade_figures.py` on a `cp1252` stream, in both Windows
+jobs. No check finds a script that lacks the call.
+
 **[>> Read Full Skills Documentation <<](../System/Docs/SKILLS.md)**
 
 ## 9. Framework Installer Subsystem

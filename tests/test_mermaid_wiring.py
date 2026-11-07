@@ -40,6 +40,10 @@ This file pins every R10 surface:
   whole version compared, and no ``permissions`` entry of the workflow or of a job grants write
   (R12.5, A18, ``TC-14``).
 
+TASK 143 adds three pins to ``TestDocumentationStandards``: §4.4 registers the anchors of a
+Light TASK, and neither ``02_analyst_prompt.md`` nor the living ``docs/TASK.md`` names an
+unregistered anchor.
+
 Text is compared with whitespace collapsed and case folded, so a reflow passes. A reworded pin
 fails by design: change the pin together with the surface.
 """
@@ -204,8 +208,13 @@ MERMAID_FIRST = re.compile(r"mermaid\W{1,8}ascii", re.I)
 QUOTED_COMMAND = re.compile(r"`((?:python3|bash) " + re.escape(SCRIPTS) + r"[^`]*)`")
 #: Anchors written as HTML comments, as a script source spells them.
 ANCHOR_LITERAL = re.compile(r"<!-- ((?:contract|generated|loop|feedback):[a-z0-9<>-]+) -->")
+#: TASK 143 (WI-63): the anchors of the sections of a Light TASK.
+LIGHT_TASK_ANCHORS = ("contract:meta", "contract:decisions", "contract:requirements",
+                      "contract:files", "contract:acceptance", "contract:out-of-scope")
+#: The prompt that writes `docs/TASK.md`.
+ANALYST_PROMPT = "System/Agents/02_analyst_prompt.md"
 
-FENCE = re.compile(r"^\s*(```|~~~)")
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 
 
@@ -214,6 +223,35 @@ def _read(rel):
     if not path.is_file():
         raise AssertionError(f"{rel}: the file is missing")
     return path.read_text(encoding="utf-8")
+
+
+def _outside_fences(lines):
+    """Yield (index, line) of each line outside a fenced block. A fence closes only on its own
+    character, at least as long, with nothing after it (CommonMark), so a quoted fence of
+    another kind or length inside a block does not end it."""
+    fence = None
+    for i, line in enumerate(lines):
+        m = FENCE.match(line)
+        if fence is None:
+            if m:
+                fence = m.group(1)
+            else:
+                yield i, line
+        elif (m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence)
+              and not line[m.end():].strip()):
+            fence = None
+
+
+def _own_line_anchors(text):
+    """Anchors of `text`, each a whole line after stripping whitespace, as
+    `documentation-standards` §4.3 looks one up. A quotation inside a sentence is prose. Lines
+    inside a fenced block are skipped: that is this module's choice, not a rule of §4.3."""
+    found = []
+    for _, line in _outside_fences(text.splitlines()):
+        m = ANCHOR_LITERAL.fullmatch(line.strip())
+        if m:
+            found.append(m.group(1))
+    return found
 
 
 def _flat(text):
@@ -227,14 +265,10 @@ def _missing(needles, text):
 
 def _headings(lines):
     """Yield (index, level, title) of each heading outside a fenced block."""
-    in_fence = False
-    for i, line in enumerate(lines):
-        if FENCE.match(line):
-            in_fence = not in_fence
-        elif not in_fence:
-            m = HEADING.match(line)
-            if m:
-                yield i, len(m.group(1)), m.group(2)
+    for i, line in _outside_fences(lines):
+        m = HEADING.match(line)
+        if m:
+            yield i, len(m.group(1)), m.group(2)
 
 
 def _section(text, title_pattern):
@@ -573,7 +607,8 @@ class TestArchitectureTemplates(unittest.TestCase):
             with self.subTest(template=rel):
                 run = subprocess.run([sys.executable, str(SKILL_ROOT / "scripts" / LINT),
                                       str(PROJECT_ROOT / rel)],
-                                     capture_output=True, text=True, timeout=60)
+                                     capture_output=True, text=True, encoding="utf-8",
+                                     errors="replace", timeout=60)
                 self.assertEqual(run.returncode, 0, f"{rel}: the figure lint exits "
                                  f"{run.returncode}:\n{(run.stdout + run.stderr).strip()[:600]}")
 
@@ -590,7 +625,9 @@ class TestArchitectureTemplates(unittest.TestCase):
 
 class TestDocumentationStandards(unittest.TestCase):
     """TC-03 — R10.2: §5.6 exists and states the ASCII fence and the legend condition; §4.4
-    registers every anchor the skill's scripts read, and each consumer it names reads its anchor."""
+    registers every anchor the skill's scripts read, and each consumer it names reads its anchor.
+    TASK 143 (WI-63) adds the anchors of a Light TASK: §4.4 holds their rows, and the analyst
+    prompt and the living docs/TASK.md name no unregistered anchor."""
 
     def setUp(self):
         self.text = _read(DOC_STANDARDS)
@@ -672,6 +709,60 @@ class TestDocumentationStandards(unittest.TestCase):
         unregistered = [f"{name} reads '{anchor}'" for anchor, name in sorted(read.items())
                         if anchor not in registry]
         self.assertEqual(unregistered, [], f"{DOC_STANDARDS} §4.4 lacks: {unregistered}")
+
+    def test_registry_holds_the_light_task_rows(self):
+        """TASK 143 (WI-63): each section of a Light TASK has a registered anchor."""
+        registry = self._registry()
+        problems = []
+        for anchor in LIGHT_TASK_ANCHORS:
+            row = registry.get(anchor)
+            if row is None:
+                problems.append(f"{DOC_STANDARDS} §4.4: missing the row '`{anchor}`'")
+            elif "docs/TASK.md" not in row[1]:
+                problems.append(f"{DOC_STANDARDS} §4.4 `{anchor}`: document is not docs/TASK.md")
+        self.assertEqual(problems, [], "\n".join(problems))
+
+    def test_the_analyst_prompt_names_only_registered_anchors(self):
+        """TASK 143: the prompt that writes a TASK names no anchor §4.4 lacks, and its Light
+        Mode Bypass names each anchor of the Light shape."""
+        registry = self._registry()
+        text = _read(ANALYST_PROMPT)
+        named = set(ANCHOR_LITERAL.findall(text))
+        self.assertIn("contract:rtm", named, f"{ANALYST_PROMPT}: the detector found no anchor")
+        self.assertEqual(sorted(named - set(registry)), [],
+                         f"{ANALYST_PROMPT} names anchors that {DOC_STANDARDS} §4.4 lacks")
+        start, end = text.find("**Light Mode Bypass**"), text.find("**Content Requirements")
+        self.assertTrue(0 <= start < end, f"{ANALYST_PROMPT}: no Light Mode Bypass block")
+        bypass = text[start:end]
+        self.assertEqual([a for a in LIGHT_TASK_ANCHORS if f"<!-- {a} -->" not in bypass], [],
+                         f"{ANALYST_PROMPT}: the Light Mode Bypass misses an anchor of the shape")
+
+    def test_own_line_anchors_follow_the_lookup_rule(self):
+        """The detector of the next test, on literals: a whole line after stripping whitespace;
+        a quotation inside a sentence and a line inside any fenced block do not count."""
+        text = ("<!-- contract:meta -->\n"
+                "   <!-- contract:files -->  \n"
+                "x `<!-- contract:rtm -->` y\n"
+                "```markdown\n<!-- contract:fenced -->\n```\n"
+                "~~~\n<!-- contract:tilde -->\n~~~\n"
+                "````markdown\n```markdown\n<!-- contract:nested -->\n```\n````\n"
+                "```\n```python\n<!-- contract:info -->\n```\n"
+                "~~~\n```\n<!-- contract:mixed -->\n~~~\n"
+                "<!-- contract:acceptance -->\n")
+        self.assertEqual(_own_line_anchors(text),
+                         ["contract:meta", "contract:files", "contract:acceptance"])
+
+    def test_the_living_task_carries_only_registered_anchors(self):
+        """TASK 143: each anchor of docs/TASK.md is registered and present once (§4.3: a
+        repeated anchor is an error). Anchors stay optional on read: a TASK with none passes."""
+        path = PROJECT_ROOT / "docs" / "TASK.md"
+        if not path.is_file():
+            self.skipTest("docs/TASK.md is absent between tasks")
+        found = _own_line_anchors(path.read_text(encoding="utf-8"))
+        self.assertEqual(sorted(set(found) - set(self._registry())), [],
+                         f"docs/TASK.md carries anchors that {DOC_STANDARDS} §4.4 lacks")
+        self.assertEqual(sorted({a for a in found if found.count(a) > 1}), [],
+                         "docs/TASK.md repeats an anchor")
 
 
 class TestRolePrompts(unittest.TestCase):
@@ -1027,7 +1118,10 @@ class TestPlanTemplate(unittest.TestCase):
             argv = [sys.executable, str(script), str(plan)]
             for flag in flags:
                 argv += [flag, str(plan)]
-            return subprocess.run(argv, capture_output=True, text=True, timeout=60)
+            # The child writes in the codec of its own stream (MR-2); decode it explicitly,
+            # so a run under PYTHONIOENCODING=cp1252 cannot fail in the parent's decoder.
+            return subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
+                                  errors="replace", timeout=60)
 
     def test_schedule_block_is_plan_schedule_v1(self):
         for rel in self.PLANS:

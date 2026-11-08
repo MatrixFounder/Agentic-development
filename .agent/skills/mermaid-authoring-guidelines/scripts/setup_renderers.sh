@@ -6,8 +6,8 @@
 # and writes <tag>/puppeteer.json pointing at the installed chrome-headless-shell.
 #
 #   v10  mermaid-cli 10.9.1  + mermaid 10.9.8   (floor)
-#   v11  mermaid-cli 11.17.0 + mermaid 11.17.2  (the version GitHub runs)
-#   v12  mermaid-cli 12.0.0  + mermaid 12.1.0   (forward check; with --forward)
+#   v11  mermaid-cli 11.17.1 + mermaid 11.17.2  (the version GitHub runs)
+#   v12  mermaid-cli 12.2.0  + mermaid 12.1.0   (forward check; with --forward)
 #
 # Source of each install: assets/renderers/<tag>/package.json and package-lock.json, installed
 # with `npm ci --ignore-scripts`. The only install script in the three lockfiles is puppeteer's
@@ -55,8 +55,9 @@
 # 2.0.1, tar-fs 2.1.1 and ws 8.13.0: 6 high advisories (npm audit, 2026-10-03), and extract-zip
 # has no release with a fix. The overrides of each package.json also set dompurify to 3.4.17 and
 # katex to 0.18.10 (TASK 129 R3.1). With these versions npm audit reports no advisory for the
-# three lockfiles (2026-10-27). The render page takes no script from those two packages. It runs
-# the copies that other packages embed, which advisories cover (WI-41):
+# three lockfiles (2026-10-27, and 2026-11-08 after TASK 144). The render page takes no script
+# from those two packages. It runs the copies that other packages embed, which advisories cover
+# (WI-41):
 #   v10  mermaid 10.9.8                                   DOMPurify 3.4.2   KaTeX 0.16.45
 #   v11  mermaid 11.17.2, @mermaid-js/layout-elk 0.2.3    DOMPurify 3.4.12  KaTeX 0.16.47
 #   v11  @mermaid-js/mermaid-zenuml 0.2.3                 DOMPurify 3.3.1
@@ -64,7 +65,9 @@
 #   v12  @mermaid-js/mermaid-zenuml 1.0.1                 DOMPurify 3.3.1
 # On 2026-10-05 every reference figure rendered in v10 with the metrics measured under 19.11.1
 # (TASK 110). On 2026-10-27 every reference figure rendered in v10, v11 and v12 with the status and
-# the metrics it had with puppeteer 25.12.0 (TASK 129 R3.5).
+# the metrics it had with puppeteer 25.12.0 (TASK 129 R3.5). On 2026-11-08 every reference figure
+# rendered in v10, v11 and v12 with mermaid-cli 11.17.1 and 12.2.0, the releases that fix
+# GHSA-fjh9-vh7p-qj59, with the status and the metrics it had with 11.17.0 and 12.0.0 (TASK 144).
 #
 # Usage: setup_renderers.sh [--forward] [--dry-run]
 #   --dry-run writes nothing: it checks node and the install home (a home inside a git work

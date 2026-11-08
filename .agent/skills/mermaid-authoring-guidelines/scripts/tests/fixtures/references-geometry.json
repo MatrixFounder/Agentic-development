@@ -3,7 +3,7 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/ascii.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -19,7 +19,7 @@
    "figures": {}
   },
   "references/eval-results.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -35,7 +35,7 @@
    "figures": {}
   },
   "references/flowchart.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -60,7 +60,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -119,7 +119,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -249,7 +249,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -310,7 +310,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -444,7 +444,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -504,7 +504,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -636,7 +636,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -692,7 +692,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -808,7 +808,7 @@
    }
   },
   "references/gantt.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -833,7 +833,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -898,7 +898,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1038,7 +1038,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1092,7 +1092,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1210,7 +1210,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1275,7 +1275,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1407,7 +1407,7 @@
    }
   },
   "references/layout-and-planarity.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -1432,7 +1432,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1495,7 +1495,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1633,7 +1633,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1679,7 +1679,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1781,7 +1781,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1839,7 +1839,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1965,7 +1965,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2015,7 +2015,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2117,7 +2117,7 @@
    }
   },
   "references/other-kinds.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -2142,7 +2142,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2191,7 +2191,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2303,7 +2303,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2352,7 +2352,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2460,7 +2460,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2516,7 +2516,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2636,7 +2636,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2687,7 +2687,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2800,7 +2800,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2851,7 +2851,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2962,7 +2962,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3017,7 +3017,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3137,7 +3137,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3188,7 +3188,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3300,7 +3300,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3352,7 +3352,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3458,7 +3458,7 @@
    }
   },
   "references/renderer-facts.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:37:36Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -3472,8 +3472,8 @@
     }
    },
    "figures": {
-    "102": {
-     "fence_end": 109,
+    "107": {
+     "fence_end": 114,
      "sha256": "c3a2e6762a91ba3f84f226a6cf68465d51a41d441f6d79baac9f0d977640a38e",
      "kind": "flowchart-v2",
      "negative": true,
@@ -3483,7 +3483,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -3542,7 +3542,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -3646,8 +3646,8 @@
       }
      }
     },
-    "130": {
-     "fence_end": 138,
+    "135": {
+     "fence_end": 143,
      "sha256": "52bfd848bf78d84d1affc1123ab74546308fe5e92d7cb7cea480e074177f3e0b",
      "kind": "flowchart-v2",
      "negative": true,
@@ -3657,7 +3657,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -3720,7 +3720,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -3834,8 +3834,8 @@
       }
      }
     },
-    "168": {
-     "fence_end": 183,
+    "173": {
+     "fence_end": 188,
      "sha256": "0afb03775abb3fb19cecbf34e670f00e027899be6cfe3c6dcc862190aeaac9ce",
      "kind": "flowchart-v2",
      "negative": true,
@@ -3845,7 +3845,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -3916,7 +3916,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -4039,8 +4039,8 @@
       }
      }
     },
-    "204": {
-     "fence_end": 218,
+    "209": {
+     "fence_end": 223,
      "sha256": "9779f16385b9df4b8bdf5c4be26691621cb732ef618a2124a89ece87c49dae5e",
      "kind": "stateDiagram",
      "negative": true,
@@ -4050,7 +4050,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -4119,7 +4119,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -4244,8 +4244,8 @@
       }
      }
     },
-    "241": {
-     "fence_end": 250,
+    "246": {
+     "fence_end": 255,
      "sha256": "058eeec5423b8ff3d7d2b7c3d2a472467f06adc3798b9084ec60b31fba6ec0f1",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4255,7 +4255,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -4301,7 +4301,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -4392,8 +4392,8 @@
       }
      }
     },
-    "269": {
-     "fence_end": 279,
+    "274": {
+     "fence_end": 284,
      "sha256": "48b4601ea4e8df454d27d1eac5ede44a593b20a7ca24eee807481fcee91111bf",
      "kind": "sequence",
      "negative": true,
@@ -4403,7 +4403,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -4466,7 +4466,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -4591,8 +4591,8 @@
       }
      }
     },
-    "313": {
-     "fence_end": 318,
+    "318": {
+     "fence_end": 323,
      "sha256": "5df17a173e18f0fac26baa4daa0de289c4f241c0e96e2cc2d3cd43a9d374bec1",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4602,7 +4602,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Times New Roman",
        "pass": false,
@@ -4657,7 +4657,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Times New Roman",
        "pass": false,
@@ -4755,8 +4755,8 @@
       }
      }
     },
-    "350": {
-     "fence_end": 369,
+    "355": {
+     "fence_end": 374,
      "sha256": "b26bb897778b523907858a8800758cad12ebd2961d5f972ac193311c7aa6354b",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4766,7 +4766,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -4839,7 +4839,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -4971,8 +4971,8 @@
       }
      }
     },
-    "388": {
-     "fence_end": 392,
+    "393": {
+     "fence_end": 397,
      "sha256": "bacd4d84b5da1d8bfc5e42c6c199037481d3c59a476d0b4f80b6b571fe0a3588",
      "kind": "flowchart-v2",
      "negative": true,
@@ -4982,7 +4982,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5025,7 +5025,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5110,8 +5110,8 @@
       }
      }
     },
-    "420": {
-     "fence_end": 437,
+    "425": {
+     "fence_end": 442,
      "sha256": "f4fb8e0feff2fed66a91fec2a1e6bd0ecf7d6403eea09cc2f1da06a3da9134b7",
      "kind": "sequence",
      "negative": true,
@@ -5121,7 +5121,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -5196,7 +5196,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -5345,8 +5345,8 @@
       }
      }
     },
-    "464": {
-     "fence_end": 476,
+    "469": {
+     "fence_end": 481,
      "sha256": "9d159ff18a63d967c26e7f1fbc64f3d188f6bb017cbcde17cfd6ace3eef9ca2a",
      "kind": "sequence",
      "negative": true,
@@ -5356,7 +5356,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5419,7 +5419,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -5550,8 +5550,8 @@
       }
      }
     },
-    "534": {
-     "fence_end": 561,
+    "539": {
+     "fence_end": 566,
      "sha256": "cc7e7f87ecd91ce688222ae7dd3356a375ed11ee2bdb66c932b30c8696f3456b",
      "kind": "flowchart-v2",
      "negative": false,
@@ -5561,7 +5561,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5615,7 +5615,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5724,8 +5724,8 @@
       }
      }
     },
-    "571": {
-     "fence_end": 586,
+    "576": {
+     "fence_end": 591,
      "sha256": "eb0c653d86baf181b2089ad48c2cf506ef5995d5baf77ffb3fedda30034d1b41",
      "kind": "sequence",
      "negative": false,
@@ -5735,7 +5735,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5798,7 +5798,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -5923,8 +5923,8 @@
       }
      }
     },
-    "873": {
-     "fence_end": 880,
+    "887": {
+     "fence_end": 894,
      "sha256": "07187bf35b3f9f995e4564359557eadfea495905974233554d9a540a8ee7026e",
      "kind": "flowchart-v2",
      "negative": true,
@@ -5934,7 +5934,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -5990,7 +5990,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -6091,8 +6091,8 @@
       }
      }
     },
-    "888": {
-     "fence_end": 900,
+    "902": {
+     "fence_end": 914,
      "sha256": "998dda6af0e9e53977eea30d382ee65f9faebaeaf1c3914781634777951b9f07",
      "kind": "flowchart-v2",
      "negative": false,
@@ -6102,7 +6102,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6147,7 +6147,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6241,7 +6241,7 @@
    }
   },
   "references/review-checklist.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -6266,7 +6266,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6319,7 +6319,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6429,7 +6429,7 @@
    }
   },
   "references/scripts-and-setup.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -6445,7 +6445,7 @@
    "figures": {}
   },
   "references/sequence.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -6470,7 +6470,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6564,7 +6564,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6754,7 +6754,7 @@
    }
   },
   "references/state.md": {
-   "generated": "2026-10-30T07:13:17Z",
+   "generated": "2026-11-07T22:06:52Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -6779,7 +6779,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -6839,7 +6839,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,

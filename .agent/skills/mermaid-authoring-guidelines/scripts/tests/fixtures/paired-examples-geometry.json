@@ -3,7 +3,7 @@
  "about": "Render evidence of every mermaid fence of the files below, keyed by file and opening fence line; written by `python3 scripts/render_check.py <file> --fixture <this file>` (TASK R7.8, R9.5, A19). Per file it holds the sha256 of the instruments and the notation values the renders ran with. scripts/tests/test_paired_examples.py recomputes each sha256 from the file and evaluates the stored metrics against notation.json without node.",
  "files": {
   "references/paired-examples.md": {
-   "generated": "2026-10-30T07:12:41Z",
+   "generated": "2026-11-07T22:06:13Z",
    "instruments": "f0611bce9ac9766bf0e72d28fb25915764033ed1fb11e7d265f6ea60f11cd296",
    "settings": {
     "column_px": 900,
@@ -28,7 +28,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -126,7 +126,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -330,7 +330,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -398,7 +398,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -546,7 +546,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -602,7 +602,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -726,7 +726,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -783,7 +783,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -908,7 +908,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -961,7 +961,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1079,7 +1079,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1131,7 +1131,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1246,7 +1246,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1293,7 +1293,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -1399,7 +1399,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1472,7 +1472,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1629,7 +1629,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1722,7 +1722,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1918,7 +1918,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -1983,7 +1983,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": false,
@@ -2124,7 +2124,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2251,7 +2251,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2515,7 +2515,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2636,7 +2636,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2888,7 +2888,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -2944,7 +2944,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3068,7 +3068,7 @@
       "v11": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,
@@ -3134,7 +3134,7 @@
       "v11-dark": {
        "status": "ok",
        "mermaid": "11.17.2",
-       "mermaid_cli": "11.17.0",
+       "mermaid_cli": "11.17.1",
        "browser": "HeadlessChrome/156.0.8078.80",
        "font_family": "Trebuchet MS",
        "pass": true,

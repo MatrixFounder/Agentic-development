@@ -4,14 +4,19 @@ The measured renderer behaviour that the rules of `SKILL.md` rest on. Each fact 
 measured, a reproduction, the observed behaviour and the author rule. Load this file to check a
 rule, or when a render shows something no other reference explains.
 
-**Measured.** 2026-10-02, on macOS, with `chrome-headless-shell` 131 and 150.
+**Measured.** 2026-10-02, on macOS, with `chrome-headless-shell` 131 and 150, in mermaid-cli 10.9.1,
+11.17.0 and 12.0.0.
+
+**Re-rendered.** 2026-11-08, with `chrome-headless-shell` 156. Every figure of `references/`
+rendered in mermaid-cli 11.17.1 and 12.2.0 with the status and the metrics of 11.17.0 and 12.0.0.
+The reproductions of each fact were not run again. The two releases fix the defect of RF-21.
 
 | Tag | mermaid | mermaid-cli | Used by |
 | :--- | :--- | :--- | :--- |
 | 10.9.3 | 10.9.3 | 10.9.1 | JetBrains IDEs 2024.3 to 2026.1 |
 | 10.9.8 | 10.9.8 | 10.9.1 | the check pair, as its floor |
-| 11.17.2 | 11.17.2 | 11.17.0 | the check pair; GitHub |
-| 12.1.0 | 12.1.0 | 12.0.0 | the forward check |
+| 11.17.2 | 11.17.2 | 11.17.1 | the check pair; GitHub |
+| 12.1.0 | 12.1.0 | 12.2.0 | the forward check |
 
 - Renders in 10.9.x and 11.17.2 used `-w 1800`; renders in 12.1.0 used `--size 1800x1200`. A gantt
   with the gantt settings line was also rendered at `-w 916`, the width of the render check.
@@ -802,18 +807,27 @@ the font size × min(1, `column_px` 900 / width); its floor is `min_effective_fo
 
 **Rule.** Give every `gitGraph` commit an `id`.
 
-### RF-21 — mermaid-cli serves local files to the page
+### RF-21 — mermaid-cli 11.14.0 to 11.17.0 and 12.0.0 serve local files to the page
 
-**Versions.** mermaid-cli 11.14.0 to 12.0.0. This project runs 11.17.0 (the check pair) and 12.0.0
-(`--forward`, the latest release on 2026-10-05); 11.12.0 and earlier have no such filter.
+**Versions.** mermaid-cli 11.14.0 to 11.17.0, and 12.0.0; 11.12.0 and earlier have no such filter.
+mermaid-cli 11.17.1 and 12.2.0 fix the filter with PR #1216. This project has run them since
+2026-11-08: 11.17.1 for the check pair, 12.2.0 for `--forward`.
 
-**Observed.** The request filter of mermaid-cli inverts its allowlist. A page can load a local
-`.css`, `.js`, `.mjs` or `.woff2` file by its path.
+**Advisory.** GHSA-fjh9-vh7p-qj59, severity low, published 2026-11-06:
 
-**Rule.** Render a figure, never a page that someone else wrote. Strict mode keeps a figure from
-running script, and the browser resolves no host, so a loaded file cannot leave the machine.
-Further detail went to the maintainers in a private report on 2026-10-05 (WI-30) and stays out of
-this file until a public advisory describes it (`security-audit` §6.1).
+- the method `#isInAllowedDir` of the request filter accepted a path outside the allowed
+  directories;
+- the advisory states the effect on an untrusted figure: it can load any web font file on the
+  disk, and the render can show whether a given font is present.
+
+The private report of 2026-10-05 (WI-30) preceded the advisory.
+
+**Observed** in 11.17.0 and 12.0.0. A page can load a local `.css`, `.js`, `.mjs` or `.woff2` file
+by its path.
+
+**Rule.** Pin mermaid-cli 11.17.1 or a later 11.x release, or 12.2.0 or later. Render a figure,
+never a page that someone else wrote. Strict mode keeps a figure from running script, and the
+browser resolves no host, so a loaded file cannot leave the machine.
 
 ### RF-22 — the floor renderer runs on the puppeteer of v11
 

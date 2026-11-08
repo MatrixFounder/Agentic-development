@@ -605,5 +605,39 @@ class TestLockfileOverrides(unittest.TestCase):
                 self.assertEqual(copies, [])
 
 
+#: The ranges of mermaid-cli that GHSA-fjh9-vh7p-qj59 covers, each as [first, fixed) of releases.
+CLI_ADVISORY_RANGES = (("11.14.0", "11.17.1"), ("12.0.0", "12.2.0"))
+
+
+def _semver_key(version):
+    """A key that orders versions as semver does: `12.2.0-rc.1` sorts before `12.2.0`."""
+    release, _, pre = version.partition("-")
+    return tuple(int(part) for part in release.split(".")) + (0 if pre else 1,)
+
+
+def _in_advisory_range(version):
+    key = _semver_key(version)
+    return any(_semver_key(first) <= key < _semver_key(fixed) for first, fixed in CLI_ADVISORY_RANGES)
+
+
+class TestAdvisoryRanges(unittest.TestCase):
+    """TASK 144: no cli pin lies in a range of GHSA-fjh9-vh7p-qj59 (RF-21).
+
+    On 2026-11-08 the global advisory database had no record of it, so `npm audit` misses it.
+    """
+
+    def test_each_cli_pin_is_outside_the_advisory_ranges(self):
+        for tag, pin in sorted(NOTATION["renderers"]["installs"].items()):
+            with self.subTest(tag=tag, cli=pin["cli"]):
+                self.assertFalse(_in_advisory_range(pin["cli"]),
+                                 "mermaid-cli %s lies in a range of GHSA-fjh9-vh7p-qj59" % pin["cli"])
+
+    def test_the_ranges_hold_the_affected_releases_only(self):
+        inside = ("11.14.0", "11.17.0", "11.17.1-rc.1", "12.0.0", "12.2.0-rc.1")
+        outside = ("10.9.1", "11.12.0", "11.14.0-rc.1", "11.17.1", "12.2.0", "12.3.0-rc.1")
+        self.assertEqual([v for v in inside if not _in_advisory_range(v)], [])
+        self.assertEqual([v for v in outside if _in_advisory_range(v)], [])
+
+
 if __name__ == "__main__":
     unittest.main()

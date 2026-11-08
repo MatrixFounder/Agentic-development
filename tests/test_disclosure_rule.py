@@ -11,12 +11,11 @@ the draft before a commit. This file pins the rule that keeps the detail out:
 * the places that write a finding down point to §6.1: step 4 of the `security-audit` workflow,
   Step 3 of the auditor prompt, the filing rules of `run-feedback` and the output routing of
   `vdd-multi` (``TC-03``);
-* the documents that quote the skill's version quote the front matter (``TC-04``);
-* two paragraphs that already hold public detail of the TASK 110 finding are not extended, and
-  the records of that finding point to the rule (``TC-05``). Headings and single lines hold such
-  detail too; the audit of TASK 110 lists them, and these pins do not cover them.
+* the documents that quote the skill's version quote the front matter (``TC-04``).
+
+TC-05 pinned two paragraphs of the TASK 110 finding until a public advisory described it. TASK 144
+dropped it: GHSA-fjh9-vh7p-qj59 describes that finding.
 """
-import hashlib
 import re
 import unittest
 from pathlib import Path
@@ -49,15 +48,6 @@ def _section(text, heading):
     level = len(m.group(1))
     end = re.compile(rf"^#{{1,{level}}} ", re.M).search(text, m.end())
     return text[m.end():end.start() if end else len(text)]
-
-
-def _paragraph(text, start):
-    """The paragraph that begins with `start`, whitespace collapsed."""
-    i = text.find(start)
-    if i == -1:
-        raise AssertionError(f"no paragraph starts with {start!r}")
-    j = text.find("\n\n", i)
-    return _flat(text[i:j if j != -1 else len(text)])
 
 
 class TestSkillRule(unittest.TestCase):
@@ -154,37 +144,6 @@ class TestVersionMirrors(unittest.TestCase):
                            ("System/Docs/VDD.md", f"`security-audit` skill (v{version})")):
             with self.subTest(file=rel):
                 self.assertIn(quote, _read(rel))
-
-
-#: sha256 of each paragraph, whitespace collapsed, as at the base revision 6ae772b. The paragraphs
-#: describe the TASK 110 finding as the public repository held it before §6.1. A failure here
-#: means the paragraph changed: confirm that it adds no detail (§6.1), then update the digest.
-#: Drop both pins once a public advisory describes the finding.
-PUBLIC_PARAGRAPHS = {
-    (".agent/skills/mermaid-authoring-guidelines/references/renderer-facts.md",
-     "**Observed.** The request filter of mermaid-cli"):
-        "38c92dc6dbdf07f8a89b43e913fce599415e53335dc8fec64dd1d8e4a60c1d37",
-    ("docs/backlog/wi-30-renderer-supply-chain-v10-lockfile-mermaid-cli-request-filter-browser-"
-     "hash.md", "**Signal.** Three renderer supply-chain items"):
-        "67486b36c9a22d06e6bd26bbbb5070648799ec33008a9e7275dfbcb0af049fed",
-}
-
-
-class TestPublicDetail(unittest.TestCase):
-    """TC-05: detail that was public before the rule is not extended."""
-
-    def test_each_paragraph_is_as_at_the_base(self):
-        for (rel, start), digest in PUBLIC_PARAGRAPHS.items():
-            with self.subTest(file=rel):
-                got = hashlib.sha256(_paragraph(_read(rel), start).encode("utf-8")).hexdigest()
-                self.assertEqual(got, digest)
-
-    def test_the_records_of_the_finding_point_to_the_rule(self):
-        rf21, wi30 = (rel for rel, _start in PUBLIC_PARAGRAPHS)
-        self.assertIn(f"until a public advisory describes it ({POINTER})",
-                      _paragraph(_read(rf21), "**Rule.** Render a figure"))
-        self.assertIn("the private report is sent and its channel and date are recorded here",
-                      _paragraph(_read(wi30), "**Acceptance.**"))
 
 
 if __name__ == "__main__":

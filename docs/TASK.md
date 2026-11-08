@@ -1,4 +1,4 @@
-# TASK 143 — [LIGHT] The anchor registry names the sections of a Light TASK (WI-63)
+# TASK 144 — [LIGHT] The renderers run the mermaid-cli releases that fix GHSA-fjh9-vh7p-qj59
 
 <!-- contract:meta -->
 
@@ -6,168 +6,146 @@
 
 | Field | Value |
 | :--- | :--- |
-| Task ID | 143 |
-| Slug | light-task-anchors |
+| Task ID | 144 |
+| Slug | mermaid-cli-advisory-pins |
 | Type | Light Mode (D1) |
-| Source | WI-63, option 1; the operator's request of 2026-11-07 |
-| Base revision | `7d7746669ad5ee7c453afdba44bf0749abb2808d` |
-| Closes | WI-63, MR-2 |
-| Archive name | `task-143-light-task-anchors.md` |
-| Revision | 7 |
+| Source | GHSA-fjh9-vh7p-qj59, published 2026-11-06; the operator's request of 2026-11-08 |
+| Base revision | `9edf4979e517bfc8e43db813b1b388c07a2c95ce` |
+| Closes | the follow-up that WI-30 names |
+| Archive name | `task-144-mermaid-cli-advisory-pins.md` |
+| Revision | 4 |
 
-**Request.** The operator chose option 1 of WI-63 and `/light`.
+**Request.** The operator asked what the published advisory changes here, and chose `/light`.
 
-**Finding.** A Light TASK has the sections Decisions, Requirements, Files and Out of scope.
-The registry of `documentation-standards` §4.4 names no anchor for them, and
-`02_analyst_prompt.md` says to never invent one. 28 archived tasks of `docs/tasks/` carry
-`contract:requirements` or `contract:out-of-scope`. TASK 141 removed four invented anchors by
-hand.
+**Finding.**
+- GHSA-fjh9-vh7p-qj59 (severity low) covers `@mermaid-js/mermaid-cli` from 11.14.0 to before
+  11.17.1, and from 12.0.0 to before 12.2.0. The fix is mermaid-cli PR #1216.
+- The v11 install pins mermaid-cli 11.17.0; the v12 install pins 12.0.0. Both are in range.
+- The v10 install pins 10.9.1, outside the range.
+- Between 12.0.0 and 12.2.0, mermaid-cli changes three runtime files of `src/`:
+  `puppeteerIntercept.js` (the fix), `index.js` (one line of `--help` text) and `version.js`. It
+  adds `puppeteerIntercept.spec.js`, which no module imports.
+- On 2026-11-08 the global GitHub advisory database has no record of the GHSA, and `npm audit`
+  reports no advisory for the three lockfiles.
 
-**Revision 2** follows the code review of cycle 1: CHANGES REQUESTED, with two MAJOR, four
-MINOR and eight NIT findings, none BLOCKING. The fix pass:
-- the MAJOR M1: the living-TASK test no longer requires an anchor, since §4.3 keeps anchors
-  optional on read; a literal test proves its detector;
-- the MAJOR M2: the index line of WI-63 moves to `## Closed`;
-- the detector follows the lookup rule of §4.3, a whole line after stripping whitespace; it also
-  skips fenced blocks, by this task's choice;
-- the rows name `docs/TASK.md` with no qualifier; the analyst prompt names the section of each
-  anchor, and says that a standard TASK with such a section uses the same anchor.
+**Revision 3** follows the code review of cycle 1: CHANGES REQUESTED, with one MAJOR, seven
+MINOR and seven NIT findings, none BLOCKING. The fix pass:
+- the MAJOR M1: both changelogs carry a Migration note, since `render_check.py` refuses an
+  install whose cli differs from its pin;
+- m1: the tests of the skill ran with the new installs; the ten render tests passed;
+- m5: `TestAdvisoryRanges` fails on a cli pin inside a range of the advisory (R8);
+- m2, m3: WI-64 states the basis of its 14 days and lists each file that names 12.1.0;
+- m4, m7, m6 and the NITs: wording of RF-21, the changelogs, WI-30 and its index line; the
+  `renderer-facts.md` record of the fixture is rendered again after the prose edit.
 
-**Revision 3** follows cycle 2: APPROVED, with five MINOR and eleven NIT findings. They are fixed
-in place with no review round 3, under the operator's standing rule of 2026-10-16. Two NITs stay:
-a no-space spelling of an anchor, and the `—` consumer that no test pins.
-- a fence closes only on its own character and length, with nothing after it (CommonMark);
-- the test reuses `ANCHOR_LITERAL` and fails on a repeated anchor;
-- §4.3 licenses an anchor for a section that a template or a prompt emits; the analyst prompt
-  allows no anchor outside the list, and its standard-mode block names the Light anchors.
-
-**Revision 4.** The retro of this task filed MR-2: `plan_gantt.py` ends with
-`UnicodeEncodeError` on a `cp1252` stream when its report holds the `→` of a critical path. The
-operator asked to fix it at once (D5, R5).
-
-**Revision 5** follows the narrow review of the MR-2 fix: CHANGES REQUESTED, with one MAJOR, one
-MINOR and nine NIT findings. The MAJOR: residual 4 was half wrong. `lint_mermaid.py` crashed on a
-`cp1252` stream before a finding's hint, the class of MR-2, also on native Windows. It is fixed
-here the same way, with TC-E9; residual 4 is gone. The MR-2 resolution corrects its body: only
-the preview of `plan_gantt.py` crashed.
-
-**Revision 6** follows a second narrow review, on the operator's request: APPROVED, with three
-MINOR and six NIT findings, fixed in place:
-- the same defect in `evals/grade_figures.py` and `evals/selftest_figure_evals.py`: both print a
-  `Δ_H`. Both escape now, with TC-E10 for the grader; the committed report of campaign
-  `2026-10-opus55-xhigh-r1` takes the new SHA-256 of `grade_figures.py`, as commit `3a6e07e` did;
-- the scope text of the lint defect covers any character outside the codec, in every output mode;
-- three tests decode the output of their child explicitly; a docstring gives the new counts.
-
-**Revision 7.** On the operator's request of 2026-11-08, `docs/ARCHITECTURE.md` §8 Rule 6 states
-the stream convention; residual 4 is gone (D6, R6).
+**Revision 4** follows cycle 2: APPROVED, with three NIT findings. They are fixed in place with
+no review round 3, under the operator's standing rule of 2026-10-16:
+- the new prose wraps at 100 columns;
+- `TestAdvisoryRanges` orders a pre-release before its release, as semver does;
+- the WI-30 index line keeps the advisory outside the clause of 2026-10-05.
 
 <!-- contract:decisions -->
 
 ## 1. Decisions
 
-- D1, 2026-11-07, operator: `/light`. The run has the edit, its pinning tests, the test run and
-  one code reviewer in at most two cycles. It has no meta-audit and no security audit: the
-  anchor change runs nothing, and D5 covers the scripts that it changes.
-- D2, 2026-11-07, operator: option 1 of WI-63. §4.4 registers `contract:decisions`,
-  `contract:requirements`, `contract:files` and `contract:out-of-scope` for `docs/TASK.md`, with
-  no consumer.
-- D3, orchestrator: the archived tasks stay as they are; an archive is not rewritten.
-- D4, orchestrator: the framework release is v3.56.3. The commit waits for the operator.
-- D5, 2026-11-07, operator: MR-2 is fixed in this task, and with it the same defect of
-  `lint_mermaid.py`, `grade_figures.py` and `selftest_figure_evals.py`. The fix changes four
-  scripts; it adds no input and no dependency, so the run has no security audit. Two narrow
-  review rounds check it; the operator asked for the second.
-- D6, 2026-11-08, operator: ARCHITECTURE §8 states the convention that the scripts of TASK 139
-  and of D5 follow, as Rule 6.
+- D1, 2026-11-08, operator: `/light`. The run has the edit, the test run and one code reviewer
+  in at most two cycles. It has no meta-audit: `mermaid-authoring-guidelines` is TIER 2. It has
+  no security audit: the change adds no input and no direct dependency. The review brief carries
+  the difference of the two lockfiles.
+- D2, 2026-11-08, operator: v12 runs mermaid-cli 12.2.0 with mermaid 12.1.0, through the
+  existing override. Rejected: mermaid 12.3.0 — it changes the layout engine, and each fact
+  measured on 12.1.0 needs a new measurement (WI-64).
+- D3, 2026-11-08, operator: WI-64 records the move of the forward check to mermaid 12.3 or
+  later, with the condition that starts it.
+- D4, orchestrator: the v10 install stays as it is.
+- D5, orchestrator: `scripts/tests/fixtures/expected.json` and the committed `fx-*.svg` stay.
+  They record SVGs that mermaid-cli 11.17.0 wrote, and no test binds them to the pins.
+- D6, orchestrator: the framework release is v3.56.4. The commit waits for the operator.
+- D7, 2026-11-08, orchestrator: `M/evals/evals.json` stays. Campaign `2026-10-opus55-xhigh-r1`
+  registered its sha256, and its `pins` record the renderers of that campaign. No code reads
+  them; `render_corpus.py` reads the pins of `notation.json`.
+  Rejected: an edit with an amendment — it changes the record of a finished campaign.
+- D8, 2026-11-08, operator: the Observed paragraph of RF-21 keeps the file types it named
+  before the advisory. The text was public before §6.1, and this task does not extend it.
+  Rejected: narrowing it to the web fonts of the advisory (review cycle 1, n6).
 
 <!-- contract:requirements -->
 
 ## 2. Requirements
 
-- **R1** `documentation-standards` §4.4 (v1.8 → v1.9) has one row per anchor of D2. Each row
-  names `docs/TASK.md` as the document, the section, and the consumer `—`.
-- **R2** The Light Mode Bypass of `02_analyst_prompt.md` names the anchor of each section of a
-  Light TASK: `contract:meta`, `contract:decisions`, `contract:requirements`, `contract:files`,
-  `contract:acceptance` and `contract:out-of-scope`. A standard TASK with such a section uses
-  the same anchor.
-- **R3** `tests/test_mermaid_wiring.py::TestDocumentationStandards` fails:
-  - when §4.4 lacks a row of D2;
-  - when `02_analyst_prompt.md` names an unregistered anchor;
-  - when `docs/TASK.md` carries an unregistered or a repeated anchor, by the lookup rule of
-    §4.3, outside fenced blocks. A TASK with no anchor passes.
-- **R4** WI-63 is `done` in its record, and its index line stands under `## Closed` of
-  `docs/BACKLOG.md`. `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md` and `README.ru.md` carry
-  v3.56.3.
-- **R5** `plan_gantt.py` escapes on stdout and stderr what the codec of the stream cannot
-  encode, as TASK 139 did for `generate_wrappers.py`:
-  - `tests/test_text_encoding.py` TC-E8 runs it on `PLAN_EXAMPLE.md` with a `cp1252` stream and
-    expects exit 0 and the critical path `1.1 \u2192 1.2`;
-  - `tests/test_mermaid_wiring.py` decodes the output of the `plan_gantt.py` child explicitly;
-  - MR-2 is `fixed` in its record and in `docs/KNOWN_ISSUES.md`;
-  - `lint_mermaid.py` escapes the same way: TC-E9 runs it on a `cp1252` stream, and
-    `test_lint_mermaid.py` decodes the output of its child explicitly;
-  - `evals/grade_figures.py` and `evals/selftest_figure_evals.py` escape the same way: TC-E10
-    runs the grader on a `cp1252` stream, and the selftest passes under `cp1252`. The committed
-    report of campaign `2026-10-opus55-xhigh-r1` records the new SHA-256 of the grader;
-    `selftest_figure_evals.py` TC-ME-22 passes.
-- **R6** `docs/ARCHITECTURE.md` §8 Rule 6: a script that writes to stdout or stderr text it does
-  not fully control calls `reconfigure(errors="backslashreplace")` on both streams, first in
-  `main()`, with no `encoding=`. A test that starts a script decodes its output explicitly. The
-  rule names its enforcement and the gap: no check finds a script that lacks the call.
+`M/` stands for `.agent/skills/mermaid-authoring-guidelines/`.
+
+- **R1** The manifests pin the fixed releases:
+  - `M/assets/renderers/v11/package.json`: `@mermaid-js/mermaid-cli` 11.17.1;
+  - `M/assets/renderers/v12/package.json`: `@mermaid-js/mermaid-cli` 12.2.0;
+  - the overrides stay; each `description` names the new version;
+  - `npm install --package-lock-only --ignore-scripts` writes each lockfile from its base;
+  - `M/assets/notation.json` names cli 11.17.1 and 12.2.0 (D7).
+- **R2** `npm audit --package-lock-only` reports no advisory for the three lockfiles. The review
+  brief lists each package that the lockfile diff adds or removes, each `hasInstallScript` and
+  each `resolved` host.
+- **R3** Each mermaid fence of `M/references/*.md` renders in v10, v11, v11 dark and v12 with the
+  status and the metrics of the base installs. Both sides use chrome-headless-shell
+  156.0.8078.80.
+- **R4** The new installs write `references-geometry.json`, `paired-examples-geometry.json` and
+  `plan-example-geometry.json` again.
+- **R5** `M/references/renderer-facts.md`:
+  - RF-21 cites GHSA-fjh9-vh7p-qj59 and names the affected and the fixed versions;
+  - RF-21 drops the sentence that keeps detail out until an advisory exists;
+  - the renderer table names cli 11.17.1 and 12.2.0.
+
+  The header of `M/scripts/setup_renderers.sh` names the same versions.
+- **R6** `tests/test_disclosure_rule.py` drops `TestPublicDetail` (TC-05), `_paragraph` and the
+  `hashlib` import. Its docstring drops the TC-05 item.
+- **R7** Records:
+  - the WI-30 record carries a note on the advisory, and its index line names it;
+  - WI-64 is filed in `docs/backlog/` and `docs/BACKLOG.md`;
+  - `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md` and `README.ru.md` carry v3.56.4, with a
+    Migration note.
+- **R8** `M/scripts/tests/test_setup_renderers.py::TestAdvisoryRanges` fails when a cli pin of
+  `notation.json` lies in a range of GHSA-fjh9-vh7p-qj59.
 
 <!-- contract:files -->
 
 ## 3. Files
 
-- `.agent/skills/documentation-standards/SKILL.md`;
-- `System/Agents/02_analyst_prompt.md`;
-- `tests/test_mermaid_wiring.py`, `tests/test_text_encoding.py`;
-- `.agent/skills/mermaid-authoring-guidelines/scripts/plan_gantt.py`, `lint_mermaid.py`,
-  `tests/test_lint_mermaid.py`, `tests/test_lint_mermaid_package.py`;
-- `.agent/skills/mermaid-authoring-guidelines/evals/grade_figures.py`,
-  `selftest_figure_evals.py`, `corpus/2026-10-opus55-xhigh-r1/report.json`;
-- `tests/test_allow_listed_imports.py`;
-- `docs/ARCHITECTURE.md`;
-- `docs/issues/mr-2-*.md`, `docs/KNOWN_ISSUES.md`;
-- `docs/backlog/wi-63-*.md`, `docs/BACKLOG.md`;
+- `M/assets/renderers/v11/package.json`, `package-lock.json`;
+- `M/assets/renderers/v12/package.json`, `package-lock.json`;
+- `M/assets/notation.json`;
+- `M/scripts/setup_renderers.sh`;
+- `M/references/renderer-facts.md`;
+- `M/scripts/tests/fixtures/references-geometry.json`, `paired-examples-geometry.json`,
+  `plan-example-geometry.json`;
+- `tests/test_disclosure_rule.py`, `M/scripts/tests/test_setup_renderers.py`;
+- `docs/backlog/wi-30-*.md`, `docs/backlog/wi-64-*.md`, `docs/BACKLOG.md`;
 - `CHANGELOG.md`, `CHANGELOG.ru.md`, `README.md`, `README.ru.md`;
-- `docs/TASK.md`; the archive of TASK 142.
+- `docs/TASK.md`; the archive of TASK 143.
 
 <!-- contract:acceptance -->
 
 ## 4. Acceptance
 
-- TC-1 — `tests/test_mermaid_wiring.py` → pass. It fails on each of these plantings:
-  - a row of D2 is removed from §4.4;
-  - `02_analyst_prompt.md` names `<!-- contract:invented -->`;
-  - `docs/TASK.md` carries `<!-- contract:invented -->`, also indented.
-
-  A `docs/TASK.md` with no anchor, or with that anchor inside a fenced block, passes.
-- TC-2 — `python3 tests/run_tests.py` → pass.
-- TC-3 — `validate_skill.py` on `documentation-standards`, `check_prompt_references.py` and
-  `smoke_workflows.py` → pass.
-- TC-4 — `scan_register.py` on the edited text → no warn-level finding that this run adds.
-- TC-5 — the reproduction of MR-2 → pass; `tests/test_text_encoding.py` → pass, also under
-  `PYTHONIOENCODING=cp1252`. TC-E8, TC-E9 and TC-E10 fail on the scripts without the escape.
-  The tests of `mermaid-authoring-guidelines` and `selftest_figure_evals.py` pass under
-  `PYTHONIOENCODING=cp1252`.
+- TC-1 — `M/scripts/tests/test_setup_renderers.py` TC-L1 → pass. It fails on a lockfile that
+  still holds cli 11.17.0 or 12.0.0. `TestAdvisoryRanges` → pass; it fails when `notation.json`
+  holds the pins of the base.
+- TC-2 — `setup_renderers.sh --forward` in a scratch home → exit 0, with a passed smoke render
+  for each install.
+- TC-3 — base renders against new renders, over every figure of `M/references/*.md` → no
+  difference of status or metric in v10, v11, v11 dark and v12.
+- TC-4 — the tests of `M/scripts/tests/`, `python3 tests/run_tests.py`,
+  `lint_mermaid.py --probe`, `lint_mermaid.py` on `M/references/*.md` and
+  `selftest_figure_evals.py` → pass.
+- TC-5 — `npm audit --package-lock-only` in each renderer directory → 0 advisories.
+- TC-6 — `scan_register.py` on the edited text → no warn-level finding that this run adds.
 
 <!-- contract:out-of-scope -->
 
 ## 5. Out of scope and residuals
 
-1. The 28 archived tasks keep their anchors (D3). Each carries some of the four, now registered:
-   `contract:out-of-scope` 27 of them, `contract:decisions` 13, `contract:requirements` 9.
-   Two other anchors stay unregistered: `contract:constraints` in the archive of TASK 118 and
-   `contract:measurements` in that of TASK 133.
-2. No gate keys on the four anchors; their consumer is `—`. `archive_protocol.py` ends the Meta
-   region at the next `<!-- contract:` comment, so `contract:decisions` now ends it earlier;
-   `parse_task_meta` returns the same values.
-3. The `—` of the `contract:meta` row predates this task: `archive_protocol.py` reads that
-   anchor.
-4. No check finds a script that lacks the call of Rule 6; the TC-E tests cover four scripts.
-5. Under a simulated `PYTHONIOENCODING=cp1252`, `test_allow_listed_imports.py` fails in
-   `artifact-formalizer/scripts/selftest_scan.py`: it decodes the output of its child with the
-   codec of the locale, UTF-8 there. On native Windows both sides take `cp1252`. That skill is
-   outside this diff, and no Windows job runs the file.
+1. The forward check on mermaid 12.3 or later (D2, WI-64).
+2. `expected.json` and the `fx-*.svg` fixtures (D5).
+3. The `geometry.json` files and `evals.json` of campaign `2026-10-opus55-xhigh-r1` record cli
+   11.17.0 and 12.0.0. They record that campaign's renders (D7).
+4. `test_render_check.py` builds renderers with cli 11.17.0 and 12.0.0. These values select the
+   per-major behaviour of `mmdc_command`, not a pin.
+5. Archived tasks, plans and reviews keep the versions they name.

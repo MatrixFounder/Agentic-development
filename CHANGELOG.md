@@ -16,6 +16,53 @@
 
 ## 🇺🇸 English Version (Primary)
 
+### **v3.56.4 — The Mermaid renderers run the mermaid-cli releases that fix GHSA-fjh9-vh7p-qj59 (TASK 144)**
+
+#### Fixed
+
+- **The v11 renderer runs mermaid-cli 11.17.1, and the v12 renderer runs 12.2.0**
+  (GHSA-fjh9-vh7p-qj59, severity low, published 2026-11-06). In mermaid-cli 11.14.0 to 11.17.0
+  and in 12.0.0, the request filter accepted a path outside its allowed directories, so an
+  untrusted figure could load a local web font file. Before, v11 ran 11.17.0 and v12 ran 12.0.0.
+  - v12 keeps mermaid 12.1.0 through its override. v10 keeps mermaid-cli 10.9.1, which predates
+    the filter.
+  - The v11 and v12 lockfiles change only the mermaid-cli pin and its entry; the v10 lockfile
+    stays. No package is added or removed. `npm audit` reports no advisory for the three
+    lockfiles. On 2026-11-08 the global advisory database had no record of the GHSA, and
+    `npm audit` did not report it.
+  - Every figure of `references/` renders in v10, v11, v11 dark and v12 with the status and the
+    5,100 metric values it had before, in chrome-headless-shell 156.0.8078.80. Two runs of one
+    install differ in the SVG bytes of about 50 of the 204 renders, so the comparison reads the
+    metrics.
+  - `references-geometry.json`, `paired-examples-geometry.json` and `plan-example-geometry.json`
+    record the new renders.
+  - The `evals.json` of campaign `2026-10-opus55-xhigh-r1` keeps cli 11.17.0 and 12.0.0: the
+    campaign registered its sha256.
+
+#### Changed
+
+- **RF-21 of `renderer-facts.md` cites GHSA-fjh9-vh7p-qj59** and names the affected and the
+  fixed releases. Its rule pins mermaid-cli 11.17.1 or a later 11.x release, or 12.2.0 or later.
+  The sentence that kept the detail out until an advisory existed is gone (`security-audit`
+  §6.1). The renderer table names cli 11.17.1 and 12.2.0.
+- **`tests/test_disclosure_rule.py` drops TC-05**, the two paragraph pins of the TASK 110
+  finding, as WI-30 required once an advisory described it.
+- **WI-30** records the advisory.
+
+#### Added
+
+- **WI-64:** the forward check on mermaid 12.3 or later. It starts when GitHub or VS Code runs
+  mermaid 12, when mermaid 13.0.0 has been released for 14 days, or when the v12 pin is 3 minor
+  releases behind.
+- **`test_setup_renderers.py::TestAdvisoryRanges`** fails when a cli pin of `notation.json` lies
+  in a range of GHSA-fjh9-vh7p-qj59. `npm audit` does not report that advisory yet.
+
+#### Migration
+
+- **Run `setup_renderers.sh` again**, with `--forward` for v12. `render_check.py` refuses an install
+  whose mermaid-cli differs from its pin, and the tests of the skill that render skip with such an
+  install.
+
 ### **v3.56.3 — The anchor registry names the sections of a Light TASK (TASK 143)**
 
 #### Changed

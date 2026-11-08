@@ -17,6 +17,10 @@ resolved_by: 'TASK 110'
 
 # WI-30 — Renderer supply chain: v10 lockfile, mermaid-cli request filter, browser hash
 
+> **Advisory 2026-11-06 (TASK 144).** GHSA-fjh9-vh7p-qj59 describes the defect, and
+> mermaid-cli 11.17.1 and 12.2.0 fix it. From 2026-11-08 the v11 and v12 renderers pin these
+> releases. RF-21 cites the advisory, and TC-05 of `tests/test_disclosure_rule.py` is gone.
+
 > **Done 2026-10-05 (TASK 110).**
 >
 > - v10 overrides puppeteer with 25.12.0; `npm audit` reports no advisory for any renderer
